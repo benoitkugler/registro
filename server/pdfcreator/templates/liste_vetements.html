@@ -1,0 +1,53 @@
+{{ define "main" }}
+<style>
+  table th,
+  table td {
+    border: 1px solid grey;
+  }
+
+  tr {
+    break-inside: avoid;
+  }
+
+  tr:nth-child(even) {
+    background-color: rgba(211, 211, 211, 0.2);
+  }
+</style>
+<h3 style="text-align: center">Liste de vêtements - {{ .Camp }}</h3>
+
+<div style="font-size: 9pt; font-style: italic; margin-bottom: 12px">
+  Nom et prénom du participant :
+</div>
+
+<table
+  style="
+    table-layout: fixed;
+    width: 98%;
+    margin: auto;
+    border-collapse: collapse;
+  "
+>
+  <tr class="color-asso" style="text-align: center">
+    <th style="width: 8%">Nb.</th>
+    <th style="width: 68%">Vêtement</th>
+    <th style="width: 12%">Arrivée</th>
+    <th style="width: 12%">Départ</th>
+  </tr>
+
+  {{ range .Vetements }}
+  <tr
+    style="overflow-wrap: break-word; font-size: 10pt;
+  {{ if .Important }} font-weight: bold; {{ end }}
+  "
+  >
+    <td>{{ .Quantite }}</td>
+    <td>{{ .Description }}</td>
+    <td></td>
+    <td></td>
+  </tr>
+
+  {{ end }}
+</table>
+<br />
+<div style="font-size: 12pt">{{ .Complement }}</div>
+{{ end }}

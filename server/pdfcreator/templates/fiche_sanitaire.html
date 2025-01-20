@@ -1,0 +1,144 @@
+{{ define "content" }}
+
+<style>
+  .color-ok {
+    color: green;
+  }
+
+  h5 {
+    margin: 8px 0px;
+  }
+</style>
+
+{{ range .Pages }}
+<header style="display: flex; justify-content: space-between">
+  <div>
+    <img src="{{ $.Asso.Icon }}" height="80px" />
+  </div>
+  <div style="text-align: right">
+    <div>{{ .Personne.NomPrenom }}</div>
+    <div>né(e) le {{ .Personne.DateNaissance.String }}</div>
+    <div>{{ .Personne.Sexe.String }}</div>
+  </div>
+</header>
+
+<main style="font-size: 11pt">
+  <h2 style="text-align: center">Fiche sanitaire de liaison</h2>
+
+  <!-- Handicap -->
+  {{ if .FicheSanitaire.Handicap }}
+  <span> {{ .Personne.Prenom }} est en situation de <b>handicap</b>. </span>
+  {{ else }}
+  <span class="color-ok">
+    {{ .Personne.Prenom }} ne présente pas de situation de handicap.
+  </span>
+  {{ end }}
+
+  <br />
+
+  <!-- Traitement médical -->
+  {{ if .FicheSanitaire.TraitementMedical }}
+  <span>
+    {{ .Personne.Prenom }} suit un <b>traitement médical</b> pendant le séjour.
+  </span>
+  {{ else }}
+  <span class="color-ok">
+    {{ .Personne.Prenom }} ne suit pas de traitement médical pendant le séjour.
+  </span>
+  {{ end }}
+
+  <br />
+
+  <!-- Maladies -->
+  {{ if eq (len .FicheSanitaire.Maladies.List) 0 }}
+  <span class="color-ok"> {{ .Personne.Prenom }} n'a eu aucune maladie. </span>
+  {{ else }}
+  <span> {{ .Personne.Prenom }} a eu les <b>maladies</b> suivantes: </span>
+  <ul style="column-count: 2">
+    {{ range .FicheSanitaire.Maladies.List }}
+    <li><i>{{ . }}</i></li>
+    {{ end }}
+  </ul>
+  {{ end }}
+
+  <hr />
+
+  <!-- Allergies -->
+  {{ if eq (len .FicheSanitaire.Allergies.List) 0}}
+  <span class="color-ok">
+    {{ .Personne.Prenom }} ne présente aucune allergie.
+  </span>
+  {{ else }}
+  <span> {{ .Personne.Prenom }} présente les <b>allergies</b> suivantes: </span>
+  <ul style="column-count: 2">
+    {{ range .FicheSanitaire.Allergies.List }}
+    <li><i>{{ . }}</i></li>
+    {{ end }}
+  </ul>
+  {{ end }}
+
+  <br />
+
+  {{ if ne .FicheSanitaire.Allergies.ConduiteATenir ""}}
+  <br />
+  <b>Conduite à tenir :</b>
+  <br />
+  <div style="font-style: italic; font-size: smaller">
+    {{ .FicheSanitaire.Allergies.ConduiteATenir }}
+  </div>
+  <hr />
+  {{ end }} {{ if ne .FicheSanitaire.DifficultesSante ""}}
+  <h5>Difficultés de santé :</h5>
+  <div style="font-style: italic; font-size: smaller">
+    {{ .FicheSanitaire.DifficultesSante }}
+  </div>
+  {{ end }} {{ if ne .FicheSanitaire.Recommandations ""}}
+  <h5>Recommandations :</h5>
+  <div style="font-style: italic; font-size: smaller">
+    {{ .FicheSanitaire.Recommandations }}
+  </div>
+  {{ end }}
+
+  <hr />
+
+  <h5>Coordonnées du responsable légal :</h5>
+
+  <div style="display: flex">
+    <div>
+      <b>Nom : </b>{{ .Responsable.NomPrenom}} <br />
+      <b>Sécurité sociale : </b> {{ .Responsable.SecuriteSociale }} <br />
+      <b>Numéro d'urgence : </b> {{ .FicheSanitaire.Tel.String }}
+    </div>
+    <div>
+      <b>Adresse : </b>{{ .Responsable.Adresse }} <br />
+      {{ .Responsable.CodePostal }} {{ .Responsable.Ville }} {{
+      .Responsable.Pays }} <br />
+      <b>Tél. : </b> {{ .Responsable.Tels.String }}
+    </div>
+  </div>
+
+  <hr />
+
+  <h5>Médecin traitant:</h5>
+  <div style="display: flex; justify-content: space-between">
+    <div>{{ .FicheSanitaire.Medecin.Nom }}</div>
+    <div><b>Tél. :</b> {{ .FicheSanitaire.Medecin.Tel.String }}</div>
+  </div>
+
+  <hr />
+
+  <h5>Autorisation</h5>
+
+  Le responsable légal autorise le responsable du séjour à prendre, le cas
+  échéant,
+  <b>toutes mesures</b> (traitement médical, hospitalisation, intervention
+  chirurgicale) rendues nécessaires par l'état du participant. Il autorise
+  également, si nécessaire, le directeur du séjour à faire sortir le participant
+  de l’hôpital après une hospitalisation.
+</main>
+
+<div style="page-break-after: always"></div>
+{{ end }}
+
+<!--  -->
+{{ end }}

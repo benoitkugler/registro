@@ -1,0 +1,68 @@
+{{ define "main" }}
+
+<style>
+  .title {
+    border: 1px solid grey;
+    border-radius: 4px;
+  }
+</style>
+
+<!-- Titre et destinataire -->
+<div class="title">Facture</div>
+<div style="font-style: italic; font-size: 10pt">Edition au {{ .Date }}</div>
+
+<div style="display: flex; justify-content: space-between">
+  <div></div>
+  <div>
+    <div>{{ .Destinataire.NomPrenom }}</div>
+    <div>{{ .Destinataire.Adresse }}</div>
+    <div>{{ .Destinataire.CodePostal }} {{ .Destinaire.Ville }}</div>
+  </div>
+</div>
+
+<table style="table-layout: fixed">
+  <tr class="color-asso">
+    <th>Participant</th>
+    <th>Camp</th>
+    <th>Dates</th>
+    <th>Prix</th>
+    <th>Aides extérieures</th>
+    <th>Sous-total</th>
+  </tr>
+  {{ range .Participants }}
+  <tr>
+    <td>{{ .NomPrenom }}<br />{{ .DateNaissance }}</td>
+    <td>{{ .Camp.Label }}<br />N° JS: {{ .Camp.NumeroJS }}</td>
+    <td>du {{ .Camp.DateDebut }}<br />au {{ .Camp.DateFin }}</td>
+    <td>{{ .Prix.PrixBase}} {{ .Prix.DescriptionPrix }}</td>
+    <td>
+      {{ range .Prix.Aides }}
+      <div>{{ .Description }}</div>
+      {{ end }}
+    </td>
+    <td>{{ .Prix.PrixSansRemises }}</td>
+  </tr>
+  {{ if ne (len .Remises) 0 }}
+  <!-- Total remises -->
+  <tr>
+    <!-- TODO -->
+    <td colspan="5">{{ .Remises }}</td>
+    <td>{{ .Prix.PrixNet }}</td>
+  </tr>
+  {{ end }} {{ end }}
+  <!-- Total (demandé) -->
+  <tr>
+    <td colspan="5" style="font-style: italic">Total (après remises)</td>
+    <td style="font-weight: bold">{{ .Bilan.Demande.String }}</td>
+  </tr>
+
+  <!-- Paiements -->
+  {{ range .Paiements }}
+  <tr>
+    <td colspan="5">{{ .Description }}</td>
+    <td>{{ .Montant }}</td>
+  </tr>
+  {{ end }}
+</table>
+
+{{ end }}

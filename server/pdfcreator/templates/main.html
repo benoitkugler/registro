@@ -1,0 +1,63 @@
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <style>
+      footer {
+        position: running(footer);
+      }
+      @page {
+        @bottom-center {
+          width: 100%;
+          content: element(footer);
+        }
+
+        margin-top: 20px;
+        margin-left: 8px;
+        margin-right: 8px;
+        margin-bottom: 32px; /** incuding the footer */
+      }
+
+      .color-asso {
+        background-color: {{ $.Asso.Color }};
+      }
+    </style>
+    <footer
+      style="
+        border: 1px solid grey;
+        border-radius: 4px;
+        padding: 4px;
+        font-size: 8pt;
+        display: flex;
+        justify-content: space-between;
+      "
+      class="color-asso"
+    >
+      <div>{{ .Asso.Title }}</div>
+      <div>{{ .Asso.Infos }}</div>
+    </footer>
+
+    {{ block "content" . }}
+
+    <header
+      style="break-before: page; display: flex; justify-content: space-between"
+    >
+      <div>
+        <img src="{{ .Asso.Icon }}" height="80px" />
+      </div>
+
+      {{ block "header-right" . }}
+      <div style="text-align: right">
+        <div>{{ .Asso.ContactNom }}</div>
+        <div>{{ .Asso.ContactTel }}</div>
+        <div>{{ .Asso.ContactMail }}</div>
+      </div>
+      {{ end }}
+    </header>
+
+    <main>{{ block "main" . }} {{ end }}</main>
+
+    {{ end }}
+  </body>
+</html>

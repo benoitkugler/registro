@@ -1,0 +1,43 @@
+{{ define "main" }}
+<style>
+  table th,
+  table td {
+    border: 1px solid grey;
+  }
+
+  tr {
+    break-inside: avoid;
+  }
+
+  tr:nth-child(even) {
+    background-color: rgba(211, 211, 211, 0.5);
+  }
+</style>
+<h3 style="text-align: center">Liste des participants - {{ .Camp }}</h3>
+
+<table
+  style="
+    table-layout: fixed;
+    width: 95%;
+    margin: auto;
+    border-collapse: collapse;
+  "
+>
+  <tr class="color-asso" style="text-align: center">
+    <th style="width: 25%">Participant</th>
+    <th style="width: 20%">Responsable</th>
+    <th style="width: 30%">Mail</th>
+    <th style="width: 25%">Commune</th>
+  </tr>
+
+  {{ range .Participants }}
+  <tr style="overflow-wrap: break-word; font-size: 9pt">
+    <td>{{ .Participant }}</td>
+    <td>{{ .Responsable }}</td>
+    <td>{{ .Mail }}</td>
+    <td>{{ .Commune }}</td>
+  </tr>
+
+  {{ end }}
+</table>
+{{ end }}
