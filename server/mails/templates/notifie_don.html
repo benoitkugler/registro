@@ -1,0 +1,11 @@
+{{ define "content" }}
+<p>
+  Nous avons bien reçu un don d'un montant de <i>{{ .Montant }}</i>{{ if ne
+  .Organisme "" }}, pour le compte de {{ .Organisme }}{{ end }}. <br />
+  <b>Merci</b> pour le soutien !
+</p>
+<p>
+  Ce mail est une notification automatique, et nous enverrons un remerciement
+  plus personnel prochainement.
+</p>
+{{ end }}

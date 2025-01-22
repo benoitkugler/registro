@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta name="viewport" content="width=device-width" />
+    <meta charset="UTF-8" />
+    <meta http-uiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Courriel {{ .Asso.Title }}</title>
+    <style type="text/css">
+        body {
+          margin: 0 auto;
+          padding: 0;
+          min-width: 100%;
+          font-family: sans-serif;
+        }
+
+        table {
+          margin: 0 0 0 0;
+        }
+
+        ul {
+          margin-top: 2px;
+          margin-bottom: 2px;
+        }
+
+        span.yellow-title {
+          margin-top: 10px;
+          margin-bottom: 7px;
+          padding: 10px;
+          /* display: block; */
+          /* border-radius: 10px; */
+          font-size: 1.1em;
+          font-style: italic;
+          background-color: {{ $.Asso.ColorAccent }};
+      }
+
+      .color-asso {
+            background-color: {{ $.Asso.Color }};
+        }
+
+
+        .header {
+          height: 40px;
+          text-align: center;
+          font-size: 16px;
+          font-weight: bold;
+        }
+
+        .bonjour {
+          padding-top: 20px;
+          padding-left: 10px;
+          padding-bottom: 5px;
+          font-size: 16px;
+        }
+
+        .content {
+          font-size: 16px;
+          line-height: 30px;
+        }
+
+        .salutations {
+          height: 70px;
+          text-align: left;
+          font-size: 16px;
+        }
+
+        .footer {
+          text-align: left;
+          height: 45px;
+          font-size: 12px;
+        }
+
+        table.coordonnees {
+          margin-left: 30px;
+          color: #5b3c33;
+        }
+    </style>
+  </head>
+
+  <body>
+    <table
+      bgcolor="#FFFFFF"
+      width="100%"
+      border="0"
+      cellspacing="0"
+      cellpadding="0"
+    >
+      <tr class="header" class="color-asso">
+        <td style="text-align: center; padding: 5px">
+          {{ .Asso.Title }} - {{ .Title }}
+        </td>
+      </tr>
+      <tr>
+        <td class="bonjour">{{ .Salutations }}</td>
+      </tr>
+      <tr class="content">
+        <td style="padding: 10px">{{ template "content" . }}</td>
+      </tr>
+
+      <tr class="salutations">
+        <td style="padding: 10px">{{ .Signature }}</td>
+      </tr>
+
+      <tr class="footer" class="color-asso">
+        <td style="padding: 5px">{{ .Asso.Title}}</td>
+        <td style="padding: 5px">{{ .Asso.Infos }}</td>
+      </tr>
+    </table>
+  </body>
+</html>
