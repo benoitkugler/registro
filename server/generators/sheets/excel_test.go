@@ -20,7 +20,7 @@ func TestCreateTable(t *testing.T) {
 		{{Value: "lmkeke", Bold: true}, {Value: "Blue", Color: "#AA00BB"}},
 		{{ValueF: 5.56, NumFormat: FrancsSuisse}, {ValueF: 3, NumFormat: Int}},
 		{{ValueF: 5.56, NumFormat: Euros}, {ValueF: 3, NumFormat: Euros}},
-		{{Value: "5.56"}, {ValueF: 25.5, NumFormat: Percentage}},
+		{{Value: "5.56"}, {ValueF: 0.255, NumFormat: Percentage}},
 		{{NumFormat: Float}, {}},
 	}
 	content, err := CreateTable([]string{"nom", "Prénom"}, liste)
