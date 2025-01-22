@@ -8,14 +8,23 @@ import (
 	"testing"
 	"time"
 
+	"registro/config"
 	"registro/sql/camps"
 	pr "registro/sql/personnes"
 	"registro/utils"
 	tu "registro/utils/testutils"
 )
 
+var cfg config.Asso
+
 func init() {
 	err := Init(os.TempDir())
+	if err != nil {
+		panic(err)
+	}
+
+	os.Setenv("ASSO", "acve")
+	cfg, err = config.NewConfig()
 	if err != nil {
 		panic(err)
 	}
@@ -90,7 +99,7 @@ func TestFicheSanitaire(t *testing.T) {
 	data := randFicheSanitaires()
 
 	ti := time.Now()
-	content, err := CreateFicheSanitaires(data)
+	content, err := CreateFicheSanitaires(cfg, data)
 	fmt.Println(time.Since(ti))
 	tu.AssertNoErr(t, err)
 	tu.Write(t, "FicheSanitaires.pdf", content)
@@ -99,7 +108,7 @@ func TestFicheSanitaire(t *testing.T) {
 func BenchmarkFS(b *testing.B) {
 	pages := randFicheSanitaires()
 	for i := 0; i < b.N; i++ {
-		_, _ = CreateFicheSanitaires(pages)
+		_, _ = CreateFicheSanitaires(cfg, pages)
 	}
 }
 
@@ -120,7 +129,7 @@ func TestListeParticipants(t *testing.T) {
 	data := randParticipants()
 
 	ti := time.Now()
-	content, err := CreateListeParticipants(data, "VIvie la vie 2024")
+	content, err := CreateListeParticipants(cfg, data, "VIvie la vie 2024")
 	fmt.Println(time.Since(ti))
 	tu.AssertNoErr(t, err)
 	tu.Write(t, "ListeParticipants.pdf", content)
@@ -142,7 +151,7 @@ func TestListeVetements(t *testing.T) {
 	data := randVetements()
 
 	ti := time.Now()
-	content, err := CreateListeVetements(camps.ListeVetements{
+	content, err := CreateListeVetements(cfg, camps.ListeVetements{
 		Vetements:  data,
 		Complement: "Il n'ya <b> pas</b> de service de lingerie.",
 	}, "VIvie la vie 2024")

@@ -4,7 +4,7 @@ import (
 	"embed"
 	"html/template"
 
-	"registro/asso"
+	"registro/config"
 	"registro/sql/camps"
 	pr "registro/sql/personnes"
 )
@@ -43,14 +43,14 @@ type FicheSanitaire struct {
 
 type ficheSanitaireTmplData struct {
 	Pages []FicheSanitaire
-	Asso  asso.AssoMeta
+	Asso  config.Asso
 }
 
 // CreateFicheSanitaires returns a PDF document, one "fiche sanitaire" per page.
-func CreateFicheSanitaires(pages []FicheSanitaire) ([]byte, error) {
+func CreateFicheSanitaires(cfg config.Asso, pages []FicheSanitaire) ([]byte, error) {
 	return templateToPDF(ficheSanitaireTmpl, ficheSanitaireTmplData{
 		Pages: pages,
-		Asso:  asso.Asso, // TODO:
+		Asso:  cfg,
 	})
 }
 
@@ -62,31 +62,31 @@ type Participant struct {
 }
 
 type listeParticipantsTmplData struct {
-	Asso         asso.AssoMeta
+	Asso         config.Asso
 	Camp         string // label
 	Participants []Participant
 }
 
 // CreateListeParticipants returns a PDF document.
-func CreateListeParticipants(participants []Participant, camp string) ([]byte, error) {
+func CreateListeParticipants(cfg config.Asso, participants []Participant, camp string) ([]byte, error) {
 	return templateToPDF(listeParticipantsTmpl, listeParticipantsTmplData{
-		Asso:         asso.Asso, // TODO:
+		Asso:         cfg,
 		Camp:         camp,
 		Participants: participants,
 	})
 }
 
 type listeVetementsTmplData struct {
-	Asso       asso.AssoMeta
+	Asso       config.Asso
 	Camp       string // label
 	Vetements  []camps.Vetement
 	Complement template.HTML
 }
 
 // CreateListeVetements returns a PDF document.
-func CreateListeVetements(liste camps.ListeVetements, camp string) ([]byte, error) {
+func CreateListeVetements(cfg config.Asso, liste camps.ListeVetements, camp string) ([]byte, error) {
 	return templateToPDF(listeVetementsTmpl, listeVetementsTmplData{
-		Asso:       asso.Asso, // TODO:
+		Asso:       cfg,
 		Camp:       camp,
 		Vetements:  liste.Vetements,
 		Complement: template.HTML(liste.Complement),

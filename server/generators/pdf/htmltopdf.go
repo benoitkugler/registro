@@ -38,7 +38,7 @@ func Init(fontCacheDir string) error {
 func htmlToPDF(html string) ([]byte, error) {
 	var dst bytes.Buffer
 	// TODO : proper asset filepath
-	err := goweasyprint.HtmlToPdfOptions(&dst, utils.InputString(html), "..", nil, "", nil, true, fc, 1, nil)
+	err := goweasyprint.HtmlToPdfOptions(&dst, utils.InputString(html), "../..", nil, "", nil, true, fc, 1, nil)
 	return dst.Bytes(), err
 }
 
