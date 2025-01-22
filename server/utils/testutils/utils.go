@@ -3,6 +3,7 @@ package testutils
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -25,6 +26,25 @@ func AssertNoErr(t *testing.T, err error) {
 	t.Helper()
 	if err != nil {
 		t.Fatal(err)
+	}
+}
+
+func LoadEnv(t *testing.T, file string) {
+	t.Helper()
+
+	content, err := os.ReadFile(file)
+	AssertNoErr(t, err)
+
+	for _, line := range strings.Split(string(content), "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		key, val, ok := strings.Cut(line, "=")
+		if !ok {
+			t.Fatalf("invalid env. line %s", line)
+		}
+		t.Setenv(key, val)
 	}
 }
 
