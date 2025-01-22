@@ -1,0 +1,66 @@
+package crypto
+
+import (
+	"fmt"
+	"testing"
+
+	pr "registro/sql/personnes"
+	tu "registro/utils/testutils"
+)
+
+func TestEncryptionID(t *testing.T) {
+	key := NewEncrypter("5s64qsd897e4q87mùlds54")
+	otherKey := NewEncrypter("4")
+	for i := range [200]int{} {
+		v1 := 456 + 100*int64(i)
+		s, err := newEncryptedID(key, v1)
+		tu.AssertNoErr(t, err)
+
+		v2, err := DecryptID[int64](key, s)
+		tu.AssertNoErr(t, err)
+		tu.Assert(t, v1 == v2)
+		_, err = DecryptID[pr.IdPersonne](key, s)
+		tu.Assert(t, err != nil)
+
+		r1 := pr.IdPersonne(v1 - 5)
+		s, err = newEncryptedID(key, r1)
+		tu.AssertNoErr(t, err)
+		r2, err := DecryptID[pr.IdPersonne](key, s)
+		tu.AssertNoErr(t, err)
+		tu.Assert(t, r1 == r2)
+
+		// expected errors
+		_, err = DecryptID[int64](key, s)
+		tu.Assert(t, err != nil)
+
+		_, err = DecryptID[pr.IdPersonne](otherKey, s)
+		tu.Assert(t, err != nil)
+
+	}
+
+	fmt.Println(EncryptID(key, pr.IdPersonne(456)))
+}
+
+func TestJSON(t *testing.T) {
+	type T struct {
+		A int
+		B string
+	}
+	v := T{A: 456, B: "sld"}
+	var k Encrypter
+	s, err := k.EncryptJSON(v)
+	tu.AssertNoErr(t, err)
+
+	var v2 T
+	err = k.DecryptJSON(s, &v2)
+	tu.AssertNoErr(t, err)
+
+	tu.Assert(t, v == v2)
+
+	err = k.DecryptJSON("", &v2)
+	tu.Assert(t, err != nil)
+
+	otherKey := NewEncrypter("44")
+	err = otherKey.DecryptJSON(s, &v2)
+	tu.Assert(t, err != nil)
+}
