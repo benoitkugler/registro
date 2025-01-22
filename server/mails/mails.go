@@ -75,7 +75,7 @@ func newMail(to []string, subject, htmlBody string, ccs []string, replyTo ReplyT
 	for index, m := range to {
 		e.To[index] = getTo(creds.Prod, m)
 		if e.To[index] == "" {
-			return nil, errors.New("Adresse mail non fournie !")
+			return nil, errors.New("adresse mail non fournie")
 		}
 	}
 	e.Cc = make([]string, len(ccs))
@@ -126,7 +126,7 @@ func (b basicMailer) SendMail(to, subject, htmlBody string, ccs []string, replyT
 
 	from, auth := getFromAuth(b.smtp)
 	if err = e.Send(from, auth); err != nil {
-		return fmt.Errorf("Impossible d'envoyer le mail : %s", err)
+		return fmt.Errorf("impossible d'envoyer le mail : %s", err)
 	}
 	return nil
 }
@@ -158,7 +158,7 @@ func (p Pool) SendMail(to, subject, htmlBody string, ccs []string, replyTo Reply
 		return err
 	}
 	if err := p.pool.Send(mail, 10*time.Second); err != nil {
-		return fmt.Errorf("Impossible d'envoyer le mail : %s", err)
+		return fmt.Errorf("impossible d'envoyer le mail : %s", err)
 	}
 	return nil
 }

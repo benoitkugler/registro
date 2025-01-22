@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"registro/sql"
-	"registro/sql/personnes"
 	pr "registro/sql/personnes"
 	tu "registro/utils/testutils"
 )
@@ -187,7 +186,7 @@ func TestInviteEquipier(t *testing.T) {
 
 	html, err := InviteEquipier(cfg,
 		fmt.Sprintf("C3 - %d", time.Now().Year()), "Vincent",
-		personnes.Etatcivil{Prenom: "Cl audie", Sexe: personnes.Woman}, "http://test.fr")
+		pr.Etatcivil{Prenom: "Cl audie", Sexe: pr.Woman}, "http://test.fr")
 	tu.AssertNoErr(t, err)
 
 	tu.Write(t, "mail10_equipier.html", []byte(html))

@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"strings"
 	"time"
+	"unicode"
 )
 
 var (
@@ -12,12 +13,22 @@ var (
 	reSepPrenom = regexp.MustCompile("[ -.]")
 )
 
+func upperFirst(s string) string {
+	s = strings.ToLower(s)
+	if s == "" {
+		return ""
+	}
+	runes := []rune(s)
+	runes[0] = unicode.ToUpper(runes[0])
+	return string(runes)
+}
+
 func formatPrenom(s string) string {
 	parts := reSepPrenom.Split(string(s), -1)
 	var tmp []string
 	for _, p := range parts {
 		if p != "" {
-			tmp = append(tmp, strings.Title(strings.ToLower(p)))
+			tmp = append(tmp, upperFirst(p))
 		}
 	}
 	return strings.Join(tmp, "-")

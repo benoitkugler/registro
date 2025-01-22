@@ -2,8 +2,6 @@ package sql
 
 import (
 	"database/sql/driver"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -74,23 +72,4 @@ func (s *Montant) Scan(src interface{}) error {
 func (s Montant) Value() (driver.Value, error) {
 	bs := fmt.Appendf(nil, "(%d,%d)", s.cent, s.currency)
 	return driver.Value(bs), nil
-}
-
-func loadJSON(out interface{}, src interface{}) error {
-	if src == nil {
-		return nil // zero value out
-	}
-	bs, ok := src.([]byte)
-	if !ok {
-		return errors.New("not a []byte")
-	}
-	return json.Unmarshal(bs, out)
-}
-
-func dumpJSON(s interface{}) (driver.Value, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return driver.Value(string(b)), nil
 }
