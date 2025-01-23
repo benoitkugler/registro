@@ -108,7 +108,7 @@ func render(temp *template.Template, data interface{}) (string, error) {
 
 type Contact struct {
 	Prenom string
-	Sexe   pr.Sex
+	Sexe   pr.Sexe
 }
 
 func (c Contact) Salutations() string {

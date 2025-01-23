@@ -1,0 +1,45 @@
+{{ define "main" }}
+
+<style>
+  .title {
+    border: 2px solid grey;
+    font-size: larger;
+    border-radius: 4px;
+    padding: 8px;
+    margin-bottom: 4px;
+  }
+</style>
+
+<!-- Titre et destinataire -->
+
+<div style="display: flex; justify-content: space-between; margin: 16px 0px">
+  <div style="align-self: center">
+    <div class="title">Attestation de présence</div>
+    <div style="font-style: italic; font-size: 10pt">
+      Edition au {{ .Date }}
+    </div>
+  </div>
+  <div>
+    <div>{{ .Destinataire.NomPrenom }}</div>
+    <div>{{ .Destinataire.Adresse }}</div>
+    <div>{{ .Destinataire.CodePostal }} {{ .Destinataire.Ville }}</div>
+  </div>
+</div>
+
+<div style="margin-top: 24px">
+  Le centre d'inscriptions {{ .Asso.Title }} certifie par la présente {{ if gt
+  (len .Participants) 1 }}les participations suivantes :{{ else }}la
+  participation suivante :{{ end }}
+
+  <ul>
+    {{ range .Participants }}
+    <li>
+      <b>{{ .Personne.NomPrenom }}</b> (né{{ .Personne.Sexe.Accord }} le {{
+      .Personne.DateNaissance.String }}), au séjour {{ .Camp.Nom }} (agrément {{
+      .Camp.Agrement }}), du <b>{{ .Camp.DateDebut.String }}</b> au
+      <b>{{ .Camp.DateFin.String }}</b>
+    </li>
+    {{ end }}
+  </ul>
+</div>
+{{ end }}

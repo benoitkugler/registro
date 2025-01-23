@@ -24,6 +24,7 @@ func init() {
 	}
 
 	os.Setenv("ASSO", "acve")
+	os.Setenv("ASSO_BANK_IBAN", ".")
 	cfg, err = config.NewConfig()
 	if err != nil {
 		panic(err)
@@ -158,4 +159,33 @@ func TestListeVetements(t *testing.T) {
 	fmt.Println(time.Since(ti))
 	tu.AssertNoErr(t, err)
 	tu.Write(t, "ListeVetements.pdf", content)
+}
+
+func TestAttestationPresence(t *testing.T) {
+	camp := camps.Camp{
+		Nom:       "C2",
+		DateDebut: pr.NewDate(2022, 5, 13),
+		Duree:     30,
+		Agrement:  "5465sd6s64s6d4",
+	}
+	personne := pr.Etatcivil{
+		Nom: "Kugler", Prenom: "Benoit",
+		Sexe: pr.Woman, DateNaissance: pr.NewDate(1999, 1, 3),
+	}
+
+	ti := time.Now()
+	content, err := CreateAttestationPresence(cfg, Destinataire{
+		NomPrenom:  "Kugler benoit",
+		Adresse:    "200, Route de Dieulefit",
+		CodePostal: "07568",
+		Ville:      "Montélimar",
+	}, []camps.ParticipantExt{
+		{Camp: camp, Personne: pr.Personne{Etatcivil: personne}},
+		{Camp: camp, Personne: pr.Personne{Etatcivil: personne}},
+		{Camp: camp, Personne: pr.Personne{Etatcivil: personne}},
+		{Camp: camp, Personne: pr.Personne{Etatcivil: personne}},
+	})
+	fmt.Println(time.Since(ti))
+	tu.AssertNoErr(t, err)
+	tu.Write(t, "AttestationPresence.pdf", content)
 }
