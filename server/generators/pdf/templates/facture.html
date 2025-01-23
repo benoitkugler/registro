@@ -2,21 +2,27 @@
 
 <style>
   .title {
-    border: 1px solid grey;
+    border: 2px solid grey;
+    font-size: larger;
     border-radius: 4px;
+    padding: 8px;
+    margin-bottom: 4px;
   }
 </style>
 
 <!-- Titre et destinataire -->
-<div class="title">Facture</div>
-<div style="font-style: italic; font-size: 10pt">Edition au {{ .Date }}</div>
 
-<div style="display: flex; justify-content: space-between">
-  <div></div>
+<div style="display: flex; justify-content: space-between; margin: 16px 0px">
+  <div style="align-self: center">
+    <div class="title">Facture</div>
+    <div style="font-style: italic; font-size: 10pt">
+      Edition au {{ .Date }}
+    </div>
+  </div>
   <div>
     <div>{{ .Destinataire.NomPrenom }}</div>
     <div>{{ .Destinataire.Adresse }}</div>
-    <div>{{ .Destinataire.CodePostal }} {{ .Destinaire.Ville }}</div>
+    <div>{{ .Destinataire.CodePostal }} {{ .Destinataire.Ville }}</div>
   </div>
 </div>
 
