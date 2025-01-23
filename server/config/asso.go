@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"html/template"
 	"os"
@@ -15,6 +16,8 @@ type Asso struct {
 	ContactNom, ContactTel, ContactMail string
 
 	MailsSettings MailsSettings
+
+	BankName, BankIBAN string // displayed in espace perso
 }
 
 var acve = Asso{
@@ -36,6 +39,8 @@ var acve = Asso{
 		ReplyTo:             "inscriptions@acve.asso.fr",
 		SignatureMailDefaut: "Pour le centre d'inscriptions, <br /> Marie-Pierre BUFFET",
 	},
+
+	BankName: "Crédit Mutuel",
 }
 
 // TODO:
@@ -53,13 +58,23 @@ type MailsSettings struct {
 // The following configs are supported:
 //   - acve
 //   - repere
+//
+// The ASSO_BANK_IBAN env is also read
 func NewConfig() (Asso, error) {
+	var out Asso
 	switch asso := os.Getenv("ASSO"); asso {
 	case "acve":
-		return acve, nil
+		out = acve
 	case "repere":
-		return repere, nil
+		out = repere
 	default:
 		return Asso{}, fmt.Errorf("missing or unsupported ASSO env. (%s)", asso)
 	}
+
+	iban := os.Getenv("ASSO_BANK_IBAN")
+	if iban == "" {
+		return Asso{}, errors.New("missing ASSO_BANK_IBAN env.")
+	}
+	out.BankIBAN = iban
+	return out, nil
 }
