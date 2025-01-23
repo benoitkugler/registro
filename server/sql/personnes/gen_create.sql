@@ -4,7 +4,7 @@ CREATE TABLE personnes (
     Nom text NOT NULL,
     NomJeuneFille text NOT NULL,
     Prenom text NOT NULL,
-    DateNaissance timestamp(0) with time zone NOT NULL,
+    DateNaissance date NOT NULL,
     VilleNaissance text NOT NULL,
     DepartementNaissance text NOT NULL,
     Sexe integer CHECK (Sexe IN (2, 1)) NOT NULL,
@@ -18,6 +18,8 @@ CREATE TABLE personnes (
     Profession text NOT NULL,
     Etudiant boolean NOT NULL,
     Fonctionnaire boolean NOT NULL,
+    Diplome integer CHECK (Diplome IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19)) NOT NULL,
+    Approfondissement integer CHECK (Approfondissement IN (0, 1, 2, 3, 4, 5)) NOT NULL,
     FicheSanitaire jsonb NOT NULL,
     IsTemp boolean NOT NULL
 );

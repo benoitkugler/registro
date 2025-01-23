@@ -34,7 +34,7 @@ func formatPrenom(s string) string {
 	return strings.Join(tmp, "-")
 }
 
-func (s Sex) String() string {
+func (s Sexe) String() string {
 	switch s {
 	case Woman:
 		return "Femme"
@@ -43,6 +43,14 @@ func (s Sex) String() string {
 	default:
 		return ""
 	}
+}
+
+// Accord returns "e" for women
+func (s Sexe) Accord() string {
+	if s == Woman {
+		return "e"
+	}
+	return ""
 }
 
 func (d Date) String() string {

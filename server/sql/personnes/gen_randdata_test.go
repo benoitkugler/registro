@@ -18,6 +18,12 @@ func randAllergies() Allergies {
 	return s
 }
 
+func randApprofondissement() Approfondissement {
+	choix := [...]Approfondissement{AAucun, AAutre, ASb, ACanoe, AVoile, AMoto}
+	i := rand.Intn(len(choix))
+	return choix[i]
+}
+
 func randCountry() Country {
 	return Country(randstring())
 }
@@ -30,6 +36,12 @@ func randDepartement() Departement {
 	return Departement(randstring())
 }
 
+func randDiplome() Diplome {
+	choix := [...]Diplome{DAucun, DBafa, DBafaStag, DBafd, DBafdStag, DCap, DAssSociale, DEducSpe, DMonEduc, DInstit, DProf, DAgreg, DBjeps, DDut, DEje, DDeug, DStaps, DBapaat, DBeatep, DZzautre}
+	i := rand.Intn(len(choix))
+	return choix[i]
+}
+
 func randFicheSanitaire() FicheSanitaire {
 	var s FicheSanitaire
 	s.TraitementMedical = randbool()
@@ -40,7 +52,7 @@ func randFicheSanitaire() FicheSanitaire {
 	s.Handicap = randbool()
 	s.Tel = randTel()
 	s.Medecin = randMedecin()
-	s.LastModif = randTime()
+	s.LastModif = randtTime()
 	s.Mails = randSlicestring()
 
 	return s
@@ -93,14 +105,16 @@ func randPersonne() Personne {
 	s.Profession = randstring()
 	s.Etudiant = randbool()
 	s.Fonctionnaire = randbool()
+	s.Diplome = randDiplome()
+	s.Approfondissement = randApprofondissement()
 	s.FicheSanitaire = randFicheSanitaire()
 	s.IsTemp = randbool()
 
 	return s
 }
 
-func randSex() Sex {
-	choix := [...]Sex{Man, Woman}
+func randSex() Sexe {
+	choix := [...]Sexe{Man, Woman}
 	i := rand.Intn(len(choix))
 	return choix[i]
 }
@@ -120,10 +134,6 @@ func randTel() Tel {
 
 func randTels() Tels {
 	return Tels(randSlicestring())
-}
-
-func randTime() Time {
-	return Time(randtTime())
 }
 
 func randbool() bool {

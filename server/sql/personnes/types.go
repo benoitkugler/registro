@@ -11,6 +11,10 @@ type Time time.Time
 // Date is a date (without notion of time)
 type Date time.Time
 
+func NewDate(year int, month time.Month, day int) Date {
+	return Date(time.Date(year, month, day, 0, 0, 0, 0, time.UTC))
+}
+
 // Country is the ISO 3166 code of a country
 type Country string
 
@@ -18,11 +22,11 @@ type Country string
 // or its name for other countries
 type Departement string
 
-// Sex is Man, Woman or undefined.
-type Sex uint8
+// Sexe is Man, Woman or undefined.
+type Sexe uint8
 
 const (
-	_ Sex = iota
+	_ Sexe = iota
 	Woman
 	Man
 )
@@ -41,7 +45,7 @@ type Etatcivil struct {
 	DateNaissance        Date
 	VilleNaissance       string
 	DepartementNaissance Departement
-	Sexe                 Sex
+	Sexe                 Sexe
 	Tels                 Tels
 	Mail                 string
 	Adresse              string
@@ -155,6 +159,42 @@ type FicheSanitaire struct {
 	Tel               Tel       `json:"tel"` // added to the one of the responsable
 	Medecin           Medecin   `json:"medecin"`
 
-	LastModif Time     `json:"last_modif"` // dernière modification
-	Mails     []string `json:"mails"`      // owners
+	LastModif time.Time `json:"last_modif"` // dernière modification
+	Mails     []string  `json:"mails"`      // owners
 }
+
+type Diplome uint8
+
+const (
+	DAucun      Diplome = iota // Aucun
+	DBafa                      // BAFA Titulaire
+	DBafaStag                  // BAFA Stagiaire
+	DBafd                      // BAFD titulaire
+	DBafdStag                  // BAFD stagiaire
+	DCap                       // CAP petit enfance
+	DAssSociale                // Assitante Sociale
+	DEducSpe                   // Educ. spé.
+	DMonEduc                   // Moniteur educateur
+	DInstit                    // Professeur des écoles
+	DProf                      // Enseignant du secondaire
+	DAgreg                     // Agrégé
+	DBjeps                     // BPJEPS
+	DDut                       // DUT carrière sociale
+	DEje                       // EJE
+	DDeug                      // DEUG
+	DStaps                     // STAPS
+	DBapaat                    // BAPAAT
+	DBeatep                    // BEATEP
+	DZzautre                   // AUTRE
+)
+
+type Approfondissement uint8
+
+const (
+	AAucun Approfondissement = iota // Non effectué
+	AAutre                          // Approfondissement
+	ASb                             // Surveillant de baignade
+	ACanoe                          // Canoë - Kayak
+	AVoile                          // Voile
+	AMoto                           // Loisirs motocyclistes
+)
