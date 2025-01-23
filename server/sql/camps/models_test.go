@@ -20,6 +20,6 @@ func TestCamp_DateFin(t *testing.T) {
 		{pr.NewDate(2000, time.December, 30), 3, pr.NewDate(2001, time.January, 1)},
 	} {
 		got := (&Camp{DateDebut: test.debut, Duree: test.duree}).DateFin()
-		tu.Assert(t, time.Time(got).Equal(time.Time(test.expected)))
+		tu.Assert(t, got == test.expected)
 	}
 }

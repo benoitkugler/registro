@@ -22,5 +22,24 @@ func TestSQL(t *testing.T) {
 
 	p, err = SelectPersonne(db, p.Id)
 	tu.AssertNoErr(t, err)
-	tu.Assert(t, time.Time(p.DateNaissance).Equal(time.Time(date)))
+	tu.Assert(t, p.DateNaissance == date)
+}
+
+func TestDate(t *testing.T) {
+	db := tu.NewTestDB(t)
+	defer db.Remove()
+
+	_, err := db.Exec(`
+	CREATE TABLE t1 (id serial, date date);
+	`)
+	tu.AssertNoErr(t, err)
+
+	ti := NewDate(2025, 5, 23)
+	_, err = db.Exec("INSERT INTO t1 (date) VALUES ($1)", ti)
+	tu.AssertNoErr(t, err)
+
+	var v Date
+	err = db.QueryRow("SELECT date FROM t1;").Scan(&v)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, v == ti)
 }

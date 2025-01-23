@@ -10,11 +10,6 @@ type Personne struct {
 
 	Etatcivil
 
-	// used for equipiers
-
-	Diplome           Diplome
-	Approfondissement Approfondissement
-
 	FicheSanitaire FicheSanitaire
 
 	// IsTemp is `true` for non verified profils,

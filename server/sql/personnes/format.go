@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
-	"time"
 	"unicode"
 )
 
@@ -54,7 +53,7 @@ func (s Sexe) Accord() string {
 }
 
 func (d Date) String() string {
-	da := time.Time(d)
+	da := d.Time()
 	if da.IsZero() {
 		return ""
 	}
@@ -65,11 +64,11 @@ const innerTelSep = " "
 
 func (t Tel) String() string { return formatTelSep(string(t), innerTelSep) }
 
-// stripTel return the number without spaces or delimiters
-func stripTel(t string) string { return reSepTel.ReplaceAllString(t, "") }
+// StripTel return the number without spaces or delimiters
+func StripTel(t string) string { return reSepTel.ReplaceAllString(t, "") }
 
 func formatTelSep(t string, separator string) string {
-	t = stripTel(t)
+	t = StripTel(t)
 	if len(t) < 8 {
 		return t
 	}

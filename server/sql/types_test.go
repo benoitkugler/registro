@@ -2,7 +2,6 @@ package sql
 
 import (
 	"testing"
-	"time"
 
 	tu "registro/utils/testutils"
 
@@ -60,23 +59,4 @@ func TestMontant_String(t *testing.T) {
 	} {
 		tu.Assert(t, test.m.String() == test.expected)
 	}
-}
-
-func TestDate(t *testing.T) {
-	db := tu.NewTestDB(t)
-	defer db.Remove()
-
-	_, err := db.Exec(`
-	CREATE TABLE t1 (id serial, date date);
-	`)
-	tu.AssertNoErr(t, err)
-
-	ti := time.Date(2025, 5, 23, 12, 5, 6, 5, time.Local)
-	_, err = db.Exec("INSERT INTO t1 (date) VALUES ($1)", ti)
-	tu.AssertNoErr(t, err)
-
-	var v time.Time
-	err = db.QueryRow("SELECT date FROM t1;").Scan(&v)
-	tu.AssertNoErr(t, err)
-	tu.Assert(t, v.Year() == ti.Year() && v.Month() == ti.Month() && v.Day() == ti.Day())
 }

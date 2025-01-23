@@ -7,7 +7,6 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
-	"time"
 
 	"github.com/lib/pq"
 )
@@ -184,12 +183,12 @@ func (s *Date) Scan(src interface{}) error {
 	if err != nil {
 		return err
 	}
-	*s = Date(tmp.Time)
+	*s = NewDateFrom(tmp.Time)
 	return nil
 }
 
 func (s Date) Value() (driver.Value, error) {
-	return pq.NullTime{Time: time.Time(s), Valid: true}.Value()
+	return pq.NullTime{Time: s.Time(), Valid: true}.Value()
 }
 
 func IdPersonneArrayToPQ(ids []IdPersonne) pq.Int64Array {

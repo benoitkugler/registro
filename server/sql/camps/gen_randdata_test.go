@@ -45,7 +45,7 @@ func randint64() int64 {
 }
 
 func randper_Date() personnes.Date {
-	return personnes.Date(randtTime())
+	return personnes.Date(randtDate())
 }
 
 func randper_IdPersonne() personnes.IdPersonne {
@@ -63,6 +63,6 @@ func randstring() string {
 	return string(b)
 }
 
-func randtTime() time.Time {
+func randtDate() time.Time {
 	return time.Unix(int64(rand.Int31()), 5)
 }

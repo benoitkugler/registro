@@ -29,7 +29,7 @@ func randCountry() Country {
 }
 
 func randDate() Date {
-	return Date(randtTime())
+	return Date(randtDate())
 }
 
 func randDepartement() Departement {
@@ -94,7 +94,7 @@ func randPersonne() Personne {
 	s.DateNaissance = randDate()
 	s.VilleNaissance = randstring()
 	s.DepartementNaissance = randDepartement()
-	s.Sexe = randSex()
+	s.Sexe = randSexe()
 	s.Tels = randTels()
 	s.Mail = randstring()
 	s.Adresse = randstring()
@@ -113,7 +113,7 @@ func randPersonne() Personne {
 	return s
 }
 
-func randSex() Sexe {
+func randSexe() Sexe {
 	choix := [...]Sexe{Man, Woman}
 	i := rand.Intn(len(choix))
 	return choix[i]
@@ -154,6 +154,10 @@ func randstring() string {
 		b[i] = letterRunes2[rand.Intn(maxLength)]
 	}
 	return string(b)
+}
+
+func randtDate() time.Time {
+	return time.Unix(int64(rand.Int31()), 5)
 }
 
 func randtTime() time.Time {

@@ -22,8 +22,8 @@ type Camp struct {
 }
 
 func (cp *Camp) DateFin() pr.Date {
-	out := time.Time(cp.DateDebut)
-	return pr.Date(out.Add(time.Hour * 24 * time.Duration(cp.Duree-1)))
+	out := cp.DateDebut.Time()
+	return pr.NewDateFrom(out.Add(time.Hour * 24 * time.Duration(cp.Duree-1)))
 }
 
 type Participant struct {

@@ -15,6 +15,15 @@ func NewDate(year int, month time.Month, day int) Date {
 	return Date(time.Date(year, month, day, 0, 0, 0, 0, time.UTC))
 }
 
+func NewDateFrom(ti time.Time) Date {
+	return NewDate(ti.Year(), ti.Month(), ti.Day())
+}
+
+func (d Date) Time() time.Time {
+	ti := time.Time(d)
+	return time.Date(ti.Year(), ti.Month(), ti.Day(), 0, 0, 0, 0, time.UTC)
+}
+
 // Country is the ISO 3166 code of a country
 type Country string
 
@@ -38,6 +47,8 @@ type Tel string
 type Tels []string
 
 // Etatcivil stores information about the identity of one person.
+//
+// The fields defined here are the ones used in profil merging.
 type Etatcivil struct {
 	Nom                  string
 	NomJeuneFille        string
@@ -56,6 +67,8 @@ type Etatcivil struct {
 	Profession           string
 	Etudiant             bool
 	Fonctionnaire        bool
+	Diplome              Diplome           // used for equipiers
+	Approfondissement    Approfondissement // used for equipiers
 }
 
 func (p Etatcivil) FPrenom() string { return formatPrenom(p.Prenom) }
