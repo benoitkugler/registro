@@ -34,8 +34,8 @@ func (enc Encrypter) encrypt(data []byte) ([]byte, error) {
 	return ciphertext, nil
 }
 
-func (pass Encrypter) decrypt(data []byte) ([]byte, error) {
-	block, err := aes.NewCipher(pass[:])
+func (enc Encrypter) decrypt(data []byte) ([]byte, error) {
+	block, err := aes.NewCipher(enc[:])
 	if err != nil {
 		return nil, err
 	}
@@ -109,12 +109,12 @@ func DecryptID[T IDs](key Encrypter, enc string) (T, error) {
 
 // EncryptJSON marshals `data`, encrypts and escape
 // using [base64.RawURLEncoding]
-func (pass Encrypter) EncryptJSON(data interface{}) (string, error) {
+func (key Encrypter) EncryptJSON(data interface{}) (string, error) {
 	b, err := json.Marshal(data)
 	if err != nil {
 		return "", err
 	}
-	b, err = pass.encrypt(b)
+	b, err = key.encrypt(b)
 	if err != nil {
 		return "", err
 	}
@@ -123,12 +123,12 @@ func (pass Encrypter) EncryptJSON(data interface{}) (string, error) {
 
 // DecryptJSON performs the reverse operation of [EncryptJSON],
 // storing the data into `dst`
-func (pass Encrypter) DecryptJSON(data string, dst interface{}) error {
+func (key Encrypter) DecryptJSON(data string, dst interface{}) error {
 	b, err := base64.RawURLEncoding.DecodeString(data)
 	if err != nil {
 		return err
 	}
-	b, err = pass.decrypt(b)
+	b, err = key.decrypt(b)
 	if err != nil {
 		return err
 	}

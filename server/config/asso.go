@@ -73,7 +73,7 @@ func NewConfig() (Asso, error) {
 
 	iban := os.Getenv("ASSO_BANK_IBAN")
 	if iban == "" {
-		return Asso{}, errors.New("missing ASSO_BANK_IBAN env.")
+		return Asso{}, errors.New("missing ASSO_BANK_IBAN env. variable")
 	}
 	out.BankIBAN = iban
 	return out, nil
