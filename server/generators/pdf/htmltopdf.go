@@ -13,10 +13,17 @@ import (
 	"github.com/benoitkugler/webrender/utils"
 )
 
-var fc text.FontConfiguration
+var (
+	fc      text.FontConfiguration
+	rootDir string
+)
 
-// Init setup font resources required for HTML to PDF conversion.
-func Init(fontCacheDir string) error {
+// Init setups font resources required for HTML to PDF conversion,
+// and defines [root], which is the folder containing 'assets/'
+// used in HTML templates.
+func Init(fontCacheDir, root string) error {
+	rootDir = root
+
 	fontcache := filepath.Join(fontCacheDir, "font.cache")
 
 	fs, err := fontconfig.LoadFontsetFile(fontcache)
@@ -35,10 +42,10 @@ func Init(fontCacheDir string) error {
 	return nil
 }
 
-func htmlToPDF(html string) ([]byte, error) {
+// root is the folder containing 'assets/'
+func htmlToPDF(html, root string) ([]byte, error) {
 	var dst bytes.Buffer
-	// TODO : proper asset filepath
-	err := goweasyprint.HtmlToPdfOptions(&dst, utils.InputString(html), "../..", nil, "", nil, true, fc, 1, nil)
+	err := goweasyprint.HtmlToPdfOptions(&dst, utils.InputString(html), root, nil, "", nil, false, fc, 1, nil)
 	return dst.Bytes(), err
 }
 
@@ -48,5 +55,5 @@ func templateToPDF(t *template.Template, args any) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("generating html: %s", err)
 	}
-	return htmlToPDF(html.String())
+	return htmlToPDF(html.String(), rootDir)
 }

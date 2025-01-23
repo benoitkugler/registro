@@ -18,7 +18,7 @@ import (
 var cfg config.Asso
 
 func init() {
-	err := Init(os.TempDir())
+	err := Init(os.TempDir(), "../..")
 	if err != nil {
 		panic(err)
 	}
