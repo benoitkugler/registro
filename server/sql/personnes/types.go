@@ -1,6 +1,7 @@
 package personnes
 
 import (
+	"encoding"
 	"strings"
 	"time"
 )
@@ -24,8 +25,23 @@ func (d Date) Time() time.Time {
 	return time.Date(ti.Year(), ti.Month(), ti.Day(), 0, 0, 0, 0, time.UTC)
 }
 
-// Country is the ISO 3166 code of a country
-type Country string
+var (
+	_ encoding.TextMarshaler   = (*Date)(nil)
+	_ encoding.TextUnmarshaler = (*Date)(nil)
+)
+
+func (d Date) MarshalText() ([]byte, error) {
+	return []byte(d.Time().Format(time.DateOnly)), nil
+}
+
+func (d *Date) UnmarshalText(text []byte) error {
+	ti, err := time.Parse(time.DateOnly, string(text))
+	*d = NewDateFrom(ti)
+	return err
+}
+
+// Pays is the ISO 3166 code of a country
+type Pays string
 
 // Departement is the number of a french departement,
 // or its name for other countries
@@ -62,7 +78,7 @@ type Etatcivil struct {
 	Adresse              string
 	CodePostal           string
 	Ville                string
-	Pays                 Country
+	Pays                 Pays
 	SecuriteSociale      string
 	Profession           string
 	Etudiant             bool

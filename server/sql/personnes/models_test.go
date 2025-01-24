@@ -1,6 +1,9 @@
 package personnes
 
 import (
+	"encoding/json"
+	"math/rand"
+	"os"
 	"testing"
 	"time"
 
@@ -42,4 +45,36 @@ func TestDate(t *testing.T) {
 	err = db.QueryRow("SELECT date FROM t1;").Scan(&v)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, v == ti)
+
+	// JSON
+	b, err := json.Marshal(v)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, string(b) == `"2025-05-23"`)
+	var v2 Date
+	err = json.Unmarshal(b, &v2)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, v == v2)
+}
+
+func TestDumpRandomDB(t *testing.T) {
+	// t.Skip("generation test: already run")
+
+	noms := [...]string{"kugler", "Méchin", "JOnac", "Martin-Guillard"}
+	prenoms := [...]string{"henry", "pierre", "martin", "jean-jacques", "dédé", "Maël"}
+
+	l := make([]Personne, 200)
+	for i := range l {
+		l[i] = randPersonne()
+		if randbool() {
+			l[i].Nom = noms[rand.Intn(len(noms))]
+		}
+		if randbool() {
+			l[i].Prenom = prenoms[rand.Intn(len(prenoms))]
+		}
+	}
+	b, err := json.MarshalIndent(l, " ", " ")
+	tu.AssertNoErr(t, err)
+
+	err = os.WriteFile("../../controllers/matching/test/samples.json", b, os.ModePerm)
+	tu.AssertNoErr(t, err)
 }

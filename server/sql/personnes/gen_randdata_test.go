@@ -24,8 +24,8 @@ func randApprofondissement() Approfondissement {
 	return choix[i]
 }
 
-func randCountry() Country {
-	return Country(randstring())
+func randCountry() Pays {
+	return Pays(randstring())
 }
 
 func randDate() Date {
