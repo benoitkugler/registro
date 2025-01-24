@@ -52,7 +52,7 @@ func randFicheSanitaire() FicheSanitaire {
 		Rhumatisme: randBool(),
 		Rougeole:   randBool(),
 	}
-	fs := pr.FicheSanitaire{
+	fs := pr.Fichesanitaire{
 		TraitementMedical: randBool(),
 		DifficultesSante:  utils.RandString(100, true),
 		Handicap:          randBool(),

@@ -1,4 +1,18 @@
 -- Code genererated by gomacro/generator/sql. DO NOT EDIT.
+CREATE TABLE fichesanitaires (
+    IdPersonne integer NOT NULL,
+    TraitementMedical boolean NOT NULL,
+    Maladies jsonb NOT NULL,
+    Allergies jsonb NOT NULL,
+    DifficultesSante text NOT NULL,
+    Recommandations text NOT NULL,
+    Handicap boolean NOT NULL,
+    Tel text NOT NULL,
+    Medecin jsonb NOT NULL,
+    LastModif timestamp(0) with time zone NOT NULL,
+    Mails text[]
+);
+
 CREATE TABLE personnes (
     Id serial PRIMARY KEY,
     Nom text NOT NULL,
@@ -7,7 +21,7 @@ CREATE TABLE personnes (
     DateNaissance date NOT NULL,
     VilleNaissance text NOT NULL,
     DepartementNaissance text NOT NULL,
-    Sexe integer CHECK (Sexe IN (2, 1)) NOT NULL,
+    Sexe integer CHECK (Sexe IN (0, 1, 2)) NOT NULL,
     Tels text[],
     Mail text NOT NULL,
     Adresse text NOT NULL,
@@ -20,33 +34,15 @@ CREATE TABLE personnes (
     Fonctionnaire boolean NOT NULL,
     Diplome integer CHECK (Diplome IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19)) NOT NULL,
     Approfondissement integer CHECK (Approfondissement IN (0, 1, 2, 3, 4, 5)) NOT NULL,
-    FicheSanitaire jsonb NOT NULL,
     IsTemp boolean NOT NULL
 );
 
 -- constraints
-CREATE OR REPLACE FUNCTION gomacro_validate_json_array_string (data jsonb)
-    RETURNS boolean
-    AS $$
-BEGIN
-    IF jsonb_typeof(data) = 'null' THEN
-        RETURN TRUE;
-    END IF;
-    IF jsonb_typeof(data) != 'array' THEN
-        RETURN FALSE;
-    END IF;
-    IF jsonb_array_length(data) = 0 THEN
-        RETURN TRUE;
-    END IF;
-    RETURN (
-        SELECT
-            bool_and(gomacro_validate_json_string (value))
-        FROM
-            jsonb_array_elements(data));
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
+ALTER TABLE fichesanitaires
+    ADD UNIQUE (IdPersonne);
+
+ALTER TABLE fichesanitaires
+    ADD FOREIGN KEY (IdPersonne) REFERENCES personnes ON DELETE CASCADE;
 
 CREATE OR REPLACE FUNCTION gomacro_validate_json_boolean (data jsonb)
     RETURNS boolean
@@ -82,36 +78,6 @@ BEGIN
         AND gomacro_validate_json_boolean (data -> 'medicamenteuses')
         AND gomacro_validate_json_string (data -> 'autres')
         AND gomacro_validate_json_string (data -> 'conduite_a_tenir');
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION gomacro_validate_json_pers_FicheSanitaire (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean;
-BEGIN
-    IF jsonb_typeof(data) != 'object' THEN
-        RETURN FALSE;
-    END IF;
-    is_valid := (
-        SELECT
-            bool_and(key IN ('traitement_medical', 'maladies', 'allergies', 'difficultes_sante', 'recommandations', 'handicap', 'tel', 'medecin', 'last_modif', 'mails'))
-        FROM
-            jsonb_each(data))
-        AND gomacro_validate_json_boolean (data -> 'traitement_medical')
-        AND gomacro_validate_json_pers_Maladies (data -> 'maladies')
-        AND gomacro_validate_json_pers_Allergies (data -> 'allergies')
-        AND gomacro_validate_json_string (data -> 'difficultes_sante')
-        AND gomacro_validate_json_string (data -> 'recommandations')
-        AND gomacro_validate_json_boolean (data -> 'handicap')
-        AND gomacro_validate_json_string (data -> 'tel')
-        AND gomacro_validate_json_pers_Medecin (data -> 'medecin')
-        AND gomacro_validate_json_string (data -> 'last_modif')
-        AND gomacro_validate_json_array_string (data -> 'mails');
     RETURN is_valid;
 END;
 $$
@@ -184,6 +150,12 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-ALTER TABLE personnes
-    ADD CONSTRAINT FicheSanitaire_gomacro CHECK (gomacro_validate_json_pers_FicheSanitaire (FicheSanitaire));
+ALTER TABLE fichesanitaires
+    ADD CONSTRAINT Allergies_gomacro CHECK (gomacro_validate_json_pers_Allergies (Allergies));
+
+ALTER TABLE fichesanitaires
+    ADD CONSTRAINT Maladies_gomacro CHECK (gomacro_validate_json_pers_Maladies (Maladies));
+
+ALTER TABLE fichesanitaires
+    ADD CONSTRAINT Medecin_gomacro CHECK (gomacro_validate_json_pers_Medecin (Medecin));
 

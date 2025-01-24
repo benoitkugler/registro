@@ -24,10 +24,6 @@ func randApprofondissement() Approfondissement {
 	return choix[i]
 }
 
-func randCountry() Pays {
-	return Pays(randstring())
-}
-
 func randDate() Date {
 	return Date(randtDate())
 }
@@ -42,8 +38,9 @@ func randDiplome() Diplome {
 	return choix[i]
 }
 
-func randFicheSanitaire() FicheSanitaire {
-	var s FicheSanitaire
+func randFichesanitaire() Fichesanitaire {
+	var s Fichesanitaire
+	s.IdPersonne = randIdPersonne()
 	s.TraitementMedical = randbool()
 	s.Maladies = randMaladies()
 	s.Allergies = randAllergies()
@@ -52,14 +49,18 @@ func randFicheSanitaire() FicheSanitaire {
 	s.Handicap = randbool()
 	s.Tel = randTel()
 	s.Medecin = randMedecin()
-	s.LastModif = randtTime()
-	s.Mails = randSlicestring()
+	s.LastModif = randTime()
+	s.Mails = randMails()
 
 	return s
 }
 
 func randIdPersonne() IdPersonne {
 	return IdPersonne(randint64())
+}
+
+func randMails() Mails {
+	return Mails(randSlicestring())
 }
 
 func randMaladies() Maladies {
@@ -85,6 +86,10 @@ func randMedecin() Medecin {
 	return s
 }
 
+func randPays() Pays {
+	return Pays(randstring())
+}
+
 func randPersonne() Personne {
 	var s Personne
 	s.Id = randIdPersonne()
@@ -100,21 +105,20 @@ func randPersonne() Personne {
 	s.Adresse = randstring()
 	s.CodePostal = randstring()
 	s.Ville = randstring()
-	s.Pays = randCountry()
+	s.Pays = randPays()
 	s.SecuriteSociale = randstring()
 	s.Profession = randstring()
 	s.Etudiant = randbool()
 	s.Fonctionnaire = randbool()
 	s.Diplome = randDiplome()
 	s.Approfondissement = randApprofondissement()
-	s.FicheSanitaire = randFicheSanitaire()
 	s.IsTemp = randbool()
 
 	return s
 }
 
 func randSexe() Sexe {
-	choix := [...]Sexe{Man, Woman}
+	choix := [...]Sexe{Empty, Woman, Man}
 	i := rand.Intn(len(choix))
 	return choix[i]
 }
@@ -134,6 +138,10 @@ func randTel() Tel {
 
 func randTels() Tels {
 	return Tels(randSlicestring())
+}
+
+func randTime() Time {
+	return Time(randtTime())
 }
 
 func randbool() bool {

@@ -40,7 +40,7 @@ func parseTemplate(templateFile string) *template.Template {
 
 type FicheSanitaire struct {
 	Personne       pr.Etatcivil
-	FicheSanitaire pr.FicheSanitaire
+	FicheSanitaire pr.Fichesanitaire
 	Responsable    pr.Etatcivil
 }
 

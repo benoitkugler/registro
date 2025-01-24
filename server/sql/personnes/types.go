@@ -51,7 +51,7 @@ type Departement string
 type Sexe uint8
 
 const (
-	_ Sexe = iota
+	Empty Sexe = iota
 	Woman
 	Man
 )
@@ -96,9 +96,47 @@ func (p Etatcivil) NomPrenom() string {
 	return p.FNom() + " " + p.FPrenom()
 }
 
+type Diplome uint8
+
+const (
+	DAucun      Diplome = iota // Aucun
+	DBafa                      // BAFA Titulaire
+	DBafaStag                  // BAFA Stagiaire
+	DBafd                      // BAFD titulaire
+	DBafdStag                  // BAFD stagiaire
+	DCap                       // CAP petit enfance
+	DAssSociale                // Assitante Sociale
+	DEducSpe                   // Educ. spé.
+	DMonEduc                   // Moniteur educateur
+	DInstit                    // Professeur des écoles
+	DProf                      // Enseignant du secondaire
+	DAgreg                     // Agrégé
+	DBjeps                     // BPJEPS
+	DDut                       // DUT carrière sociale
+	DEje                       // EJE
+	DDeug                      // DEUG
+	DStaps                     // STAPS
+	DBapaat                    // BAPAAT
+	DBeatep                    // BEATEP
+	DZzautre                   // AUTRE
+)
+
+type Approfondissement uint8
+
+const (
+	AAucun Approfondissement = iota // Non effectué
+	AAutre                          // Approfondissement
+	ASb                             // Surveillant de baignade
+	ACanoe                          // Canoë - Kayak
+	AVoile                          // Voile
+	AMoto                           // Loisirs motocyclistes
+)
+
 //--------------------------------------------------------------------
 //------------------------ Fiche Sanitaire ---------------------------
 //--------------------------------------------------------------------
+
+type Mails []string
 
 type Maladies struct {
 	Rubeole    bool `json:"rubeole"`
@@ -174,56 +212,3 @@ type Medecin struct {
 	Nom string `json:"nom"`
 	Tel Tel    `json:"tel"`
 }
-
-// FicheSanitaire stores information as declared on the personnal space.
-// Information from the responsable legal will be required to display
-// the complete document.
-type FicheSanitaire struct {
-	TraitementMedical bool      `json:"traitement_medical"`
-	Maladies          Maladies  `json:"maladies"`
-	Allergies         Allergies `json:"allergies"`
-	DifficultesSante  string    `json:"difficultes_sante"`
-	Recommandations   string    `json:"recommandations"`
-	Handicap          bool      `json:"handicap"`
-	Tel               Tel       `json:"tel"` // added to the one of the responsable
-	Medecin           Medecin   `json:"medecin"`
-
-	LastModif time.Time `json:"last_modif"` // dernière modification
-	Mails     []string  `json:"mails"`      // owners
-}
-
-type Diplome uint8
-
-const (
-	DAucun      Diplome = iota // Aucun
-	DBafa                      // BAFA Titulaire
-	DBafaStag                  // BAFA Stagiaire
-	DBafd                      // BAFD titulaire
-	DBafdStag                  // BAFD stagiaire
-	DCap                       // CAP petit enfance
-	DAssSociale                // Assitante Sociale
-	DEducSpe                   // Educ. spé.
-	DMonEduc                   // Moniteur educateur
-	DInstit                    // Professeur des écoles
-	DProf                      // Enseignant du secondaire
-	DAgreg                     // Agrégé
-	DBjeps                     // BPJEPS
-	DDut                       // DUT carrière sociale
-	DEje                       // EJE
-	DDeug                      // DEUG
-	DStaps                     // STAPS
-	DBapaat                    // BAPAAT
-	DBeatep                    // BEATEP
-	DZzautre                   // AUTRE
-)
-
-type Approfondissement uint8
-
-const (
-	AAucun Approfondissement = iota // Non effectué
-	AAutre                          // Approfondissement
-	ASb                             // Surveillant de baignade
-	ACanoe                          // Canoë - Kayak
-	AVoile                          // Voile
-	AMoto                           // Loisirs motocyclistes
-)

@@ -50,3 +50,11 @@ func SQLError(err error) error {
 	}
 	return fmt.Errorf("La requête SQL a échoué : %s %T", err, err)
 }
+
+func MapValues[K comparable, V any](m map[K]V) []V {
+	out := make([]V, 0, len(m))
+	for _, v := range m {
+		out =append(out, v)
+	}
+	return out
+}

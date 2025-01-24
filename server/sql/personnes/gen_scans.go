@@ -7,6 +7,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"time"
 
 	"github.com/lib/pq"
 )
@@ -22,6 +23,169 @@ type DB interface {
 	Query(query string, args ...interface{}) (*sql.Rows, error)
 	QueryRow(query string, args ...interface{}) *sql.Row
 	Prepare(query string) (*sql.Stmt, error)
+}
+
+func scanOneFichesanitaire(row scanner) (Fichesanitaire, error) {
+	var item Fichesanitaire
+	err := row.Scan(
+		&item.IdPersonne,
+		&item.TraitementMedical,
+		&item.Maladies,
+		&item.Allergies,
+		&item.DifficultesSante,
+		&item.Recommandations,
+		&item.Handicap,
+		&item.Tel,
+		&item.Medecin,
+		&item.LastModif,
+		&item.Mails,
+	)
+	return item, err
+}
+
+func ScanFichesanitaire(row *sql.Row) (Fichesanitaire, error) { return scanOneFichesanitaire(row) }
+
+// SelectAll returns all the items in the fichesanitaires table.
+func SelectAllFichesanitaires(db DB) (Fichesanitaires, error) {
+	rows, err := db.Query("SELECT * FROM fichesanitaires")
+	if err != nil {
+		return nil, err
+	}
+	return ScanFichesanitaires(rows)
+}
+
+type Fichesanitaires []Fichesanitaire
+
+func ScanFichesanitaires(rs *sql.Rows) (Fichesanitaires, error) {
+	var (
+		item Fichesanitaire
+		err  error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(Fichesanitaires, 0, 16)
+	for rs.Next() {
+		item, err = scanOneFichesanitaire(rs)
+		if err != nil {
+			return nil, err
+		}
+		structs = append(structs, item)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+func InsertFichesanitaire(db DB, item Fichesanitaire) error {
+	_, err := db.Exec(`INSERT INTO fichesanitaires (
+			idpersonne, traitementmedical, maladies, allergies, difficultessante, recommandations, handicap, tel, medecin, lastmodif, mails
+			) VALUES (
+			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
+			);
+			`, item.IdPersonne, item.TraitementMedical, item.Maladies, item.Allergies, item.DifficultesSante, item.Recommandations, item.Handicap, item.Tel, item.Medecin, item.LastModif, item.Mails)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Insert the links Fichesanitaire in the database.
+// It is a no-op if 'items' is empty.
+func InsertManyFichesanitaires(tx *sql.Tx, items ...Fichesanitaire) error {
+	if len(items) == 0 {
+		return nil
+	}
+
+	stmt, err := tx.Prepare(pq.CopyIn("fichesanitaires",
+		"idpersonne",
+		"traitementmedical",
+		"maladies",
+		"allergies",
+		"difficultessante",
+		"recommandations",
+		"handicap",
+		"tel",
+		"medecin",
+		"lastmodif",
+		"mails",
+	))
+	if err != nil {
+		return err
+	}
+
+	for _, item := range items {
+		_, err = stmt.Exec(item.IdPersonne, item.TraitementMedical, item.Maladies, item.Allergies, item.DifficultesSante, item.Recommandations, item.Handicap, item.Tel, item.Medecin, item.LastModif, item.Mails)
+		if err != nil {
+			return err
+		}
+	}
+
+	if _, err = stmt.Exec(); err != nil {
+		return err
+	}
+
+	if err = stmt.Close(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Delete the link Fichesanitaire from the database.
+// Only the foreign keys IdPersonne fields are used in 'item'.
+func (item Fichesanitaire) Delete(tx DB) error {
+	_, err := tx.Exec(`DELETE FROM fichesanitaires WHERE IdPersonne = $1;`, item.IdPersonne)
+	return err
+}
+
+// ByIdPersonne returns a map with 'IdPersonne' as keys.
+func (items Fichesanitaires) ByIdPersonne() map[IdPersonne]Fichesanitaire {
+	out := make(map[IdPersonne]Fichesanitaire, len(items))
+	for _, target := range items {
+		out[target.IdPersonne] = target
+	}
+	return out
+}
+
+// IdPersonnes returns the list of ids of IdPersonne
+// contained in this link table.
+// They are not garanteed to be distinct.
+func (items Fichesanitaires) IdPersonnes() []IdPersonne {
+	out := make([]IdPersonne, len(items))
+	for index, target := range items {
+		out[index] = target.IdPersonne
+	}
+	return out
+}
+
+// SelectFichesanitaireByIdPersonne return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectFichesanitaireByIdPersonne(tx DB, idPersonne IdPersonne) (item Fichesanitaire, found bool, err error) {
+	row := tx.QueryRow("SELECT * FROM fichesanitaires WHERE idpersonne = $1", idPersonne)
+	item, err = ScanFichesanitaire(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
+}
+
+func SelectFichesanitairesByIdPersonnes(tx DB, idPersonnes_ ...IdPersonne) (Fichesanitaires, error) {
+	rows, err := tx.Query("SELECT * FROM fichesanitaires WHERE idpersonne = ANY($1)", IdPersonneArrayToPQ(idPersonnes_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanFichesanitaires(rows)
+}
+
+func DeleteFichesanitairesByIdPersonnes(tx DB, idPersonnes_ ...IdPersonne) (Fichesanitaires, error) {
+	rows, err := tx.Query("DELETE FROM fichesanitaires WHERE idpersonne = ANY($1) RETURNING *", IdPersonneArrayToPQ(idPersonnes_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanFichesanitaires(rows)
 }
 
 func scanOnePersonne(row scanner) (Personne, error) {
@@ -47,7 +211,6 @@ func scanOnePersonne(row scanner) (Personne, error) {
 		&item.Fonctionnaire,
 		&item.Diplome,
 		&item.Approfondissement,
-		&item.FicheSanitaire,
 		&item.IsTemp,
 	)
 	return item, err
@@ -117,22 +280,22 @@ func ScanPersonnes(rs *sql.Rows) (Personnes, error) {
 // Insert one Personne in the database and returns the item with id filled.
 func (item Personne) Insert(tx DB) (out Personne, err error) {
 	row := tx.QueryRow(`INSERT INTO personnes (
-		nom, nomjeunefille, prenom, datenaissance, villenaissance, departementnaissance, sexe, tels, mail, adresse, codepostal, ville, pays, securitesociale, profession, etudiant, fonctionnaire, diplome, approfondissement, fichesanitaire, istemp
+		nom, nomjeunefille, prenom, datenaissance, villenaissance, departementnaissance, sexe, tels, mail, adresse, codepostal, ville, pays, securitesociale, profession, etudiant, fonctionnaire, diplome, approfondissement, istemp
 		) VALUES (
-		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21
+		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20
 		) RETURNING *;
-		`, item.Nom, item.NomJeuneFille, item.Prenom, item.DateNaissance, item.VilleNaissance, item.DepartementNaissance, item.Sexe, item.Tels, item.Mail, item.Adresse, item.CodePostal, item.Ville, item.Pays, item.SecuriteSociale, item.Profession, item.Etudiant, item.Fonctionnaire, item.Diplome, item.Approfondissement, item.FicheSanitaire, item.IsTemp)
+		`, item.Nom, item.NomJeuneFille, item.Prenom, item.DateNaissance, item.VilleNaissance, item.DepartementNaissance, item.Sexe, item.Tels, item.Mail, item.Adresse, item.CodePostal, item.Ville, item.Pays, item.SecuriteSociale, item.Profession, item.Etudiant, item.Fonctionnaire, item.Diplome, item.Approfondissement, item.IsTemp)
 	return ScanPersonne(row)
 }
 
 // Update Personne in the database and returns the new version.
 func (item Personne) Update(tx DB) (out Personne, err error) {
 	row := tx.QueryRow(`UPDATE personnes SET (
-		nom, nomjeunefille, prenom, datenaissance, villenaissance, departementnaissance, sexe, tels, mail, adresse, codepostal, ville, pays, securitesociale, profession, etudiant, fonctionnaire, diplome, approfondissement, fichesanitaire, istemp
+		nom, nomjeunefille, prenom, datenaissance, villenaissance, departementnaissance, sexe, tels, mail, adresse, codepostal, ville, pays, securitesociale, profession, etudiant, fonctionnaire, diplome, approfondissement, istemp
 		) = (
-		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21
-		) WHERE id = $22 RETURNING *;
-		`, item.Nom, item.NomJeuneFille, item.Prenom, item.DateNaissance, item.VilleNaissance, item.DepartementNaissance, item.Sexe, item.Tels, item.Mail, item.Adresse, item.CodePostal, item.Ville, item.Pays, item.SecuriteSociale, item.Profession, item.Etudiant, item.Fonctionnaire, item.Diplome, item.Approfondissement, item.FicheSanitaire, item.IsTemp, item.Id)
+		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20
+		) WHERE id = $21 RETURNING *;
+		`, item.Nom, item.NomJeuneFille, item.Prenom, item.DateNaissance, item.VilleNaissance, item.DepartementNaissance, item.Sexe, item.Tels, item.Mail, item.Adresse, item.CodePostal, item.Ville, item.Pays, item.SecuriteSociale, item.Profession, item.Etudiant, item.Fonctionnaire, item.Diplome, item.Approfondissement, item.IsTemp, item.Id)
 	return ScanPersonne(row)
 }
 
@@ -170,6 +333,13 @@ func dumpJSON(s interface{}) (driver.Value, error) {
 	return driver.Value(string(b)), nil
 }
 
+func (s *Mails) Scan(src interface{}) error {
+	return (*pq.StringArray)(s).Scan(src)
+}
+func (s Mails) Value() (driver.Value, error) {
+	return pq.StringArray(s).Value()
+}
+
 func (s *Tels) Scan(src interface{}) error {
 	return (*pq.StringArray)(s).Scan(src)
 }
@@ -189,6 +359,20 @@ func (s *Date) Scan(src interface{}) error {
 
 func (s Date) Value() (driver.Value, error) {
 	return pq.NullTime{Time: s.Time(), Valid: true}.Value()
+}
+
+func (s *Time) Scan(src interface{}) error {
+	var tmp pq.NullTime
+	err := tmp.Scan(src)
+	if err != nil {
+		return err
+	}
+	*s = Time(tmp.Time)
+	return nil
+}
+
+func (s Time) Value() (driver.Value, error) {
+	return pq.NullTime{Time: time.Time(s), Valid: true}.Value()
 }
 
 func IdPersonneArrayToPQ(ids []IdPersonne) pq.Int64Array {
@@ -240,5 +424,11 @@ func (s IdPersonneSet) Keys() []IdPersonne {
 	return out
 }
 
-func (s *FicheSanitaire) Scan(src interface{}) error  { return loadJSON(s, src) }
-func (s FicheSanitaire) Value() (driver.Value, error) { return dumpJSON(s) }
+func (s *Allergies) Scan(src interface{}) error  { return loadJSON(s, src) }
+func (s Allergies) Value() (driver.Value, error) { return dumpJSON(s) }
+
+func (s *Maladies) Scan(src interface{}) error  { return loadJSON(s, src) }
+func (s Maladies) Value() (driver.Value, error) { return dumpJSON(s) }
+
+func (s *Medecin) Scan(src interface{}) error  { return loadJSON(s, src) }
+func (s Medecin) Value() (driver.Value, error) { return dumpJSON(s) }
