@@ -11,6 +11,8 @@ import (
 type (
 	IdCamp        int64
 	IdParticipant int64
+	IdImagelettre int64
+	IdSondage int64
 )
 
 type Camp struct {
@@ -30,4 +32,38 @@ type Participant struct {
 	Id         IdParticipant
 	IdCamp     IdCamp
 	IdPersonne pr.IdPersonne
+}
+
+// LettreDirecteur conserve le html utilisé pour générer la lettre.
+// En revanche, c'est bien le document PDF généré et enregistré dans la 
+// table documents qui est envoyé aux parents.
+//
+// gomacro:SQL ADD UNIQUE(IdCamp)
+type Lettredirecteur struct {
+	IdCamp             int64  `gomacro-sql-on-delete:"CASCADE"`
+	Html               string 
+	UseCoordCentre     bool   
+	ShowAdressePostale bool   
+	ColorCoord         string 
+}
+
+// Images contenues dans les lettres aux parents,
+// accessibles via un lien crypté
+type Imagelettre struct {
+	Id IdImagelettre
+	IdCamp   int64  `gomacro-sql-on-delete:"CASCADE"`
+	Filename string // as uploaded
+	Content  []byte 
+}
+
+// Sondage enregistre les retours sur un séjour
+//
+// gomacro:SQL ADD UNIQUE(IdCamp, IdDossier)
+type Sondage struct {
+	IdSondage int64     
+	IdCamp    int64     `gomacro-sql-on-delete:"CASCADE"`
+	IdDossier int64     `gomacro-sql-on-delete:"CASCADE"`
+	Modified  time.Time 
+
+	ReponseSondage
 }
