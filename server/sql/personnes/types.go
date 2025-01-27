@@ -132,11 +132,11 @@ const (
 	AMoto                           // Loisirs motocyclistes
 )
 
+type Mails []string
+
 //--------------------------------------------------------------------
 //------------------------ Fiche Sanitaire ---------------------------
 //--------------------------------------------------------------------
-
-type Mails []string
 
 type Maladies struct {
 	Rubeole    bool `json:"rubeole"`
