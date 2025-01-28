@@ -29,3 +29,21 @@ func NewJoomeo() (out Joomeo, err error) {
 
 	return out, nil
 }
+
+// StripeKey is a private key used to secure Stripe notifications
+type StripeKey string
+
+// NewStripe loads STRIPE_SECRET and STRIPE_WEBHOOK env. variables
+func NewStripe() (string, StripeKey, error) {
+	secret := os.Getenv("STRIPE_SECRET")
+	if secret == "" {
+		return "", "", errors.New("missing env STRIPE_SECRET")
+	}
+
+	webhook := os.Getenv("STRIPE_WEBHOOK")
+	if webhook == "" {
+		return "", "", errors.New("missing env STRIPE_WEBHOOK")
+	}
+
+	return secret, StripeKey(webhook), nil
+}
