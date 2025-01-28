@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	pr "registro/sql/personnes"
+	"registro/sql/shared"
 	"registro/utils"
 )
 
@@ -93,7 +94,7 @@ func cmpBool(in, out bool) diff {
 	return conflict
 }
 
-func cmpDate(in, out pr.Date) diff {
+func cmpDate(in, out shared.Date) diff {
 	in_, out_ := in.Time(), out.Time()
 	if in_.IsZero() {
 		return inZero
@@ -146,7 +147,7 @@ type Conflicts struct {
 }
 
 type fields interface {
-	string | pr.Date | pr.Departement | pr.Sexe | pr.Tels | pr.Pays | bool | pr.Diplome | pr.Approfondissement
+	string | shared.Date | pr.Departement | pr.Sexe | pr.Tels | pr.Pays | bool | pr.Diplome | pr.Approfondissement
 }
 
 func cmpGeneric[T fields](entrant, existant T) diff {
@@ -154,8 +155,8 @@ func cmpGeneric[T fields](entrant, existant T) diff {
 	switch v1.(type) {
 	case string:
 		return cmpString(v1.(string), v2.(string))
-	case pr.Date:
-		return cmpDate(v1.(pr.Date), v2.(pr.Date))
+	case shared.Date:
+		return cmpDate(v1.(shared.Date), v2.(shared.Date))
 	case pr.Departement:
 		return cmpString(v1.(pr.Departement), v2.(pr.Departement))
 	case pr.Sexe:

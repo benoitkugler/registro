@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	pr "registro/sql/personnes"
+	"registro/sql/shared"
 	"registro/utils"
 )
 
@@ -22,14 +23,14 @@ type PatternsSimilarite struct {
 	Nom           string
 	Prenom        string
 	Sexe          pr.Sexe
-	DateNaissance pr.Date
+	DateNaissance shared.Date
 	Mail          string
 }
 
 func (in *PatternsSimilarite) normalize() {
-	in.Nom = strings.TrimSpace(strings.ToLower(in.Nom))
-	in.Prenom = strings.TrimSpace(strings.ToLower(in.Prenom))
-	in.Mail = strings.TrimSpace(strings.ToLower(in.Mail))
+	in.Nom = utils.Normalize(in.Nom)
+	in.Prenom = utils.Normalize(in.Prenom)
+	in.Mail = utils.Normalize(in.Mail)
 }
 
 func (in PatternsSimilarite) scoreMax() (scoreMax int) {
@@ -95,7 +96,7 @@ func isIn(full, substr string) bool {
 }
 
 func comparaison(p pr.Personne, in PatternsSimilarite) (score int) {
-	if in.Mail != "" && strings.Contains(strings.TrimSpace(p.Mail), in.Mail) {
+	if in.Mail != "" && isIn(p.Mail, in.Mail) {
 		score += poidsMail
 	}
 	if !p.DateNaissance.Time().IsZero() && in.DateNaissance == p.DateNaissance {

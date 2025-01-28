@@ -2,6 +2,7 @@ package personnes
 
 import (
 	"math/rand"
+	"registro/sql/shared"
 	"time"
 )
 
@@ -22,10 +23,6 @@ func randApprofondissement() Approfondissement {
 	choix := [...]Approfondissement{AAucun, AAutre, ASb, ACanoe, AVoile, AMoto}
 	i := rand.Intn(len(choix))
 	return choix[i]
-}
-
-func randDate() Date {
-	return Date(randtDate())
 }
 
 func randDepartement() Departement {
@@ -96,7 +93,7 @@ func randPersonne() Personne {
 	s.Nom = randstring()
 	s.NomJeuneFille = randstring()
 	s.Prenom = randstring()
-	s.DateNaissance = randDate()
+	s.DateNaissance = randsha_Date()
 	s.VilleNaissance = randstring()
 	s.DepartementNaissance = randDepartement()
 	s.Sexe = randSexe()
@@ -151,6 +148,10 @@ func randbool() bool {
 
 func randint64() int64 {
 	return int64(rand.Intn(1000000))
+}
+
+func randsha_Date() shared.Date {
+	return shared.Date(randtDate())
 }
 
 var letterRunes2 = []rune("azertyuiopqsdfghjklmwxcvbn123456789é@!?&èïab ")

@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"registro/sql"
+	"registro/sql/camps"
 	pr "registro/sql/personnes"
 	tu "registro/utils/testutils"
 )
@@ -198,11 +198,11 @@ func TestInviteEquipier(t *testing.T) {
 func TestNotificationDon(t *testing.T) {
 	cfg, _ := loadEnv(t)
 
-	html, err := NotifieDon(cfg, Contact{Prenom: "Benoit", Sexe: pr.Woman}, sql.Euros(45.48), "")
+	html, err := NotifieDon(cfg, Contact{Prenom: "Benoit", Sexe: pr.Woman}, camps.NewEuros(45.48), "")
 	tu.AssertNoErr(t, err)
 	tu.Write(t, "notification_don_1.html", []byte(html))
 
-	html, err = NotifieDon(cfg, Contact{Prenom: "Beno it", Sexe: pr.Man}, sql.Euros(45.48), "Eglise de Montmeyran")
+	html, err = NotifieDon(cfg, Contact{Prenom: "Beno it", Sexe: pr.Man}, camps.NewEuros(45.48), "Eglise de Montmeyran")
 	tu.AssertNoErr(t, err)
 	tu.Write(t, "notification_don_2.html", []byte(html))
 }

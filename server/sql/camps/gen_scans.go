@@ -4,7 +4,13 @@ package camps
 
 import (
 	"database/sql"
+	"database/sql/driver"
+	"encoding/json"
+	"errors"
+	"fmt"
 	"registro/sql/personnes"
+	"strconv"
+	"strings"
 
 	"github.com/lib/pq"
 )
@@ -30,6 +36,7 @@ func scanOneCamp(row scanner) (Camp, error) {
 		&item.DateDebut,
 		&item.Duree,
 		&item.Agrement,
+		&item.Prix,
 	)
 	return item, err
 }
@@ -98,22 +105,22 @@ func ScanCamps(rs *sql.Rows) (Camps, error) {
 // Insert one Camp in the database and returns the item with id filled.
 func (item Camp) Insert(tx DB) (out Camp, err error) {
 	row := tx.QueryRow(`INSERT INTO camps (
-		nom, datedebut, duree, agrement
+		nom, datedebut, duree, agrement, prix
 		) VALUES (
-		$1, $2, $3, $4
+		$1, $2, $3, $4, $5
 		) RETURNING *;
-		`, item.Nom, item.DateDebut, item.Duree, item.Agrement)
+		`, item.Nom, item.DateDebut, item.Duree, item.Agrement, item.Prix)
 	return ScanCamp(row)
 }
 
 // Update Camp in the database and returns the new version.
 func (item Camp) Update(tx DB) (out Camp, err error) {
 	row := tx.QueryRow(`UPDATE camps SET (
-		nom, datedebut, duree, agrement
+		nom, datedebut, duree, agrement, prix
 		) = (
-		$1, $2, $3, $4
-		) WHERE id = $5 RETURNING *;
-		`, item.Nom, item.DateDebut, item.Duree, item.Agrement, item.Id)
+		$1, $2, $3, $4, $5
+		) WHERE id = $6 RETURNING *;
+		`, item.Nom, item.DateDebut, item.Duree, item.Agrement, item.Prix, item.Id)
 	return ScanCamp(row)
 }
 
@@ -132,55 +139,59 @@ func DeleteCampsByIDs(tx DB, ids ...IdCamp) ([]IdCamp, error) {
 	return ScanIdCampArray(rows)
 }
 
-func scanOneParticipant(row scanner) (Participant, error) {
-	var item Participant
+func scanOneEquipier(row scanner) (Equipier, error) {
+	var item Equipier
 	err := row.Scan(
 		&item.Id,
 		&item.IdCamp,
 		&item.IdPersonne,
+		&item.Roles,
+		&item.Presence,
+		&item.Invitation,
+		&item.AccepteCharte,
 	)
 	return item, err
 }
 
-func ScanParticipant(row *sql.Row) (Participant, error) { return scanOneParticipant(row) }
+func ScanEquipier(row *sql.Row) (Equipier, error) { return scanOneEquipier(row) }
 
-// SelectAll returns all the items in the participants table.
-func SelectAllParticipants(db DB) (Participants, error) {
-	rows, err := db.Query("SELECT * FROM participants")
+// SelectAll returns all the items in the equipiers table.
+func SelectAllEquipiers(db DB) (Equipiers, error) {
+	rows, err := db.Query("SELECT * FROM equipiers")
 	if err != nil {
 		return nil, err
 	}
-	return ScanParticipants(rows)
+	return ScanEquipiers(rows)
 }
 
-// SelectParticipant returns the entry matching 'id'.
-func SelectParticipant(tx DB, id IdParticipant) (Participant, error) {
-	row := tx.QueryRow("SELECT * FROM participants WHERE id = $1", id)
-	return ScanParticipant(row)
+// SelectEquipier returns the entry matching 'id'.
+func SelectEquipier(tx DB, id IdEquipier) (Equipier, error) {
+	row := tx.QueryRow("SELECT * FROM equipiers WHERE id = $1", id)
+	return ScanEquipier(row)
 }
 
-// SelectParticipants returns the entry matching the given 'ids'.
-func SelectParticipants(tx DB, ids ...IdParticipant) (Participants, error) {
-	rows, err := tx.Query("SELECT * FROM participants WHERE id = ANY($1)", IdParticipantArrayToPQ(ids))
+// SelectEquipiers returns the entry matching the given 'ids'.
+func SelectEquipiers(tx DB, ids ...IdEquipier) (Equipiers, error) {
+	rows, err := tx.Query("SELECT * FROM equipiers WHERE id = ANY($1)", IdEquipierArrayToPQ(ids))
 	if err != nil {
 		return nil, err
 	}
-	return ScanParticipants(rows)
+	return ScanEquipiers(rows)
 }
 
-type Participants map[IdParticipant]Participant
+type Equipiers map[IdEquipier]Equipier
 
-func (m Participants) IDs() []IdParticipant {
-	out := make([]IdParticipant, 0, len(m))
+func (m Equipiers) IDs() []IdEquipier {
+	out := make([]IdEquipier, 0, len(m))
 	for i := range m {
 		out = append(out, i)
 	}
 	return out
 }
 
-func ScanParticipants(rs *sql.Rows) (Participants, error) {
+func ScanEquipiers(rs *sql.Rows) (Equipiers, error) {
 	var (
-		s   Participant
+		s   Equipier
 		err error
 	)
 	defer func() {
@@ -189,9 +200,9 @@ func ScanParticipants(rs *sql.Rows) (Participants, error) {
 			err = errClose
 		}
 	}()
-	structs := make(Participants, 16)
+	structs := make(Equipiers, 16)
 	for rs.Next() {
-		s, err = scanOneParticipant(rs)
+		s, err = scanOneEquipier(rs)
 		if err != nil {
 			return nil, err
 		}
@@ -203,50 +214,50 @@ func ScanParticipants(rs *sql.Rows) (Participants, error) {
 	return structs, nil
 }
 
-// Insert one Participant in the database and returns the item with id filled.
-func (item Participant) Insert(tx DB) (out Participant, err error) {
-	row := tx.QueryRow(`INSERT INTO participants (
-		idcamp, idpersonne
+// Insert one Equipier in the database and returns the item with id filled.
+func (item Equipier) Insert(tx DB) (out Equipier, err error) {
+	row := tx.QueryRow(`INSERT INTO equipiers (
+		idcamp, idpersonne, roles, presence, invitation, acceptecharte
 		) VALUES (
-		$1, $2
+		$1, $2, $3, $4, $5, $6
 		) RETURNING *;
-		`, item.IdCamp, item.IdPersonne)
-	return ScanParticipant(row)
+		`, item.IdCamp, item.IdPersonne, item.Roles, item.Presence, item.Invitation, item.AccepteCharte)
+	return ScanEquipier(row)
 }
 
-// Update Participant in the database and returns the new version.
-func (item Participant) Update(tx DB) (out Participant, err error) {
-	row := tx.QueryRow(`UPDATE participants SET (
-		idcamp, idpersonne
+// Update Equipier in the database and returns the new version.
+func (item Equipier) Update(tx DB) (out Equipier, err error) {
+	row := tx.QueryRow(`UPDATE equipiers SET (
+		idcamp, idpersonne, roles, presence, invitation, acceptecharte
 		) = (
-		$1, $2
-		) WHERE id = $3 RETURNING *;
-		`, item.IdCamp, item.IdPersonne, item.Id)
-	return ScanParticipant(row)
+		$1, $2, $3, $4, $5, $6
+		) WHERE id = $7 RETURNING *;
+		`, item.IdCamp, item.IdPersonne, item.Roles, item.Presence, item.Invitation, item.AccepteCharte, item.Id)
+	return ScanEquipier(row)
 }
 
-// Deletes the Participant and returns the item
-func DeleteParticipantById(tx DB, id IdParticipant) (Participant, error) {
-	row := tx.QueryRow("DELETE FROM participants WHERE id = $1 RETURNING *;", id)
-	return ScanParticipant(row)
+// Deletes the Equipier and returns the item
+func DeleteEquipierById(tx DB, id IdEquipier) (Equipier, error) {
+	row := tx.QueryRow("DELETE FROM equipiers WHERE id = $1 RETURNING *;", id)
+	return ScanEquipier(row)
 }
 
-// Deletes the Participant in the database and returns the ids.
-func DeleteParticipantsByIDs(tx DB, ids ...IdParticipant) ([]IdParticipant, error) {
-	rows, err := tx.Query("DELETE FROM participants WHERE id = ANY($1) RETURNING id", IdParticipantArrayToPQ(ids))
+// Deletes the Equipier in the database and returns the ids.
+func DeleteEquipiersByIDs(tx DB, ids ...IdEquipier) ([]IdEquipier, error) {
+	rows, err := tx.Query("DELETE FROM equipiers WHERE id = ANY($1) RETURNING id", IdEquipierArrayToPQ(ids))
 	if err != nil {
 		return nil, err
 	}
-	return ScanIdParticipantArray(rows)
+	return ScanIdEquipierArray(rows)
 }
 
 // ByIdCamp returns a map with 'IdCamp' as keys.
-func (items Participants) ByIdCamp() map[IdCamp]Participants {
-	out := make(map[IdCamp]Participants)
+func (items Equipiers) ByIdCamp() map[IdCamp]Equipiers {
+	out := make(map[IdCamp]Equipiers)
 	for _, target := range items {
 		dict := out[target.IdCamp]
 		if dict == nil {
-			dict = make(Participants)
+			dict = make(Equipiers)
 		}
 		dict[target.Id] = target
 		out[target.IdCamp] = dict
@@ -257,7 +268,7 @@ func (items Participants) ByIdCamp() map[IdCamp]Participants {
 // IdCamps returns the list of ids of IdCamp
 // contained in this table.
 // They are not garanteed to be distinct.
-func (items Participants) IdCamps() []IdCamp {
+func (items Equipiers) IdCamps() []IdCamp {
 	out := make([]IdCamp, 0, len(items))
 	for _, target := range items {
 		out = append(out, target.IdCamp)
@@ -265,29 +276,29 @@ func (items Participants) IdCamps() []IdCamp {
 	return out
 }
 
-func SelectParticipantsByIdCamps(tx DB, idCamps_ ...IdCamp) (Participants, error) {
-	rows, err := tx.Query("SELECT * FROM participants WHERE idcamp = ANY($1)", IdCampArrayToPQ(idCamps_))
+func SelectEquipiersByIdCamps(tx DB, idCamps_ ...IdCamp) (Equipiers, error) {
+	rows, err := tx.Query("SELECT * FROM equipiers WHERE idcamp = ANY($1)", IdCampArrayToPQ(idCamps_))
 	if err != nil {
 		return nil, err
 	}
-	return ScanParticipants(rows)
+	return ScanEquipiers(rows)
 }
 
-func DeleteParticipantsByIdCamps(tx DB, idCamps_ ...IdCamp) ([]IdParticipant, error) {
-	rows, err := tx.Query("DELETE FROM participants WHERE idcamp = ANY($1) RETURNING id", IdCampArrayToPQ(idCamps_))
+func DeleteEquipiersByIdCamps(tx DB, idCamps_ ...IdCamp) ([]IdEquipier, error) {
+	rows, err := tx.Query("DELETE FROM equipiers WHERE idcamp = ANY($1) RETURNING id", IdCampArrayToPQ(idCamps_))
 	if err != nil {
 		return nil, err
 	}
-	return ScanIdParticipantArray(rows)
+	return ScanIdEquipierArray(rows)
 }
 
 // ByIdPersonne returns a map with 'IdPersonne' as keys.
-func (items Participants) ByIdPersonne() map[personnes.IdPersonne]Participants {
-	out := make(map[personnes.IdPersonne]Participants)
+func (items Equipiers) ByIdPersonne() map[personnes.IdPersonne]Equipiers {
+	out := make(map[personnes.IdPersonne]Equipiers)
 	for _, target := range items {
 		dict := out[target.IdPersonne]
 		if dict == nil {
-			dict = make(Participants)
+			dict = make(Equipiers)
 		}
 		dict[target.Id] = target
 		out[target.IdPersonne] = dict
@@ -298,7 +309,7 @@ func (items Participants) ByIdPersonne() map[personnes.IdPersonne]Participants {
 // IdPersonnes returns the list of ids of IdPersonne
 // contained in this table.
 // They are not garanteed to be distinct.
-func (items Participants) IdPersonnes() []personnes.IdPersonne {
+func (items Equipiers) IdPersonnes() []personnes.IdPersonne {
 	out := make([]personnes.IdPersonne, 0, len(items))
 	for _, target := range items {
 		out = append(out, target.IdPersonne)
@@ -306,20 +317,302 @@ func (items Participants) IdPersonnes() []personnes.IdPersonne {
 	return out
 }
 
-func SelectParticipantsByIdPersonnes(tx DB, idPersonnes_ ...personnes.IdPersonne) (Participants, error) {
-	rows, err := tx.Query("SELECT * FROM participants WHERE idpersonne = ANY($1)", personnes.IdPersonneArrayToPQ(idPersonnes_))
+func SelectEquipiersByIdPersonnes(tx DB, idPersonnes_ ...personnes.IdPersonne) (Equipiers, error) {
+	rows, err := tx.Query("SELECT * FROM equipiers WHERE idpersonne = ANY($1)", personnes.IdPersonneArrayToPQ(idPersonnes_))
 	if err != nil {
 		return nil, err
 	}
-	return ScanParticipants(rows)
+	return ScanEquipiers(rows)
 }
 
-func DeleteParticipantsByIdPersonnes(tx DB, idPersonnes_ ...personnes.IdPersonne) ([]IdParticipant, error) {
-	rows, err := tx.Query("DELETE FROM participants WHERE idpersonne = ANY($1) RETURNING id", personnes.IdPersonneArrayToPQ(idPersonnes_))
+func DeleteEquipiersByIdPersonnes(tx DB, idPersonnes_ ...personnes.IdPersonne) ([]IdEquipier, error) {
+	rows, err := tx.Query("DELETE FROM equipiers WHERE idpersonne = ANY($1) RETURNING id", personnes.IdPersonneArrayToPQ(idPersonnes_))
 	if err != nil {
 		return nil, err
 	}
-	return ScanIdParticipantArray(rows)
+	return ScanIdEquipierArray(rows)
+}
+
+// SelectEquipierByIdCampAndIdPersonne return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectEquipierByIdCampAndIdPersonne(tx DB, idCamp IdCamp, idPersonne personnes.IdPersonne) (item Equipier, found bool, err error) {
+	row := tx.QueryRow("SELECT * FROM equipiers WHERE IdCamp = $1 AND IdPersonne = $2", idCamp, idPersonne)
+	item, err = ScanEquipier(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
+}
+
+func scanOneImagelettre(row scanner) (Imagelettre, error) {
+	var item Imagelettre
+	err := row.Scan(
+		&item.Id,
+		&item.IdCamp,
+		&item.Filename,
+		&item.Content,
+	)
+	return item, err
+}
+
+func ScanImagelettre(row *sql.Row) (Imagelettre, error) { return scanOneImagelettre(row) }
+
+// SelectAll returns all the items in the imagelettres table.
+func SelectAllImagelettres(db DB) (Imagelettres, error) {
+	rows, err := db.Query("SELECT * FROM imagelettres")
+	if err != nil {
+		return nil, err
+	}
+	return ScanImagelettres(rows)
+}
+
+// SelectImagelettre returns the entry matching 'id'.
+func SelectImagelettre(tx DB, id IdImagelettre) (Imagelettre, error) {
+	row := tx.QueryRow("SELECT * FROM imagelettres WHERE id = $1", id)
+	return ScanImagelettre(row)
+}
+
+// SelectImagelettres returns the entry matching the given 'ids'.
+func SelectImagelettres(tx DB, ids ...IdImagelettre) (Imagelettres, error) {
+	rows, err := tx.Query("SELECT * FROM imagelettres WHERE id = ANY($1)", IdImagelettreArrayToPQ(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanImagelettres(rows)
+}
+
+type Imagelettres map[IdImagelettre]Imagelettre
+
+func (m Imagelettres) IDs() []IdImagelettre {
+	out := make([]IdImagelettre, 0, len(m))
+	for i := range m {
+		out = append(out, i)
+	}
+	return out
+}
+
+func ScanImagelettres(rs *sql.Rows) (Imagelettres, error) {
+	var (
+		s   Imagelettre
+		err error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(Imagelettres, 16)
+	for rs.Next() {
+		s, err = scanOneImagelettre(rs)
+		if err != nil {
+			return nil, err
+		}
+		structs[s.Id] = s
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+// Insert one Imagelettre in the database and returns the item with id filled.
+func (item Imagelettre) Insert(tx DB) (out Imagelettre, err error) {
+	row := tx.QueryRow(`INSERT INTO imagelettres (
+		idcamp, filename, content
+		) VALUES (
+		$1, $2, $3
+		) RETURNING *;
+		`, item.IdCamp, item.Filename, item.Content)
+	return ScanImagelettre(row)
+}
+
+// Update Imagelettre in the database and returns the new version.
+func (item Imagelettre) Update(tx DB) (out Imagelettre, err error) {
+	row := tx.QueryRow(`UPDATE imagelettres SET (
+		idcamp, filename, content
+		) = (
+		$1, $2, $3
+		) WHERE id = $4 RETURNING *;
+		`, item.IdCamp, item.Filename, item.Content, item.Id)
+	return ScanImagelettre(row)
+}
+
+// Deletes the Imagelettre and returns the item
+func DeleteImagelettreById(tx DB, id IdImagelettre) (Imagelettre, error) {
+	row := tx.QueryRow("DELETE FROM imagelettres WHERE id = $1 RETURNING *;", id)
+	return ScanImagelettre(row)
+}
+
+// Deletes the Imagelettre in the database and returns the ids.
+func DeleteImagelettresByIDs(tx DB, ids ...IdImagelettre) ([]IdImagelettre, error) {
+	rows, err := tx.Query("DELETE FROM imagelettres WHERE id = ANY($1) RETURNING id", IdImagelettreArrayToPQ(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIdImagelettreArray(rows)
+}
+
+func scanOneLettredirecteur(row scanner) (Lettredirecteur, error) {
+	var item Lettredirecteur
+	err := row.Scan(
+		&item.IdCamp,
+		&item.Html,
+		&item.UseCoordCentre,
+		&item.ShowAdressePostale,
+		&item.ColorCoord,
+	)
+	return item, err
+}
+
+func ScanLettredirecteur(row *sql.Row) (Lettredirecteur, error) { return scanOneLettredirecteur(row) }
+
+// SelectAll returns all the items in the lettredirecteurs table.
+func SelectAllLettredirecteurs(db DB) (Lettredirecteurs, error) {
+	rows, err := db.Query("SELECT * FROM lettredirecteurs")
+	if err != nil {
+		return nil, err
+	}
+	return ScanLettredirecteurs(rows)
+}
+
+type Lettredirecteurs []Lettredirecteur
+
+func ScanLettredirecteurs(rs *sql.Rows) (Lettredirecteurs, error) {
+	var (
+		item Lettredirecteur
+		err  error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(Lettredirecteurs, 0, 16)
+	for rs.Next() {
+		item, err = scanOneLettredirecteur(rs)
+		if err != nil {
+			return nil, err
+		}
+		structs = append(structs, item)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+func InsertLettredirecteur(db DB, item Lettredirecteur) error {
+	_, err := db.Exec(`INSERT INTO lettredirecteurs (
+			idcamp, html, usecoordcentre, showadressepostale, colorcoord
+			) VALUES (
+			$1, $2, $3, $4, $5
+			);
+			`, item.IdCamp, item.Html, item.UseCoordCentre, item.ShowAdressePostale, item.ColorCoord)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Insert the links Lettredirecteur in the database.
+// It is a no-op if 'items' is empty.
+func InsertManyLettredirecteurs(tx *sql.Tx, items ...Lettredirecteur) error {
+	if len(items) == 0 {
+		return nil
+	}
+
+	stmt, err := tx.Prepare(pq.CopyIn("lettredirecteurs",
+		"idcamp",
+		"html",
+		"usecoordcentre",
+		"showadressepostale",
+		"colorcoord",
+	))
+	if err != nil {
+		return err
+	}
+
+	for _, item := range items {
+		_, err = stmt.Exec(item.IdCamp, item.Html, item.UseCoordCentre, item.ShowAdressePostale, item.ColorCoord)
+		if err != nil {
+			return err
+		}
+	}
+
+	if _, err = stmt.Exec(); err != nil {
+		return err
+	}
+
+	if err = stmt.Close(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Delete the link Lettredirecteur from the database.
+// Only the foreign keys  fields are used in 'item'.
+func (item Lettredirecteur) Delete(tx DB) error {
+	_, err := tx.Exec(`DELETE FROM lettredirecteurs WHERE ;`)
+	return err
+}
+
+// SelectLettredirecteurByIdCamp return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectLettredirecteurByIdCamp(tx DB, idCamp int64) (item Lettredirecteur, found bool, err error) {
+	row := tx.QueryRow("SELECT * FROM lettredirecteurs WHERE IdCamp = $1", idCamp)
+	item, err = ScanLettredirecteur(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
+}
+
+func loadJSON(out interface{}, src interface{}) error {
+	if src == nil {
+		return nil //zero value out
+	}
+	bs, ok := src.([]byte)
+	if !ok {
+		return errors.New("not a []byte")
+	}
+	return json.Unmarshal(bs, out)
+}
+
+func dumpJSON(s interface{}) (driver.Value, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return driver.Value(string(b)), nil
+}
+
+func (s *Montant) Scan(src interface{}) error {
+	bs, ok := src.([]byte)
+	if !ok {
+		return fmt.Errorf("unsupported type %T", src)
+	}
+	fields := strings.Split(string(bs[1:len(bs)-1]), ",")
+	if len(fields) != 2 {
+		return fmt.Errorf("unsupported number of fields %d", len(fields))
+	}
+
+	valCent, err := strconv.Atoi(fields[0])
+	if err != nil {
+		return err
+	}
+	s.Cent = int(valCent)
+
+	valCurrency, err := strconv.Atoi(fields[1])
+	if err != nil {
+		return err
+	}
+	s.Currency = Currency(valCurrency)
+
+	return nil
+}
+func (s Montant) Value() (driver.Value, error) {
+	bs := fmt.Appendf(nil, "(%d, %d)", s.Cent, s.Currency)
+	return driver.Value(bs), nil
 }
 
 func IdCampArrayToPQ(ids []IdCamp) pq.Int64Array {
@@ -371,7 +664,7 @@ func (s IdCampSet) Keys() []IdCamp {
 	return out
 }
 
-func IdParticipantArrayToPQ(ids []IdParticipant) pq.Int64Array {
+func IdEquipierArrayToPQ(ids []IdEquipier) pq.Int64Array {
 	out := make(pq.Int64Array, len(ids))
 	for i, v := range ids {
 		out[i] = int64(v)
@@ -379,14 +672,14 @@ func IdParticipantArrayToPQ(ids []IdParticipant) pq.Int64Array {
 	return out
 }
 
-// ScanIdParticipantArray scans the result of a query returning a
+// ScanIdEquipierArray scans the result of a query returning a
 // list of ID's.
-func ScanIdParticipantArray(rs *sql.Rows) ([]IdParticipant, error) {
+func ScanIdEquipierArray(rs *sql.Rows) ([]IdEquipier, error) {
 	defer rs.Close()
-	ints := make([]IdParticipant, 0, 16)
+	ints := make([]IdEquipier, 0, 16)
 	var err error
 	for rs.Next() {
-		var s IdParticipant
+		var s IdEquipier
 		if err = rs.Scan(&s); err != nil {
 			return nil, err
 		}
@@ -398,24 +691,76 @@ func ScanIdParticipantArray(rs *sql.Rows) ([]IdParticipant, error) {
 	return ints, nil
 }
 
-type IdParticipantSet map[IdParticipant]bool
+type IdEquipierSet map[IdEquipier]bool
 
-func NewIdParticipantSetFrom(ids []IdParticipant) IdParticipantSet {
-	out := make(IdParticipantSet, len(ids))
+func NewIdEquipierSetFrom(ids []IdEquipier) IdEquipierSet {
+	out := make(IdEquipierSet, len(ids))
 	for _, key := range ids {
 		out[key] = true
 	}
 	return out
 }
 
-func (s IdParticipantSet) Add(id IdParticipant) { s[id] = true }
+func (s IdEquipierSet) Add(id IdEquipier) { s[id] = true }
 
-func (s IdParticipantSet) Has(id IdParticipant) bool { return s[id] }
+func (s IdEquipierSet) Has(id IdEquipier) bool { return s[id] }
 
-func (s IdParticipantSet) Keys() []IdParticipant {
-	out := make([]IdParticipant, 0, len(s))
+func (s IdEquipierSet) Keys() []IdEquipier {
+	out := make([]IdEquipier, 0, len(s))
 	for k := range s {
 		out = append(out, k)
 	}
 	return out
 }
+
+func IdImagelettreArrayToPQ(ids []IdImagelettre) pq.Int64Array {
+	out := make(pq.Int64Array, len(ids))
+	for i, v := range ids {
+		out[i] = int64(v)
+	}
+	return out
+}
+
+// ScanIdImagelettreArray scans the result of a query returning a
+// list of ID's.
+func ScanIdImagelettreArray(rs *sql.Rows) ([]IdImagelettre, error) {
+	defer rs.Close()
+	ints := make([]IdImagelettre, 0, 16)
+	var err error
+	for rs.Next() {
+		var s IdImagelettre
+		if err = rs.Scan(&s); err != nil {
+			return nil, err
+		}
+		ints = append(ints, s)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return ints, nil
+}
+
+type IdImagelettreSet map[IdImagelettre]bool
+
+func NewIdImagelettreSetFrom(ids []IdImagelettre) IdImagelettreSet {
+	out := make(IdImagelettreSet, len(ids))
+	for _, key := range ids {
+		out[key] = true
+	}
+	return out
+}
+
+func (s IdImagelettreSet) Add(id IdImagelettre) { s[id] = true }
+
+func (s IdImagelettreSet) Has(id IdImagelettre) bool { return s[id] }
+
+func (s IdImagelettreSet) Keys() []IdImagelettre {
+	out := make([]IdImagelettre, 0, len(s))
+	for k := range s {
+		out = append(out, k)
+	}
+	return out
+}
+
+func (s *Roles) Scan(src interface{}) error  { return loadJSON(s, src) }
+func (s Roles) Value() (driver.Value, error) { return dumpJSON(s) }

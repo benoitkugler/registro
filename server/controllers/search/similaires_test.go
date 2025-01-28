@@ -48,8 +48,9 @@ func TestLoadAndSearchSimilaires(t *testing.T) {
 		Nom:    "Kug ",
 		Prenom: "dédé ",
 	})
-	tu.Assert(t, len(res1) > len(res2))
+	tu.Assert(t, len(res1) == len(res2))
 
+	tu.Assert(t, !personnes[0].IsTemp)
 	_, res3 := ChercheSimilaires(personnes, PatternsSimilarite{
 		Mail: personnes[0].Mail,
 	})

@@ -347,20 +347,6 @@ func (s Tels) Value() (driver.Value, error) {
 	return pq.StringArray(s).Value()
 }
 
-func (s *Date) Scan(src interface{}) error {
-	var tmp pq.NullTime
-	err := tmp.Scan(src)
-	if err != nil {
-		return err
-	}
-	*s = NewDateFrom(tmp.Time)
-	return nil
-}
-
-func (s Date) Value() (driver.Value, error) {
-	return pq.NullTime{Time: s.Time(), Valid: true}.Value()
-}
-
 func (s *Time) Scan(src interface{}) error {
 	var tmp pq.NullTime
 	err := tmp.Scan(src)

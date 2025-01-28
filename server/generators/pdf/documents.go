@@ -7,7 +7,9 @@ import (
 
 	"registro/config"
 	cps "registro/sql/camps"
+	"registro/sql/dossiers"
 	pr "registro/sql/personnes"
+	"registro/sql/shared"
 )
 
 //go:embed templates/*
@@ -104,17 +106,17 @@ type Destinataire struct {
 }
 
 // CreateAttestationPresence returns a PDF document.
-func CreateAttestationPresence(cfg config.Asso, destinataire Destinataire, participants []cps.ParticipantExt) ([]byte, error) {
+func CreateAttestationPresence(cfg config.Asso, destinataire Destinataire, participants []dossiers.ParticipantExt) ([]byte, error) {
 	type attestationPresenceTmplData struct {
 		Asso         config.Asso
 		Date         string // now
 		Destinataire Destinataire
-		Participants []cps.ParticipantExt
+		Participants []dossiers.ParticipantExt
 	}
 
 	return templateToPDF(attestationPresenceTmpl, attestationPresenceTmplData{
 		Asso:         cfg,
-		Date:         pr.Date(time.Now()).String(),
+		Date:         shared.NewDateFrom(time.Now()).String(),
 		Destinataire: destinataire,
 		Participants: participants,
 	})

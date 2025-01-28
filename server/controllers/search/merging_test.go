@@ -5,6 +5,7 @@ import (
 	"time"
 
 	pr "registro/sql/personnes"
+	"registro/sql/shared"
 	tu "registro/utils/testutils"
 )
 
@@ -14,7 +15,7 @@ func TestSimilaires(t *testing.T) {
 		Prenom:            "ben",
 		Tels:              pr.Tels{"0675784512"},
 		Sexe:              pr.Man,
-		DateNaissance:     pr.Date(time.Now()),
+		DateNaissance:     shared.NewDateFrom(time.Now()),
 		Approfondissement: pr.ACanoe,
 		Etudiant:          true,
 	}
@@ -23,7 +24,7 @@ func TestSimilaires(t *testing.T) {
 		Prenom:        "Bèn",
 		Tels:          pr.Tels{"06-75-78-45-12", "0478458956"},
 		Sexe:          pr.Woman,
-		DateNaissance: pr.Date(time.Now()),
+		DateNaissance: shared.NewDateFrom(time.Now()),
 		Fonctionnaire: true,
 	}
 	merged, conficts := Merge(entrant, existant)

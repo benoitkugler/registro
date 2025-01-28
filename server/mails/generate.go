@@ -7,7 +7,7 @@ import (
 	"html/template"
 
 	"registro/config"
-	"registro/sql"
+	"registro/sql/camps"
 	pr "registro/sql/personnes"
 )
 
@@ -359,7 +359,7 @@ func InviteEquipier(cfg config.Asso, labelCamp string, directeur string, equipie
 }
 
 // organisme est vide pour les dons particulier
-func NotifieDon(cfg config.Asso, contact Contact, montant sql.Montant, organisme string) (string, error) {
+func NotifieDon(cfg config.Asso, contact Contact, montant camps.Montant, organisme string) (string, error) {
 	p := struct {
 		champsCommuns
 		Montant   string

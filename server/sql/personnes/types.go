@@ -1,44 +1,14 @@
 package personnes
 
 import (
-	"encoding"
 	"strings"
 	"time"
+
+	"registro/sql/shared"
 )
 
 // Time is date and time
 type Time time.Time
-
-// Date is a date (without notion of time)
-type Date time.Time
-
-func NewDate(year int, month time.Month, day int) Date {
-	return Date(time.Date(year, month, day, 0, 0, 0, 0, time.UTC))
-}
-
-func NewDateFrom(ti time.Time) Date {
-	return NewDate(ti.Year(), ti.Month(), ti.Day())
-}
-
-func (d Date) Time() time.Time {
-	ti := time.Time(d)
-	return time.Date(ti.Year(), ti.Month(), ti.Day(), 0, 0, 0, 0, time.UTC)
-}
-
-var (
-	_ encoding.TextMarshaler   = (*Date)(nil)
-	_ encoding.TextUnmarshaler = (*Date)(nil)
-)
-
-func (d Date) MarshalText() ([]byte, error) {
-	return []byte(d.Time().Format(time.DateOnly)), nil
-}
-
-func (d *Date) UnmarshalText(text []byte) error {
-	ti, err := time.Parse(time.DateOnly, string(text))
-	*d = NewDateFrom(ti)
-	return err
-}
 
 // Pays is the ISO 3166 code of a country
 type Pays string
@@ -69,7 +39,7 @@ type Etatcivil struct {
 	Nom                  string
 	NomJeuneFille        string
 	Prenom               string
-	DateNaissance        Date
+	DateNaissance        shared.Date
 	VilleNaissance       string
 	DepartementNaissance Departement
 	Sexe                 Sexe

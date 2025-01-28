@@ -21,7 +21,7 @@ CREATE TABLE personnes (
     DateNaissance date NOT NULL,
     VilleNaissance text NOT NULL,
     DepartementNaissance text NOT NULL,
-    Sexe integer CHECK (Sexe IN (0, 1, 2)) NOT NULL,
+    Sexe smallint CHECK (Sexe IN (0, 1, 2)) NOT NULL,
     Tels text[],
     Mail text NOT NULL,
     Adresse text NOT NULL,
@@ -32,8 +32,8 @@ CREATE TABLE personnes (
     Profession text NOT NULL,
     Etudiant boolean NOT NULL,
     Fonctionnaire boolean NOT NULL,
-    Diplome integer CHECK (Diplome IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19)) NOT NULL,
-    Approfondissement integer CHECK (Approfondissement IN (0, 1, 2, 3, 4, 5)) NOT NULL,
+    Diplome smallint CHECK (Diplome IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19)) NOT NULL,
+    Approfondissement smallint CHECK (Approfondissement IN (0, 1, 2, 3, 4, 5)) NOT NULL,
     IsTemp boolean NOT NULL
 );
 

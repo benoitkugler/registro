@@ -1,8 +1,10 @@
 package camps
 
 import (
+	"database/sql"
 	"math/rand"
 	"registro/sql/personnes"
+	"registro/sql/shared"
 	"time"
 )
 
@@ -12,9 +14,29 @@ func randCamp() Camp {
 	var s Camp
 	s.Id = randIdCamp()
 	s.Nom = randstring()
-	s.DateDebut = randper_Date()
+	s.DateDebut = randsha_Date()
 	s.Duree = randint()
 	s.Agrement = randstring()
+	s.Prix = randMontant()
+
+	return s
+}
+
+func randCurrency() Currency {
+	choix := [...]Currency{Empty, Euros, FrancsSuisse}
+	i := rand.Intn(len(choix))
+	return choix[i]
+}
+
+func randEquipier() Equipier {
+	var s Equipier
+	s.Id = randIdEquipier()
+	s.IdCamp = randIdCamp()
+	s.IdPersonne = randper_IdPersonne()
+	s.Roles = randRoles()
+	s.Presence = randsha_OptionnalPlage()
+	s.Invitation = randInvitationEquipier()
+	s.AccepteCharte = randsql_NullBool()
 
 	return s
 }
@@ -23,17 +45,80 @@ func randIdCamp() IdCamp {
 	return IdCamp(randint64())
 }
 
-func randIdParticipant() IdParticipant {
-	return IdParticipant(randint64())
+func randIdEquipier() IdEquipier {
+	return IdEquipier(randint64())
 }
 
-func randParticipant() Participant {
-	var s Participant
-	s.Id = randIdParticipant()
-	s.IdCamp = randIdCamp()
-	s.IdPersonne = randper_IdPersonne()
+func randIdImagelettre() IdImagelettre {
+	return IdImagelettre(randint64())
+}
+
+func randImagelettre() Imagelettre {
+	var s Imagelettre
+	s.Id = randIdImagelettre()
+	s.IdCamp = randint64()
+	s.Filename = randstring()
+	s.Content = randSliceuint8()
 
 	return s
+}
+
+func randInvitationEquipier() InvitationEquipier {
+	choix := [...]InvitationEquipier{NonInvite, Invite, Verifie}
+	i := rand.Intn(len(choix))
+	return choix[i]
+}
+
+func randLettredirecteur() Lettredirecteur {
+	var s Lettredirecteur
+	s.IdCamp = randint64()
+	s.Html = randstring()
+	s.UseCoordCentre = randbool()
+	s.ShowAdressePostale = randbool()
+	s.ColorCoord = randstring()
+
+	return s
+}
+
+func randMontant() Montant {
+	var s Montant
+	s.Cent = randint()
+	s.Currency = randCurrency()
+
+	return s
+}
+
+func randRole() Role {
+	choix := [...]Role{AutreRole, Directeur, Adjoint, Animation, AideAnimation, Chauffeur, Intendance, Babysiter, Menage, Factotum, Infirmerie, Cuisine, Lingerie}
+	i := rand.Intn(len(choix))
+	return choix[i]
+}
+
+func randRoles() Roles {
+	return Roles(randSliceRole())
+}
+
+func randSliceRole() []Role {
+	l := 3 + rand.Intn(5)
+	out := make([]Role, l)
+	for i := range out {
+		out[i] = randRole()
+	}
+	return out
+}
+
+func randSliceuint8() []byte {
+	l := 3 + rand.Intn(5)
+	out := make([]byte, l)
+	for i := range out {
+		out[i] = randuint8()
+	}
+	return out
+}
+
+func randbool() bool {
+	i := rand.Int31n(2)
+	return i == 1
 }
 
 func randint() int {
@@ -44,12 +129,29 @@ func randint64() int64 {
 	return int64(rand.Intn(1000000))
 }
 
-func randper_Date() personnes.Date {
-	return personnes.Date(randtDate())
-}
-
 func randper_IdPersonne() personnes.IdPersonne {
 	return personnes.IdPersonne(randint64())
+}
+
+func randsha_Date() shared.Date {
+	return shared.Date(randtDate())
+}
+
+func randsha_OptionnalPlage() shared.OptionnalPlage {
+	var s shared.OptionnalPlage
+	s.From = randsha_Date()
+	s.Duree = randint()
+	s.Active = randbool()
+
+	return s
+}
+
+func randsql_NullBool() sql.NullBool {
+	var s sql.NullBool
+	s.Bool = randbool()
+	s.Valid = randbool()
+
+	return s
 }
 
 var letterRunes2 = []rune("azertyuiopqsdfghjklmwxcvbn123456789é@!?&èïab ")
@@ -65,4 +167,8 @@ func randstring() string {
 
 func randtDate() time.Time {
 	return time.Unix(int64(rand.Int31()), 5)
+}
+
+func randuint8() uint8 {
+	return uint8(rand.Intn(1000000))
 }

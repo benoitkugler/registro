@@ -10,7 +10,9 @@ import (
 
 	"registro/config"
 	"registro/sql/camps"
+	"registro/sql/dossiers"
 	pr "registro/sql/personnes"
+	"registro/sql/shared"
 	"registro/utils"
 	tu "registro/utils/testutils"
 )
@@ -73,7 +75,7 @@ func randFicheSanitaire() FicheSanitaire {
 		Nom:           utils.RandString(15, true),
 		Prenom:        "zkle é@dzkmk è",
 		Sexe:          pr.Woman,
-		DateNaissance: pr.Date(time.Now()),
+		DateNaissance: shared.NewDateFrom(time.Now()),
 	}
 	resp := pr.Etatcivil{
 		Nom:             utils.RandString(25, true),
@@ -164,13 +166,13 @@ func TestListeVetements(t *testing.T) {
 func TestAttestationPresence(t *testing.T) {
 	camp := camps.Camp{
 		Nom:       "C2",
-		DateDebut: pr.NewDate(2022, 5, 13),
+		DateDebut: shared.NewDate(2022, 5, 13),
 		Duree:     30,
 		Agrement:  "5465sd6s64s6d4",
 	}
 	personne := pr.Etatcivil{
 		Nom: "Kugler", Prenom: "Benoit",
-		Sexe: pr.Woman, DateNaissance: pr.NewDate(1999, 1, 3),
+		Sexe: pr.Woman, DateNaissance: shared.NewDate(1999, 1, 3),
 	}
 
 	ti := time.Now()
@@ -179,7 +181,7 @@ func TestAttestationPresence(t *testing.T) {
 		Adresse:    "200, Route de Dieulefit",
 		CodePostal: "07568",
 		Ville:      "Montélimar",
-	}, []camps.ParticipantExt{
+	}, []dossiers.ParticipantExt{
 		{Camp: camp, Personne: pr.Personne{Etatcivil: personne}},
 		{Camp: camp, Personne: pr.Personne{Etatcivil: personne}},
 		{Camp: camp, Personne: pr.Personne{Etatcivil: personne}},

@@ -1,7 +1,6 @@
 package personnes
 
 import (
-	"fmt"
 	"regexp"
 	"strings"
 	"unicode"
@@ -50,14 +49,6 @@ func (s Sexe) Accord() string {
 		return "e"
 	}
 	return ""
-}
-
-func (d Date) String() string {
-	da := d.Time()
-	if da.IsZero() {
-		return ""
-	}
-	return fmt.Sprintf("%02d/%02d/%04d", da.Day(), da.Month(), da.Year())
 }
 
 const innerTelSep = " "

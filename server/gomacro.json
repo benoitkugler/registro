@@ -1,0 +1,44 @@
+{
+    "sql/personnes/models.go": [
+        {
+            "Mode": "go/sqlcrud",
+            "Output": "sql/personnes/gen_scans.go"
+        },
+        {
+            "Mode": "sql",
+            "Output": "sql/personnes/gen_create.sql"
+        },
+        {
+            "Mode": "go/randdata",
+            "Output": "sql/personnes/gen_randdata_test.go"
+        }
+    ],
+    "sql/camps/models.go": [
+        {
+            "Mode": "go/sqlcrud",
+            "Output": "sql/camps/gen_scans.go"
+        },
+        {
+            "Mode": "sql",
+            "Output": "sql/camps/gen_create.sql"
+        },
+        {
+            "Mode": "go/randdata",
+            "Output": "sql/camps/gen_randdata_test.go"
+        }
+    ],
+    "sql/dossiers/models.go": [
+        {
+            "Mode": "go/sqlcrud",
+            "Output": "sql/dossiers/gen_scans.go"
+        },
+        {
+            "Mode": "sql",
+            "Output": "sql/dossiers/gen_create.sql"
+        },
+        {
+            "Mode": "go/randdata",
+            "Output": "sql/dossiers/gen_randdata_test.go"
+        }
+    ]
+}
