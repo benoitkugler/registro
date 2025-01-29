@@ -9,6 +9,7 @@ require (
 	github.com/benoitkugler/textlayout v0.3.1 // indirect
 	github.com/benoitkugler/textprocessing v0.0.3 // indirect
 	github.com/benoitkugler/webrender v0.0.13 // indirect
+	github.com/disintegration/imaging v1.6.2 // indirect
 	github.com/go-text/typesetting v0.2.1 // indirect
 	github.com/hhrutter/lzw v1.0.0 // indirect
 	github.com/jordan-wright/email v4.0.1-0.20210109023952-943e75fe5223+incompatible // indirect

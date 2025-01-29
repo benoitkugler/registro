@@ -5,21 +5,23 @@ package dossiers
 import (
 	"time"
 
-	"registro/sql/camps"
+	cps "registro/sql/camps"
 	pr "registro/sql/personnes"
 	"registro/sql/shared"
 )
 
 type (
-	IdParticipant int64
-	IdDossier     int64
-	IdSondage     int64
-	IdPaiement    int64
+	IdParticipant   int64
+	IdDossier       int64
+	IdSondage       int64
+	IdPaiement      int64
+	IdStructureaide int64
+	IdAide          int64
 )
 
 type Participant struct {
 	Id         IdParticipant
-	IdCamp     camps.IdCamp  `gomacro-sql-on-delete:"CASCADE"`
+	IdCamp     cps.IdCamp    `gomacro-sql-on-delete:"CASCADE"`
 	IdPersonne pr.IdPersonne `gomacro-sql-on-delete:"CASCADE"`
 	IdDossier  IdDossier     `gomacro-sql-on-delete:"CASCADE"`
 
@@ -62,7 +64,7 @@ type Paiement struct {
 	IsAcompte       bool
 	IsRemboursement bool
 
-	Montant camps.Montant
+	Montant cps.Montant
 	Payeur  string
 	Mode    ModePaiement
 	Date    shared.Date
@@ -76,10 +78,33 @@ type Paiement struct {
 //
 // gomacro:SQL ADD UNIQUE(IdCamp, IdDossier)
 type Sondage struct {
-	IdSondage int64
-	IdCamp    int64 `gomacro-sql-on-delete:"CASCADE"`
-	IdDossier int64 `gomacro-sql-on-delete:"CASCADE"`
+	IdSondage IdSondage
+	IdCamp    cps.IdCamp `gomacro-sql-on-delete:"CASCADE"`
+	IdDossier IdDossier  `gomacro-sql-on-delete:"CASCADE"`
 	Modified  time.Time
 
 	ReponseSondage
+}
+
+type Structureaide struct {
+	Id              int64
+	Nom             string
+	Immatriculation string
+	Adresse         string
+	CodePostal      string
+	Ville           string
+	Telephone       pr.Tel
+	Info            string
+}
+
+type Aide struct {
+	Id              IdAide
+	IdStructureaide IdStructureaide
+	IdParticipant   IdParticipant `gomacro-sql-on-delete:"CASCADE"`
+
+	Valide bool
+
+	Valeur     cps.Montant
+	ParJour    bool
+	NbJoursMax int
 }

@@ -1,4 +1,14 @@
 -- Code genererated by gomacro/generator/sql. DO NOT EDIT.
+CREATE TABLE aides (
+    Id serial PRIMARY KEY,
+    IdStructureaide integer NOT NULL,
+    IdParticipant integer NOT NULL,
+    Valide boolean NOT NULL,
+    Valeur Montant NOT NULL,
+    ParJour boolean NOT NULL,
+    NbJoursMax integer NOT NULL
+);
+
 CREATE TABLE dossiers (
     Id serial PRIMARY KEY,
     IdPersonne integer NOT NULL,
@@ -51,6 +61,17 @@ CREATE TABLE sondages (
     MessageResponsable text NOT NULL
 );
 
+CREATE TABLE structureaides (
+    Id serial PRIMARY KEY,
+    Nom text NOT NULL,
+    Immatriculation text NOT NULL,
+    Adresse text NOT NULL,
+    CodePostal text NOT NULL,
+    Ville text NOT NULL,
+    Telephone text NOT NULL,
+    Info text NOT NULL
+);
+
 -- constraints
 ALTER TABLE participants
     ADD FOREIGN KEY (IdCamp) REFERENCES camps ON DELETE CASCADE;
@@ -69,6 +90,18 @@ ALTER TABLE paiements
 
 ALTER TABLE sondages
     ADD UNIQUE (IdCamp, IdDossier);
+
+ALTER TABLE sondages
+    ADD FOREIGN KEY (IdCamp) REFERENCES camps ON DELETE CASCADE;
+
+ALTER TABLE sondages
+    ADD FOREIGN KEY (IdDossier) REFERENCES dossiers ON DELETE CASCADE;
+
+ALTER TABLE aides
+    ADD FOREIGN KEY (IdStructureaide) REFERENCES structureaides;
+
+ALTER TABLE aides
+    ADD FOREIGN KEY (IdParticipant) REFERENCES participants ON DELETE CASCADE;
 
 CREATE OR REPLACE FUNCTION gomacro_validate_json_camp_Currency (data jsonb)
     RETURNS boolean

@@ -96,3 +96,8 @@ type OptionnalPlage struct {
 	Plage
 	Active bool
 }
+
+type OptID[T ~int64] struct {
+	Id    T
+	Valid bool
+}

@@ -40,5 +40,19 @@
             "Mode": "go/randdata",
             "Output": "sql/dossiers/gen_randdata_test.go"
         }
+    ],
+    "sql/files/models.go": [
+        {
+            "Mode": "go/sqlcrud",
+            "Output": "sql/files/gen_scans.go"
+        },
+        {
+            "Mode": "sql",
+            "Output": "sql/files/gen_create.sql"
+        },
+        {
+            "Mode": "go/randdata",
+            "Output": "sql/files/gen_randdata_test.go"
+        }
     ]
 }
