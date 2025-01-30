@@ -81,7 +81,7 @@ func ScanFichesanitaires(rs *sql.Rows) (Fichesanitaires, error) {
 	return structs, nil
 }
 
-func InsertFichesanitaire(db DB, item Fichesanitaire) error {
+func (item Fichesanitaire) Insert(db DB) error {
 	_, err := db.Exec(`INSERT INTO fichesanitaires (
 			idpersonne, traitementmedical, maladies, allergies, difficultessante, recommandations, handicap, tel, medecin, lastmodif, mails
 			) VALUES (

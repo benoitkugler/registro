@@ -89,7 +89,7 @@ func NewTestDB(t *testing.T, generateSQLFile ...string) TestDB {
 		t.Fatal(err)
 	}
 
-	t.Log("Successfully created dev DB")
+	t.Logf("Successfully created dev DB %s", name)
 
 	return TestDB{DB: db, name: name}
 }

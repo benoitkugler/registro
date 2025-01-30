@@ -10,7 +10,6 @@ import (
 
 	"registro/config"
 	"registro/sql/camps"
-	"registro/sql/dossiers"
 	pr "registro/sql/personnes"
 	"registro/sql/shared"
 	"registro/utils"
@@ -181,7 +180,7 @@ func TestAttestationPresence(t *testing.T) {
 		Adresse:    "200, Route de Dieulefit",
 		CodePostal: "07568",
 		Ville:      "Montélimar",
-	}, []dossiers.ParticipantExt{
+	}, []camps.ParticipantExt{
 		{Camp: camp, Personne: pr.Personne{Etatcivil: personne}},
 		{Camp: camp, Personne: pr.Personne{Etatcivil: personne}},
 		{Camp: camp, Personne: pr.Personne{Etatcivil: personne}},

@@ -3,7 +3,6 @@ package files
 import (
 	"math/rand"
 	"registro/sql/camps"
-	"registro/sql/dossiers"
 	"registro/sql/personnes"
 	"time"
 )
@@ -59,7 +58,7 @@ func randFile() File {
 func randFileAide() FileAide {
 	var s FileAide
 	s.IdFile = randIdFile()
-	s.IdAide = randdos_IdAide()
+	s.IdAide = randcam_IdAide()
 
 	return s
 }
@@ -111,16 +110,16 @@ func randbool() bool {
 	return i == 1
 }
 
+func randcam_IdAide() camps.IdAide {
+	return camps.IdAide(randint64())
+}
+
 func randcam_IdCamp() camps.IdCamp {
 	return camps.IdCamp(randint64())
 }
 
 func randcam_IdEquipier() camps.IdEquipier {
 	return camps.IdEquipier(randint64())
-}
-
-func randdos_IdAide() dossiers.IdAide {
-	return dossiers.IdAide(randint64())
 }
 
 func randint() int {

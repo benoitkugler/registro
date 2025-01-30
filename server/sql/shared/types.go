@@ -3,6 +3,8 @@ package shared
 import (
 	"database/sql/driver"
 	"encoding"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -52,6 +54,27 @@ func (d Date) String() string {
 	return fmt.Sprintf("%02d/%02d/%04d", da.Day(), da.Month(), da.Year())
 }
 
+var weekDays = [...]string{
+	"Dim",
+	"Lun",
+	"Mar",
+	"Mer",
+	"Jeu",
+	"Ven",
+	"Sam",
+}
+
+// ShortString renvoie la date au format mer 2
+func (d Date) ShortString() string {
+	t := d.Time()
+	return fmt.Sprintf("%s %d", weekDays[t.Weekday()], t.Day())
+}
+
+func (d Date) AddDays(jours int) Date {
+	const day = 24 * time.Hour
+	return NewDateFrom(d.Time().Add(day * time.Duration(jours)))
+}
+
 var (
 	_ encoding.TextMarshaler   = (*Date)(nil)
 	_ encoding.TextUnmarshaler = (*Date)(nil)
@@ -90,6 +113,25 @@ type Plage struct {
 func (pl Plage) To() Date {
 	out := pl.From.Time()
 	return NewDateFrom(out.Add(time.Hour * 24 * time.Duration(pl.Duree-1)))
+}
+
+func (s *Plage) Scan(src interface{}) error {
+	if src == nil {
+		return nil // zero value out
+	}
+	bs, ok := src.([]byte)
+	if !ok {
+		return errors.New("not a []byte")
+	}
+	return json.Unmarshal(bs, s)
+}
+
+func (s Plage) Value() (driver.Value, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return driver.Value(string(b)), nil
 }
 
 type OptID[T ~int64] struct {

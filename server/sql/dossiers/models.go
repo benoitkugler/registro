@@ -5,43 +5,21 @@ package dossiers
 import (
 	"time"
 
-	cps "registro/sql/camps"
 	pr "registro/sql/personnes"
 	"registro/sql/shared"
 )
 
 type (
-	IdParticipant   int64
-	IdDossier       int64
-	IdSondage       int64
-	IdPaiement      int64
-	IdStructureaide int64
-	IdAide          int64
+	IdDossier  int64
+	IdPaiement int64
 )
-
-type Participant struct {
-	Id         IdParticipant
-	IdCamp     cps.IdCamp    `gomacro-sql-on-delete:"CASCADE"`
-	IdPersonne pr.IdPersonne `gomacro-sql-on-delete:"CASCADE"`
-	IdDossier  IdDossier     `gomacro-sql-on-delete:"CASCADE"`
-
-	ListeAttente     ListeAttente
-	Remises          Remises
-	QuotientFamilial int
-
-	// TODO:
-	// OptionPrix   OptionPrixParticipant `json:"option_prix"`
-
-	Details string // rempli sur l'espace de suivi
-	Bus     Bus    // rempli sur l'espace de suivi
-}
 
 // Dossier représente un dossier d'inscription validé,
 // et permet le suivi de l'inscription.
 // En particulier, il y a un espace personnel par dossier.
 type Dossier struct {
-	Id         IdDossier
-	IdPersonne pr.IdPersonne // responsable légal en charge du dossier
+	Id            IdDossier
+	IdResponsable pr.IdPersonne // responsable légal en charge du dossier
 
 	// CopiesMails est une liste d'adresse en copies des mails envoyés,
 	// donnant entre autre accès à l'espace personnel
@@ -64,7 +42,7 @@ type Paiement struct {
 	IsAcompte       bool
 	IsRemboursement bool
 
-	Montant cps.Montant
+	Montant Montant
 	Payeur  string
 	Mode    ModePaiement
 	Date    shared.Date
@@ -72,39 +50,4 @@ type Paiement struct {
 	Label string
 	// Details peut stocker un motif ou la date d'encaissement d'un chèque
 	Details string
-}
-
-// Sondage enregistre les retours sur un séjour
-//
-// gomacro:SQL ADD UNIQUE(IdCamp, IdDossier)
-type Sondage struct {
-	IdSondage IdSondage
-	IdCamp    cps.IdCamp `gomacro-sql-on-delete:"CASCADE"`
-	IdDossier IdDossier  `gomacro-sql-on-delete:"CASCADE"`
-	Modified  time.Time
-
-	ReponseSondage
-}
-
-type Structureaide struct {
-	Id              int64
-	Nom             string
-	Immatriculation string
-	Adresse         string
-	CodePostal      string
-	Ville           string
-	Telephone       pr.Tel
-	Info            string
-}
-
-type Aide struct {
-	Id              IdAide
-	IdStructureaide IdStructureaide
-	IdParticipant   IdParticipant `gomacro-sql-on-delete:"CASCADE"`
-
-	Valide bool
-
-	Valeur     cps.Montant
-	ParJour    bool
-	NbJoursMax int
 }

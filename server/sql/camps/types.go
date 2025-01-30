@@ -2,40 +2,199 @@ package camps
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
+	"registro/sql/dossiers"
+	"registro/sql/personnes"
 	"registro/sql/shared"
+	"registro/utils"
 )
 
-type Currency uint8
+type Montant = dossiers.Montant
+
+// ListeAttente définit le statut d'un participant
+// par rapport à la liste d'attente
+type ListeAttente uint8
 
 const (
-	Empty Currency = iota
-	Euros
-	FrancsSuisse
+	// personne n'a encore décidé ou placer le participant
+	ADecider ListeAttente = iota
+	// le profil ne suit pas les conditions du camp
+	AttenteProfilInvalide
+	// le camp est déjà complet
+	AttenteCampComplet
+	// une place s'est libérée et on attend une confirmation
+	EnAttenteReponse
+	// le participant apparait en liste principale
+	Inscrit
 )
 
-func (c Currency) String() string {
-	switch c {
-	case Euros:
-		return "€"
-	case FrancsSuisse:
-		return "CHF"
-	default:
-		return "<invalid currency>"
+type Bus uint8
+
+const (
+	NoBus Bus = iota
+	Aller
+	Retour
+	AllerRetour
+)
+
+func (b Bus) Includes(aller bool) bool {
+	if aller {
+		return b == Aller || b == AllerRetour
 	}
+	return b == Retour || b == AllerRetour
 }
 
-// Montant représente un prix (avec son unité).
-type Montant struct {
-	Cent     int
-	Currency Currency
+// Remises altère le prix payé par un participant
+type Remises struct {
+	ReducEquipiers int // en %
+	ReducEnfants   int // en %
+	ReducSpeciale  Montant
 }
 
-func NewEuros(f float32) Montant { return Montant{int(f * 100), Euros} }
+// Semaine précise le choix d'une seule semaine de camp
+type Semaine uint8
 
-func (s Montant) String() string {
-	return strings.ReplaceAll(fmt.Sprintf("%g %s", float64(s.Cent)/100, s.Currency), ".", ",")
+const (
+	Tout     Semaine = iota // Camp complet
+	Semaine1                // Semaine 1
+	Semaine2                // Semaine 2
+)
+
+// Jours stocke les indexes (0-based) des jours de présence
+// d'un participant à un séjour
+// Une liste vide indique la présence sur TOUT le séjour.
+type Jours []int32
+
+// sorted renvoie une liste triée et unique
+func (js Jours) sorted() []int {
+	set := map[int]bool{}
+	for _, index := range js {
+		set[int(index)] = true
+	}
+	sortedKeys := utils.MapKeys(set)
+	sort.Ints(sortedKeys)
+	return sortedKeys
+}
+
+// Sanitize vérifie que les jours sont valides
+func (js Jours) Sanitize(duree int) error {
+	if len(js.sorted()) != len(js) {
+		return fmt.Errorf("jours de présences invalides: %v", js)
+	}
+	for _, j := range js {
+		if j < 0 || int(j) >= duree {
+			return fmt.Errorf("jour de présence invalide (%d)", j)
+		}
+	}
+	return nil
+}
+
+// NbJours renvoie le nombre de jours de présence
+// en évitant un éventuel doublon
+func (js Jours) NbJours(datesCamp shared.Plage) int {
+	if len(js) == 0 {
+		return datesCamp.Duree
+	}
+	return len(js.sorted())
+}
+
+// ClosestPlage renvoie la plage englobant les jours de présence
+func (js Jours) ClosestPlage(datesCamp shared.Plage) shared.Plage {
+	sorted := js.sorted()
+	if len(sorted) == 0 { // zero value : tout le séjour
+		return datesCamp
+	}
+	indexMin, indexMax := sorted[0], sorted[len(js)-1]
+	return shared.Plage{From: datesCamp.From.AddDays(indexMin), Duree: indexMax - indexMin + 1}
+}
+
+// CalculePrix somme les prix des journées de présence
+func (js Jours) CalculePrix(prixParJour []Montant) Montant {
+	var total Montant
+	for _, i := range js.sorted() {
+		if i >= len(prixParJour) { // ne devrait pas arriver
+			continue
+		}
+		total.Add(prixParJour[i])
+	}
+	return total
+}
+
+// Description renvoie les jours de présence au camp
+func (js Jours) Description(datesCamp shared.Plage) string {
+	sorted := js.sorted()
+	if len(sorted) == 0 || len(sorted) == datesCamp.Duree {
+		return "Tout le séjour"
+	}
+
+	var days []string
+	for _, index := range sorted { // 0 based
+		day := datesCamp.From.AddDays(index)
+		days = append(days, day.ShortString())
+	}
+	return strings.Join(days, "; ")
+}
+
+type OptionPrixKind uint8
+
+const (
+	_ OptionPrixKind = iota
+	PrixSemaine
+	PrixStatut
+	PrixJour
+)
+
+// OptionPrixCamp stocke une option sur le prix d'un camp. Une seule est effective,
+// déterminée par Active
+type OptionPrixCamp struct {
+	Active OptionPrixKind
+
+	Semaine OptionSemaineCamp
+	Statuts []PrixParStatut
+	// Prix de chaque jour du camp (souvent constant)
+	// Le champ [Prix] du séjour peut être inférieur à la somme
+	// pour une remise.
+	Jour []Montant
+}
+
+type OptionSemaineCamp struct {
+	Plage1 shared.Plage
+	Plage2 shared.Plage
+	Prix1  Montant
+	Prix2  Montant
+}
+
+type PrixParStatut struct {
+	Id          int64
+	Prix        Montant
+	Statut      string
+	Description string
+}
+
+// OptionPrixParticipant répond à OptionPrixCamp. L'option est active si :
+//   - elle est active dans le camp
+//   - elle est non nulle dans le participant
+type OptionPrixParticipant struct {
+	Semaine  Semaine
+	IdStatut int
+	Jour     Jours
+}
+
+// IsNonZero renvoie `true` si une option est active
+// pour la catégorie demandée.
+func (op OptionPrixParticipant) IsNonZero(kind OptionPrixKind) bool {
+	switch kind {
+	case PrixSemaine:
+		return op.Semaine != 0
+	case PrixStatut:
+		return op.IdStatut != 0
+	case PrixJour:
+		return len(op.Jour) > 0
+	default:
+		return false
+	}
 }
 
 type Vetement struct {
@@ -156,4 +315,38 @@ const (
 type OptionnalPlage struct {
 	shared.Plage
 	Active bool
+}
+
+// Satisfaction est une énumération indiquant le
+// niveau de satisfaction sur le sondage de fin de séjour
+type Satisfaction uint8
+
+// Attention, la valeur compte pour la présentation
+// sur le frontend comme "form-rating"
+const (
+	NoSatisfaction   Satisfaction = iota // -
+	Decevant                             // Décevant
+	Moyen                                // Moyen
+	Satisfaisant                         // Satisfaisant
+	Tressatisfaisant                     // Très satisfaisant
+)
+
+type ReponseSondage struct {
+	InfosAvantSejour   Satisfaction
+	InfosPendantSejour Satisfaction
+	Hebergement        Satisfaction
+	Activites          Satisfaction
+	Theme              Satisfaction
+	Nourriture         Satisfaction
+	Hygiene            Satisfaction
+	Ambiance           Satisfaction
+	Ressenti           Satisfaction
+	MessageEnfant      string
+	MessageResponsable string
+}
+
+type ParticipantExt struct {
+	Participant
+	Camp
+	personnes.Personne
 }

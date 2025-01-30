@@ -7,7 +7,6 @@ import (
 
 	"registro/config"
 	cps "registro/sql/camps"
-	"registro/sql/dossiers"
 	pr "registro/sql/personnes"
 	"registro/sql/shared"
 )
@@ -106,12 +105,12 @@ type Destinataire struct {
 }
 
 // CreateAttestationPresence returns a PDF document.
-func CreateAttestationPresence(cfg config.Asso, destinataire Destinataire, participants []dossiers.ParticipantExt) ([]byte, error) {
+func CreateAttestationPresence(cfg config.Asso, destinataire Destinataire, participants []cps.ParticipantExt) ([]byte, error) {
 	type attestationPresenceTmplData struct {
 		Asso         config.Asso
 		Date         string // now
 		Destinataire Destinataire
-		Participants []dossiers.ParticipantExt
+		Participants []cps.ParticipantExt
 	}
 
 	return templateToPDF(attestationPresenceTmpl, attestationPresenceTmplData{

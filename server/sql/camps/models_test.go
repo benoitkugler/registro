@@ -4,13 +4,14 @@ import (
 	"testing"
 	"time"
 
+	"registro/sql/dossiers"
 	pr "registro/sql/personnes"
 	"registro/sql/shared"
 	tu "registro/utils/testutils"
 )
 
 func TestSQL(t *testing.T) {
-	db := tu.NewTestDB(t, "../personnes/gen_create.sql", "gen_create.sql")
+	db := tu.NewTestDB(t, "../personnes/gen_create.sql", "../dossiers/gen_create.sql", "gen_create.sql")
 	defer db.Remove()
 
 	camp, err := randCamp().Insert(db)
@@ -24,52 +25,30 @@ func TestSQL(t *testing.T) {
 	// only one directeur
 	_, err = Equipier{IdPersonne: personne.Id, IdCamp: camp.Id, Roles: Roles{Direction, Menage}}.Insert(db)
 	tu.Assert(t, err != nil)
-}
 
-func TestMontant(t *testing.T) {
-	db := tu.NewTestDB(t)
-	defer db.Remove()
-
-	_, err := db.Exec(`
-	CREATE TYPE montant AS (cent int, currenty smallint);
-
-	CREATE TABLE t1 (id serial, montant montant);
-	INSERT INTO t1 (id, montant) VALUES (1, (0, 0));
-	`)
+	// participants et groupe
+	dossier, err := dossiers.Dossier{IdResponsable: personne.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+	part1 := randParticipant()
+	part1.IdCamp, part1.IdPersonne, part1.IdDossier = camp.Id, personne.Id, dossier.Id
+	part1, err = part1.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	for _, expected := range [...]Montant{
-		{0, 0},
-		{-2, 1},
-		{10, 2},
-	} {
-		_, err = db.Exec("UPDATE t1 SET montant = $1", expected)
-		tu.AssertNoErr(t, err)
+	groupe1, err := Groupe{IdCamp: camp.Id, Nom: "1"}.Insert(db)
+	tu.AssertNoErr(t, err)
+	groupe2, err := Groupe{IdCamp: camp.Id, Nom: "2"}.Insert(db)
+	tu.AssertNoErr(t, err)
 
-		var montant Montant
-		row := db.QueryRow("SELECT montant FROM t1;")
-		err = row.Scan(&montant)
-		tu.AssertNoErr(t, err)
-		tu.Assert(t, montant == expected)
+	err = GroupeParticipant(GroupeParticipant{IdParticipant: part1.Id, IdGroupe: groupe1.Id, IdCamp: camp.Id}).Insert(db)
+	tu.AssertNoErr(t, err)
 
-	}
-}
+	err = GroupeParticipant(GroupeParticipant{IdParticipant: part1.Id, IdGroupe: groupe1.Id, IdCamp: camp.Id}).Insert(db)
+	tu.Assert(t, err != nil) // unicité
+	err = GroupeParticipant(GroupeParticipant{IdParticipant: part1.Id, IdGroupe: groupe2.Id, IdCamp: camp.Id}).Insert(db)
+	tu.Assert(t, err != nil) // unicité du participant
 
-func TestMontant_String(t *testing.T) {
-	for _, test := range [...]struct {
-		m        Montant
-		expected string
-	}{
-		{Montant{}, "0 <invalid currency>"},
-		{Montant{0, 1}, "0 €"},
-		{Montant{100, 1}, "1 €"},
-		{Montant{-100, 1}, "-1 €"},
-		{Montant{110, 1}, "1,1 €"},
-		{Montant{110, 2}, "1,1 CHF"},
-		{Montant{11589, 2}, "115,89 CHF"},
-	} {
-		tu.Assert(t, test.m.String() == test.expected)
-	}
+	err = GroupeParticipant(GroupeParticipant{IdParticipant: part1.Id, IdGroupe: groupe1.Id, IdCamp: 0}).Insert(db)
+	tu.Assert(t, err != nil)
 }
 
 func TestCamp_DateFin(t *testing.T) {

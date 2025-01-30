@@ -7,10 +7,8 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
-	"fmt"
+	"registro/sql/dossiers"
 	"registro/sql/personnes"
-	"strconv"
-	"strings"
 
 	"github.com/lib/pq"
 )
@@ -28,6 +26,200 @@ type DB interface {
 	Prepare(query string) (*sql.Stmt, error)
 }
 
+func scanOneAide(row scanner) (Aide, error) {
+	var item Aide
+	err := row.Scan(
+		&item.Id,
+		&item.IdStructureaide,
+		&item.IdParticipant,
+		&item.Valide,
+		&item.Valeur,
+		&item.ParJour,
+		&item.NbJoursMax,
+	)
+	return item, err
+}
+
+func ScanAide(row *sql.Row) (Aide, error) { return scanOneAide(row) }
+
+// SelectAll returns all the items in the aides table.
+func SelectAllAides(db DB) (Aides, error) {
+	rows, err := db.Query("SELECT * FROM aides")
+	if err != nil {
+		return nil, err
+	}
+	return ScanAides(rows)
+}
+
+// SelectAide returns the entry matching 'id'.
+func SelectAide(tx DB, id IdAide) (Aide, error) {
+	row := tx.QueryRow("SELECT * FROM aides WHERE id = $1", id)
+	return ScanAide(row)
+}
+
+// SelectAides returns the entry matching the given 'ids'.
+func SelectAides(tx DB, ids ...IdAide) (Aides, error) {
+	rows, err := tx.Query("SELECT * FROM aides WHERE id = ANY($1)", IdAideArrayToPQ(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanAides(rows)
+}
+
+type Aides map[IdAide]Aide
+
+func (m Aides) IDs() []IdAide {
+	out := make([]IdAide, 0, len(m))
+	for i := range m {
+		out = append(out, i)
+	}
+	return out
+}
+
+func ScanAides(rs *sql.Rows) (Aides, error) {
+	var (
+		s   Aide
+		err error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(Aides, 16)
+	for rs.Next() {
+		s, err = scanOneAide(rs)
+		if err != nil {
+			return nil, err
+		}
+		structs[s.Id] = s
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+// Insert one Aide in the database and returns the item with id filled.
+func (item Aide) Insert(tx DB) (out Aide, err error) {
+	row := tx.QueryRow(`INSERT INTO aides (
+		idstructureaide, idparticipant, valide, valeur, parjour, nbjoursmax
+		) VALUES (
+		$1, $2, $3, $4, $5, $6
+		) RETURNING *;
+		`, item.IdStructureaide, item.IdParticipant, item.Valide, item.Valeur, item.ParJour, item.NbJoursMax)
+	return ScanAide(row)
+}
+
+// Update Aide in the database and returns the new version.
+func (item Aide) Update(tx DB) (out Aide, err error) {
+	row := tx.QueryRow(`UPDATE aides SET (
+		idstructureaide, idparticipant, valide, valeur, parjour, nbjoursmax
+		) = (
+		$1, $2, $3, $4, $5, $6
+		) WHERE id = $7 RETURNING *;
+		`, item.IdStructureaide, item.IdParticipant, item.Valide, item.Valeur, item.ParJour, item.NbJoursMax, item.Id)
+	return ScanAide(row)
+}
+
+// Deletes the Aide and returns the item
+func DeleteAideById(tx DB, id IdAide) (Aide, error) {
+	row := tx.QueryRow("DELETE FROM aides WHERE id = $1 RETURNING *;", id)
+	return ScanAide(row)
+}
+
+// Deletes the Aide in the database and returns the ids.
+func DeleteAidesByIDs(tx DB, ids ...IdAide) ([]IdAide, error) {
+	rows, err := tx.Query("DELETE FROM aides WHERE id = ANY($1) RETURNING id", IdAideArrayToPQ(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIdAideArray(rows)
+}
+
+// ByIdStructureaide returns a map with 'IdStructureaide' as keys.
+func (items Aides) ByIdStructureaide() map[IdStructureaide]Aides {
+	out := make(map[IdStructureaide]Aides)
+	for _, target := range items {
+		dict := out[target.IdStructureaide]
+		if dict == nil {
+			dict = make(Aides)
+		}
+		dict[target.Id] = target
+		out[target.IdStructureaide] = dict
+	}
+	return out
+}
+
+// IdStructureaides returns the list of ids of IdStructureaide
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items Aides) IdStructureaides() []IdStructureaide {
+	out := make([]IdStructureaide, 0, len(items))
+	for _, target := range items {
+		out = append(out, target.IdStructureaide)
+	}
+	return out
+}
+
+func SelectAidesByIdStructureaides(tx DB, idStructureaides_ ...IdStructureaide) (Aides, error) {
+	rows, err := tx.Query("SELECT * FROM aides WHERE idstructureaide = ANY($1)", IdStructureaideArrayToPQ(idStructureaides_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanAides(rows)
+}
+
+func DeleteAidesByIdStructureaides(tx DB, idStructureaides_ ...IdStructureaide) ([]IdAide, error) {
+	rows, err := tx.Query("DELETE FROM aides WHERE idstructureaide = ANY($1) RETURNING id", IdStructureaideArrayToPQ(idStructureaides_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIdAideArray(rows)
+}
+
+// ByIdParticipant returns a map with 'IdParticipant' as keys.
+func (items Aides) ByIdParticipant() map[IdParticipant]Aides {
+	out := make(map[IdParticipant]Aides)
+	for _, target := range items {
+		dict := out[target.IdParticipant]
+		if dict == nil {
+			dict = make(Aides)
+		}
+		dict[target.Id] = target
+		out[target.IdParticipant] = dict
+	}
+	return out
+}
+
+// IdParticipants returns the list of ids of IdParticipant
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items Aides) IdParticipants() []IdParticipant {
+	out := make([]IdParticipant, 0, len(items))
+	for _, target := range items {
+		out = append(out, target.IdParticipant)
+	}
+	return out
+}
+
+func SelectAidesByIdParticipants(tx DB, idParticipants_ ...IdParticipant) (Aides, error) {
+	rows, err := tx.Query("SELECT * FROM aides WHERE idparticipant = ANY($1)", IdParticipantArrayToPQ(idParticipants_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanAides(rows)
+}
+
+func DeleteAidesByIdParticipants(tx DB, idParticipants_ ...IdParticipant) ([]IdAide, error) {
+	rows, err := tx.Query("DELETE FROM aides WHERE idparticipant = ANY($1) RETURNING id", IdParticipantArrayToPQ(idParticipants_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIdAideArray(rows)
+}
+
 func scanOneCamp(row scanner) (Camp, error) {
 	var item Camp
 	err := row.Scan(
@@ -37,6 +229,7 @@ func scanOneCamp(row scanner) (Camp, error) {
 		&item.Duree,
 		&item.Agrement,
 		&item.Prix,
+		&item.OptionPrix,
 	)
 	return item, err
 }
@@ -105,22 +298,22 @@ func ScanCamps(rs *sql.Rows) (Camps, error) {
 // Insert one Camp in the database and returns the item with id filled.
 func (item Camp) Insert(tx DB) (out Camp, err error) {
 	row := tx.QueryRow(`INSERT INTO camps (
-		nom, datedebut, duree, agrement, prix
+		nom, datedebut, duree, agrement, prix, optionprix
 		) VALUES (
-		$1, $2, $3, $4, $5
+		$1, $2, $3, $4, $5, $6
 		) RETURNING *;
-		`, item.Nom, item.DateDebut, item.Duree, item.Agrement, item.Prix)
+		`, item.Nom, item.DateDebut, item.Duree, item.Agrement, item.Prix, item.OptionPrix)
 	return ScanCamp(row)
 }
 
 // Update Camp in the database and returns the new version.
 func (item Camp) Update(tx DB) (out Camp, err error) {
 	row := tx.QueryRow(`UPDATE camps SET (
-		nom, datedebut, duree, agrement, prix
+		nom, datedebut, duree, agrement, prix, optionprix
 		) = (
-		$1, $2, $3, $4, $5
-		) WHERE id = $6 RETURNING *;
-		`, item.Nom, item.DateDebut, item.Duree, item.Agrement, item.Prix, item.Id)
+		$1, $2, $3, $4, $5, $6
+		) WHERE id = $7 RETURNING *;
+		`, item.Nom, item.DateDebut, item.Duree, item.Agrement, item.Prix, item.OptionPrix, item.Id)
 	return ScanCamp(row)
 }
 
@@ -343,6 +536,410 @@ func SelectEquipierByIdCampAndIdPersonne(tx DB, idCamp IdCamp, idPersonne person
 	return item, true, err
 }
 
+func scanOneGroupe(row scanner) (Groupe, error) {
+	var item Groupe
+	err := row.Scan(
+		&item.Id,
+		&item.IdCamp,
+		&item.Nom,
+		&item.Plage,
+		&item.Couleur,
+	)
+	return item, err
+}
+
+func ScanGroupe(row *sql.Row) (Groupe, error) { return scanOneGroupe(row) }
+
+// SelectAll returns all the items in the groupes table.
+func SelectAllGroupes(db DB) (Groupes, error) {
+	rows, err := db.Query("SELECT * FROM groupes")
+	if err != nil {
+		return nil, err
+	}
+	return ScanGroupes(rows)
+}
+
+// SelectGroupe returns the entry matching 'id'.
+func SelectGroupe(tx DB, id IdGroupe) (Groupe, error) {
+	row := tx.QueryRow("SELECT * FROM groupes WHERE id = $1", id)
+	return ScanGroupe(row)
+}
+
+// SelectGroupes returns the entry matching the given 'ids'.
+func SelectGroupes(tx DB, ids ...IdGroupe) (Groupes, error) {
+	rows, err := tx.Query("SELECT * FROM groupes WHERE id = ANY($1)", IdGroupeArrayToPQ(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanGroupes(rows)
+}
+
+type Groupes map[IdGroupe]Groupe
+
+func (m Groupes) IDs() []IdGroupe {
+	out := make([]IdGroupe, 0, len(m))
+	for i := range m {
+		out = append(out, i)
+	}
+	return out
+}
+
+func ScanGroupes(rs *sql.Rows) (Groupes, error) {
+	var (
+		s   Groupe
+		err error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(Groupes, 16)
+	for rs.Next() {
+		s, err = scanOneGroupe(rs)
+		if err != nil {
+			return nil, err
+		}
+		structs[s.Id] = s
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+// Insert one Groupe in the database and returns the item with id filled.
+func (item Groupe) Insert(tx DB) (out Groupe, err error) {
+	row := tx.QueryRow(`INSERT INTO groupes (
+		idcamp, nom, plage, couleur
+		) VALUES (
+		$1, $2, $3, $4
+		) RETURNING *;
+		`, item.IdCamp, item.Nom, item.Plage, item.Couleur)
+	return ScanGroupe(row)
+}
+
+// Update Groupe in the database and returns the new version.
+func (item Groupe) Update(tx DB) (out Groupe, err error) {
+	row := tx.QueryRow(`UPDATE groupes SET (
+		idcamp, nom, plage, couleur
+		) = (
+		$1, $2, $3, $4
+		) WHERE id = $5 RETURNING *;
+		`, item.IdCamp, item.Nom, item.Plage, item.Couleur, item.Id)
+	return ScanGroupe(row)
+}
+
+// Deletes the Groupe and returns the item
+func DeleteGroupeById(tx DB, id IdGroupe) (Groupe, error) {
+	row := tx.QueryRow("DELETE FROM groupes WHERE id = $1 RETURNING *;", id)
+	return ScanGroupe(row)
+}
+
+// Deletes the Groupe in the database and returns the ids.
+func DeleteGroupesByIDs(tx DB, ids ...IdGroupe) ([]IdGroupe, error) {
+	rows, err := tx.Query("DELETE FROM groupes WHERE id = ANY($1) RETURNING id", IdGroupeArrayToPQ(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIdGroupeArray(rows)
+}
+
+// ByIdCamp returns a map with 'IdCamp' as keys.
+func (items Groupes) ByIdCamp() map[IdCamp]Groupes {
+	out := make(map[IdCamp]Groupes)
+	for _, target := range items {
+		dict := out[target.IdCamp]
+		if dict == nil {
+			dict = make(Groupes)
+		}
+		dict[target.Id] = target
+		out[target.IdCamp] = dict
+	}
+	return out
+}
+
+// IdCamps returns the list of ids of IdCamp
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items Groupes) IdCamps() []IdCamp {
+	out := make([]IdCamp, 0, len(items))
+	for _, target := range items {
+		out = append(out, target.IdCamp)
+	}
+	return out
+}
+
+func SelectGroupesByIdCamps(tx DB, idCamps_ ...IdCamp) (Groupes, error) {
+	rows, err := tx.Query("SELECT * FROM groupes WHERE idcamp = ANY($1)", IdCampArrayToPQ(idCamps_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanGroupes(rows)
+}
+
+func DeleteGroupesByIdCamps(tx DB, idCamps_ ...IdCamp) ([]IdGroupe, error) {
+	rows, err := tx.Query("DELETE FROM groupes WHERE idcamp = ANY($1) RETURNING id", IdCampArrayToPQ(idCamps_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIdGroupeArray(rows)
+}
+
+func scanOneGroupeParticipant(row scanner) (GroupeParticipant, error) {
+	var item GroupeParticipant
+	err := row.Scan(
+		&item.IdParticipant,
+		&item.IdGroupe,
+		&item.IdCamp,
+		&item.Manuel,
+	)
+	return item, err
+}
+
+func ScanGroupeParticipant(row *sql.Row) (GroupeParticipant, error) {
+	return scanOneGroupeParticipant(row)
+}
+
+// SelectAll returns all the items in the groupe_participants table.
+func SelectAllGroupeParticipants(db DB) (GroupeParticipants, error) {
+	rows, err := db.Query("SELECT * FROM groupe_participants")
+	if err != nil {
+		return nil, err
+	}
+	return ScanGroupeParticipants(rows)
+}
+
+type GroupeParticipants []GroupeParticipant
+
+func ScanGroupeParticipants(rs *sql.Rows) (GroupeParticipants, error) {
+	var (
+		item GroupeParticipant
+		err  error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(GroupeParticipants, 0, 16)
+	for rs.Next() {
+		item, err = scanOneGroupeParticipant(rs)
+		if err != nil {
+			return nil, err
+		}
+		structs = append(structs, item)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+func (item GroupeParticipant) Insert(db DB) error {
+	_, err := db.Exec(`INSERT INTO groupe_participants (
+			idparticipant, idgroupe, idcamp, manuel
+			) VALUES (
+			$1, $2, $3, $4
+			);
+			`, item.IdParticipant, item.IdGroupe, item.IdCamp, item.Manuel)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Insert the links GroupeParticipant in the database.
+// It is a no-op if 'items' is empty.
+func InsertManyGroupeParticipants(tx *sql.Tx, items ...GroupeParticipant) error {
+	if len(items) == 0 {
+		return nil
+	}
+
+	stmt, err := tx.Prepare(pq.CopyIn("groupe_participants",
+		"idparticipant",
+		"idgroupe",
+		"idcamp",
+		"manuel",
+	))
+	if err != nil {
+		return err
+	}
+
+	for _, item := range items {
+		_, err = stmt.Exec(item.IdParticipant, item.IdGroupe, item.IdCamp, item.Manuel)
+		if err != nil {
+			return err
+		}
+	}
+
+	if _, err = stmt.Exec(); err != nil {
+		return err
+	}
+
+	if err = stmt.Close(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Delete the link GroupeParticipant from the database.
+// Only the foreign keys IdParticipant, IdGroupe, IdCamp fields are used in 'item'.
+func (item GroupeParticipant) Delete(tx DB) error {
+	_, err := tx.Exec(`DELETE FROM groupe_participants WHERE IdParticipant = $1 AND IdGroupe = $2 AND IdCamp = $3;`, item.IdParticipant, item.IdGroupe, item.IdCamp)
+	return err
+}
+
+// ByIdParticipant returns a map with 'IdParticipant' as keys.
+func (items GroupeParticipants) ByIdParticipant() map[IdParticipant]GroupeParticipant {
+	out := make(map[IdParticipant]GroupeParticipant, len(items))
+	for _, target := range items {
+		out[target.IdParticipant] = target
+	}
+	return out
+}
+
+// IdParticipants returns the list of ids of IdParticipant
+// contained in this link table.
+// They are not garanteed to be distinct.
+func (items GroupeParticipants) IdParticipants() []IdParticipant {
+	out := make([]IdParticipant, len(items))
+	for index, target := range items {
+		out[index] = target.IdParticipant
+	}
+	return out
+}
+
+// SelectGroupeParticipantByIdParticipant return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectGroupeParticipantByIdParticipant(tx DB, idParticipant IdParticipant) (item GroupeParticipant, found bool, err error) {
+	row := tx.QueryRow("SELECT * FROM groupe_participants WHERE idparticipant = $1", idParticipant)
+	item, err = ScanGroupeParticipant(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
+}
+
+func SelectGroupeParticipantsByIdParticipants(tx DB, idParticipants_ ...IdParticipant) (GroupeParticipants, error) {
+	rows, err := tx.Query("SELECT * FROM groupe_participants WHERE idparticipant = ANY($1)", IdParticipantArrayToPQ(idParticipants_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanGroupeParticipants(rows)
+}
+
+func DeleteGroupeParticipantsByIdParticipants(tx DB, idParticipants_ ...IdParticipant) (GroupeParticipants, error) {
+	rows, err := tx.Query("DELETE FROM groupe_participants WHERE idparticipant = ANY($1) RETURNING *", IdParticipantArrayToPQ(idParticipants_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanGroupeParticipants(rows)
+}
+
+// ByIdGroupe returns a map with 'IdGroupe' as keys.
+func (items GroupeParticipants) ByIdGroupe() map[IdGroupe]GroupeParticipants {
+	out := make(map[IdGroupe]GroupeParticipants)
+	for _, target := range items {
+		out[target.IdGroupe] = append(out[target.IdGroupe], target)
+	}
+	return out
+}
+
+// IdGroupes returns the list of ids of IdGroupe
+// contained in this link table.
+// They are not garanteed to be distinct.
+func (items GroupeParticipants) IdGroupes() []IdGroupe {
+	out := make([]IdGroupe, len(items))
+	for index, target := range items {
+		out[index] = target.IdGroupe
+	}
+	return out
+}
+
+func SelectGroupeParticipantsByIdGroupes(tx DB, idGroupes_ ...IdGroupe) (GroupeParticipants, error) {
+	rows, err := tx.Query("SELECT * FROM groupe_participants WHERE idgroupe = ANY($1)", IdGroupeArrayToPQ(idGroupes_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanGroupeParticipants(rows)
+}
+
+func DeleteGroupeParticipantsByIdGroupes(tx DB, idGroupes_ ...IdGroupe) (GroupeParticipants, error) {
+	rows, err := tx.Query("DELETE FROM groupe_participants WHERE idgroupe = ANY($1) RETURNING *", IdGroupeArrayToPQ(idGroupes_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanGroupeParticipants(rows)
+}
+
+// ByIdCamp returns a map with 'IdCamp' as keys.
+func (items GroupeParticipants) ByIdCamp() map[IdCamp]GroupeParticipants {
+	out := make(map[IdCamp]GroupeParticipants)
+	for _, target := range items {
+		out[target.IdCamp] = append(out[target.IdCamp], target)
+	}
+	return out
+}
+
+// IdCamps returns the list of ids of IdCamp
+// contained in this link table.
+// They are not garanteed to be distinct.
+func (items GroupeParticipants) IdCamps() []IdCamp {
+	out := make([]IdCamp, len(items))
+	for index, target := range items {
+		out[index] = target.IdCamp
+	}
+	return out
+}
+
+func SelectGroupeParticipantsByIdCamps(tx DB, idCamps_ ...IdCamp) (GroupeParticipants, error) {
+	rows, err := tx.Query("SELECT * FROM groupe_participants WHERE idcamp = ANY($1)", IdCampArrayToPQ(idCamps_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanGroupeParticipants(rows)
+}
+
+func DeleteGroupeParticipantsByIdCamps(tx DB, idCamps_ ...IdCamp) (GroupeParticipants, error) {
+	rows, err := tx.Query("DELETE FROM groupe_participants WHERE idcamp = ANY($1) RETURNING *", IdCampArrayToPQ(idCamps_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanGroupeParticipants(rows)
+}
+
+// SelectGroupeParticipantByIdParticipantAndIdCamp return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectGroupeParticipantByIdParticipantAndIdCamp(tx DB, idParticipant IdParticipant, idCamp IdCamp) (item GroupeParticipant, found bool, err error) {
+	row := tx.QueryRow("SELECT * FROM groupe_participants WHERE IdParticipant = $1 AND IdCamp = $2", idParticipant, idCamp)
+	item, err = ScanGroupeParticipant(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
+}
+
+// SelectGroupeByIdCampAndNom return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectGroupeByIdCampAndNom(tx DB, idCamp IdCamp, nom string) (item Groupe, found bool, err error) {
+	row := tx.QueryRow("SELECT * FROM groupes WHERE IdCamp = $1 AND Nom = $2", idCamp, nom)
+	item, err = ScanGroupe(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
+}
+
+// SelectGroupeByIdAndIdCamp return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectGroupeByIdAndIdCamp(tx DB, id IdGroupe, idCamp IdCamp) (item Groupe, found bool, err error) {
+	row := tx.QueryRow("SELECT * FROM groupes WHERE Id = $1 AND IdCamp = $2", id, idCamp)
+	item, err = ScanGroupe(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
+}
+
 func scanOneImagelettre(row scanner) (Imagelettre, error) {
 	var item Imagelettre
 	err := row.Scan(
@@ -502,7 +1099,7 @@ func ScanLettredirecteurs(rs *sql.Rows) (Lettredirecteurs, error) {
 	return structs, nil
 }
 
-func InsertLettredirecteur(db DB, item Lettredirecteur) error {
+func (item Lettredirecteur) Insert(db DB) error {
 	_, err := db.Exec(`INSERT INTO lettredirecteurs (
 			idcamp, html, usecoordcentre, showadressepostale, colorcoord
 			) VALUES (
@@ -551,20 +1148,614 @@ func InsertManyLettredirecteurs(tx *sql.Tx, items ...Lettredirecteur) error {
 }
 
 // Delete the link Lettredirecteur from the database.
-// Only the foreign keys  fields are used in 'item'.
+// Only the foreign keys IdCamp fields are used in 'item'.
 func (item Lettredirecteur) Delete(tx DB) error {
-	_, err := tx.Exec(`DELETE FROM lettredirecteurs WHERE ;`)
+	_, err := tx.Exec(`DELETE FROM lettredirecteurs WHERE IdCamp = $1;`, item.IdCamp)
 	return err
 }
 
+// ByIdCamp returns a map with 'IdCamp' as keys.
+func (items Lettredirecteurs) ByIdCamp() map[IdCamp]Lettredirecteur {
+	out := make(map[IdCamp]Lettredirecteur, len(items))
+	for _, target := range items {
+		out[target.IdCamp] = target
+	}
+	return out
+}
+
+// IdCamps returns the list of ids of IdCamp
+// contained in this link table.
+// They are not garanteed to be distinct.
+func (items Lettredirecteurs) IdCamps() []IdCamp {
+	out := make([]IdCamp, len(items))
+	for index, target := range items {
+		out[index] = target.IdCamp
+	}
+	return out
+}
+
 // SelectLettredirecteurByIdCamp return zero or one item, thanks to a UNIQUE SQL constraint.
-func SelectLettredirecteurByIdCamp(tx DB, idCamp int64) (item Lettredirecteur, found bool, err error) {
-	row := tx.QueryRow("SELECT * FROM lettredirecteurs WHERE IdCamp = $1", idCamp)
+func SelectLettredirecteurByIdCamp(tx DB, idCamp IdCamp) (item Lettredirecteur, found bool, err error) {
+	row := tx.QueryRow("SELECT * FROM lettredirecteurs WHERE idcamp = $1", idCamp)
 	item, err = ScanLettredirecteur(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
 	}
 	return item, true, err
+}
+
+func SelectLettredirecteursByIdCamps(tx DB, idCamps_ ...IdCamp) (Lettredirecteurs, error) {
+	rows, err := tx.Query("SELECT * FROM lettredirecteurs WHERE idcamp = ANY($1)", IdCampArrayToPQ(idCamps_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanLettredirecteurs(rows)
+}
+
+func DeleteLettredirecteursByIdCamps(tx DB, idCamps_ ...IdCamp) (Lettredirecteurs, error) {
+	rows, err := tx.Query("DELETE FROM lettredirecteurs WHERE idcamp = ANY($1) RETURNING *", IdCampArrayToPQ(idCamps_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanLettredirecteurs(rows)
+}
+
+func scanOneParticipant(row scanner) (Participant, error) {
+	var item Participant
+	err := row.Scan(
+		&item.Id,
+		&item.IdCamp,
+		&item.IdPersonne,
+		&item.IdDossier,
+		&item.ListeAttente,
+		&item.Remises,
+		&item.QuotientFamilial,
+		&item.OptionPrix,
+		&item.Details,
+		&item.Bus,
+	)
+	return item, err
+}
+
+func ScanParticipant(row *sql.Row) (Participant, error) { return scanOneParticipant(row) }
+
+// SelectAll returns all the items in the participants table.
+func SelectAllParticipants(db DB) (Participants, error) {
+	rows, err := db.Query("SELECT * FROM participants")
+	if err != nil {
+		return nil, err
+	}
+	return ScanParticipants(rows)
+}
+
+// SelectParticipant returns the entry matching 'id'.
+func SelectParticipant(tx DB, id IdParticipant) (Participant, error) {
+	row := tx.QueryRow("SELECT * FROM participants WHERE id = $1", id)
+	return ScanParticipant(row)
+}
+
+// SelectParticipants returns the entry matching the given 'ids'.
+func SelectParticipants(tx DB, ids ...IdParticipant) (Participants, error) {
+	rows, err := tx.Query("SELECT * FROM participants WHERE id = ANY($1)", IdParticipantArrayToPQ(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanParticipants(rows)
+}
+
+type Participants map[IdParticipant]Participant
+
+func (m Participants) IDs() []IdParticipant {
+	out := make([]IdParticipant, 0, len(m))
+	for i := range m {
+		out = append(out, i)
+	}
+	return out
+}
+
+func ScanParticipants(rs *sql.Rows) (Participants, error) {
+	var (
+		s   Participant
+		err error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(Participants, 16)
+	for rs.Next() {
+		s, err = scanOneParticipant(rs)
+		if err != nil {
+			return nil, err
+		}
+		structs[s.Id] = s
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+// Insert one Participant in the database and returns the item with id filled.
+func (item Participant) Insert(tx DB) (out Participant, err error) {
+	row := tx.QueryRow(`INSERT INTO participants (
+		idcamp, idpersonne, iddossier, listeattente, remises, quotientfamilial, optionprix, details, bus
+		) VALUES (
+		$1, $2, $3, $4, $5, $6, $7, $8, $9
+		) RETURNING *;
+		`, item.IdCamp, item.IdPersonne, item.IdDossier, item.ListeAttente, item.Remises, item.QuotientFamilial, item.OptionPrix, item.Details, item.Bus)
+	return ScanParticipant(row)
+}
+
+// Update Participant in the database and returns the new version.
+func (item Participant) Update(tx DB) (out Participant, err error) {
+	row := tx.QueryRow(`UPDATE participants SET (
+		idcamp, idpersonne, iddossier, listeattente, remises, quotientfamilial, optionprix, details, bus
+		) = (
+		$1, $2, $3, $4, $5, $6, $7, $8, $9
+		) WHERE id = $10 RETURNING *;
+		`, item.IdCamp, item.IdPersonne, item.IdDossier, item.ListeAttente, item.Remises, item.QuotientFamilial, item.OptionPrix, item.Details, item.Bus, item.Id)
+	return ScanParticipant(row)
+}
+
+// Deletes the Participant and returns the item
+func DeleteParticipantById(tx DB, id IdParticipant) (Participant, error) {
+	row := tx.QueryRow("DELETE FROM participants WHERE id = $1 RETURNING *;", id)
+	return ScanParticipant(row)
+}
+
+// Deletes the Participant in the database and returns the ids.
+func DeleteParticipantsByIDs(tx DB, ids ...IdParticipant) ([]IdParticipant, error) {
+	rows, err := tx.Query("DELETE FROM participants WHERE id = ANY($1) RETURNING id", IdParticipantArrayToPQ(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIdParticipantArray(rows)
+}
+
+// ByIdCamp returns a map with 'IdCamp' as keys.
+func (items Participants) ByIdCamp() map[IdCamp]Participants {
+	out := make(map[IdCamp]Participants)
+	for _, target := range items {
+		dict := out[target.IdCamp]
+		if dict == nil {
+			dict = make(Participants)
+		}
+		dict[target.Id] = target
+		out[target.IdCamp] = dict
+	}
+	return out
+}
+
+// IdCamps returns the list of ids of IdCamp
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items Participants) IdCamps() []IdCamp {
+	out := make([]IdCamp, 0, len(items))
+	for _, target := range items {
+		out = append(out, target.IdCamp)
+	}
+	return out
+}
+
+func SelectParticipantsByIdCamps(tx DB, idCamps_ ...IdCamp) (Participants, error) {
+	rows, err := tx.Query("SELECT * FROM participants WHERE idcamp = ANY($1)", IdCampArrayToPQ(idCamps_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanParticipants(rows)
+}
+
+func DeleteParticipantsByIdCamps(tx DB, idCamps_ ...IdCamp) ([]IdParticipant, error) {
+	rows, err := tx.Query("DELETE FROM participants WHERE idcamp = ANY($1) RETURNING id", IdCampArrayToPQ(idCamps_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIdParticipantArray(rows)
+}
+
+// ByIdPersonne returns a map with 'IdPersonne' as keys.
+func (items Participants) ByIdPersonne() map[personnes.IdPersonne]Participants {
+	out := make(map[personnes.IdPersonne]Participants)
+	for _, target := range items {
+		dict := out[target.IdPersonne]
+		if dict == nil {
+			dict = make(Participants)
+		}
+		dict[target.Id] = target
+		out[target.IdPersonne] = dict
+	}
+	return out
+}
+
+// IdPersonnes returns the list of ids of IdPersonne
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items Participants) IdPersonnes() []personnes.IdPersonne {
+	out := make([]personnes.IdPersonne, 0, len(items))
+	for _, target := range items {
+		out = append(out, target.IdPersonne)
+	}
+	return out
+}
+
+func SelectParticipantsByIdPersonnes(tx DB, idPersonnes_ ...personnes.IdPersonne) (Participants, error) {
+	rows, err := tx.Query("SELECT * FROM participants WHERE idpersonne = ANY($1)", personnes.IdPersonneArrayToPQ(idPersonnes_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanParticipants(rows)
+}
+
+func DeleteParticipantsByIdPersonnes(tx DB, idPersonnes_ ...personnes.IdPersonne) ([]IdParticipant, error) {
+	rows, err := tx.Query("DELETE FROM participants WHERE idpersonne = ANY($1) RETURNING id", personnes.IdPersonneArrayToPQ(idPersonnes_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIdParticipantArray(rows)
+}
+
+// ByIdDossier returns a map with 'IdDossier' as keys.
+func (items Participants) ByIdDossier() map[dossiers.IdDossier]Participants {
+	out := make(map[dossiers.IdDossier]Participants)
+	for _, target := range items {
+		dict := out[target.IdDossier]
+		if dict == nil {
+			dict = make(Participants)
+		}
+		dict[target.Id] = target
+		out[target.IdDossier] = dict
+	}
+	return out
+}
+
+// IdDossiers returns the list of ids of IdDossier
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items Participants) IdDossiers() []dossiers.IdDossier {
+	out := make([]dossiers.IdDossier, 0, len(items))
+	for _, target := range items {
+		out = append(out, target.IdDossier)
+	}
+	return out
+}
+
+func SelectParticipantsByIdDossiers(tx DB, idDossiers_ ...dossiers.IdDossier) (Participants, error) {
+	rows, err := tx.Query("SELECT * FROM participants WHERE iddossier = ANY($1)", dossiers.IdDossierArrayToPQ(idDossiers_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanParticipants(rows)
+}
+
+func DeleteParticipantsByIdDossiers(tx DB, idDossiers_ ...dossiers.IdDossier) ([]IdParticipant, error) {
+	rows, err := tx.Query("DELETE FROM participants WHERE iddossier = ANY($1) RETURNING id", dossiers.IdDossierArrayToPQ(idDossiers_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIdParticipantArray(rows)
+}
+
+func scanOneSondage(row scanner) (Sondage, error) {
+	var item Sondage
+	err := row.Scan(
+		&item.IdSondage,
+		&item.IdCamp,
+		&item.IdDossier,
+		&item.Modified,
+		&item.InfosAvantSejour,
+		&item.InfosPendantSejour,
+		&item.Hebergement,
+		&item.Activites,
+		&item.Theme,
+		&item.Nourriture,
+		&item.Hygiene,
+		&item.Ambiance,
+		&item.Ressenti,
+		&item.MessageEnfant,
+		&item.MessageResponsable,
+	)
+	return item, err
+}
+
+func ScanSondage(row *sql.Row) (Sondage, error) { return scanOneSondage(row) }
+
+// SelectAll returns all the items in the sondages table.
+func SelectAllSondages(db DB) (Sondages, error) {
+	rows, err := db.Query("SELECT * FROM sondages")
+	if err != nil {
+		return nil, err
+	}
+	return ScanSondages(rows)
+}
+
+type Sondages []Sondage
+
+func ScanSondages(rs *sql.Rows) (Sondages, error) {
+	var (
+		item Sondage
+		err  error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(Sondages, 0, 16)
+	for rs.Next() {
+		item, err = scanOneSondage(rs)
+		if err != nil {
+			return nil, err
+		}
+		structs = append(structs, item)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+func (item Sondage) Insert(db DB) error {
+	_, err := db.Exec(`INSERT INTO sondages (
+			idsondage, idcamp, iddossier, modified, infosavantsejour, infospendantsejour, hebergement, activites, theme, nourriture, hygiene, ambiance, ressenti, messageenfant, messageresponsable
+			) VALUES (
+			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15
+			);
+			`, item.IdSondage, item.IdCamp, item.IdDossier, item.Modified, item.InfosAvantSejour, item.InfosPendantSejour, item.Hebergement, item.Activites, item.Theme, item.Nourriture, item.Hygiene, item.Ambiance, item.Ressenti, item.MessageEnfant, item.MessageResponsable)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Insert the links Sondage in the database.
+// It is a no-op if 'items' is empty.
+func InsertManySondages(tx *sql.Tx, items ...Sondage) error {
+	if len(items) == 0 {
+		return nil
+	}
+
+	stmt, err := tx.Prepare(pq.CopyIn("sondages",
+		"idsondage",
+		"idcamp",
+		"iddossier",
+		"modified",
+		"infosavantsejour",
+		"infospendantsejour",
+		"hebergement",
+		"activites",
+		"theme",
+		"nourriture",
+		"hygiene",
+		"ambiance",
+		"ressenti",
+		"messageenfant",
+		"messageresponsable",
+	))
+	if err != nil {
+		return err
+	}
+
+	for _, item := range items {
+		_, err = stmt.Exec(item.IdSondage, item.IdCamp, item.IdDossier, item.Modified, item.InfosAvantSejour, item.InfosPendantSejour, item.Hebergement, item.Activites, item.Theme, item.Nourriture, item.Hygiene, item.Ambiance, item.Ressenti, item.MessageEnfant, item.MessageResponsable)
+		if err != nil {
+			return err
+		}
+	}
+
+	if _, err = stmt.Exec(); err != nil {
+		return err
+	}
+
+	if err = stmt.Close(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Delete the link Sondage from the database.
+// Only the foreign keys IdCamp, IdDossier fields are used in 'item'.
+func (item Sondage) Delete(tx DB) error {
+	_, err := tx.Exec(`DELETE FROM sondages WHERE IdCamp = $1 AND IdDossier = $2;`, item.IdCamp, item.IdDossier)
+	return err
+}
+
+// ByIdCamp returns a map with 'IdCamp' as keys.
+func (items Sondages) ByIdCamp() map[IdCamp]Sondages {
+	out := make(map[IdCamp]Sondages)
+	for _, target := range items {
+		out[target.IdCamp] = append(out[target.IdCamp], target)
+	}
+	return out
+}
+
+// IdCamps returns the list of ids of IdCamp
+// contained in this link table.
+// They are not garanteed to be distinct.
+func (items Sondages) IdCamps() []IdCamp {
+	out := make([]IdCamp, len(items))
+	for index, target := range items {
+		out[index] = target.IdCamp
+	}
+	return out
+}
+
+func SelectSondagesByIdCamps(tx DB, idCamps_ ...IdCamp) (Sondages, error) {
+	rows, err := tx.Query("SELECT * FROM sondages WHERE idcamp = ANY($1)", IdCampArrayToPQ(idCamps_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanSondages(rows)
+}
+
+func DeleteSondagesByIdCamps(tx DB, idCamps_ ...IdCamp) (Sondages, error) {
+	rows, err := tx.Query("DELETE FROM sondages WHERE idcamp = ANY($1) RETURNING *", IdCampArrayToPQ(idCamps_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanSondages(rows)
+}
+
+// ByIdDossier returns a map with 'IdDossier' as keys.
+func (items Sondages) ByIdDossier() map[dossiers.IdDossier]Sondages {
+	out := make(map[dossiers.IdDossier]Sondages)
+	for _, target := range items {
+		out[target.IdDossier] = append(out[target.IdDossier], target)
+	}
+	return out
+}
+
+// IdDossiers returns the list of ids of IdDossier
+// contained in this link table.
+// They are not garanteed to be distinct.
+func (items Sondages) IdDossiers() []dossiers.IdDossier {
+	out := make([]dossiers.IdDossier, len(items))
+	for index, target := range items {
+		out[index] = target.IdDossier
+	}
+	return out
+}
+
+func SelectSondagesByIdDossiers(tx DB, idDossiers_ ...dossiers.IdDossier) (Sondages, error) {
+	rows, err := tx.Query("SELECT * FROM sondages WHERE iddossier = ANY($1)", dossiers.IdDossierArrayToPQ(idDossiers_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanSondages(rows)
+}
+
+func DeleteSondagesByIdDossiers(tx DB, idDossiers_ ...dossiers.IdDossier) (Sondages, error) {
+	rows, err := tx.Query("DELETE FROM sondages WHERE iddossier = ANY($1) RETURNING *", dossiers.IdDossierArrayToPQ(idDossiers_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanSondages(rows)
+}
+
+// SelectSondageByIdCampAndIdDossier return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectSondageByIdCampAndIdDossier(tx DB, idCamp IdCamp, idDossier dossiers.IdDossier) (item Sondage, found bool, err error) {
+	row := tx.QueryRow("SELECT * FROM sondages WHERE IdCamp = $1 AND IdDossier = $2", idCamp, idDossier)
+	item, err = ScanSondage(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
+}
+
+func scanOneStructureaide(row scanner) (Structureaide, error) {
+	var item Structureaide
+	err := row.Scan(
+		&item.Id,
+		&item.Nom,
+		&item.Immatriculation,
+		&item.Adresse,
+		&item.CodePostal,
+		&item.Ville,
+		&item.Telephone,
+		&item.Info,
+	)
+	return item, err
+}
+
+func ScanStructureaide(row *sql.Row) (Structureaide, error) { return scanOneStructureaide(row) }
+
+// SelectAll returns all the items in the structureaides table.
+func SelectAllStructureaides(db DB) (Structureaides, error) {
+	rows, err := db.Query("SELECT * FROM structureaides")
+	if err != nil {
+		return nil, err
+	}
+	return ScanStructureaides(rows)
+}
+
+// SelectStructureaide returns the entry matching 'id'.
+func SelectStructureaide(tx DB, id int64) (Structureaide, error) {
+	row := tx.QueryRow("SELECT * FROM structureaides WHERE id = $1", id)
+	return ScanStructureaide(row)
+}
+
+// SelectStructureaides returns the entry matching the given 'ids'.
+func SelectStructureaides(tx DB, ids ...int64) (Structureaides, error) {
+	rows, err := tx.Query("SELECT * FROM structureaides WHERE id = ANY($1)", int64ArrayToPQ(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanStructureaides(rows)
+}
+
+type Structureaides map[int64]Structureaide
+
+func (m Structureaides) IDs() []int64 {
+	out := make([]int64, 0, len(m))
+	for i := range m {
+		out = append(out, i)
+	}
+	return out
+}
+
+func ScanStructureaides(rs *sql.Rows) (Structureaides, error) {
+	var (
+		s   Structureaide
+		err error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(Structureaides, 16)
+	for rs.Next() {
+		s, err = scanOneStructureaide(rs)
+		if err != nil {
+			return nil, err
+		}
+		structs[s.Id] = s
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+// Insert one Structureaide in the database and returns the item with id filled.
+func (item Structureaide) Insert(tx DB) (out Structureaide, err error) {
+	row := tx.QueryRow(`INSERT INTO structureaides (
+		nom, immatriculation, adresse, codepostal, ville, telephone, info
+		) VALUES (
+		$1, $2, $3, $4, $5, $6, $7
+		) RETURNING *;
+		`, item.Nom, item.Immatriculation, item.Adresse, item.CodePostal, item.Ville, item.Telephone, item.Info)
+	return ScanStructureaide(row)
+}
+
+// Update Structureaide in the database and returns the new version.
+func (item Structureaide) Update(tx DB) (out Structureaide, err error) {
+	row := tx.QueryRow(`UPDATE structureaides SET (
+		nom, immatriculation, adresse, codepostal, ville, telephone, info
+		) = (
+		$1, $2, $3, $4, $5, $6, $7
+		) WHERE id = $8 RETURNING *;
+		`, item.Nom, item.Immatriculation, item.Adresse, item.CodePostal, item.Ville, item.Telephone, item.Info, item.Id)
+	return ScanStructureaide(row)
+}
+
+// Deletes the Structureaide and returns the item
+func DeleteStructureaideById(tx DB, id int64) (Structureaide, error) {
+	row := tx.QueryRow("DELETE FROM structureaides WHERE id = $1 RETURNING *;", id)
+	return ScanStructureaide(row)
+}
+
+// Deletes the Structureaide in the database and returns the ids.
+func DeleteStructureaidesByIDs(tx DB, ids ...int64) ([]int64, error) {
+	rows, err := tx.Query("DELETE FROM structureaides WHERE id = ANY($1) RETURNING id", int64ArrayToPQ(ids))
+	if err != nil {
+		return nil, err
+	}
+	return Scanint64Array(rows)
 }
 
 func loadJSON(out interface{}, src interface{}) error {
@@ -606,33 +1797,53 @@ func (s Roles) Value() (driver.Value, error) {
 	return tmp.Value()
 }
 
-func (s *Montant) Scan(src interface{}) error {
-	bs, ok := src.([]byte)
-	if !ok {
-		return fmt.Errorf("unsupported type %T", src)
+func IdAideArrayToPQ(ids []IdAide) pq.Int64Array {
+	out := make(pq.Int64Array, len(ids))
+	for i, v := range ids {
+		out[i] = int64(v)
 	}
-	fields := strings.Split(string(bs[1:len(bs)-1]), ",")
-	if len(fields) != 2 {
-		return fmt.Errorf("unsupported number of fields %d", len(fields))
-	}
-
-	valCent, err := strconv.Atoi(fields[0])
-	if err != nil {
-		return err
-	}
-	s.Cent = int(valCent)
-
-	valCurrency, err := strconv.Atoi(fields[1])
-	if err != nil {
-		return err
-	}
-	s.Currency = Currency(valCurrency)
-
-	return nil
+	return out
 }
-func (s Montant) Value() (driver.Value, error) {
-	bs := fmt.Appendf(nil, "(%d, %d)", s.Cent, s.Currency)
-	return driver.Value(bs), nil
+
+// ScanIdAideArray scans the result of a query returning a
+// list of ID's.
+func ScanIdAideArray(rs *sql.Rows) ([]IdAide, error) {
+	defer rs.Close()
+	ints := make([]IdAide, 0, 16)
+	var err error
+	for rs.Next() {
+		var s IdAide
+		if err = rs.Scan(&s); err != nil {
+			return nil, err
+		}
+		ints = append(ints, s)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return ints, nil
+}
+
+type IdAideSet map[IdAide]bool
+
+func NewIdAideSetFrom(ids []IdAide) IdAideSet {
+	out := make(IdAideSet, len(ids))
+	for _, key := range ids {
+		out[key] = true
+	}
+	return out
+}
+
+func (s IdAideSet) Add(id IdAide) { s[id] = true }
+
+func (s IdAideSet) Has(id IdAide) bool { return s[id] }
+
+func (s IdAideSet) Keys() []IdAide {
+	out := make([]IdAide, 0, len(s))
+	for k := range s {
+		out = append(out, k)
+	}
+	return out
 }
 
 func IdCampArrayToPQ(ids []IdCamp) pq.Int64Array {
@@ -733,6 +1944,55 @@ func (s IdEquipierSet) Keys() []IdEquipier {
 	return out
 }
 
+func IdGroupeArrayToPQ(ids []IdGroupe) pq.Int64Array {
+	out := make(pq.Int64Array, len(ids))
+	for i, v := range ids {
+		out[i] = int64(v)
+	}
+	return out
+}
+
+// ScanIdGroupeArray scans the result of a query returning a
+// list of ID's.
+func ScanIdGroupeArray(rs *sql.Rows) ([]IdGroupe, error) {
+	defer rs.Close()
+	ints := make([]IdGroupe, 0, 16)
+	var err error
+	for rs.Next() {
+		var s IdGroupe
+		if err = rs.Scan(&s); err != nil {
+			return nil, err
+		}
+		ints = append(ints, s)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return ints, nil
+}
+
+type IdGroupeSet map[IdGroupe]bool
+
+func NewIdGroupeSetFrom(ids []IdGroupe) IdGroupeSet {
+	out := make(IdGroupeSet, len(ids))
+	for _, key := range ids {
+		out[key] = true
+	}
+	return out
+}
+
+func (s IdGroupeSet) Add(id IdGroupe) { s[id] = true }
+
+func (s IdGroupeSet) Has(id IdGroupe) bool { return s[id] }
+
+func (s IdGroupeSet) Keys() []IdGroupe {
+	out := make([]IdGroupe, 0, len(s))
+	for k := range s {
+		out = append(out, k)
+	}
+	return out
+}
+
 func IdImagelettreArrayToPQ(ids []IdImagelettre) pq.Int64Array {
 	out := make(pq.Int64Array, len(ids))
 	for i, v := range ids {
@@ -782,5 +2042,155 @@ func (s IdImagelettreSet) Keys() []IdImagelettre {
 	return out
 }
 
+func IdParticipantArrayToPQ(ids []IdParticipant) pq.Int64Array {
+	out := make(pq.Int64Array, len(ids))
+	for i, v := range ids {
+		out[i] = int64(v)
+	}
+	return out
+}
+
+// ScanIdParticipantArray scans the result of a query returning a
+// list of ID's.
+func ScanIdParticipantArray(rs *sql.Rows) ([]IdParticipant, error) {
+	defer rs.Close()
+	ints := make([]IdParticipant, 0, 16)
+	var err error
+	for rs.Next() {
+		var s IdParticipant
+		if err = rs.Scan(&s); err != nil {
+			return nil, err
+		}
+		ints = append(ints, s)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return ints, nil
+}
+
+type IdParticipantSet map[IdParticipant]bool
+
+func NewIdParticipantSetFrom(ids []IdParticipant) IdParticipantSet {
+	out := make(IdParticipantSet, len(ids))
+	for _, key := range ids {
+		out[key] = true
+	}
+	return out
+}
+
+func (s IdParticipantSet) Add(id IdParticipant) { s[id] = true }
+
+func (s IdParticipantSet) Has(id IdParticipant) bool { return s[id] }
+
+func (s IdParticipantSet) Keys() []IdParticipant {
+	out := make([]IdParticipant, 0, len(s))
+	for k := range s {
+		out = append(out, k)
+	}
+	return out
+}
+
+func IdStructureaideArrayToPQ(ids []IdStructureaide) pq.Int64Array {
+	out := make(pq.Int64Array, len(ids))
+	for i, v := range ids {
+		out[i] = int64(v)
+	}
+	return out
+}
+
+// ScanIdStructureaideArray scans the result of a query returning a
+// list of ID's.
+func ScanIdStructureaideArray(rs *sql.Rows) ([]IdStructureaide, error) {
+	defer rs.Close()
+	ints := make([]IdStructureaide, 0, 16)
+	var err error
+	for rs.Next() {
+		var s IdStructureaide
+		if err = rs.Scan(&s); err != nil {
+			return nil, err
+		}
+		ints = append(ints, s)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return ints, nil
+}
+
+type IdStructureaideSet map[IdStructureaide]bool
+
+func NewIdStructureaideSetFrom(ids []IdStructureaide) IdStructureaideSet {
+	out := make(IdStructureaideSet, len(ids))
+	for _, key := range ids {
+		out[key] = true
+	}
+	return out
+}
+
+func (s IdStructureaideSet) Add(id IdStructureaide) { s[id] = true }
+
+func (s IdStructureaideSet) Has(id IdStructureaide) bool { return s[id] }
+
+func (s IdStructureaideSet) Keys() []IdStructureaide {
+	out := make([]IdStructureaide, 0, len(s))
+	for k := range s {
+		out = append(out, k)
+	}
+	return out
+}
+
+func int64ArrayToPQ(ids []int64) pq.Int64Array { return ids }
+
+// Scanint64Array scans the result of a query returning a
+// list of ID's.
+func Scanint64Array(rs *sql.Rows) ([]int64, error) {
+	defer rs.Close()
+	ints := make([]int64, 0, 16)
+	var err error
+	for rs.Next() {
+		var s int64
+		if err = rs.Scan(&s); err != nil {
+			return nil, err
+		}
+		ints = append(ints, s)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return ints, nil
+}
+
+type int64Set map[int64]bool
+
+func Newint64SetFrom(ids []int64) int64Set {
+	out := make(int64Set, len(ids))
+	for _, key := range ids {
+		out[key] = true
+	}
+	return out
+}
+
+func (s int64Set) Add(id int64) { s[id] = true }
+
+func (s int64Set) Has(id int64) bool { return s[id] }
+
+func (s int64Set) Keys() []int64 {
+	out := make([]int64, 0, len(s))
+	for k := range s {
+		out = append(out, k)
+	}
+	return out
+}
+
+func (s *OptionPrixCamp) Scan(src interface{}) error  { return loadJSON(s, src) }
+func (s OptionPrixCamp) Value() (driver.Value, error) { return dumpJSON(s) }
+
+func (s *OptionPrixParticipant) Scan(src interface{}) error  { return loadJSON(s, src) }
+func (s OptionPrixParticipant) Value() (driver.Value, error) { return dumpJSON(s) }
+
 func (s *OptionnalPlage) Scan(src interface{}) error  { return loadJSON(s, src) }
 func (s OptionnalPlage) Value() (driver.Value, error) { return dumpJSON(s) }
+
+func (s *Remises) Scan(src interface{}) error  { return loadJSON(s, src) }
+func (s Remises) Value() (driver.Value, error) { return dumpJSON(s) }

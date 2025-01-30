@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"registro/config"
-	"registro/sql/camps"
 	"registro/sql/dossiers"
 	"registro/sql/personnes"
 	"registro/sql/shared"
@@ -25,12 +24,12 @@ type stripeMetadata struct {
 	IdDossier dossiers.IdDossier
 	Payeur    string
 	IsAcompte bool
-	Montant   camps.Montant
+	Montant   dossiers.Montant
 }
 
 // StartSession should be called to start a paiement session.
 func StartSession(idDossier dossiers.IdDossier, respo personnes.Etatcivil, userProvidedMail bool,
-	isAcompte bool, succesURL, cancelURL string, montant camps.Montant,
+	isAcompte bool, succesURL, cancelURL string, montant dossiers.Montant,
 ) (sessionID string, _ error) {
 	// only fill if not using custom mail
 	var customerEmail *string
@@ -51,9 +50,9 @@ func StartSession(idDossier dossiers.IdDossier, respo personnes.Etatcivil, userP
 
 	var currency string
 	switch montant.Currency {
-	case camps.Euros:
+	case dossiers.Euros:
 		currency = "eur"
-	case camps.FrancsSuisse:
+	case dossiers.FrancsSuisse:
 		currency = "chf"
 	default:
 		return "", fmt.Errorf("unsupported currency: %d", montant.Currency)
@@ -96,7 +95,7 @@ func StartSession(idDossier dossiers.IdDossier, respo personnes.Etatcivil, userP
 func ReceivePaiement(key config.StripeKey, body io.ReadCloser, header http.Header) (dossiers.Paiement, bool, error) {
 	payload, err := io.ReadAll(body)
 	if err != nil {
-		return dossiers.Paiement{}, false, fmt.Errorf("error reading request body from Stripe notification: %v\n", err)
+		return dossiers.Paiement{}, false, fmt.Errorf("error reading request body from Stripe notification: %v", err)
 	}
 	_ = body.Close()
 
@@ -104,7 +103,7 @@ func ReceivePaiement(key config.StripeKey, body io.ReadCloser, header http.Heade
 	// You can find your endpoint's secret in your webhook settings
 	event, err := webhook.ConstructEvent(payload, header.Get("Stripe-Signature"), string(key))
 	if err != nil {
-		return dossiers.Paiement{}, false, fmt.Errorf("invalid request on Stripe notification endpoint: %v\n", err)
+		return dossiers.Paiement{}, false, fmt.Errorf("invalid request on Stripe notification endpoint: %v", err)
 	}
 
 	// Handle the checkout.session.completed event
@@ -112,7 +111,7 @@ func ReceivePaiement(key config.StripeKey, body io.ReadCloser, header http.Heade
 		var session stripe.CheckoutSession
 		err := json.Unmarshal(event.Data.Raw, &session)
 		if err != nil {
-			return dossiers.Paiement{}, false, fmt.Errorf("error parsing webhook JSON: %v\n", err)
+			return dossiers.Paiement{}, false, fmt.Errorf("error parsing webhook JSON: %v", err)
 		}
 		p, err := parsePaiement(&session)
 		return p, true, err

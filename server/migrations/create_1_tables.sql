@@ -5,30 +5,48 @@ CREATE TYPE Montant AS (
     Currency smallint
 );
 
-CREATE TABLE camps (
-    Id serial PRIMARY KEY,
-    Nom text NOT NULL,
-    DateDebut date NOT NULL,
-    Duree integer NOT NULL,
-    Agrement text NOT NULL,
-    Prix Montant NOT NULL
-);
-
-CREATE TABLE equipiers (
-    Id serial PRIMARY KEY,
-    IdCamp integer NOT NULL,
-    IdPersonne integer NOT NULL,
-    Roles jsonb NOT NULL,
-    Presence jsonb NOT NULL,
-    Invitation smallint CHECK (Invitation IN (0, 1, 2)) NOT NULL,
-    AccepteCharte boolean
-);
-
 CREATE TABLE imagelettres (
     Id serial PRIMARY KEY,
     IdCamp integer NOT NULL,
     Filename text NOT NULL,
     Content bytea NOT NULL
+);
+
+CREATE TABLE demande_camps (
+    IdCamp integer NOT NULL,
+    IdDemande integer NOT NULL
+);
+
+CREATE TABLE dossiers (
+    Id serial PRIMARY KEY,
+    IdResponsable integer NOT NULL,
+    CopiesMails text[],
+    LastConnection timestamp(0) with time zone NOT NULL,
+    IsValidated boolean NOT NULL,
+    PartageAdressesOK boolean NOT NULL
+);
+
+CREATE TABLE paiements (
+    Id serial PRIMARY KEY,
+    IdDossier integer NOT NULL,
+    IsAcompte boolean NOT NULL,
+    IsRemboursement boolean NOT NULL,
+    Montant Montant NOT NULL,
+    Payeur text NOT NULL,
+    Mode smallint CHECK (Mode IN (0, 1, 2, 3, 4, 5)) NOT NULL,
+    Date date NOT NULL,
+    Label text NOT NULL,
+    Details text NOT NULL
+);
+
+CREATE TABLE aides (
+    Id serial PRIMARY KEY,
+    IdStructureaide integer NOT NULL,
+    IdParticipant integer NOT NULL,
+    Valide boolean NOT NULL,
+    Valeur Montant NOT NULL,
+    ParJour boolean NOT NULL,
+    NbJoursMax integer NOT NULL
 );
 
 CREATE TABLE lettredirecteurs (
@@ -37,6 +55,93 @@ CREATE TABLE lettredirecteurs (
     UseCoordCentre boolean NOT NULL,
     ShowAdressePostale boolean NOT NULL,
     ColorCoord text NOT NULL
+);
+
+CREATE TABLE participants (
+    Id serial PRIMARY KEY,
+    IdCamp integer NOT NULL,
+    IdPersonne integer NOT NULL,
+    IdDossier integer NOT NULL,
+    ListeAttente smallint CHECK (ListeAttente IN (0, 1, 2, 3, 4)) NOT NULL,
+    Remises jsonb NOT NULL,
+    QuotientFamilial integer NOT NULL,
+    OptionPrix jsonb NOT NULL,
+    Details text NOT NULL,
+    Bus smallint CHECK (Bus IN (0, 1, 2, 3)) NOT NULL
+);
+
+CREATE TABLE sondages (
+    IdSondage integer NOT NULL,
+    IdCamp integer NOT NULL,
+    IdDossier integer NOT NULL,
+    Modified timestamp(0) with time zone NOT NULL,
+    InfosAvantSejour smallint CHECK (InfosAvantSejour IN (0, 1, 2, 3, 4)) NOT NULL,
+    InfosPendantSejour smallint CHECK (InfosPendantSejour IN (0, 1, 2, 3, 4)) NOT NULL,
+    Hebergement smallint CHECK (Hebergement IN (0, 1, 2, 3, 4)) NOT NULL,
+    Activites smallint CHECK (Activites IN (0, 1, 2, 3, 4)) NOT NULL,
+    Theme smallint CHECK (Theme IN (0, 1, 2, 3, 4)) NOT NULL,
+    Nourriture smallint CHECK (Nourriture IN (0, 1, 2, 3, 4)) NOT NULL,
+    Hygiene smallint CHECK (Hygiene IN (0, 1, 2, 3, 4)) NOT NULL,
+    Ambiance smallint CHECK (Ambiance IN (0, 1, 2, 3, 4)) NOT NULL,
+    Ressenti smallint CHECK (Ressenti IN (0, 1, 2, 3, 4)) NOT NULL,
+    MessageEnfant text NOT NULL,
+    MessageResponsable text NOT NULL
+);
+
+CREATE TABLE structureaides (
+    Id serial PRIMARY KEY,
+    Nom text NOT NULL,
+    Immatriculation text NOT NULL,
+    Adresse text NOT NULL,
+    CodePostal text NOT NULL,
+    Ville text NOT NULL,
+    Telephone text NOT NULL,
+    Info text NOT NULL
+);
+
+CREATE TABLE camps (
+    Id serial PRIMARY KEY,
+    Nom text NOT NULL,
+    DateDebut date NOT NULL,
+    Duree integer NOT NULL,
+    Agrement text NOT NULL,
+    Prix Montant NOT NULL,
+    OptionPrix jsonb NOT NULL
+);
+
+CREATE TABLE groupes (
+    Id serial PRIMARY KEY,
+    IdCamp integer NOT NULL,
+    Nom text NOT NULL,
+    Plage jsonb NOT NULL,
+    Couleur text NOT NULL
+);
+
+CREATE TABLE equipiers (
+    Id serial PRIMARY KEY,
+    IdCamp integer NOT NULL,
+    IdPersonne integer NOT NULL,
+    Roles smallint[],
+    Presence jsonb NOT NULL,
+    Invitation smallint CHECK (Invitation IN (0, 1, 2)) NOT NULL,
+    AccepteCharte boolean
+);
+
+CREATE TABLE groupe_participants (
+    IdParticipant integer NOT NULL,
+    IdGroupe integer NOT NULL,
+    IdCamp integer NOT NULL,
+    Manuel boolean NOT NULL
+);
+
+CREATE TABLE demandes (
+    Id serial PRIMARY KEY,
+    IdFile integer,
+    IdDirecteur integer,
+    Categorie smallint CHECK (Categorie IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)) NOT NULL,
+    Description text NOT NULL,
+    MaxDocs integer NOT NULL,
+    JoursValide integer NOT NULL
 );
 
 CREATE TABLE personnes (
@@ -77,55 +182,33 @@ CREATE TABLE fichesanitaires (
     Mails text[]
 );
 
-CREATE TABLE sondages (
-    IdSondage integer NOT NULL,
-    IdCamp integer NOT NULL,
-    IdDossier integer NOT NULL,
-    Modified timestamp(0) with time zone NOT NULL,
-    InfosAvantSejour smallint CHECK (InfosAvantSejour IN (0, 1, 2, 3, 4)) NOT NULL,
-    InfosPendantSejour smallint CHECK (InfosPendantSejour IN (0, 1, 2, 3, 4)) NOT NULL,
-    Hebergement smallint CHECK (Hebergement IN (0, 1, 2, 3, 4)) NOT NULL,
-    Activites smallint CHECK (Activites IN (0, 1, 2, 3, 4)) NOT NULL,
-    Theme smallint CHECK (Theme IN (0, 1, 2, 3, 4)) NOT NULL,
-    Nourriture smallint CHECK (Nourriture IN (0, 1, 2, 3, 4)) NOT NULL,
-    Hygiene smallint CHECK (Hygiene IN (0, 1, 2, 3, 4)) NOT NULL,
-    Ambiance smallint CHECK (Ambiance IN (0, 1, 2, 3, 4)) NOT NULL,
-    Ressenti smallint CHECK (Ressenti IN (0, 1, 2, 3, 4)) NOT NULL,
-    MessageEnfant text NOT NULL,
-    MessageResponsable text NOT NULL
-);
-
-CREATE TABLE participants (
-    Id serial PRIMARY KEY,
-    IdCamp integer NOT NULL,
+CREATE TABLE file_personnes (
+    IdFile integer NOT NULL,
     IdPersonne integer NOT NULL,
-    IdDossier integer NOT NULL,
-    ListeAttente smallint CHECK (ListeAttente IN (0, 1, 2, 3, 4)) NOT NULL,
-    Remises jsonb NOT NULL,
-    QuotientFamilial integer NOT NULL,
-    Details text NOT NULL,
-    Bus smallint CHECK (Bus IN (0, 1, 2, 3)) NOT NULL
+    IdDemande integer NOT NULL
 );
 
-CREATE TABLE paiements (
-    Id serial PRIMARY KEY,
-    IdDossier integer NOT NULL,
-    IsAcompte boolean NOT NULL,
-    IsRemboursement boolean NOT NULL,
-    Montant Montant NOT NULL,
-    Payeur text NOT NULL,
-    Mode smallint CHECK (Mode IN (0, 1, 2, 3, 4, 5)) NOT NULL,
-    Date date NOT NULL,
-    Label text NOT NULL,
-    Details text NOT NULL
+CREATE TABLE file_camps (
+    IdFile integer NOT NULL,
+    IdCamp integer NOT NULL,
+    IsLettre boolean NOT NULL
 );
 
-CREATE TABLE dossiers (
+CREATE TABLE file_aides (
+    IdFile integer NOT NULL,
+    IdAide integer NOT NULL
+);
+
+CREATE TABLE files (
     Id serial PRIMARY KEY,
-    IdPersonne integer NOT NULL,
-    CopiesMails text[],
-    LastConnection timestamp(0) with time zone NOT NULL,
-    IsValidated boolean NOT NULL,
-    PartageAdressesOK boolean NOT NULL
+    Taille integer NOT NULL,
+    NomClient text NOT NULL,
+    DateHeureModif timestamp(0) with time zone NOT NULL
+);
+
+CREATE TABLE demande_equipiers (
+    IdEquipier integer NOT NULL,
+    IdDemande integer NOT NULL,
+    Optionnel boolean NOT NULL
 );
 

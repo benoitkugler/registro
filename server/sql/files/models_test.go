@@ -27,13 +27,13 @@ func TestSQL(t *testing.T) {
 	file3, err := File{}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	err = InsertFileCamp(db, FileCamp{IdCamp: camp.Id, IdFile: file1.Id, IsLettre: true})
+	err = FileCamp{IdCamp: camp.Id, IdFile: file1.Id, IsLettre: true}.Insert(db)
 	tu.AssertNoErr(t, err)
-	err = InsertFileCamp(db, FileCamp{IdCamp: camp.Id, IdFile: file2.Id, IsLettre: true})
+	err = FileCamp{IdCamp: camp.Id, IdFile: file2.Id, IsLettre: true}.Insert(db)
 	tu.Assert(t, err != nil) // lettre is unique
-	err = InsertFileCamp(db, FileCamp{IdCamp: camp.Id, IdFile: file2.Id, IsLettre: false})
+	err = FileCamp{IdCamp: camp.Id, IdFile: file2.Id, IsLettre: false}.Insert(db)
 	tu.AssertNoErr(t, err)
-	err = InsertFileCamp(db, FileCamp{IdCamp: camp.Id, IdFile: file3.Id, IsLettre: false})
+	err = FileCamp{IdCamp: camp.Id, IdFile: file3.Id, IsLettre: false}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	// demandes

@@ -4,15 +4,22 @@ package camps
 
 import (
 	"database/sql"
+	"time"
 
+	"registro/sql/dossiers"
 	pr "registro/sql/personnes"
 	"registro/sql/shared"
 )
 
 type (
-	IdCamp        int64
-	IdImagelettre int64
-	IdEquipier    int64
+	IdCamp          int64
+	IdImagelettre   int64
+	IdGroupe        int64
+	IdParticipant   int64
+	IdSondage       int64
+	IdEquipier      int64
+	IdStructureaide int64
+	IdAide          int64
 )
 
 type Camp struct {
@@ -22,7 +29,8 @@ type Camp struct {
 	Duree     int // nombre de jours date et fin inclus
 	Agrement  string
 
-	Prix Montant
+	Prix       Montant
+	OptionPrix OptionPrixCamp
 }
 
 func (cp *Camp) DateFin() shared.Date {
@@ -35,7 +43,7 @@ func (cp *Camp) DateFin() shared.Date {
 //
 // gomacro:SQL ADD UNIQUE(IdCamp)
 type Lettredirecteur struct {
-	IdCamp             int64 `gomacro-sql-on-delete:"CASCADE"`
+	IdCamp             IdCamp `gomacro-sql-on-delete:"CASCADE"`
 	Html               string
 	UseCoordCentre     bool
 	ShowAdressePostale bool
@@ -51,10 +59,62 @@ type Imagelettre struct {
 	Content  []byte
 }
 
+type Participant struct {
+	Id         IdParticipant
+	IdCamp     IdCamp             `gomacro-sql-on-delete:"CASCADE"`
+	IdPersonne pr.IdPersonne      `gomacro-sql-on-delete:"CASCADE"`
+	IdDossier  dossiers.IdDossier `gomacro-sql-on-delete:"CASCADE"`
+
+	ListeAttente     ListeAttente
+	Remises          Remises
+	QuotientFamilial int
+
+	OptionPrix OptionPrixParticipant
+
+	Details string // rempli sur l'espace de suivi
+	Bus     Bus    // rempli sur l'espace de suivi
+}
+
+// Groupe représente un groupe de participants
+// Un séjour peut définir (ou non) une liste de groupes
+//
+// gomacro:SQL ADD UNIQUE(IdCamp, Nom)
+// Requise par la contrainte GroupeParticipant
+// gomacro:SQL ADD UNIQUE(Id, IdCamp)
+type Groupe struct {
+	Id     IdGroupe
+	IdCamp IdCamp `gomacro-sql-on-delete:"CASCADE"`
+
+	// TODO: check that
+	// un nom vide indique un groupe par défaut
+	Nom string
+	// indication: ignorée forcément pour un groupe par défaut
+	Plage shared.Plage
+	// Hex color, optionnelle
+	Couleur string
+}
+
+// GroupeParticipant défini le contenu des groupes
+// gomacro:SQL ADD UNIQUE (IdParticipant)
+// gomacro:SQL ADD UNIQUE (IdParticipant, IdCamp)
+// gomacro:SQL ADD FOREIGN KEY (IdParticipant, IdCamp) REFERENCES Participant (Id,IdCamp)
+// gomacro:SQL ADD FOREIGN KEY (IdGroupe, IdCamp) REFERENCES Groupe (Id,IdCamp)
+type GroupeParticipant struct {
+	IdParticipant IdParticipant `gomacro-sql-on-delete:"CASCADE"`
+	IdGroupe      IdGroupe      `gomacro-sql-on-delete:"CASCADE"`
+	// redondance pour assurer l'intégrité
+	IdCamp IdCamp
+
+	// Manuel indique si l'attribution a été faite
+	// en modifiant directement la fiche du participant ou
+	// en fonction de l'âge
+	Manuel bool
+}
+
 // Equipier représente un participant dans l'équipe d'un séjour
 //
 // gomacro:SQL ADD UNIQUE(IdCamp, IdPersonne)
-// gomacro:SQL CREATE UNIQUE INDEX ON Equipiers(IdCamp) WHERE #[Role.Direction] = ANY(Roles)
+// gomacro:SQL CREATE UNIQUE INDEX ON Equipier(IdCamp) WHERE #[Role.Direction] = ANY(Roles)
 type Equipier struct {
 	Id         IdEquipier
 	IdCamp     IdCamp
@@ -66,4 +126,39 @@ type Equipier struct {
 	Invitation InvitationEquipier
 	// validation de la charte ACVE
 	AccepteCharte sql.NullBool
+}
+
+// Sondage enregistre les retours sur un séjour
+//
+// gomacro:SQL ADD UNIQUE(IdCamp, IdDossier)
+type Sondage struct {
+	IdSondage IdSondage
+	IdCamp    IdCamp             `gomacro-sql-on-delete:"CASCADE"`
+	IdDossier dossiers.IdDossier `gomacro-sql-on-delete:"CASCADE"`
+	Modified  time.Time
+
+	ReponseSondage
+}
+
+type Structureaide struct {
+	Id              int64
+	Nom             string
+	Immatriculation string
+	Adresse         string
+	CodePostal      string
+	Ville           string
+	Telephone       pr.Tel
+	Info            string
+}
+
+type Aide struct {
+	Id              IdAide
+	IdStructureaide IdStructureaide
+	IdParticipant   IdParticipant `gomacro-sql-on-delete:"CASCADE"`
+
+	Valide bool
+
+	Valeur     Montant
+	ParJour    bool
+	NbJoursMax int
 }

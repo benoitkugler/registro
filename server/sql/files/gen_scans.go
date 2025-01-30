@@ -6,7 +6,6 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"registro/sql/camps"
-	"registro/sql/dossiers"
 	"registro/sql/personnes"
 
 	"github.com/lib/pq"
@@ -184,7 +183,7 @@ func ScanDemandeCamps(rs *sql.Rows) (DemandeCamps, error) {
 	return structs, nil
 }
 
-func InsertDemandeCamp(db DB, item DemandeCamp) error {
+func (item DemandeCamp) Insert(db DB) error {
 	_, err := db.Exec(`INSERT INTO demande_camps (
 			idcamp, iddemande
 			) VALUES (
@@ -366,7 +365,7 @@ func ScanDemandeEquipiers(rs *sql.Rows) (DemandeEquipiers, error) {
 	return structs, nil
 }
 
-func InsertDemandeEquipier(db DB, item DemandeEquipier) error {
+func (item DemandeEquipier) Insert(db DB) error {
 	_, err := db.Exec(`INSERT INTO demande_equipiers (
 			idequipier, iddemande, optionnel
 			) VALUES (
@@ -657,7 +656,7 @@ func ScanFileAides(rs *sql.Rows) (FileAides, error) {
 	return structs, nil
 }
 
-func InsertFileAide(db DB, item FileAide) error {
+func (item FileAide) Insert(db DB) error {
 	_, err := db.Exec(`INSERT INTO file_aides (
 			idfile, idaide
 			) VALUES (
@@ -756,8 +755,8 @@ func DeleteFileAidesByIdFiles(tx DB, idFiles_ ...IdFile) (FileAides, error) {
 }
 
 // ByIdAide returns a map with 'IdAide' as keys.
-func (items FileAides) ByIdAide() map[dossiers.IdAide]FileAide {
-	out := make(map[dossiers.IdAide]FileAide, len(items))
+func (items FileAides) ByIdAide() map[camps.IdAide]FileAide {
+	out := make(map[camps.IdAide]FileAide, len(items))
 	for _, target := range items {
 		out[target.IdAide] = target
 	}
@@ -767,8 +766,8 @@ func (items FileAides) ByIdAide() map[dossiers.IdAide]FileAide {
 // IdAides returns the list of ids of IdAide
 // contained in this link table.
 // They are not garanteed to be distinct.
-func (items FileAides) IdAides() []dossiers.IdAide {
-	out := make([]dossiers.IdAide, len(items))
+func (items FileAides) IdAides() []camps.IdAide {
+	out := make([]camps.IdAide, len(items))
 	for index, target := range items {
 		out[index] = target.IdAide
 	}
@@ -776,7 +775,7 @@ func (items FileAides) IdAides() []dossiers.IdAide {
 }
 
 // SelectFileAideByIdAide return zero or one item, thanks to a UNIQUE SQL constraint.
-func SelectFileAideByIdAide(tx DB, idAide dossiers.IdAide) (item FileAide, found bool, err error) {
+func SelectFileAideByIdAide(tx DB, idAide camps.IdAide) (item FileAide, found bool, err error) {
 	row := tx.QueryRow("SELECT * FROM file_aides WHERE idaide = $1", idAide)
 	item, err = ScanFileAide(row)
 	if err == sql.ErrNoRows {
@@ -785,16 +784,16 @@ func SelectFileAideByIdAide(tx DB, idAide dossiers.IdAide) (item FileAide, found
 	return item, true, err
 }
 
-func SelectFileAidesByIdAides(tx DB, idAides_ ...dossiers.IdAide) (FileAides, error) {
-	rows, err := tx.Query("SELECT * FROM file_aides WHERE idaide = ANY($1)", dossiers.IdAideArrayToPQ(idAides_))
+func SelectFileAidesByIdAides(tx DB, idAides_ ...camps.IdAide) (FileAides, error) {
+	rows, err := tx.Query("SELECT * FROM file_aides WHERE idaide = ANY($1)", camps.IdAideArrayToPQ(idAides_))
 	if err != nil {
 		return nil, err
 	}
 	return ScanFileAides(rows)
 }
 
-func DeleteFileAidesByIdAides(tx DB, idAides_ ...dossiers.IdAide) (FileAides, error) {
-	rows, err := tx.Query("DELETE FROM file_aides WHERE idaide = ANY($1) RETURNING *", dossiers.IdAideArrayToPQ(idAides_))
+func DeleteFileAidesByIdAides(tx DB, idAides_ ...camps.IdAide) (FileAides, error) {
+	rows, err := tx.Query("DELETE FROM file_aides WHERE idaide = ANY($1) RETURNING *", camps.IdAideArrayToPQ(idAides_))
 	if err != nil {
 		return nil, err
 	}
@@ -849,7 +848,7 @@ func ScanFileCamps(rs *sql.Rows) (FileCamps, error) {
 	return structs, nil
 }
 
-func InsertFileCamp(db DB, item FileCamp) error {
+func (item FileCamp) Insert(db DB) error {
 	_, err := db.Exec(`INSERT INTO file_camps (
 			idfile, idcamp, islettre
 			) VALUES (
@@ -1032,7 +1031,7 @@ func ScanFilePersonnes(rs *sql.Rows) (FilePersonnes, error) {
 	return structs, nil
 }
 
-func InsertFilePersonne(db DB, item FilePersonne) error {
+func (item FilePersonne) Insert(db DB) error {
 	_, err := db.Exec(`INSERT INTO file_personnes (
 			idfile, idpersonne, iddemande
 			) VALUES (

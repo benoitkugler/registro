@@ -8,7 +8,6 @@ import (
 	"time"
 
 	cps "registro/sql/camps"
-	"registro/sql/dossiers"
 	"registro/sql/personnes"
 )
 
@@ -55,7 +54,7 @@ func (f File) Filepath(dir string, forMiniature bool) string {
 // gomacro:SQL ADD CONSTRAINT constraint_1 CHECK(Categorie = 0 OR IdDirecteur IS NULL)
 // gomacro:SQL ADD CONSTRAINT constraint_2 CHECK(Categorie <> 0 OR IdDirecteur IS NOT NULL)
 // gomacro:SQL ADD CONSTRAINT constraint_3 CHECK(MaxDocs >= 1)
-// gomacro:SQL CREATE UNIQUE INDEX ON demandes(Categorie) WHERE Categorie <> 0
+// gomacro:SQL CREATE UNIQUE INDEX ON Demande(Categorie) WHERE Categorie <> 0
 type Demande struct {
 	Id IdDemande
 
@@ -100,7 +99,7 @@ type DemandeCamp struct {
 // FileCamp est une table de lien pour les lettres des séjours et les documents additionnels
 //
 // gomacro:SQL ADD UNIQUE(IdFile)
-// gomacro:SQL CREATE UNIQUE INDEX ON file_camps(IdCamp) WHERE IsLettre IS true
+// gomacro:SQL CREATE UNIQUE INDEX ON FileCamp(IdCamp) WHERE IsLettre IS true
 type FileCamp struct {
 	IdFile   IdFile `gomacro-sql-on-delete:"CASCADE"`
 	IdCamp   cps.IdCamp
@@ -122,5 +121,5 @@ type FilePersonne struct {
 // gomacro:SQL ADD UNIQUE(IdAide)
 type FileAide struct {
 	IdFile IdFile `gomacro-sql-on-delete:"CASCADE"`
-	IdAide dossiers.IdAide
+	IdAide cps.IdAide
 }
