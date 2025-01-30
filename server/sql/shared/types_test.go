@@ -2,11 +2,13 @@ package shared
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 	"time"
 
 	tu "registro/utils/testutils"
 
+	"github.com/lib/pq"
 	_ "github.com/lib/pq"
 )
 
@@ -52,4 +54,23 @@ func TestPlage_To(t *testing.T) {
 		got := Plage{From: test.debut, Duree: test.duree}.To()
 		tu.Assert(t, got == test.expected)
 	}
+}
+
+func TestUint8Array(t *testing.T) {
+	db := tu.NewTestDB(t)
+	defer db.Remove()
+
+	_, err := db.Exec(`
+	CREATE TABLE t1 (id serial, roles smallint[]);
+	`)
+	tu.AssertNoErr(t, err)
+
+	ti := pq.Int32Array{-1, 2, 8, 1000}
+	_, err = db.Exec("INSERT INTO t1 (roles) VALUES ($1)", ti)
+	tu.AssertNoErr(t, err)
+
+	var v pq.Int32Array
+	err = db.QueryRow("SELECT roles FROM t1;").Scan(&v)
+	tu.AssertNoErr(t, err)
+	fmt.Println(v)
 }

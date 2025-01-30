@@ -54,13 +54,14 @@ type Imagelettre struct {
 // Equipier représente un participant dans l'équipe d'un séjour
 //
 // gomacro:SQL ADD UNIQUE(IdCamp, IdPersonne)
+// gomacro:SQL CREATE UNIQUE INDEX ON Equipiers(IdCamp) WHERE #[Role.Direction] = ANY(Roles)
 type Equipier struct {
 	Id         IdEquipier
 	IdCamp     IdCamp
 	IdPersonne pr.IdPersonne `gomacro-sql-on-delete:"CASCADE"`
 
 	Roles    Roles
-	Presence shared.OptionnalPlage
+	Presence OptionnalPlage
 
 	Invitation InvitationEquipier
 	// validation de la charte ACVE

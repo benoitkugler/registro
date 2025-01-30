@@ -17,7 +17,7 @@ CREATE TABLE equipiers (
     Id serial PRIMARY KEY,
     IdCamp integer NOT NULL,
     IdPersonne integer NOT NULL,
-    Roles jsonb NOT NULL,
+    Roles smallint[],
     Presence jsonb NOT NULL,
     Invitation smallint CHECK (Invitation IN (0, 1, 2)) NOT NULL,
     AccepteCharte boolean
@@ -45,34 +45,17 @@ ALTER TABLE lettredirecteurs
 ALTER TABLE equipiers
     ADD UNIQUE (IdCamp, IdPersonne);
 
+CREATE UNIQUE INDEX ON Equipiers (IdCamp)
+WHERE
+    1
+    /* Role.Direction */
+    = ANY (Roles);
+
 ALTER TABLE equipiers
     ADD FOREIGN KEY (IdCamp) REFERENCES camps;
 
 ALTER TABLE equipiers
     ADD FOREIGN KEY (IdPersonne) REFERENCES personnes ON DELETE CASCADE;
-
-CREATE OR REPLACE FUNCTION gomacro_validate_json_array_camp_Role (data jsonb)
-    RETURNS boolean
-    AS $$
-BEGIN
-    IF jsonb_typeof(data) = 'null' THEN
-        RETURN TRUE;
-    END IF;
-    IF jsonb_typeof(data) != 'array' THEN
-        RETURN FALSE;
-    END IF;
-    IF jsonb_array_length(data) = 0 THEN
-        RETURN TRUE;
-    END IF;
-    RETURN (
-        SELECT
-            bool_and(gomacro_validate_json_camp_Role (value))
-        FROM
-            jsonb_array_elements(data));
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
 
 CREATE OR REPLACE FUNCTION gomacro_validate_json_boolean (data jsonb)
     RETURNS boolean
@@ -89,38 +72,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION gomacro_validate_json_camp_Role (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean := jsonb_typeof(data) = 'number'
-    AND data::int IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12);
-BEGIN
-    IF NOT is_valid THEN
-        RAISE WARNING '% is not a camp_Role', data;
-    END IF;
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION gomacro_validate_json_number (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean := jsonb_typeof(data) = 'number';
-BEGIN
-    IF NOT is_valid THEN
-        RAISE WARNING '% is not a number', data;
-    END IF;
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION gomacro_validate_json_shar_OptionnalPlage (data jsonb)
+CREATE OR REPLACE FUNCTION gomacro_validate_json_camp_OptionnalPlage (data jsonb)
     RETURNS boolean
     AS $$
 DECLARE
@@ -143,6 +95,21 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION gomacro_validate_json_number (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean := jsonb_typeof(data) = 'number';
+BEGIN
+    IF NOT is_valid THEN
+        RAISE WARNING '% is not a number', data;
+    END IF;
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
 CREATE OR REPLACE FUNCTION gomacro_validate_json_string (data jsonb)
     RETURNS boolean
     AS $$
@@ -159,8 +126,5 @@ LANGUAGE 'plpgsql'
 IMMUTABLE;
 
 ALTER TABLE equipiers
-    ADD CONSTRAINT Roles_gomacro CHECK (gomacro_validate_json_array_camp_Role (Roles));
-
-ALTER TABLE equipiers
-    ADD CONSTRAINT Presence_gomacro CHECK (gomacro_validate_json_shar_OptionnalPlage (Presence));
+    ADD CONSTRAINT Presence_gomacro CHECK (gomacro_validate_json_camp_OptionnalPlage (Presence));
 

@@ -92,11 +92,6 @@ func (pl Plage) To() Date {
 	return NewDateFrom(out.Add(time.Hour * 24 * time.Duration(pl.Duree-1)))
 }
 
-type OptionnalPlage struct {
-	Plage
-	Active bool
-}
-
 type OptID[T ~int64] struct {
 	Id    T
 	Valid bool

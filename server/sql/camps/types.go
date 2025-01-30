@@ -3,6 +3,8 @@ package camps
 import (
 	"fmt"
 	"strings"
+
+	"registro/sql/shared"
 )
 
 type Currency uint8
@@ -52,7 +54,7 @@ type Role uint8
 
 const (
 	AutreRole     Role = iota // Autre
-	Directeur                 // Direction
+	Direction                 // Direction
 	Adjoint                   // Adjoint
 	Animation                 // Animation
 	AideAnimation             // Aide-animateur
@@ -70,7 +72,7 @@ func (r Role) String() string {
 	switch r {
 	case AutreRole:
 		return "Autre"
-	case Directeur:
+	case Direction:
 		return "Direction"
 	case Adjoint:
 		return "Adjoint"
@@ -103,7 +105,7 @@ func (r Role) String() string {
 // comme au pair.
 func (r Role) IsAuPair() bool {
 	switch r {
-	case Directeur, Adjoint, Animation, AideAnimation:
+	case Direction, Adjoint, Animation, AideAnimation:
 		return true
 	default:
 		return false
@@ -150,3 +152,8 @@ const (
 	Invite
 	Verifie
 )
+
+type OptionnalPlage struct {
+	shared.Plage
+	Active bool
+}

@@ -4,9 +4,27 @@ import (
 	"testing"
 	"time"
 
+	pr "registro/sql/personnes"
 	"registro/sql/shared"
 	tu "registro/utils/testutils"
 )
+
+func TestSQL(t *testing.T) {
+	db := tu.NewTestDB(t, "../personnes/gen_create.sql", "gen_create.sql")
+	defer db.Remove()
+
+	camp, err := randCamp().Insert(db)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, camp.Id != 0)
+	personne, err := pr.Personne{}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	_, err = Equipier{IdPersonne: personne.Id, IdCamp: camp.Id, Roles: Roles{Direction, AutreRole}}.Insert(db)
+	tu.AssertNoErr(t, err)
+	// only one directeur
+	_, err = Equipier{IdPersonne: personne.Id, IdCamp: camp.Id, Roles: Roles{Direction, Menage}}.Insert(db)
+	tu.Assert(t, err != nil)
+}
 
 func TestMontant(t *testing.T) {
 	db := tu.NewTestDB(t)

@@ -34,7 +34,7 @@ func randEquipier() Equipier {
 	s.IdCamp = randIdCamp()
 	s.IdPersonne = randper_IdPersonne()
 	s.Roles = randRoles()
-	s.Presence = randsha_OptionnalPlage()
+	s.Presence = randOptionnalPlage()
 	s.Invitation = randInvitationEquipier()
 	s.AccepteCharte = randsql_NullBool()
 
@@ -88,8 +88,17 @@ func randMontant() Montant {
 	return s
 }
 
+func randOptionnalPlage() OptionnalPlage {
+	var s OptionnalPlage
+	s.From = randsha_Date()
+	s.Duree = randint()
+	s.Active = randbool()
+
+	return s
+}
+
 func randRole() Role {
-	choix := [...]Role{AutreRole, Directeur, Adjoint, Animation, AideAnimation, Chauffeur, Intendance, Babysiter, Menage, Factotum, Infirmerie, Cuisine, Lingerie}
+	choix := [...]Role{AutreRole, Direction, Adjoint, Animation, AideAnimation, Chauffeur, Intendance, Babysiter, Menage, Factotum, Infirmerie, Cuisine, Lingerie}
 	i := rand.Intn(len(choix))
 	return choix[i]
 }
@@ -135,15 +144,6 @@ func randper_IdPersonne() personnes.IdPersonne {
 
 func randsha_Date() shared.Date {
 	return shared.Date(randtDate())
-}
-
-func randsha_OptionnalPlage() shared.OptionnalPlage {
-	var s shared.OptionnalPlage
-	s.From = randsha_Date()
-	s.Duree = randint()
-	s.Active = randbool()
-
-	return s
 }
 
 func randsql_NullBool() sql.NullBool {

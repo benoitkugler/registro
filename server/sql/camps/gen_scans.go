@@ -586,6 +586,26 @@ func dumpJSON(s interface{}) (driver.Value, error) {
 	return driver.Value(string(b)), nil
 }
 
+func (s *Roles) Scan(src interface{}) error {
+	var tmp pq.Int32Array
+	err := tmp.Scan(src)
+	if err != nil {
+		return err
+	}
+	*s = make([]Role, len(tmp))
+	for i, v := range tmp {
+		(*s)[i] = Role(v)
+	}
+	return nil
+}
+func (s Roles) Value() (driver.Value, error) {
+	tmp := make(pq.Int32Array, len(s))
+	for i, v := range s {
+		tmp[i] = int32(v)
+	}
+	return tmp.Value()
+}
+
 func (s *Montant) Scan(src interface{}) error {
 	bs, ok := src.([]byte)
 	if !ok {
@@ -762,5 +782,5 @@ func (s IdImagelettreSet) Keys() []IdImagelettre {
 	return out
 }
 
-func (s *Roles) Scan(src interface{}) error  { return loadJSON(s, src) }
-func (s Roles) Value() (driver.Value, error) { return dumpJSON(s) }
+func (s *OptionnalPlage) Scan(src interface{}) error  { return loadJSON(s, src) }
+func (s OptionnalPlage) Value() (driver.Value, error) { return dumpJSON(s) }

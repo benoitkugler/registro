@@ -5,8 +5,6 @@ package files
 import (
 	"database/sql"
 	"database/sql/driver"
-	"encoding/json"
-	"errors"
 	"registro/sql/camps"
 	"registro/sql/dossiers"
 	"registro/sql/personnes"
@@ -1203,25 +1201,6 @@ func DeleteFilePersonnesByIdDemandes(tx DB, idDemandes_ ...IdDemande) (FilePerso
 		return nil, err
 	}
 	return ScanFilePersonnes(rows)
-}
-
-func loadJSON(out interface{}, src interface{}) error {
-	if src == nil {
-		return nil //zero value out
-	}
-	bs, ok := src.([]byte)
-	if !ok {
-		return errors.New("not a []byte")
-	}
-	return json.Unmarshal(bs, out)
-}
-
-func dumpJSON(s interface{}) (driver.Value, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return driver.Value(string(b)), nil
 }
 
 func IdDemandeArrayToPQ(ids []IdDemande) pq.Int64Array {
