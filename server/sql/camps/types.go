@@ -11,7 +11,10 @@ import (
 	"registro/utils"
 )
 
-type Montant = dossiers.Montant
+type (
+	Montant   = dossiers.Montant
+	OptIdTaux = dossiers.OptIdTaux
+)
 
 // ListeAttente définit le statut d'un participant
 // par rapport à la liste d'attente

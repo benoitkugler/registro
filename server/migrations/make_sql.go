@@ -1,12 +1,14 @@
 // This script is a small helper to split an SQL file into
-// 3 parts : tables, json functions and constraints
+// 3 parts : tables, json functions and constraints.
 //
-// go run make_sql.go
+// The order of the tables must be specified.
+//
+// go run make_sql.go ../sql/personnes/ ../sql/dossiers/ ../sql/camps/
+
 package main
 
 import (
 	"bytes"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"slices"
@@ -69,31 +71,17 @@ func splitStatements(s []byte) []statement {
 	return out
 }
 
-func fetchSQLFiles() (out []statement) {
-	err := filepath.WalkDir("../sql", func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if d.IsDir() {
-			return nil // recurse
-		}
-
-		if !strings.HasSuffix(path, "gen_create.sql") {
-			return nil // continue
-		}
-
+func fetchSQLFiles(dirs []string) (out []statement) {
+	for _, dir := range dirs {
+		path := filepath.Join(dir, "gen_create.sql")
 		by, err := os.ReadFile(path)
 		check(err)
 
 		out = append(out, splitStatements(by)...)
-
-		return nil
-	})
-	check(err)
+	}
 
 	// sort so that create type are written first
-	slices.SortFunc(out, func(a, b statement) int { return int(a.kind) - int(b.kind) })
+	slices.SortStableFunc(out, func(a, b statement) int { return int(a.kind) - int(b.kind) })
 
 	return out
 }
@@ -105,7 +93,9 @@ func check(err error) {
 }
 
 func main() {
-	statements := fetchSQLFiles()
+	dirs := os.Args[1:]
+
+	statements := fetchSQLFiles(dirs)
 
 	f0, err := os.Create("create_1_tables.sql")
 	check(err)

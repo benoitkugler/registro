@@ -10,16 +10,39 @@ import (
 )
 
 type (
+	IdTaux     int64
 	IdDossier  int64
 	IdPaiement int64
 )
 
+// Taux définit le taux de convertion de chaque
+// monnaie.
+//
+// Une table de conversion est associée à chaque camp,
+// et tous les camps d'un même dossier doivent être liés à la
+// même table.
+// Un camp sans [Taux] équivaut à la table {1000, 0}, c'est à dire
+// avec un support pour les Euros seulement
+type Taux struct {
+	Id IdTaux
+
+	// 1[Monnaie]  = [Field] / 1000 €
+
+	Euros        int
+	FrancsSuisse int
+}
+
 // Dossier représente un dossier d'inscription validé,
 // et permet le suivi de l'inscription.
 // En particulier, il y a un espace personnel par dossier.
+//
+// Requise par la contrainte Participant
+// gomacro:SQL ADD UNIQUE(Id, IdTaux)
 type Dossier struct {
 	Id            IdDossier
 	IdResponsable pr.IdPersonne // responsable légal en charge du dossier
+	// IdTaux is used for consistency
+	IdTaux IdTaux
 
 	// CopiesMails est une liste d'adresse en copies des mails envoyés,
 	// donnant entre autre accès à l'espace personnel

@@ -37,6 +37,7 @@ func randCamp() Camp {
 	s.DateDebut = randsha_Date()
 	s.Duree = randint()
 	s.Agrement = randstring()
+	s.IdTaux = randdos_IdTaux()
 	s.Prix = randdos_Montant()
 	s.OptionPrix = randOptionPrixCamp()
 
@@ -196,6 +197,7 @@ func randParticipant() Participant {
 	s.IdCamp = randIdCamp()
 	s.IdPersonne = randper_IdPersonne()
 	s.IdDossier = randdos_IdDossier()
+	s.IdTaux = randdos_IdTaux()
 	s.ListeAttente = randListeAttente()
 	s.Remises = randRemises()
 	s.QuotientFamilial = randint()
@@ -333,13 +335,17 @@ func randbool() bool {
 }
 
 func randdos_Currency() dossiers.Currency {
-	choix := [...]dossiers.Currency{dossiers.Empty, dossiers.Euros, dossiers.FrancsSuisse}
+	choix := [...]dossiers.Currency{dossiers.Euros, dossiers.FrancsSuisse}
 	i := rand.Intn(len(choix))
 	return choix[i]
 }
 
 func randdos_IdDossier() dossiers.IdDossier {
 	return dossiers.IdDossier(randint64())
+}
+
+func randdos_IdTaux() dossiers.IdTaux {
+	return dossiers.IdTaux(randint64())
 }
 
 func randdos_Montant() dossiers.Montant {

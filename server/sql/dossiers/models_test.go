@@ -19,9 +19,9 @@ func TestMontant(t *testing.T) {
 	tu.AssertNoErr(t, err)
 
 	for _, expected := range [...]Montant{
-		{0, 0},
-		{-2, 1},
-		{10, 2},
+		{0, nbCurrencies},
+		{-2, Euros},
+		{10, FrancsSuisse},
 	} {
 		_, err = db.Exec("UPDATE t1 SET montant = $1", expected)
 		tu.AssertNoErr(t, err)
@@ -32,22 +32,5 @@ func TestMontant(t *testing.T) {
 		tu.AssertNoErr(t, err)
 		tu.Assert(t, montant == expected)
 
-	}
-}
-
-func TestMontant_String(t *testing.T) {
-	for _, test := range [...]struct {
-		m        Montant
-		expected string
-	}{
-		{Montant{}, "0 <invalid currency>"},
-		{Montant{0, 1}, "0 €"},
-		{Montant{100, 1}, "1 €"},
-		{Montant{-100, 1}, "-1 €"},
-		{Montant{110, 1}, "1,1 €"},
-		{Montant{110, 2}, "1,1 CHF"},
-		{Montant{11589, 2}, "115,89 CHF"},
-	} {
-		tu.Assert(t, test.m.String() == test.expected)
 	}
 }

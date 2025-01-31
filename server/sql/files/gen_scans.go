@@ -136,6 +136,38 @@ func DeleteDemandesByIDs(tx DB, ids ...IdDemande) ([]IdDemande, error) {
 	return ScanIdDemandeArray(rows)
 }
 
+func SelectDemandesByIdFiles(tx DB, idFiles_ ...IdFile) (Demandes, error) {
+	rows, err := tx.Query("SELECT * FROM demandes WHERE idfile = ANY($1)", IdFileArrayToPQ(idFiles_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanDemandes(rows)
+}
+
+func DeleteDemandesByIdFiles(tx DB, idFiles_ ...IdFile) ([]IdDemande, error) {
+	rows, err := tx.Query("DELETE FROM demandes WHERE idfile = ANY($1) RETURNING id", IdFileArrayToPQ(idFiles_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIdDemandeArray(rows)
+}
+
+func SelectDemandesByIdDirecteurs(tx DB, idDirecteurs_ ...personnes.IdPersonne) (Demandes, error) {
+	rows, err := tx.Query("SELECT * FROM demandes WHERE iddirecteur = ANY($1)", personnes.IdPersonneArrayToPQ(idDirecteurs_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanDemandes(rows)
+}
+
+func DeleteDemandesByIdDirecteurs(tx DB, idDirecteurs_ ...personnes.IdPersonne) ([]IdDemande, error) {
+	rows, err := tx.Query("DELETE FROM demandes WHERE iddirecteur = ANY($1) RETURNING id", personnes.IdPersonneArrayToPQ(idDirecteurs_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIdDemandeArray(rows)
+}
+
 func scanOneDemandeCamp(row scanner) (DemandeCamp, error) {
 	var item DemandeCamp
 	err := row.Scan(

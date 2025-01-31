@@ -228,6 +228,7 @@ func scanOneCamp(row scanner) (Camp, error) {
 		&item.DateDebut,
 		&item.Duree,
 		&item.Agrement,
+		&item.IdTaux,
 		&item.Prix,
 		&item.OptionPrix,
 	)
@@ -298,22 +299,22 @@ func ScanCamps(rs *sql.Rows) (Camps, error) {
 // Insert one Camp in the database and returns the item with id filled.
 func (item Camp) Insert(tx DB) (out Camp, err error) {
 	row := tx.QueryRow(`INSERT INTO camps (
-		nom, datedebut, duree, agrement, prix, optionprix
+		nom, datedebut, duree, agrement, idtaux, prix, optionprix
 		) VALUES (
-		$1, $2, $3, $4, $5, $6
+		$1, $2, $3, $4, $5, $6, $7
 		) RETURNING *;
-		`, item.Nom, item.DateDebut, item.Duree, item.Agrement, item.Prix, item.OptionPrix)
+		`, item.Nom, item.DateDebut, item.Duree, item.Agrement, item.IdTaux, item.Prix, item.OptionPrix)
 	return ScanCamp(row)
 }
 
 // Update Camp in the database and returns the new version.
 func (item Camp) Update(tx DB) (out Camp, err error) {
 	row := tx.QueryRow(`UPDATE camps SET (
-		nom, datedebut, duree, agrement, prix, optionprix
+		nom, datedebut, duree, agrement, idtaux, prix, optionprix
 		) = (
-		$1, $2, $3, $4, $5, $6
-		) WHERE id = $7 RETURNING *;
-		`, item.Nom, item.DateDebut, item.Duree, item.Agrement, item.Prix, item.OptionPrix, item.Id)
+		$1, $2, $3, $4, $5, $6, $7
+		) WHERE id = $8 RETURNING *;
+		`, item.Nom, item.DateDebut, item.Duree, item.Agrement, item.IdTaux, item.Prix, item.OptionPrix, item.Id)
 	return ScanCamp(row)
 }
 
@@ -330,6 +331,57 @@ func DeleteCampsByIDs(tx DB, ids ...IdCamp) ([]IdCamp, error) {
 		return nil, err
 	}
 	return ScanIdCampArray(rows)
+}
+
+// ByIdTaux returns a map with 'IdTaux' as keys.
+func (items Camps) ByIdTaux() map[dossiers.IdTaux]Camps {
+	out := make(map[dossiers.IdTaux]Camps)
+	for _, target := range items {
+		dict := out[target.IdTaux]
+		if dict == nil {
+			dict = make(Camps)
+		}
+		dict[target.Id] = target
+		out[target.IdTaux] = dict
+	}
+	return out
+}
+
+// IdTauxs returns the list of ids of IdTaux
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items Camps) IdTauxs() []dossiers.IdTaux {
+	out := make([]dossiers.IdTaux, 0, len(items))
+	for _, target := range items {
+		out = append(out, target.IdTaux)
+	}
+	return out
+}
+
+func SelectCampsByIdTauxs(tx DB, idTauxs_ ...dossiers.IdTaux) (Camps, error) {
+	rows, err := tx.Query("SELECT * FROM camps WHERE idtaux = ANY($1)", dossiers.IdTauxArrayToPQ(idTauxs_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanCamps(rows)
+}
+
+func DeleteCampsByIdTauxs(tx DB, idTauxs_ ...dossiers.IdTaux) ([]IdCamp, error) {
+	rows, err := tx.Query("DELETE FROM camps WHERE idtaux = ANY($1) RETURNING id", dossiers.IdTauxArrayToPQ(idTauxs_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIdCampArray(rows)
+}
+
+// SelectCampByIdAndIdTaux return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectCampByIdAndIdTaux(tx DB, id IdCamp, idTaux dossiers.IdTaux) (item Camp, found bool, err error) {
+	row := tx.QueryRow("SELECT * FROM camps WHERE Id = $1 AND IdTaux = $2", id, idTaux)
+	item, err = ScanCamp(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
 }
 
 func scanOneEquipier(row scanner) (Equipier, error) {
@@ -1207,6 +1259,7 @@ func scanOneParticipant(row scanner) (Participant, error) {
 		&item.IdCamp,
 		&item.IdPersonne,
 		&item.IdDossier,
+		&item.IdTaux,
 		&item.ListeAttente,
 		&item.Remises,
 		&item.QuotientFamilial,
@@ -1281,22 +1334,22 @@ func ScanParticipants(rs *sql.Rows) (Participants, error) {
 // Insert one Participant in the database and returns the item with id filled.
 func (item Participant) Insert(tx DB) (out Participant, err error) {
 	row := tx.QueryRow(`INSERT INTO participants (
-		idcamp, idpersonne, iddossier, listeattente, remises, quotientfamilial, optionprix, details, bus
+		idcamp, idpersonne, iddossier, idtaux, listeattente, remises, quotientfamilial, optionprix, details, bus
 		) VALUES (
-		$1, $2, $3, $4, $5, $6, $7, $8, $9
+		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10
 		) RETURNING *;
-		`, item.IdCamp, item.IdPersonne, item.IdDossier, item.ListeAttente, item.Remises, item.QuotientFamilial, item.OptionPrix, item.Details, item.Bus)
+		`, item.IdCamp, item.IdPersonne, item.IdDossier, item.IdTaux, item.ListeAttente, item.Remises, item.QuotientFamilial, item.OptionPrix, item.Details, item.Bus)
 	return ScanParticipant(row)
 }
 
 // Update Participant in the database and returns the new version.
 func (item Participant) Update(tx DB) (out Participant, err error) {
 	row := tx.QueryRow(`UPDATE participants SET (
-		idcamp, idpersonne, iddossier, listeattente, remises, quotientfamilial, optionprix, details, bus
+		idcamp, idpersonne, iddossier, idtaux, listeattente, remises, quotientfamilial, optionprix, details, bus
 		) = (
-		$1, $2, $3, $4, $5, $6, $7, $8, $9
-		) WHERE id = $10 RETURNING *;
-		`, item.IdCamp, item.IdPersonne, item.IdDossier, item.ListeAttente, item.Remises, item.QuotientFamilial, item.OptionPrix, item.Details, item.Bus, item.Id)
+		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10
+		) WHERE id = $11 RETURNING *;
+		`, item.IdCamp, item.IdPersonne, item.IdDossier, item.IdTaux, item.ListeAttente, item.Remises, item.QuotientFamilial, item.OptionPrix, item.Details, item.Bus, item.Id)
 	return ScanParticipant(row)
 }
 
@@ -1436,6 +1489,57 @@ func DeleteParticipantsByIdDossiers(tx DB, idDossiers_ ...dossiers.IdDossier) ([
 		return nil, err
 	}
 	return ScanIdParticipantArray(rows)
+}
+
+// ByIdTaux returns a map with 'IdTaux' as keys.
+func (items Participants) ByIdTaux() map[dossiers.IdTaux]Participants {
+	out := make(map[dossiers.IdTaux]Participants)
+	for _, target := range items {
+		dict := out[target.IdTaux]
+		if dict == nil {
+			dict = make(Participants)
+		}
+		dict[target.Id] = target
+		out[target.IdTaux] = dict
+	}
+	return out
+}
+
+// IdTauxs returns the list of ids of IdTaux
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items Participants) IdTauxs() []dossiers.IdTaux {
+	out := make([]dossiers.IdTaux, 0, len(items))
+	for _, target := range items {
+		out = append(out, target.IdTaux)
+	}
+	return out
+}
+
+func SelectParticipantsByIdTauxs(tx DB, idTauxs_ ...dossiers.IdTaux) (Participants, error) {
+	rows, err := tx.Query("SELECT * FROM participants WHERE idtaux = ANY($1)", dossiers.IdTauxArrayToPQ(idTauxs_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanParticipants(rows)
+}
+
+func DeleteParticipantsByIdTauxs(tx DB, idTauxs_ ...dossiers.IdTaux) ([]IdParticipant, error) {
+	rows, err := tx.Query("DELETE FROM participants WHERE idtaux = ANY($1) RETURNING id", dossiers.IdTauxArrayToPQ(idTauxs_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIdParticipantArray(rows)
+}
+
+// SelectParticipantByIdAndIdCamp return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectParticipantByIdAndIdCamp(tx DB, id IdParticipant, idCamp IdCamp) (item Participant, found bool, err error) {
+	row := tx.QueryRow("SELECT * FROM participants WHERE Id = $1 AND IdCamp = $2", id, idCamp)
+	item, err = ScanParticipant(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
 }
 
 func scanOneSondage(row scanner) (Sondage, error) {

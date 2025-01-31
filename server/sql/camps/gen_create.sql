@@ -15,6 +15,7 @@ CREATE TABLE camps (
     DateDebut date NOT NULL,
     Duree integer NOT NULL,
     Agrement text NOT NULL,
+    IdTaux integer NOT NULL,
     Prix Montant NOT NULL,
     OptionPrix jsonb NOT NULL
 );
@@ -64,6 +65,7 @@ CREATE TABLE participants (
     IdCamp integer NOT NULL,
     IdPersonne integer NOT NULL,
     IdDossier integer NOT NULL,
+    IdTaux integer NOT NULL,
     ListeAttente smallint CHECK (ListeAttente IN (0, 1, 2, 3, 4)) NOT NULL,
     Remises jsonb NOT NULL,
     QuotientFamilial integer NOT NULL,
@@ -102,11 +104,26 @@ CREATE TABLE structureaides (
 );
 
 -- constraints
+ALTER TABLE camps
+    ADD UNIQUE (Id, IdTaux);
+
+ALTER TABLE camps
+    ADD FOREIGN KEY (IdTaux) REFERENCES tauxs;
+
 ALTER TABLE lettredirecteurs
     ADD UNIQUE (IdCamp);
 
 ALTER TABLE lettredirecteurs
     ADD FOREIGN KEY (IdCamp) REFERENCES camps ON DELETE CASCADE;
+
+ALTER TABLE participants
+    ADD FOREIGN KEY (IdCamp, IdTaux) REFERENCES camps (Id, IdTaux) ON DELETE CASCADE;
+
+ALTER TABLE participants
+    ADD FOREIGN KEY (IdDossier, IdTaux) REFERENCES dossiers (Id, IdTaux) ON DELETE CASCADE;
+
+ALTER TABLE participants
+    ADD UNIQUE (Id, IdCamp);
 
 ALTER TABLE participants
     ADD FOREIGN KEY (IdCamp) REFERENCES camps ON DELETE CASCADE;
@@ -116,6 +133,9 @@ ALTER TABLE participants
 
 ALTER TABLE participants
     ADD FOREIGN KEY (IdDossier) REFERENCES dossiers ON DELETE CASCADE;
+
+ALTER TABLE participants
+    ADD FOREIGN KEY (IdTaux) REFERENCES tauxs;
 
 ALTER TABLE groupes
     ADD UNIQUE (IdCamp, Nom);
@@ -133,10 +153,10 @@ ALTER TABLE groupe_participants
     ADD UNIQUE (IdParticipant, IdCamp);
 
 ALTER TABLE groupe_participants
-    ADD FOREIGN KEY (IdParticipant, IdCamp) REFERENCES participants (Id, IdCamp);
+    ADD FOREIGN KEY (IdParticipant, IdCamp) REFERENCES participants (Id, IdCamp) ON DELETE CASCADE;
 
 ALTER TABLE groupe_participants
-    ADD FOREIGN KEY (IdGroupe, IdCamp) REFERENCES groupes (Id, IdCamp);
+    ADD FOREIGN KEY (IdGroupe, IdCamp) REFERENCES groupes (Id, IdCamp) ON DELETE CASCADE;
 
 ALTER TABLE groupe_participants
     ADD FOREIGN KEY (IdParticipant) REFERENCES participants ON DELETE CASCADE;

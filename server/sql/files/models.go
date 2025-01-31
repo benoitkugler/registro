@@ -59,10 +59,10 @@ type Demande struct {
 	Id IdDemande
 
 	// Document à télécharger et remplir, optionnel
-	IdFile OptIdFile
+	IdFile OptIdFile `gomacro-sql-foreign:"File"`
 
 	// Pour les demandes 'custom', le directeur proprietaire de la contrainte
-	IdDirecteur OptIdPersonne `gomacro-sql-on-delete:"CASCADE"`
+	IdDirecteur OptIdPersonne `gomacro-sql-on-delete:"CASCADE" gomacro-sql-foreign:"Personne"`
 
 	Categorie Categorie
 

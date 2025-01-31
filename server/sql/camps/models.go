@@ -22,12 +22,18 @@ type (
 	IdAide          int64
 )
 
+// Camp
+//
+// Requise par la contrainte Participant
+// gomacro:SQL ADD UNIQUE(Id, IdTaux)
 type Camp struct {
 	Id        IdCamp
 	Nom       string
 	DateDebut shared.Date
 	Duree     int // nombre de jours date et fin inclus
 	Agrement  string
+
+	IdTaux dossiers.IdTaux
 
 	Prix       Montant
 	OptionPrix OptionPrixCamp
@@ -59,11 +65,22 @@ type Imagelettre struct {
 	Content  []byte
 }
 
+// Participant
+//
+// gomacro:SQL ADD FOREIGN KEY (IdCamp, IdTaux) REFERENCES Camp (Id,IdTaux) ON DELETE CASCADE
+// gomacro:SQL ADD FOREIGN KEY (IdDossier, IdTaux) REFERENCES Dossier (Id,IdTaux) ON DELETE CASCADE
+//
+// Requise par la contrainte GroupeParticipant
+// gomacro:SQL ADD UNIQUE(Id, IdCamp)
 type Participant struct {
 	Id         IdParticipant
 	IdCamp     IdCamp             `gomacro-sql-on-delete:"CASCADE"`
 	IdPersonne pr.IdPersonne      `gomacro-sql-on-delete:"CASCADE"`
 	IdDossier  dossiers.IdDossier `gomacro-sql-on-delete:"CASCADE"`
+
+	// IdTaux is used for consistency,
+	// so that a [Dossier] has only one taux
+	IdTaux dossiers.IdTaux
 
 	ListeAttente     ListeAttente
 	Remises          Remises
@@ -97,8 +114,8 @@ type Groupe struct {
 // GroupeParticipant défini le contenu des groupes
 // gomacro:SQL ADD UNIQUE (IdParticipant)
 // gomacro:SQL ADD UNIQUE (IdParticipant, IdCamp)
-// gomacro:SQL ADD FOREIGN KEY (IdParticipant, IdCamp) REFERENCES Participant (Id,IdCamp)
-// gomacro:SQL ADD FOREIGN KEY (IdGroupe, IdCamp) REFERENCES Groupe (Id,IdCamp)
+// gomacro:SQL ADD FOREIGN KEY (IdParticipant, IdCamp) REFERENCES Participant (Id,IdCamp) ON DELETE CASCADE
+// gomacro:SQL ADD FOREIGN KEY (IdGroupe, IdCamp) REFERENCES Groupe (Id,IdCamp) ON DELETE CASCADE
 type GroupeParticipant struct {
 	IdParticipant IdParticipant `gomacro-sql-on-delete:"CASCADE"`
 	IdGroupe      IdGroupe      `gomacro-sql-on-delete:"CASCADE"`

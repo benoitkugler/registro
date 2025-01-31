@@ -14,41 +14,98 @@ func TestSQL(t *testing.T) {
 	db := tu.NewTestDB(t, "../personnes/gen_create.sql", "../dossiers/gen_create.sql", "gen_create.sql")
 	defer db.Remove()
 
-	camp, err := randCamp().Insert(db)
+	defautTaux, err := dossiers.Taux{Euros: 1000}.Insert(db)
 	tu.AssertNoErr(t, err)
-	tu.Assert(t, camp.Id != 0)
+
+	camp1 := randCamp()
+	camp1.IdTaux = defautTaux.Id
+	camp1, err = camp1.Insert(db)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, camp1.Id != 0)
 	personne, err := pr.Personne{}.Insert(db)
 	tu.AssertNoErr(t, err)
-
-	_, err = Equipier{IdPersonne: personne.Id, IdCamp: camp.Id, Roles: Roles{Direction, AutreRole}}.Insert(db)
-	tu.AssertNoErr(t, err)
-	// only one directeur
-	_, err = Equipier{IdPersonne: personne.Id, IdCamp: camp.Id, Roles: Roles{Direction, Menage}}.Insert(db)
-	tu.Assert(t, err != nil)
-
-	// participants et groupe
-	dossier, err := dossiers.Dossier{IdResponsable: personne.Id}.Insert(db)
-	tu.AssertNoErr(t, err)
-	part1 := randParticipant()
-	part1.IdCamp, part1.IdPersonne, part1.IdDossier = camp.Id, personne.Id, dossier.Id
-	part1, err = part1.Insert(db)
+	dossier, err := dossiers.Dossier{IdResponsable: personne.Id, IdTaux: defautTaux.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	groupe1, err := Groupe{IdCamp: camp.Id, Nom: "1"}.Insert(db)
-	tu.AssertNoErr(t, err)
-	groupe2, err := Groupe{IdCamp: camp.Id, Nom: "2"}.Insert(db)
-	tu.AssertNoErr(t, err)
+	t.Run("equipiers", func(t *testing.T) {
+		_, err = Equipier{IdPersonne: personne.Id, IdCamp: camp1.Id, Roles: Roles{Direction, AutreRole}}.Insert(db)
+		tu.AssertNoErr(t, err)
+		// only one directeur
+		_, err = Equipier{IdPersonne: personne.Id, IdCamp: camp1.Id, Roles: Roles{Direction, Menage}}.Insert(db)
+		tu.Assert(t, err != nil)
+	})
 
-	err = GroupeParticipant(GroupeParticipant{IdParticipant: part1.Id, IdGroupe: groupe1.Id, IdCamp: camp.Id}).Insert(db)
-	tu.AssertNoErr(t, err)
+	t.Run("participants et groupes", func(t *testing.T) {
+		part1 := randParticipant()
+		part1.IdCamp, part1.IdPersonne, part1.IdDossier = camp1.Id, personne.Id, dossier.Id
+		part1.IdTaux = camp1.IdTaux
+		part1, err = part1.Insert(db)
+		tu.AssertNoErr(t, err)
 
-	err = GroupeParticipant(GroupeParticipant{IdParticipant: part1.Id, IdGroupe: groupe1.Id, IdCamp: camp.Id}).Insert(db)
-	tu.Assert(t, err != nil) // unicité
-	err = GroupeParticipant(GroupeParticipant{IdParticipant: part1.Id, IdGroupe: groupe2.Id, IdCamp: camp.Id}).Insert(db)
-	tu.Assert(t, err != nil) // unicité du participant
+		groupe1, err := Groupe{IdCamp: camp1.Id, Nom: "1"}.Insert(db)
+		tu.AssertNoErr(t, err)
+		groupe2, err := Groupe{IdCamp: camp1.Id, Nom: "2"}.Insert(db)
+		tu.AssertNoErr(t, err)
 
-	err = GroupeParticipant(GroupeParticipant{IdParticipant: part1.Id, IdGroupe: groupe1.Id, IdCamp: 0}).Insert(db)
-	tu.Assert(t, err != nil)
+		err = GroupeParticipant(GroupeParticipant{IdParticipant: part1.Id, IdGroupe: groupe1.Id, IdCamp: camp1.Id}).Insert(db)
+		tu.AssertNoErr(t, err)
+
+		err = GroupeParticipant(GroupeParticipant{IdParticipant: part1.Id, IdGroupe: groupe1.Id, IdCamp: camp1.Id}).Insert(db)
+		tu.Assert(t, err != nil) // unicité
+		err = GroupeParticipant(GroupeParticipant{IdParticipant: part1.Id, IdGroupe: groupe2.Id, IdCamp: camp1.Id}).Insert(db)
+		tu.Assert(t, err != nil) // unicité du participant
+
+		err = GroupeParticipant(GroupeParticipant{IdParticipant: part1.Id, IdGroupe: groupe1.Id, IdCamp: 0}).Insert(db)
+		tu.Assert(t, err != nil)
+
+		_, err = DeleteGroupeById(db, groupe1.Id)
+		tu.AssertNoErr(t, err)
+		_, err = DeleteGroupeById(db, groupe2.Id)
+		tu.AssertNoErr(t, err)
+		_, err = DeleteParticipantById(db, part1.Id)
+		tu.AssertNoErr(t, err)
+	})
+
+	t.Run("dossiers et taux", func(t *testing.T) {
+		camp2 := randCamp()
+		camp2.IdTaux = defautTaux.Id
+		camp2, err := camp2.Insert(db)
+		tu.AssertNoErr(t, err)
+
+		taux, err := dossiers.Taux{}.Insert(db)
+		tu.AssertNoErr(t, err)
+
+		part1 := randParticipant()
+		part1.IdCamp, part1.IdPersonne, part1.IdDossier = camp1.Id, personne.Id, dossier.Id
+
+		part1.IdTaux = taux.Id
+		_, err = part1.Insert(db)
+		tu.Assert(t, err != nil) // IdTaux n'est pas cohérent
+
+		part1.IdTaux = defautTaux.Id
+		part1, err = part1.Insert(db)
+		tu.AssertNoErr(t, err)
+
+		camp1.IdTaux = taux.Id
+		_, err = camp1.Update(db)
+		tu.Assert(t, err != nil) // IdTaux n'est pas cohérent
+
+		// deux camps sans taux sont OK
+		part2 := part1
+		part2.IdCamp = camp2.Id
+		part2, err = part2.Insert(db)
+		tu.AssertNoErr(t, err)
+
+		camp3 := randCamp()
+		camp3.IdTaux = taux.Id
+		camp3, err = camp3.Insert(db)
+		tu.AssertNoErr(t, err)
+
+		part3 := randParticipant()
+		part3.IdCamp, part3.IdPersonne, part3.IdDossier = camp3.Id, personne.Id, dossier.Id
+		_, err = part3.Insert(db)
+		tu.Assert(t, err != nil) // IdTaux n'est pas cohérent
+	})
 }
 
 func TestCamp_DateFin(t *testing.T) {

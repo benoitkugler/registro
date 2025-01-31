@@ -7,6 +7,7 @@ CREATE TYPE Montant AS (
 CREATE TABLE dossiers (
     Id serial PRIMARY KEY,
     IdResponsable integer NOT NULL,
+    IdTaux integer NOT NULL,
     CopiesMails text[],
     LastConnection timestamp(0) with time zone NOT NULL,
     IsValidated boolean NOT NULL,
@@ -26,9 +27,21 @@ CREATE TABLE paiements (
     Details text NOT NULL
 );
 
+CREATE TABLE tauxs (
+    Id serial PRIMARY KEY,
+    Euros integer NOT NULL,
+    FrancsSuisse integer NOT NULL
+);
+
 -- constraints
 ALTER TABLE dossiers
+    ADD UNIQUE (Id, IdTaux);
+
+ALTER TABLE dossiers
     ADD FOREIGN KEY (IdResponsable) REFERENCES personnes;
+
+ALTER TABLE dossiers
+    ADD FOREIGN KEY (IdTaux) REFERENCES tauxs;
 
 ALTER TABLE paiements
     ADD FOREIGN KEY (IdDossier) REFERENCES dossiers ON DELETE CASCADE;

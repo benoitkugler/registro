@@ -33,6 +33,7 @@ func scanOneDossier(row scanner) (Dossier, error) {
 	err := row.Scan(
 		&item.Id,
 		&item.IdResponsable,
+		&item.IdTaux,
 		&item.CopiesMails,
 		&item.LastConnection,
 		&item.IsValidated,
@@ -105,22 +106,22 @@ func ScanDossiers(rs *sql.Rows) (Dossiers, error) {
 // Insert one Dossier in the database and returns the item with id filled.
 func (item Dossier) Insert(tx DB) (out Dossier, err error) {
 	row := tx.QueryRow(`INSERT INTO dossiers (
-		idresponsable, copiesmails, lastconnection, isvalidated, partageadressesok
+		idresponsable, idtaux, copiesmails, lastconnection, isvalidated, partageadressesok
 		) VALUES (
-		$1, $2, $3, $4, $5
+		$1, $2, $3, $4, $5, $6
 		) RETURNING *;
-		`, item.IdResponsable, item.CopiesMails, item.LastConnection, item.IsValidated, item.PartageAdressesOK)
+		`, item.IdResponsable, item.IdTaux, item.CopiesMails, item.LastConnection, item.IsValidated, item.PartageAdressesOK)
 	return ScanDossier(row)
 }
 
 // Update Dossier in the database and returns the new version.
 func (item Dossier) Update(tx DB) (out Dossier, err error) {
 	row := tx.QueryRow(`UPDATE dossiers SET (
-		idresponsable, copiesmails, lastconnection, isvalidated, partageadressesok
+		idresponsable, idtaux, copiesmails, lastconnection, isvalidated, partageadressesok
 		) = (
-		$1, $2, $3, $4, $5
-		) WHERE id = $6 RETURNING *;
-		`, item.IdResponsable, item.CopiesMails, item.LastConnection, item.IsValidated, item.PartageAdressesOK, item.Id)
+		$1, $2, $3, $4, $5, $6
+		) WHERE id = $7 RETURNING *;
+		`, item.IdResponsable, item.IdTaux, item.CopiesMails, item.LastConnection, item.IsValidated, item.PartageAdressesOK, item.Id)
 	return ScanDossier(row)
 }
 
@@ -178,6 +179,57 @@ func DeleteDossiersByIdResponsables(tx DB, idResponsables_ ...personnes.IdPerson
 		return nil, err
 	}
 	return ScanIdDossierArray(rows)
+}
+
+// ByIdTaux returns a map with 'IdTaux' as keys.
+func (items Dossiers) ByIdTaux() map[IdTaux]Dossiers {
+	out := make(map[IdTaux]Dossiers)
+	for _, target := range items {
+		dict := out[target.IdTaux]
+		if dict == nil {
+			dict = make(Dossiers)
+		}
+		dict[target.Id] = target
+		out[target.IdTaux] = dict
+	}
+	return out
+}
+
+// IdTauxs returns the list of ids of IdTaux
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items Dossiers) IdTauxs() []IdTaux {
+	out := make([]IdTaux, 0, len(items))
+	for _, target := range items {
+		out = append(out, target.IdTaux)
+	}
+	return out
+}
+
+func SelectDossiersByIdTauxs(tx DB, idTauxs_ ...IdTaux) (Dossiers, error) {
+	rows, err := tx.Query("SELECT * FROM dossiers WHERE idtaux = ANY($1)", IdTauxArrayToPQ(idTauxs_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanDossiers(rows)
+}
+
+func DeleteDossiersByIdTauxs(tx DB, idTauxs_ ...IdTaux) ([]IdDossier, error) {
+	rows, err := tx.Query("DELETE FROM dossiers WHERE idtaux = ANY($1) RETURNING id", IdTauxArrayToPQ(idTauxs_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIdDossierArray(rows)
+}
+
+// SelectDossierByIdAndIdTaux return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectDossierByIdAndIdTaux(tx DB, id IdDossier, idTaux IdTaux) (item Dossier, found bool, err error) {
+	row := tx.QueryRow("SELECT * FROM dossiers WHERE Id = $1 AND IdTaux = $2", id, idTaux)
+	item, err = ScanDossier(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
 }
 
 func scanOnePaiement(row scanner) (Paiement, error) {
@@ -336,6 +388,114 @@ func DeletePaiementsByIdDossiers(tx DB, idDossiers_ ...IdDossier) ([]IdPaiement,
 	return ScanIdPaiementArray(rows)
 }
 
+func scanOneTaux(row scanner) (Taux, error) {
+	var item Taux
+	err := row.Scan(
+		&item.Id,
+		&item.Euros,
+		&item.FrancsSuisse,
+	)
+	return item, err
+}
+
+func ScanTaux(row *sql.Row) (Taux, error) { return scanOneTaux(row) }
+
+// SelectAll returns all the items in the tauxs table.
+func SelectAllTauxs(db DB) (Tauxs, error) {
+	rows, err := db.Query("SELECT * FROM tauxs")
+	if err != nil {
+		return nil, err
+	}
+	return ScanTauxs(rows)
+}
+
+// SelectTaux returns the entry matching 'id'.
+func SelectTaux(tx DB, id IdTaux) (Taux, error) {
+	row := tx.QueryRow("SELECT * FROM tauxs WHERE id = $1", id)
+	return ScanTaux(row)
+}
+
+// SelectTauxs returns the entry matching the given 'ids'.
+func SelectTauxs(tx DB, ids ...IdTaux) (Tauxs, error) {
+	rows, err := tx.Query("SELECT * FROM tauxs WHERE id = ANY($1)", IdTauxArrayToPQ(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanTauxs(rows)
+}
+
+type Tauxs map[IdTaux]Taux
+
+func (m Tauxs) IDs() []IdTaux {
+	out := make([]IdTaux, 0, len(m))
+	for i := range m {
+		out = append(out, i)
+	}
+	return out
+}
+
+func ScanTauxs(rs *sql.Rows) (Tauxs, error) {
+	var (
+		s   Taux
+		err error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(Tauxs, 16)
+	for rs.Next() {
+		s, err = scanOneTaux(rs)
+		if err != nil {
+			return nil, err
+		}
+		structs[s.Id] = s
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+// Insert one Taux in the database and returns the item with id filled.
+func (item Taux) Insert(tx DB) (out Taux, err error) {
+	row := tx.QueryRow(`INSERT INTO tauxs (
+		euros, francssuisse
+		) VALUES (
+		$1, $2
+		) RETURNING *;
+		`, item.Euros, item.FrancsSuisse)
+	return ScanTaux(row)
+}
+
+// Update Taux in the database and returns the new version.
+func (item Taux) Update(tx DB) (out Taux, err error) {
+	row := tx.QueryRow(`UPDATE tauxs SET (
+		euros, francssuisse
+		) = (
+		$1, $2
+		) WHERE id = $3 RETURNING *;
+		`, item.Euros, item.FrancsSuisse, item.Id)
+	return ScanTaux(row)
+}
+
+// Deletes the Taux and returns the item
+func DeleteTauxById(tx DB, id IdTaux) (Taux, error) {
+	row := tx.QueryRow("DELETE FROM tauxs WHERE id = $1 RETURNING *;", id)
+	return ScanTaux(row)
+}
+
+// Deletes the Taux in the database and returns the ids.
+func DeleteTauxsByIDs(tx DB, ids ...IdTaux) ([]IdTaux, error) {
+	rows, err := tx.Query("DELETE FROM tauxs WHERE id = ANY($1) RETURNING id", IdTauxArrayToPQ(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIdTauxArray(rows)
+}
+
 func loadJSON(out interface{}, src interface{}) error {
 	if src == nil {
 		return nil //zero value out
@@ -476,6 +636,55 @@ func (s IdPaiementSet) Has(id IdPaiement) bool { return s[id] }
 
 func (s IdPaiementSet) Keys() []IdPaiement {
 	out := make([]IdPaiement, 0, len(s))
+	for k := range s {
+		out = append(out, k)
+	}
+	return out
+}
+
+func IdTauxArrayToPQ(ids []IdTaux) pq.Int64Array {
+	out := make(pq.Int64Array, len(ids))
+	for i, v := range ids {
+		out[i] = int64(v)
+	}
+	return out
+}
+
+// ScanIdTauxArray scans the result of a query returning a
+// list of ID's.
+func ScanIdTauxArray(rs *sql.Rows) ([]IdTaux, error) {
+	defer rs.Close()
+	ints := make([]IdTaux, 0, 16)
+	var err error
+	for rs.Next() {
+		var s IdTaux
+		if err = rs.Scan(&s); err != nil {
+			return nil, err
+		}
+		ints = append(ints, s)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return ints, nil
+}
+
+type IdTauxSet map[IdTaux]bool
+
+func NewIdTauxSetFrom(ids []IdTaux) IdTauxSet {
+	out := make(IdTauxSet, len(ids))
+	for _, key := range ids {
+		out[key] = true
+	}
+	return out
+}
+
+func (s IdTauxSet) Add(id IdTaux) { s[id] = true }
+
+func (s IdTauxSet) Has(id IdTaux) bool { return s[id] }
+
+func (s IdTauxSet) Keys() []IdTaux {
+	out := make([]IdTaux, 0, len(s))
 	for k := range s {
 		out = append(out, k)
 	}

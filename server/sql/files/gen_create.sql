@@ -58,6 +58,12 @@ CREATE UNIQUE INDEX ON demandes (Categorie)
 WHERE
     Categorie <> 0;
 
+ALTER TABLE demandes
+    ADD FOREIGN KEY (IdFile) REFERENCES files;
+
+ALTER TABLE demandes
+    ADD FOREIGN KEY (IdDirecteur) REFERENCES personnes ON DELETE CASCADE;
+
 ALTER TABLE demande_equipiers
     ADD UNIQUE (IdEquipier, IdDemande);
 
