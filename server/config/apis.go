@@ -47,3 +47,24 @@ func NewStripe() (string, StripeKey, error) {
 
 	return secret, StripeKey(webhook), nil
 }
+
+type Helloasso struct {
+	ID     string
+	Secret string
+}
+
+// NewHelloasso uses env variables to build Helloasso credentials :
+// HELLOASSO_ID, HELLOASSO_SECRET
+func NewHelloasso() (out Helloasso, err error) {
+	out.ID = os.Getenv("HELLOASSO_ID")
+	if out.ID == "" {
+		return Helloasso{}, errors.New("missing env HELLOASSO_ID")
+	}
+
+	out.Secret = os.Getenv("HELLOASSO_SECRET")
+	if out.Secret == "" {
+		return Helloasso{}, errors.New("missing env HELLOASSO_SECRET")
+	}
+
+	return out, nil
+}
