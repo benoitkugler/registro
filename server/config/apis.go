@@ -30,22 +30,26 @@ func NewJoomeo() (out Joomeo, err error) {
 	return out, nil
 }
 
-// StripeKey is a private key used to secure Stripe notifications
-type StripeKey string
+// See https://dashboard.stripe.com/account/apikeys
+type Stripe struct {
+	Key string
+	// Webhook is a private key used to secure Stripe notifications
+	Webhook string
+}
 
-// NewStripe loads STRIPE_SECRET and STRIPE_WEBHOOK env. variables
-func NewStripe() (string, StripeKey, error) {
-	secret := os.Getenv("STRIPE_SECRET")
-	if secret == "" {
-		return "", "", errors.New("missing env STRIPE_SECRET")
+// NewStripe loads STRIPE_KEY and STRIPE_WEBHOOK env. variables
+func NewStripe() (Stripe, error) {
+	key := os.Getenv("STRIPE_KEY")
+	if key == "" {
+		return Stripe{}, errors.New("missing env STRIPE_KEY")
 	}
 
 	webhook := os.Getenv("STRIPE_WEBHOOK")
 	if webhook == "" {
-		return "", "", errors.New("missing env STRIPE_WEBHOOK")
+		return Stripe{}, errors.New("missing env STRIPE_WEBHOOK")
 	}
 
-	return secret, StripeKey(webhook), nil
+	return Stripe{key, webhook}, nil
 }
 
 type Helloasso struct {

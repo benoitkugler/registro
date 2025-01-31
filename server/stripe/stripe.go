@@ -28,9 +28,12 @@ type stripeMetadata struct {
 }
 
 // StartSession should be called to start a paiement session.
-func StartSession(idDossier dossiers.IdDossier, respo personnes.Etatcivil, userProvidedMail bool,
-	isAcompte bool, succesURL, cancelURL string, montant dossiers.Montant,
+func StartSession(key config.Stripe, idDossier dossiers.IdDossier, respo personnes.Etatcivil, userProvidedMail bool,
+	isAcompte bool, montant dossiers.Montant,
+	succesURL, cancelURL string,
 ) (sessionID string, _ error) {
+	stripe.Key = key.Key
+
 	// only fill if not using custom mail
 	var customerEmail *string
 	if !userProvidedMail {
@@ -92,7 +95,9 @@ func StartSession(idDossier dossiers.IdDossier, respo personnes.Etatcivil, userP
 
 // ReceivePaiement decodes the request send by Stripe when a payment is concluded.
 // It returns [false] for other notifications.
-func ReceivePaiement(key config.StripeKey, body io.ReadCloser, header http.Header) (dossiers.Paiement, bool, error) {
+func ReceivePaiement(key config.Stripe, body io.ReadCloser, header http.Header) (dossiers.Paiement, bool, error) {
+	stripe.Key = key.Key
+
 	payload, err := io.ReadAll(body)
 	if err != nil {
 		return dossiers.Paiement{}, false, fmt.Errorf("error reading request body from Stripe notification: %v", err)
@@ -101,7 +106,7 @@ func ReceivePaiement(key config.StripeKey, body io.ReadCloser, header http.Heade
 
 	// Pass the request body and Stripe-Signature header to ConstructEvent, along with the webhook signing key
 	// You can find your endpoint's secret in your webhook settings
-	event, err := webhook.ConstructEvent(payload, header.Get("Stripe-Signature"), string(key))
+	event, err := webhook.ConstructEvent(payload, header.Get("Stripe-Signature"), key.Webhook)
 	if err != nil {
 		return dossiers.Paiement{}, false, fmt.Errorf("invalid request on Stripe notification endpoint: %v", err)
 	}
