@@ -1,4 +1,4 @@
-go run make_sql.go ../sql/personnes/ ../sql/dossiers/ ../sql/camps/ && 
+go run make_sql.go ../sql/personnes/ ../sql/dossiers/ ../sql/camps/ ../sql/dons && 
 dropdb test && 
 createdb test && 
 psql test < create_1_tables.sql &&
