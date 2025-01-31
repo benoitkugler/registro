@@ -2,6 +2,7 @@ package dons
 
 import (
 	"math/rand"
+	"registro/sql/dossiers"
 	"registro/sql/shared"
 	"time"
 )
