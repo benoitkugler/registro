@@ -10,7 +10,7 @@ import (
 )
 
 func devCreds(t *testing.T) config.Joomeo {
-	tu.LoadEnv(t, "../dev.env")
+	tu.LoadEnv(t, "../env.sh")
 	out, err := config.NewJoomeo()
 	tu.AssertNoErr(t, err)
 	return out

@@ -9,7 +9,7 @@ import (
 )
 
 func devCreds(t *testing.T) config.Helloasso {
-	tu.LoadEnv(t, "../dev.env")
+	tu.LoadEnv(t, "../env.sh")
 	creds, err := config.NewHelloasso()
 	tu.AssertNoErr(t, err)
 	return creds

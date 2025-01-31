@@ -9,9 +9,9 @@ import (
 )
 
 func loadEnv(t *testing.T) (config.Asso, config.SMTP) {
-	tu.LoadEnv(t, "../dev.env")
+	tu.LoadEnv(t, "../env.sh")
 
-	cfg, err := config.NewConfig()
+	cfg, err := config.NewAsso()
 	tu.AssertNoErr(t, err)
 	creds, err := config.NewSMTP(false)
 	tu.AssertNoErr(t, err)

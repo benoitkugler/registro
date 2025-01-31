@@ -104,11 +104,11 @@ func (db TestDB) Remove() {
 	runCmd(exec.Command("dropdb", "--if-exists", "--force", "--username="+getUserName(), db.name))
 }
 
-// SampleDB is a test DB containing a dump of the personnes from ACVE
+// SampleDB is a test DB manually setup
 var SampleDB = config.DB{
 	Host:     "localhost",
 	User:     "benoit",
 	Password: "dummy",
-	Name:     "tmp_acve",
+	Name:     "test",
 	Port:     5432,
 }

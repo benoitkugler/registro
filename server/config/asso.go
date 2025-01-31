@@ -54,13 +54,13 @@ type MailsSettings struct {
 	SignatureMailDefaut template.HTML
 }
 
-// NewConfig read the ASSO env variable and returns the associated configuration.
+// NewAsso read the ASSO env variable and returns the associated configuration.
 // The following configs are supported:
 //   - acve
 //   - repere
 //
 // The ASSO_BANK_IBAN env is also read
-func NewConfig() (Asso, error) {
+func NewAsso() (Asso, error) {
 	var out Asso
 	switch asso := os.Getenv("ASSO"); asso {
 	case "acve":

@@ -1,15 +1,21 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"registro/config"
 )
 
 func main() {
-	config, err := config.NewConfig()
+	asso, err := config.NewAsso()
 	if err != nil {
 		log.Fatal(err)
 	}
-	_ = config
+
+	db, err := config.NewDB()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(asso, db)
 }

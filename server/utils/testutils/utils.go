@@ -36,10 +36,10 @@ func LoadEnv(t *testing.T, file string) {
 	AssertNoErr(t, err)
 
 	for _, line := range strings.Split(string(content), "\n") {
-		line = strings.TrimSpace(line)
-		if line == "" || strings.HasPrefix(line, "#") {
+		if !strings.HasPrefix(line, "export ") {
 			continue
 		}
+		line = strings.TrimPrefix(line, "export ")
 		key, val, ok := strings.Cut(line, "=")
 		if !ok {
 			t.Fatalf("invalid env. line %s", line)
