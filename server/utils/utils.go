@@ -2,10 +2,13 @@ package utils
 
 import (
 	"bytes"
+	"database/sql"
 	"fmt"
 	"math/rand"
+	"strconv"
 	"unicode"
 
+	"github.com/labstack/echo/v4"
 	"github.com/lib/pq"
 	"golang.org/x/text/runes"
 	"golang.org/x/text/transform"
@@ -44,13 +47,43 @@ func Normalize(s string) string {
 	return string(removeAccents(bytes.ToLower(bytes.TrimSpace([]byte(s)))))
 }
 
-func SQLError(err error) error {
-	if err, ok := err.(*pq.Error); ok {
-		//lint:ignore ST1005 Erreur utilisateur
-		return fmt.Errorf("La requête SQL (table %s) a échoué : %s", err.Table, err)
+// QueryParamInt parse the query param `name` to an int
+func QueryParamInt[T ~int64](c echo.Context, name string) (T, error) {
+	idS := c.QueryParam(name)
+	id, err := strconv.ParseInt(idS, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("invalid ID parameter %s : %s", idS, err)
 	}
-	//lint:ignore ST1005 Erreur utilisateur
-	return fmt.Errorf("La requête SQL a échoué : %s %T", err, err)
+	return T(id), nil
+}
+
+// SQLError wraps [*pq.Error] errors only
+func SQLError(err error) error {
+	if errPq, ok := err.(*pq.Error); ok {
+		//lint:ignore ST1005 Erreur utilisateur
+		return fmt.Errorf("La requête SQL (table %s) a échoué : %s", errPq.Table, errPq)
+	}
+	return err
+}
+
+// InTx démarre une transaction, execute [fn] et
+// COMMIT. En cas d'erreur, la transaction est ROLLBACK,
+// et l'erreur renvoyé est passé à [SQLError]
+func InTx(db *sql.DB, fn func(tx *sql.Tx) error) error {
+	tx, err := db.Begin()
+	if err != nil {
+		return SQLError(err)
+	}
+	err = fn(tx)
+	if err != nil {
+		_ = tx.Rollback()
+		return SQLError(err)
+	}
+	err = tx.Commit()
+	if err != nil {
+		return SQLError(err)
+	}
+	return nil
 }
 
 func MapValues[K comparable, V any](m map[K]V) []V {

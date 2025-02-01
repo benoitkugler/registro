@@ -3,8 +3,6 @@ package files
 //go:generate ../../../../../go/src/github.com/benoitkugler/gomacro/cmd/gomacro models.go go/sqlcrud:gen_scans.go sql:gen_create.sql go/randdata:gen_randdata_test.go
 
 import (
-	"fmt"
-	"path/filepath"
 	"time"
 
 	cps "registro/sql/camps"
@@ -33,15 +31,6 @@ type File struct {
 
 func NewFile(fileContent []byte, filename string) File {
 	return File{Taille: len(fileContent), NomClient: filename, DateHeureModif: time.Now()}
-}
-
-// Filepath returns the file location
-func (f File) Filepath(dir string, forMiniature bool) string {
-	id := fmt.Sprintf("file_%d", f.Id)
-	if forMiniature {
-		id += "_min"
-	}
-	return filepath.Join(dir, id)
 }
 
 // Demande encode la catégorie d'un fichier à fournir.
@@ -77,6 +66,7 @@ type Demande struct {
 	// une alerte est donnée pour les documents périmés
 	JoursValide int
 }
+
 
 // DemandeEquipier représente un document demandé à un équpier
 //

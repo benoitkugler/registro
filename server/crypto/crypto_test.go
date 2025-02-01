@@ -20,7 +20,7 @@ func TestEncryptionID(t *testing.T) {
 		tu.AssertNoErr(t, err)
 		tu.Assert(t, v1 == v2)
 		_, err = DecryptID[pr.IdPersonne](key, s)
-		tu.Assert(t, err != nil)
+		tu.AssertErr(t, err)
 
 		r1 := pr.IdPersonne(v1 - 5)
 		s, err = newEncryptedID(key, r1)
@@ -31,10 +31,10 @@ func TestEncryptionID(t *testing.T) {
 
 		// expected errors
 		_, err = DecryptID[int64](key, s)
-		tu.Assert(t, err != nil)
+		tu.AssertErr(t, err)
 
 		_, err = DecryptID[pr.IdPersonne](otherKey, s)
-		tu.Assert(t, err != nil)
+		tu.AssertErr(t, err)
 
 	}
 
@@ -58,9 +58,9 @@ func TestJSON(t *testing.T) {
 	tu.Assert(t, v == v2)
 
 	err = k.DecryptJSON("", &v2)
-	tu.Assert(t, err != nil)
+	tu.AssertErr(t, err)
 
 	otherKey := NewEncrypter("44")
 	err = otherKey.DecryptJSON(s, &v2)
-	tu.Assert(t, err != nil)
+	tu.AssertErr(t, err)
 }

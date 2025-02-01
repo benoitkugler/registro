@@ -11,13 +11,17 @@ CREATE TABLE aides (
 
 CREATE TABLE camps (
     Id serial PRIMARY KEY,
+    IdTaux integer NOT NULL,
     Nom text NOT NULL,
     DateDebut date NOT NULL,
     Duree integer NOT NULL,
     Agrement text NOT NULL,
-    IdTaux integer NOT NULL,
+    Description text NOT NULL,
+    Navette jsonb NOT NULL,
+    Ouvert boolean NOT NULL,
     Prix Montant NOT NULL,
-    OptionPrix jsonb NOT NULL
+    OptionPrix jsonb NOT NULL,
+    OptionQuotientFamilial integer[] CHECK (array_length(OptionQuotientFamilial, 1) = 4) NOT NULL
 );
 
 CREATE TABLE equipiers (
@@ -117,7 +121,7 @@ ALTER TABLE lettredirecteurs
     ADD FOREIGN KEY (IdCamp) REFERENCES camps ON DELETE CASCADE;
 
 ALTER TABLE participants
-    ADD FOREIGN KEY (IdCamp, IdTaux) REFERENCES camps (Id, IdTaux) ON DELETE CASCADE;
+    ADD FOREIGN KEY (IdCamp, IdTaux) REFERENCES camps (Id, IdTaux);
 
 ALTER TABLE participants
     ADD FOREIGN KEY (IdDossier, IdTaux) REFERENCES dossiers (Id, IdTaux) ON DELETE CASCADE;
@@ -126,7 +130,7 @@ ALTER TABLE participants
     ADD UNIQUE (Id, IdCamp);
 
 ALTER TABLE participants
-    ADD FOREIGN KEY (IdCamp) REFERENCES camps ON DELETE CASCADE;
+    ADD FOREIGN KEY (IdCamp) REFERENCES camps;
 
 ALTER TABLE participants
     ADD FOREIGN KEY (IdPersonne) REFERENCES personnes ON DELETE CASCADE;
@@ -281,6 +285,28 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION gomacro_validate_json_camp_Navette (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('Actif', 'Commentaire'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_boolean (data -> 'Actif')
+        AND gomacro_validate_json_string (data -> 'Commentaire');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
 CREATE OR REPLACE FUNCTION gomacro_validate_json_camp_OptionPrixCamp (data jsonb)
     RETURNS boolean
     AS $$
@@ -310,7 +336,7 @@ CREATE OR REPLACE FUNCTION gomacro_validate_json_camp_OptionPrixKind (data jsonb
     AS $$
 DECLARE
     is_valid boolean := jsonb_typeof(data) = 'number'
-    AND data::int IN (3, 1, 2);
+    AND data::int IN (0, 1, 2, 3);
 BEGIN
     IF NOT is_valid THEN
         RAISE WARNING '% is not a camp_OptionPrixKind', data;
@@ -543,6 +569,9 @@ END;
 $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
+
+ALTER TABLE camps
+    ADD CONSTRAINT Navette_gomacro CHECK (gomacro_validate_json_camp_Navette (Navette));
 
 ALTER TABLE camps
     ADD CONSTRAINT OptionPrix_gomacro CHECK (gomacro_validate_json_camp_OptionPrixCamp (OptionPrix));

@@ -190,6 +190,28 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION gomacro_validate_json_camp_Navette (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('Actif', 'Commentaire'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_boolean (data -> 'Actif')
+        AND gomacro_validate_json_string (data -> 'Commentaire');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
 CREATE OR REPLACE FUNCTION gomacro_validate_json_camp_OptionPrixCamp (data jsonb)
     RETURNS boolean
     AS $$
@@ -219,7 +241,7 @@ CREATE OR REPLACE FUNCTION gomacro_validate_json_camp_OptionPrixKind (data jsonb
     AS $$
 DECLARE
     is_valid boolean := jsonb_typeof(data) = 'number'
-    AND data::int IN (3, 1, 2);
+    AND data::int IN (0, 1, 2, 3);
 BEGIN
     IF NOT is_valid THEN
         RAISE WARNING '% is not a camp_OptionPrixKind', data;

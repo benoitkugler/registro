@@ -1,8 +1,12 @@
 package files
 
 import (
+	"fmt"
+
+	cp "registro/sql/camps"
 	"registro/sql/personnes"
 	"registro/sql/shared"
+	"registro/utils"
 )
 
 type OptIdFile shared.OptID[IdFile]
@@ -12,21 +16,103 @@ type OptIdPersonne shared.OptID[personnes.IdPersonne]
 type Categorie uint8
 
 const (
-	Unknown            Categorie = iota // -
-	Bafa                                // BAFA
-	Bafd                                // BAFD
-	CarteId                             // Carte d'identité/Passeport
-	Permis                              // Permis de conduire
-	Sb                                  // Surveillant de baignade
-	Secour                              // Secourisme (PSC1 - AFPS)
-	BafdEquiv                           // Equivalent BAFD
-	BafaEquiv                           // Equivalent BAFA
-	CarteVitale                         // Carte Vitale
-	Haccp                               // Cuisine (HACCP)
-	CertMedicalCuisine                  // Certificat médical Cuisine
-	Scolarite                           // Certificat de scolarité
-	Autre                               // Autre
-	Vaccin                              // Vaccin
+	NoBuiltin Categorie = iota // -
 
-	TestNautique // Test nautique
+	CarteId            // Carte d'identité/Passeport
+	Permis             // Permis de conduire
+	SB                 // Surveillant de baignade
+	Secourisme         // Secourisme (PSC1 - AFPS)
+	Bafa               // BAFA
+	Bafd               // BAFD
+	CarteVitale        // Carte Vitale
+	Vaccins            // Vaccins
+	Haccp              // Cuisine (HACCP)
+	BafdEquiv          // Equivalent BAFD
+	BafaEquiv          // Equivalent BAFA
+	CertMedicalCuisine // Certificat médical cuisine
+	Scolarite          // Certificat de scolarité
+	Autre              // Autre
+
+	nbCategorieEquipier
 )
+
+// Builtins indique les demandes connues à l'avance
+type Builtins [nbCategorieEquipier]IdDemande
+
+// LoadBuiltins charge les demandes 'builtin', qui doivent
+// être prédéclarées dans la base de données.
+func LoadBuiltins(db DB) (out [nbCategorieEquipier]IdDemande, err error) {
+	ds, err := SelectAllDemandes(db)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+	return ds.builtins()
+}
+
+func (ds Demandes) builtins() (out [nbCategorieEquipier]IdDemande, err error) {
+	for _, demande := range ds {
+		if demande.Categorie == NoBuiltin {
+			continue
+		}
+		out[demande.Categorie] = demande.Id
+	}
+
+	// check that all builtins are properly defined
+	for cat, v := range out {
+		if cat == 0 { //  ignore the empty categorie
+			continue
+		}
+		if v == 0 {
+			return out, fmt.Errorf("missing builtin Categorie %d", cat)
+		}
+	}
+	return out, nil
+}
+
+// un nouvel équipier est crée avec ces demandes par défaut
+var demandesDefaut = [cp.NbRoles][]Categorie{
+	cp.Direction:     {CarteId, Permis, SB, Bafa, Bafd, CarteVitale, Vaccins, BafdEquiv},
+	cp.Adjoint:       {CarteId, Permis, SB, CarteVitale, Vaccins},
+	cp.Animation:     {CarteId, Permis, SB, Bafa, BafaEquiv, CarteVitale, Vaccins, Scolarite},
+	cp.AideAnimation: {CarteId, CarteVitale, Vaccins, Scolarite},
+	cp.Chauffeur:     {CarteId, CarteVitale, Vaccins},
+	cp.Intendance:    {CarteId, CarteVitale, Vaccins, Haccp},
+	cp.Babysiter:     {CarteId, CarteVitale, Vaccins, Scolarite},
+	cp.Menage:        {CarteId, CarteVitale, Vaccins, Scolarite},
+	cp.Factotum:      {CarteId, CarteVitale, Vaccins},
+	cp.Infirmerie:    {CarteId, Secourisme, CarteVitale, Vaccins},
+	cp.Cuisine:       {CarteId, CarteVitale, Vaccins, Haccp, CertMedicalCuisine, Scolarite},
+	cp.Lingerie:      {CarteId, CarteVitale, Vaccins},
+}
+
+func isDemandeOpt(cat Categorie, roles cp.Roles) bool {
+	// un certificat de secourisme est obligatoire pour l'infirmerie
+	if roles.Is(cp.Infirmerie) && cat == Secourisme {
+		return false
+	}
+	return true
+}
+
+// Defaut renvoie les demandes par défaut pour l'équipier donné.
+func (builtinDemandes Builtins) Defaut(equipier cp.Equipier) DemandeEquipiers {
+	// on aggrège les demandes de chaque rôle
+	var categories [nbCategorieEquipier]bool
+	for _, role := range equipier.Roles {
+		for _, cat := range demandesDefaut[role] {
+			categories[cat] = true
+		}
+	}
+	// on prend en compte le caractère optionnelle
+	var demandes DemandeEquipiers
+	for cat, has := range categories {
+		if !has {
+			continue
+		}
+		demandes = append(demandes, DemandeEquipier{
+			IdEquipier: equipier.Id,
+			IdDemande:  builtinDemandes[cat],
+			Optionnel:  isDemandeOpt(Categorie(cat), equipier.Roles),
+		})
+	}
+	return demandes
+}

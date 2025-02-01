@@ -32,7 +32,7 @@ func TestSQL(t *testing.T) {
 		tu.AssertNoErr(t, err)
 		// only one directeur
 		_, err = Equipier{IdPersonne: personne.Id, IdCamp: camp1.Id, Roles: Roles{Direction, Menage}}.Insert(db)
-		tu.Assert(t, err != nil)
+		tu.AssertErr(t, err)
 	})
 
 	t.Run("participants et groupes", func(t *testing.T) {
@@ -51,12 +51,12 @@ func TestSQL(t *testing.T) {
 		tu.AssertNoErr(t, err)
 
 		err = GroupeParticipant(GroupeParticipant{IdParticipant: part1.Id, IdGroupe: groupe1.Id, IdCamp: camp1.Id}).Insert(db)
-		tu.Assert(t, err != nil) // unicité
+		tu.AssertErr(t, err) // unicité
 		err = GroupeParticipant(GroupeParticipant{IdParticipant: part1.Id, IdGroupe: groupe2.Id, IdCamp: camp1.Id}).Insert(db)
-		tu.Assert(t, err != nil) // unicité du participant
+		tu.AssertErr(t, err) // unicité du participant
 
 		err = GroupeParticipant(GroupeParticipant{IdParticipant: part1.Id, IdGroupe: groupe1.Id, IdCamp: 0}).Insert(db)
-		tu.Assert(t, err != nil)
+		tu.AssertErr(t, err)
 
 		_, err = DeleteGroupeById(db, groupe1.Id)
 		tu.AssertNoErr(t, err)
@@ -80,7 +80,7 @@ func TestSQL(t *testing.T) {
 
 		part1.IdTaux = taux.Id
 		_, err = part1.Insert(db)
-		tu.Assert(t, err != nil) // IdTaux n'est pas cohérent
+		tu.AssertErr(t, err) // IdTaux n'est pas cohérent
 
 		part1.IdTaux = defautTaux.Id
 		part1, err = part1.Insert(db)
@@ -88,7 +88,7 @@ func TestSQL(t *testing.T) {
 
 		camp1.IdTaux = taux.Id
 		_, err = camp1.Update(db)
-		tu.Assert(t, err != nil) // IdTaux n'est pas cohérent
+		tu.AssertErr(t, err) // IdTaux n'est pas cohérent
 
 		// deux camps sans taux sont OK
 		part2 := part1
@@ -104,7 +104,7 @@ func TestSQL(t *testing.T) {
 		part3 := randParticipant()
 		part3.IdCamp, part3.IdPersonne, part3.IdDossier = camp3.Id, personne.Id, dossier.Id
 		_, err = part3.Insert(db)
-		tu.Assert(t, err != nil) // IdTaux n'est pas cohérent
+		tu.AssertErr(t, err) // IdTaux n'est pas cohérent
 	})
 }
 

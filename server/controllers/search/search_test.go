@@ -11,7 +11,7 @@ import (
 )
 
 func TestRechercheRapide(t *testing.T) {
-	db, err := tu.SampleDB.ConnectPostgres()
+	db, err := tu.SampleDBACVE.ConnectPostgres()
 	tu.AssertNoErr(t, err)
 	defer db.Close()
 

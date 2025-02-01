@@ -7,6 +7,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"registro/sql/dossiers"
 	"registro/sql/personnes"
 
@@ -224,13 +225,17 @@ func scanOneCamp(row scanner) (Camp, error) {
 	var item Camp
 	err := row.Scan(
 		&item.Id,
+		&item.IdTaux,
 		&item.Nom,
 		&item.DateDebut,
 		&item.Duree,
 		&item.Agrement,
-		&item.IdTaux,
+		&item.Description,
+		&item.Navette,
+		&item.Ouvert,
 		&item.Prix,
 		&item.OptionPrix,
+		&item.OptionQuotientFamilial,
 	)
 	return item, err
 }
@@ -299,22 +304,22 @@ func ScanCamps(rs *sql.Rows) (Camps, error) {
 // Insert one Camp in the database and returns the item with id filled.
 func (item Camp) Insert(tx DB) (out Camp, err error) {
 	row := tx.QueryRow(`INSERT INTO camps (
-		nom, datedebut, duree, agrement, idtaux, prix, optionprix
+		idtaux, nom, datedebut, duree, agrement, description, navette, ouvert, prix, optionprix, optionquotientfamilial
 		) VALUES (
-		$1, $2, $3, $4, $5, $6, $7
+		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
 		) RETURNING *;
-		`, item.Nom, item.DateDebut, item.Duree, item.Agrement, item.IdTaux, item.Prix, item.OptionPrix)
+		`, item.IdTaux, item.Nom, item.DateDebut, item.Duree, item.Agrement, item.Description, item.Navette, item.Ouvert, item.Prix, item.OptionPrix, item.OptionQuotientFamilial)
 	return ScanCamp(row)
 }
 
 // Update Camp in the database and returns the new version.
 func (item Camp) Update(tx DB) (out Camp, err error) {
 	row := tx.QueryRow(`UPDATE camps SET (
-		nom, datedebut, duree, agrement, idtaux, prix, optionprix
+		idtaux, nom, datedebut, duree, agrement, description, navette, ouvert, prix, optionprix, optionquotientfamilial
 		) = (
-		$1, $2, $3, $4, $5, $6, $7
-		) WHERE id = $8 RETURNING *;
-		`, item.Nom, item.DateDebut, item.Duree, item.Agrement, item.IdTaux, item.Prix, item.OptionPrix, item.Id)
+		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
+		) WHERE id = $12 RETURNING *;
+		`, item.IdTaux, item.Nom, item.DateDebut, item.Duree, item.Agrement, item.Description, item.Navette, item.Ouvert, item.Prix, item.OptionPrix, item.OptionQuotientFamilial, item.Id)
 	return ScanCamp(row)
 }
 
@@ -1881,6 +1886,23 @@ func dumpJSON(s interface{}) (driver.Value, error) {
 	return driver.Value(string(b)), nil
 }
 
+func (s *OptionQuotientFamilial) Scan(src interface{}) error {
+	var tmp pq.Int32Array
+	err := tmp.Scan(src)
+	if err != nil {
+		return err
+	}
+	if len(tmp) != 4 {
+		return fmt.Errorf("unexpected length %d", len(tmp))
+	}
+	copy(s[:], tmp)
+	return nil
+
+}
+func (s OptionQuotientFamilial) Value() (driver.Value, error) {
+	return pq.Int32Array(s[:]).Value()
+}
+
 func (s *Roles) Scan(src interface{}) error {
 	var tmp pq.Int32Array
 	err := tmp.Scan(src)
@@ -2286,6 +2308,9 @@ func (s int64Set) Keys() []int64 {
 	}
 	return out
 }
+
+func (s *Navette) Scan(src interface{}) error  { return loadJSON(s, src) }
+func (s Navette) Value() (driver.Value, error) { return dumpJSON(s) }
 
 func (s *OptionPrixCamp) Scan(src interface{}) error  { return loadJSON(s, src) }
 func (s OptionPrixCamp) Value() (driver.Value, error) { return dumpJSON(s) }

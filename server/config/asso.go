@@ -43,7 +43,7 @@ var acve = Asso{
 	BankName: "Crédit Mutuel",
 }
 
-// TODO:
+// TODO: collect Repere values
 var repere = Asso{}
 
 type MailsSettings struct {

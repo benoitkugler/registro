@@ -84,13 +84,17 @@ CREATE TABLE aides (
 
 CREATE TABLE camps (
     Id serial PRIMARY KEY,
+    IdTaux integer NOT NULL,
     Nom text NOT NULL,
     DateDebut date NOT NULL,
     Duree integer NOT NULL,
     Agrement text NOT NULL,
-    IdTaux integer NOT NULL,
+    Description text NOT NULL,
+    Navette jsonb NOT NULL,
+    Ouvert boolean NOT NULL,
     Prix Montant NOT NULL,
-    OptionPrix jsonb NOT NULL
+    OptionPrix jsonb NOT NULL,
+    OptionQuotientFamilial integer[] CHECK (array_length(OptionQuotientFamilial, 1) = 4) NOT NULL
 );
 
 CREATE TABLE equipiers (
@@ -174,6 +178,51 @@ CREATE TABLE structureaides (
     Ville text NOT NULL,
     Telephone text NOT NULL,
     Info text NOT NULL
+);
+
+CREATE TABLE demandes (
+    Id serial PRIMARY KEY,
+    IdFile integer,
+    IdDirecteur integer,
+    Categorie smallint CHECK (Categorie IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)) NOT NULL,
+    Description text NOT NULL,
+    MaxDocs integer NOT NULL,
+    JoursValide integer NOT NULL
+);
+
+CREATE TABLE demande_camps (
+    IdCamp integer NOT NULL,
+    IdDemande integer NOT NULL
+);
+
+CREATE TABLE demande_equipiers (
+    IdEquipier integer NOT NULL,
+    IdDemande integer NOT NULL,
+    Optionnel boolean NOT NULL
+);
+
+CREATE TABLE files (
+    Id serial PRIMARY KEY,
+    Taille integer NOT NULL,
+    NomClient text NOT NULL,
+    DateHeureModif timestamp(0) with time zone NOT NULL
+);
+
+CREATE TABLE file_aides (
+    IdFile integer NOT NULL,
+    IdAide integer NOT NULL
+);
+
+CREATE TABLE file_camps (
+    IdFile integer NOT NULL,
+    IdCamp integer NOT NULL,
+    IsLettre boolean NOT NULL
+);
+
+CREATE TABLE file_personnes (
+    IdFile integer NOT NULL,
+    IdPersonne integer NOT NULL,
+    IdDemande integer NOT NULL
 );
 
 CREATE TABLE dons (

@@ -35,14 +35,14 @@ func TestMiniature(t *testing.T) {
 	tu.Assert(t, bytes.Equal(min, minAlt))
 
 	_, err = ComputeMiniature(".xxx", nil)
-	tu.Assert(t, err != nil)
+	tu.AssertErr(t, err)
 	_, err = ComputeMiniature(".png", &bytes.Reader{})
-	tu.Assert(t, err != nil)
+	tu.AssertErr(t, err)
 }
 
 func TestFilepath(t *testing.T) {
-	tu.Assert(t, File{Id: 4}.Filepath("root", false) == "root/file_4")
-	tu.Assert(t, File{Id: 4}.Filepath("root", true) == "root/file_4_min")
+	tu.Assert(t, IdFile(4).filepath("root", false) == "root/file_4")
+	tu.Assert(t, IdFile(4).filepath("root", true) == "root/file_4_min")
 }
 
 func TestNewFile(t *testing.T) {

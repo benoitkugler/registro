@@ -4,6 +4,7 @@ package camps
 
 import (
 	"database/sql"
+	"errors"
 	"time"
 
 	"registro/sql/dossiers"
@@ -27,20 +28,44 @@ type (
 // Requise par la contrainte Participant
 // gomacro:SQL ADD UNIQUE(Id, IdTaux)
 type Camp struct {
-	Id        IdCamp
-	Nom       string
-	DateDebut shared.Date
-	Duree     int // nombre de jours date et fin inclus
-	Agrement  string
+	Id IdCamp
 
 	IdTaux dossiers.IdTaux
 
-	Prix       Montant
-	OptionPrix OptionPrixCamp
+	Nom                    string
+	DateDebut              shared.Date
+	Duree                  int // nombre de jours date et fin inclus
+	Agrement               string
+	Description            string // Description est affichée sur le formulaire d'inscription
+	Navette                Navette
+	Ouvert                 bool // ouvert aux inscriptions ou non
+	Prix                   Montant
+	OptionPrix             OptionPrixCamp
+	OptionQuotientFamilial OptionQuotientFamilial
 }
 
 func (cp *Camp) DateFin() shared.Date {
 	return shared.Plage{From: cp.DateDebut, Duree: cp.Duree}.To()
+}
+
+// Check assure la validité de divers champs.
+func (c *Camp) Check() error {
+	if c.Duree < 1 {
+		return errors.New("invalid Duree")
+	}
+	if c.DateDebut.Time().Year() < 2000 {
+		return errors.New("invalid DateDebut")
+	}
+	if c.Prix.Cent < 0 {
+		return errors.New("invalid Prix")
+	}
+	if c.OptionPrix.Active != PrixJour {
+		return nil // rien à vérifier
+	}
+	if c.Duree != len(c.OptionPrix.Jour) {
+		return errors.New("invalid OptionPrix.Jour length")
+	}
+	return nil
 }
 
 // Lettredirecteur conserve le html utilisé pour générer la lettre.
@@ -67,14 +92,14 @@ type Imagelettre struct {
 
 // Participant
 //
-// gomacro:SQL ADD FOREIGN KEY (IdCamp, IdTaux) REFERENCES Camp (Id,IdTaux) ON DELETE CASCADE
+// gomacro:SQL ADD FOREIGN KEY (IdCamp, IdTaux) REFERENCES Camp (Id,IdTaux)
 // gomacro:SQL ADD FOREIGN KEY (IdDossier, IdTaux) REFERENCES Dossier (Id,IdTaux) ON DELETE CASCADE
 //
 // Requise par la contrainte GroupeParticipant
 // gomacro:SQL ADD UNIQUE(Id, IdCamp)
 type Participant struct {
 	Id         IdParticipant
-	IdCamp     IdCamp             `gomacro-sql-on-delete:"CASCADE"`
+	IdCamp     IdCamp
 	IdPersonne pr.IdPersonne      `gomacro-sql-on-delete:"CASCADE"`
 	IdDossier  dossiers.IdDossier `gomacro-sql-on-delete:"CASCADE"`
 

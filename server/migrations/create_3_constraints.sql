@@ -40,7 +40,7 @@ ALTER TABLE lettredirecteurs
     ADD FOREIGN KEY (IdCamp) REFERENCES camps ON DELETE CASCADE;
 
 ALTER TABLE participants
-    ADD FOREIGN KEY (IdCamp, IdTaux) REFERENCES camps (Id, IdTaux) ON DELETE CASCADE;
+    ADD FOREIGN KEY (IdCamp, IdTaux) REFERENCES camps (Id, IdTaux);
 
 ALTER TABLE participants
     ADD FOREIGN KEY (IdDossier, IdTaux) REFERENCES dossiers (Id, IdTaux) ON DELETE CASCADE;
@@ -49,7 +49,7 @@ ALTER TABLE participants
     ADD UNIQUE (Id, IdCamp);
 
 ALTER TABLE participants
-    ADD FOREIGN KEY (IdCamp) REFERENCES camps ON DELETE CASCADE;
+    ADD FOREIGN KEY (IdCamp) REFERENCES camps;
 
 ALTER TABLE participants
     ADD FOREIGN KEY (IdPersonne) REFERENCES personnes ON DELETE CASCADE;
@@ -121,6 +121,9 @@ ALTER TABLE aides
     ADD FOREIGN KEY (IdParticipant) REFERENCES participants ON DELETE CASCADE;
 
 ALTER TABLE camps
+    ADD CONSTRAINT Navette_gomacro CHECK (gomacro_validate_json_camp_Navette (Navette));
+
+ALTER TABLE camps
     ADD CONSTRAINT OptionPrix_gomacro CHECK (gomacro_validate_json_camp_OptionPrixCamp (OptionPrix));
 
 ALTER TABLE participants
@@ -134,4 +137,78 @@ ALTER TABLE participants
 
 ALTER TABLE groupes
     ADD CONSTRAINT Plage_gomacro CHECK (gomacro_validate_json_shar_Plage (Plage));
+
+ALTER TABLE demandes
+    ADD CONSTRAINT constraint_1 CHECK (Categorie = 0 OR IdDirecteur IS NULL);
+
+ALTER TABLE demandes
+    ADD CONSTRAINT constraint_2 CHECK (Categorie <> 0 OR IdDirecteur IS NOT NULL);
+
+ALTER TABLE demandes
+    ADD CONSTRAINT constraint_3 CHECK (MaxDocs >= 1);
+
+CREATE UNIQUE INDEX ON demandes (Categorie)
+WHERE
+    Categorie <> 0;
+
+ALTER TABLE demandes
+    ADD FOREIGN KEY (IdFile) REFERENCES files;
+
+ALTER TABLE demandes
+    ADD FOREIGN KEY (IdDirecteur) REFERENCES personnes ON DELETE CASCADE;
+
+ALTER TABLE demande_equipiers
+    ADD UNIQUE (IdEquipier, IdDemande);
+
+ALTER TABLE demande_equipiers
+    ADD FOREIGN KEY (IdEquipier) REFERENCES equipiers ON DELETE CASCADE;
+
+ALTER TABLE demande_equipiers
+    ADD FOREIGN KEY (IdDemande) REFERENCES demandes;
+
+ALTER TABLE demande_camps
+    ADD UNIQUE (IdCamp, IdDemande);
+
+ALTER TABLE demande_camps
+    ADD FOREIGN KEY (IdCamp) REFERENCES camps ON DELETE CASCADE;
+
+ALTER TABLE demande_camps
+    ADD FOREIGN KEY (IdDemande) REFERENCES demandes;
+
+ALTER TABLE file_camps
+    ADD UNIQUE (IdFile);
+
+CREATE UNIQUE INDEX ON file_camps (IdCamp)
+WHERE
+    IsLettre IS TRUE;
+
+ALTER TABLE file_camps
+    ADD FOREIGN KEY (IdFile) REFERENCES files ON DELETE CASCADE;
+
+ALTER TABLE file_camps
+    ADD FOREIGN KEY (IdCamp) REFERENCES camps;
+
+ALTER TABLE file_personnes
+    ADD UNIQUE (IdFile);
+
+ALTER TABLE file_personnes
+    ADD FOREIGN KEY (IdFile) REFERENCES files ON DELETE CASCADE;
+
+ALTER TABLE file_personnes
+    ADD FOREIGN KEY (IdPersonne) REFERENCES personnes;
+
+ALTER TABLE file_personnes
+    ADD FOREIGN KEY (IdDemande) REFERENCES demandes;
+
+ALTER TABLE file_aides
+    ADD UNIQUE (IdFile);
+
+ALTER TABLE file_aides
+    ADD UNIQUE (IdAide);
+
+ALTER TABLE file_aides
+    ADD FOREIGN KEY (IdFile) REFERENCES files ON DELETE CASCADE;
+
+ALTER TABLE file_aides
+    ADD FOREIGN KEY (IdAide) REFERENCES aides;
 

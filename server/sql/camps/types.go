@@ -143,7 +143,7 @@ func (js Jours) Description(datesCamp shared.Plage) string {
 type OptionPrixKind uint8
 
 const (
-	_ OptionPrixKind = iota
+	NoOption OptionPrixKind = iota
 	PrixSemaine
 	PrixStatut
 	PrixJour
@@ -200,6 +200,38 @@ func (op OptionPrixParticipant) IsNonZero(kind OptionPrixKind) bool {
 	}
 }
 
+// grilleQF définit une grille fixe de prix au quotient familial
+// Index 0 : de 1 à 359
+// Index 1 : de 360 à 564
+// Index 2 : de 565 à 714
+// Index 3 : plus de 715
+var grilleQF = [...]int{0, 359, 564, 714}
+
+// OptionQuotientFamilial applique un pourcentage sur le prix de base (exprimé en %),
+// pour les categories définie par `QuotientFamilial`
+//
+// Par cohérence avec le prix de base, la dernière valeur vaut toujours 100
+// (sauf pour les entrées vides).
+type OptionQuotientFamilial [len(grilleQF)]int32
+
+// Percentage renvoie le pourcentage appliqué au prix de base pour le quotient
+// familial donné.
+func (q OptionQuotientFamilial) Percentage(quotientFamilial int) int {
+	N := len(grilleQF)
+	for i := 0; i < N-1; i++ {
+		q1, q2 := grilleQF[i], grilleQF[i+1]
+		if q1 < quotientFamilial && quotientFamilial <= q2 {
+			return int(q[i])
+		}
+	}
+	return 100
+}
+
+type Navette struct {
+	Actif       bool
+	Commentaire string
+}
+
 type Vetement struct {
 	Quantite    int
 	Description string
@@ -229,6 +261,8 @@ const (
 	Cuisine                   // Cuisine
 	Lingerie                  // Lingerie
 )
+
+const NbRoles = Lingerie + 1 // gomacro:no-enum
 
 func (r Role) String() string {
 	switch r {

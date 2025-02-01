@@ -24,6 +24,14 @@ func randAide() Aide {
 	return s
 }
 
+func randAr4_int32() [4]int32 {
+	var out [4]int32
+	for i := range out {
+		out[i] = randint32()
+	}
+	return out
+}
+
 func randBus() Bus {
 	choix := [...]Bus{NoBus, Aller, Retour, AllerRetour}
 	i := rand.Intn(len(choix))
@@ -33,13 +41,17 @@ func randBus() Bus {
 func randCamp() Camp {
 	var s Camp
 	s.Id = randIdCamp()
+	s.IdTaux = randdos_IdTaux()
 	s.Nom = randstring()
 	s.DateDebut = randsha_Date()
 	s.Duree = randint()
 	s.Agrement = randstring()
-	s.IdTaux = randdos_IdTaux()
+	s.Description = randstring()
+	s.Navette = randNavette()
+	s.Ouvert = randbool()
 	s.Prix = randdos_Montant()
 	s.OptionPrix = randOptionPrixCamp()
+	s.OptionQuotientFamilial = randOptionQuotientFamilial()
 
 	return s
 }
@@ -147,6 +159,14 @@ func randListeAttente() ListeAttente {
 	return choix[i]
 }
 
+func randNavette() Navette {
+	var s Navette
+	s.Actif = randbool()
+	s.Commentaire = randstring()
+
+	return s
+}
+
 func randOptionPrixCamp() OptionPrixCamp {
 	var s OptionPrixCamp
 	s.Active = randOptionPrixKind()
@@ -158,7 +178,7 @@ func randOptionPrixCamp() OptionPrixCamp {
 }
 
 func randOptionPrixKind() OptionPrixKind {
-	choix := [...]OptionPrixKind{PrixJour, PrixSemaine, PrixStatut}
+	choix := [...]OptionPrixKind{NoOption, PrixSemaine, PrixStatut, PrixJour}
 	i := rand.Intn(len(choix))
 	return choix[i]
 }
@@ -170,6 +190,10 @@ func randOptionPrixParticipant() OptionPrixParticipant {
 	s.Jour = randJours()
 
 	return s
+}
+
+func randOptionQuotientFamilial() OptionQuotientFamilial {
+	return OptionQuotientFamilial(randAr4_int32())
 }
 
 func randOptionSemaineCamp() OptionSemaineCamp {

@@ -51,8 +51,6 @@ var (
 // NewTestDB creates a new database and add all the tables
 // as defined in the `generateSQLFile` files.
 func NewTestDB(t *testing.T, generateSQLFile ...string) TestDB {
-	// t.Helper()
-
 	const userPassword = "dummy"
 
 	dbCountMutex.Lock()
@@ -104,11 +102,11 @@ func (db TestDB) Remove() {
 	runCmd(exec.Command("dropdb", "--if-exists", "--force", "--username="+getUserName(), db.name))
 }
 
-// SampleDB is a test DB manually setup
-var SampleDB = config.DB{
+// SampleDBACVE is a test DB manually setup
+var SampleDBACVE = config.DB{
 	Host:     "localhost",
 	User:     "benoit",
 	Password: "dummy",
-	Name:     "test",
+	Name:     "tmp_acve",
 	Port:     5432,
 }

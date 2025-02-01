@@ -29,6 +29,11 @@ func AssertNoErr(t *testing.T, err error) {
 	}
 }
 
+func AssertErr(t *testing.T, err error) {
+	t.Helper()
+	Assert(t, err != nil)
+}
+
 func LoadEnv(t *testing.T, file string) {
 	t.Helper()
 
