@@ -48,7 +48,7 @@ func Normalize(s string) string {
 }
 
 // QueryParamInt parse the query param `name` to an int
-func QueryParamInt[T ~int64](c echo.Context, name string) (T, error) {
+func QueryParamInt[T interface{ ~int64 | int }](c echo.Context, name string) (T, error) {
 	idS := c.QueryParam(name)
 	id, err := strconv.ParseInt(idS, 10, 64)
 	if err != nil {
