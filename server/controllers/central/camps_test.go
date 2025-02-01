@@ -5,6 +5,7 @@ import (
 
 	"registro/config"
 	"registro/crypto"
+	cps "registro/sql/camps"
 	"registro/sql/files"
 	"registro/sql/personnes"
 	tu "registro/utils/testutils"
@@ -34,6 +35,12 @@ func TestCRUD(t *testing.T) {
 		camps, err = ct.loadCamps()
 		tu.AssertNoErr(t, err)
 		tu.Assert(t, len(camps) == 1)
+
+		camp.Camp.Ouvert = true
+		camp.Camp.Navette = cps.Navette{Actif: true, Commentaire: "7 € Aller retour"}
+		updated, err := ct.updateCamp(camp.Camp)
+		tu.AssertNoErr(t, err)
+		tu.Assert(t, updated.Ouvert)
 
 		err = ct.deleteCamp(camp.Camp.Id)
 		tu.AssertNoErr(t, err)
