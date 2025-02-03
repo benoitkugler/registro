@@ -83,6 +83,12 @@ func randMedecin() Medecin {
 	return s
 }
 
+func randNationnalite() Nationnalite {
+	choix := [...]Nationnalite{Autre, Francaise, Suisse}
+	i := rand.Intn(len(choix))
+	return choix[i]
+}
+
 func randPays() Pays {
 	return Pays(randstring())
 }
@@ -91,12 +97,12 @@ func randPersonne() Personne {
 	var s Personne
 	s.Id = randIdPersonne()
 	s.Nom = randstring()
-	s.NomJeuneFille = randstring()
 	s.Prenom = randstring()
+	s.Sexe = randSexe()
 	s.DateNaissance = randsha_Date()
 	s.VilleNaissance = randstring()
 	s.DepartementNaissance = randDepartement()
-	s.Sexe = randSexe()
+	s.Nationnalite = randNationnalite()
 	s.Tels = randTels()
 	s.Mail = randstring()
 	s.Adresse = randstring()
@@ -104,6 +110,7 @@ func randPersonne() Personne {
 	s.Ville = randstring()
 	s.Pays = randPays()
 	s.SecuriteSociale = randstring()
+	s.NomJeuneFille = randstring()
 	s.Profession = randstring()
 	s.Etudiant = randbool()
 	s.Fonctionnaire = randbool()

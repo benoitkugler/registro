@@ -15,6 +15,8 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+type CampStats struct{}
+
 type CampExt struct {
 	Camp cp.Camp
 	Taux ds.Taux
@@ -57,6 +59,7 @@ func (ct *Controller) createCamp() (CampExt, error) {
 	const defaultTaux = ds.IdTaux(1)
 	camp, err := cp.Camp{
 		IdTaux: defaultTaux, DateDebut: shared.NewDateFrom(time.Now()), Duree: 1,
+		Places: 40,
 	}.Insert(ct.db)
 	if err != nil {
 		return CampExt{}, utils.SQLError(err)
@@ -94,6 +97,7 @@ func (ct *Controller) updateCamp(args cp.Camp) (cp.Camp, error) {
 	camp.Agrement = args.Agrement
 	camp.Description = args.Description
 	camp.Navette = args.Navette
+	camp.Places = args.Places
 	camp.Ouvert = args.Ouvert
 	camp.Prix = args.Prix
 	camp.OptionPrix = args.OptionPrix

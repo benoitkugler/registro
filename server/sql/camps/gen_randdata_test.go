@@ -48,6 +48,7 @@ func randCamp() Camp {
 	s.Agrement = randstring()
 	s.Description = randstring()
 	s.Navette = randNavette()
+	s.Places = randint()
 	s.Ouvert = randbool()
 	s.Prix = randdos_Montant()
 	s.OptionPrix = randOptionPrixCamp()
@@ -154,7 +155,7 @@ func randLettredirecteur() Lettredirecteur {
 }
 
 func randListeAttente() ListeAttente {
-	choix := [...]ListeAttente{ADecider, AttenteProfilInvalide, AttenteCampComplet, EnAttenteReponse, Inscrit}
+	choix := [...]ListeAttente{AStatuer, AttenteProfilInvalide, Refuse, AttenteCampComplet, EnAttenteReponse, Inscrit}
 	i := rand.Intn(len(choix))
 	return choix[i]
 }

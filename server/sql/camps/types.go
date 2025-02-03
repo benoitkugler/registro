@@ -22,9 +22,11 @@ type ListeAttente uint8
 
 const (
 	// personne n'a encore décidé ou placer le participant
-	ADecider ListeAttente = iota
+	AStatuer ListeAttente = iota
 	// le profil ne suit pas les conditions du camp
 	AttenteProfilInvalide
+	// définitivment refusé (non concerné par une place libérée)
+	Refuse
 	// le camp est déjà complet
 	AttenteCampComplet
 	// une place s'est libérée et on attend une confirmation

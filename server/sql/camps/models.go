@@ -38,6 +38,7 @@ type Camp struct {
 	Agrement               string
 	Description            string // Description est affichée sur le formulaire d'inscription
 	Navette                Navette
+	Places                 int  // nombre de places prévues pour le séjour
 	Ouvert                 bool // ouvert aux inscriptions ou non
 	Prix                   Montant
 	OptionPrix             OptionPrixCamp
@@ -50,6 +51,9 @@ func (cp *Camp) DateFin() shared.Date {
 
 // Check assure la validité de divers champs.
 func (c *Camp) Check() error {
+	if c.Places < 1 {
+		return errors.New("invalid Places")
+	}
 	if c.Duree < 1 {
 		return errors.New("invalid Duree")
 	}

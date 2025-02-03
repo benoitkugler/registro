@@ -108,9 +108,11 @@ func cmpDate(in, out shared.Date) diff {
 	return conflict
 }
 
-func cmpEnum[T interface {
-	pr.Sexe | pr.Approfondissement | pr.Diplome
-}](in, out T) diff {
+type fieldEnum interface {
+	pr.Sexe | pr.Approfondissement | pr.Diplome | pr.Nationnalite
+}
+
+func cmpEnum[T fieldEnum](in, out T) diff {
 	if in == 0 {
 		return inZero
 	}
@@ -132,6 +134,7 @@ type Conflicts struct {
 	VilleNaissance       bool
 	DepartementNaissance bool
 	Sexe                 bool
+	Nationnalite         bool
 	Tels                 bool
 	Mail                 bool
 	Adresse              bool
@@ -147,7 +150,9 @@ type Conflicts struct {
 }
 
 type fields interface {
-	string | shared.Date | pr.Departement | pr.Sexe | pr.Tels | pr.Pays | bool | pr.Diplome | pr.Approfondissement
+	string | bool |
+		shared.Date | pr.Departement | pr.Tels | pr.Pays |
+		fieldEnum
 }
 
 func cmpGeneric[T fields](entrant, existant T) diff {
@@ -171,6 +176,8 @@ func cmpGeneric[T fields](entrant, existant T) diff {
 		return cmpEnum(v1.(pr.Diplome), v2.(pr.Diplome))
 	case pr.Approfondissement:
 		return cmpEnum(v1.(pr.Approfondissement), v2.(pr.Approfondissement))
+	case pr.Nationnalite:
+		return cmpEnum(v1.(pr.Nationnalite), v2.(pr.Nationnalite))
 	default:
 		panic("exhaustive type switch")
 	}
@@ -196,12 +203,12 @@ func choose[T fields](entrant, existant T) (T, bool) {
 // le résultat de la fusion et un crible d'alerte
 func Merge(entrant pr.Etatcivil, existant pr.Etatcivil) (merged pr.Etatcivil, conflicts Conflicts) {
 	merged.Nom, conflicts.Nom = choose(entrant.Nom, existant.Nom)
-	merged.NomJeuneFille, conflicts.NomJeuneFille = choose(entrant.NomJeuneFille, existant.NomJeuneFille)
 	merged.Prenom, conflicts.Prenom = choose(entrant.Prenom, existant.Prenom)
+	merged.Sexe, conflicts.Sexe = choose(entrant.Sexe, existant.Sexe)
 	merged.DateNaissance, conflicts.DateNaissance = choose(entrant.DateNaissance, existant.DateNaissance)
 	merged.VilleNaissance, conflicts.VilleNaissance = choose(entrant.VilleNaissance, existant.VilleNaissance)
 	merged.DepartementNaissance, conflicts.DepartementNaissance = choose(entrant.DepartementNaissance, existant.DepartementNaissance)
-	merged.Sexe, conflicts.Sexe = choose(entrant.Sexe, existant.Sexe)
+	merged.Nationnalite, conflicts.Nationnalite = choose(entrant.Nationnalite, existant.Nationnalite)
 	merged.Tels, conflicts.Tels = choose(entrant.Tels, existant.Tels)
 	merged.Mail, conflicts.Mail = choose(entrant.Mail, existant.Mail)
 	merged.Adresse, conflicts.Adresse = choose(entrant.Adresse, existant.Adresse)
@@ -209,10 +216,12 @@ func Merge(entrant pr.Etatcivil, existant pr.Etatcivil) (merged pr.Etatcivil, co
 	merged.Ville, conflicts.Ville = choose(entrant.Ville, existant.Ville)
 	merged.Pays, conflicts.Pays = choose(entrant.Pays, existant.Pays)
 	merged.SecuriteSociale, conflicts.SecuriteSociale = choose(entrant.SecuriteSociale, existant.SecuriteSociale)
+	merged.NomJeuneFille, conflicts.NomJeuneFille = choose(entrant.NomJeuneFille, existant.NomJeuneFille)
 	merged.Profession, conflicts.Profession = choose(entrant.Profession, existant.Profession)
 	merged.Etudiant, conflicts.Etudiant = choose(entrant.Etudiant, existant.Etudiant)
 	merged.Fonctionnaire, conflicts.Fonctionnaire = choose(entrant.Fonctionnaire, existant.Fonctionnaire)
 	merged.Diplome, conflicts.Diplome = choose(entrant.Diplome, existant.Diplome)
 	merged.Approfondissement, conflicts.Approfondissement = choose(entrant.Approfondissement, existant.Approfondissement)
+
 	return merged, conflicts
 }

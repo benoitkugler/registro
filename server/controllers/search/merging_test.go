@@ -18,6 +18,7 @@ func TestSimilaires(t *testing.T) {
 		DateNaissance:     shared.NewDateFrom(time.Now()),
 		Approfondissement: pr.ACanoe,
 		Etudiant:          true,
+		Nationnalite:      pr.Suisse,
 	}
 	existant := pr.Etatcivil{
 		Nom:           "llmmlsd",
@@ -39,4 +40,5 @@ func TestSimilaires(t *testing.T) {
 	tu.Assert(t, conficts.Sexe)
 	tu.Assert(t, merged.Sexe == pr.Man)
 	tu.Assert(t, !conficts.DateNaissance)
+	tu.Assert(t, merged.Nationnalite == pr.Suisse)
 }

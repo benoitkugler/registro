@@ -36,25 +36,31 @@ type Tels []string
 //
 // The fields defined here are the ones used in profil merging.
 type Etatcivil struct {
-	Nom                  string
-	NomJeuneFille        string
-	Prenom               string
+	Nom    string
+	Prenom string
+	Sexe   Sexe
+
 	DateNaissance        shared.Date
 	VilleNaissance       string
 	DepartementNaissance Departement
-	Sexe                 Sexe
-	Tels                 Tels
-	Mail                 string
-	Adresse              string
-	CodePostal           string
-	Ville                string
-	Pays                 Pays
-	SecuriteSociale      string
-	Profession           string
-	Etudiant             bool
-	Fonctionnaire        bool
-	Diplome              Diplome           // used for equipiers
-	Approfondissement    Approfondissement // used for equipiers
+	Nationnalite         Nationnalite
+
+	Tels Tels
+	Mail string
+
+	Adresse    string
+	CodePostal string
+	Ville      string
+	Pays       Pays
+
+	SecuriteSociale string
+
+	NomJeuneFille     string            // used for equipiers
+	Profession        string            // used for equipiers
+	Etudiant          bool              // used for equipiers
+	Fonctionnaire     bool              // used for equipiers
+	Diplome           Diplome           // used for equipiers
+	Approfondissement Approfondissement // used for equipiers
 }
 
 func (p Etatcivil) FPrenom() string { return formatPrenom(p.Prenom) }
@@ -65,6 +71,16 @@ func (p Etatcivil) FNom() string { return strings.ToUpper(p.Nom) }
 func (p Etatcivil) NomPrenom() string {
 	return p.FNom() + " " + p.FPrenom()
 }
+
+// Nationnalite encode la nationnalité,
+// qui peut être différente du [Pays]
+type Nationnalite uint8
+
+const (
+	Autre Nationnalite = iota
+	Francaise
+	Suisse
+)
 
 type Diplome uint8
 
