@@ -6,13 +6,12 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-//go:generate ../../../go/src/github.com/benoitkugler/gomacro/cmd/gomacro routes.go typescript/api:../clients/central/api.ts
+//go:generate ../../../go/src/github.com/benoitkugler/gomacro/cmd/gomacro routes.go typescript/api:../registro-web/src/logic/app/api.ts
 
 func setupRoutesCentral(e *echo.Echo, ct *central.Controller) {
-	gr := e.Group("/api/v1/central", ct.JWTMiddleware())
-
-	gr.GET("/camps", ct.CampsGet)
-	gr.PUT("/camps", ct.CampsCreate)
-	gr.POST("/camps", ct.CampsUpdate)
-	gr.DELETE("/camps", ct.CampsDelete)
+	gr := e.Group("", ct.JWTMiddleware())
+	gr.GET("/api/v1/app/camps", ct.CampsGet)
+	gr.PUT("/api/v1/app/camps", ct.CampsCreate)
+	gr.POST("/api/v1/app/camps", ct.CampsUpdate)
+	gr.DELETE("/api/v1/app/camps", ct.CampsDelete)
 }

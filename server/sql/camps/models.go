@@ -111,7 +111,7 @@ type Participant struct {
 	// so that a [Dossier] has only one taux
 	IdTaux dossiers.IdTaux
 
-	ListeAttente     ListeAttente
+	Statut           ListeAttente
 	Remises          Remises
 	QuotientFamilial int
 

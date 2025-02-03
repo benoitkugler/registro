@@ -223,7 +223,7 @@ func randParticipant() Participant {
 	s.IdPersonne = randper_IdPersonne()
 	s.IdDossier = randdos_IdDossier()
 	s.IdTaux = randdos_IdTaux()
-	s.ListeAttente = randListeAttente()
+	s.Statut = randListeAttente()
 	s.Remises = randRemises()
 	s.QuotientFamilial = randint()
 	s.OptionPrix = randOptionPrixParticipant()

@@ -7,13 +7,15 @@ import (
 	"os"
 	"strconv"
 	"strings"
-
+	"net/http"
+	
 	"registro/config"
 	"registro/controllers/central"
 	"registro/crypto"
 	"registro/sql/files"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 func main() {
@@ -21,18 +23,12 @@ func main() {
 	flag.Parse()
 	isDev := *devPtr
 
-	fmt.Println("Running in mode dev:", isDev)
-
 	_, encrypter, dbCreds, fs := loadEnvs()
 
 	db, err := dbCreds.ConnectPostgres()
 	check(err)
 	check(db.Ping())
-	fmt.Println("\tPing DB -> OK.")
-
-	// TODO: setup APIS
-	ct, err := central.NewController(db, encrypter, fs, config.SMTP{}, config.Joomeo{}, config.Helloasso{})
-	check(err)
+	fmt.Println("Ping DB -> OK.")
 
 	e := echo.New()
 	e.HideBanner = true
@@ -41,11 +37,31 @@ func main() {
 		e.DefaultHTTPErrorHandler(err, c)
 	}
 
+	// TODO: setup APIS
+	ct, err := central.NewController(db, encrypter, fs, config.SMTP{}, config.Joomeo{}, config.Helloasso{})
+	check(err)
+	
+	if isDev {
+		fmt.Println("Running in dev mode")
+		
+		e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+			AllowMethods:  append(middleware.DefaultCORSConfig.AllowMethods, http.MethodOptions),
+			AllowHeaders:  []string{"Authorization", "Content-Type", "Access-Control-Allow-Origin"},
+			ExposeHeaders: []string{"Content-Disposition"},
+		}))
+		fmt.Println("\tenabling CORS")
+	
+		token, err := ct.NewToken(false)
+		check(err)
+		fmt.Println("\tcentral dev token:", token)
+	}
+
+
 	setupRoutesCentral(e, ct)
 
 	adress := getAdress(isDev)
 
-	fmt.Println("\tSetup done.")
+	fmt.Println("Setup done.")
 
 	e.Logger.Fatal(e.Start(adress))
 }

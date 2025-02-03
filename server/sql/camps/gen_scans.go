@@ -1266,7 +1266,7 @@ func scanOneParticipant(row scanner) (Participant, error) {
 		&item.IdPersonne,
 		&item.IdDossier,
 		&item.IdTaux,
-		&item.ListeAttente,
+		&item.Statut,
 		&item.Remises,
 		&item.QuotientFamilial,
 		&item.OptionPrix,
@@ -1340,22 +1340,22 @@ func ScanParticipants(rs *sql.Rows) (Participants, error) {
 // Insert one Participant in the database and returns the item with id filled.
 func (item Participant) Insert(tx DB) (out Participant, err error) {
 	row := tx.QueryRow(`INSERT INTO participants (
-		idcamp, idpersonne, iddossier, idtaux, listeattente, remises, quotientfamilial, optionprix, details, bus
+		idcamp, idpersonne, iddossier, idtaux, statut, remises, quotientfamilial, optionprix, details, bus
 		) VALUES (
 		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10
 		) RETURNING *;
-		`, item.IdCamp, item.IdPersonne, item.IdDossier, item.IdTaux, item.ListeAttente, item.Remises, item.QuotientFamilial, item.OptionPrix, item.Details, item.Bus)
+		`, item.IdCamp, item.IdPersonne, item.IdDossier, item.IdTaux, item.Statut, item.Remises, item.QuotientFamilial, item.OptionPrix, item.Details, item.Bus)
 	return ScanParticipant(row)
 }
 
 // Update Participant in the database and returns the new version.
 func (item Participant) Update(tx DB) (out Participant, err error) {
 	row := tx.QueryRow(`UPDATE participants SET (
-		idcamp, idpersonne, iddossier, idtaux, listeattente, remises, quotientfamilial, optionprix, details, bus
+		idcamp, idpersonne, iddossier, idtaux, statut, remises, quotientfamilial, optionprix, details, bus
 		) = (
 		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10
 		) WHERE id = $11 RETURNING *;
-		`, item.IdCamp, item.IdPersonne, item.IdDossier, item.IdTaux, item.ListeAttente, item.Remises, item.QuotientFamilial, item.OptionPrix, item.Details, item.Bus, item.Id)
+		`, item.IdCamp, item.IdPersonne, item.IdDossier, item.IdTaux, item.Statut, item.Remises, item.QuotientFamilial, item.OptionPrix, item.Details, item.Bus, item.Id)
 	return ScanParticipant(row)
 }
 

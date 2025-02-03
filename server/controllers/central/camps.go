@@ -15,11 +15,10 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type CampStats struct{}
-
-type CampExt struct {
-	Camp cp.Camp
-	Taux ds.Taux
+type CampHeader struct {
+	Camp  cp.Camp
+	Taux  ds.Taux
+	Stats cp.StatistiquesInscrits
 }
 
 func (ct *Controller) CampsGet(c echo.Context) error {
@@ -30,7 +29,7 @@ func (ct *Controller) CampsGet(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) loadCamps() ([]CampExt, error) {
+func (ct *Controller) loadCamps() ([]CampHeader, error) {
 	camps, err := cp.SelectAllCamps(ct.db)
 	if err != nil {
 		return nil, utils.SQLError(err)
@@ -39,9 +38,20 @@ func (ct *Controller) loadCamps() ([]CampExt, error) {
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
-	out := make([]CampExt, 0, len(camps))
+	participants, err := cp.SelectParticipantsByIdCamps(ct.db, camps.IDs()...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	byCamp := participants.ByIdCamp()
+	personnes, err := pr.SelectPersonnes(ct.db, participants.IdPersonnes()...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+
+	out := make([]CampHeader, 0, len(camps))
 	for _, camp := range camps {
-		out = append(out, CampExt{camp, taux[camp.IdTaux]})
+		loader := cp.CampLoader{Camp: &camp, Participants: byCamp[camp.Id], Personnes: personnes}
+		out = append(out, CampHeader{camp, taux[camp.IdTaux], loader.Stats()})
 	}
 	return out, nil
 }
@@ -54,21 +64,23 @@ func (ct *Controller) CampsCreate(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) createCamp() (CampExt, error) {
+func (ct *Controller) createCamp() (CampHeader, error) {
 	// TODO: better taux handling
 	const defaultTaux = ds.IdTaux(1)
 	camp, err := cp.Camp{
-		IdTaux: defaultTaux, DateDebut: shared.NewDateFrom(time.Now()), Duree: 1,
+		IdTaux: defaultTaux,
+		Nom: "Nouveau séjour",
+		 DateDebut: shared.NewDateFrom(time.Now()), Duree: 1,
 		Places: 40,
 	}.Insert(ct.db)
 	if err != nil {
-		return CampExt{}, utils.SQLError(err)
+		return CampHeader{}, utils.SQLError(err)
 	}
 	taux, err := ds.SelectTaux(ct.db, camp.IdTaux)
 	if err != nil {
-		return CampExt{}, utils.SQLError(err)
+		return CampHeader{}, utils.SQLError(err)
 	}
-	return CampExt{camp, taux}, nil
+	return CampHeader{camp, taux, cp.StatistiquesInscrits{}}, nil
 }
 
 func (ct *Controller) CampsUpdate(c echo.Context) error {

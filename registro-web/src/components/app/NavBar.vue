@@ -55,6 +55,7 @@
 
     <template v-slot:append>
       <slot></slot>
+      <div class="mr-2"></div>
     </template>
   </v-app-bar>
 </template>
@@ -62,7 +63,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 
-const logo = `/${import.meta.env.VITE_ASSO}/logo.png`;
+const logo = `${import.meta.env.BASE_URL}${import.meta.env.VITE_ASSO}/logo.png`;
 
 const version = `v${VITE_APP_VERSION}`;
 

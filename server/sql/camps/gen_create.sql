@@ -71,7 +71,7 @@ CREATE TABLE participants (
     IdPersonne integer NOT NULL,
     IdDossier integer NOT NULL,
     IdTaux integer NOT NULL,
-    ListeAttente smallint CHECK (ListeAttente IN (0, 1, 2, 3, 4, 5)) NOT NULL,
+    Statut smallint CHECK (Statut IN (0, 1, 2, 3, 4, 5)) NOT NULL,
     Remises jsonb NOT NULL,
     QuotientFamilial integer NOT NULL,
     OptionPrix jsonb NOT NULL,

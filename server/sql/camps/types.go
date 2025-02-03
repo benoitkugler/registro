@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"registro/sql/dossiers"
-	"registro/sql/personnes"
 	"registro/sql/shared"
 	"registro/utils"
 )
@@ -382,10 +381,4 @@ type ReponseSondage struct {
 	Ressenti           Satisfaction
 	MessageEnfant      string
 	MessageResponsable string
-}
-
-type ParticipantExt struct {
-	Participant
-	Camp
-	personnes.Personne
 }
