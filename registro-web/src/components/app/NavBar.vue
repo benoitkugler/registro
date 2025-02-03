@@ -46,10 +46,14 @@
       @click="showSideBar = !showSideBar"
     ></v-app-bar-nav-icon>
     <v-app-bar-title>
-      <v-avatar class="mr-2">
-        <v-img height="40" src="@/assets/logo.png" />
-      </v-avatar>
-      {{ props.title }}
+      <v-row>
+        <v-col align-self="center" cols="auto">
+          <v-img width="60" :src="logo" />
+        </v-col>
+        <v-col align-self="center">
+          {{ props.title }}
+        </v-col>
+      </v-row>
     </v-app-bar-title>
 
     <template v-slot:append>
@@ -60,6 +64,8 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
+
+const logo = `/${import.meta.env.VITE_ASSO}/logo.png`;
 
 const showSideBar = ref(false);
 const props = defineProps<{
