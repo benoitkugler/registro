@@ -35,7 +35,10 @@ export default defineConfig({
       },
     }),
   ],
-  define: { "process.env": {} },
+  define: {
+    VITE_APP_VERSION: JSON.stringify(process.env.npm_package_version),
+    "process.env": {},
+  },
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),

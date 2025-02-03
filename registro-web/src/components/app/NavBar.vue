@@ -1,9 +1,6 @@
 <template>
   <v-navigation-drawer app v-model="showSideBar" temporary>
-    <v-list-item>
-      <v-row>
-        <v-col align-self="center"> Accéder à la page...</v-col>
-      </v-row>
+    <v-list-item title="Registro - Backoffice" :subtitle="version">
     </v-list-item>
     <v-divider></v-divider>
 
@@ -66,6 +63,8 @@
 import { ref } from "vue";
 
 const logo = `/${import.meta.env.VITE_ASSO}/logo.png`;
+
+const version = `v${VITE_APP_VERSION}`;
 
 const showSideBar = ref(false);
 const props = defineProps<{
