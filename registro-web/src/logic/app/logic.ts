@@ -83,30 +83,6 @@ export namespace Camps {
   export function label(camp: Camp) {
     return `${camp.Nom} - ${year(camp)}`;
   }
-
-  /** renvoie la couleur de la période du camp */
-  export function periodeColor(camp: Camp) {
-    const month = new Date(camp.DateDebut).getUTCMonth();
-    switch (month) {
-      case 7:
-      case 8: // Ete
-        return "rgba(45, 185, 187, 200)";
-      case 9:
-      case 10:
-      case 11: // Automne
-        return "rgba(170, 228, 62, 200)";
-      case 12:
-      case 1:
-      case 2:
-      case 3: // Hiver
-        return "rgba(173, 116, 30, 200)";
-      case 4:
-      case 5:
-      case 6:
-      default: // Printemps
-        return "rgba(203, 199, 193, 200)";
-    }
-  }
 }
 
 export function copy<T>(v: T): T {

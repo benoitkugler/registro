@@ -18,7 +18,7 @@
     </v-card>
   </v-dialog>
 
-  <v-row>
+  <v-row :style="{ 'background-color': periodeColor }" class="rounded my-1">
     <v-col>
       <v-list-item
         :title="$props.camp.Camp.Nom"
@@ -30,6 +30,7 @@
       <v-tooltip content-class="px-1" width="600">
         <template v-slot:activator="{ props: innerProps }">
           <v-progress-linear
+            class="bg-white"
             v-bind="innerProps"
             :max="$props.camp.Camp.Places"
             :model-value="$props.camp.Stats.Valides"
@@ -93,4 +94,30 @@ const allAttente = computed(
 );
 
 const showDelete = ref(false);
+
+/** renvoie la couleur de la période du camp */
+const periodeColor = computed(() => {
+  const month = new Date(props.camp.Camp.DateDebut).getUTCMonth() + 1;
+  console.log(month);
+
+  switch (month) {
+    case 7:
+    case 8: // Ete
+      return "rgb(45, 185, 187)";
+    case 9:
+    case 10:
+    case 11: // Automne
+      return "rgb(173, 116, 30)";
+    case 12:
+    case 1:
+    case 2:
+    case 3: // Hiver
+      return "rgb(240, 240, 240)";
+    case 4:
+    case 5:
+    case 6:
+    default: // Printemps
+      return "rgb(170, 228, 62)";
+  }
+});
 </script>
