@@ -48,11 +48,11 @@ func (s *Montant) Add(other Montant) { s.Cent += other.Cent }
 type Currency uint8
 
 const (
-	Euros Currency = iota
-	FrancsSuisse
+	Euros        Currency = iota // €
+	FrancsSuisse                 // CHF
 )
 
-const nbCurrencies = FrancsSuisse + 1
+const nbCurrencies = FrancsSuisse + 1 // gomacro:no-enum
 
 func (c Currency) String() string {
 	switch c {

@@ -68,10 +68,10 @@ func (ct *Controller) createCamp() (CampHeader, error) {
 	// TODO: better taux handling
 	const defaultTaux = ds.IdTaux(1)
 	camp, err := cp.Camp{
-		IdTaux: defaultTaux,
-		Nom: "Nouveau séjour",
-		 DateDebut: shared.NewDateFrom(time.Now()), Duree: 1,
-		Places: 40,
+		IdTaux:    defaultTaux,
+		Nom:       "Nouveau séjour",
+		DateDebut: shared.NewDateFrom(time.Now()), Duree: 1,
+		Places: 40, AgeMin: 6, AgeMax: 12,
 	}.Insert(ct.db)
 	if err != nil {
 		return CampHeader{}, utils.SQLError(err)
@@ -106,14 +106,18 @@ func (ct *Controller) updateCamp(args cp.Camp) (cp.Camp, error) {
 	camp.Nom = args.Nom
 	camp.DateDebut = args.DateDebut
 	camp.Duree = args.Duree
+	camp.Lieu = args.Lieu
 	camp.Agrement = args.Agrement
 	camp.Description = args.Description
 	camp.Navette = args.Navette
 	camp.Places = args.Places
+	camp.AgeMin = args.AgeMin
+	camp.AgeMax = args.AgeMax
 	camp.Ouvert = args.Ouvert
 	camp.Prix = args.Prix
 	camp.OptionPrix = args.OptionPrix
 	camp.OptionQuotientFamilial = args.OptionQuotientFamilial
+	camp.Password = args.Password
 	camp, err = camp.Update(ct.db)
 	if err != nil {
 		return cp.Camp{}, utils.SQLError(err)
@@ -139,7 +143,8 @@ func (ct *Controller) CampsDelete(c echo.Context) error {
 func (ct *Controller) deleteCamp(id cp.IdCamp) error {
 	var toDelete []fs.IdFile
 	err := utils.InTx(ct.db, func(tx *sql.Tx) error {
-		// intégrité sur les participants et équipiers
+		// intégrité sur les participants
+		// cascade sur les équipiers
 
 		links, err := fs.DeleteFileCampsByIdCamps(tx, id)
 		if err != nil {

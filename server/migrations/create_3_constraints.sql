@@ -100,7 +100,7 @@ WHERE
     = ANY (Roles);
 
 ALTER TABLE equipiers
-    ADD FOREIGN KEY (IdCamp) REFERENCES camps;
+    ADD FOREIGN KEY (IdCamp) REFERENCES camps ON DELETE CASCADE;
 
 ALTER TABLE equipiers
     ADD FOREIGN KEY (IdPersonne) REFERENCES personnes ON DELETE CASCADE;

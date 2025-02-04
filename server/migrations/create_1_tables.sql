@@ -89,14 +89,18 @@ CREATE TABLE camps (
     Nom text NOT NULL,
     DateDebut date NOT NULL,
     Duree integer NOT NULL,
+    Lieu text NOT NULL,
     Agrement text NOT NULL,
     Description text NOT NULL,
     Navette jsonb NOT NULL,
     Places integer NOT NULL,
+    AgeMin integer NOT NULL,
+    AgeMax integer NOT NULL,
     Ouvert boolean NOT NULL,
     Prix Montant NOT NULL,
     OptionPrix jsonb NOT NULL,
-    OptionQuotientFamilial integer[] CHECK (array_length(OptionQuotientFamilial, 1) = 4) NOT NULL
+    OptionQuotientFamilial integer[] CHECK (array_length(OptionQuotientFamilial, 1) = 4) NOT NULL,
+    Password text NOT NULL
 );
 
 CREATE TABLE equipiers (

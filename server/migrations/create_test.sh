@@ -1,3 +1,4 @@
+cd migrations &&
 echo "Compile .SQL files..." && 
 go run make_sql.go ../sql/personnes/ ../sql/dossiers/ ../sql/camps/ ../sql/files ../sql/dons && 
 echo "Reset database <test>..." &&

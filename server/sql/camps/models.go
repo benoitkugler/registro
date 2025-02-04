@@ -32,17 +32,24 @@ type Camp struct {
 
 	IdTaux dossiers.IdTaux
 
-	Nom                    string
-	DateDebut              shared.Date
-	Duree                  int // nombre de jours date et fin inclus
-	Agrement               string
-	Description            string // Description est affichée sur le formulaire d'inscription
-	Navette                Navette
-	Places                 int  // nombre de places prévues pour le séjour
-	Ouvert                 bool // ouvert aux inscriptions ou non
+	Nom         string
+	DateDebut   shared.Date
+	Duree       int // nombre de jours date et fin inclus
+	Lieu        string
+	Agrement    string
+	Description string // Description est affichée sur le formulaire d'inscription
+	Navette     Navette
+	Places      int // nombre de places prévues pour le séjour
+	AgeMin      int // inclusif
+	AgeMax      int // inclusif
+
+	Ouvert bool // ouvert aux inscriptions ou non
+
 	Prix                   Montant
 	OptionPrix             OptionPrixCamp
 	OptionQuotientFamilial OptionQuotientFamilial
+
+	Password string
 }
 
 func (cp *Camp) DateFin() shared.Date {
@@ -51,23 +58,28 @@ func (cp *Camp) DateFin() shared.Date {
 
 // Check assure la validité de divers champs.
 func (c *Camp) Check() error {
-	if c.Places < 1 {
-		return errors.New("invalid Places")
-	}
 	if c.Duree < 1 {
 		return errors.New("invalid Duree")
 	}
-	if c.DateDebut.Time().Year() < 2000 {
+	if c.DateDebut.Time().Year() < 2020 {
 		return errors.New("invalid DateDebut")
+	}
+	if c.Places < 1 {
+		return errors.New("invalid Places")
+	}
+	if c.AgeMin < 1 {
+		return errors.New("invalid AgeMin")
+	}
+	if c.AgeMax < 1 || c.AgeMax < c.AgeMin {
+		return errors.New("invalid AgeMax")
 	}
 	if c.Prix.Cent < 0 {
 		return errors.New("invalid Prix")
 	}
-	if c.OptionPrix.Active != PrixJour {
-		return nil // rien à vérifier
-	}
-	if c.Duree != len(c.OptionPrix.Jour) {
-		return errors.New("invalid OptionPrix.Jour length")
+	if c.OptionPrix.Active == PrixJour {
+		if c.Duree != len(c.OptionPrix.Jour) {
+			return errors.New("invalid OptionPrix.Jour length")
+		}
 	}
 	return nil
 }
@@ -163,7 +175,7 @@ type GroupeParticipant struct {
 // gomacro:SQL CREATE UNIQUE INDEX ON Equipier(IdCamp) WHERE #[Role.Direction] = ANY(Roles)
 type Equipier struct {
 	Id         IdEquipier
-	IdCamp     IdCamp
+	IdCamp     IdCamp        `gomacro-sql-on-delete:"CASCADE"`
 	IdPersonne pr.IdPersonne `gomacro-sql-on-delete:"CASCADE"`
 
 	Roles    Roles

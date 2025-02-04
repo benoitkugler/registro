@@ -229,14 +229,18 @@ func scanOneCamp(row scanner) (Camp, error) {
 		&item.Nom,
 		&item.DateDebut,
 		&item.Duree,
+		&item.Lieu,
 		&item.Agrement,
 		&item.Description,
 		&item.Navette,
 		&item.Places,
+		&item.AgeMin,
+		&item.AgeMax,
 		&item.Ouvert,
 		&item.Prix,
 		&item.OptionPrix,
 		&item.OptionQuotientFamilial,
+		&item.Password,
 	)
 	return item, err
 }
@@ -305,22 +309,22 @@ func ScanCamps(rs *sql.Rows) (Camps, error) {
 // Insert one Camp in the database and returns the item with id filled.
 func (item Camp) Insert(tx DB) (out Camp, err error) {
 	row := tx.QueryRow(`INSERT INTO camps (
-		idtaux, nom, datedebut, duree, agrement, description, navette, places, ouvert, prix, optionprix, optionquotientfamilial
+		idtaux, nom, datedebut, duree, lieu, agrement, description, navette, places, agemin, agemax, ouvert, prix, optionprix, optionquotientfamilial, password
 		) VALUES (
-		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
+		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16
 		) RETURNING *;
-		`, item.IdTaux, item.Nom, item.DateDebut, item.Duree, item.Agrement, item.Description, item.Navette, item.Places, item.Ouvert, item.Prix, item.OptionPrix, item.OptionQuotientFamilial)
+		`, item.IdTaux, item.Nom, item.DateDebut, item.Duree, item.Lieu, item.Agrement, item.Description, item.Navette, item.Places, item.AgeMin, item.AgeMax, item.Ouvert, item.Prix, item.OptionPrix, item.OptionQuotientFamilial, item.Password)
 	return ScanCamp(row)
 }
 
 // Update Camp in the database and returns the new version.
 func (item Camp) Update(tx DB) (out Camp, err error) {
 	row := tx.QueryRow(`UPDATE camps SET (
-		idtaux, nom, datedebut, duree, agrement, description, navette, places, ouvert, prix, optionprix, optionquotientfamilial
+		idtaux, nom, datedebut, duree, lieu, agrement, description, navette, places, agemin, agemax, ouvert, prix, optionprix, optionquotientfamilial, password
 		) = (
-		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
-		) WHERE id = $13 RETURNING *;
-		`, item.IdTaux, item.Nom, item.DateDebut, item.Duree, item.Agrement, item.Description, item.Navette, item.Places, item.Ouvert, item.Prix, item.OptionPrix, item.OptionQuotientFamilial, item.Id)
+		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16
+		) WHERE id = $17 RETURNING *;
+		`, item.IdTaux, item.Nom, item.DateDebut, item.Duree, item.Lieu, item.Agrement, item.Description, item.Navette, item.Places, item.AgeMin, item.AgeMax, item.Ouvert, item.Prix, item.OptionPrix, item.OptionQuotientFamilial, item.Password, item.Id)
 	return ScanCamp(row)
 }
 

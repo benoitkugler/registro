@@ -45,14 +45,18 @@ func randCamp() Camp {
 	s.Nom = randstring()
 	s.DateDebut = randsha_Date()
 	s.Duree = randint()
+	s.Lieu = randstring()
 	s.Agrement = randstring()
 	s.Description = randstring()
 	s.Navette = randNavette()
 	s.Places = randint()
+	s.AgeMin = randint()
+	s.AgeMax = randint()
 	s.Ouvert = randbool()
 	s.Prix = randdos_Montant()
 	s.OptionPrix = randOptionPrixCamp()
 	s.OptionQuotientFamilial = randOptionQuotientFamilial()
+	s.Password = randstring()
 
 	return s
 }
