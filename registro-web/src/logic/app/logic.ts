@@ -23,13 +23,10 @@ class Controller extends AbstractAPI {
 
   protected handleError(error: any): void {
     let kind: string, messageHtml: string;
-    //   code = null;
     if (error.response) {
       // The request was made and the server responded with a status code
       // that falls out of the range of 2xx
       kind = `Erreur côté serveur`;
-      //   code = error.response.status;
-
       messageHtml = error.response.data.message;
       if (messageHtml) {
         messageHtml = "<i>" + messageHtml + "</i>";
@@ -76,7 +73,7 @@ export const controller = new Controller(
 
 export namespace Camps {
   export function year(camp: Camp) {
-    return new Date(camp.DateDebut).getFullYear();
+    return new Date(camp.DateDebut).getUTCFullYear();
   }
   export function dateFin(camp: Camp): Date_ {
     var date = new Date(camp.DateDebut);
@@ -85,6 +82,30 @@ export namespace Camps {
   }
   export function label(camp: Camp) {
     return `${camp.Nom} - ${year(camp)}`;
+  }
+
+  /** renvoie la couleur de la période du camp */
+  export function periodeColor(camp: Camp) {
+    const month = new Date(camp.DateDebut).getUTCMonth();
+    switch (month) {
+      case 7:
+      case 8: // Ete
+        return "rgba(45, 185, 187, 200)";
+      case 9:
+      case 10:
+      case 11: // Automne
+        return "rgba(170, 228, 62, 200)";
+      case 12:
+      case 1:
+      case 2:
+      case 3: // Hiver
+        return "rgba(173, 116, 30, 200)";
+      case 4:
+      case 5:
+      case 6:
+      default: // Printemps
+        return "rgba(203, 199, 193, 200)";
+    }
   }
 }
 
