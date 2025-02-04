@@ -7,8 +7,13 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    CampEdit: typeof import('./src/components/app/camps/CampEdit.vue')['default']
     CampHeaderRow: typeof import('./src/components/app/camps/CampHeaderRow.vue')['default']
     CampStats: typeof import('./src/components/app/camps/CampStats.vue')['default']
+    copy: typeof import('./src/components/shared/DateField copy.vue')['default']
+    DateField: typeof import('./src/components/shared/DateField.vue')['default']
+    IntField: typeof import('./src/components/shared/IntField.vue')['default']
+    MontantField: typeof import('./src/components/shared/MontantField.vue')['default']
     NavBar: typeof import('./src/components/app/NavBar.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']

@@ -1,4 +1,4 @@
-import { AbstractAPI } from "./api";
+import { AbstractAPI, type Camp, type Date_ } from "./api";
 import { devToken } from "./env";
 
 function arrayBufferToString(buffer: ArrayBuffer) {
@@ -73,3 +73,27 @@ export const controller = new Controller(
   isDev ? localhost : window.location.origin,
   isDev ? devToken : ""
 );
+
+export namespace Camps {
+  export function year(camp: Camp) {
+    return new Date(camp.DateDebut).getFullYear();
+  }
+  export function dateFin(camp: Camp): Date_ {
+    var date = new Date(camp.DateDebut);
+    date.setDate(date.getDate() + camp.Duree - 1);
+    return newDate_(date);
+  }
+  export function label(camp: Camp) {
+    return `${camp.Nom} - ${year(camp)}`;
+  }
+}
+
+export function copy<T>(v: T): T {
+  return JSON.parse(JSON.stringify(v));
+}
+
+export function newDate_(d: Date) {
+  const offset = d.getTimezoneOffset();
+  d = new Date(d.getTime() - offset * 60 * 1000);
+  return d.toISOString().split("T")[0] as Date_;
+}

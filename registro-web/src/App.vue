@@ -2,13 +2,8 @@
   <v-app>
     <v-main>
       <router-view />
-    </v-main>
-  </v-app>
 
-  <!-- <router-view v-if="isLoggedIn" />
-      <v-skeleton-loader v-else type="card"></v-skeleton-loader> -->
-
-  <!-- <v-snackbar
+      <v-snackbar
         style="z-index: 10000"
         app
         :model-value="message != ''"
@@ -30,9 +25,31 @@
       >
         <b>{{ errorKind }}</b>
         <div v-html="errorHtml"></div>
-      </v-snackbar> -->
+      </v-snackbar>
+    </v-main>
+  </v-app>
+
+  <!-- <router-view v-if="isLoggedIn" />
+      <v-skeleton-loader v-else type="card"></v-skeleton-loader> -->
 </template>
 
 <script lang="ts" setup>
-//
+import { ref } from "vue";
+import { controller } from "./logic/app/logic";
+
+const message = ref("");
+const messageColor = ref("secondary");
+
+const errorKind = ref("");
+const errorHtml = ref("");
+
+controller.onError = (s, m) => {
+  errorKind.value = s;
+  errorHtml.value = m;
+};
+
+controller.showMessage = (s, color) => {
+  message.value = s;
+  messageColor.value = color || "success";
+};
 </script>

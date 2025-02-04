@@ -22,14 +22,18 @@ export interface Camp {
   Nom: string;
   DateDebut: Date;
   Duree: Int;
+  Lieu: string;
   Agrement: string;
   Description: string;
   Navette: Navette;
   Places: Int;
+  AgeMin: Int;
+  AgeMax: Int;
   Ouvert: boolean;
   Prix: Montant;
   OptionPrix: OptionPrixCamp;
   OptionQuotientFamilial: OptionQuotientFamilial;
+  Password: string;
 }
 // registro/sql/camps.IdCamp
 export type IdCamp = Int;
@@ -95,14 +99,12 @@ export interface StatistiquesInscrits {
 export const Currency = {
   Euros: 0,
   FrancsSuisse: 1,
-  nbCurrencies: 2,
 } as const;
 export type Currency = (typeof Currency)[keyof typeof Currency];
 
 export const CurrencyLabels: { [key in Currency]: string } = {
-  [Currency.Euros]: "",
-  [Currency.FrancsSuisse]: "",
-  [Currency.nbCurrencies]: "",
+  [Currency.Euros]: "€",
+  [Currency.FrancsSuisse]: "CHF",
 };
 
 // registro/sql/dossiers.IdTaux
