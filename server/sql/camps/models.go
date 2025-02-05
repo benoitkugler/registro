@@ -56,6 +56,32 @@ func (cp *Camp) DateFin() shared.Date {
 	return shared.Plage{From: cp.DateDebut, Duree: cp.Duree}.To()
 }
 
+// IsTerminated renvoie `true` si le camp est
+// passé d'au moins 45 jours.
+// Un camp sans date de fin est considéré comme terminé.
+func (cp *Camp) IsTerminated() bool {
+	const deltaTerminated = 45 * 24 * time.Hour
+	dateFin := cp.DateFin().Time()
+	if dateFin.IsZero() {
+		return true
+	}
+	return time.Now().After(dateFin.Add(deltaTerminated))
+}
+
+// AgeDebutCamp renvoie l'âge qu'aura une personne née le 'dateNaissance' au premier jour
+// du séjour.
+func (cp *Camp) AgeDebutCamp(dateNaissance Date) int { return dateNaissance.Age(cp.DateDebut) }
+
+// IsAgeValide renvoie le statut correspondant aux âges min et max du séjour
+func (cp *Camp) IsAgeValide(dateNaissance Date) (min, max bool) {
+	age := c.AgeDebutCamp(personne)
+
+	// isMaxValide 
+	max := age <= c.AgeMax 
+	min := age >= c.AgeMin
+	return min, max
+}
+
 // Check assure la validité de divers champs.
 func (c *Camp) Check() error {
 	if c.Duree < 1 {
@@ -67,7 +93,7 @@ func (c *Camp) Check() error {
 	if c.Places < 1 {
 		return errors.New("invalid Places")
 	}
-	if c.AgeMin < 1 {
+	if c.AgeMin < 0 {
 		return errors.New("invalid AgeMin")
 	}
 	if c.AgeMax < 1 || c.AgeMax < c.AgeMin {

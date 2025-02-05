@@ -54,6 +54,32 @@ func (d Date) String() string {
 	return fmt.Sprintf("%02d/%02d/%04d", da.Day(), da.Month(), da.Year())
 }
 
+// avant renvoie true si le jour et le mois de 'd1' sont avant (au sens large) le jour et le mois de 'd2'.
+func avant(d1, d2 time.Time) bool {
+	if d1.Month() < d2.Month() {
+		return true
+	}
+	if d1.Month() > d2.Month() {
+		return false
+	}
+	return d1.Day() <= d2.Day()
+}
+
+// CalculeAge renvoie l'âge qu'aura une personne au jour `now`
+func (d Date) Age(now Date) int {
+	dt, nowt := d.Time(), now.Time()
+	if dt.IsZero() {
+		return 0
+	}
+
+	years := nowt.Year() - dt.Year()
+	if avant(dt, nowt) {
+		return years
+	}
+	return years - 1
+}
+
+
 var weekDays = [...]string{
 	"Dim",
 	"Lun",
