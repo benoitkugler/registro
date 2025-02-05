@@ -42,7 +42,7 @@
     </v-dialog>
 
     <v-responsive class="align-center fill-height mx-auto">
-      <v-card title="Camps" :subtitle="camps.length" class="ma-1">
+      <v-card title="Camps" :subtitle="campsData.size" class="ma-1">
         <template v-slot:append>
           <v-menu>
             <template v-slot:activator="{ props }">
@@ -73,9 +73,13 @@
             :key="index"
             :camp="camp"
             @edit="toEdit = camp.Camp"
+            @edit-taux="/** TODO */"
           ></CampHeaderRow>
 
-          <v-pagination :length="pagesCount"></v-pagination>
+          <v-pagination
+            :length="pagesCount"
+            v-model="currentPage"
+          ></v-pagination>
         </v-card-text>
       </v-card>
     </v-responsive>
@@ -93,7 +97,19 @@ const campsData = reactive(new Map<IdCamp, CampHeader>());
 const isLoading = ref(false);
 
 // with sort and filter
-const camps = computed(() => Array.from(campsData.values()));
+const camps = computed(() => {
+  const out = Array.from(campsData.values());
+  // most recent first
+  out.sort(
+    (a, b) =>
+      new Date(b.Camp.DateDebut).valueOf() -
+      new Date(a.Camp.DateDebut).valueOf()
+  );
+  return out.slice(
+    (currentPage.value - 1) * pageSize,
+    currentPage.value * pageSize
+  );
+});
 
 async function fetchCamps() {
   isLoading.value = true;
@@ -115,8 +131,9 @@ async function create() {
   toEdit.value = res.Camp;
 }
 
-const pageSize = 12;
-const pagesCount = computed(() => Math.ceil(camps.value.length / pageSize));
+const pageSize = 16;
+const pagesCount = computed(() => Math.ceil(campsData.size / pageSize));
+const currentPage = ref(1); // 1-based
 
 const toEdit = ref<Camp | null>(null);
 async function updateCamp(camp: Camp) {

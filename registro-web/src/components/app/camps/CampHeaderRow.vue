@@ -18,7 +18,11 @@
     </v-card>
   </v-dialog>
 
-  <v-row :style="{ 'background-color': periodeColor }" class="rounded my-1">
+  <v-row
+    :style="{ 'background-color': periodeColor }"
+    class="rounded my-1 pa-1"
+    no-gutters
+  >
     <v-col>
       <v-list-item
         :title="$props.camp.Camp.Nom"
@@ -56,7 +60,8 @@
         <template v-slot:activator="{ props }">
           <v-btn
             v-bind="props"
-            size="small"
+            size="x-small"
+            class="mx-1"
             flat
             icon="mdi-dots-vertical"
           ></v-btn>
@@ -65,6 +70,14 @@
           <v-list-item prepend-icon="mdi-pencil" @click="emit('edit')"
             >Modifier</v-list-item
           >
+
+          <v-list-item
+            prepend-icon="mdi-currency-eur"
+            @click="emit('edit-taux')"
+            >Taux de conversion</v-list-item
+          >
+
+          <v-divider thickness="1"></v-divider>
           <v-list-item
             prepend-icon="mdi-delete"
             :disabled="$props.camp.Stats.Inscriptions > 0"
@@ -87,6 +100,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: "edit"): void;
+  (e: "edit-taux"): void;
 }>();
 
 const allAttente = computed(
@@ -105,7 +119,7 @@ const periodeColor = computed(() => {
     case 9:
     case 10:
     case 11: // Automne
-      return "rgb(173, 116, 30)";
+      return "rgb(190, 150, 60)";
     case 12:
     case 1:
     case 2:
@@ -115,7 +129,7 @@ const periodeColor = computed(() => {
     case 5:
     case 6:
     default: // Printemps
-      return "rgb(170, 228, 62)";
+      return "rgb(190, 228, 100)";
   }
 });
 </script>
