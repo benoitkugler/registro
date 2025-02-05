@@ -38,11 +38,11 @@ func NewFile(fileContent []byte, filename string) File {
 //   - les documents connus en avances (doc. équipiers, vaccins)
 //   - des documents spécifiques à chaque camp et pouvant donc varier
 //
-// L'attribut 'Categorie' permet d'identifier des contraintes universelles
+// L'attribut 'Categorie' permet d'identifier des contraintes universelles.
 //
-// gomacro:SQL ADD CONSTRAINT constraint_1 CHECK(Categorie = 0 OR IdDirecteur IS NULL)
-// gomacro:SQL ADD CONSTRAINT constraint_2 CHECK(Categorie <> 0 OR IdDirecteur IS NOT NULL)
-// gomacro:SQL ADD CONSTRAINT constraint_3 CHECK(MaxDocs >= 1)
+// Cas invalide : Categorie != 0 && IdDirecteur != nil
+// gomacro:SQL ADD CONSTRAINT constraint_categorie CHECK(Categorie = 0 OR IdDirecteur IS NULL)
+// gomacro:SQL ADD CONSTRAINT constraint_maxdocs CHECK(MaxDocs >= 1)
 // gomacro:SQL CREATE UNIQUE INDEX ON Demande(Categorie) WHERE Categorie <> 0
 type Demande struct {
 	Id IdDemande
@@ -51,6 +51,7 @@ type Demande struct {
 	IdFile OptIdFile `gomacro-sql-foreign:"File"`
 
 	// Pour les demandes 'custom', le directeur proprietaire de la contrainte
+	// ou vide pour indiquer une contrainte commune à tous les séjours
 	IdDirecteur OptIdPersonne `gomacro-sql-on-delete:"CASCADE" gomacro-sql-foreign:"Personne"`
 
 	Categorie Categorie
@@ -66,7 +67,6 @@ type Demande struct {
 	// une alerte est donnée pour les documents périmés
 	JoursValide int
 }
-
 
 // DemandeEquipier représente un document demandé à un équpier
 //

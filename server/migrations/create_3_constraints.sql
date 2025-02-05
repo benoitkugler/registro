@@ -142,13 +142,10 @@ ALTER TABLE groupes
     ADD CONSTRAINT Plage_gomacro CHECK (gomacro_validate_json_shar_Plage (Plage));
 
 ALTER TABLE demandes
-    ADD CONSTRAINT constraint_1 CHECK (Categorie = 0 OR IdDirecteur IS NULL);
+    ADD CONSTRAINT constraint_categorie CHECK (Categorie = 0 OR IdDirecteur IS NULL);
 
 ALTER TABLE demandes
-    ADD CONSTRAINT constraint_2 CHECK (Categorie <> 0 OR IdDirecteur IS NOT NULL);
-
-ALTER TABLE demandes
-    ADD CONSTRAINT constraint_3 CHECK (MaxDocs >= 1);
+    ADD CONSTRAINT constraint_maxdocs CHECK (MaxDocs >= 1);
 
 CREATE UNIQUE INDEX ON demandes (Categorie)
 WHERE
