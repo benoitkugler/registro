@@ -20,6 +20,7 @@
         label="Taux"
         :items="items"
         v-model="selected"
+        @update:model-value="onSelect"
         :disabled="modelValue.Id <= 0"
       ></v-select>
     </v-col>
@@ -71,7 +72,6 @@ import {
   type Taux,
 } from "@/logic/app/api";
 import { controller, copy, mapFromObject, round } from "@/logic/app/logic";
-const props = defineProps<{}>();
 
 onMounted(fetch);
 
@@ -92,7 +92,11 @@ async function fetch() {
   const res = await controller.CampsGetTaux();
   if (res === undefined) return;
   tauxMap.value = mapFromObject(res);
-  onSwitch(modelValue.value.Id > 0);
+
+  if (modelValue.value.Id > 0) {
+    modelValue.value = copy(tauxMap.value.get(modelValue.value.Id)!);
+    selected.value = modelValue.value.Id;
+  }
 }
 
 function onSwitch(useExistant: boolean | null) {
@@ -106,6 +110,10 @@ function onSwitch(useExistant: boolean | null) {
     modelValue.value.Id = 0 as Int;
     modelValue.value.Label = "";
   }
+}
+
+function onSelect(id: IdTaux) {
+  modelValue.value = copy(tauxMap.value.get(id)!);
 }
 
 const labelError = computed(() => {

@@ -7,6 +7,12 @@
 INSERT INTO tauxs
     VALUES (1, 'Euros seulement (par défaut)', 1000, 0);
 
+SELECT
+    setval('tauxs_id_seq', (
+            SELECT
+                max(id)
+            FROM tauxs));
+
 -- Builtin Demandes
 INSERT INTO demandes (Categorie, Description, MaxDocs, JoursValide)
     VALUES
@@ -38,4 +44,10 @@ INSERT INTO demandes (Categorie, Description, MaxDocs, JoursValide)
         (13, 'Certificat de scolarité', 1, 0),
         --
         (14, 'Autre', 1, 0);
+
+SELECT
+    setval('demandes_id_seq', (
+            SELECT
+                max(id)
+            FROM demandes));
 

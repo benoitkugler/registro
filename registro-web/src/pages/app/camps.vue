@@ -12,6 +12,28 @@
       ></CampEdit>
     </v-dialog>
 
+    <v-dialog
+      :model-value="toEditTaux != null"
+      @update:model-value="toEditTaux = null"
+      max-width="600"
+    >
+      <v-card
+        v-if="toEditTaux != null"
+        title="Modifier le taux"
+        subtitle="La modification n'est possible que si aucun participant n'est enregistré."
+      >
+        <v-card-text>
+          <TauxSelect v-model="toEditTaux.Taux"></TauxSelect>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn :disabled="toEditTaux.Stats.Inscriptions > 0" @click="setTaux"
+            >Modifier</v-btn
+          >
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <v-dialog v-model="showCreateMany" max-width="600">
       <v-card
         title="Créer plusieurs camps"
@@ -73,7 +95,7 @@
             :key="index"
             :camp="camp"
             @edit="toEdit = camp.Camp"
-            @edit-taux="/** TODO */"
+            @edit-taux="toEditTaux = camp"
           ></CampHeaderRow>
 
           <v-pagination
@@ -144,6 +166,22 @@ async function updateCamp(camp: Camp) {
   if (res === undefined) return;
   controller.showMessage("Camp modifié avec succès.");
   campsData.get(res.Id)!.Camp = res;
+}
+
+const toEditTaux = ref<CampHeader | null>(null);
+async function setTaux() {
+  const val = toEditTaux.value;
+  if (val == null) return;
+  toEditTaux.value = null;
+  isLoading.value = true;
+  const res = await controller.CampsSetTaux({
+    IdCamp: val.Camp.Id,
+    Taux: val.Taux,
+  });
+  isLoading.value = false;
+  if (res === undefined) return;
+  controller.showMessage("Taux modifié avec succès.");
+  campsData.set(res.Camp.Id, res);
 }
 
 const showCreateMany = ref(false);
