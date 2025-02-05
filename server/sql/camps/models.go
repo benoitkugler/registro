@@ -9,7 +9,7 @@ import (
 
 	"registro/sql/dossiers"
 	pr "registro/sql/personnes"
-	"registro/sql/shared"
+	sh "registro/sql/shared"
 )
 
 type (
@@ -33,7 +33,7 @@ type Camp struct {
 	IdTaux dossiers.IdTaux
 
 	Nom         string
-	DateDebut   shared.Date
+	DateDebut   sh.Date
 	Duree       int // nombre de jours date et fin inclus
 	Lieu        string
 	Agrement    string
@@ -52,8 +52,8 @@ type Camp struct {
 	Password string
 }
 
-func (cp *Camp) DateFin() shared.Date {
-	return shared.Plage{From: cp.DateDebut, Duree: cp.Duree}.To()
+func (cp *Camp) DateFin() sh.Date {
+	return sh.Plage{From: cp.DateDebut, Duree: cp.Duree}.To()
 }
 
 // IsTerminated renvoie `true` si le camp est
@@ -70,15 +70,13 @@ func (cp *Camp) IsTerminated() bool {
 
 // AgeDebutCamp renvoie l'âge qu'aura une personne née le 'dateNaissance' au premier jour
 // du séjour.
-func (cp *Camp) AgeDebutCamp(dateNaissance Date) int { return dateNaissance.Age(cp.DateDebut) }
+func (cp *Camp) AgeDebutCamp(dateNaissance sh.Date) int { return dateNaissance.Age(cp.DateDebut) }
 
 // IsAgeValide renvoie le statut correspondant aux âges min et max du séjour
-func (cp *Camp) IsAgeValide(dateNaissance Date) (min, max bool) {
-	age := c.AgeDebutCamp(personne)
-
-	// isMaxValide 
-	max := age <= c.AgeMax 
-	min := age >= c.AgeMin
+func (cp *Camp) IsAgeValide(dateNaissance sh.Date) (min, max bool) {
+	age := cp.AgeDebutCamp(dateNaissance)
+	min = age >= cp.AgeMin
+	max = age <= cp.AgeMax
 	return min, max
 }
 
@@ -173,7 +171,7 @@ type Groupe struct {
 	// un nom vide indique un groupe par défaut
 	Nom string
 	// indication: ignorée forcément pour un groupe par défaut
-	Plage shared.Plage
+	Plage sh.Plage
 	// Hex color, optionnelle
 	Couleur string
 }
