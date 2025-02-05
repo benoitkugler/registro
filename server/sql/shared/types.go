@@ -79,7 +79,6 @@ func (d Date) Age(now Date) int {
 	return years - 1
 }
 
-
 var weekDays = [...]string{
 	"Dim",
 	"Lun",
@@ -90,7 +89,7 @@ var weekDays = [...]string{
 	"Sam",
 }
 
-// ShortString renvoie la date au format mer 2
+// ShortString renvoie la date au format Mer 2
 func (d Date) ShortString() string {
 	t := d.Time()
 	return fmt.Sprintf("%s %d", weekDays[t.Weekday()], t.Day())
