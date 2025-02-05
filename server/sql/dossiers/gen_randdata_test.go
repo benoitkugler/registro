@@ -82,6 +82,7 @@ func randSlicestring() []string {
 func randTaux() Taux {
 	var s Taux
 	s.Id = randIdTaux()
+	s.Label = randstring()
 	s.Euros = randint()
 	s.FrancsSuisse = randint()
 

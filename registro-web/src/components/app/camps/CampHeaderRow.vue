@@ -27,10 +27,10 @@
       </v-list-item>
     </v-col>
     <v-col cols="2" align-self="center">
-      <v-tooltip content-class="px-1" width="600">
+      <v-menu width="600" location="left">
         <template v-slot:activator="{ props: innerProps }">
           <v-progress-linear
-            class="bg-white"
+            class="bg-white border-md border-primary"
             v-bind="innerProps"
             :max="$props.camp.Camp.Places"
             :model-value="$props.camp.Stats.Valides"
@@ -49,7 +49,7 @@
           >
         </template>
         <CampStats :stats="$props.camp.Stats"></CampStats>
-      </v-tooltip>
+      </v-menu>
     </v-col>
     <v-col cols="auto" align-self="center">
       <v-menu>
@@ -98,8 +98,6 @@ const showDelete = ref(false);
 /** renvoie la couleur de la période du camp */
 const periodeColor = computed(() => {
   const month = new Date(props.camp.Camp.DateDebut).getUTCMonth() + 1;
-  console.log(month);
-
   switch (month) {
     case 7:
     case 8: // Ete

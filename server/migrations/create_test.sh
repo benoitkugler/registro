@@ -5,9 +5,9 @@ echo "Reset database <test>..." &&
 dropdb test && 
 createdb test && 
 echo "Setup tables..." && 
-psql test < create_1_tables.sql &&
-psql test < create_2_json_funcs.sql &&
-psql test < create_3_constraints.sql &&
+psql -v ON_ERROR_STOP=1 test < create_1_tables.sql &&
+psql -v ON_ERROR_STOP=1 test < create_2_json_funcs.sql &&
+psql -v ON_ERROR_STOP=1 test < create_3_constraints.sql &&
 echo "Add predeclared items..." &&
-psql test < init.sql &&
+psql -v ON_ERROR_STOP=1 test < init.sql &&
 echo "Done."

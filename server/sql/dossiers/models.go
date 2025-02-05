@@ -23,8 +23,12 @@ type (
 // même table.
 // Un camp sans [Taux] équivaut à la table {1000, 0}, c'est à dire
 // avec un support pour les Euros seulement
+//
+// gomacro:SQL ADD UNIQUE(Label)
 type Taux struct {
 	Id IdTaux
+
+	Label string
 
 	// 1[Monnaie]  = [Field] / 1000 €
 

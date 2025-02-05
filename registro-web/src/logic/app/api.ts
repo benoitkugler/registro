@@ -15,6 +15,16 @@ export interface CampHeader {
   Taux: Taux;
   Stats: StatistiquesInscrits;
 }
+// registro/controllers/central.CampsCreateManyIn
+export interface CampsCreateManyIn {
+  Taux: Taux;
+  Count: Int;
+}
+// registro/controllers/central.CampsSetTauxIn
+export interface CampsSetTauxIn {
+  IdCamp: IdCamp;
+  Taux: Taux;
+}
 // registro/sql/camps.Camp
 export interface Camp {
   Id: IdCamp;
@@ -117,9 +127,12 @@ export interface Montant {
 // registro/sql/dossiers.Taux
 export interface Taux {
   Id: IdTaux;
+  Label: string;
   Euros: Int;
   FrancsSuisse: Int;
 }
+// registro/sql/dossiers.Tauxs
+export type Tauxs = { [key in IdTaux]: Taux } | null;
 // registro/sql/shared.Date
 export type Date = Date_;
 // registro/sql/shared.Plage
@@ -183,6 +196,27 @@ export abstract class AbstractAPI {
     }
   }
 
+  protected async rawCampsCreateMany(params: CampsCreateManyIn) {
+    const fullUrl = this.baseUrl + "/api/v1/app/camps-many";
+    const rep: AxiosResponse<CampHeader[] | null> = await Axios.put(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() },
+    );
+    return rep.data;
+  }
+
+  /** CampsCreateMany wraps rawCampsCreateMany and handles the error */
+  async CampsCreateMany(params: CampsCreateManyIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawCampsCreateMany(params);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
   protected async rawCampsUpdate(params: Camp) {
     const fullUrl = this.baseUrl + "/api/v1/app/camps";
     const rep: AxiosResponse<Camp> = await Axios.post(fullUrl, params, {
@@ -213,6 +247,44 @@ export abstract class AbstractAPI {
     this.startRequest();
     try {
       const out = await this.rawCampsDelete();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected async rawCampsGetTaux() {
+    const fullUrl = this.baseUrl + "/api/v1/app/camps-taux";
+    const rep: AxiosResponse<Tauxs> = await Axios.get(fullUrl, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** CampsGetTaux wraps rawCampsGetTaux and handles the error */
+  async CampsGetTaux() {
+    this.startRequest();
+    try {
+      const out = await this.rawCampsGetTaux();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected async rawCampsSetTaux(params: CampsSetTauxIn) {
+    const fullUrl = this.baseUrl + "/api/v1/app/camps-taux";
+    const rep: AxiosResponse<CampHeader> = await Axios.post(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** CampsSetTaux wraps rawCampsSetTaux and handles the error */
+  async CampsSetTaux(params: CampsSetTauxIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawCampsSetTaux(params);
       return out;
     } catch (error) {
       this.handleError(error);

@@ -29,11 +29,15 @@ CREATE TABLE paiements (
 
 CREATE TABLE tauxs (
     Id serial PRIMARY KEY,
+    Label text NOT NULL,
     Euros integer NOT NULL,
     FrancsSuisse integer NOT NULL
 );
 
 -- constraints
+ALTER TABLE tauxs
+    ADD UNIQUE (Label);
+
 ALTER TABLE dossiers
     ADD UNIQUE (Id, IdTaux);
 

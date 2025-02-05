@@ -69,6 +69,7 @@ CREATE TABLE paiements (
 
 CREATE TABLE tauxs (
     Id serial PRIMARY KEY,
+    Label text NOT NULL,
     Euros integer NOT NULL,
     FrancsSuisse integer NOT NULL
 );

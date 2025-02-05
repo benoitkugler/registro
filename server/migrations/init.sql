@@ -1,10 +1,11 @@
 --
--- Script to be run after the DB creation
+-- Script to be run after the DB creation (mandatory, assumed by the server code)
+--
 --
 -- Default Taux
 
 INSERT INTO tauxs
-    VALUES (1, 1000, 0);
+    VALUES (1, 'Euros seulement (par défaut)', 1000, 0);
 
 -- Builtin Demandes
 INSERT INTO demandes (Categorie, Description, MaxDocs, JoursValide)

@@ -2,6 +2,7 @@ package central
 
 import (
 	"database/sql"
+	"errors"
 	"log"
 	"time"
 
@@ -14,6 +15,18 @@ import (
 
 	"github.com/labstack/echo/v4"
 )
+
+func (ct *Controller) CampsGetTaux(c echo.Context) error {
+	out, err := ct.loadTaux()
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) loadTaux() (ds.Tauxs, error) {
+	return ds.SelectAllTauxs(ct.db)
+}
 
 type CampHeader struct {
 	Camp  cp.Camp
@@ -56,6 +69,52 @@ func (ct *Controller) loadCamps() ([]CampHeader, error) {
 	return out, nil
 }
 
+func ensureTaux(tx *sql.Tx, taux ds.Taux) (ds.Taux, error) {
+	if taux.Id <= 0 { // create a new Taux
+		return taux.Insert(tx)
+	} // else, simply use the Id
+	return taux, nil
+}
+
+type CampsCreateManyIn struct {
+	// If Taux has an [Id] <= 0, it is created first,
+	// Otherwise, only its [Id] is used.
+	Taux ds.Taux
+	// Count is the number of Camp to create
+	Count int
+}
+
+func (ct *Controller) CampsCreateMany(c echo.Context) error {
+	var args CampsCreateManyIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+	out, err := ct.createManyCamp(args)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) createManyCamp(args CampsCreateManyIn) (out []CampHeader, _ error) {
+	err := utils.InTx(ct.db, func(tx *sql.Tx) error {
+		var err error
+		args.Taux, err = ensureTaux(tx, args.Taux)
+		if err != nil {
+			return err
+		}
+		for i := 0; i < args.Count; i++ {
+			camp, err := defaultCamp(args.Taux.Id).Insert(tx)
+			if err != nil {
+				return err
+			}
+			out = append(out, CampHeader{camp, args.Taux, cp.StatistiquesInscrits{}})
+		}
+		return nil
+	})
+	return out, err
+}
+
 func (ct *Controller) CampsCreate(c echo.Context) error {
 	out, err := ct.createCamp()
 	if err != nil {
@@ -64,15 +123,18 @@ func (ct *Controller) CampsCreate(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) createCamp() (CampHeader, error) {
-	// TODO: better taux handling
-	const defaultTaux = ds.IdTaux(1)
-	camp, err := cp.Camp{
-		IdTaux:    defaultTaux,
+func defaultCamp(idTaux ds.IdTaux) cp.Camp {
+	return cp.Camp{
+		IdTaux:    idTaux,
 		Nom:       "Nouveau séjour",
 		DateDebut: shared.NewDateFrom(time.Now()), Duree: 1,
 		Places: 40, AgeMin: 6, AgeMax: 12,
-	}.Insert(ct.db)
+	}
+}
+
+func (ct *Controller) createCamp() (CampHeader, error) {
+	const defaultTaux = ds.IdTaux(1) // always present in the DB, by construction
+	camp, err := defaultCamp(defaultTaux).Insert(ct.db)
 	if err != nil {
 		return CampHeader{}, utils.SQLError(err)
 	}
@@ -124,6 +186,57 @@ func (ct *Controller) updateCamp(args cp.Camp) (cp.Camp, error) {
 	}
 
 	return camp, nil
+}
+
+type CampsSetTauxIn struct {
+	IdCamp cp.IdCamp
+	// If Taux has an [Id] <= 0, it is created first,
+	// Otherwise, only its [Id] is used.
+	Taux ds.Taux
+}
+
+// CampsSetTaux permet à l'utilisateur de changer le Taux
+// utilisé par un séjour donné, à condition qu'il n'y ait
+// pas encore de participants.
+func (ct *Controller) CampsSetTaux(c echo.Context) error {
+	var args CampsSetTauxIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+	out, err := ct.setTaux(args)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) setTaux(args CampsSetTauxIn) (out CampHeader, _ error) {
+	err := utils.InTx(ct.db, func(tx *sql.Tx) error {
+		participants, err := cp.SelectParticipantsByIdCamps(tx, args.IdCamp)
+		if err != nil {
+			return err
+		}
+		if len(participants) > 0 {
+			return errors.New("des participants sont déjà déclarés")
+		}
+
+		args.Taux, err = ensureTaux(tx, args.Taux)
+		if err != nil {
+			return err
+		}
+		camp, err := cp.SelectCamp(tx, args.IdCamp)
+		if err != nil {
+			return err
+		}
+		camp.IdTaux = args.Taux.Id
+		camp, err = camp.Update(tx)
+		if err != nil {
+			return err
+		}
+		out = CampHeader{camp, args.Taux, cp.StatistiquesInscrits{}} // no participants
+		return nil
+	})
+	return out, err
 }
 
 // CampsDelete supprime un camp SANS participants ni équipiers,

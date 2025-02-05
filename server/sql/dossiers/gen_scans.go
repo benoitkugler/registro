@@ -392,6 +392,7 @@ func scanOneTaux(row scanner) (Taux, error) {
 	var item Taux
 	err := row.Scan(
 		&item.Id,
+		&item.Label,
 		&item.Euros,
 		&item.FrancsSuisse,
 	)
@@ -462,22 +463,22 @@ func ScanTauxs(rs *sql.Rows) (Tauxs, error) {
 // Insert one Taux in the database and returns the item with id filled.
 func (item Taux) Insert(tx DB) (out Taux, err error) {
 	row := tx.QueryRow(`INSERT INTO tauxs (
-		euros, francssuisse
+		label, euros, francssuisse
 		) VALUES (
-		$1, $2
+		$1, $2, $3
 		) RETURNING *;
-		`, item.Euros, item.FrancsSuisse)
+		`, item.Label, item.Euros, item.FrancsSuisse)
 	return ScanTaux(row)
 }
 
 // Update Taux in the database and returns the new version.
 func (item Taux) Update(tx DB) (out Taux, err error) {
 	row := tx.QueryRow(`UPDATE tauxs SET (
-		euros, francssuisse
+		label, euros, francssuisse
 		) = (
-		$1, $2
-		) WHERE id = $3 RETURNING *;
-		`, item.Euros, item.FrancsSuisse, item.Id)
+		$1, $2, $3
+		) WHERE id = $4 RETURNING *;
+		`, item.Label, item.Euros, item.FrancsSuisse, item.Id)
 	return ScanTaux(row)
 }
 
@@ -494,6 +495,16 @@ func DeleteTauxsByIDs(tx DB, ids ...IdTaux) ([]IdTaux, error) {
 		return nil, err
 	}
 	return ScanIdTauxArray(rows)
+}
+
+// SelectTauxByLabel return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectTauxByLabel(tx DB, label string) (item Taux, found bool, err error) {
+	row := tx.QueryRow("SELECT * FROM tauxs WHERE Label = $1", label)
+	item, err = ScanTaux(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
 }
 
 func loadJSON(out interface{}, src interface{}) error {

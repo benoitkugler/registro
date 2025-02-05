@@ -15,6 +15,9 @@ ALTER TABLE fichesanitaires
 ALTER TABLE fichesanitaires
     ADD CONSTRAINT Medecin_gomacro CHECK (gomacro_validate_json_pers_Medecin (Medecin));
 
+ALTER TABLE tauxs
+    ADD UNIQUE (Label);
+
 ALTER TABLE dossiers
     ADD UNIQUE (Id, IdTaux);
 

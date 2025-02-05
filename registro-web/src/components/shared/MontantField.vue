@@ -8,7 +8,13 @@
         :label="$props.label"
         type="number"
         :model-value="modelValue.Cent / 100"
-        @update:model-value="(v) => (modelValue = {Cent: Math.round(Number(v) * 100) as Int, Currency:modelValue.Currency})"
+        @update:model-value="
+          (v) =>
+            (modelValue = {
+              Cent: round(Number(v) * 100),
+              Currency: modelValue.Currency,
+            })
+        "
       >
       </v-text-field>
     </v-col>
@@ -34,6 +40,7 @@ import {
   type Int,
   type Montant,
 } from "@/logic/app/api";
+import { round } from "@/logic/app/logic";
 const props = defineProps<{
   label: string;
   hideDetails?: boolean;
