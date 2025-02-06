@@ -56,15 +56,11 @@ func (cp *Camp) DateFin() sh.Date {
 	return sh.Plage{From: cp.DateDebut, Duree: cp.Duree}.To()
 }
 
-// IsTerminated renvoie `true` si le camp est
+// isTerminated renvoie `true` si le camp est
 // passé d'au moins 45 jours.
-// Un camp sans date de fin est considéré comme terminé.
-func (cp *Camp) IsTerminated() bool {
+func (cp *Camp) isTerminated() bool {
 	const deltaTerminated = 45 * 24 * time.Hour
 	dateFin := cp.DateFin().Time()
-	if dateFin.IsZero() {
-		return true
-	}
 	return time.Now().After(dateFin.Add(deltaTerminated))
 }
 

@@ -29,7 +29,7 @@ func (ct *Controller) loadTaux() (ds.Tauxs, error) {
 }
 
 type CampHeader struct {
-	Camp  cp.Camp
+	Camp  cp.CampExt
 	Taux  ds.Taux
 	Stats cp.StatistiquesInscrits
 }
@@ -64,7 +64,7 @@ func (ct *Controller) loadCamps() ([]CampHeader, error) {
 	out := make([]CampHeader, 0, len(camps))
 	for _, camp := range camps {
 		loader := cp.CampLoader{Camp: &camp, Participants: byCamp[camp.Id], Personnes: personnes}
-		out = append(out, CampHeader{camp, taux[camp.IdTaux], loader.Stats()})
+		out = append(out, CampHeader{camp.Ext(), taux[camp.IdTaux], loader.Stats()})
 	}
 	return out, nil
 }
@@ -108,7 +108,7 @@ func (ct *Controller) createManyCamp(args CampsCreateManyIn) (out []CampHeader, 
 			if err != nil {
 				return err
 			}
-			out = append(out, CampHeader{camp, args.Taux, cp.StatistiquesInscrits{}})
+			out = append(out, CampHeader{camp.Ext(), args.Taux, cp.StatistiquesInscrits{}})
 		}
 		return nil
 	})
@@ -142,7 +142,7 @@ func (ct *Controller) createCamp() (CampHeader, error) {
 	if err != nil {
 		return CampHeader{}, utils.SQLError(err)
 	}
-	return CampHeader{camp, taux, cp.StatistiquesInscrits{}}, nil
+	return CampHeader{camp.Ext(), taux, cp.StatistiquesInscrits{}}, nil
 }
 
 func (ct *Controller) CampsUpdate(c echo.Context) error {
@@ -157,13 +157,13 @@ func (ct *Controller) CampsUpdate(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) updateCamp(args cp.Camp) (cp.Camp, error) {
+func (ct *Controller) updateCamp(args cp.Camp) (cp.CampExt, error) {
 	camp, err := cp.SelectCamp(ct.db, args.Id)
 	if err != nil {
-		return cp.Camp{}, utils.SQLError(err)
+		return cp.CampExt{}, utils.SQLError(err)
 	}
 	if err = args.Check(); err != nil {
-		return cp.Camp{}, err
+		return cp.CampExt{}, err
 	}
 	camp.Nom = args.Nom
 	camp.DateDebut = args.DateDebut
@@ -182,10 +182,10 @@ func (ct *Controller) updateCamp(args cp.Camp) (cp.Camp, error) {
 	camp.Password = args.Password
 	camp, err = camp.Update(ct.db)
 	if err != nil {
-		return cp.Camp{}, utils.SQLError(err)
+		return cp.CampExt{}, utils.SQLError(err)
 	}
 
-	return camp, nil
+	return camp.Ext(), nil
 }
 
 type CampsSetTauxIn struct {
@@ -233,7 +233,7 @@ func (ct *Controller) setTaux(args CampsSetTauxIn) (out CampHeader, _ error) {
 		if err != nil {
 			return err
 		}
-		out = CampHeader{camp, args.Taux, cp.StatistiquesInscrits{}} // no participants
+		out = CampHeader{camp.Ext(), args.Taux, cp.StatistiquesInscrits{}} // no participants
 		return nil
 	})
 	return out, err

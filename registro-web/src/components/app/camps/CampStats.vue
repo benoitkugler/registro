@@ -3,48 +3,42 @@
     <v-card-text>
       <v-row>
         <v-col cols="5">
-          Demandes d'inscriptions : {{ $props.stats.Inscriptions }}
+          Demandes d'inscriptions : {{ props.stats.Inscriptions }}
         </v-col>
         <v-col class="text-right">
-          Dont Filles : {{ $props.stats.InscriptionsFilles }}
+          Dont Filles : {{ props.stats.InscriptionsFilles }}
           {{
-            pourcentS(
-              $props.stats.InscriptionsFilles,
-              $props.stats.Inscriptions
-            )
-          }}, Suisses : {{ $props.stats.InscriptionsSuisses }}
+            pourcentS(props.stats.InscriptionsFilles, props.stats.Inscriptions)
+          }}, Suisses : {{ props.stats.InscriptionsSuisses }}
           {{
-            pourcentS(
-              $props.stats.InscriptionsSuisses,
-              $props.stats.Inscriptions
-            )
+            pourcentS(props.stats.InscriptionsSuisses, props.stats.Inscriptions)
           }}
         </v-col>
       </v-row>
       <v-row>
         <v-col cols="4">
-          Confirmées : {{ $props.stats.Valides }}
-          {{ pourcentS($props.stats.Valides, $props.stats.Inscriptions) }}
+          Confirmées : {{ props.stats.Valides }}
+          {{ pourcentS(props.stats.Valides, props.stats.Inscriptions) }}
         </v-col>
         <v-col class="text-right">
-          Dont Filles : {{ $props.stats.ValidesFilles }}
-          {{ pourcentS($props.stats.ValidesFilles, $props.stats.Valides) }} ,
-          Suisses : {{ $props.stats.ValidesSuisses }}
-          {{ pourcentS($props.stats.ValidesSuisses, $props.stats.Valides) }}
+          Dont Filles : {{ props.stats.ValidesFilles }}
+          {{ pourcentS(props.stats.ValidesFilles, props.stats.Valides) }} ,
+          Suisses : {{ props.stats.ValidesSuisses }}
+          {{ pourcentS(props.stats.ValidesSuisses, props.stats.Valides) }}
         </v-col>
       </v-row>
       <v-row>
         <v-col>
-          A statuer : {{ $props.stats.AStatuer }}
-          {{ pourcentS($props.stats.AStatuer, $props.stats.Inscriptions) }}
+          A statuer : {{ props.stats.AStatuer }}
+          {{ pourcentS(props.stats.AStatuer, props.stats.Inscriptions) }}
         </v-col>
         <v-col cols="5" class="text-center">
-          Demandes d'exception : {{ $props.stats.Exceptions }}
-          {{ pourcentS($props.stats.Exceptions, $props.stats.Inscriptions) }}
+          Demandes d'exception : {{ props.stats.Exceptions }}
+          {{ pourcentS(props.stats.Exceptions, props.stats.Inscriptions) }}
         </v-col>
         <v-col class="text-right">
-          Refus : {{ $props.stats.Refus }}
-          {{ pourcentS($props.stats.Refus, $props.stats.Inscriptions) }}
+          Refus : {{ props.stats.Refus }}
+          {{ pourcentS(props.stats.Refus, props.stats.Inscriptions) }}
         </v-col>
       </v-row>
     </v-card-text>

@@ -5,7 +5,7 @@
     variant="outlined"
     density="compact"
     :hide-details="props.hideDetails"
-    :label="$props.label"
+    :label="props.label"
     :model-value="(adapter.parseISO(modelValue) as Date).toLocaleDateString()"
     readonly
   >
@@ -18,7 +18,7 @@
         variant="outlined"
         density="compact"
         :hide-details="props.hideDetails"
-        :label="$props.label"
+        :label="props.label"
         :model-value="(adapter.parseISO(modelValue) as Date).toLocaleDateString()"
       >
       </v-text-field>

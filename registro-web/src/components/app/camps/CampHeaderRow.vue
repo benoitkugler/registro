@@ -3,7 +3,7 @@
     <v-card title="Confirmer la suppression">
       <v-card-text>
         Etes vous certain de supprimer le séjour
-        <b>{{ Camps.label($props.camp.Camp) }}</b> ? <br />
+        <b>{{ Camps.label(props.camp.Camp.Camp) }}</b> ? <br />
         <br />
         Les éventuels <i>équipiers</i> déclarés sur ce séjour seront aussi
         supprimés.
@@ -22,28 +22,30 @@
     :style="{ 'background-color': periodeColor }"
     class="rounded my-1 pa-1"
     no-gutters
+    justify="space-between"
   >
     <v-col>
       <v-list-item
-        :title="$props.camp.Camp.Nom"
-        :subtitle="Camps.year($props.camp.Camp)"
+        :title="props.camp.Camp.Camp.Nom"
+        :subtitle="Camps.year(props.camp.Camp.Camp)"
       >
       </v-list-item>
     </v-col>
+    <v-col align-self="center"> {{ Camps.formatPlage(camp.Camp.Camp) }}</v-col>
     <v-col cols="2" align-self="center">
       <v-menu width="600" location="left">
         <template v-slot:activator="{ props: innerProps }">
           <v-progress-linear
             class="bg-white border-md border-primary"
             v-bind="innerProps"
-            :max="$props.camp.Camp.Places"
-            :model-value="$props.camp.Stats.Valides"
+            :max="props.camp.Camp.Camp.Places"
+            :model-value="props.camp.Stats.Valides"
             height="36"
             rounded
           >
             <template v-slot:default="{ value }">
               <strong
-                >{{ value }}/{{ $props.camp.Camp.Places }}
+                >{{ value }}/{{ props.camp.Camp.Camp.Places }}
                 <span v-if="allAttente > 0">
                   (+
                   {{ allAttente }})</span
@@ -52,14 +54,15 @@
             </template></v-progress-linear
           >
         </template>
-        <CampStats :stats="$props.camp.Stats"></CampStats>
+        <CampStats :stats="props.camp.Stats"></CampStats>
       </v-menu>
     </v-col>
+    <v-col cols="1"></v-col>
     <v-col cols="auto" align-self="center">
       <v-menu>
-        <template v-slot:activator="{ props }">
+        <template v-slot:activator="{ props: innerProps }">
           <v-btn
-            v-bind="props"
+            v-bind="innerProps"
             size="x-small"
             class="mx-1"
             flat
@@ -80,7 +83,7 @@
           <v-divider thickness="1"></v-divider>
           <v-list-item
             prepend-icon="mdi-delete"
-            :disabled="$props.camp.Stats.Inscriptions > 0"
+            :disabled="props.camp.Stats.Inscriptions > 0"
             @click="showDelete = true"
             >Supprimer</v-list-item
           >
@@ -111,7 +114,7 @@ const showDelete = ref(false);
 
 /** renvoie la couleur de la période du camp */
 const periodeColor = computed(() => {
-  const month = new Date(props.camp.Camp.DateDebut).getUTCMonth() + 1;
+  const month = new Date(props.camp.Camp.Camp.DateDebut).getUTCMonth() + 1;
   switch (month) {
     case 7:
     case 8: // Ete

@@ -67,3 +67,14 @@ func (cd CampLoader) Stats() StatistiquesInscrits {
 	}
 	return stats
 }
+
+type CampExt struct {
+	Camp Camp
+	// IsTerminated is 'true' when the camp
+	// is over by, even if the 'Ouvert' tag is still on.
+	IsTerminated bool
+}
+
+func (cp Camp) Ext() CampExt {
+	return CampExt{cp, cp.isTerminated()}
+}

@@ -11,7 +11,7 @@ export type Date_ = string & { __opaque__: "Date" };
 export type Int = number & { __opaque__: "Int" };
 // registro/controllers/central.CampHeader
 export interface CampHeader {
-  Camp: Camp;
+  Camp: CampExt;
   Taux: Taux;
   Stats: StatistiquesInscrits;
 }
@@ -44,6 +44,11 @@ export interface Camp {
   OptionPrix: OptionPrixCamp;
   OptionQuotientFamilial: OptionQuotientFamilial;
   Password: string;
+}
+// registro/sql/camps.CampExt
+export interface CampExt {
+  Camp: Camp;
+  IsTerminated: boolean;
 }
 // registro/sql/camps.IdCamp
 export type IdCamp = Int;
@@ -219,7 +224,7 @@ export abstract class AbstractAPI {
 
   protected async rawCampsUpdate(params: Camp) {
     const fullUrl = this.baseUrl + "/api/v1/app/camps";
-    const rep: AxiosResponse<Camp> = await Axios.post(fullUrl, params, {
+    const rep: AxiosResponse<CampExt> = await Axios.post(fullUrl, params, {
       headers: this.getHeaders(),
     });
     return rep.data;

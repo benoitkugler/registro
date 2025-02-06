@@ -83,6 +83,18 @@ export namespace Camps {
   export function label(camp: Camp) {
     return `${camp.Nom} - ${year(camp)}`;
   }
+
+  export function formatPlage(camp: Camp) {
+    const debut = new Date(camp.DateDebut);
+    const fin = new Date(Camps.dateFin(camp));
+    return `${formatDate(debut)} au ${formatDate(fin)}`;
+  }
+
+  export function match(camp: Camp, normalizedPattern: string) {
+    if (normalizedPattern == "") return true;
+    const str = normalize(label(camp) + camp.Lieu);
+    return str.includes(normalizedPattern);
+  }
 }
 
 export function copy<T>(v: T): T {
@@ -113,3 +125,31 @@ export function newDate_(d: Date) {
 export function round(v: number) {
   return Math.round(v) as Int;
 }
+
+/** normalize returns s without spaces, accents and in lower case */
+export function normalize(s: string) {
+  return s
+    .replaceAll(" ", "")
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
+function formatDate(date: Date, showYear = false, showWeekday = true) {
+  if (isNaN(date.valueOf()) || date.getFullYear() <= 1) {
+    return "";
+  }
+  const s = date.toLocaleString(undefined, {
+    year: showYear ? "numeric" : undefined,
+    day: "numeric",
+    month: "short",
+    // hour: "2-digit",
+    // minute: showMinute ? "2-digit" : undefined,
+  });
+  if (showWeekday) {
+    return `${_weekdays[date.getDay()]} ${s}`;
+  }
+  return s;
+}
+
+const _weekdays = ["Dim.", "Lun.", "Mar.", "Mer.", "Jeu.", "Ven.", "Sam."];

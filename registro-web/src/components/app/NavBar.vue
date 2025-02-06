@@ -48,7 +48,7 @@
           <v-img width="60" :src="logo" />
         </v-col>
         <v-col align-self="center">
-          {{ $props.title }}
+          {{ props.title }}
         </v-col>
       </v-row>
     </v-app-bar-title>

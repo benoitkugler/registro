@@ -3,72 +3,96 @@
     <div>Boutons a venir</div>
   </NavBar>
 
-  <v-container class="fill-height" fluid>
-    <v-dialog :model-value="toEdit != null" @update:model-value="toEdit = null">
-      <CampEdit
-        v-if="toEdit != null"
-        :camp="toEdit"
-        @save="updateCamp"
-      ></CampEdit>
-    </v-dialog>
+  <v-dialog :model-value="toEdit != null" @update:model-value="toEdit = null">
+    <CampEdit
+      v-if="toEdit != null"
+      :camp="toEdit"
+      @save="updateCamp"
+    ></CampEdit>
+  </v-dialog>
 
-    <v-dialog
-      :model-value="toEditTaux != null"
-      @update:model-value="toEditTaux = null"
-      max-width="600"
+  <v-dialog
+    :model-value="toEditTaux != null"
+    @update:model-value="toEditTaux = null"
+    max-width="600"
+  >
+    <v-card
+      v-if="toEditTaux != null"
+      title="Modifier le taux"
+      subtitle="La modification n'est possible que si aucun participant n'est enregistré."
     >
-      <v-card
-        v-if="toEditTaux != null"
-        title="Modifier le taux"
-        subtitle="La modification n'est possible que si aucun participant n'est enregistré."
-      >
-        <v-card-text>
-          <TauxSelect v-model="toEditTaux.Taux"></TauxSelect>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn :disabled="toEditTaux.Stats.Inscriptions > 0" @click="setTaux"
-            >Modifier</v-btn
-          >
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+      <v-card-text>
+        <TauxSelect v-model="toEditTaux.Taux"></TauxSelect>
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn :disabled="toEditTaux.Stats.Inscriptions > 0" @click="setTaux"
+          >Modifier</v-btn
+        >
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 
-    <v-dialog v-model="showCreateMany" max-width="600">
-      <v-card
-        title="Créer plusieurs camps"
-        subtitle="Les camps seront liés au même taux de conversion"
-      >
-        <v-card-text>
-          <v-row>
-            <v-col>
-              <IntField
-                label="Nombre de camps"
-                v-model="createCount"
-              ></IntField>
-            </v-col>
-          </v-row>
-          <v-divider thickness="2" class="my-2"></v-divider>
-          <TauxSelect v-model="createSelectedTaux"></TauxSelect>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn
-            color="success"
-            @click="createMany"
-            :disabled="!areCreateFieldsValid"
-            >Créer</v-btn
-          >
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+  <v-dialog v-model="showCreateMany" max-width="600">
+    <v-card
+      title="Créer plusieurs camps"
+      subtitle="Les camps seront liés au même taux de conversion"
+    >
+      <v-card-text>
+        <v-row>
+          <v-col>
+            <IntField label="Nombre de camps" v-model="createCount"></IntField>
+          </v-col>
+        </v-row>
+        <v-divider thickness="2" class="my-2"></v-divider>
+        <TauxSelect v-model="createSelectedTaux"></TauxSelect>
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn
+          color="success"
+          @click="createMany"
+          :disabled="!areCreateFieldsValid"
+          >Créer</v-btn
+        >
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 
-    <v-responsive class="align-center fill-height mx-auto">
-      <v-card title="Camps" :subtitle="campsData.size" class="ma-1">
-        <template v-slot:append>
+  <v-card title="Camps" :subtitle="campsData.size" class="ma-2">
+    <template v-slot:append>
+      <v-row>
+        <v-col align-self="center" style="width: 240px">
+          <v-checkbox
+            hide-details
+            label="Inscriptions ouvertes seulement"
+            v-model="filter.openOnly"
+            @update:model-value="ensurePageValid"
+          >
+          </v-checkbox>
+        </v-col>
+        <v-col align-self="center" style="width: 240px">
+          <v-text-field
+            label="Rechercher"
+            variant="filled"
+            density="comfortable"
+            hide-details
+            prepend-inner-icon="mdi-magnify"
+            clearable
+            v-model="filter.pattern"
+            @click:clear="
+              filter.pattern = '';
+              ensurePageValid();
+            "
+            @update:model-value="ensurePageValid()"
+          >
+          </v-text-field>
+        </v-col>
+        <v-divider vertical thickness="1"></v-divider>
+        <v-col align-self="center">
           <v-menu>
-            <template v-slot:activator="{ props }">
-              <v-btn v-bind="props" color="success" :disabled="isLoading">
+            <template v-slot:activator="{ props: innerProps }">
+              <v-btn v-bind="innerProps" color="success" :disabled="isLoading">
                 <template v-slot:prepend>
                   <v-icon>mdi-plus</v-icon>
                 </template>
@@ -85,32 +109,31 @@
               </v-list-item>
             </v-list>
           </v-menu>
-        </template>
-        <v-card-text class="mt-4">
-          <v-skeleton-loader v-if="isLoading"></v-skeleton-loader>
-          <i v-else-if="camps.length == 0">Aucun camp.</i>
+        </v-col>
+      </v-row>
+    </template>
+    <v-card-text class="mt-4">
+      <v-skeleton-loader v-if="isLoading"></v-skeleton-loader>
+      <i v-else-if="camps.length == 0"
+        >Aucun camp ne correspond aux filtres actuels.</i
+      >
 
-          <CampHeaderRow
-            v-for="(camp, index) in camps"
-            :key="index"
-            :camp="camp"
-            @edit="toEdit = camp.Camp"
-            @edit-taux="toEditTaux = camp"
-          ></CampHeaderRow>
+      <CampHeaderRow
+        v-for="(camp, index) in pageList"
+        :key="index"
+        :camp="camp"
+        @edit="toEdit = camp.Camp.Camp"
+        @edit-taux="toEditTaux = camp"
+      ></CampHeaderRow>
 
-          <v-pagination
-            :length="pagesCount"
-            v-model="currentPage"
-          ></v-pagination>
-        </v-card-text>
-      </v-card>
-    </v-responsive>
-  </v-container>
+      <v-pagination :length="pagesCount" v-model="currentPage"></v-pagination>
+    </v-card-text>
+  </v-card>
 </template>
 
 <script lang="ts" setup>
 import { ref, computed, onMounted, reactive } from "vue";
-import { controller } from "@/logic/app/logic";
+import { Camps, controller, normalize } from "@/logic/app/logic";
 import type { Camp, CampHeader, IdCamp, Int, Taux } from "@/logic/app/api";
 
 onMounted(fetchCamps);
@@ -118,20 +141,36 @@ onMounted(fetchCamps);
 const campsData = reactive(new Map<IdCamp, CampHeader>());
 const isLoading = ref(false);
 
+const filter = reactive({ pattern: "", openOnly: false });
+
 // with sort and filter
 const camps = computed(() => {
-  const out = Array.from(campsData.values());
+  const pattern = normalize(filter.pattern);
+  const out = Array.from(campsData.values()).filter(
+    (camp) =>
+      Camps.match(camp.Camp.Camp, pattern) &&
+      (!filter.openOnly || (camp.Camp.Camp.Ouvert && !camp.Camp.IsTerminated))
+  );
   // most recent first
   out.sort(
     (a, b) =>
-      new Date(b.Camp.DateDebut).valueOf() -
-      new Date(a.Camp.DateDebut).valueOf()
+      new Date(b.Camp.Camp.DateDebut).valueOf() -
+      new Date(a.Camp.Camp.DateDebut).valueOf()
   );
-  return out.slice(
+  return out;
+});
+const pageList = computed(() =>
+  camps.value.slice(
     (currentPage.value - 1) * pageSize,
     currentPage.value * pageSize
-  );
-});
+  )
+);
+
+function ensurePageValid() {
+  if (currentPage.value > pagesCount.value) {
+    currentPage.value = pagesCount.value;
+  }
+}
 
 async function fetchCamps() {
   isLoading.value = true;
@@ -139,7 +178,7 @@ async function fetchCamps() {
   isLoading.value = false;
   if (res === undefined) return;
   campsData.clear();
-  res?.forEach((v) => campsData.set(v.Camp.Id, v));
+  res?.forEach((v) => campsData.set(v.Camp.Camp.Id, v));
 }
 
 async function create() {
@@ -149,12 +188,12 @@ async function create() {
   if (res === undefined) return;
 
   controller.showMessage("Camp ajouté avec succès.");
-  campsData.set(res.Camp.Id, res);
-  toEdit.value = res.Camp;
+  campsData.set(res.Camp.Camp.Id, res);
+  toEdit.value = res.Camp.Camp;
 }
 
 const pageSize = 16;
-const pagesCount = computed(() => Math.ceil(campsData.size / pageSize));
+const pagesCount = computed(() => Math.ceil(camps.value.length / pageSize));
 const currentPage = ref(1); // 1-based
 
 const toEdit = ref<Camp | null>(null);
@@ -165,7 +204,8 @@ async function updateCamp(camp: Camp) {
   isLoading.value = false;
   if (res === undefined) return;
   controller.showMessage("Camp modifié avec succès.");
-  campsData.get(res.Id)!.Camp = res;
+  campsData.get(res.Camp.Id)!.Camp = res;
+  ensurePageValid();
 }
 
 const toEditTaux = ref<CampHeader | null>(null);
@@ -175,13 +215,13 @@ async function setTaux() {
   toEditTaux.value = null;
   isLoading.value = true;
   const res = await controller.CampsSetTaux({
-    IdCamp: val.Camp.Id,
+    IdCamp: val.Camp.Camp.Id,
     Taux: val.Taux,
   });
   isLoading.value = false;
   if (res === undefined) return;
   controller.showMessage("Taux modifié avec succès.");
-  campsData.set(res.Camp.Id, res);
+  campsData.set(res.Camp.Camp.Id, res);
 }
 
 const showCreateMany = ref(false);
@@ -206,6 +246,6 @@ async function createMany() {
   isLoading.value = false;
   if (res === undefined) return;
   controller.showMessage("Camps créés avec succès.");
-  res?.forEach((c) => campsData.set(c.Camp.Id, c));
+  res?.forEach((c) => campsData.set(c.Camp.Camp.Id, c));
 }
 </script>

@@ -21,10 +21,11 @@ type (
 // Une table de conversion est associée à chaque camp,
 // et tous les camps d'un même dossier doivent être liés à la
 // même table.
-// Un camp sans [Taux] équivaut à la table {1000, 0}, c'est à dire
+// Un taux par défaut est défini par {1000, 0}, c'est à dire
 // avec un support pour les Euros seulement
 //
 // gomacro:SQL ADD UNIQUE(Label)
+// gomacro:SQL ADD CHECK(Euros = 1000)
 type Taux struct {
 	Id IdTaux
 

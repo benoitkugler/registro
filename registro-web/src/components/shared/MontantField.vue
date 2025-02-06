@@ -5,7 +5,7 @@
         variant="outlined"
         density="compact"
         :hide-details="props.hideDetails"
-        :label="$props.label"
+        :label="props.label"
         type="number"
         :model-value="modelValue.Cent / 100"
         @update:model-value="
