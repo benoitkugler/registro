@@ -3,6 +3,7 @@
     <div>Boutons a venir</div>
   </NavBar>
 
+  <!-- Edition -->
   <v-dialog :model-value="toEdit != null" @update:model-value="toEdit = null">
     <CampEdit
       v-if="toEdit != null"
@@ -11,6 +12,7 @@
     ></CampEdit>
   </v-dialog>
 
+  <!-- Choix du taux -->
   <v-dialog
     :model-value="toEditTaux != null"
     @update:model-value="toEditTaux = null"
@@ -33,6 +35,7 @@
     </v-card>
   </v-dialog>
 
+  <!-- Assitant création -->
   <v-dialog v-model="showCreateMany" max-width="600">
     <v-card
       title="Créer plusieurs camps"
@@ -124,6 +127,7 @@
         :camp="camp"
         @edit="toEdit = camp.Camp.Camp"
         @edit-taux="toEditTaux = camp"
+        @delete="deleteCamp(camp)"
       ></CampHeaderRow>
 
       <v-pagination :length="pagesCount" v-model="currentPage"></v-pagination>
@@ -247,5 +251,15 @@ async function createMany() {
   if (res === undefined) return;
   controller.showMessage("Camps créés avec succès.");
   res?.forEach((c) => campsData.set(c.Camp.Camp.Id, c));
+}
+
+async function deleteCamp(camp: CampHeader) {
+  isLoading.value = true;
+  const res = await controller.CampsDelete({ id: camp.Camp.Camp.Id });
+  isLoading.value = false;
+  if (res === undefined) return;
+  controller.showMessage("Camp supprimé avec succès.");
+  campsData.delete(camp.Camp.Camp.Id);
+  ensurePageValid();
 }
 </script>

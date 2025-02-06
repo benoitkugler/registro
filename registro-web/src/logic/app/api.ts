@@ -241,17 +241,20 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected async rawCampsDelete() {
+  protected async rawCampsDelete(params: { id: Int }) {
     const fullUrl = this.baseUrl + "/api/v1/app/camps";
-    await Axios.delete(fullUrl, { headers: this.getHeaders() });
+    await Axios.delete(fullUrl, {
+      headers: this.getHeaders(),
+      params: { id: String(params["id"]) },
+    });
     return true;
   }
 
   /** CampsDelete wraps rawCampsDelete and handles the error */
-  async CampsDelete() {
+  async CampsDelete(params: { id: Int }) {
     this.startRequest();
     try {
-      const out = await this.rawCampsDelete();
+      const out = await this.rawCampsDelete(params);
       return out;
     } catch (error) {
       this.handleError(error);

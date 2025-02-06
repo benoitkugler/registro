@@ -13,7 +13,14 @@
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="red">Supprimer</v-btn>
+        <v-btn
+          color="red"
+          @click="
+            showDelete = false;
+            emit('delete');
+          "
+          >Supprimer</v-btn
+        >
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -104,6 +111,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: "edit"): void;
   (e: "edit-taux"): void;
+  (e: "delete"): void;
 }>();
 
 const allAttente = computed(

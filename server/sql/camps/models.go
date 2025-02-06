@@ -106,7 +106,7 @@ func (c *Camp) Check() error {
 
 // Lettredirecteur conserve le html utilisé pour générer la lettre.
 // En revanche, c'est bien le document PDF généré et enregistré dans la
-// table documents qui est envoyé aux parents.
+// table Files qui est envoyé aux parents.
 //
 // gomacro:SQL ADD UNIQUE(IdCamp)
 type Lettredirecteur struct {
@@ -136,7 +136,7 @@ type Imagelettre struct {
 type Participant struct {
 	Id         IdParticipant
 	IdCamp     IdCamp
-	IdPersonne pr.IdPersonne      `gomacro-sql-on-delete:"CASCADE"`
+	IdPersonne pr.IdPersonne
 	IdDossier  dossiers.IdDossier `gomacro-sql-on-delete:"CASCADE"`
 
 	// IdTaux is used for consistency,
