@@ -18,6 +18,9 @@ ALTER TABLE fichesanitaires
 ALTER TABLE tauxs
     ADD UNIQUE (Label);
 
+ALTER TABLE tauxs
+    ADD CHECK (Euros = 1000);
+
 ALTER TABLE dossiers
     ADD UNIQUE (Id, IdTaux);
 
@@ -55,7 +58,7 @@ ALTER TABLE participants
     ADD FOREIGN KEY (IdCamp) REFERENCES camps;
 
 ALTER TABLE participants
-    ADD FOREIGN KEY (IdPersonne) REFERENCES personnes ON DELETE CASCADE;
+    ADD FOREIGN KEY (IdPersonne) REFERENCES personnes;
 
 ALTER TABLE participants
     ADD FOREIGN KEY (IdDossier) REFERENCES dossiers ON DELETE CASCADE;

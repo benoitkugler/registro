@@ -35,9 +35,9 @@ func scanOneDossier(row scanner) (Dossier, error) {
 		&item.IdResponsable,
 		&item.IdTaux,
 		&item.CopiesMails,
-		&item.LastConnection,
-		&item.IsValidated,
 		&item.PartageAdressesOK,
+		&item.IsValidated,
+		&item.LastConnection,
 	)
 	return item, err
 }
@@ -106,22 +106,22 @@ func ScanDossiers(rs *sql.Rows) (Dossiers, error) {
 // Insert one Dossier in the database and returns the item with id filled.
 func (item Dossier) Insert(tx DB) (out Dossier, err error) {
 	row := tx.QueryRow(`INSERT INTO dossiers (
-		idresponsable, idtaux, copiesmails, lastconnection, isvalidated, partageadressesok
+		idresponsable, idtaux, copiesmails, partageadressesok, isvalidated, lastconnection
 		) VALUES (
 		$1, $2, $3, $4, $5, $6
 		) RETURNING *;
-		`, item.IdResponsable, item.IdTaux, item.CopiesMails, item.LastConnection, item.IsValidated, item.PartageAdressesOK)
+		`, item.IdResponsable, item.IdTaux, item.CopiesMails, item.PartageAdressesOK, item.IsValidated, item.LastConnection)
 	return ScanDossier(row)
 }
 
 // Update Dossier in the database and returns the new version.
 func (item Dossier) Update(tx DB) (out Dossier, err error) {
 	row := tx.QueryRow(`UPDATE dossiers SET (
-		idresponsable, idtaux, copiesmails, lastconnection, isvalidated, partageadressesok
+		idresponsable, idtaux, copiesmails, partageadressesok, isvalidated, lastconnection
 		) = (
 		$1, $2, $3, $4, $5, $6
 		) WHERE id = $7 RETURNING *;
-		`, item.IdResponsable, item.IdTaux, item.CopiesMails, item.LastConnection, item.IsValidated, item.PartageAdressesOK, item.Id)
+		`, item.IdResponsable, item.IdTaux, item.CopiesMails, item.PartageAdressesOK, item.IsValidated, item.LastConnection, item.Id)
 	return ScanDossier(row)
 }
 

@@ -54,7 +54,7 @@ CREATE TABLE groupe_participants (
     Manuel boolean NOT NULL
 );
 
-CREATE TABLE imagelettres (
+CREATE TABLE lettre_images (
     Id serial PRIMARY KEY,
     IdCamp integer NOT NULL,
     Filename text NOT NULL,
@@ -138,7 +138,7 @@ ALTER TABLE participants
     ADD FOREIGN KEY (IdCamp) REFERENCES camps;
 
 ALTER TABLE participants
-    ADD FOREIGN KEY (IdPersonne) REFERENCES personnes ON DELETE CASCADE;
+    ADD FOREIGN KEY (IdPersonne) REFERENCES personnes;
 
 ALTER TABLE participants
     ADD FOREIGN KEY (IdDossier) REFERENCES dossiers ON DELETE CASCADE;
@@ -490,7 +490,7 @@ CREATE OR REPLACE FUNCTION gomacro_validate_json_doss_Currency (data jsonb)
     AS $$
 DECLARE
     is_valid boolean := jsonb_typeof(data) = 'number'
-    AND data::int IN (0, 1, 2);
+    AND data::int IN (0, 1);
 BEGIN
     IF NOT is_valid THEN
         RAISE WARNING '% is not a doss_Currency', data;

@@ -1002,8 +1002,8 @@ func SelectGroupeByIdAndIdCamp(tx DB, id IdGroupe, idCamp IdCamp) (item Groupe, 
 	return item, true, err
 }
 
-func scanOneImagelettre(row scanner) (Imagelettre, error) {
-	var item Imagelettre
+func scanOneLettreImage(row scanner) (LettreImage, error) {
+	var item LettreImage
 	err := row.Scan(
 		&item.Id,
 		&item.IdCamp,
@@ -1013,45 +1013,45 @@ func scanOneImagelettre(row scanner) (Imagelettre, error) {
 	return item, err
 }
 
-func ScanImagelettre(row *sql.Row) (Imagelettre, error) { return scanOneImagelettre(row) }
+func ScanLettreImage(row *sql.Row) (LettreImage, error) { return scanOneLettreImage(row) }
 
-// SelectAll returns all the items in the imagelettres table.
-func SelectAllImagelettres(db DB) (Imagelettres, error) {
-	rows, err := db.Query("SELECT * FROM imagelettres")
+// SelectAll returns all the items in the lettre_images table.
+func SelectAllLettreImages(db DB) (LettreImages, error) {
+	rows, err := db.Query("SELECT * FROM lettre_images")
 	if err != nil {
 		return nil, err
 	}
-	return ScanImagelettres(rows)
+	return ScanLettreImages(rows)
 }
 
-// SelectImagelettre returns the entry matching 'id'.
-func SelectImagelettre(tx DB, id IdImagelettre) (Imagelettre, error) {
-	row := tx.QueryRow("SELECT * FROM imagelettres WHERE id = $1", id)
-	return ScanImagelettre(row)
+// SelectLettreImage returns the entry matching 'id'.
+func SelectLettreImage(tx DB, id IdLettreImage) (LettreImage, error) {
+	row := tx.QueryRow("SELECT * FROM lettre_images WHERE id = $1", id)
+	return ScanLettreImage(row)
 }
 
-// SelectImagelettres returns the entry matching the given 'ids'.
-func SelectImagelettres(tx DB, ids ...IdImagelettre) (Imagelettres, error) {
-	rows, err := tx.Query("SELECT * FROM imagelettres WHERE id = ANY($1)", IdImagelettreArrayToPQ(ids))
+// SelectLettreImages returns the entry matching the given 'ids'.
+func SelectLettreImages(tx DB, ids ...IdLettreImage) (LettreImages, error) {
+	rows, err := tx.Query("SELECT * FROM lettre_images WHERE id = ANY($1)", IdLettreImageArrayToPQ(ids))
 	if err != nil {
 		return nil, err
 	}
-	return ScanImagelettres(rows)
+	return ScanLettreImages(rows)
 }
 
-type Imagelettres map[IdImagelettre]Imagelettre
+type LettreImages map[IdLettreImage]LettreImage
 
-func (m Imagelettres) IDs() []IdImagelettre {
-	out := make([]IdImagelettre, 0, len(m))
+func (m LettreImages) IDs() []IdLettreImage {
+	out := make([]IdLettreImage, 0, len(m))
 	for i := range m {
 		out = append(out, i)
 	}
 	return out
 }
 
-func ScanImagelettres(rs *sql.Rows) (Imagelettres, error) {
+func ScanLettreImages(rs *sql.Rows) (LettreImages, error) {
 	var (
-		s   Imagelettre
+		s   LettreImage
 		err error
 	)
 	defer func() {
@@ -1060,9 +1060,9 @@ func ScanImagelettres(rs *sql.Rows) (Imagelettres, error) {
 			err = errClose
 		}
 	}()
-	structs := make(Imagelettres, 16)
+	structs := make(LettreImages, 16)
 	for rs.Next() {
-		s, err = scanOneImagelettre(rs)
+		s, err = scanOneLettreImage(rs)
 		if err != nil {
 			return nil, err
 		}
@@ -1074,41 +1074,41 @@ func ScanImagelettres(rs *sql.Rows) (Imagelettres, error) {
 	return structs, nil
 }
 
-// Insert one Imagelettre in the database and returns the item with id filled.
-func (item Imagelettre) Insert(tx DB) (out Imagelettre, err error) {
-	row := tx.QueryRow(`INSERT INTO imagelettres (
+// Insert one LettreImage in the database and returns the item with id filled.
+func (item LettreImage) Insert(tx DB) (out LettreImage, err error) {
+	row := tx.QueryRow(`INSERT INTO lettre_images (
 		idcamp, filename, content
 		) VALUES (
 		$1, $2, $3
 		) RETURNING *;
 		`, item.IdCamp, item.Filename, item.Content)
-	return ScanImagelettre(row)
+	return ScanLettreImage(row)
 }
 
-// Update Imagelettre in the database and returns the new version.
-func (item Imagelettre) Update(tx DB) (out Imagelettre, err error) {
-	row := tx.QueryRow(`UPDATE imagelettres SET (
+// Update LettreImage in the database and returns the new version.
+func (item LettreImage) Update(tx DB) (out LettreImage, err error) {
+	row := tx.QueryRow(`UPDATE lettre_images SET (
 		idcamp, filename, content
 		) = (
 		$1, $2, $3
 		) WHERE id = $4 RETURNING *;
 		`, item.IdCamp, item.Filename, item.Content, item.Id)
-	return ScanImagelettre(row)
+	return ScanLettreImage(row)
 }
 
-// Deletes the Imagelettre and returns the item
-func DeleteImagelettreById(tx DB, id IdImagelettre) (Imagelettre, error) {
-	row := tx.QueryRow("DELETE FROM imagelettres WHERE id = $1 RETURNING *;", id)
-	return ScanImagelettre(row)
+// Deletes the LettreImage and returns the item
+func DeleteLettreImageById(tx DB, id IdLettreImage) (LettreImage, error) {
+	row := tx.QueryRow("DELETE FROM lettre_images WHERE id = $1 RETURNING *;", id)
+	return ScanLettreImage(row)
 }
 
-// Deletes the Imagelettre in the database and returns the ids.
-func DeleteImagelettresByIDs(tx DB, ids ...IdImagelettre) ([]IdImagelettre, error) {
-	rows, err := tx.Query("DELETE FROM imagelettres WHERE id = ANY($1) RETURNING id", IdImagelettreArrayToPQ(ids))
+// Deletes the LettreImage in the database and returns the ids.
+func DeleteLettreImagesByIDs(tx DB, ids ...IdLettreImage) ([]IdLettreImage, error) {
+	rows, err := tx.Query("DELETE FROM lettre_images WHERE id = ANY($1) RETURNING id", IdLettreImageArrayToPQ(ids))
 	if err != nil {
 		return nil, err
 	}
-	return ScanIdImagelettreArray(rows)
+	return ScanIdLettreImageArray(rows)
 }
 
 func scanOneLettredirecteur(row scanner) (Lettredirecteur, error) {
@@ -2124,7 +2124,7 @@ func (s IdGroupeSet) Keys() []IdGroupe {
 	return out
 }
 
-func IdImagelettreArrayToPQ(ids []IdImagelettre) pq.Int64Array {
+func IdLettreImageArrayToPQ(ids []IdLettreImage) pq.Int64Array {
 	out := make(pq.Int64Array, len(ids))
 	for i, v := range ids {
 		out[i] = int64(v)
@@ -2132,14 +2132,14 @@ func IdImagelettreArrayToPQ(ids []IdImagelettre) pq.Int64Array {
 	return out
 }
 
-// ScanIdImagelettreArray scans the result of a query returning a
+// ScanIdLettreImageArray scans the result of a query returning a
 // list of ID's.
-func ScanIdImagelettreArray(rs *sql.Rows) ([]IdImagelettre, error) {
+func ScanIdLettreImageArray(rs *sql.Rows) ([]IdLettreImage, error) {
 	defer rs.Close()
-	ints := make([]IdImagelettre, 0, 16)
+	ints := make([]IdLettreImage, 0, 16)
 	var err error
 	for rs.Next() {
-		var s IdImagelettre
+		var s IdLettreImage
 		if err = rs.Scan(&s); err != nil {
 			return nil, err
 		}
@@ -2151,22 +2151,22 @@ func ScanIdImagelettreArray(rs *sql.Rows) ([]IdImagelettre, error) {
 	return ints, nil
 }
 
-type IdImagelettreSet map[IdImagelettre]bool
+type IdLettreImageSet map[IdLettreImage]bool
 
-func NewIdImagelettreSetFrom(ids []IdImagelettre) IdImagelettreSet {
-	out := make(IdImagelettreSet, len(ids))
+func NewIdLettreImageSetFrom(ids []IdLettreImage) IdLettreImageSet {
+	out := make(IdLettreImageSet, len(ids))
 	for _, key := range ids {
 		out[key] = true
 	}
 	return out
 }
 
-func (s IdImagelettreSet) Add(id IdImagelettre) { s[id] = true }
+func (s IdLettreImageSet) Add(id IdLettreImage) { s[id] = true }
 
-func (s IdImagelettreSet) Has(id IdImagelettre) bool { return s[id] }
+func (s IdLettreImageSet) Has(id IdLettreImage) bool { return s[id] }
 
-func (s IdImagelettreSet) Keys() []IdImagelettre {
-	out := make([]IdImagelettre, 0, len(s))
+func (s IdLettreImageSet) Keys() []IdLettreImage {
+	out := make([]IdLettreImage, 0, len(s))
 	for k := range s {
 		out = append(out, k)
 	}

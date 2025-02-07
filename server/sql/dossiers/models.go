@@ -52,15 +52,14 @@ type Dossier struct {
 	// CopiesMails est une liste d'adresse en copies des mails envoyés,
 	// donnant entre autre accès à l'espace personnel
 	CopiesMails pr.Mails
-
-	LastConnection time.Time // connection sur l'espace personnel
+	// Autorisation de partage des adresses aux autres participants
+	PartageAdressesOK bool
 
 	// IsValidated devient 'true' lorsque l'inscription
 	// est validée manuellement par le centre ou un directeur.
 	IsValidated bool
 
-	// Autorisation de partage des adresses aux autres participants
-	PartageAdressesOK bool
+	LastConnection time.Time // connection sur l'espace personnel
 }
 
 type Paiement struct {

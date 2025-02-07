@@ -9,9 +9,9 @@ CREATE TABLE dossiers (
     IdResponsable integer NOT NULL,
     IdTaux integer NOT NULL,
     CopiesMails text[],
-    LastConnection timestamp(0) with time zone NOT NULL,
+    PartageAdressesOK boolean NOT NULL,
     IsValidated boolean NOT NULL,
-    PartageAdressesOK boolean NOT NULL
+    LastConnection timestamp(0) with time zone NOT NULL
 );
 
 CREATE TABLE paiements (
@@ -37,6 +37,9 @@ CREATE TABLE tauxs (
 -- constraints
 ALTER TABLE tauxs
     ADD UNIQUE (Label);
+
+ALTER TABLE tauxs
+    ADD CHECK (Euros = 1000);
 
 ALTER TABLE dossiers
     ADD UNIQUE (Id, IdTaux);

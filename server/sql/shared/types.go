@@ -65,15 +65,16 @@ func avant(d1, d2 time.Time) bool {
 	return d1.Day() <= d2.Day()
 }
 
-// CalculeAge renvoie l'âge qu'aura une personne au jour `now`
-func (d Date) Age(now Date) int {
-	dt, nowt := d.Time(), now.Time()
-	if dt.IsZero() {
+// CalculeAge renvoie l'âge qu'aura une personne au jour `now`.
+// Si la date de naissance est invalide, l'âge renvoyé est 0.
+func (d Date) Age(now time.Time) int {
+	dt := d.Time()
+	if dt.Year() < 1000 { // vrai en particulier si la date est vide
 		return 0
 	}
 
-	years := nowt.Year() - dt.Year()
-	if avant(dt, nowt) {
+	years := now.Year() - dt.Year()
+	if avant(dt, now) {
 		return years
 	}
 	return years - 1

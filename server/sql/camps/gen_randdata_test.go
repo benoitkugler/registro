@@ -111,8 +111,8 @@ func randIdGroupe() IdGroupe {
 	return IdGroupe(randint64())
 }
 
-func randIdImagelettre() IdImagelettre {
-	return IdImagelettre(randint64())
+func randIdLettreImage() IdLettreImage {
+	return IdLettreImage(randint64())
 }
 
 func randIdParticipant() IdParticipant {
@@ -127,16 +127,6 @@ func randIdStructureaide() IdStructureaide {
 	return IdStructureaide(randint64())
 }
 
-func randImagelettre() Imagelettre {
-	var s Imagelettre
-	s.Id = randIdImagelettre()
-	s.IdCamp = randint64()
-	s.Filename = randstring()
-	s.Content = randSliceuint8()
-
-	return s
-}
-
 func randInvitationEquipier() InvitationEquipier {
 	choix := [...]InvitationEquipier{NonInvite, Invite, Verifie}
 	i := rand.Intn(len(choix))
@@ -145,6 +135,16 @@ func randInvitationEquipier() InvitationEquipier {
 
 func randJours() Jours {
 	return Jours(randSliceint32())
+}
+
+func randLettreImage() LettreImage {
+	var s LettreImage
+	s.Id = randIdLettreImage()
+	s.IdCamp = randint64()
+	s.Filename = randstring()
+	s.Content = randSliceuint8()
+
+	return s
 }
 
 func randLettredirecteur() Lettredirecteur {

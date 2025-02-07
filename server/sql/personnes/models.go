@@ -24,6 +24,15 @@ func (m Personnes) RemoveTemp() {
 	}
 }
 
+// SelectByMail returns the profiles with the given [mail].
+func SelectByMail(db DB, mail string) (Personnes, error) {
+	rows, err := db.Query("SELECT * FROM personnes WHERE Mail = $1", mail)
+	if err != nil {
+		return nil, err
+	}
+	return ScanPersonnes(rows)
+}
+
 // Fichesanitaire stores information as declared on the personnal space.
 //
 // Information from the responsable legal will be required to display

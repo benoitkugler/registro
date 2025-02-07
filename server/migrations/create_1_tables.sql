@@ -49,9 +49,9 @@ CREATE TABLE dossiers (
     IdResponsable integer NOT NULL,
     IdTaux integer NOT NULL,
     CopiesMails text[],
-    LastConnection timestamp(0) with time zone NOT NULL,
+    PartageAdressesOK boolean NOT NULL,
     IsValidated boolean NOT NULL,
-    PartageAdressesOK boolean NOT NULL
+    LastConnection timestamp(0) with time zone NOT NULL
 );
 
 CREATE TABLE paiements (
@@ -129,7 +129,7 @@ CREATE TABLE groupe_participants (
     Manuel boolean NOT NULL
 );
 
-CREATE TABLE imagelettres (
+CREATE TABLE lettre_images (
     Id serial PRIMARY KEY,
     IdCamp integer NOT NULL,
     Filename text NOT NULL,

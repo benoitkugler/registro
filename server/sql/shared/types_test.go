@@ -85,6 +85,7 @@ func TestDate_Age(t *testing.T) {
 		want int
 	}{
 		{Date{}, Date{}, 0},
+		{NewDate(800, time.February, 5), Date{}, 0},
 		{NewDate(2000, time.February, 5), NewDate(2000, time.February, 8), 0},
 		{NewDate(2000, time.February, 5), NewDate(2001, time.February, 4), 0},
 		{NewDate(2000, time.February, 5), NewDate(2001, time.February, 5), 1},
@@ -92,7 +93,7 @@ func TestDate_Age(t *testing.T) {
 		{NewDate(2000, time.February, 5), NewDate(2001, time.January, 5), 0},
 	}
 	for _, tt := range tests {
-		tu.Assert(t, tt.d.Age(tt.now) == tt.want)
+		tu.Assert(t, tt.d.Age(tt.now.Time()) == tt.want)
 	}
 }
 

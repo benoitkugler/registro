@@ -21,9 +21,9 @@ func randDossier() Dossier {
 	s.IdResponsable = randper_IdPersonne()
 	s.IdTaux = randIdTaux()
 	s.CopiesMails = randper_Mails()
-	s.LastConnection = randtTime()
-	s.IsValidated = randbool()
 	s.PartageAdressesOK = randbool()
+	s.IsValidated = randbool()
+	s.LastConnection = randtTime()
 
 	return s
 }

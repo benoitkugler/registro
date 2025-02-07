@@ -390,7 +390,7 @@ CREATE OR REPLACE FUNCTION gomacro_validate_json_doss_Currency (data jsonb)
     AS $$
 DECLARE
     is_valid boolean := jsonb_typeof(data) = 'number'
-    AND data::int IN (0, 1, 2);
+    AND data::int IN (0, 1);
 BEGIN
     IF NOT is_valid THEN
         RAISE WARNING '% is not a doss_Currency', data;

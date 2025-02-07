@@ -14,7 +14,7 @@ import (
 
 type (
 	IdCamp          int64
-	IdImagelettre   int64
+	IdLettreImage   int64
 	IdGroupe        int64
 	IdParticipant   int64
 	IdSondage       int64
@@ -66,7 +66,9 @@ func (cp *Camp) isTerminated() bool {
 
 // AgeDebutCamp renvoie l'âge qu'aura une personne née le 'dateNaissance' au premier jour
 // du séjour.
-func (cp *Camp) AgeDebutCamp(dateNaissance sh.Date) int { return dateNaissance.Age(cp.DateDebut) }
+func (cp *Camp) AgeDebutCamp(dateNaissance sh.Date) int {
+	return dateNaissance.Age(cp.DateDebut.Time())
+}
 
 // IsAgeValide renvoie le statut correspondant aux âges min et max du séjour
 func (cp *Camp) IsAgeValide(dateNaissance sh.Date) (min, max bool) {
@@ -117,10 +119,10 @@ type Lettredirecteur struct {
 	ColorCoord         string
 }
 
-// Imagelettre stockes les images contenues dans les lettres aux parents,
+// LettreImage stockes les images contenues dans les lettres aux parents,
 // accessibles via un lien crypté
-type Imagelettre struct {
-	Id       IdImagelettre
+type LettreImage struct {
+	Id       IdLettreImage
 	IdCamp   int64  `gomacro-sql-on-delete:"CASCADE"`
 	Filename string // as uploaded
 	Content  []byte

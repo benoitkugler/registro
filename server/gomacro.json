@@ -54,5 +54,19 @@
             "Mode": "go/randdata",
             "Output": "sql/files/gen_randdata_test.go"
         }
+    ],
+    "sql/inscriptions/models.go": [
+        {
+            "Mode": "go/sqlcrud",
+            "Output": "sql/inscriptions/gen_scans.go"
+        },
+        {
+            "Mode": "sql",
+            "Output": "sql/inscriptions/gen_create.sql"
+        },
+        {
+            "Mode": "go/randdata",
+            "Output": "sql/inscriptions/gen_randdata_test.go"
+        }
     ]
 }
