@@ -83,7 +83,7 @@ func newMail(to []string, subject, htmlBody string, ccs []string, replyTo ReplyT
 		e.Cc[index] = getTo(creds.Prod, cc)
 	}
 	e.From = fmt.Sprintf("%s <%s>", settings.AssoName, creds.User)
-	e.Subject = subject
+	e.Subject = fmt.Sprintf("[%s] %s", settings.AssoName, subject)
 	e.HTML = []byte(htmlBody)
 
 	if settings.Sauvegarde != "" {
@@ -105,6 +105,7 @@ func newMail(to []string, subject, htmlBody string, ccs []string, replyTo ReplyT
 }
 
 type Mailer interface {
+	// MailsSettings.AssoName is added as prefix to the subject
 	SendMail(to, subject, htmlBody string, ccs []string, replyTo ReplyTo) (err error)
 }
 

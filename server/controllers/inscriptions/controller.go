@@ -2,12 +2,15 @@ package inscriptions
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
 	"time"
 
+	"registro/config"
 	"registro/crypto"
+	"registro/mails"
 	"registro/sql/camps"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
@@ -19,14 +22,27 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// La procédure d'inscription se déroule en 3 temps :
+//	- [LoadData] : les camps ouvertss sont retournées au client,
+//	  avec (en option) les données de pré-inscription
+//	- [SaveInscription] : le client envoie une demande d'inscription : le serveur l'enregistre et en
+//	  envoie une demande de confirmation par email
+//	- [ConfirmeInscription] : le lien de confirmation est activé : l'inscription est confirmée et le dossier
+//    est créé (l'espace perso est alors accessible)
+
+// PathConfirmeInscription est envoyé par mail
+const PathConfirmeInscription = "/inscription/confirme"
+
 type Controller struct {
 	db *sql.DB
 
-	key crypto.Encrypter
+	key  crypto.Encrypter
+	smtp config.SMTP
+	asso config.Asso
 }
 
-func NewController(db *sql.DB, key crypto.Encrypter) *Controller {
-	return &Controller{db, key}
+func NewController(db *sql.DB, key crypto.Encrypter, smtp config.SMTP, asso config.Asso) *Controller {
+	return &Controller{db, key, smtp, asso}
 }
 
 // LoadData décode la (potentiel) préinscription et renvoie les
@@ -46,7 +62,7 @@ func (ct *Controller) LoadData(c echo.Context) error {
 type DataInscription struct {
 	Camps              cps.Camps
 	InitialInscription Inscription
-	PreselectedCamp    string // optionnel
+	PreselectedCamp    string // optionnel, copy of 'preselected' query param
 }
 
 func (ct *Controller) loadData(preselected, preinscription string) (DataInscription, error) {
@@ -83,7 +99,7 @@ func (ct *Controller) loadCamps() (cps.Camps, error) {
 	}
 	now := time.Now()
 	for id, camp := range camps {
-		if isOver := camp.DateFin().Time().Before(now); isOver {
+		if isOver := camp.DateFin().Time().Before(now); isOver || !camp.Ouvert {
 			delete(camps, id)
 		}
 	}
@@ -105,6 +121,31 @@ type Inscription struct {
 	Participants []Participant
 }
 
+func (insc *Inscription) Check() error {
+	if strings.TrimSpace(insc.Responsable.Nom) == "" {
+		return errors.New("missing Nom")
+	}
+	if strings.TrimSpace(insc.Responsable.Prenom) == "" {
+		return errors.New("missing Prenom")
+	}
+	if insc.Responsable.DateNaissance.Time().IsZero() {
+		return errors.New("missing DateNaissance")
+	}
+	if len(insc.Participants) == 0 {
+		return errors.New("missing Participants")
+	}
+	age := insc.Responsable.DateNaissance.Age(time.Now())
+	if age < 18 {
+		return errors.New("invalid Age")
+	}
+	for _, part := range insc.Participants {
+		if part.DateNaissance.Time().IsZero() {
+			return errors.New("missing Participant.DateNaissance")
+		}
+	}
+	return nil
+}
+
 // newResponsableLegal renvoie les champs de la personne
 // vus comme le responsable d'une inscription
 func newResponsableLegal(r pr.Etatcivil) in.ResponsableLegal {
@@ -123,8 +164,8 @@ func newResponsableLegal(r pr.Etatcivil) in.ResponsableLegal {
 }
 
 type Participant struct {
-	IdCamp   camps.IdCamp
 	PreIdent string // crypted
+	IdCamp   camps.IdCamp
 
 	Nom           string
 	Prenom        string
@@ -228,4 +269,107 @@ func (ct *Controller) decodePreinscription(crypted string) (insc Inscription, _ 
 		insc.Participants = append(insc.Participants, partInsc)
 	}
 	return insc, nil
+}
+
+// SaveInscription vérifie et sauvegarde l'inscription, et
+// demande une confirmation par mail.
+func (ct *Controller) SaveInscription(c echo.Context) error {
+	var args Inscription
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	err := ct.saveInscription(c.Request().Host, args)
+	if err != nil {
+		return err
+	}
+	return c.NoContent(200)
+}
+
+// envoie un mail de demande de confirmation
+func (ct *Controller) saveInscription(host string, publicInsc Inscription) (err error) {
+	camps, err := ct.loadCamps()
+	if err != nil {
+		return err
+	}
+
+	if err = publicInsc.Check(); err != nil {
+		return err
+	}
+
+	insc := in.Inscription{
+		Responsable:        publicInsc.Responsable,
+		Message:            publicInsc.Message,
+		CopiesMails:        publicInsc.CopiesMails,
+		PartageAdressesOK:  publicInsc.PartageAdressesOK,
+		DemandeFondSoutien: publicInsc.DemandeFondSoutien,
+
+		DateHeure:   time.Now(),
+		IsConfirmed: false,
+	}
+	insc.ResponsablePreIdent, err = ct.decodePreIdent(publicInsc.ResponsablePreIdent)
+	if err != nil {
+		return err
+	}
+
+	var participants in.InscriptionParticipants
+	for _, publicPart := range publicInsc.Participants {
+		if _, isCampValid := camps[publicPart.IdCamp]; !isCampValid {
+			return errors.New("invalid IdCamp")
+		}
+		part := in.InscriptionParticipant{
+			IdCamp:        publicPart.IdCamp,
+			Nom:           publicPart.Nom,
+			Prenom:        publicPart.Prenom,
+			DateNaissance: publicPart.DateNaissance,
+			Sexe:          publicPart.Sexe,
+			Nationnalite:  publicPart.Nationnalite,
+		}
+		part.PreIdent, err = ct.decodePreIdent(publicPart.PreIdent)
+		if err != nil {
+			return err
+		}
+		participants = append(participants, part)
+	}
+
+	// enregistre l'inscription sur la base
+	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
+		insc, err = insc.Insert(tx)
+		if err != nil {
+			return err
+		}
+		for i := range participants {
+			participants[i].IdInscription = insc.Id
+		}
+		err = in.InsertManyInscriptionParticipants(tx, participants...)
+		return err
+	})
+	if err != nil {
+		return err
+	}
+
+	// envoie un mail de demande de confirmation
+
+	cryptedId := crypto.EncryptID(ct.key, insc.Id)
+	urlValide := utils.BuildUrl(host, PathConfirmeInscription, map[string]string{
+		"crypted-id": cryptedId,
+	})
+
+	html, err := mails.ConfirmeInscription(ct.asso, mails.Contact{Prenom: insc.Responsable.Prenom, Sexe: insc.Responsable.Sexe}, urlValide)
+	if err != nil {
+		return err
+	}
+	if err = mails.NewMailer(ct.smtp, ct.asso.MailsSettings).SendMail(insc.Responsable.Mail, "Vérification de l'adresse mail", html, nil, nil); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (ct *Controller) decodePreIdent(crypted string) (in.OptIdPersonne, error) {
+	if crypted == "" { // pas de pré identification
+		return in.OptIdPersonne{}, nil
+	}
+
+	id, err := crypto.DecryptID[pr.IdPersonne](ct.key, crypted)
+	return in.OptIdPersonne{Id: id, Valid: true}, err
 }

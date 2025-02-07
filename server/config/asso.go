@@ -47,7 +47,7 @@ var acve = Asso{
 var repere = Asso{}
 
 type MailsSettings struct {
-	AssoName            string // used in adress
+	AssoName            string // used in adress and as object prefix
 	Sauvegarde          string // send copies to this adress
 	Unsubscribe         string // used in 'List-Unsubscribe' header
 	ReplyTo             string // Adresse à laquelle répondre

@@ -1,6 +1,6 @@
 cd migrations &&
 echo "Compile .SQL files..." && 
-go run make_sql.go ../sql/personnes/ ../sql/dossiers/ ../sql/camps/ ../sql/files ../sql/dons && 
+go run make_sql.go ../sql/personnes/ ../sql/dossiers/ ../sql/camps/ ../sql/files ../sql/inscriptions  ../sql/dons && 
 echo "Reset database <test>..." &&
 dropdb test && 
 createdb test && 

@@ -15,13 +15,15 @@ import (
 var templates embed.FS
 
 var (
-	inviteEquipierTmpl *template.Template
-	notifieDonTmpl     *template.Template
+	inviteEquipierTmpl      *template.Template
+	notifieDonTmpl          *template.Template
+	confirmeInscriptionTmpl *template.Template
 )
 
 func init() {
 	inviteEquipierTmpl = parseTemplate("templates/invite_equipier.html")
 	notifieDonTmpl = parseTemplate("templates/notifie_don.html")
+	confirmeInscriptionTmpl = parseTemplate("templates/confirme_inscription.html")
 }
 
 func parseTemplate(templateFile string) *template.Template {
@@ -142,8 +144,8 @@ func (c Contact) Salutations() string {
 // }
 
 type champsCommuns struct {
-	Salutations string
 	Title       string
+	Salutations string
 	Signature   template.HTML
 
 	Asso config.Asso
@@ -290,15 +292,22 @@ type champsCommuns struct {
 // 	return render(templates.RenvoieLienEspacePerso, "base.html", p)
 // }
 
-// func NewValideMail(urlValideInscription string, contact Contact) (string, error) {
-// 	commun := newChampCommuns(contact, "Confirmation de l'adresse mail")
-// 	commun.SignatureMail = "<i>Ps : Ceci est un mail automatique, merci de ne pas y répondre.</i>"
-// 	p := paramsValideMail{
-// 		UrlValideInscription: urlValideInscription,
-// 		champsCommuns:        commun,
-// 	}
-// 	return render(templates.ValideMail, "base.html", p)
-// }
+func ConfirmeInscription(asso config.Asso, contact Contact, urlConfirmeInscription string) (string, error) {
+	args := struct {
+		champsCommuns
+		URL template.HTML
+	}{
+		champsCommuns: champsCommuns{
+			Title:       "Validation de l'adresse mail",
+			Salutations: contact.Salutations(),
+			Signature:   template.HTML("<i>Ps : Ceci est un mail automatique, merci de ne pas y répondre.</i>"),
+			Asso:        asso,
+		},
+		URL: template.HTML(urlConfirmeInscription),
+	}
+
+	return render(confirmeInscriptionTmpl, args)
+}
 
 // func NewDebloqueFicheSanitaire(urlDebloqueFicheSanitaire, newMail, nomPrenom string) (string, error) {
 // 	commun := newChampCommuns(Contact{}, "Accès à la fiche sanitaire")
@@ -341,7 +350,7 @@ func InviteEquipier(cfg config.Asso, labelCamp string, directeur string, equipie
 		s = "Chère"
 	}
 
-	p := struct {
+	args := struct {
 		champsCommuns
 		LabelCamp      string
 		LienFormulaire string
@@ -355,12 +364,12 @@ func InviteEquipier(cfg config.Asso, labelCamp string, directeur string, equipie
 		labelCamp,
 		lienForumaire,
 	}
-	return render(inviteEquipierTmpl, p)
+	return render(inviteEquipierTmpl, args)
 }
 
 // organisme est vide pour les dons particulier
 func NotifieDon(cfg config.Asso, contact Contact, montant dossiers.Montant, organisme string) (string, error) {
-	p := struct {
+	args := struct {
 		champsCommuns
 		Montant   string
 		Organisme string
@@ -374,7 +383,7 @@ func NotifieDon(cfg config.Asso, contact Contact, montant dossiers.Montant, orga
 		Montant:   montant.String(),
 		Organisme: organisme,
 	}
-	return render(notifieDonTmpl, p)
+	return render(notifieDonTmpl, args)
 }
 
 // func NewNotifFusion(contact Contact, lienEspacePerso string) (string, error) {

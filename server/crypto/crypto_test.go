@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	in "registro/sql/inscriptions"
 	pr "registro/sql/personnes"
 	tu "registro/utils/testutils"
 )
@@ -29,13 +30,21 @@ func TestEncryptionID(t *testing.T) {
 		tu.AssertNoErr(t, err)
 		tu.Assert(t, r1 == r2)
 
+		i1 := in.IdInscription(v1 - 5)
+		s, err = newEncryptedID(key, i1)
+		tu.AssertNoErr(t, err)
+		i2, err := DecryptID[in.IdInscription](key, s)
+		tu.AssertNoErr(t, err)
+		tu.Assert(t, i1 == i2)
+
 		// expected errors
 		_, err = DecryptID[int64](key, s)
 		tu.AssertErr(t, err)
 
 		_, err = DecryptID[pr.IdPersonne](otherKey, s)
 		tu.AssertErr(t, err)
-
+		_, err = DecryptID[in.IdInscription](otherKey, s)
+		tu.AssertErr(t, err)
 	}
 
 	fmt.Println(EncryptID(key, pr.IdPersonne(456)))

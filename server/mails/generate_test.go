@@ -206,3 +206,11 @@ func TestNotificationDon(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	tu.Write(t, "notification_don_2.html", []byte(html))
 }
+
+func TestConfirmeInscription(t *testing.T) {
+	cfg, _ := loadEnv(t)
+
+	html, err := ConfirmeInscription(cfg, Contact{Prenom: "Benoit", Sexe: pr.Woman}, "https://acve.fr/confirme?id='ee'")
+	tu.AssertNoErr(t, err)
+	tu.Write(t, "confirme_inscription.html", []byte(html))
+}

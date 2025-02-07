@@ -57,7 +57,7 @@
           line-height: 30px;
         }
 
-        .salutations {
+        .signature {
           height: 70px;
           text-align: left;
           font-size: 16px;
@@ -84,25 +84,25 @@
       cellspacing="0"
       cellpadding="0"
     >
-      <tr class="header" class="color-asso">
-        <td style="text-align: center; padding: 5px">
+      <tr class="header color-asso">
+        <td colspan="2" style="text-align: center; padding: 5px">
           {{ .Asso.Title }} - {{ .Title }}
         </td>
       </tr>
       <tr>
-        <td class="bonjour">{{ .Salutations }}</td>
+        <td colspan="2" class="bonjour">{{ .Salutations }}</td>
       </tr>
       <tr class="content">
-        <td style="padding: 10px">{{ template "content" . }}</td>
+        <td colspan="2" style="padding: 10px">{{ template "content" . }}</td>
       </tr>
 
-      <tr class="salutations">
-        <td style="padding: 10px">{{ .Signature }}</td>
+      <tr class="signature">
+        <td colspan="2" style="padding: 10px">{{ .Signature }}</td>
       </tr>
 
-      <tr class="footer" class="color-asso">
+      <tr class="footer color-asso">
         <td style="padding: 5px">{{ .Asso.Title}}</td>
-        <td style="padding: 5px">{{ .Asso.Infos }}</td>
+        <td style="padding: 5px; text-align: right">{{ .Asso.Infos }}</td>
       </tr>
     </table>
   </body>

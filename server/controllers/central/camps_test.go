@@ -14,8 +14,7 @@ import (
 func TestCRUD(t *testing.T) {
 	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
 		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",
-		"../../migrations/init.sql",
-	)
+		"../../migrations/init.sql")
 	defer db.Remove()
 
 	pe, err := personnes.Personne{}.Insert(db)

@@ -2,10 +2,14 @@ package utils
 
 import (
 	"bytes"
+	"cmp"
 	"database/sql"
 	"fmt"
 	"math/rand"
+	"net/url"
+	"slices"
 	"strconv"
+	"strings"
 	"unicode"
 
 	"github.com/labstack/echo/v4"
@@ -86,6 +90,24 @@ func InTx(db *sql.DB, fn func(tx *sql.Tx) error) error {
 	return nil
 }
 
+// BuildUrl returns http(s)://<host>/<path>?<params>
+func BuildUrl(host, path string, params map[string]string) string {
+	pm := url.Values{}
+	for k, v := range params {
+		pm.Add(k, v)
+	}
+	u := url.URL{
+		Host:     host,
+		Scheme:   "https",
+		Path:     path,
+		RawQuery: pm.Encode(),
+	}
+	if strings.HasPrefix(host, "localhost") {
+		u.Scheme = "http"
+	}
+	return u.String()
+}
+
 func MapValues[K comparable, V any](m map[K]V) []V {
 	out := make([]V, 0, len(m))
 	for _, v := range m {
@@ -99,5 +121,11 @@ func MapKeys[K comparable, V any](m map[K]V) []K {
 	for k := range m {
 		out = append(out, k)
 	}
+	return out
+}
+
+func MapKeysSorted[K cmp.Ordered, V any](m map[K]V) []K {
+	out := MapKeys(m)
+	slices.Sort(out)
 	return out
 }

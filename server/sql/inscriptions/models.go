@@ -13,6 +13,7 @@ import (
 type IdInscription int64
 
 // Inscription enregistre l'inscription faite via le formulaire publique.
+//
 // L'inscription publique est transformée en [Dossier] dès réception,
 // cette table ne sert donc qu'à garder une trace en cas de problème.
 type Inscription struct {
@@ -27,6 +28,10 @@ type Inscription struct {
 	DemandeFondSoutien bool
 
 	DateHeure time.Time
+
+	// IsConfirmed is set to 'true' when the
+	// mail has been confirmed and the [Dossier] has been created.
+	IsConfirmed bool
 }
 
 type InscriptionParticipant struct {

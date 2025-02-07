@@ -232,6 +232,28 @@ CREATE TABLE file_personnes (
     IdDemande integer NOT NULL
 );
 
+CREATE TABLE inscriptions (
+    Id serial PRIMARY KEY,
+    Responsable jsonb NOT NULL,
+    ResponsablePreIdent integer,
+    Message text NOT NULL,
+    CopiesMails text[],
+    PartageAdressesOK boolean NOT NULL,
+    DemandeFondSoutien boolean NOT NULL,
+    DateHeure timestamp(0) with time zone NOT NULL
+);
+
+CREATE TABLE inscription_participants (
+    IdInscription integer NOT NULL,
+    IdCamp integer NOT NULL,
+    PreIdent integer,
+    Nom text NOT NULL,
+    Prenom text NOT NULL,
+    DateNaissance date NOT NULL,
+    Sexe smallint CHECK (Sexe IN (0, 1, 2)) NOT NULL,
+    Nationnalite smallint CHECK (Nationnalite IN (0, 1, 2)) NOT NULL
+);
+
 CREATE TABLE dons (
     Id serial PRIMARY KEY,
     Valeur Montant NOT NULL,

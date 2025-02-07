@@ -215,3 +215,18 @@ ALTER TABLE file_aides
 ALTER TABLE file_aides
     ADD FOREIGN KEY (IdAide) REFERENCES aides;
 
+ALTER TABLE inscriptions
+    ADD FOREIGN KEY (ResponsablePreIdent) REFERENCES personnes ON DELETE SET NULL;
+
+ALTER TABLE inscription_participants
+    ADD FOREIGN KEY (IdInscription) REFERENCES inscriptions ON DELETE CASCADE;
+
+ALTER TABLE inscription_participants
+    ADD FOREIGN KEY (IdCamp) REFERENCES camps ON DELETE CASCADE;
+
+ALTER TABLE inscription_participants
+    ADD FOREIGN KEY (PreIdent) REFERENCES personnes ON DELETE SET NULL;
+
+ALTER TABLE inscriptions
+    ADD CONSTRAINT Responsable_gomacro CHECK (gomacro_validate_json_insc_ResponsableLegal (Responsable));
+

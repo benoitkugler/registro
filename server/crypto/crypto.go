@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io"
 
+	in "registro/sql/inscriptions"
 	pr "registro/sql/personnes"
 )
 
@@ -54,12 +55,13 @@ func (enc Encrypter) decrypt(data []byte) ([]byte, error) {
 
 type IDs interface {
 	~int64
-	pr.IdPersonne | int64
+	pr.IdPersonne | in.IdInscription | int64
 }
 
 const (
 	tOther = iota
 	tPersonne
+	tInscription
 )
 
 type wrappedID[T IDs] struct {
@@ -80,6 +82,8 @@ func newEncryptedID[T IDs](key Encrypter, ID T) (string, error) {
 	switch any(ID).(type) {
 	case pr.IdPersonne:
 		data.Type = tPersonne
+	case in.IdInscription:
+		data.Type = tInscription
 	default:
 		data.Type = tOther
 	}
@@ -98,6 +102,8 @@ func DecryptID[T IDs](key Encrypter, enc string) (T, error) {
 	switch any(wr.ID).(type) {
 	case pr.IdPersonne:
 		typeMatch = wr.Type == tPersonne
+	case in.IdInscription:
+		typeMatch = wr.Type == tInscription
 	default:
 		typeMatch = wr.Type == tOther
 	}
