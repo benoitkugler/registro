@@ -32,12 +32,13 @@ func scanOneDossier(row scanner) (Dossier, error) {
 	var item Dossier
 	err := row.Scan(
 		&item.Id,
-		&item.IdResponsable,
 		&item.IdTaux,
+		&item.IdResponsable,
 		&item.CopiesMails,
 		&item.PartageAdressesOK,
 		&item.IsValidated,
 		&item.LastConnection,
+		&item.KeyV1,
 	)
 	return item, err
 }
@@ -106,22 +107,22 @@ func ScanDossiers(rs *sql.Rows) (Dossiers, error) {
 // Insert one Dossier in the database and returns the item with id filled.
 func (item Dossier) Insert(tx DB) (out Dossier, err error) {
 	row := tx.QueryRow(`INSERT INTO dossiers (
-		idresponsable, idtaux, copiesmails, partageadressesok, isvalidated, lastconnection
+		idtaux, idresponsable, copiesmails, partageadressesok, isvalidated, lastconnection, keyv1
 		) VALUES (
-		$1, $2, $3, $4, $5, $6
+		$1, $2, $3, $4, $5, $6, $7
 		) RETURNING *;
-		`, item.IdResponsable, item.IdTaux, item.CopiesMails, item.PartageAdressesOK, item.IsValidated, item.LastConnection)
+		`, item.IdTaux, item.IdResponsable, item.CopiesMails, item.PartageAdressesOK, item.IsValidated, item.LastConnection, item.KeyV1)
 	return ScanDossier(row)
 }
 
 // Update Dossier in the database and returns the new version.
 func (item Dossier) Update(tx DB) (out Dossier, err error) {
 	row := tx.QueryRow(`UPDATE dossiers SET (
-		idresponsable, idtaux, copiesmails, partageadressesok, isvalidated, lastconnection
+		idtaux, idresponsable, copiesmails, partageadressesok, isvalidated, lastconnection, keyv1
 		) = (
-		$1, $2, $3, $4, $5, $6
-		) WHERE id = $7 RETURNING *;
-		`, item.IdResponsable, item.IdTaux, item.CopiesMails, item.PartageAdressesOK, item.IsValidated, item.LastConnection, item.Id)
+		$1, $2, $3, $4, $5, $6, $7
+		) WHERE id = $8 RETURNING *;
+		`, item.IdTaux, item.IdResponsable, item.CopiesMails, item.PartageAdressesOK, item.IsValidated, item.LastConnection, item.KeyV1, item.Id)
 	return ScanDossier(row)
 }
 
@@ -134,47 +135,6 @@ func DeleteDossierById(tx DB, id IdDossier) (Dossier, error) {
 // Deletes the Dossier in the database and returns the ids.
 func DeleteDossiersByIDs(tx DB, ids ...IdDossier) ([]IdDossier, error) {
 	rows, err := tx.Query("DELETE FROM dossiers WHERE id = ANY($1) RETURNING id", IdDossierArrayToPQ(ids))
-	if err != nil {
-		return nil, err
-	}
-	return ScanIdDossierArray(rows)
-}
-
-// ByIdResponsable returns a map with 'IdResponsable' as keys.
-func (items Dossiers) ByIdResponsable() map[personnes.IdPersonne]Dossiers {
-	out := make(map[personnes.IdPersonne]Dossiers)
-	for _, target := range items {
-		dict := out[target.IdResponsable]
-		if dict == nil {
-			dict = make(Dossiers)
-		}
-		dict[target.Id] = target
-		out[target.IdResponsable] = dict
-	}
-	return out
-}
-
-// IdResponsables returns the list of ids of IdResponsable
-// contained in this table.
-// They are not garanteed to be distinct.
-func (items Dossiers) IdResponsables() []personnes.IdPersonne {
-	out := make([]personnes.IdPersonne, 0, len(items))
-	for _, target := range items {
-		out = append(out, target.IdResponsable)
-	}
-	return out
-}
-
-func SelectDossiersByIdResponsables(tx DB, idResponsables_ ...personnes.IdPersonne) (Dossiers, error) {
-	rows, err := tx.Query("SELECT * FROM dossiers WHERE idresponsable = ANY($1)", personnes.IdPersonneArrayToPQ(idResponsables_))
-	if err != nil {
-		return nil, err
-	}
-	return ScanDossiers(rows)
-}
-
-func DeleteDossiersByIdResponsables(tx DB, idResponsables_ ...personnes.IdPersonne) ([]IdDossier, error) {
-	rows, err := tx.Query("DELETE FROM dossiers WHERE idresponsable = ANY($1) RETURNING id", personnes.IdPersonneArrayToPQ(idResponsables_))
 	if err != nil {
 		return nil, err
 	}
@@ -222,10 +182,362 @@ func DeleteDossiersByIdTauxs(tx DB, idTauxs_ ...IdTaux) ([]IdDossier, error) {
 	return ScanIdDossierArray(rows)
 }
 
+// ByIdResponsable returns a map with 'IdResponsable' as keys.
+func (items Dossiers) ByIdResponsable() map[personnes.IdPersonne]Dossiers {
+	out := make(map[personnes.IdPersonne]Dossiers)
+	for _, target := range items {
+		dict := out[target.IdResponsable]
+		if dict == nil {
+			dict = make(Dossiers)
+		}
+		dict[target.Id] = target
+		out[target.IdResponsable] = dict
+	}
+	return out
+}
+
+// IdResponsables returns the list of ids of IdResponsable
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items Dossiers) IdResponsables() []personnes.IdPersonne {
+	out := make([]personnes.IdPersonne, 0, len(items))
+	for _, target := range items {
+		out = append(out, target.IdResponsable)
+	}
+	return out
+}
+
+func SelectDossiersByIdResponsables(tx DB, idResponsables_ ...personnes.IdPersonne) (Dossiers, error) {
+	rows, err := tx.Query("SELECT * FROM dossiers WHERE idresponsable = ANY($1)", personnes.IdPersonneArrayToPQ(idResponsables_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanDossiers(rows)
+}
+
+func DeleteDossiersByIdResponsables(tx DB, idResponsables_ ...personnes.IdPersonne) ([]IdDossier, error) {
+	rows, err := tx.Query("DELETE FROM dossiers WHERE idresponsable = ANY($1) RETURNING id", personnes.IdPersonneArrayToPQ(idResponsables_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIdDossierArray(rows)
+}
+
 // SelectDossierByIdAndIdTaux return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectDossierByIdAndIdTaux(tx DB, id IdDossier, idTaux IdTaux) (item Dossier, found bool, err error) {
 	row := tx.QueryRow("SELECT * FROM dossiers WHERE Id = $1 AND IdTaux = $2", id, idTaux)
 	item, err = ScanDossier(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
+}
+
+func scanOneEvent(row scanner) (Event, error) {
+	var item Event
+	err := row.Scan(
+		&item.Id,
+		&item.IdDossier,
+		&item.Kind,
+		&item.Created,
+	)
+	return item, err
+}
+
+func ScanEvent(row *sql.Row) (Event, error) { return scanOneEvent(row) }
+
+// SelectAll returns all the items in the events table.
+func SelectAllEvents(db DB) (Events, error) {
+	rows, err := db.Query("SELECT * FROM events")
+	if err != nil {
+		return nil, err
+	}
+	return ScanEvents(rows)
+}
+
+// SelectEvent returns the entry matching 'id'.
+func SelectEvent(tx DB, id IdEvent) (Event, error) {
+	row := tx.QueryRow("SELECT * FROM events WHERE id = $1", id)
+	return ScanEvent(row)
+}
+
+// SelectEvents returns the entry matching the given 'ids'.
+func SelectEvents(tx DB, ids ...IdEvent) (Events, error) {
+	rows, err := tx.Query("SELECT * FROM events WHERE id = ANY($1)", IdEventArrayToPQ(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanEvents(rows)
+}
+
+type Events map[IdEvent]Event
+
+func (m Events) IDs() []IdEvent {
+	out := make([]IdEvent, 0, len(m))
+	for i := range m {
+		out = append(out, i)
+	}
+	return out
+}
+
+func ScanEvents(rs *sql.Rows) (Events, error) {
+	var (
+		s   Event
+		err error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(Events, 16)
+	for rs.Next() {
+		s, err = scanOneEvent(rs)
+		if err != nil {
+			return nil, err
+		}
+		structs[s.Id] = s
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+// Insert one Event in the database and returns the item with id filled.
+func (item Event) Insert(tx DB) (out Event, err error) {
+	row := tx.QueryRow(`INSERT INTO events (
+		iddossier, kind, created
+		) VALUES (
+		$1, $2, $3
+		) RETURNING *;
+		`, item.IdDossier, item.Kind, item.Created)
+	return ScanEvent(row)
+}
+
+// Update Event in the database and returns the new version.
+func (item Event) Update(tx DB) (out Event, err error) {
+	row := tx.QueryRow(`UPDATE events SET (
+		iddossier, kind, created
+		) = (
+		$1, $2, $3
+		) WHERE id = $4 RETURNING *;
+		`, item.IdDossier, item.Kind, item.Created, item.Id)
+	return ScanEvent(row)
+}
+
+// Deletes the Event and returns the item
+func DeleteEventById(tx DB, id IdEvent) (Event, error) {
+	row := tx.QueryRow("DELETE FROM events WHERE id = $1 RETURNING *;", id)
+	return ScanEvent(row)
+}
+
+// Deletes the Event in the database and returns the ids.
+func DeleteEventsByIDs(tx DB, ids ...IdEvent) ([]IdEvent, error) {
+	rows, err := tx.Query("DELETE FROM events WHERE id = ANY($1) RETURNING id", IdEventArrayToPQ(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIdEventArray(rows)
+}
+
+// ByIdDossier returns a map with 'IdDossier' as keys.
+func (items Events) ByIdDossier() map[IdDossier]Events {
+	out := make(map[IdDossier]Events)
+	for _, target := range items {
+		dict := out[target.IdDossier]
+		if dict == nil {
+			dict = make(Events)
+		}
+		dict[target.Id] = target
+		out[target.IdDossier] = dict
+	}
+	return out
+}
+
+// IdDossiers returns the list of ids of IdDossier
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items Events) IdDossiers() []IdDossier {
+	out := make([]IdDossier, 0, len(items))
+	for _, target := range items {
+		out = append(out, target.IdDossier)
+	}
+	return out
+}
+
+func SelectEventsByIdDossiers(tx DB, idDossiers_ ...IdDossier) (Events, error) {
+	rows, err := tx.Query("SELECT * FROM events WHERE iddossier = ANY($1)", IdDossierArrayToPQ(idDossiers_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanEvents(rows)
+}
+
+func DeleteEventsByIdDossiers(tx DB, idDossiers_ ...IdDossier) ([]IdEvent, error) {
+	rows, err := tx.Query("DELETE FROM events WHERE iddossier = ANY($1) RETURNING id", IdDossierArrayToPQ(idDossiers_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIdEventArray(rows)
+}
+
+func scanOneEventMessage(row scanner) (EventMessage, error) {
+	var item EventMessage
+	err := row.Scan(
+		&item.IdEvent,
+		&item.Guard,
+		&item.Contenu,
+		&item.Origine,
+		&item.VuPar,
+	)
+	return item, err
+}
+
+func ScanEventMessage(row *sql.Row) (EventMessage, error) { return scanOneEventMessage(row) }
+
+// SelectAll returns all the items in the event_messages table.
+func SelectAllEventMessages(db DB) (EventMessages, error) {
+	rows, err := db.Query("SELECT * FROM event_messages")
+	if err != nil {
+		return nil, err
+	}
+	return ScanEventMessages(rows)
+}
+
+type EventMessages []EventMessage
+
+func ScanEventMessages(rs *sql.Rows) (EventMessages, error) {
+	var (
+		item EventMessage
+		err  error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(EventMessages, 0, 16)
+	for rs.Next() {
+		item, err = scanOneEventMessage(rs)
+		if err != nil {
+			return nil, err
+		}
+		structs = append(structs, item)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+func (item EventMessage) Insert(db DB) error {
+	_, err := db.Exec(`INSERT INTO event_messages (
+			idevent, guard, contenu, origine, vupar
+			) VALUES (
+			$1, $2, $3, $4, $5
+			);
+			`, item.IdEvent, item.Guard, item.Contenu, item.Origine, item.VuPar)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Insert the links EventMessage in the database.
+// It is a no-op if 'items' is empty.
+func InsertManyEventMessages(tx *sql.Tx, items ...EventMessage) error {
+	if len(items) == 0 {
+		return nil
+	}
+
+	stmt, err := tx.Prepare(pq.CopyIn("event_messages",
+		"idevent",
+		"guard",
+		"contenu",
+		"origine",
+		"vupar",
+	))
+	if err != nil {
+		return err
+	}
+
+	for _, item := range items {
+		_, err = stmt.Exec(item.IdEvent, item.Guard, item.Contenu, item.Origine, item.VuPar)
+		if err != nil {
+			return err
+		}
+	}
+
+	if _, err = stmt.Exec(); err != nil {
+		return err
+	}
+
+	if err = stmt.Close(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Delete the link EventMessage from the database.
+// Only the foreign keys IdEvent fields are used in 'item'.
+func (item EventMessage) Delete(tx DB) error {
+	_, err := tx.Exec(`DELETE FROM event_messages WHERE IdEvent = $1;`, item.IdEvent)
+	return err
+}
+
+// ByIdEvent returns a map with 'IdEvent' as keys.
+func (items EventMessages) ByIdEvent() map[IdEvent]EventMessage {
+	out := make(map[IdEvent]EventMessage, len(items))
+	for _, target := range items {
+		out[target.IdEvent] = target
+	}
+	return out
+}
+
+// IdEvents returns the list of ids of IdEvent
+// contained in this link table.
+// They are not garanteed to be distinct.
+func (items EventMessages) IdEvents() []IdEvent {
+	out := make([]IdEvent, len(items))
+	for index, target := range items {
+		out[index] = target.IdEvent
+	}
+	return out
+}
+
+// SelectEventMessageByIdEvent return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectEventMessageByIdEvent(tx DB, idEvent IdEvent) (item EventMessage, found bool, err error) {
+	row := tx.QueryRow("SELECT * FROM event_messages WHERE idevent = $1", idEvent)
+	item, err = ScanEventMessage(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
+}
+
+func SelectEventMessagesByIdEvents(tx DB, idEvents_ ...IdEvent) (EventMessages, error) {
+	rows, err := tx.Query("SELECT * FROM event_messages WHERE idevent = ANY($1)", IdEventArrayToPQ(idEvents_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanEventMessages(rows)
+}
+
+func DeleteEventMessagesByIdEvents(tx DB, idEvents_ ...IdEvent) (EventMessages, error) {
+	rows, err := tx.Query("DELETE FROM event_messages WHERE idevent = ANY($1) RETURNING *", IdEventArrayToPQ(idEvents_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanEventMessages(rows)
+}
+
+// SelectEventByIdAndKind return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectEventByIdAndKind(tx DB, id IdEvent, kind EventKind) (item Event, found bool, err error) {
+	row := tx.QueryRow("SELECT * FROM events WHERE Id = $1 AND Kind = $2", id, kind)
+	item, err = ScanEvent(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
 	}
@@ -526,6 +838,23 @@ func dumpJSON(s interface{}) (driver.Value, error) {
 	return driver.Value(string(b)), nil
 }
 
+func (s *VuPar) Scan(src interface{}) error {
+	var tmp pq.BoolArray
+	err := tmp.Scan(src)
+	if err != nil {
+		return err
+	}
+	if len(tmp) != 3 {
+		return fmt.Errorf("unexpected length %d", len(tmp))
+	}
+	copy(s[:], tmp)
+	return nil
+
+}
+func (s VuPar) Value() (driver.Value, error) {
+	return pq.BoolArray(s[:]).Value()
+}
+
 func (s *Montant) Scan(src interface{}) error {
 	bs, ok := src.([]byte)
 	if !ok {
@@ -598,6 +927,55 @@ func (s IdDossierSet) Has(id IdDossier) bool { return s[id] }
 
 func (s IdDossierSet) Keys() []IdDossier {
 	out := make([]IdDossier, 0, len(s))
+	for k := range s {
+		out = append(out, k)
+	}
+	return out
+}
+
+func IdEventArrayToPQ(ids []IdEvent) pq.Int64Array {
+	out := make(pq.Int64Array, len(ids))
+	for i, v := range ids {
+		out[i] = int64(v)
+	}
+	return out
+}
+
+// ScanIdEventArray scans the result of a query returning a
+// list of ID's.
+func ScanIdEventArray(rs *sql.Rows) ([]IdEvent, error) {
+	defer rs.Close()
+	ints := make([]IdEvent, 0, 16)
+	var err error
+	for rs.Next() {
+		var s IdEvent
+		if err = rs.Scan(&s); err != nil {
+			return nil, err
+		}
+		ints = append(ints, s)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return ints, nil
+}
+
+type IdEventSet map[IdEvent]bool
+
+func NewIdEventSetFrom(ids []IdEvent) IdEventSet {
+	out := make(IdEventSet, len(ids))
+	for _, key := range ids {
+		out[key] = true
+	}
+	return out
+}
+
+func (s IdEventSet) Add(id IdEvent) { s[id] = true }
+
+func (s IdEventSet) Has(id IdEvent) bool { return s[id] }
+
+func (s IdEventSet) Keys() []IdEvent {
+	out := make([]IdEvent, 0, len(s))
 	for k := range s {
 		out = append(out, k)
 	}

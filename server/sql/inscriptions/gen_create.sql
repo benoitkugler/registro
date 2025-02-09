@@ -1,18 +1,21 @@
 -- Code genererated by gomacro/generator/sql. DO NOT EDIT.
 CREATE TABLE inscriptions (
     Id serial PRIMARY KEY,
+    IdTaux integer NOT NULL,
     Responsable jsonb NOT NULL,
     ResponsablePreIdent integer,
     Message text NOT NULL,
     CopiesMails text[],
     PartageAdressesOK boolean NOT NULL,
     DemandeFondSoutien boolean NOT NULL,
-    DateHeure timestamp(0) with time zone NOT NULL
+    DateHeure timestamp(0) with time zone NOT NULL,
+    IsConfirmed boolean NOT NULL
 );
 
 CREATE TABLE inscription_participants (
     IdInscription integer NOT NULL,
     IdCamp integer NOT NULL,
+    IdTaux integer NOT NULL,
     PreIdent integer,
     Nom text NOT NULL,
     Prenom text NOT NULL,
@@ -23,13 +26,28 @@ CREATE TABLE inscription_participants (
 
 -- constraints
 ALTER TABLE inscriptions
+    ADD UNIQUE (Id, IdTaux);
+
+ALTER TABLE inscriptions
+    ADD FOREIGN KEY (IdTaux) REFERENCES tauxs;
+
+ALTER TABLE inscriptions
     ADD FOREIGN KEY (ResponsablePreIdent) REFERENCES personnes ON DELETE SET NULL;
+
+ALTER TABLE inscription_participants
+    ADD FOREIGN KEY (IdCamp, IdTaux) REFERENCES camps (Id, IdTaux) ON DELETE CASCADE;
+
+ALTER TABLE inscription_participants
+    ADD FOREIGN KEY (IdInscription, IdTaux) REFERENCES inscriptions (Id, IdTaux) ON DELETE CASCADE;
 
 ALTER TABLE inscription_participants
     ADD FOREIGN KEY (IdInscription) REFERENCES inscriptions ON DELETE CASCADE;
 
 ALTER TABLE inscription_participants
     ADD FOREIGN KEY (IdCamp) REFERENCES camps ON DELETE CASCADE;
+
+ALTER TABLE inscription_participants
+    ADD FOREIGN KEY (IdTaux) REFERENCES tauxs;
 
 ALTER TABLE inscription_participants
     ADD FOREIGN KEY (PreIdent) REFERENCES personnes ON DELETE SET NULL;

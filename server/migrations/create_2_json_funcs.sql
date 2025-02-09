@@ -91,6 +91,31 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION gomacro_validate_json_pers_Publicite (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('VersionPapier', 'PubHiver', 'PubEte', 'EchoRocher', 'Eonews'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_boolean (data -> 'VersionPapier')
+        AND gomacro_validate_json_boolean (data -> 'PubHiver')
+        AND gomacro_validate_json_boolean (data -> 'PubEte')
+        AND gomacro_validate_json_boolean (data -> 'EchoRocher')
+        AND gomacro_validate_json_boolean (data -> 'Eonews');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
 CREATE OR REPLACE FUNCTION gomacro_validate_json_string (data jsonb)
     RETURNS boolean
     AS $$

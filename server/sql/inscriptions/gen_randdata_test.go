@@ -3,6 +3,7 @@ package inscriptions
 import (
 	"math/rand"
 	"registro/sql/camps"
+	"registro/sql/dossiers"
 	"registro/sql/personnes"
 	"registro/sql/shared"
 	"time"
@@ -17,6 +18,7 @@ func randIdInscription() IdInscription {
 func randInscription() Inscription {
 	var s Inscription
 	s.Id = randIdInscription()
+	s.IdTaux = randdos_IdTaux()
 	s.Responsable = randResponsableLegal()
 	s.ResponsablePreIdent = randOptIdPersonne()
 	s.Message = randstring()
@@ -24,6 +26,7 @@ func randInscription() Inscription {
 	s.PartageAdressesOK = randbool()
 	s.DemandeFondSoutien = randbool()
 	s.DateHeure = randtTime()
+	s.IsConfirmed = randbool()
 
 	return s
 }
@@ -32,6 +35,7 @@ func randInscriptionParticipant() InscriptionParticipant {
 	var s InscriptionParticipant
 	s.IdInscription = randIdInscription()
 	s.IdCamp = randcam_IdCamp()
+	s.IdTaux = randdos_IdTaux()
 	s.PreIdent = randOptIdPersonne()
 	s.Nom = randstring()
 	s.Prenom = randstring()
@@ -82,6 +86,10 @@ func randbool() bool {
 
 func randcam_IdCamp() camps.IdCamp {
 	return camps.IdCamp(randint64())
+}
+
+func randdos_IdTaux() dossiers.IdTaux {
+	return dossiers.IdTaux(randint64())
 }
 
 func randint64() int64 {

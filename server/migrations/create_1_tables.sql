@@ -41,6 +41,7 @@ CREATE TABLE personnes (
     Fonctionnaire boolean NOT NULL,
     Diplome smallint CHECK (Diplome IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19)) NOT NULL,
     Approfondissement smallint CHECK (Approfondissement IN (0, 1, 2, 3, 4, 5)) NOT NULL,
+    Publicite jsonb NOT NULL,
     IsTemp boolean NOT NULL
 );
 
@@ -234,18 +235,21 @@ CREATE TABLE file_personnes (
 
 CREATE TABLE inscriptions (
     Id serial PRIMARY KEY,
+    IdTaux integer NOT NULL,
     Responsable jsonb NOT NULL,
     ResponsablePreIdent integer,
     Message text NOT NULL,
     CopiesMails text[],
     PartageAdressesOK boolean NOT NULL,
     DemandeFondSoutien boolean NOT NULL,
-    DateHeure timestamp(0) with time zone NOT NULL
+    DateHeure timestamp(0) with time zone NOT NULL,
+    IsConfirmed boolean NOT NULL
 );
 
 CREATE TABLE inscription_participants (
     IdInscription integer NOT NULL,
     IdCamp integer NOT NULL,
+    IdTaux integer NOT NULL,
     PreIdent integer,
     Nom text NOT NULL,
     Prenom text NOT NULL,

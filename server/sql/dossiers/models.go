@@ -13,6 +13,7 @@ type (
 	IdTaux     int64
 	IdDossier  int64
 	IdPaiement int64
+	IdEvent    int64
 )
 
 // Taux définit le taux de convertion de chaque
@@ -45,9 +46,9 @@ type Taux struct {
 // gomacro:SQL ADD UNIQUE(Id, IdTaux)
 type Dossier struct {
 	Id            IdDossier
+	IdTaux        IdTaux
 	IdResponsable pr.IdPersonne // responsable légal en charge du dossier
 	// IdTaux is used for consistency
-	IdTaux IdTaux
 
 	// CopiesMails est une liste d'adresse en copies des mails envoyés,
 	// donnant entre autre accès à l'espace personnel
@@ -60,6 +61,8 @@ type Dossier struct {
 	IsValidated bool
 
 	LastConnection time.Time // connection sur l'espace personnel
+
+	KeyV1 string // Deprecated: for backward compatibility only
 }
 
 type Paiement struct {
@@ -77,4 +80,32 @@ type Paiement struct {
 	Label string
 	// Details peut stocker un motif ou la date d'encaissement d'un chèque
 	Details string
+}
+
+// Event encode un échange entre le centre d'inscription
+// et le responsable d'un dossier
+//
+// Requis pour référence
+// gomacro:SQL ADD UNIQUE(Id, Kind)
+type Event struct {
+	Id        IdEvent
+	IdDossier IdDossier `gomacro-sql-on-delete:"CASCADE"`
+	Kind      EventKind
+	Created   time.Time
+}
+
+// EventMessage stocke le contenu d'un message libre
+//
+// gomacro:SQL ADD UNIQUE(IdEvent)
+// contraintes d'intégrité :
+// gomacro:SQL ADD CHECK(guard = #[EventKind.Message])
+// gomacro:SQL ADD FOREIGN KEY (IdEvent, guard) REFERENCES Event(id,kind)
+type EventMessage struct {
+	IdEvent IdEvent `gomacro-sql-on-delete:"CASCADE"`
+	// For consistency
+	Guard EventKind
+
+	Contenu string
+	Origine MessageOrigine
+	VuPar   VuPar
 }

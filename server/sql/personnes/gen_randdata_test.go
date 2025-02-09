@@ -116,7 +116,19 @@ func randPersonne() Personne {
 	s.Fonctionnaire = randbool()
 	s.Diplome = randDiplome()
 	s.Approfondissement = randApprofondissement()
+	s.Publicite = randPublicite()
 	s.IsTemp = randbool()
+
+	return s
+}
+
+func randPublicite() Publicite {
+	var s Publicite
+	s.VersionPapier = randbool()
+	s.PubHiver = randbool()
+	s.PubEte = randbool()
+	s.EchoRocher = randbool()
+	s.Eonews = randbool()
 
 	return s
 }

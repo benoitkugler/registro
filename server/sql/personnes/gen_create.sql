@@ -35,6 +35,7 @@ CREATE TABLE personnes (
     Fonctionnaire boolean NOT NULL,
     Diplome smallint CHECK (Diplome IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19)) NOT NULL,
     Approfondissement smallint CHECK (Approfondissement IN (0, 1, 2, 3, 4, 5)) NOT NULL,
+    Publicite jsonb NOT NULL,
     IsTemp boolean NOT NULL
 );
 
@@ -136,6 +137,31 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION gomacro_validate_json_pers_Publicite (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('VersionPapier', 'PubHiver', 'PubEte', 'EchoRocher', 'Eonews'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_boolean (data -> 'VersionPapier')
+        AND gomacro_validate_json_boolean (data -> 'PubHiver')
+        AND gomacro_validate_json_boolean (data -> 'PubEte')
+        AND gomacro_validate_json_boolean (data -> 'EchoRocher')
+        AND gomacro_validate_json_boolean (data -> 'Eonews');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
 CREATE OR REPLACE FUNCTION gomacro_validate_json_string (data jsonb)
     RETURNS boolean
     AS $$
@@ -159,4 +185,7 @@ ALTER TABLE fichesanitaires
 
 ALTER TABLE fichesanitaires
     ADD CONSTRAINT Medecin_gomacro CHECK (gomacro_validate_json_pers_Medecin (Medecin));
+
+ALTER TABLE personnes
+    ADD CONSTRAINT Publicite_gomacro CHECK (gomacro_validate_json_pers_Publicite (Publicite));
 

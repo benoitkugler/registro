@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	ds "registro/sql/dossiers"
 	in "registro/sql/inscriptions"
 	pr "registro/sql/personnes"
 	tu "registro/utils/testutils"
@@ -37,6 +38,13 @@ func TestEncryptionID(t *testing.T) {
 		tu.AssertNoErr(t, err)
 		tu.Assert(t, i1 == i2)
 
+		d1 := ds.IdDossier(v1 - 5)
+		s, err = newEncryptedID(key, d1)
+		tu.AssertNoErr(t, err)
+		d2, err := DecryptID[ds.IdDossier](key, s)
+		tu.AssertNoErr(t, err)
+		tu.Assert(t, d1 == d2)
+
 		// expected errors
 		_, err = DecryptID[int64](key, s)
 		tu.AssertErr(t, err)
@@ -44,6 +52,8 @@ func TestEncryptionID(t *testing.T) {
 		_, err = DecryptID[pr.IdPersonne](otherKey, s)
 		tu.AssertErr(t, err)
 		_, err = DecryptID[in.IdInscription](otherKey, s)
+		tu.AssertErr(t, err)
+		_, err = DecryptID[ds.IdDossier](otherKey, s)
 		tu.AssertErr(t, err)
 	}
 

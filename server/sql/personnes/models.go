@@ -10,6 +10,10 @@ type Personne struct {
 
 	Etatcivil
 
+	// Publicite est utilisé pour des exports automatiques
+	// TODO: https://github.com/benoitkugler/registro/issues/11
+	Publicite Publicite
+
 	// IsTemp is `true` for non verified profils,
 	// which may require to be merged to an existant one
 	IsTemp bool

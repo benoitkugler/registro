@@ -120,6 +120,15 @@ const (
 
 type Mails []string
 
+// Publicite indique les préférences de communication
+type Publicite struct {
+	VersionPapier bool
+	PubHiver      bool
+	PubEte        bool
+	EchoRocher    bool
+	Eonews        bool
+}
+
 //--------------------------------------------------------------------
 //------------------------ Fiche Sanitaire ---------------------------
 //--------------------------------------------------------------------

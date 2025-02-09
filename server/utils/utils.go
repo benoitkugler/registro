@@ -90,11 +90,15 @@ func InTx(db *sql.DB, fn func(tx *sql.Tx) error) error {
 	return nil
 }
 
+type QParam struct{ k, v string }
+
+func QP(key, value string) QParam { return QParam{key, value} }
+
 // BuildUrl returns http(s)://<host>/<path>?<params>
-func BuildUrl(host, path string, params map[string]string) string {
+func BuildUrl(host, path string, params ...QParam) string {
 	pm := url.Values{}
-	for k, v := range params {
-		pm.Add(k, v)
+	for _, v := range params {
+		pm.Add(v.k, v.v)
 	}
 	u := url.URL{
 		Host:     host,

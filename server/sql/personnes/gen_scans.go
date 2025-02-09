@@ -212,6 +212,7 @@ func scanOnePersonne(row scanner) (Personne, error) {
 		&item.Fonctionnaire,
 		&item.Diplome,
 		&item.Approfondissement,
+		&item.Publicite,
 		&item.IsTemp,
 	)
 	return item, err
@@ -281,22 +282,22 @@ func ScanPersonnes(rs *sql.Rows) (Personnes, error) {
 // Insert one Personne in the database and returns the item with id filled.
 func (item Personne) Insert(tx DB) (out Personne, err error) {
 	row := tx.QueryRow(`INSERT INTO personnes (
-		nom, prenom, sexe, datenaissance, villenaissance, departementnaissance, nationnalite, tels, mail, adresse, codepostal, ville, pays, securitesociale, nomjeunefille, profession, etudiant, fonctionnaire, diplome, approfondissement, istemp
+		nom, prenom, sexe, datenaissance, villenaissance, departementnaissance, nationnalite, tels, mail, adresse, codepostal, ville, pays, securitesociale, nomjeunefille, profession, etudiant, fonctionnaire, diplome, approfondissement, publicite, istemp
 		) VALUES (
-		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21
+		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22
 		) RETURNING *;
-		`, item.Nom, item.Prenom, item.Sexe, item.DateNaissance, item.VilleNaissance, item.DepartementNaissance, item.Nationnalite, item.Tels, item.Mail, item.Adresse, item.CodePostal, item.Ville, item.Pays, item.SecuriteSociale, item.NomJeuneFille, item.Profession, item.Etudiant, item.Fonctionnaire, item.Diplome, item.Approfondissement, item.IsTemp)
+		`, item.Nom, item.Prenom, item.Sexe, item.DateNaissance, item.VilleNaissance, item.DepartementNaissance, item.Nationnalite, item.Tels, item.Mail, item.Adresse, item.CodePostal, item.Ville, item.Pays, item.SecuriteSociale, item.NomJeuneFille, item.Profession, item.Etudiant, item.Fonctionnaire, item.Diplome, item.Approfondissement, item.Publicite, item.IsTemp)
 	return ScanPersonne(row)
 }
 
 // Update Personne in the database and returns the new version.
 func (item Personne) Update(tx DB) (out Personne, err error) {
 	row := tx.QueryRow(`UPDATE personnes SET (
-		nom, prenom, sexe, datenaissance, villenaissance, departementnaissance, nationnalite, tels, mail, adresse, codepostal, ville, pays, securitesociale, nomjeunefille, profession, etudiant, fonctionnaire, diplome, approfondissement, istemp
+		nom, prenom, sexe, datenaissance, villenaissance, departementnaissance, nationnalite, tels, mail, adresse, codepostal, ville, pays, securitesociale, nomjeunefille, profession, etudiant, fonctionnaire, diplome, approfondissement, publicite, istemp
 		) = (
-		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21
-		) WHERE id = $22 RETURNING *;
-		`, item.Nom, item.Prenom, item.Sexe, item.DateNaissance, item.VilleNaissance, item.DepartementNaissance, item.Nationnalite, item.Tels, item.Mail, item.Adresse, item.CodePostal, item.Ville, item.Pays, item.SecuriteSociale, item.NomJeuneFille, item.Profession, item.Etudiant, item.Fonctionnaire, item.Diplome, item.Approfondissement, item.IsTemp, item.Id)
+		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22
+		) WHERE id = $23 RETURNING *;
+		`, item.Nom, item.Prenom, item.Sexe, item.DateNaissance, item.VilleNaissance, item.DepartementNaissance, item.Nationnalite, item.Tels, item.Mail, item.Adresse, item.CodePostal, item.Ville, item.Pays, item.SecuriteSociale, item.NomJeuneFille, item.Profession, item.Etudiant, item.Fonctionnaire, item.Diplome, item.Approfondissement, item.Publicite, item.IsTemp, item.Id)
 	return ScanPersonne(row)
 }
 
@@ -419,3 +420,6 @@ func (s Maladies) Value() (driver.Value, error) { return dumpJSON(s) }
 
 func (s *Medecin) Scan(src interface{}) error  { return loadJSON(s, src) }
 func (s Medecin) Value() (driver.Value, error) { return dumpJSON(s) }
+
+func (s *Publicite) Scan(src interface{}) error  { return loadJSON(s, src) }
+func (s Publicite) Value() (driver.Value, error) { return dumpJSON(s) }

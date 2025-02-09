@@ -15,6 +15,9 @@ ALTER TABLE fichesanitaires
 ALTER TABLE fichesanitaires
     ADD CONSTRAINT Medecin_gomacro CHECK (gomacro_validate_json_pers_Medecin (Medecin));
 
+ALTER TABLE personnes
+    ADD CONSTRAINT Publicite_gomacro CHECK (gomacro_validate_json_pers_Publicite (Publicite));
+
 ALTER TABLE tauxs
     ADD UNIQUE (Label);
 
@@ -216,13 +219,28 @@ ALTER TABLE file_aides
     ADD FOREIGN KEY (IdAide) REFERENCES aides;
 
 ALTER TABLE inscriptions
+    ADD UNIQUE (Id, IdTaux);
+
+ALTER TABLE inscriptions
+    ADD FOREIGN KEY (IdTaux) REFERENCES tauxs;
+
+ALTER TABLE inscriptions
     ADD FOREIGN KEY (ResponsablePreIdent) REFERENCES personnes ON DELETE SET NULL;
+
+ALTER TABLE inscription_participants
+    ADD FOREIGN KEY (IdCamp, IdTaux) REFERENCES camps (Id, IdTaux) ON DELETE CASCADE;
+
+ALTER TABLE inscription_participants
+    ADD FOREIGN KEY (IdInscription, IdTaux) REFERENCES inscriptions (Id, IdTaux) ON DELETE CASCADE;
 
 ALTER TABLE inscription_participants
     ADD FOREIGN KEY (IdInscription) REFERENCES inscriptions ON DELETE CASCADE;
 
 ALTER TABLE inscription_participants
     ADD FOREIGN KEY (IdCamp) REFERENCES camps ON DELETE CASCADE;
+
+ALTER TABLE inscription_participants
+    ADD FOREIGN KEY (IdTaux) REFERENCES tauxs;
 
 ALTER TABLE inscription_participants
     ADD FOREIGN KEY (PreIdent) REFERENCES personnes ON DELETE SET NULL;

@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"registro/sql/camps"
+	"registro/sql/dossiers"
 	"registro/sql/personnes"
 
 	"github.com/lib/pq"
@@ -30,6 +31,7 @@ func scanOneInscription(row scanner) (Inscription, error) {
 	var item Inscription
 	err := row.Scan(
 		&item.Id,
+		&item.IdTaux,
 		&item.Responsable,
 		&item.ResponsablePreIdent,
 		&item.Message,
@@ -37,6 +39,7 @@ func scanOneInscription(row scanner) (Inscription, error) {
 		&item.PartageAdressesOK,
 		&item.DemandeFondSoutien,
 		&item.DateHeure,
+		&item.IsConfirmed,
 	)
 	return item, err
 }
@@ -105,22 +108,22 @@ func ScanInscriptions(rs *sql.Rows) (Inscriptions, error) {
 // Insert one Inscription in the database and returns the item with id filled.
 func (item Inscription) Insert(tx DB) (out Inscription, err error) {
 	row := tx.QueryRow(`INSERT INTO inscriptions (
-		responsable, responsablepreident, message, copiesmails, partageadressesok, demandefondsoutien, dateheure
+		idtaux, responsable, responsablepreident, message, copiesmails, partageadressesok, demandefondsoutien, dateheure, isconfirmed
 		) VALUES (
-		$1, $2, $3, $4, $5, $6, $7
+		$1, $2, $3, $4, $5, $6, $7, $8, $9
 		) RETURNING *;
-		`, item.Responsable, item.ResponsablePreIdent, item.Message, item.CopiesMails, item.PartageAdressesOK, item.DemandeFondSoutien, item.DateHeure)
+		`, item.IdTaux, item.Responsable, item.ResponsablePreIdent, item.Message, item.CopiesMails, item.PartageAdressesOK, item.DemandeFondSoutien, item.DateHeure, item.IsConfirmed)
 	return ScanInscription(row)
 }
 
 // Update Inscription in the database and returns the new version.
 func (item Inscription) Update(tx DB) (out Inscription, err error) {
 	row := tx.QueryRow(`UPDATE inscriptions SET (
-		responsable, responsablepreident, message, copiesmails, partageadressesok, demandefondsoutien, dateheure
+		idtaux, responsable, responsablepreident, message, copiesmails, partageadressesok, demandefondsoutien, dateheure, isconfirmed
 		) = (
-		$1, $2, $3, $4, $5, $6, $7
-		) WHERE id = $8 RETURNING *;
-		`, item.Responsable, item.ResponsablePreIdent, item.Message, item.CopiesMails, item.PartageAdressesOK, item.DemandeFondSoutien, item.DateHeure, item.Id)
+		$1, $2, $3, $4, $5, $6, $7, $8, $9
+		) WHERE id = $10 RETURNING *;
+		`, item.IdTaux, item.Responsable, item.ResponsablePreIdent, item.Message, item.CopiesMails, item.PartageAdressesOK, item.DemandeFondSoutien, item.DateHeure, item.IsConfirmed, item.Id)
 	return ScanInscription(row)
 }
 
@@ -133,6 +136,47 @@ func DeleteInscriptionById(tx DB, id IdInscription) (Inscription, error) {
 // Deletes the Inscription in the database and returns the ids.
 func DeleteInscriptionsByIDs(tx DB, ids ...IdInscription) ([]IdInscription, error) {
 	rows, err := tx.Query("DELETE FROM inscriptions WHERE id = ANY($1) RETURNING id", IdInscriptionArrayToPQ(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIdInscriptionArray(rows)
+}
+
+// ByIdTaux returns a map with 'IdTaux' as keys.
+func (items Inscriptions) ByIdTaux() map[dossiers.IdTaux]Inscriptions {
+	out := make(map[dossiers.IdTaux]Inscriptions)
+	for _, target := range items {
+		dict := out[target.IdTaux]
+		if dict == nil {
+			dict = make(Inscriptions)
+		}
+		dict[target.Id] = target
+		out[target.IdTaux] = dict
+	}
+	return out
+}
+
+// IdTauxs returns the list of ids of IdTaux
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items Inscriptions) IdTauxs() []dossiers.IdTaux {
+	out := make([]dossiers.IdTaux, 0, len(items))
+	for _, target := range items {
+		out = append(out, target.IdTaux)
+	}
+	return out
+}
+
+func SelectInscriptionsByIdTauxs(tx DB, idTauxs_ ...dossiers.IdTaux) (Inscriptions, error) {
+	rows, err := tx.Query("SELECT * FROM inscriptions WHERE idtaux = ANY($1)", dossiers.IdTauxArrayToPQ(idTauxs_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanInscriptions(rows)
+}
+
+func DeleteInscriptionsByIdTauxs(tx DB, idTauxs_ ...dossiers.IdTaux) ([]IdInscription, error) {
+	rows, err := tx.Query("DELETE FROM inscriptions WHERE idtaux = ANY($1) RETURNING id", dossiers.IdTauxArrayToPQ(idTauxs_))
 	if err != nil {
 		return nil, err
 	}
@@ -160,6 +204,7 @@ func scanOneInscriptionParticipant(row scanner) (InscriptionParticipant, error) 
 	err := row.Scan(
 		&item.IdInscription,
 		&item.IdCamp,
+		&item.IdTaux,
 		&item.PreIdent,
 		&item.Nom,
 		&item.Prenom,
@@ -212,11 +257,11 @@ func ScanInscriptionParticipants(rs *sql.Rows) (InscriptionParticipants, error) 
 
 func (item InscriptionParticipant) Insert(db DB) error {
 	_, err := db.Exec(`INSERT INTO inscription_participants (
-			idinscription, idcamp, preident, nom, prenom, datenaissance, sexe, nationnalite
+			idinscription, idcamp, idtaux, preident, nom, prenom, datenaissance, sexe, nationnalite
 			) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8
+			$1, $2, $3, $4, $5, $6, $7, $8, $9
 			);
-			`, item.IdInscription, item.IdCamp, item.PreIdent, item.Nom, item.Prenom, item.DateNaissance, item.Sexe, item.Nationnalite)
+			`, item.IdInscription, item.IdCamp, item.IdTaux, item.PreIdent, item.Nom, item.Prenom, item.DateNaissance, item.Sexe, item.Nationnalite)
 	if err != nil {
 		return err
 	}
@@ -233,6 +278,7 @@ func InsertManyInscriptionParticipants(tx *sql.Tx, items ...InscriptionParticipa
 	stmt, err := tx.Prepare(pq.CopyIn("inscription_participants",
 		"idinscription",
 		"idcamp",
+		"idtaux",
 		"preident",
 		"nom",
 		"prenom",
@@ -245,7 +291,7 @@ func InsertManyInscriptionParticipants(tx *sql.Tx, items ...InscriptionParticipa
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdInscription, item.IdCamp, item.PreIdent, item.Nom, item.Prenom, item.DateNaissance, item.Sexe, item.Nationnalite)
+		_, err = stmt.Exec(item.IdInscription, item.IdCamp, item.IdTaux, item.PreIdent, item.Nom, item.Prenom, item.DateNaissance, item.Sexe, item.Nationnalite)
 		if err != nil {
 			return err
 		}
@@ -262,9 +308,9 @@ func InsertManyInscriptionParticipants(tx *sql.Tx, items ...InscriptionParticipa
 }
 
 // Delete the link InscriptionParticipant from the database.
-// Only the foreign keys IdInscription, IdCamp, PreIdent fields are used in 'item'.
+// Only the foreign keys IdInscription, IdCamp, IdTaux, PreIdent fields are used in 'item'.
 func (item InscriptionParticipant) Delete(tx DB) error {
-	_, err := tx.Exec(`DELETE FROM inscription_participants WHERE IdInscription = $1 AND IdCamp = $2 AND ((PreIdent IS NULL AND $3 IS NULL) OR PreIdent = $3);`, item.IdInscription, item.IdCamp, item.PreIdent)
+	_, err := tx.Exec(`DELETE FROM inscription_participants WHERE IdInscription = $1 AND IdCamp = $2 AND IdTaux = $3 AND ((PreIdent IS NULL AND $4 IS NULL) OR PreIdent = $4);`, item.IdInscription, item.IdCamp, item.IdTaux, item.PreIdent)
 	return err
 }
 
@@ -340,6 +386,42 @@ func DeleteInscriptionParticipantsByIdCamps(tx DB, idCamps_ ...camps.IdCamp) (In
 	return ScanInscriptionParticipants(rows)
 }
 
+// ByIdTaux returns a map with 'IdTaux' as keys.
+func (items InscriptionParticipants) ByIdTaux() map[dossiers.IdTaux]InscriptionParticipants {
+	out := make(map[dossiers.IdTaux]InscriptionParticipants)
+	for _, target := range items {
+		out[target.IdTaux] = append(out[target.IdTaux], target)
+	}
+	return out
+}
+
+// IdTauxs returns the list of ids of IdTaux
+// contained in this link table.
+// They are not garanteed to be distinct.
+func (items InscriptionParticipants) IdTauxs() []dossiers.IdTaux {
+	out := make([]dossiers.IdTaux, len(items))
+	for index, target := range items {
+		out[index] = target.IdTaux
+	}
+	return out
+}
+
+func SelectInscriptionParticipantsByIdTauxs(tx DB, idTauxs_ ...dossiers.IdTaux) (InscriptionParticipants, error) {
+	rows, err := tx.Query("SELECT * FROM inscription_participants WHERE idtaux = ANY($1)", dossiers.IdTauxArrayToPQ(idTauxs_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanInscriptionParticipants(rows)
+}
+
+func DeleteInscriptionParticipantsByIdTauxs(tx DB, idTauxs_ ...dossiers.IdTaux) (InscriptionParticipants, error) {
+	rows, err := tx.Query("DELETE FROM inscription_participants WHERE idtaux = ANY($1) RETURNING *", dossiers.IdTauxArrayToPQ(idTauxs_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanInscriptionParticipants(rows)
+}
+
 func SelectInscriptionParticipantsByPreIdents(tx DB, preIdents_ ...personnes.IdPersonne) (InscriptionParticipants, error) {
 	rows, err := tx.Query("SELECT * FROM inscription_participants WHERE preident = ANY($1)", personnes.IdPersonneArrayToPQ(preIdents_))
 	if err != nil {
@@ -354,6 +436,16 @@ func DeleteInscriptionParticipantsByPreIdents(tx DB, preIdents_ ...personnes.IdP
 		return nil, err
 	}
 	return ScanInscriptionParticipants(rows)
+}
+
+// SelectInscriptionByIdAndIdTaux return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectInscriptionByIdAndIdTaux(tx DB, id IdInscription, idTaux dossiers.IdTaux) (item Inscription, found bool, err error) {
+	row := tx.QueryRow("SELECT * FROM inscriptions WHERE Id = $1 AND IdTaux = $2", id, idTaux)
+	item, err = ScanInscription(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
 }
 
 func loadJSON(out interface{}, src interface{}) error {
