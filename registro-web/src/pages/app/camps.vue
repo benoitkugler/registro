@@ -116,10 +116,14 @@
       </v-row>
     </template>
     <v-card-text class="mt-4">
+      <v-alert v-if="!isPlageTauxValid" type="warning">
+        Attention, les camps ouverts aux inscriptions ont des taux de conversion
+        incompatibles !
+      </v-alert>
       <v-skeleton-loader v-if="isLoading"></v-skeleton-loader>
-      <i v-else-if="camps.length == 0"
-        >Aucun camp ne correspond aux filtres actuels.</i
-      >
+      <i v-else-if="camps.length == 0">
+        Aucun camp ne correspond aux filtres actuels.
+      </i>
 
       <CampHeaderRow
         v-for="(camp, index) in pageList"
@@ -153,7 +157,7 @@ const camps = computed(() => {
   const out = Array.from(campsData.values()).filter(
     (camp) =>
       Camps.match(camp.Camp.Camp, pattern) &&
-      (!filter.openOnly || (camp.Camp.Camp.Ouvert && !camp.Camp.IsTerminated))
+      (!filter.openOnly || Camps.open(camp.Camp))
   );
   // most recent first
   out.sort(
@@ -197,7 +201,9 @@ async function create() {
 }
 
 const pageSize = 16;
-const pagesCount = computed(() => Math.ceil(camps.value.length / pageSize));
+const pagesCount = computed(() =>
+  Math.max(Math.ceil(camps.value.length / pageSize), 1)
+);
 const currentPage = ref(1); // 1-based
 
 const toEdit = ref<Camp | null>(null);
@@ -239,6 +245,18 @@ const createSelectedTaux = ref<Taux>({
 const areCreateFieldsValid = computed(
   () => createSelectedTaux.value.Id > 0 || createSelectedTaux.value.Label != ""
 );
+
+/** isPlageTauxValid return true if all the camp
+ * open to inscriptions have the same [IdTaux]
+ */
+const isPlageTauxValid = computed(() => {
+  const tauxCampsOpen = new Set(
+    Array.from(campsData.values())
+      .filter((c) => Camps.open(c.Camp))
+      .map((c) => c.Camp.Camp.IdTaux)
+  );
+  return tauxCampsOpen.size <= 1;
+});
 
 async function createMany() {
   showCreateMany.value = false;

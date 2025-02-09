@@ -1,4 +1,10 @@
-import { AbstractAPI, type Camp, type Date_, type Int } from "./api";
+import {
+  AbstractAPI,
+  type Camp,
+  type CampExt,
+  type Date_,
+  type Int,
+} from "./api";
 import { devToken } from "./env";
 
 function arrayBufferToString(buffer: ArrayBuffer) {
@@ -94,6 +100,10 @@ export namespace Camps {
     if (normalizedPattern == "") return true;
     const str = normalize(label(camp) + camp.Lieu);
     return str.includes(normalizedPattern);
+  }
+
+  export function open(camp: CampExt) {
+    return camp.Camp.Ouvert && !camp.IsTerminated;
   }
 }
 

@@ -132,9 +132,29 @@ func defaultCamp(idTaux ds.IdTaux) cp.Camp {
 	}
 }
 
+// select the last taux used
+func lastTaux(camps cp.Camps) ds.IdTaux {
+	// there is always the defaut taux present in the DB, by construction
+	if len(camps) == 0 {
+		return 1
+	}
+	var last cp.Camp
+	for _, camp := range camps {
+		if camp.DateDebut.Time().After(last.DateDebut.Time()) {
+			last = camp
+		}
+	}
+	return last.IdTaux
+}
+
 func (ct *Controller) createCamp() (CampHeader, error) {
-	const defaultTaux = ds.IdTaux(1) // always present in the DB, by construction
-	camp, err := defaultCamp(defaultTaux).Insert(ct.db)
+	camps, err := cp.SelectAllCamps(ct.db)
+	if err != nil {
+		return CampHeader{}, utils.SQLError(err)
+	}
+	idTaux := lastTaux(camps)
+
+	camp, err := defaultCamp(idTaux).Insert(ct.db)
 	if err != nil {
 		return CampHeader{}, utils.SQLError(err)
 	}
