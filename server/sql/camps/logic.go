@@ -78,3 +78,18 @@ type CampExt struct {
 func (cp Camp) Ext() CampExt {
 	return CampExt{cp, cp.isTerminated()}
 }
+
+
+// TrouveGroupe cherche parmis les groupes possibles celui qui pourrait convenir.
+// Normalement, les groupes respectent un invariant de continuité sur les plages,
+// imposé par le frontend.
+// Si plusieurs pourraient convenir, un seul est renvoyé, de façon arbitraire.
+func (gs Groupes) TrouveGroupe(dateNaissance shared.Date) (Groupe, bool) {
+	for _, g := range gs {
+		if g.Plage.Contains(dateNaissance) {
+			return g, true
+		}
+	}
+	// on a trouvé aucun groupe
+	return Groupe{}, false
+}
