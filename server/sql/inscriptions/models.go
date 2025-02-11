@@ -1,6 +1,7 @@
 package inscriptions
 
 import (
+	"database/sql"
 	"time"
 
 	"registro/sql/camps"
@@ -36,6 +37,8 @@ type Inscription struct {
 
 	// IsConfirmed is set to 'true' when the
 	// mail has been confirmed and the [Dossier] has been created.
+	// Note that the [Dossier.IsValidated] is still false,
+	// since some personnes may still require to be identified by humans
 	IsConfirmed bool
 }
 
@@ -57,4 +60,20 @@ type InscriptionParticipant struct {
 	DateNaissance shared.Date
 	Sexe          pr.Sexe
 	Nationnalite  pr.Nationnalite
+}
+
+// Create insert [insc], then update [participants] id's and insert them
+func Create(tx *sql.Tx, insc Inscription, participants InscriptionParticipants) (Inscription, error) {
+	insc, err := insc.Insert(tx)
+	if err != nil {
+		return insc, err
+	}
+	for i := range participants {
+		participants[i].IdInscription = insc.Id
+	}
+	err = InsertManyInscriptionParticipants(tx, participants...)
+	if err != nil {
+		return insc, err
+	}
+	return insc, nil
 }

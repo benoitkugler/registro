@@ -12,7 +12,6 @@ import (
 	"registro/controllers/search"
 	"registro/crypto"
 	"registro/mails"
-	"registro/sql/camps"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
 	"registro/sql/events"
@@ -167,7 +166,7 @@ func newResponsableLegal(r pr.Etatcivil) in.ResponsableLegal {
 
 type Participant struct {
 	PreIdent string // crypted
-	IdCamp   camps.IdCamp
+	IdCamp   cps.IdCamp
 
 	Nom           string
 	Prenom        string
@@ -288,30 +287,28 @@ func (ct *Controller) SaveInscription(c echo.Context) error {
 	return c.NoContent(200)
 }
 
-// envoie un mail de demande de confirmation
-func (ct *Controller) saveInscription(host string, publicInsc Inscription) (err error) {
+func (ct *Controller) buildInscription(publicInsc Inscription) (insc in.Inscription, ps in.InscriptionParticipants, _ error) {
 	camps, err := ct.loadCamps()
 	if err != nil {
-		return err
+		return insc, ps, err
 	}
 
 	if err = publicInsc.check(); err != nil {
-		return err
+		return insc, ps, err
 	}
 
-	var (
-		participants in.InscriptionParticipants
-		allTaux      = ds.IdTauxSet{} // check that all taux are the same
-	)
+	allTaux := ds.IdTauxSet{} // check that all taux are the same
+
 	for _, publicPart := range publicInsc.Participants {
 		camp, isCampValid := camps[publicPart.IdCamp]
 		if !isCampValid {
-			return errors.New("invalid IdCamp")
+			return insc, ps, errors.New("invalid IdCamp")
 		}
 		allTaux.Add(camp.IdTaux)
 
 		part := in.InscriptionParticipant{
 			IdCamp:        publicPart.IdCamp,
+			IdTaux:        camp.IdTaux,
 			Nom:           publicPart.Nom,
 			Prenom:        publicPart.Prenom,
 			DateNaissance: publicPart.DateNaissance,
@@ -320,16 +317,36 @@ func (ct *Controller) saveInscription(host string, publicInsc Inscription) (err 
 		}
 		part.PreIdent, err = ct.decodePreIdent(publicPart.PreIdent)
 		if err != nil {
-			return err
+			return insc, ps, err
 		}
-		participants = append(participants, part)
+		ps = append(ps, part)
 	}
 	if len(allTaux) != 1 {
-		return errors.New("internal error: inconsistent taux")
+		return insc, ps, errors.New("internal error: inconsistent taux")
+	}
+	sharedTaux := allTaux.Keys()[0] // valid thanks to the check above
+
+	// check that, if the participant is pre-identified,
+	// the personne is not already present in the camp,
+	// so that the error does not trigger in [confirmeInscription]
+	tmp, err := cps.SelectParticipantsByIdCamps(ct.db, ps.IdCamps()...)
+	if err != nil {
+		return insc, ps, utils.SQLError(err)
+	}
+	currentParticipants := tmp.ByIdCamp()
+	for _, part := range ps {
+		if !part.PreIdent.Valid {
+			continue // nothing to check: a new profil will be created
+		}
+		idPersonne := part.PreIdent.Id
+		campParts := currentParticipants[part.IdCamp]
+		if len(campParts.ByIdPersonne()[idPersonne]) != 0 {
+			return insc, ps, fmt.Errorf("%s est déjà inscrit sur le camp %s", part.Prenom, camps[part.IdCamp].Label())
+		}
 	}
 
-	insc := in.Inscription{
-		IdTaux:             allTaux.Keys()[0], // valid thanks to the check above
+	insc = in.Inscription{
+		IdTaux:             sharedTaux,
 		Responsable:        publicInsc.Responsable,
 		Message:            publicInsc.Message,
 		CopiesMails:        publicInsc.CopiesMails,
@@ -341,38 +358,40 @@ func (ct *Controller) saveInscription(host string, publicInsc Inscription) (err 
 	}
 	insc.ResponsablePreIdent, err = ct.decodePreIdent(publicInsc.ResponsablePreIdent)
 	if err != nil {
+		return insc, ps, err
+	}
+
+	return insc, ps, nil
+}
+
+// envoie un mail de demande de confirmation
+func (ct *Controller) saveInscription(host string, publicInsc Inscription) (err error) {
+	insc, participants, err := ct.buildInscription(publicInsc)
+	if err != nil {
 		return err
 	}
 
-	// enregistre l'inscription sur la base
 	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
-		insc, err = insc.Insert(tx)
+		// enregistre l'inscription sur la base
+		insc, err = in.Create(tx, insc, participants)
 		if err != nil {
 			return err
 		}
-		for i := range participants {
-			participants[i].IdInscription = insc.Id
+
+		// envoie un mail de demande de confirmation
+		cryptedId := crypto.EncryptID(ct.key, insc.Id)
+		urlValide := utils.BuildUrl(host, EndpointConfirmeInscription, utils.QP(queryParamIdInscription, cryptedId))
+		html, err := mails.ConfirmeInscription(ct.asso, mails.Contact{Prenom: insc.Responsable.Prenom, Sexe: insc.Responsable.Sexe}, urlValide)
+		if err != nil {
+			return err
 		}
-		err = in.InsertManyInscriptionParticipants(tx, participants...)
-		return err
+		if err = mails.NewMailer(ct.smtp, ct.asso.MailsSettings).SendMail(insc.Responsable.Mail, "Vérification de l'adresse mail", html, nil, nil); err != nil {
+			return err
+		}
+		return nil
 	})
-	if err != nil {
-		return err
-	}
 
-	// envoie un mail de demande de confirmation
-
-	cryptedId := crypto.EncryptID(ct.key, insc.Id)
-	urlValide := utils.BuildUrl(host, EndpointConfirmeInscription, utils.QP(queryParamIdInscription, cryptedId))
-
-	html, err := mails.ConfirmeInscription(ct.asso, mails.Contact{Prenom: insc.Responsable.Prenom, Sexe: insc.Responsable.Sexe}, urlValide)
-	if err != nil {
-		return err
-	}
-	if err = mails.NewMailer(ct.smtp, ct.asso.MailsSettings).SendMail(insc.Responsable.Mail, "Vérification de l'adresse mail", html, nil, nil); err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 const queryParamIdInscription = "insc-token"
@@ -398,7 +417,11 @@ func URLEspacePerso(key crypto.Encrypter, host string, dossier ds.IdDossier, que
 // redirigeant ensuite vers l'espace perso.
 func (ct *Controller) ConfirmeInscription(c echo.Context) error {
 	idCrypted := c.QueryParam(queryParamIdInscription)
-	dossier, err := ct.confirmeInscription(idCrypted)
+	id, err := crypto.DecryptID[in.IdInscription](ct.key, idCrypted)
+	if err != nil {
+		return err
+	}
+	dossier, err := ct.confirmeInscription(id)
 	if err != nil {
 		return err
 	}
@@ -406,13 +429,9 @@ func (ct *Controller) ConfirmeInscription(c echo.Context) error {
 	return c.Redirect(307, url)
 }
 
-// transforme l'inscription en dossier et l'enregistre
-// renvoie le dossier créé et son responsable
-func (ct *Controller) confirmeInscription(idCrypted string) (ds.Dossier, error) {
-	id, err := crypto.DecryptID[in.IdInscription](ct.key, idCrypted)
-	if err != nil {
-		return ds.Dossier{}, err
-	}
+// transforme l'inscription en dossier et l'enregistre,
+// renvoyant le dossier créé
+func (ct *Controller) confirmeInscription(id in.IdInscription) (ds.Dossier, error) {
 	insc, err := in.SelectInscription(ct.db, id)
 	if err != nil {
 		return ds.Dossier{}, utils.SQLError(err)
@@ -420,6 +439,10 @@ func (ct *Controller) confirmeInscription(idCrypted string) (ds.Dossier, error) 
 	participants, err := in.SelectInscriptionParticipantsByIdInscriptions(ct.db, id)
 	if err != nil {
 		return ds.Dossier{}, utils.SQLError(err)
+	}
+
+	if insc.IsConfirmed {
+		return ds.Dossier{}, errors.New("inscription déjà confirmé")
 	}
 
 	type identifiedPersonne struct {
@@ -446,12 +469,6 @@ func (ct *Controller) confirmeInscription(idCrypted string) (ds.Dossier, error) 
 			Ville:         insc.Responsable.Ville,
 			Pays:          insc.Responsable.Pays,
 		},
-		// on active automatiquement l'envoie des pub été/ hiver
-		// pour une personne existante, ces champs sont ignorés par [search.Merge]
-		Publicite: pr.Publicite{
-			PubEte:   true,
-			PubHiver: true,
-		},
 	}
 
 	allPers = append(allPers, identifiedPersonne{responsable, insc.ResponsablePreIdent})
@@ -470,12 +487,23 @@ func (ct *Controller) confirmeInscription(idCrypted string) (ds.Dossier, error) 
 
 	var dossier ds.Dossier
 	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
-		// on charge les personnes pour la comparaison
+		// on charge les personnes pour la comparaison ...
 		personnes, err := pr.SelectPersonnes(tx, allPersIDs.Keys()...)
 		if err != nil {
 			return err
 		}
+		// ... et les camps et groupes
+		camps, err := cps.SelectCamps(tx, participants.IdCamps()...)
+		if err != nil {
+			return err
+		}
+		tmp, err := cps.SelectGroupesByIdCamps(tx, camps.IDs()...)
+		if err != nil {
+			return err
+		}
+		groupes := tmp.ByIdCamp()
 
+		// mise à jour (ou création) des personnes
 		for i, inc := range allPers {
 			if existante, exists := personnes[inc.preIdent.Id]; inc.preIdent.Valid && exists {
 				// si l'inscription est préidentifiée, on fusionne automatiquement
@@ -491,8 +519,19 @@ func (ct *Controller) confirmeInscription(idCrypted string) (ds.Dossier, error) 
 				return err
 			}
 		}
+
 		responsablePersonne := allPers[0].personne // le responsable est en premier
 		participantPersonnes := allPers[1:]
+
+		// on active automatiquement l'envoi des pub été/ hiver pour le responsable
+		responsablePersonne.Publicite = pr.Publicite{
+			PubEte:   true,
+			PubHiver: true,
+		}
+		responsablePersonne, err = responsablePersonne.Update(tx)
+		if err != nil {
+			return err
+		}
 
 		dossier = ds.Dossier{
 			IdTaux:            insc.IdTaux,
@@ -529,7 +568,7 @@ func (ct *Controller) confirmeInscription(idCrypted string) (ds.Dossier, error) 
 				return err
 			}
 			err = events.EventMessage{
-				IdEvent: event.Id, Guard: event.Kind,
+				IdEvent: event.Id,
 				Contenu: content, Origine: events.FromEspaceperso,
 			}.Insert(tx)
 			if err != nil {
@@ -555,18 +594,23 @@ func (ct *Controller) confirmeInscription(idCrypted string) (ds.Dossier, error) 
 				return err
 			}
 
-			// TODO:
-			// groupe, hasFound := campG.TrouveGroupe(inscPart.DateNaissance)
-			// if hasFound {
-			// 	// on ajoute automatiquement le nouveau participant au groupe
-			// 	lien := rd.GroupeParticipant{IdGroupe: groupe.Id, IdCamp: groupe.IdCamp, IdParticipant: participant.Id}
-			// 	err = rd.InsertManyGroupeParticipants(tx, lien)
-			// 	if err != nil {
-			// 		return err
-			// 	}
-			// }
+			groupe, hasFound := groupes[participant.IdCamp].TrouveGroupe(personne.DateNaissance)
+			if hasFound {
+				// on ajoute automatiquement le nouveau participant au groupe
+				err = cps.GroupeParticipant{
+					IdGroupe: groupe.Id, IdCamp: groupe.IdCamp,
+					IdParticipant: participant.Id,
+				}.Insert(tx)
+				if err != nil {
+					return err
+				}
+			}
 		}
-		return nil
+
+		// tag the inscription as Confirmed
+		insc.IsConfirmed = true
+		_, err = insc.Update(tx)
+		return err
 	})
 
 	return dossier, err

@@ -1,6 +1,7 @@
 package inscriptions
 
 import (
+	"database/sql"
 	"slices"
 	"testing"
 	"time"
@@ -9,7 +10,8 @@ import (
 	"registro/crypto"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
-	"registro/sql/inscriptions"
+	ev "registro/sql/events"
+	in "registro/sql/inscriptions"
 	pr "registro/sql/personnes"
 	"registro/sql/shared"
 	"registro/utils"
@@ -118,7 +120,17 @@ func TestController_saveInscription(t *testing.T) {
 
 	cfg, creds := loadEnv(t)
 
+	taux2, err := ds.Taux{Euros: 1000}.Insert(db)
+	tu.AssertNoErr(t, err)
 	camp, err := cps.Camp{IdTaux: 1, DateDebut: shared.NewDateFrom(time.Now()), Duree: 3, Ouvert: true}.Insert(db)
+	tu.AssertNoErr(t, err)
+	camp2, err := cps.Camp{IdTaux: taux2.Id, DateDebut: shared.NewDateFrom(time.Now()), Duree: 3, Ouvert: true}.Insert(db)
+	tu.AssertNoErr(t, err)
+	pers, err := pr.Personne{}.Insert(db)
+	tu.AssertNoErr(t, err)
+	dossier, err := ds.Dossier{IdTaux: 1, IdResponsable: pers.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+	_, err = cps.Participant{IdPersonne: pers.Id, IdCamp: camp.Id, IdTaux: camp.IdTaux, IdDossier: dossier.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	ct := NewController(db.DB, crypto.Encrypter{}, creds, cfg)
@@ -126,8 +138,33 @@ func TestController_saveInscription(t *testing.T) {
 	err = ct.saveInscription("", Inscription{})
 	tu.AssertErr(t, err)
 
+	// insc with inconsitent taux
+	err = ct.saveInscription("", Inscription{
+		Responsable: in.ResponsableLegal{
+			Nom: "Kug", Prenom: "Ben",
+			DateNaissance: shared.NewDate(2000, 1, 1),
+		},
+		Participants: []Participant{
+			{IdCamp: camp.Id, DateNaissance: shared.Date(time.Now())},
+			{IdCamp: camp2.Id, DateNaissance: shared.Date(time.Now())},
+		},
+	})
+	tu.AssertErr(t, err)
+
+	// insc with pre-ident to someone already in the camp
+	err = ct.saveInscription("", Inscription{
+		Responsable: in.ResponsableLegal{
+			Nom: "Kug", Prenom: "Ben",
+			DateNaissance: shared.NewDate(2000, 1, 1),
+		},
+		Participants: []Participant{
+			{PreIdent: crypto.EncryptID(ct.key, pers.Id), IdCamp: camp.Id, DateNaissance: shared.Date(time.Now())},
+		},
+	})
+	tu.AssertErr(t, err)
+
 	err = ct.saveInscription("localhost", Inscription{
-		Responsable: inscriptions.ResponsableLegal{
+		Responsable: in.ResponsableLegal{
 			Nom: "Kug", Prenom: "Ben",
 			DateNaissance: shared.NewDate(2000, 1, 1),
 		},
@@ -137,4 +174,62 @@ func TestController_saveInscription(t *testing.T) {
 		},
 	})
 	tu.AssertNoErr(t, err)
+}
+
+func TestController_confirmeInscription(t *testing.T) {
+	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
+		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",
+		"../../migrations/init.sql")
+	defer db.Remove()
+
+	cfg, creds := loadEnv(t)
+
+	camp, err := cps.Camp{IdTaux: 1, DateDebut: shared.NewDateFrom(time.Now()), Duree: 3, Ouvert: true}.Insert(db)
+	tu.AssertNoErr(t, err)
+	_, err = cps.Groupe{IdCamp: camp.Id, Plage: shared.Plage{
+		From:  shared.NewDateFrom(time.Now().Add(-50 * 24 * time.Hour)),
+		Duree: 100,
+	}}.Insert(db)
+	tu.AssertNoErr(t, err)
+	pers, err := pr.Personne{}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	ct := NewController(db.DB, crypto.Encrypter{}, creds, cfg)
+
+	insc, participants, err := ct.buildInscription(Inscription{
+		Responsable: in.ResponsableLegal{
+			Nom: "Kug", Prenom: "Ben",
+			DateNaissance: shared.NewDate(2000, 1, 1),
+		},
+		ResponsablePreIdent: crypto.EncryptID(ct.key, pers.Id),
+		Participants: []Participant{
+			{IdCamp: camp.Id, DateNaissance: shared.Date(time.Now()), PreIdent: crypto.EncryptID(ct.key, pers.Id)},
+			{IdCamp: camp.Id, DateNaissance: shared.Date(time.Now())},
+		},
+		Message: "Haha joli !",
+	})
+	tu.AssertNoErr(t, err)
+	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
+		insc, err = in.Create(tx, insc, participants)
+		return err
+	})
+	tu.AssertNoErr(t, err)
+
+	dossier, err := ct.confirmeInscription(insc.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, dossier.IsValidated == false)
+
+	insc, err = in.SelectInscription(ct.db, insc.Id)
+	tu.Assert(t, insc.IsConfirmed == true)
+
+	respo, err := pr.SelectPersonne(ct.db, dossier.IdResponsable)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, respo.Publicite.PubEte && respo.Publicite.PubHiver)
+
+	events, err := ev.SelectEventsByIdDossiers(ct.db, dossier.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(events) == 2) // time, message
+
+	_, err = ct.confirmeInscription(insc.Id) // already confirmed
+	tu.AssertErr(t, err)
 }

@@ -72,7 +72,7 @@ func SQLError(err error) error {
 
 // InTx démarre une transaction, execute [fn] et
 // COMMIT. En cas d'erreur, la transaction est ROLLBACK,
-// et l'erreur renvoyé est passé à [SQLError]
+// et l'erreur renvoyé est passée à [SQLError]
 func InTx(db *sql.DB, fn func(tx *sql.Tx) error) error {
 	tx, err := db.Begin()
 	if err != nil {

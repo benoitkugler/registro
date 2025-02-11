@@ -28,10 +28,10 @@ ALTER TABLE dossiers
     ADD UNIQUE (Id, IdTaux);
 
 ALTER TABLE dossiers
-    ADD FOREIGN KEY (IdResponsable) REFERENCES personnes;
+    ADD FOREIGN KEY (IdTaux) REFERENCES tauxs;
 
 ALTER TABLE dossiers
-    ADD FOREIGN KEY (IdTaux) REFERENCES tauxs;
+    ADD FOREIGN KEY (IdResponsable) REFERENCES personnes;
 
 ALTER TABLE paiements
     ADD FOREIGN KEY (IdDossier) REFERENCES dossiers ON DELETE CASCADE;
@@ -247,4 +247,140 @@ ALTER TABLE inscription_participants
 
 ALTER TABLE inscriptions
     ADD CONSTRAINT Responsable_gomacro CHECK (gomacro_validate_json_insc_ResponsableLegal (Responsable));
+
+ALTER TABLE events
+    ADD UNIQUE (Id, Kind);
+
+ALTER TABLE events
+    ADD FOREIGN KEY (IdDossier) REFERENCES dossiers ON DELETE CASCADE;
+
+ALTER TABLE event_messages
+    ADD UNIQUE (IdEvent);
+
+ALTER TABLE event_messages
+    ADD FOREIGN KEY (IdEvent, guard) REFERENCES events (Id, Kind);
+
+ALTER TABLE event_messages
+    ADD CHECK (Origine <> 2
+    /* MessageOrigine.FromDirecteur */
+        OR OrigineCamp IS NOT NULL);
+
+ALTER TABLE event_messages
+    ADD CHECK (Origine = 2
+    /* MessageOrigine.FromDirecteur */
+        OR OrigineCamp IS NULL);
+
+ALTER TABLE event_messages
+    ADD FOREIGN KEY (IdEvent) REFERENCES events ON DELETE CASCADE;
+
+ALTER TABLE event_messages
+    ALTER COLUMN guard SET DEFAULT 1
+    /* EventKind.Message */
+;
+
+ALTER TABLE event_messages
+    ADD CHECK (guard = 1
+    /* EventKind.Message */);
+
+ALTER TABLE event_message_vus
+    ADD FOREIGN KEY (IdEvent, guard) REFERENCES events (Id, Kind);
+
+ALTER TABLE event_message_vus
+    ADD UNIQUE (IdEvent, IdCamp);
+
+ALTER TABLE event_message_vus
+    ADD FOREIGN KEY (IdEvent) REFERENCES events ON DELETE CASCADE;
+
+ALTER TABLE event_message_vus
+    ADD FOREIGN KEY (IdCamp) REFERENCES camps ON DELETE CASCADE;
+
+ALTER TABLE event_message_vus
+    ALTER COLUMN guard SET DEFAULT 1
+    /* EventKind.Message */
+;
+
+ALTER TABLE event_message_vus
+    ADD CHECK (guard = 1
+    /* EventKind.Message */);
+
+ALTER TABLE event_camp_docss
+    ADD UNIQUE (IdEvent);
+
+ALTER TABLE event_camp_docss
+    ADD FOREIGN KEY (IdEvent, guard) REFERENCES events (Id, Kind);
+
+ALTER TABLE event_camp_docss
+    ADD FOREIGN KEY (IdEvent) REFERENCES events ON DELETE CASCADE;
+
+ALTER TABLE event_camp_docss
+    ADD FOREIGN KEY (IdCamp) REFERENCES camps;
+
+ALTER TABLE event_camp_docss
+    ALTER COLUMN guard SET DEFAULT 5
+    /* EventKind.CampDocs */
+;
+
+ALTER TABLE event_camp_docss
+    ADD CHECK (guard = 5
+    /* EventKind.CampDocs */);
+
+ALTER TABLE event_sondages
+    ADD UNIQUE (IdEvent);
+
+ALTER TABLE event_sondages
+    ADD FOREIGN KEY (IdEvent, guard) REFERENCES events (Id, Kind);
+
+ALTER TABLE event_sondages
+    ADD FOREIGN KEY (IdEvent) REFERENCES events ON DELETE CASCADE;
+
+ALTER TABLE event_sondages
+    ADD FOREIGN KEY (IdCamp) REFERENCES camps;
+
+ALTER TABLE event_sondages
+    ALTER COLUMN guard SET DEFAULT 7
+    /* EventKind.Sondage */
+;
+
+ALTER TABLE event_sondages
+    ADD CHECK (guard = 7
+    /* EventKind.Sondage */);
+
+ALTER TABLE event_place_liberees
+    ADD UNIQUE (IdEvent);
+
+ALTER TABLE event_place_liberees
+    ADD FOREIGN KEY (IdEvent, guard) REFERENCES events (Id, Kind);
+
+ALTER TABLE event_place_liberees
+    ADD FOREIGN KEY (IdEvent) REFERENCES events ON DELETE CASCADE;
+
+ALTER TABLE event_place_liberees
+    ADD FOREIGN KEY (IdParticipant) REFERENCES participants;
+
+ALTER TABLE event_place_liberees
+    ALTER COLUMN guard SET DEFAULT 8
+    /* EventKind.PlaceLiberee */
+;
+
+ALTER TABLE event_place_liberees
+    ADD CHECK (guard = 8
+    /* EventKind.PlaceLiberee */);
+
+ALTER TABLE event_attestations
+    ADD UNIQUE (IdEvent);
+
+ALTER TABLE event_attestations
+    ADD FOREIGN KEY (IdEvent, guard) REFERENCES events (Id, Kind);
+
+ALTER TABLE event_attestations
+    ADD FOREIGN KEY (IdEvent) REFERENCES events ON DELETE CASCADE;
+
+ALTER TABLE event_attestations
+    ALTER COLUMN guard SET DEFAULT 6
+    /* EventKind.Attestation */
+;
+
+ALTER TABLE event_attestations
+    ADD CHECK (guard = 6
+    /* EventKind.Attestation */);
 

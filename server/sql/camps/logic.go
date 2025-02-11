@@ -1,8 +1,13 @@
 package camps
 
 import (
+	"errors"
+	"fmt"
+	"time"
+
 	pr "registro/sql/personnes"
 	"registro/sql/shared"
+	sh "registro/sql/shared"
 )
 
 type ParticipantExt struct {
@@ -69,6 +74,65 @@ func (cd CampLoader) Stats() StatistiquesInscrits {
 		ext.add(&stats)
 	}
 	return stats
+}
+
+// Label renvoie une description courte
+func (c Camp) Label() string {
+	return fmt.Sprintf("%s %d", c.Nom, c.DateDebut.Time().Year())
+}
+
+func (cp *Camp) DateFin() sh.Date {
+	return sh.Plage{From: cp.DateDebut, Duree: cp.Duree}.To()
+}
+
+// isTerminated renvoie `true` si le camp est
+// passé d'au moins 45 jours.
+func (cp *Camp) isTerminated() bool {
+	const deltaTerminated = 45 * 24 * time.Hour
+	dateFin := cp.DateFin().Time()
+	return time.Now().After(dateFin.Add(deltaTerminated))
+}
+
+// AgeDebutCamp renvoie l'âge qu'aura une personne née le 'dateNaissance' au premier jour
+// du séjour.
+func (cp *Camp) AgeDebutCamp(dateNaissance sh.Date) int {
+	return dateNaissance.Age(cp.DateDebut.Time())
+}
+
+// IsAgeValide renvoie le statut correspondant aux âges min et max du séjour
+func (cp *Camp) IsAgeValide(dateNaissance sh.Date) (min, max bool) {
+	age := cp.AgeDebutCamp(dateNaissance)
+	min = age >= cp.AgeMin
+	max = age <= cp.AgeMax
+	return min, max
+}
+
+// Check assure la validité de divers champs.
+func (c *Camp) Check() error {
+	if c.Duree < 1 {
+		return errors.New("invalid Duree")
+	}
+	if c.DateDebut.Time().Year() < 2020 {
+		return errors.New("invalid DateDebut")
+	}
+	if c.Places < 1 {
+		return errors.New("invalid Places")
+	}
+	if c.AgeMin < 0 {
+		return errors.New("invalid AgeMin")
+	}
+	if c.AgeMax < 1 || c.AgeMax < c.AgeMin {
+		return errors.New("invalid AgeMax")
+	}
+	if c.Prix.Cent < 0 {
+		return errors.New("invalid Prix")
+	}
+	if c.OptionPrix.Active == PrixJour {
+		if c.Duree != len(c.OptionPrix.Jour) {
+			return errors.New("invalid OptionPrix.Jour length")
+		}
+	}
+	return nil
 }
 
 type CampExt struct {
