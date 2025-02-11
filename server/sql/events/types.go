@@ -1,4 +1,11 @@
-package events 
+package events
+
+import (
+	"registro/sql/camps"
+	"registro/sql/shared"
+)
+
+type OptIdCamp shared.OptID[camps.IdCamp]
 
 type EventKind uint8
 
@@ -13,7 +20,7 @@ const (
 	Inscription         // Moment d'inscription
 	AccuseReception     // Inscription validée
 	Facture             // Facture
-	CampDocs           // Document des camps
+	CampDocs            // Document des camps
 	FactureAcquittee    // Facture acquittée
 	AttestationPresence // Attestation de présence
 	Sondage             // Avis sur le séjour
@@ -28,6 +35,8 @@ const (
 	FromBackoffice
 	FromDirecteur
 )
+
+type Distribution uint8
 
 const (
 	DEspacePerso     Distribution = iota // Téléchargée depuis l'espace de suivi

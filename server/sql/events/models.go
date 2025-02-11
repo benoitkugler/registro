@@ -1,7 +1,15 @@
-package events 
+package events
+
+//go:generate ../../../../../go/src/github.com/benoitkugler/gomacro/cmd/gomacro models.go go/sqlcrud:gen_scans.go sql:gen_create.sql go/randdata:gen_randdata_test.go
+
+import (
+	"time"
+
+	"registro/sql/camps"
+	"registro/sql/dossiers"
+)
 
 type IdEvent int64
-
 
 // Event encode un échange entre le centre d'inscription
 // et le responsable d'un dossier
@@ -10,7 +18,7 @@ type IdEvent int64
 // gomacro:SQL ADD UNIQUE(Id, Kind)
 type Event struct {
 	Id        IdEvent
-	IdDossier ds.IdDossier `gomacro-sql-on-delete:"CASCADE"`
+	IdDossier dossiers.IdDossier `gomacro-sql-on-delete:"CASCADE"`
 	Kind      EventKind
 	Created   time.Time
 }
@@ -29,11 +37,11 @@ type EventMessage struct {
 	// For consistency
 	Guard EventKind
 
-	Contenu string
-	Origine MessageOrigine
+	Contenu     string
+	Origine     MessageOrigine
 	OrigineCamp OptIdCamp
 
-	VuBackoffice  bool 
+	VuBackoffice  bool
 	VuEspaceperso bool
 }
 
@@ -48,7 +56,7 @@ type EventMessageVu struct {
 	// For consistency
 	Guard EventKind
 
-	IdCamp  cps.IdCamp  `gomacro-sql-on-delete:"CASCADE"`
+	IdCamp camps.IdCamp `gomacro-sql-on-delete:"CASCADE"`
 }
 
 // EventCampDocs indique le camp concerné par l'envoi des documents.
@@ -59,7 +67,7 @@ type EventMessageVu struct {
 // gomacro:SQL ADD FOREIGN KEY (IdEvent, Guard) REFERENCES Event(Id,Kind)
 type EventCampDocs struct {
 	IdEvent IdEvent `gomacro-sql-on-delete:"CASCADE"`
-	IdCamp  cps.IdCamp
+	IdCamp  camps.IdCamp
 
 	// For consistency
 	Guard EventKind
@@ -73,21 +81,21 @@ type EventCampDocs struct {
 // gomacro:SQL ADD FOREIGN KEY (IdEvent, Guard) REFERENCES Event(Id,Kind)
 type EventSondage struct {
 	IdEvent IdEvent `gomacro-sql-on-delete:"CASCADE"`
-	IdCamp  cps.IdCamp
+	IdCamp  camps.IdCamp
 
 	// For consistency
 	Guard EventKind
 }
 
-// EventPlacelibere notifie qu'un participant a une place disponible.
+// EventPlaceLiberee notifie qu'un participant a une place disponible.
 //
 // gomacro:SQL ADD UNIQUE(IdEvent)
 // contraintes d'intégrité :
-// gomacro:SQL ADD CHECK(Guard = #[EventKind.Placelibere])
+// gomacro:SQL ADD CHECK(Guard = #[EventKind.PlaceLiberee])
 // gomacro:SQL ADD FOREIGN KEY (IdEvent, Guard) REFERENCES Event(Id,Kind)
-type EventPlacelibere struct {
-	IdEvent IdEvent `gomacro-sql-on-delete:"CASCADE"`
-	IdParticipant cps.IdParticipant 
+type EventPlaceLiberee struct {
+	IdEvent       IdEvent `gomacro-sql-on-delete:"CASCADE"`
+	IdParticipant camps.IdParticipant
 
 	// For consistency
 	Guard EventKind
@@ -104,8 +112,9 @@ type EventPlacelibere struct {
 // gomacro:SQL ADD CHECK(Guard = #[EventKind.Sondage])
 // gomacro:SQL ADD FOREIGN KEY (IdEvent, Guard) REFERENCES Event(Id,Kind)
 type MessageAttestation struct {
-	IdEvent IdEvent `gomacro-sql-on-delete:"CASCADE"`
-	Distribution Distribution `json:"distribution"`
+	IdEvent      IdEvent `gomacro-sql-on-delete:"CASCADE"`
+	Distribution Distribution
 
-	GuardKind MessageKind `json:"guard_kind"`
+	// For consistency
+	Guard EventKind
 }

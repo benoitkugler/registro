@@ -15,21 +15,6 @@ CREATE TABLE dossiers (
     KeyV1 text NOT NULL
 );
 
-CREATE TABLE events (
-    Id serial PRIMARY KEY,
-    IdDossier integer NOT NULL,
-    Kind smallint CHECK (Kind IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9)) NOT NULL,
-    Created timestamp(0) with time zone NOT NULL
-);
-
-CREATE TABLE event_messages (
-    IdEvent integer NOT NULL,
-    Guard smallint CHECK (Guard IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9)) NOT NULL,
-    Contenu text NOT NULL,
-    Origine smallint CHECK (Origine IN (0, 1, 2)) NOT NULL,
-    VuPar boolean[] CHECK (array_length(VuPar, 1) = 3) NOT NULL
-);
-
 CREATE TABLE paiements (
     Id serial PRIMARY KEY,
     IdDossier integer NOT NULL,
@@ -68,23 +53,4 @@ ALTER TABLE dossiers
 
 ALTER TABLE paiements
     ADD FOREIGN KEY (IdDossier) REFERENCES dossiers ON DELETE CASCADE;
-
-ALTER TABLE events
-    ADD UNIQUE (Id, Kind);
-
-ALTER TABLE events
-    ADD FOREIGN KEY (IdDossier) REFERENCES dossiers ON DELETE CASCADE;
-
-ALTER TABLE event_messages
-    ADD UNIQUE (IdEvent);
-
-ALTER TABLE event_messages
-    ADD CHECK (guard = 1
-    /* EventKind.Message */);
-
-ALTER TABLE event_messages
-    ADD FOREIGN KEY (IdEvent, guard) REFERENCES events (id, kind);
-
-ALTER TABLE event_messages
-    ADD FOREIGN KEY (IdEvent) REFERENCES events ON DELETE CASCADE;
 

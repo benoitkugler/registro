@@ -141,14 +141,14 @@ func (pl Plage) toT() time.Time {
 	return from.Add(time.Hour * 24 * time.Duration(pl.Duree-1))
 }
 
-func (pl Plage) To() Date {	return NewDateFrom(pl.toT()) }
+func (pl Plage) To() Date { return NewDateFrom(pl.toT()) }
 
 func (pl Plage) Contains(d Date) bool {
 	date := d.Time().Truncate(24 * time.Hour)
 	from := pl.From.Time().Truncate(24 * time.Hour)
-	to :=  pl.toT().Truncate(24 * time.Hour)
-	isDebutOK := from.Equals(date) || from.Before(date)
-	isFinOK := to.Equals(date) || to.After(date)
+	to := pl.toT().Truncate(24 * time.Hour)
+	isDebutOK := from.Equal(date) || from.Before(date)
+	isFinOK := to.Equal(date) || to.After(date)
 	return isDebutOK && isFinOK
 }
 

@@ -15,6 +15,7 @@ import (
 	"registro/sql/camps"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
+	"registro/sql/events"
 	in "registro/sql/inscriptions"
 	pr "registro/sql/personnes"
 	"registro/sql/shared"
@@ -506,9 +507,9 @@ func (ct *Controller) confirmeInscription(idCrypted string) (ds.Dossier, error) 
 		}
 
 		// on garde une trace du moment d'inscription
-		messageTime := ds.Event{
+		messageTime := events.Event{
 			IdDossier: dossier.Id,
-			Kind:      ds.Inscription,
+			Kind:      events.Inscription,
 			Created:   time.Now(),
 		}
 		_, err = messageTime.Insert(tx)
@@ -518,18 +519,18 @@ func (ct *Controller) confirmeInscription(idCrypted string) (ds.Dossier, error) 
 
 		// on insert le message du formulaire
 		if content := strings.TrimSpace(insc.Message); content != "" {
-			event := ds.Event{
+			event := events.Event{
 				IdDossier: dossier.Id,
-				Kind:      ds.Message,
+				Kind:      events.Message,
 				Created:   time.Now().Add(time.Millisecond), // on s'assure que le message vient après le moment d'inscription
 			}
 			event, err = event.Insert(tx)
 			if err != nil {
 				return err
 			}
-			err = ds.EventMessage{
+			err = events.EventMessage{
 				IdEvent: event.Id, Guard: event.Kind,
-				Contenu: content, Origine: ds.FromEspaceperso,
+				Contenu: content, Origine: events.FromEspaceperso,
 			}.Insert(tx)
 			if err != nil {
 				return err

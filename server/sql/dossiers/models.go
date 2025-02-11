@@ -3,6 +3,7 @@ package dossiers
 //go:generate ../../../../../go/src/github.com/benoitkugler/gomacro/cmd/gomacro models.go go/sqlcrud:gen_scans.go sql:gen_create.sql go/randdata:gen_randdata_test.go
 
 import (
+	"fmt"
 	"time"
 
 	pr "registro/sql/personnes"
@@ -68,8 +69,7 @@ type Paiement struct {
 	Id        IdPaiement
 	IdDossier IdDossier `gomacro-sql-on-delete:"CASCADE"`
 
-
-	IsAcompte       bool  
+	IsAcompte       bool
 	IsRemboursement bool
 
 	Montant Montant
@@ -88,7 +88,7 @@ func (r Paiement) DescriptionHTML(taux Taux) (string, string) {
 	if r.IsAcompte {
 		payeur = fmt.Sprintf("Acompte de <i>%s</i> au %s", r.Payeur, r.Date)
 	} else if r.IsRemboursement {
-		payeur = fmt.Sprintf("Remboursement au %s", r.Date))
+		payeur = fmt.Sprintf("Remboursement au %s", r.Date)
 	} else {
 		payeur = fmt.Sprintf("Paiement de <i>%s</i> au %s", r.Payeur, r.Date)
 	}

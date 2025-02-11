@@ -98,7 +98,7 @@ func (m *MontantTaux) Add(other Montant) {
 
 // String affiche le montant dans les unités pour
 // lesquelles le taux n'est pas 0.
-func (m *MontantTaux) String() string {
+func (m MontantTaux) String() string {
 	var chunks []string
 	for currency, taux := range m.taux {
 		if taux == 0 {
@@ -109,4 +109,3 @@ func (m *MontantTaux) String() string {
 	}
 	return strings.Join(chunks, " ou ")
 }
-

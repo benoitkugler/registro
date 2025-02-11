@@ -1,6 +1,9 @@
 package camps
 
-import pr "registro/sql/personnes"
+import (
+	pr "registro/sql/personnes"
+	"registro/sql/shared"
+)
 
 type ParticipantExt struct {
 	Camp        *Camp
@@ -78,7 +81,6 @@ type CampExt struct {
 func (cp Camp) Ext() CampExt {
 	return CampExt{cp, cp.isTerminated()}
 }
-
 
 // TrouveGroupe cherche parmis les groupes possibles celui qui pourrait convenir.
 // Normalement, les groupes respectent un invariant de continuité sur les plages,
