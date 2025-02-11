@@ -54,8 +54,9 @@ func (d Date) String() string {
 	return fmt.Sprintf("%02d/%02d/%04d", da.Day(), da.Month(), da.Year())
 }
 
-// avant renvoie true si le jour et le mois de 'd1' sont avant (au sens large) le jour et le mois de 'd2'.
-func avant(d1, d2 time.Time) bool {
+// avantNoYear renvoie true si le jour et le mois de 'd1' sont avantNoYear (au sens large) le jour et le mois de 'd2',
+// même si les années sont différentes
+func avantNoYear(d1, d2 time.Time) bool {
 	if d1.Month() < d2.Month() {
 		return true
 	}
@@ -63,6 +64,19 @@ func avant(d1, d2 time.Time) bool {
 		return false
 	}
 	return d1.Day() <= d2.Day()
+}
+
+// before returns 'true' if d1 <= d2,
+// only comparing Year, Month and Day
+func before(d1, d2 time.Time) bool {
+	y1, y2 := d1.Year(), d2.Year()
+	if y1 < y2 {
+		return true
+	} else if y1 > y2 {
+		return false
+	}
+	// years are the same
+	return d1.YearDay() <= d2.YearDay()
 }
 
 // CalculeAge renvoie l'âge qu'aura une personne au jour `now`.
@@ -74,7 +88,8 @@ func (d Date) Age(now time.Time) int {
 	}
 
 	years := now.Year() - dt.Year()
-	if avant(dt, now) {
+	// check if the birth is before the present
+	if avantNoYear(dt, now) {
 		return years
 	}
 	return years - 1
@@ -144,12 +159,8 @@ func (pl Plage) toT() time.Time {
 func (pl Plage) To() Date { return NewDateFrom(pl.toT()) }
 
 func (pl Plage) Contains(d Date) bool {
-	date := d.Time().Truncate(24 * time.Hour)
-	from := pl.From.Time().Truncate(24 * time.Hour)
-	to := pl.toT().Truncate(24 * time.Hour)
-	isDebutOK := from.Equal(date) || from.Before(date)
-	isFinOK := to.Equal(date) || to.After(date)
-	return isDebutOK && isFinOK
+	dt := d.Time()
+	return before(pl.From.Time(), dt) && before(dt, pl.toT())
 }
 
 func (s *Plage) Scan(src interface{}) error {

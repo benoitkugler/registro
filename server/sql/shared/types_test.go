@@ -97,6 +97,21 @@ func TestDate_Age(t *testing.T) {
 	}
 }
 
+func TestDate_String(t *testing.T) {
+	tests := []struct {
+		d    Date
+		want string
+	}{
+		{Date{}, ""},
+		{NewDate(2025, time.February, 2), "02/02/2025"},
+		{NewDate(2025, time.February, 5), "05/02/2025"},
+		{NewDate(2025, time.December, 28), "28/12/2025"},
+	}
+	for _, tt := range tests {
+		tu.Assert(t, tt.d.String() == tt.want)
+	}
+}
+
 func TestDate_ShortString(t *testing.T) {
 	tests := []struct {
 		d    Date
@@ -122,5 +137,27 @@ func TestDate_AddDays(t *testing.T) {
 	}
 	for _, tt := range tests {
 		tu.Assert(t, tt.d.AddDays(tt.jours) == tt.want)
+	}
+}
+
+func TestPlage_Contains(t *testing.T) {
+	tests := []struct {
+		From  Date
+		Duree int
+		d     Date
+		want  bool
+	}{
+		{NewDate(2000, 2, 25), 10, NewDate(2000, 2, 29), true},
+		{NewDate(1999, 2, 25), 400, NewDate(2000, 2, 29), true},
+		{Date(time.Date(2000, 1, 1, 12, 0, 0, 0, time.UTC)), 1, Date(time.Date(2000, 1, 1, 8, 0, 0, 0, time.UTC)), true},
+		{NewDate(2000, 2, 25), 10, NewDate(2000, 9, 1), false},
+		{NewDate(2000, 2, 25), 10, NewDate(1999, 2, 28), false},
+	}
+	for _, tt := range tests {
+		pl := Plage{
+			From:  tt.From,
+			Duree: tt.Duree,
+		}
+		tu.Assert(t, pl.Contains(tt.d) == tt.want)
 	}
 }
