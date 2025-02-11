@@ -46,7 +46,7 @@ func NewController(db *sql.DB, key crypto.Encrypter, smtp config.SMTP, asso conf
 	return &Controller{db, key, smtp, asso}
 }
 
-// LoadData décode la (potentiel) préinscription et renvoie les
+// LoadData décode la (potentielle) préinscription et renvoie les
 // données des séjours.
 func (ct *Controller) LoadData(c echo.Context) error {
 	preselected := c.QueryParam("preselected")       // optionnel
@@ -187,6 +187,39 @@ func newParticipant(r pr.Etatcivil) Participant {
 	}
 }
 
+type SearchHistoryOut struct {
+	MailFound bool
+}
+
+// SearchHistory analyse l'adresse mail donnée et envoie
+// un lien d'inscription rapide aux personnes concernées.
+func (ct *Controller) SearchHistory(c echo.Context) error {
+	mail := c.QueryParam("mail")
+	candidats, err := ct.chercheMail(mail)
+	if err != nil {
+		return err
+	}
+	if mailFound := len(candidats.responsables) > 0; !mailFound {
+		return c.JSON(200, SearchHistoryOut{MailFound: false})
+	}
+
+	// TODO:
+	// targets, err := ct.bild(candidats)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// html, err := mails.NewPreinscription(mail, targets)
+	// if err != nil {
+	// 	return err
+	// }
+	// if err = mails.NewMailer(ct.SMTP).SendMail(mail, "[ACVE] Inscription rapide", html, nil, nil); err != nil {
+	// 	return err
+	// }
+
+	return c.JSON(200, SearchHistoryOut{MailFound: true})
+}
+
 type candidatsPreinscription struct {
 	responsables    []pr.Personne
 	idsParticipants pr.IdPersonneSet // participants cumulés
@@ -235,6 +268,24 @@ func (ct *Controller) chercheMail(mail string) (out candidatsPreinscription, _ e
 	out.idsParticipants = pr.NewIdPersonneSetFrom(partPs.IDs())
 	return out, nil
 }
+
+// func (ct Controller) buildPreinscription(cd candidatsPreinscription) ([]mails.TargetRespo, error) {
+// 	baseUrl, err := url.Parse(origin)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	var out []mails.TargetRespo
+// 	for _, resp := range cd.responsables {
+// 		t := Preinscription{IdResponsable: resp.Id, IdsEnfants: cd.idsParticipantPersonnes}
+// 		crypted, err := shared.Encode(ct.Signing, t)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		lien := shared.BuildUrl(baseUrl.Host, baseUrl.Path, map[string]string{"preinscription": crypted})
+// 		out = append(out, mails.TargetRespo{Lien: lien, NomPrenom: resp.NomPrenom().String()})
+// 	}
+// 	return out, nil
+// }
 
 // preinscription code le choix d'un responsable et des participants associés.
 // Cet object est crypté et inséré dans un email

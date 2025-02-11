@@ -4,13 +4,14 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
-	"net/http"
-	
+
 	"registro/config"
-	"registro/controllers/central"
+	"registro/controllers/backoffice"
+	"registro/controllers/inscriptions"
 	"registro/crypto"
 	"registro/sql/files"
 
@@ -23,7 +24,9 @@ func main() {
 	flag.Parse()
 	isDev := *devPtr
 
-	_, encrypter, dbCreds, fs := loadEnvs()
+	asso, encrypter, dbCreds, fs := loadEnvs()
+	// TODO: setup APIS
+	smtp, joomeo, helloasso := config.SMTP{}, config.Joomeo{}, config.Helloasso{}
 
 	db, err := dbCreds.ConnectPostgres()
 	check(err)
@@ -37,27 +40,28 @@ func main() {
 		e.DefaultHTTPErrorHandler(err, c)
 	}
 
-	// TODO: setup APIS
-	ct, err := central.NewController(db, encrypter, fs, config.SMTP{}, config.Joomeo{}, config.Helloasso{})
+	backofficeCt, err := backoffice.NewController(db, encrypter, fs, smtp, joomeo, helloasso)
 	check(err)
-	
+
+	inscriptionsCt := inscriptions.NewController(db, encrypter, smtp, asso)
+
 	if isDev {
 		fmt.Println("Running in dev mode")
-		
+
 		e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 			AllowMethods:  append(middleware.DefaultCORSConfig.AllowMethods, http.MethodOptions),
 			AllowHeaders:  []string{"Authorization", "Content-Type", "Access-Control-Allow-Origin"},
 			ExposeHeaders: []string{"Content-Disposition"},
 		}))
 		fmt.Println("\tenabling CORS")
-	
-		token, err := ct.NewToken(false)
+
+		token, err := backofficeCt.NewToken(false)
 		check(err)
 		fmt.Println("\tcentral dev token:", token)
 	}
 
-
-	setupRoutesCentral(e, ct)
+	setupRoutesBackoffice(e, backofficeCt)
+	setupRoutesInscriptions(e, inscriptionsCt)
 
 	adress := getAdress(isDev)
 

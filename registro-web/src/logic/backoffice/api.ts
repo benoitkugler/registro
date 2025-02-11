@@ -9,18 +9,18 @@ export type Ar4_Int = [Int, Int, Int, Int];
 export type Date_ = string & { __opaque__: "Date" };
 
 export type Int = number & { __opaque__: "Int" };
-// registro/controllers/central.CampHeader
+// registro/controllers/backoffice.CampHeader
 export interface CampHeader {
   Camp: CampExt;
   Taux: Taux;
   Stats: StatistiquesInscrits;
 }
-// registro/controllers/central.CampsCreateManyIn
+// registro/controllers/backoffice.CampsCreateManyIn
 export interface CampsCreateManyIn {
   Taux: Taux;
   Count: Int;
 }
-// registro/controllers/central.CampsSetTauxIn
+// registro/controllers/backoffice.CampsSetTauxIn
 export interface CampsSetTauxIn {
   IdCamp: IdCamp;
   Taux: Taux;
@@ -164,7 +164,7 @@ export abstract class AbstractAPI {
   }
 
   protected async rawCampsGet() {
-    const fullUrl = this.baseUrl + "/api/v1/app/camps";
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/camps";
     const rep: AxiosResponse<CampHeader[] | null> = await Axios.get(fullUrl, {
       headers: this.getHeaders(),
     });
@@ -183,7 +183,7 @@ export abstract class AbstractAPI {
   }
 
   protected async rawCampsCreate() {
-    const fullUrl = this.baseUrl + "/api/v1/app/camps";
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/camps";
     const rep: AxiosResponse<CampHeader> = await Axios.put(fullUrl, null, {
       headers: this.getHeaders(),
     });
@@ -202,7 +202,7 @@ export abstract class AbstractAPI {
   }
 
   protected async rawCampsCreateMany(params: CampsCreateManyIn) {
-    const fullUrl = this.baseUrl + "/api/v1/app/camps-many";
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/camps-many";
     const rep: AxiosResponse<CampHeader[] | null> = await Axios.put(
       fullUrl,
       params,
@@ -223,7 +223,7 @@ export abstract class AbstractAPI {
   }
 
   protected async rawCampsUpdate(params: Camp) {
-    const fullUrl = this.baseUrl + "/api/v1/app/camps";
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/camps";
     const rep: AxiosResponse<CampExt> = await Axios.post(fullUrl, params, {
       headers: this.getHeaders(),
     });
@@ -242,7 +242,7 @@ export abstract class AbstractAPI {
   }
 
   protected async rawCampsDelete(params: { id: Int }) {
-    const fullUrl = this.baseUrl + "/api/v1/app/camps";
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/camps";
     await Axios.delete(fullUrl, {
       headers: this.getHeaders(),
       params: { id: String(params["id"]) },
@@ -262,7 +262,7 @@ export abstract class AbstractAPI {
   }
 
   protected async rawCampsGetTaux() {
-    const fullUrl = this.baseUrl + "/api/v1/app/camps-taux";
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/camps-taux";
     const rep: AxiosResponse<Tauxs> = await Axios.get(fullUrl, {
       headers: this.getHeaders(),
     });
@@ -281,7 +281,7 @@ export abstract class AbstractAPI {
   }
 
   protected async rawCampsSetTaux(params: CampsSetTauxIn) {
-    const fullUrl = this.baseUrl + "/api/v1/app/camps-taux";
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/camps-taux";
     const rep: AxiosResponse<CampHeader> = await Axios.post(fullUrl, params, {
       headers: this.getHeaders(),
     });

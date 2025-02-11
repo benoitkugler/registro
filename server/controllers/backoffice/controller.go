@@ -4,7 +4,7 @@
 //   - suivre les inscriptions
 //   - gérer les équipiers
 //   - gérer les dons
-package central
+package backoffice
 
 import (
 	"database/sql"

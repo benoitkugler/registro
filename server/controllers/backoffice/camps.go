@@ -1,4 +1,4 @@
-package central
+package backoffice
 
 import (
 	"database/sql"
