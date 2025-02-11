@@ -174,12 +174,160 @@ func DeleteEventsByIdDossiers(tx DB, idDossiers_ ...dossiers.IdDossier) ([]IdEve
 	return ScanIdEventArray(rows)
 }
 
+func scanOneEventAttestation(row scanner) (EventAttestation, error) {
+	var item EventAttestation
+	err := row.Scan(
+		&item.IdEvent,
+		&item.Distribution,
+		&item.IsPresence,
+	)
+	return item, err
+}
+
+func ScanEventAttestation(row *sql.Row) (EventAttestation, error) {
+	return scanOneEventAttestation(row)
+}
+
+// SelectAll returns all the items in the event_attestations table.
+func SelectAllEventAttestations(db DB) (EventAttestations, error) {
+	rows, err := db.Query("SELECT idevent, distribution, ispresence FROM event_attestations")
+	if err != nil {
+		return nil, err
+	}
+	return ScanEventAttestations(rows)
+}
+
+type EventAttestations []EventAttestation
+
+func ScanEventAttestations(rs *sql.Rows) (EventAttestations, error) {
+	var (
+		item EventAttestation
+		err  error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(EventAttestations, 0, 16)
+	for rs.Next() {
+		item, err = scanOneEventAttestation(rs)
+		if err != nil {
+			return nil, err
+		}
+		structs = append(structs, item)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+func (item EventAttestation) Insert(db DB) error {
+	_, err := db.Exec(`INSERT INTO event_attestations (
+			idevent, distribution, ispresence
+			) VALUES (
+			$1, $2, $3
+			);
+			`, item.IdEvent, item.Distribution, item.IsPresence)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Insert the links EventAttestation in the database.
+// It is a no-op if 'items' is empty.
+func InsertManyEventAttestations(tx *sql.Tx, items ...EventAttestation) error {
+	if len(items) == 0 {
+		return nil
+	}
+
+	stmt, err := tx.Prepare(pq.CopyIn("event_attestations",
+		"idevent",
+		"distribution",
+		"ispresence",
+	))
+	if err != nil {
+		return err
+	}
+
+	for _, item := range items {
+		_, err = stmt.Exec(item.IdEvent, item.Distribution, item.IsPresence)
+		if err != nil {
+			return err
+		}
+	}
+
+	if _, err = stmt.Exec(); err != nil {
+		return err
+	}
+
+	if err = stmt.Close(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Delete the link EventAttestation from the database.
+// Only the foreign keys IdEvent fields are used in 'item'.
+func (item EventAttestation) Delete(tx DB) error {
+	_, err := tx.Exec(`DELETE FROM event_attestations WHERE IdEvent = $1;`, item.IdEvent)
+	return err
+}
+
+// ByIdEvent returns a map with 'IdEvent' as keys.
+func (items EventAttestations) ByIdEvent() map[IdEvent]EventAttestation {
+	out := make(map[IdEvent]EventAttestation, len(items))
+	for _, target := range items {
+		out[target.IdEvent] = target
+	}
+	return out
+}
+
+// IdEvents returns the list of ids of IdEvent
+// contained in this link table.
+// They are not garanteed to be distinct.
+func (items EventAttestations) IdEvents() []IdEvent {
+	out := make([]IdEvent, len(items))
+	for index, target := range items {
+		out[index] = target.IdEvent
+	}
+	return out
+}
+
+// SelectEventAttestationByIdEvent return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectEventAttestationByIdEvent(tx DB, idEvent IdEvent) (item EventAttestation, found bool, err error) {
+	row := tx.QueryRow("SELECT idevent, distribution, ispresence FROM event_attestations WHERE idevent = $1", idEvent)
+	item, err = ScanEventAttestation(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
+}
+
+func SelectEventAttestationsByIdEvents(tx DB, idEvents_ ...IdEvent) (EventAttestations, error) {
+	rows, err := tx.Query("SELECT idevent, distribution, ispresence FROM event_attestations WHERE idevent = ANY($1)", IdEventArrayToPQ(idEvents_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanEventAttestations(rows)
+}
+
+func DeleteEventAttestationsByIdEvents(tx DB, idEvents_ ...IdEvent) (EventAttestations, error) {
+	rows, err := tx.Query("DELETE FROM event_attestations WHERE idevent = ANY($1) RETURNING idevent, distribution, ispresence", IdEventArrayToPQ(idEvents_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanEventAttestations(rows)
+}
+
 func scanOneEventCampDocs(row scanner) (EventCampDocs, error) {
 	var item EventCampDocs
 	err := row.Scan(
 		&item.IdEvent,
 		&item.IdCamp,
-		&item.Guard,
 	)
 	return item, err
 }
@@ -188,7 +336,7 @@ func ScanEventCampDocs(row *sql.Row) (EventCampDocs, error) { return scanOneEven
 
 // SelectAll returns all the items in the event_camp_docss table.
 func SelectAllEventCampDocss(db DB) (EventCampDocss, error) {
-	rows, err := db.Query("SELECT idevent, idcamp, guard FROM event_camp_docss")
+	rows, err := db.Query("SELECT idevent, idcamp FROM event_camp_docss")
 	if err != nil {
 		return nil, err
 	}
@@ -224,11 +372,11 @@ func ScanEventCampDocss(rs *sql.Rows) (EventCampDocss, error) {
 
 func (item EventCampDocs) Insert(db DB) error {
 	_, err := db.Exec(`INSERT INTO event_camp_docss (
-			idevent, idcamp, guard
+			idevent, idcamp
 			) VALUES (
-			$1, $2, $3
+			$1, $2
 			);
-			`, item.IdEvent, item.IdCamp, item.Guard)
+			`, item.IdEvent, item.IdCamp)
 	if err != nil {
 		return err
 	}
@@ -245,14 +393,13 @@ func InsertManyEventCampDocss(tx *sql.Tx, items ...EventCampDocs) error {
 	stmt, err := tx.Prepare(pq.CopyIn("event_camp_docss",
 		"idevent",
 		"idcamp",
-		"guard",
 	))
 	if err != nil {
 		return err
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdEvent, item.IdCamp, item.Guard)
+		_, err = stmt.Exec(item.IdEvent, item.IdCamp)
 		if err != nil {
 			return err
 		}
@@ -297,7 +444,7 @@ func (items EventCampDocss) IdEvents() []IdEvent {
 
 // SelectEventCampDocsByIdEvent return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectEventCampDocsByIdEvent(tx DB, idEvent IdEvent) (item EventCampDocs, found bool, err error) {
-	row := tx.QueryRow("SELECT idevent, idcamp, guard FROM event_camp_docss WHERE idevent = $1", idEvent)
+	row := tx.QueryRow("SELECT idevent, idcamp FROM event_camp_docss WHERE idevent = $1", idEvent)
 	item, err = ScanEventCampDocs(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
@@ -306,7 +453,7 @@ func SelectEventCampDocsByIdEvent(tx DB, idEvent IdEvent) (item EventCampDocs, f
 }
 
 func SelectEventCampDocssByIdEvents(tx DB, idEvents_ ...IdEvent) (EventCampDocss, error) {
-	rows, err := tx.Query("SELECT idevent, idcamp, guard FROM event_camp_docss WHERE idevent = ANY($1)", IdEventArrayToPQ(idEvents_))
+	rows, err := tx.Query("SELECT idevent, idcamp FROM event_camp_docss WHERE idevent = ANY($1)", IdEventArrayToPQ(idEvents_))
 	if err != nil {
 		return nil, err
 	}
@@ -314,7 +461,7 @@ func SelectEventCampDocssByIdEvents(tx DB, idEvents_ ...IdEvent) (EventCampDocss
 }
 
 func DeleteEventCampDocssByIdEvents(tx DB, idEvents_ ...IdEvent) (EventCampDocss, error) {
-	rows, err := tx.Query("DELETE FROM event_camp_docss WHERE idevent = ANY($1) RETURNING idevent, idcamp, guard", IdEventArrayToPQ(idEvents_))
+	rows, err := tx.Query("DELETE FROM event_camp_docss WHERE idevent = ANY($1) RETURNING idevent, idcamp", IdEventArrayToPQ(idEvents_))
 	if err != nil {
 		return nil, err
 	}
@@ -342,7 +489,7 @@ func (items EventCampDocss) IdCamps() []camps.IdCamp {
 }
 
 func SelectEventCampDocssByIdCamps(tx DB, idCamps_ ...camps.IdCamp) (EventCampDocss, error) {
-	rows, err := tx.Query("SELECT idevent, idcamp, guard FROM event_camp_docss WHERE idcamp = ANY($1)", camps.IdCampArrayToPQ(idCamps_))
+	rows, err := tx.Query("SELECT idevent, idcamp FROM event_camp_docss WHERE idcamp = ANY($1)", camps.IdCampArrayToPQ(idCamps_))
 	if err != nil {
 		return nil, err
 	}
@@ -350,7 +497,7 @@ func SelectEventCampDocssByIdCamps(tx DB, idCamps_ ...camps.IdCamp) (EventCampDo
 }
 
 func DeleteEventCampDocssByIdCamps(tx DB, idCamps_ ...camps.IdCamp) (EventCampDocss, error) {
-	rows, err := tx.Query("DELETE FROM event_camp_docss WHERE idcamp = ANY($1) RETURNING idevent, idcamp, guard", camps.IdCampArrayToPQ(idCamps_))
+	rows, err := tx.Query("DELETE FROM event_camp_docss WHERE idcamp = ANY($1) RETURNING idevent, idcamp", camps.IdCampArrayToPQ(idCamps_))
 	if err != nil {
 		return nil, err
 	}
@@ -361,7 +508,6 @@ func scanOneEventMessage(row scanner) (EventMessage, error) {
 	var item EventMessage
 	err := row.Scan(
 		&item.IdEvent,
-		&item.Guard,
 		&item.Contenu,
 		&item.Origine,
 		&item.OrigineCamp,
@@ -375,7 +521,7 @@ func ScanEventMessage(row *sql.Row) (EventMessage, error) { return scanOneEventM
 
 // SelectAll returns all the items in the event_messages table.
 func SelectAllEventMessages(db DB) (EventMessages, error) {
-	rows, err := db.Query("SELECT idevent, guard, contenu, origine, originecamp, vubackoffice, vuespaceperso FROM event_messages")
+	rows, err := db.Query("SELECT idevent, contenu, origine, originecamp, vubackoffice, vuespaceperso FROM event_messages")
 	if err != nil {
 		return nil, err
 	}
@@ -411,11 +557,11 @@ func ScanEventMessages(rs *sql.Rows) (EventMessages, error) {
 
 func (item EventMessage) Insert(db DB) error {
 	_, err := db.Exec(`INSERT INTO event_messages (
-			idevent, guard, contenu, origine, originecamp, vubackoffice, vuespaceperso
+			idevent, contenu, origine, originecamp, vubackoffice, vuespaceperso
 			) VALUES (
-			$1, $2, $3, $4, $5, $6, $7
+			$1, $2, $3, $4, $5, $6
 			);
-			`, item.IdEvent, item.Guard, item.Contenu, item.Origine, item.OrigineCamp, item.VuBackoffice, item.VuEspaceperso)
+			`, item.IdEvent, item.Contenu, item.Origine, item.OrigineCamp, item.VuBackoffice, item.VuEspaceperso)
 	if err != nil {
 		return err
 	}
@@ -431,7 +577,6 @@ func InsertManyEventMessages(tx *sql.Tx, items ...EventMessage) error {
 
 	stmt, err := tx.Prepare(pq.CopyIn("event_messages",
 		"idevent",
-		"guard",
 		"contenu",
 		"origine",
 		"originecamp",
@@ -443,7 +588,7 @@ func InsertManyEventMessages(tx *sql.Tx, items ...EventMessage) error {
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdEvent, item.Guard, item.Contenu, item.Origine, item.OrigineCamp, item.VuBackoffice, item.VuEspaceperso)
+		_, err = stmt.Exec(item.IdEvent, item.Contenu, item.Origine, item.OrigineCamp, item.VuBackoffice, item.VuEspaceperso)
 		if err != nil {
 			return err
 		}
@@ -488,7 +633,7 @@ func (items EventMessages) IdEvents() []IdEvent {
 
 // SelectEventMessageByIdEvent return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectEventMessageByIdEvent(tx DB, idEvent IdEvent) (item EventMessage, found bool, err error) {
-	row := tx.QueryRow("SELECT idevent, guard, contenu, origine, originecamp, vubackoffice, vuespaceperso FROM event_messages WHERE idevent = $1", idEvent)
+	row := tx.QueryRow("SELECT idevent, contenu, origine, originecamp, vubackoffice, vuespaceperso FROM event_messages WHERE idevent = $1", idEvent)
 	item, err = ScanEventMessage(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
@@ -497,7 +642,7 @@ func SelectEventMessageByIdEvent(tx DB, idEvent IdEvent) (item EventMessage, fou
 }
 
 func SelectEventMessagesByIdEvents(tx DB, idEvents_ ...IdEvent) (EventMessages, error) {
-	rows, err := tx.Query("SELECT idevent, guard, contenu, origine, originecamp, vubackoffice, vuespaceperso FROM event_messages WHERE idevent = ANY($1)", IdEventArrayToPQ(idEvents_))
+	rows, err := tx.Query("SELECT idevent, contenu, origine, originecamp, vubackoffice, vuespaceperso FROM event_messages WHERE idevent = ANY($1)", IdEventArrayToPQ(idEvents_))
 	if err != nil {
 		return nil, err
 	}
@@ -505,7 +650,7 @@ func SelectEventMessagesByIdEvents(tx DB, idEvents_ ...IdEvent) (EventMessages, 
 }
 
 func DeleteEventMessagesByIdEvents(tx DB, idEvents_ ...IdEvent) (EventMessages, error) {
-	rows, err := tx.Query("DELETE FROM event_messages WHERE idevent = ANY($1) RETURNING idevent, guard, contenu, origine, originecamp, vubackoffice, vuespaceperso", IdEventArrayToPQ(idEvents_))
+	rows, err := tx.Query("DELETE FROM event_messages WHERE idevent = ANY($1) RETURNING idevent, contenu, origine, originecamp, vubackoffice, vuespaceperso", IdEventArrayToPQ(idEvents_))
 	if err != nil {
 		return nil, err
 	}
@@ -516,7 +661,6 @@ func scanOneEventMessageVu(row scanner) (EventMessageVu, error) {
 	var item EventMessageVu
 	err := row.Scan(
 		&item.IdEvent,
-		&item.Guard,
 		&item.IdCamp,
 	)
 	return item, err
@@ -526,7 +670,7 @@ func ScanEventMessageVu(row *sql.Row) (EventMessageVu, error) { return scanOneEv
 
 // SelectAll returns all the items in the event_message_vus table.
 func SelectAllEventMessageVus(db DB) (EventMessageVus, error) {
-	rows, err := db.Query("SELECT idevent, guard, idcamp FROM event_message_vus")
+	rows, err := db.Query("SELECT idevent, idcamp FROM event_message_vus")
 	if err != nil {
 		return nil, err
 	}
@@ -562,11 +706,11 @@ func ScanEventMessageVus(rs *sql.Rows) (EventMessageVus, error) {
 
 func (item EventMessageVu) Insert(db DB) error {
 	_, err := db.Exec(`INSERT INTO event_message_vus (
-			idevent, guard, idcamp
+			idevent, idcamp
 			) VALUES (
-			$1, $2, $3
+			$1, $2
 			);
-			`, item.IdEvent, item.Guard, item.IdCamp)
+			`, item.IdEvent, item.IdCamp)
 	if err != nil {
 		return err
 	}
@@ -582,7 +726,6 @@ func InsertManyEventMessageVus(tx *sql.Tx, items ...EventMessageVu) error {
 
 	stmt, err := tx.Prepare(pq.CopyIn("event_message_vus",
 		"idevent",
-		"guard",
 		"idcamp",
 	))
 	if err != nil {
@@ -590,7 +733,7 @@ func InsertManyEventMessageVus(tx *sql.Tx, items ...EventMessageVu) error {
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdEvent, item.Guard, item.IdCamp)
+		_, err = stmt.Exec(item.IdEvent, item.IdCamp)
 		if err != nil {
 			return err
 		}
@@ -634,7 +777,7 @@ func (items EventMessageVus) IdEvents() []IdEvent {
 }
 
 func SelectEventMessageVusByIdEvents(tx DB, idEvents_ ...IdEvent) (EventMessageVus, error) {
-	rows, err := tx.Query("SELECT idevent, guard, idcamp FROM event_message_vus WHERE idevent = ANY($1)", IdEventArrayToPQ(idEvents_))
+	rows, err := tx.Query("SELECT idevent, idcamp FROM event_message_vus WHERE idevent = ANY($1)", IdEventArrayToPQ(idEvents_))
 	if err != nil {
 		return nil, err
 	}
@@ -642,7 +785,7 @@ func SelectEventMessageVusByIdEvents(tx DB, idEvents_ ...IdEvent) (EventMessageV
 }
 
 func DeleteEventMessageVusByIdEvents(tx DB, idEvents_ ...IdEvent) (EventMessageVus, error) {
-	rows, err := tx.Query("DELETE FROM event_message_vus WHERE idevent = ANY($1) RETURNING idevent, guard, idcamp", IdEventArrayToPQ(idEvents_))
+	rows, err := tx.Query("DELETE FROM event_message_vus WHERE idevent = ANY($1) RETURNING idevent, idcamp", IdEventArrayToPQ(idEvents_))
 	if err != nil {
 		return nil, err
 	}
@@ -670,7 +813,7 @@ func (items EventMessageVus) IdCamps() []camps.IdCamp {
 }
 
 func SelectEventMessageVusByIdCamps(tx DB, idCamps_ ...camps.IdCamp) (EventMessageVus, error) {
-	rows, err := tx.Query("SELECT idevent, guard, idcamp FROM event_message_vus WHERE idcamp = ANY($1)", camps.IdCampArrayToPQ(idCamps_))
+	rows, err := tx.Query("SELECT idevent, idcamp FROM event_message_vus WHERE idcamp = ANY($1)", camps.IdCampArrayToPQ(idCamps_))
 	if err != nil {
 		return nil, err
 	}
@@ -678,11 +821,21 @@ func SelectEventMessageVusByIdCamps(tx DB, idCamps_ ...camps.IdCamp) (EventMessa
 }
 
 func DeleteEventMessageVusByIdCamps(tx DB, idCamps_ ...camps.IdCamp) (EventMessageVus, error) {
-	rows, err := tx.Query("DELETE FROM event_message_vus WHERE idcamp = ANY($1) RETURNING idevent, guard, idcamp", camps.IdCampArrayToPQ(idCamps_))
+	rows, err := tx.Query("DELETE FROM event_message_vus WHERE idcamp = ANY($1) RETURNING idevent, idcamp", camps.IdCampArrayToPQ(idCamps_))
 	if err != nil {
 		return nil, err
 	}
 	return ScanEventMessageVus(rows)
+}
+
+// SelectEventMessageVuByIdEventAndIdCamp return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectEventMessageVuByIdEventAndIdCamp(tx DB, idEvent IdEvent, idCamp camps.IdCamp) (item EventMessageVu, found bool, err error) {
+	row := tx.QueryRow("SELECT idevent, idcamp FROM event_message_vus WHERE IdEvent = $1 AND IdCamp = $2", idEvent, idCamp)
+	item, err = ScanEventMessageVu(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
 }
 
 func scanOneEventPlaceLiberee(row scanner) (EventPlaceLiberee, error) {
@@ -690,7 +843,6 @@ func scanOneEventPlaceLiberee(row scanner) (EventPlaceLiberee, error) {
 	err := row.Scan(
 		&item.IdEvent,
 		&item.IdParticipant,
-		&item.Guard,
 	)
 	return item, err
 }
@@ -701,7 +853,7 @@ func ScanEventPlaceLiberee(row *sql.Row) (EventPlaceLiberee, error) {
 
 // SelectAll returns all the items in the event_place_liberees table.
 func SelectAllEventPlaceLiberees(db DB) (EventPlaceLiberees, error) {
-	rows, err := db.Query("SELECT idevent, idparticipant, guard FROM event_place_liberees")
+	rows, err := db.Query("SELECT idevent, idparticipant FROM event_place_liberees")
 	if err != nil {
 		return nil, err
 	}
@@ -737,11 +889,11 @@ func ScanEventPlaceLiberees(rs *sql.Rows) (EventPlaceLiberees, error) {
 
 func (item EventPlaceLiberee) Insert(db DB) error {
 	_, err := db.Exec(`INSERT INTO event_place_liberees (
-			idevent, idparticipant, guard
+			idevent, idparticipant
 			) VALUES (
-			$1, $2, $3
+			$1, $2
 			);
-			`, item.IdEvent, item.IdParticipant, item.Guard)
+			`, item.IdEvent, item.IdParticipant)
 	if err != nil {
 		return err
 	}
@@ -758,14 +910,13 @@ func InsertManyEventPlaceLiberees(tx *sql.Tx, items ...EventPlaceLiberee) error 
 	stmt, err := tx.Prepare(pq.CopyIn("event_place_liberees",
 		"idevent",
 		"idparticipant",
-		"guard",
 	))
 	if err != nil {
 		return err
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdEvent, item.IdParticipant, item.Guard)
+		_, err = stmt.Exec(item.IdEvent, item.IdParticipant)
 		if err != nil {
 			return err
 		}
@@ -810,7 +961,7 @@ func (items EventPlaceLiberees) IdEvents() []IdEvent {
 
 // SelectEventPlaceLibereeByIdEvent return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectEventPlaceLibereeByIdEvent(tx DB, idEvent IdEvent) (item EventPlaceLiberee, found bool, err error) {
-	row := tx.QueryRow("SELECT idevent, idparticipant, guard FROM event_place_liberees WHERE idevent = $1", idEvent)
+	row := tx.QueryRow("SELECT idevent, idparticipant FROM event_place_liberees WHERE idevent = $1", idEvent)
 	item, err = ScanEventPlaceLiberee(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
@@ -819,7 +970,7 @@ func SelectEventPlaceLibereeByIdEvent(tx DB, idEvent IdEvent) (item EventPlaceLi
 }
 
 func SelectEventPlaceLibereesByIdEvents(tx DB, idEvents_ ...IdEvent) (EventPlaceLiberees, error) {
-	rows, err := tx.Query("SELECT idevent, idparticipant, guard FROM event_place_liberees WHERE idevent = ANY($1)", IdEventArrayToPQ(idEvents_))
+	rows, err := tx.Query("SELECT idevent, idparticipant FROM event_place_liberees WHERE idevent = ANY($1)", IdEventArrayToPQ(idEvents_))
 	if err != nil {
 		return nil, err
 	}
@@ -827,7 +978,7 @@ func SelectEventPlaceLibereesByIdEvents(tx DB, idEvents_ ...IdEvent) (EventPlace
 }
 
 func DeleteEventPlaceLibereesByIdEvents(tx DB, idEvents_ ...IdEvent) (EventPlaceLiberees, error) {
-	rows, err := tx.Query("DELETE FROM event_place_liberees WHERE idevent = ANY($1) RETURNING idevent, idparticipant, guard", IdEventArrayToPQ(idEvents_))
+	rows, err := tx.Query("DELETE FROM event_place_liberees WHERE idevent = ANY($1) RETURNING idevent, idparticipant", IdEventArrayToPQ(idEvents_))
 	if err != nil {
 		return nil, err
 	}
@@ -855,7 +1006,7 @@ func (items EventPlaceLiberees) IdParticipants() []camps.IdParticipant {
 }
 
 func SelectEventPlaceLibereesByIdParticipants(tx DB, idParticipants_ ...camps.IdParticipant) (EventPlaceLiberees, error) {
-	rows, err := tx.Query("SELECT idevent, idparticipant, guard FROM event_place_liberees WHERE idparticipant = ANY($1)", camps.IdParticipantArrayToPQ(idParticipants_))
+	rows, err := tx.Query("SELECT idevent, idparticipant FROM event_place_liberees WHERE idparticipant = ANY($1)", camps.IdParticipantArrayToPQ(idParticipants_))
 	if err != nil {
 		return nil, err
 	}
@@ -863,7 +1014,7 @@ func SelectEventPlaceLibereesByIdParticipants(tx DB, idParticipants_ ...camps.Id
 }
 
 func DeleteEventPlaceLibereesByIdParticipants(tx DB, idParticipants_ ...camps.IdParticipant) (EventPlaceLiberees, error) {
-	rows, err := tx.Query("DELETE FROM event_place_liberees WHERE idparticipant = ANY($1) RETURNING idevent, idparticipant, guard", camps.IdParticipantArrayToPQ(idParticipants_))
+	rows, err := tx.Query("DELETE FROM event_place_liberees WHERE idparticipant = ANY($1) RETURNING idevent, idparticipant", camps.IdParticipantArrayToPQ(idParticipants_))
 	if err != nil {
 		return nil, err
 	}
@@ -875,7 +1026,6 @@ func scanOneEventSondage(row scanner) (EventSondage, error) {
 	err := row.Scan(
 		&item.IdEvent,
 		&item.IdCamp,
-		&item.Guard,
 	)
 	return item, err
 }
@@ -884,7 +1034,7 @@ func ScanEventSondage(row *sql.Row) (EventSondage, error) { return scanOneEventS
 
 // SelectAll returns all the items in the event_sondages table.
 func SelectAllEventSondages(db DB) (EventSondages, error) {
-	rows, err := db.Query("SELECT idevent, idcamp, guard FROM event_sondages")
+	rows, err := db.Query("SELECT idevent, idcamp FROM event_sondages")
 	if err != nil {
 		return nil, err
 	}
@@ -920,11 +1070,11 @@ func ScanEventSondages(rs *sql.Rows) (EventSondages, error) {
 
 func (item EventSondage) Insert(db DB) error {
 	_, err := db.Exec(`INSERT INTO event_sondages (
-			idevent, idcamp, guard
+			idevent, idcamp
 			) VALUES (
-			$1, $2, $3
+			$1, $2
 			);
-			`, item.IdEvent, item.IdCamp, item.Guard)
+			`, item.IdEvent, item.IdCamp)
 	if err != nil {
 		return err
 	}
@@ -941,14 +1091,13 @@ func InsertManyEventSondages(tx *sql.Tx, items ...EventSondage) error {
 	stmt, err := tx.Prepare(pq.CopyIn("event_sondages",
 		"idevent",
 		"idcamp",
-		"guard",
 	))
 	if err != nil {
 		return err
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdEvent, item.IdCamp, item.Guard)
+		_, err = stmt.Exec(item.IdEvent, item.IdCamp)
 		if err != nil {
 			return err
 		}
@@ -993,7 +1142,7 @@ func (items EventSondages) IdEvents() []IdEvent {
 
 // SelectEventSondageByIdEvent return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectEventSondageByIdEvent(tx DB, idEvent IdEvent) (item EventSondage, found bool, err error) {
-	row := tx.QueryRow("SELECT idevent, idcamp, guard FROM event_sondages WHERE idevent = $1", idEvent)
+	row := tx.QueryRow("SELECT idevent, idcamp FROM event_sondages WHERE idevent = $1", idEvent)
 	item, err = ScanEventSondage(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
@@ -1002,7 +1151,7 @@ func SelectEventSondageByIdEvent(tx DB, idEvent IdEvent) (item EventSondage, fou
 }
 
 func SelectEventSondagesByIdEvents(tx DB, idEvents_ ...IdEvent) (EventSondages, error) {
-	rows, err := tx.Query("SELECT idevent, idcamp, guard FROM event_sondages WHERE idevent = ANY($1)", IdEventArrayToPQ(idEvents_))
+	rows, err := tx.Query("SELECT idevent, idcamp FROM event_sondages WHERE idevent = ANY($1)", IdEventArrayToPQ(idEvents_))
 	if err != nil {
 		return nil, err
 	}
@@ -1010,7 +1159,7 @@ func SelectEventSondagesByIdEvents(tx DB, idEvents_ ...IdEvent) (EventSondages, 
 }
 
 func DeleteEventSondagesByIdEvents(tx DB, idEvents_ ...IdEvent) (EventSondages, error) {
-	rows, err := tx.Query("DELETE FROM event_sondages WHERE idevent = ANY($1) RETURNING idevent, idcamp, guard", IdEventArrayToPQ(idEvents_))
+	rows, err := tx.Query("DELETE FROM event_sondages WHERE idevent = ANY($1) RETURNING idevent, idcamp", IdEventArrayToPQ(idEvents_))
 	if err != nil {
 		return nil, err
 	}
@@ -1038,7 +1187,7 @@ func (items EventSondages) IdCamps() []camps.IdCamp {
 }
 
 func SelectEventSondagesByIdCamps(tx DB, idCamps_ ...camps.IdCamp) (EventSondages, error) {
-	rows, err := tx.Query("SELECT idevent, idcamp, guard FROM event_sondages WHERE idcamp = ANY($1)", camps.IdCampArrayToPQ(idCamps_))
+	rows, err := tx.Query("SELECT idevent, idcamp FROM event_sondages WHERE idcamp = ANY($1)", camps.IdCampArrayToPQ(idCamps_))
 	if err != nil {
 		return nil, err
 	}
@@ -1046,7 +1195,7 @@ func SelectEventSondagesByIdCamps(tx DB, idCamps_ ...camps.IdCamp) (EventSondage
 }
 
 func DeleteEventSondagesByIdCamps(tx DB, idCamps_ ...camps.IdCamp) (EventSondages, error) {
-	rows, err := tx.Query("DELETE FROM event_sondages WHERE idcamp = ANY($1) RETURNING idevent, idcamp, guard", camps.IdCampArrayToPQ(idCamps_))
+	rows, err := tx.Query("DELETE FROM event_sondages WHERE idcamp = ANY($1) RETURNING idevent, idcamp", camps.IdCampArrayToPQ(idCamps_))
 	if err != nil {
 		return nil, err
 	}
@@ -1061,155 +1210,6 @@ func SelectEventByIdAndKind(tx DB, id IdEvent, kind EventKind) (item Event, foun
 		return item, false, nil
 	}
 	return item, true, err
-}
-
-func scanOneMessageAttestation(row scanner) (MessageAttestation, error) {
-	var item MessageAttestation
-	err := row.Scan(
-		&item.IdEvent,
-		&item.Distribution,
-		&item.Guard,
-	)
-	return item, err
-}
-
-func ScanMessageAttestation(row *sql.Row) (MessageAttestation, error) {
-	return scanOneMessageAttestation(row)
-}
-
-// SelectAll returns all the items in the message_attestations table.
-func SelectAllMessageAttestations(db DB) (MessageAttestations, error) {
-	rows, err := db.Query("SELECT idevent, distribution, guard FROM message_attestations")
-	if err != nil {
-		return nil, err
-	}
-	return ScanMessageAttestations(rows)
-}
-
-type MessageAttestations []MessageAttestation
-
-func ScanMessageAttestations(rs *sql.Rows) (MessageAttestations, error) {
-	var (
-		item MessageAttestation
-		err  error
-	)
-	defer func() {
-		errClose := rs.Close()
-		if err == nil {
-			err = errClose
-		}
-	}()
-	structs := make(MessageAttestations, 0, 16)
-	for rs.Next() {
-		item, err = scanOneMessageAttestation(rs)
-		if err != nil {
-			return nil, err
-		}
-		structs = append(structs, item)
-	}
-	if err = rs.Err(); err != nil {
-		return nil, err
-	}
-	return structs, nil
-}
-
-func (item MessageAttestation) Insert(db DB) error {
-	_, err := db.Exec(`INSERT INTO message_attestations (
-			idevent, distribution, guard
-			) VALUES (
-			$1, $2, $3
-			);
-			`, item.IdEvent, item.Distribution, item.Guard)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// Insert the links MessageAttestation in the database.
-// It is a no-op if 'items' is empty.
-func InsertManyMessageAttestations(tx *sql.Tx, items ...MessageAttestation) error {
-	if len(items) == 0 {
-		return nil
-	}
-
-	stmt, err := tx.Prepare(pq.CopyIn("message_attestations",
-		"idevent",
-		"distribution",
-		"guard",
-	))
-	if err != nil {
-		return err
-	}
-
-	for _, item := range items {
-		_, err = stmt.Exec(item.IdEvent, item.Distribution, item.Guard)
-		if err != nil {
-			return err
-		}
-	}
-
-	if _, err = stmt.Exec(); err != nil {
-		return err
-	}
-
-	if err = stmt.Close(); err != nil {
-		return err
-	}
-	return nil
-}
-
-// Delete the link MessageAttestation from the database.
-// Only the foreign keys IdEvent fields are used in 'item'.
-func (item MessageAttestation) Delete(tx DB) error {
-	_, err := tx.Exec(`DELETE FROM message_attestations WHERE IdEvent = $1;`, item.IdEvent)
-	return err
-}
-
-// ByIdEvent returns a map with 'IdEvent' as keys.
-func (items MessageAttestations) ByIdEvent() map[IdEvent]MessageAttestation {
-	out := make(map[IdEvent]MessageAttestation, len(items))
-	for _, target := range items {
-		out[target.IdEvent] = target
-	}
-	return out
-}
-
-// IdEvents returns the list of ids of IdEvent
-// contained in this link table.
-// They are not garanteed to be distinct.
-func (items MessageAttestations) IdEvents() []IdEvent {
-	out := make([]IdEvent, len(items))
-	for index, target := range items {
-		out[index] = target.IdEvent
-	}
-	return out
-}
-
-// SelectMessageAttestationByIdEvent return zero or one item, thanks to a UNIQUE SQL constraint.
-func SelectMessageAttestationByIdEvent(tx DB, idEvent IdEvent) (item MessageAttestation, found bool, err error) {
-	row := tx.QueryRow("SELECT idevent, distribution, guard FROM message_attestations WHERE idevent = $1", idEvent)
-	item, err = ScanMessageAttestation(row)
-	if err == sql.ErrNoRows {
-		return item, false, nil
-	}
-	return item, true, err
-}
-
-func SelectMessageAttestationsByIdEvents(tx DB, idEvents_ ...IdEvent) (MessageAttestations, error) {
-	rows, err := tx.Query("SELECT idevent, distribution, guard FROM message_attestations WHERE idevent = ANY($1)", IdEventArrayToPQ(idEvents_))
-	if err != nil {
-		return nil, err
-	}
-	return ScanMessageAttestations(rows)
-}
-
-func DeleteMessageAttestationsByIdEvents(tx DB, idEvents_ ...IdEvent) (MessageAttestations, error) {
-	rows, err := tx.Query("DELETE FROM message_attestations WHERE idevent = ANY($1) RETURNING idevent, distribution, guard", IdEventArrayToPQ(idEvents_))
-	if err != nil {
-		return nil, err
-	}
-	return ScanMessageAttestations(rows)
 }
 
 func IdEventArrayToPQ(ids []IdEvent) pq.Int64Array {

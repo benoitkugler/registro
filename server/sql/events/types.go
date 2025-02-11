@@ -17,13 +17,12 @@ const (
 	Message // Message
 
 	// enregistre le moment d'inscription
-	Inscription         // Moment d'inscription
-	AccuseReception     // Inscription validée
-	Facture             // Facture
-	CampDocs            // Document des camps
-	FactureAcquittee    // Facture acquittée
-	AttestationPresence // Attestation de présence
-	Sondage             // Avis sur le séjour
+	Inscription     // Moment d'inscription
+	AccuseReception // Inscription validée
+	Facture         // Facture
+	CampDocs        // Document des camps
+	Attestation     // Facture acquittée ou attestation de présence
+	Sondage         // Avis sur le séjour
 
 	PlaceLiberee // Place libérée
 )

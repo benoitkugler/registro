@@ -25,17 +25,25 @@ func randEvent() Event {
 	return s
 }
 
+func randEventAttestation() EventAttestation {
+	var s EventAttestation
+	s.IdEvent = randIdEvent()
+	s.Distribution = randDistribution()
+	s.IsPresence = randbool()
+
+	return s
+}
+
 func randEventCampDocs() EventCampDocs {
 	var s EventCampDocs
 	s.IdEvent = randIdEvent()
 	s.IdCamp = randcam_IdCamp()
-	s.Guard = randEventKind()
 
 	return s
 }
 
 func randEventKind() EventKind {
-	choix := [...]EventKind{Supprime, Message, Inscription, AccuseReception, Facture, CampDocs, FactureAcquittee, AttestationPresence, Sondage, PlaceLiberee}
+	choix := [...]EventKind{Supprime, Message, Inscription, AccuseReception, Facture, CampDocs, Attestation, Sondage, PlaceLiberee}
 	i := rand.Intn(len(choix))
 	return choix[i]
 }
@@ -43,7 +51,6 @@ func randEventKind() EventKind {
 func randEventMessage() EventMessage {
 	var s EventMessage
 	s.IdEvent = randIdEvent()
-	s.Guard = randEventKind()
 	s.Contenu = randstring()
 	s.Origine = randMessageOrigine()
 	s.OrigineCamp = randOptIdCamp()
@@ -56,7 +63,6 @@ func randEventMessage() EventMessage {
 func randEventMessageVu() EventMessageVu {
 	var s EventMessageVu
 	s.IdEvent = randIdEvent()
-	s.Guard = randEventKind()
 	s.IdCamp = randcam_IdCamp()
 
 	return s
@@ -66,7 +72,6 @@ func randEventPlaceLiberee() EventPlaceLiberee {
 	var s EventPlaceLiberee
 	s.IdEvent = randIdEvent()
 	s.IdParticipant = randcam_IdParticipant()
-	s.Guard = randEventKind()
 
 	return s
 }
@@ -75,22 +80,12 @@ func randEventSondage() EventSondage {
 	var s EventSondage
 	s.IdEvent = randIdEvent()
 	s.IdCamp = randcam_IdCamp()
-	s.Guard = randEventKind()
 
 	return s
 }
 
 func randIdEvent() IdEvent {
 	return IdEvent(randint64())
-}
-
-func randMessageAttestation() MessageAttestation {
-	var s MessageAttestation
-	s.IdEvent = randIdEvent()
-	s.Distribution = randDistribution()
-	s.Guard = randEventKind()
-
-	return s
 }
 
 func randMessageOrigine() MessageOrigine {
