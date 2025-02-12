@@ -72,7 +72,7 @@ func TestSQL(t *testing.T) {
 		camp2, err := camp2.Insert(db)
 		tu.AssertNoErr(t, err)
 
-		taux, err := dossiers.Taux{}.Insert(db)
+		taux, err := dossiers.Taux{Euros: 1000, Label: "Special"}.Insert(db)
 		tu.AssertNoErr(t, err)
 
 		part1 := randParticipant()

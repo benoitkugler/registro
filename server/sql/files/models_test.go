@@ -19,7 +19,7 @@ func TestSQL(t *testing.T) {
 
 	pers, err := personnes.Personne{}.Insert(db)
 	tu.AssertNoErr(t, err)
-	taux, err := dossiers.Taux{}.Insert(db)
+	taux, err := dossiers.Taux{Euros: 1000}.Insert(db)
 	tu.AssertNoErr(t, err)
 	camp, err := camps.Camp{IdTaux: taux.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
@@ -45,7 +45,7 @@ func TestSQL(t *testing.T) {
 	_, err = Demande{MaxDocs: 1, Categorie: Vaccins}.Insert(db)
 	tu.AssertErr(t, err) // unique
 	_, err = Demande{MaxDocs: 1, Categorie: 0}.Insert(db)
-	tu.AssertErr(t, err) // missing directeur
+	tu.AssertNoErr(t, err) // shared constraints
 	_, err = Demande{MaxDocs: 1, Categorie: 0, IdDirecteur: OptIdPersonne{Id: pers.Id, Valid: true}}.Insert(db)
 	tu.AssertNoErr(t, err)
 }
