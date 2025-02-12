@@ -48,7 +48,7 @@ func ScanInscription(row *sql.Row) (Inscription, error) { return scanOneInscript
 
 // SelectAll returns all the items in the inscriptions table.
 func SelectAllInscriptions(db DB) (Inscriptions, error) {
-	rows, err := db.Query("SELECT * FROM inscriptions")
+	rows, err := db.Query("SELECT id, idtaux, responsable, responsablepreident, message, copiesmails, partageadressesok, demandefondsoutien, dateheure, isconfirmed FROM inscriptions")
 	if err != nil {
 		return nil, err
 	}
@@ -57,13 +57,13 @@ func SelectAllInscriptions(db DB) (Inscriptions, error) {
 
 // SelectInscription returns the entry matching 'id'.
 func SelectInscription(tx DB, id IdInscription) (Inscription, error) {
-	row := tx.QueryRow("SELECT * FROM inscriptions WHERE id = $1", id)
+	row := tx.QueryRow("SELECT id, idtaux, responsable, responsablepreident, message, copiesmails, partageadressesok, demandefondsoutien, dateheure, isconfirmed FROM inscriptions WHERE id = $1", id)
 	return ScanInscription(row)
 }
 
 // SelectInscriptions returns the entry matching the given 'ids'.
 func SelectInscriptions(tx DB, ids ...IdInscription) (Inscriptions, error) {
-	rows, err := tx.Query("SELECT * FROM inscriptions WHERE id = ANY($1)", IdInscriptionArrayToPQ(ids))
+	rows, err := tx.Query("SELECT id, idtaux, responsable, responsablepreident, message, copiesmails, partageadressesok, demandefondsoutien, dateheure, isconfirmed FROM inscriptions WHERE id = ANY($1)", IdInscriptionArrayToPQ(ids))
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +111,7 @@ func (item Inscription) Insert(tx DB) (out Inscription, err error) {
 		idtaux, responsable, responsablepreident, message, copiesmails, partageadressesok, demandefondsoutien, dateheure, isconfirmed
 		) VALUES (
 		$1, $2, $3, $4, $5, $6, $7, $8, $9
-		) RETURNING *;
+		) RETURNING id, idtaux, responsable, responsablepreident, message, copiesmails, partageadressesok, demandefondsoutien, dateheure, isconfirmed;
 		`, item.IdTaux, item.Responsable, item.ResponsablePreIdent, item.Message, item.CopiesMails, item.PartageAdressesOK, item.DemandeFondSoutien, item.DateHeure, item.IsConfirmed)
 	return ScanInscription(row)
 }
@@ -122,14 +122,14 @@ func (item Inscription) Update(tx DB) (out Inscription, err error) {
 		idtaux, responsable, responsablepreident, message, copiesmails, partageadressesok, demandefondsoutien, dateheure, isconfirmed
 		) = (
 		$1, $2, $3, $4, $5, $6, $7, $8, $9
-		) WHERE id = $10 RETURNING *;
+		) WHERE id = $10 RETURNING id, idtaux, responsable, responsablepreident, message, copiesmails, partageadressesok, demandefondsoutien, dateheure, isconfirmed;
 		`, item.IdTaux, item.Responsable, item.ResponsablePreIdent, item.Message, item.CopiesMails, item.PartageAdressesOK, item.DemandeFondSoutien, item.DateHeure, item.IsConfirmed, item.Id)
 	return ScanInscription(row)
 }
 
 // Deletes the Inscription and returns the item
 func DeleteInscriptionById(tx DB, id IdInscription) (Inscription, error) {
-	row := tx.QueryRow("DELETE FROM inscriptions WHERE id = $1 RETURNING *;", id)
+	row := tx.QueryRow("DELETE FROM inscriptions WHERE id = $1 RETURNING id, idtaux, responsable, responsablepreident, message, copiesmails, partageadressesok, demandefondsoutien, dateheure, isconfirmed;", id)
 	return ScanInscription(row)
 }
 
@@ -168,7 +168,7 @@ func (items Inscriptions) IdTauxs() []dossiers.IdTaux {
 }
 
 func SelectInscriptionsByIdTauxs(tx DB, idTauxs_ ...dossiers.IdTaux) (Inscriptions, error) {
-	rows, err := tx.Query("SELECT * FROM inscriptions WHERE idtaux = ANY($1)", dossiers.IdTauxArrayToPQ(idTauxs_))
+	rows, err := tx.Query("SELECT id, idtaux, responsable, responsablepreident, message, copiesmails, partageadressesok, demandefondsoutien, dateheure, isconfirmed FROM inscriptions WHERE idtaux = ANY($1)", dossiers.IdTauxArrayToPQ(idTauxs_))
 	if err != nil {
 		return nil, err
 	}
@@ -184,7 +184,7 @@ func DeleteInscriptionsByIdTauxs(tx DB, idTauxs_ ...dossiers.IdTaux) ([]IdInscri
 }
 
 func SelectInscriptionsByResponsablePreIdents(tx DB, responsablePreIdents_ ...personnes.IdPersonne) (Inscriptions, error) {
-	rows, err := tx.Query("SELECT * FROM inscriptions WHERE responsablepreident = ANY($1)", personnes.IdPersonneArrayToPQ(responsablePreIdents_))
+	rows, err := tx.Query("SELECT id, idtaux, responsable, responsablepreident, message, copiesmails, partageadressesok, demandefondsoutien, dateheure, isconfirmed FROM inscriptions WHERE responsablepreident = ANY($1)", personnes.IdPersonneArrayToPQ(responsablePreIdents_))
 	if err != nil {
 		return nil, err
 	}
@@ -221,7 +221,7 @@ func ScanInscriptionParticipant(row *sql.Row) (InscriptionParticipant, error) {
 
 // SelectAll returns all the items in the inscription_participants table.
 func SelectAllInscriptionParticipants(db DB) (InscriptionParticipants, error) {
-	rows, err := db.Query("SELECT * FROM inscription_participants")
+	rows, err := db.Query("SELECT idinscription, idcamp, idtaux, preident, nom, prenom, datenaissance, sexe, nationnalite FROM inscription_participants")
 	if err != nil {
 		return nil, err
 	}
@@ -335,7 +335,7 @@ func (items InscriptionParticipants) IdInscriptions() []IdInscription {
 }
 
 func SelectInscriptionParticipantsByIdInscriptions(tx DB, idInscriptions_ ...IdInscription) (InscriptionParticipants, error) {
-	rows, err := tx.Query("SELECT * FROM inscription_participants WHERE idinscription = ANY($1)", IdInscriptionArrayToPQ(idInscriptions_))
+	rows, err := tx.Query("SELECT idinscription, idcamp, idtaux, preident, nom, prenom, datenaissance, sexe, nationnalite FROM inscription_participants WHERE idinscription = ANY($1)", IdInscriptionArrayToPQ(idInscriptions_))
 	if err != nil {
 		return nil, err
 	}
@@ -343,7 +343,7 @@ func SelectInscriptionParticipantsByIdInscriptions(tx DB, idInscriptions_ ...IdI
 }
 
 func DeleteInscriptionParticipantsByIdInscriptions(tx DB, idInscriptions_ ...IdInscription) (InscriptionParticipants, error) {
-	rows, err := tx.Query("DELETE FROM inscription_participants WHERE idinscription = ANY($1) RETURNING *", IdInscriptionArrayToPQ(idInscriptions_))
+	rows, err := tx.Query("DELETE FROM inscription_participants WHERE idinscription = ANY($1) RETURNING idinscription, idcamp, idtaux, preident, nom, prenom, datenaissance, sexe, nationnalite", IdInscriptionArrayToPQ(idInscriptions_))
 	if err != nil {
 		return nil, err
 	}
@@ -371,7 +371,7 @@ func (items InscriptionParticipants) IdCamps() []camps.IdCamp {
 }
 
 func SelectInscriptionParticipantsByIdCamps(tx DB, idCamps_ ...camps.IdCamp) (InscriptionParticipants, error) {
-	rows, err := tx.Query("SELECT * FROM inscription_participants WHERE idcamp = ANY($1)", camps.IdCampArrayToPQ(idCamps_))
+	rows, err := tx.Query("SELECT idinscription, idcamp, idtaux, preident, nom, prenom, datenaissance, sexe, nationnalite FROM inscription_participants WHERE idcamp = ANY($1)", camps.IdCampArrayToPQ(idCamps_))
 	if err != nil {
 		return nil, err
 	}
@@ -379,7 +379,7 @@ func SelectInscriptionParticipantsByIdCamps(tx DB, idCamps_ ...camps.IdCamp) (In
 }
 
 func DeleteInscriptionParticipantsByIdCamps(tx DB, idCamps_ ...camps.IdCamp) (InscriptionParticipants, error) {
-	rows, err := tx.Query("DELETE FROM inscription_participants WHERE idcamp = ANY($1) RETURNING *", camps.IdCampArrayToPQ(idCamps_))
+	rows, err := tx.Query("DELETE FROM inscription_participants WHERE idcamp = ANY($1) RETURNING idinscription, idcamp, idtaux, preident, nom, prenom, datenaissance, sexe, nationnalite", camps.IdCampArrayToPQ(idCamps_))
 	if err != nil {
 		return nil, err
 	}
@@ -407,7 +407,7 @@ func (items InscriptionParticipants) IdTauxs() []dossiers.IdTaux {
 }
 
 func SelectInscriptionParticipantsByIdTauxs(tx DB, idTauxs_ ...dossiers.IdTaux) (InscriptionParticipants, error) {
-	rows, err := tx.Query("SELECT * FROM inscription_participants WHERE idtaux = ANY($1)", dossiers.IdTauxArrayToPQ(idTauxs_))
+	rows, err := tx.Query("SELECT idinscription, idcamp, idtaux, preident, nom, prenom, datenaissance, sexe, nationnalite FROM inscription_participants WHERE idtaux = ANY($1)", dossiers.IdTauxArrayToPQ(idTauxs_))
 	if err != nil {
 		return nil, err
 	}
@@ -415,7 +415,7 @@ func SelectInscriptionParticipantsByIdTauxs(tx DB, idTauxs_ ...dossiers.IdTaux) 
 }
 
 func DeleteInscriptionParticipantsByIdTauxs(tx DB, idTauxs_ ...dossiers.IdTaux) (InscriptionParticipants, error) {
-	rows, err := tx.Query("DELETE FROM inscription_participants WHERE idtaux = ANY($1) RETURNING *", dossiers.IdTauxArrayToPQ(idTauxs_))
+	rows, err := tx.Query("DELETE FROM inscription_participants WHERE idtaux = ANY($1) RETURNING idinscription, idcamp, idtaux, preident, nom, prenom, datenaissance, sexe, nationnalite", dossiers.IdTauxArrayToPQ(idTauxs_))
 	if err != nil {
 		return nil, err
 	}
@@ -423,7 +423,7 @@ func DeleteInscriptionParticipantsByIdTauxs(tx DB, idTauxs_ ...dossiers.IdTaux) 
 }
 
 func SelectInscriptionParticipantsByPreIdents(tx DB, preIdents_ ...personnes.IdPersonne) (InscriptionParticipants, error) {
-	rows, err := tx.Query("SELECT * FROM inscription_participants WHERE preident = ANY($1)", personnes.IdPersonneArrayToPQ(preIdents_))
+	rows, err := tx.Query("SELECT idinscription, idcamp, idtaux, preident, nom, prenom, datenaissance, sexe, nationnalite FROM inscription_participants WHERE preident = ANY($1)", personnes.IdPersonneArrayToPQ(preIdents_))
 	if err != nil {
 		return nil, err
 	}
@@ -431,7 +431,7 @@ func SelectInscriptionParticipantsByPreIdents(tx DB, preIdents_ ...personnes.IdP
 }
 
 func DeleteInscriptionParticipantsByPreIdents(tx DB, preIdents_ ...personnes.IdPersonne) (InscriptionParticipants, error) {
-	rows, err := tx.Query("DELETE FROM inscription_participants WHERE preident = ANY($1) RETURNING *", personnes.IdPersonneArrayToPQ(preIdents_))
+	rows, err := tx.Query("DELETE FROM inscription_participants WHERE preident = ANY($1) RETURNING idinscription, idcamp, idtaux, preident, nom, prenom, datenaissance, sexe, nationnalite", personnes.IdPersonneArrayToPQ(preIdents_))
 	if err != nil {
 		return nil, err
 	}
@@ -440,7 +440,7 @@ func DeleteInscriptionParticipantsByPreIdents(tx DB, preIdents_ ...personnes.IdP
 
 // SelectInscriptionByIdAndIdTaux return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectInscriptionByIdAndIdTaux(tx DB, id IdInscription, idTaux dossiers.IdTaux) (item Inscription, found bool, err error) {
-	row := tx.QueryRow("SELECT * FROM inscriptions WHERE Id = $1 AND IdTaux = $2", id, idTaux)
+	row := tx.QueryRow("SELECT id, idtaux, responsable, responsablepreident, message, copiesmails, partageadressesok, demandefondsoutien, dateheure, isconfirmed FROM inscriptions WHERE Id = $1 AND IdTaux = $2", id, idTaux)
 	item, err = ScanInscription(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil

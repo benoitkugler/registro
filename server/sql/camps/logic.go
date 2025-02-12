@@ -76,7 +76,7 @@ func (cd CampLoader) Stats() StatistiquesInscrits {
 	return stats
 }
 
-// Label renvoie une description courte
+// Label renvoie une description courte : Nom Année
 func (c Camp) Label() string {
 	return fmt.Sprintf("%s %d", c.Nom, c.DateDebut.Time().Year())
 }

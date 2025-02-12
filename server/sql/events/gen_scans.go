@@ -605,9 +605,9 @@ func InsertManyEventMessages(tx *sql.Tx, items ...EventMessage) error {
 }
 
 // Delete the link EventMessage from the database.
-// Only the foreign keys IdEvent fields are used in 'item'.
+// Only the foreign keys IdEvent, OrigineCamp fields are used in 'item'.
 func (item EventMessage) Delete(tx DB) error {
-	_, err := tx.Exec(`DELETE FROM event_messages WHERE IdEvent = $1;`, item.IdEvent)
+	_, err := tx.Exec(`DELETE FROM event_messages WHERE IdEvent = $1 AND ((OrigineCamp IS NULL AND $2 IS NULL) OR OrigineCamp = $2);`, item.IdEvent, item.OrigineCamp)
 	return err
 }
 
@@ -651,6 +651,22 @@ func SelectEventMessagesByIdEvents(tx DB, idEvents_ ...IdEvent) (EventMessages, 
 
 func DeleteEventMessagesByIdEvents(tx DB, idEvents_ ...IdEvent) (EventMessages, error) {
 	rows, err := tx.Query("DELETE FROM event_messages WHERE idevent = ANY($1) RETURNING idevent, contenu, origine, originecamp, vubackoffice, vuespaceperso", IdEventArrayToPQ(idEvents_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanEventMessages(rows)
+}
+
+func SelectEventMessagesByOrigineCamps(tx DB, origineCamps_ ...camps.IdCamp) (EventMessages, error) {
+	rows, err := tx.Query("SELECT idevent, contenu, origine, originecamp, vubackoffice, vuespaceperso FROM event_messages WHERE originecamp = ANY($1)", camps.IdCampArrayToPQ(origineCamps_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanEventMessages(rows)
+}
+
+func DeleteEventMessagesByOrigineCamps(tx DB, origineCamps_ ...camps.IdCamp) (EventMessages, error) {
+	rows, err := tx.Query("DELETE FROM event_messages WHERE originecamp = ANY($1) RETURNING idevent, contenu, origine, originecamp, vubackoffice, vuespaceperso", camps.IdCampArrayToPQ(origineCamps_))
 	if err != nil {
 		return nil, err
 	}

@@ -1,8 +1,10 @@
 package personnes
 
 import (
+	"fmt"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"registro/sql/shared"
 )
@@ -63,13 +65,23 @@ type Etatcivil struct {
 	Approfondissement Approfondissement // used for equipiers
 }
 
-func (p Etatcivil) FPrenom() string { return formatPrenom(p.Prenom) }
+func (p *Etatcivil) FPrenom() string { return formatPrenom(p.Prenom) }
 
-func (p Etatcivil) FNom() string { return strings.ToUpper(p.Nom) }
+func (p *Etatcivil) FNom() string { return strings.ToUpper(p.Nom) }
 
 // NomPrenom return NOM Prenom
-func (p Etatcivil) NomPrenom() string {
+func (p *Etatcivil) NomPrenom() string {
 	return p.FNom() + " " + p.FPrenom()
+}
+
+// PrenomN returns Prenom N.
+func (p *Etatcivil) PrenomN() string {
+	var initiale string
+	if nom := p.FNom(); nom != "" {
+		r, _ := utf8.DecodeRuneInString(initiale)
+		initiale = string(r)
+	}
+	return fmt.Sprintf("%s %s.", p.FPrenom(), initiale)
 }
 
 // Nationnalite encode la nationnalité,

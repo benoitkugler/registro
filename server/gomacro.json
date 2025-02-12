@@ -68,5 +68,33 @@
             "Mode": "go/randdata",
             "Output": "sql/inscriptions/gen_randdata_test.go"
         }
+    ],
+    "sql/dons/models.go": [
+        {
+            "Mode": "go/sqlcrud",
+            "Output": "sql/dons/gen_scans.go"
+        },
+        {
+            "Mode": "sql",
+            "Output": "sql/dons/gen_create.sql"
+        },
+        {
+            "Mode": "go/randdata",
+            "Output": "sql/dons/gen_randdata_test.go"
+        }
+    ],
+    "sql/events/models.go": [
+        {
+            "Mode": "go/sqlcrud",
+            "Output": "sql/events/gen_scans.go"
+        },
+        {
+            "Mode": "sql",
+            "Output": "sql/events/gen_create.sql"
+        },
+        {
+            "Mode": "go/randdata",
+            "Output": "sql/events/gen_randdata_test.go"
+        }
     ]
 }
