@@ -2,6 +2,7 @@ package inscriptions
 
 import (
 	"database/sql"
+	"net/url"
 	"slices"
 	"testing"
 	"time"
@@ -105,6 +106,12 @@ func TestController_chercheMail(t *testing.T) {
 	links, err := ct.buildPreinscription("localhost", out)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(links) == 1)
+
+	u, err := url.Parse(string(links[0].Lien))
+	tu.AssertNoErr(t, err)
+	insc, err := ct.decodePreinscription(u.Query().Get(preinscriptionKey))
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, insc.ResponsablePreIdent != "")
 }
 
 func loadEnv(t *testing.T) (config.Asso, config.SMTP) {
