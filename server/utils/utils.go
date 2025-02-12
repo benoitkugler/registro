@@ -55,14 +55,18 @@ func Normalize(s string) string {
 	return string(removeAccents(bytes.ToLower(bytes.TrimSpace([]byte(s)))))
 }
 
-// QueryParamInt parse the query param `name` to an int
-func QueryParamInt[T interface{ ~int64 | int }](c echo.Context, name string) (T, error) {
-	idS := c.QueryParam(name)
-	id, err := strconv.ParseInt(idS, 10, 64)
+// ParseInt parse [v] to an int
+func ParseInt[T interface{ ~int64 | int }](v string) (T, error) {
+	id, err := strconv.ParseInt(v, 10, 64)
 	if err != nil {
-		return 0, fmt.Errorf("invalid ID parameter %s : %s", idS, err)
+		return 0, fmt.Errorf("invalid ID parameter %s : %s", v, err)
 	}
 	return T(id), nil
+}
+
+// QueryParamInt parse the query param `name` to an int
+func QueryParamInt[T interface{ ~int64 | int }](c echo.Context, name string) (T, error) {
+	return ParseInt[T](c.QueryParam(name))
 }
 
 // SQLError wraps [*pq.Error] errors only
@@ -114,6 +118,17 @@ func BuildUrl(host, path string, params ...QParam) string {
 		u.Scheme = "http"
 	}
 	return u.String()
+}
+
+// Empêche le navigateur de mettre en cache
+// pour avoir les dernières versions des fichiers statiques
+// (essentiellement les builds .js)
+func NoCache(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		c.Response().Header().Set("Cache-Control", "no-store")
+		c.Response().Header().Set("Expires", "0")
+		return next(c)
+	}
 }
 
 func MapValues[K comparable, V any](m map[K]V) []V {

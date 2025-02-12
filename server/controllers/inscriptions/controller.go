@@ -103,7 +103,9 @@ func newCampExt(camp cps.Camp, taux ds.Taux) CampExt {
 type DataInscription struct {
 	Camps              []CampExt
 	InitialInscription Inscription
-	PreselectedCamp    string // optionnel, copy of 'preselected' query param
+	// PreselectedCamp is deduced from 'preselected' query param,
+	// and is 0 if empty or invalid
+	PreselectedCamp cps.IdCamp
 }
 
 func (ct *Controller) loadData(preselected, preinscription string) (DataInscription, error) {
@@ -124,15 +126,17 @@ func (ct *Controller) loadData(preselected, preinscription string) (DataInscript
 			return DataInscription{}, err
 		}
 	}
-
 	initialInscription.PartageAdressesOK = true // OK par défaut
 	if initialInscription.Responsable.Pays == "" {
 		initialInscription.Responsable.Pays = "FR"
 	}
 
+	// on error, the idPre will be 0
+	idPre, _ := utils.ParseInt[cps.IdCamp](preselected)
+
 	return DataInscription{
 		Camps:              list,
-		PreselectedCamp:    preselected,
+		PreselectedCamp:    idPre,
 		InitialInscription: initialInscription,
 	}, nil
 }
