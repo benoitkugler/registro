@@ -35,7 +35,7 @@ type EventMessage struct {
 
 	Contenu     string
 	Origine     MessageOrigine
-	OrigineCamp OptIdCamp
+	OrigineCamp OptIdCamp `gomacro-sql-foreign:"Camp"`
 
 	VuBackoffice  bool
 	VuEspaceperso bool
@@ -43,7 +43,7 @@ type EventMessage struct {
 	guard EventKind `gomacro-sql-guard:"#[EventKind.Message]"`
 }
 
-// EventMessageView indique qu'un message a été lue par le directeur.
+// EventMessageView indique qu'un message a été lu par le directeur.
 //
 // gomacro:SQL ADD FOREIGN KEY (IdEvent, guard) REFERENCES Event(Id,Kind)
 // gomacro:SQL ADD UNIQUE(IdEvent, IdCamp)
