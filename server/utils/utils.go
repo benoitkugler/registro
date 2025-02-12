@@ -20,22 +20,26 @@ import (
 )
 
 var (
-	letterRunes  = []rune("azertyuiopqsdfghjklmwxcvbn123456789")
+	letterRunes  = []rune("azertyuiopqsdfghjklmwxcvbn0123456789AZERTYUIOPQSDFGHJKLMWXCVBN")
 	specialRunes = []rune(" é @ ! ?&èïab ")
 )
 
 func RandString(n int, specialChars bool) string {
 	b := make([]rune, n)
-	props, maxLength := letterRunes, len(letterRunes)
+	props := letterRunes
 	if specialChars {
 		props = append(props, specialRunes...)
-		maxLength += len(specialRunes)
 	}
+	maxLength := len(props)
 	for i := range b {
 		b[i] = props[rand.Intn(maxLength)]
 	}
 	return string(b)
 }
+
+// RandPassword returns a [a-z0-9] password
+// with n chars.
+func RandPassword(n int) string { return RandString(n, false) }
 
 var noAccent = transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
 
