@@ -129,6 +129,7 @@ func defaultCamp(idTaux ds.IdTaux) cp.Camp {
 		Nom:       "Nouveau séjour",
 		DateDebut: shared.NewDateFrom(time.Now()), Duree: 1,
 		Places: 40, AgeMin: 6, AgeMax: 12,
+		Password: utils.RandPassword(6),
 	}
 }
 
