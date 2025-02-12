@@ -15,15 +15,17 @@ import (
 var templates embed.FS
 
 var (
-	inviteEquipierTmpl      *template.Template
-	notifieDonTmpl          *template.Template
-	confirmeInscriptionTmpl *template.Template
+	inviteEquipierT      *template.Template
+	notifieDonT          *template.Template
+	confirmeInscriptionT *template.Template
+	preinscriptionT      *template.Template
 )
 
 func init() {
-	inviteEquipierTmpl = parseTemplate("templates/invite_equipier.html")
-	notifieDonTmpl = parseTemplate("templates/notifie_don.html")
-	confirmeInscriptionTmpl = parseTemplate("templates/confirme_inscription.html")
+	inviteEquipierT = parseTemplate("templates/inviteEquipier.html")
+	notifieDonT = parseTemplate("templates/notifieDon.html")
+	confirmeInscriptionT = parseTemplate("templates/confirmeInscription.html")
+	preinscriptionT = parseTemplate("templates/preinscription.html")
 }
 
 func parseTemplate(templateFile string) *template.Template {
@@ -151,16 +153,6 @@ type champsCommuns struct {
 	Asso config.Asso
 }
 
-// type TargetRespo struct {
-// 	Lien, NomPrenom string
-// }
-
-// type paramsPreinscription struct {
-// 	champsCommuns
-// 	Mail         string
-// 	Responsables []TargetRespo
-// }
-
 // type paramsValideMail struct {
 // 	champsCommuns
 // 	UrlValideInscription string
@@ -270,16 +262,28 @@ type champsCommuns struct {
 // 	return render(templates.NotifieMessage, "base.html", p)
 // }
 
-// func NewPreinscription(mail string, resp []TargetRespo) (string, error) {
-// 	commun := newChampCommuns(Contact{}, "Inscription rapide")
-// 	commun.SignatureMail = "<i>Ps : Ceci est un mail automatique, merci de ne pas y répondre.</i>"
-// 	p := paramsPreinscription{
-// 		champsCommuns: commun,
-// 		Mail:          mail,
-// 		Responsables:  resp,
-// 	}
-// 	return render(templates.Preinscription, "base.html", p)
-// }
+type RespoWithLink struct {
+	NomPrenom string
+	Lien      template.HTML
+}
+
+func Preinscription(asso config.Asso, mail string, responsables []RespoWithLink) (string, error) {
+	args := struct {
+		champsCommuns
+		Mail         string
+		Responsables []RespoWithLink
+	}{
+		champsCommuns: champsCommuns{
+			Title:       "Inscription rapide",
+			Salutations: Contact{}.Salutations(),
+			Signature:   template.HTML("<i>Ps : Ceci est un mail automatique, merci de ne pas y répondre.</i>"),
+			Asso:        asso,
+		},
+		Mail:         mail,
+		Responsables: responsables,
+	}
+	return render(preinscriptionT, args)
+}
 
 // func NewRenvoieLienEspacePerso(mail string, dossiers []ResumeDossier) (string, error) {
 // 	commun := newChampCommuns(Contact{}, "Espace de suivi")
@@ -306,7 +310,7 @@ func ConfirmeInscription(asso config.Asso, contact Contact, urlConfirmeInscripti
 		URL: template.HTML(urlConfirmeInscription),
 	}
 
-	return render(confirmeInscriptionTmpl, args)
+	return render(confirmeInscriptionT, args)
 }
 
 // func NewDebloqueFicheSanitaire(urlDebloqueFicheSanitaire, newMail, nomPrenom string) (string, error) {
@@ -364,7 +368,7 @@ func InviteEquipier(cfg config.Asso, labelCamp string, directeur string, equipie
 		labelCamp,
 		lienForumaire,
 	}
-	return render(inviteEquipierTmpl, args)
+	return render(inviteEquipierT, args)
 }
 
 // organisme est vide pour les dons particulier
@@ -383,7 +387,7 @@ func NotifieDon(cfg config.Asso, contact Contact, montant dossiers.Montant, orga
 		Montant:   montant.String(),
 		Organisme: organisme,
 	}
-	return render(notifieDonTmpl, args)
+	return render(notifieDonT, args)
 }
 
 // func NewNotifFusion(contact Contact, lienEspacePerso string) (string, error) {

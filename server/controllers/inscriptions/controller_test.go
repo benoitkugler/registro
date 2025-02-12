@@ -101,6 +101,10 @@ func TestController_chercheMail(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(out.responsables) == 1)
 	tu.Assert(t, slices.Equal(utils.MapKeysSorted(out.idsParticipants), []pr.IdPersonne{p2.Id, p3.Id}))
+
+	links, err := ct.buildPreinscription("localhost", out)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(links) == 1)
 }
 
 func loadEnv(t *testing.T) (config.Asso, config.SMTP) {

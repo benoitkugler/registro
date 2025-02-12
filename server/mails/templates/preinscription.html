@@ -1,0 +1,17 @@
+{{ define "content" }}
+<p>
+    Votre adresse mail <b>{{ .Mail }}</b> est présente dans nos données. Vous pouvez remplir le formulaire d'inscription
+    en choisissant le responsable légal parmi la liste ci-dessous.
+    <ul>
+        {{ range .Responsables }}
+        <li>
+            <a href="{{ .Lien }}">{{ .NomPrenom }}</a>
+        </li>
+        {{ end }}
+    </ul>
+</p>
+
+<p>
+    Les participants associés seront aussi importés.
+</p>
+{{ end }}

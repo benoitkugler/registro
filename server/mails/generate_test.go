@@ -207,6 +207,17 @@ func TestNotificationDon(t *testing.T) {
 	tu.Write(t, "notification_don_2.html", []byte(html))
 }
 
+func TestPreinscription(t *testing.T) {
+	cfg, _ := loadEnv(t)
+
+	html, err := Preinscription(cfg, "xxx.ben@free.fr", []RespoWithLink{
+		{"Ben kug", "https://zmldz?454=46"},
+		{"Jean claude", "https://zmldz?454=46"},
+	})
+	tu.AssertNoErr(t, err)
+	tu.Write(t, "preinscription.html", []byte(html))
+}
+
 func TestConfirmeInscription(t *testing.T) {
 	cfg, _ := loadEnv(t)
 

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"html/template"
 	"sort"
 	"strings"
 	"time"
@@ -31,8 +32,12 @@ import (
 //	- [ConfirmeInscription] : le lien de confirmation est activé : l'inscription est confirmée et le dossier
 //    est créé (l'espace perso est alors accessible)
 
-// EndpointConfirmeInscription est envoyé par mail
-const EndpointConfirmeInscription = "/inscription/confirme"
+const (
+	// EndpointInscription est envoyé par mail pour les pré-inscriptions
+	EndpointInscription = "/inscription"
+	// EndpointConfirmeInscription est envoyé par mail
+	EndpointConfirmeInscription = "/inscription/confirme"
+)
 
 type Controller struct {
 	db *sql.DB
@@ -46,11 +51,13 @@ func NewController(db *sql.DB, key crypto.Encrypter, smtp config.SMTP, asso conf
 	return &Controller{db, key, smtp, asso}
 }
 
+const preinscriptionKey = "preinscription"
+
 // LoadData décode la (potentielle) préinscription et renvoie les
 // données des séjours.
 func (ct *Controller) LoadData(c echo.Context) error {
-	preselected := c.QueryParam("preselected")       // optionnel
-	preinscription := c.QueryParam("preinscription") // optionnel
+	preselected := c.QueryParam("preselected")        // optionnel
+	preinscription := c.QueryParam(preinscriptionKey) // optionnel
 
 	out, err := ct.loadData(preselected, preinscription)
 	if err != nil {
@@ -245,19 +252,18 @@ func (ct *Controller) SearchHistory(c echo.Context) error {
 		return c.JSON(200, SearchHistoryOut{MailFound: false})
 	}
 
-	// TODO:
-	// targets, err := ct.bild(candidats)
-	// if err != nil {
-	// 	return err
-	// }
+	targets, err := ct.buildPreinscription(c.Request().Host, candidats)
+	if err != nil {
+		return err
+	}
 
-	// html, err := mails.NewPreinscription(mail, targets)
-	// if err != nil {
-	// 	return err
-	// }
-	// if err = mails.NewMailer(ct.SMTP).SendMail(mail, "[ACVE] Inscription rapide", html, nil, nil); err != nil {
-	// 	return err
-	// }
+	html, err := mails.Preinscription(ct.asso, mail, targets)
+	if err != nil {
+		return err
+	}
+	if err = mails.NewMailer(ct.smtp, ct.asso.MailsSettings).SendMail(mail, "Inscription rapide", html, nil, nil); err != nil {
+		return err
+	}
 
 	return c.JSON(200, SearchHistoryOut{MailFound: true})
 }
@@ -311,29 +317,25 @@ func (ct *Controller) chercheMail(mail string) (out candidatsPreinscription, _ e
 	return out, nil
 }
 
-// func (ct Controller) buildPreinscription(cd candidatsPreinscription) ([]mails.TargetRespo, error) {
-// 	baseUrl, err := url.Parse(origin)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	var out []mails.TargetRespo
-// 	for _, resp := range cd.responsables {
-// 		t := Preinscription{IdResponsable: resp.Id, IdsEnfants: cd.idsParticipantPersonnes}
-// 		crypted, err := shared.Encode(ct.Signing, t)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 		lien := shared.BuildUrl(baseUrl.Host, baseUrl.Path, map[string]string{"preinscription": crypted})
-// 		out = append(out, mails.TargetRespo{Lien: lien, NomPrenom: resp.NomPrenom().String()})
-// 	}
-// 	return out, nil
-// }
-
 // preinscription code le choix d'un responsable et des participants associés.
 // Cet object est crypté et inséré dans un email
 type preinscription struct {
 	IdResponsable  pr.IdPersonne
 	IdParticipants pr.IdPersonneSet
+}
+
+func (ct Controller) buildPreinscription(host string, cd candidatsPreinscription) ([]mails.RespoWithLink, error) {
+	var out []mails.RespoWithLink
+	for _, resp := range cd.responsables {
+		t := preinscription{IdResponsable: resp.Id, IdParticipants: cd.idsParticipants}
+		crypted, err := ct.key.EncryptJSON(t)
+		if err != nil {
+			return nil, err
+		}
+		lien := utils.BuildUrl(host, EndpointInscription, utils.QP(preinscriptionKey, crypted))
+		out = append(out, mails.RespoWithLink{Lien: template.HTML(lien), NomPrenom: resp.NomPrenom()})
+	}
+	return out, nil
 }
 
 // decodePreinscription décode le lien du mail et forme une inscription pré-remplie.
