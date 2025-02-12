@@ -60,16 +60,54 @@ func (ct *Controller) LoadData(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
+// CampExt is a public version of [cps.Camp]
+type CampExt struct {
+	Id          cps.IdCamp
+	DateDebut   shared.Date
+	Duree       int // nombre de jours date et fin inclus
+	Lieu        string
+	Description string // Description est affichée sur le formulaire d'inscription
+	Navette     cps.Navette
+	Places      int // nombre de places prévues pour le séjour
+	AgeMin      int // inclusif
+	AgeMax      int // inclusif
+
+	Label string
+	// Formatted, possibly including several currencies
+	Prix string
+}
+
+func newCampExt(camp cps.Camp, taux ds.Taux) CampExt {
+	return CampExt{
+		Id:          camp.Id,
+		DateDebut:   camp.DateDebut,
+		Duree:       camp.Duree,
+		Lieu:        camp.Lieu,
+		Description: camp.Description,
+		Navette:     camp.Navette,
+		Places:      camp.Places,
+		AgeMin:      camp.AgeMin,
+		AgeMax:      camp.AgeMax,
+		Label:       camp.Label(),
+		Prix:        taux.Convert(camp.Prix).String(),
+	}
+}
+
 type DataInscription struct {
-	Camps              cps.Camps
+	Camps              []CampExt
 	InitialInscription Inscription
 	PreselectedCamp    string // optionnel, copy of 'preselected' query param
 }
 
 func (ct *Controller) loadData(preselected, preinscription string) (DataInscription, error) {
-	camps, err := ct.loadCamps()
+	camps, tauxs, err := ct.loadCamps()
 	if err != nil {
 		return DataInscription{}, err
+	}
+
+	list := make([]CampExt, 0, len(camps))
+	for _, camp := range camps {
+		list = append(list, newCampExt(camp, tauxs[camp.IdTaux]))
 	}
 
 	var initialInscription Inscription
@@ -86,17 +124,17 @@ func (ct *Controller) loadData(preselected, preinscription string) (DataInscript
 	}
 
 	return DataInscription{
-		Camps:              camps,
+		Camps:              list,
 		PreselectedCamp:    preselected,
 		InitialInscription: initialInscription,
 	}, nil
 }
 
 // loadCamps renvoie les camps ouverts aux inscriptions et non terminés
-func (ct *Controller) loadCamps() (cps.Camps, error) {
+func (ct *Controller) loadCamps() (cps.Camps, ds.Tauxs, error) {
 	camps, err := cps.SelectAllCamps(ct.db)
 	if err != nil {
-		return nil, utils.SQLError(err)
+		return nil, nil, utils.SQLError(err)
 	}
 	now := time.Now()
 	for id, camp := range camps {
@@ -104,7 +142,11 @@ func (ct *Controller) loadCamps() (cps.Camps, error) {
 			delete(camps, id)
 		}
 	}
-	return camps, nil
+	tauxs, err := ds.SelectTauxs(ct.db, camps.IdTauxs()...)
+	if err != nil {
+		return nil, nil, utils.SQLError(err)
+	}
+	return camps, tauxs, nil
 }
 
 // Inscription est la donnée publique correspondant
@@ -339,7 +381,7 @@ func (ct *Controller) SaveInscription(c echo.Context) error {
 }
 
 func (ct *Controller) buildInscription(publicInsc Inscription) (insc in.Inscription, ps in.InscriptionParticipants, _ error) {
-	camps, err := ct.loadCamps()
+	camps, _, err := ct.loadCamps()
 	if err != nil {
 		return insc, ps, err
 	}

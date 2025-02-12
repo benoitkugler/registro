@@ -39,9 +39,10 @@ func TestController_load(t *testing.T) {
 	ct := NewController(db.DB, crypto.Encrypter{}, config.SMTP{}, config.Asso{})
 
 	t.Run("loadCamps", func(t *testing.T) {
-		got, err := ct.loadCamps()
+		camps, tauxs, err := ct.loadCamps()
 		tu.AssertNoErr(t, err)
-		tu.Assert(t, slices.Equal(got.IDs(), []cps.IdCamp{c3.Id}))
+		tu.Assert(t, slices.Equal(camps.IDs(), []cps.IdCamp{c3.Id}))
+		tu.Assert(t, slices.Equal(tauxs.IDs(), []ds.IdTaux{1}))
 	})
 
 	t.Run("decodePreinscription", func(t *testing.T) {
