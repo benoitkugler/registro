@@ -14,7 +14,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Int } from "@/logic/app/api";
+import type { Int } from "@/logic/backoffice/api";
 const props = defineProps<{
   label: string;
   hint?: string;

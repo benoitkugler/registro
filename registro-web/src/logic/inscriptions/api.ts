@@ -3,17 +3,29 @@
 import type { AxiosResponse } from "axios";
 import Axios from "axios";
 
-export type Ar4_Int = [Int, Int, Int, Int];
-
 // AAAA-MM-YY date format
 export type Date_ = string & { __opaque__: "Date" };
 
 export type Int = number & { __opaque__: "Int" };
+// registro/controllers/inscriptions.CampExt
+export interface CampExt {
+  Id: IdCamp;
+  DateDebut: Date;
+  Duree: Int;
+  Lieu: string;
+  Description: string;
+  Navette: Navette;
+  Places: Int;
+  AgeMin: Int;
+  AgeMax: Int;
+  Label: string;
+  Prix: string;
+}
 // registro/controllers/inscriptions.DataInscription
 export interface DataInscription {
-  Camps: Camps;
+  Camps: CampExt[] | null;
   InitialInscription: Inscription;
-  PreselectedCamp: string;
+  PreselectedCamp: IdCamp;
 }
 // registro/controllers/inscriptions.Inscription
 export interface Inscription {
@@ -39,93 +51,12 @@ export interface Participant {
 export interface SearchHistoryOut {
   MailFound: boolean;
 }
-// registro/sql/camps.Camp
-export interface Camp {
-  Id: IdCamp;
-  IdTaux: IdTaux;
-  Nom: string;
-  DateDebut: Date;
-  Duree: Int;
-  Lieu: string;
-  Agrement: string;
-  Description: string;
-  Navette: Navette;
-  Places: Int;
-  AgeMin: Int;
-  AgeMax: Int;
-  Ouvert: boolean;
-  Prix: Montant;
-  OptionPrix: OptionPrixCamp;
-  OptionQuotientFamilial: OptionQuotientFamilial;
-  Password: string;
-}
-// registro/sql/camps.Camps
-export type Camps = { [key in IdCamp]: Camp } | null;
 // registro/sql/camps.IdCamp
 export type IdCamp = Int;
 // registro/sql/camps.Navette
 export interface Navette {
   Actif: boolean;
   Commentaire: string;
-}
-// registro/sql/camps.OptionPrixCamp
-export interface OptionPrixCamp {
-  Active: OptionPrixKind;
-  Semaine: OptionSemaineCamp;
-  Statuts: PrixParStatut[] | null;
-  Jour: Montant[] | null;
-}
-// registro/sql/camps.OptionPrixKind
-export const OptionPrixKind = {
-  NoOption: 0,
-  PrixSemaine: 1,
-  PrixStatut: 2,
-  PrixJour: 3,
-} as const;
-export type OptionPrixKind =
-  (typeof OptionPrixKind)[keyof typeof OptionPrixKind];
-
-export const OptionPrixKindLabels: { [key in OptionPrixKind]: string } = {
-  [OptionPrixKind.NoOption]: "",
-  [OptionPrixKind.PrixSemaine]: "",
-  [OptionPrixKind.PrixStatut]: "",
-  [OptionPrixKind.PrixJour]: "",
-};
-
-// registro/sql/camps.OptionQuotientFamilial
-export type OptionQuotientFamilial = Ar4_Int;
-// registro/sql/camps.OptionSemaineCamp
-export interface OptionSemaineCamp {
-  Plage1: Plage;
-  Plage2: Plage;
-  Prix1: Montant;
-  Prix2: Montant;
-}
-// registro/sql/camps.PrixParStatut
-export interface PrixParStatut {
-  Id: Int;
-  Prix: Montant;
-  Statut: string;
-  Description: string;
-}
-// registro/sql/dossiers.Currency
-export const Currency = {
-  Euros: 0,
-  FrancsSuisse: 1,
-} as const;
-export type Currency = (typeof Currency)[keyof typeof Currency];
-
-export const CurrencyLabels: { [key in Currency]: string } = {
-  [Currency.Euros]: "€",
-  [Currency.FrancsSuisse]: "CHF",
-};
-
-// registro/sql/dossiers.IdTaux
-export type IdTaux = Int;
-// registro/sql/dossiers.Montant
-export interface Montant {
-  Cent: Int;
-  Currency: Currency;
 }
 // registro/sql/inscriptions.ResponsableLegal
 export interface ResponsableLegal {
@@ -176,11 +107,6 @@ export const SexeLabels: { [key in Sexe]: string } = {
 export type Tels = string[] | null;
 // registro/sql/shared.Date
 export type Date = Date_;
-// registro/sql/shared.Plage
-export interface Plage {
-  From: Date;
-  Duree: Int;
-}
 
 /** AbstractAPI provides auto-generated API calls and should be used 
 		as base class for an app controller.
@@ -197,6 +123,43 @@ export abstract class AbstractAPI {
 
   getHeaders() {
     return { Authorization: "Bearer " + this.authToken };
+  }
+
+  protected async rawAnonymous14197249() {
+    const fullUrl = this.baseUrl + "/inscription";
+    await Axios.get(fullUrl, { headers: this.getHeaders() });
+    return true;
+  }
+
+  /** Anonymous14197249 wraps rawAnonymous14197249 and handles the error */
+  async Anonymous14197249() {
+    this.startRequest();
+    try {
+      const out = await this.rawAnonymous14197249();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected async rawConfirmeInscription(params: { "insc-token": string }) {
+    const fullUrl = this.baseUrl + "/inscription/confirme";
+    await Axios.get(fullUrl, {
+      headers: this.getHeaders(),
+      params: { "insc-token": params["insc-token"] },
+    });
+    return true;
+  }
+
+  /** ConfirmeInscription wraps rawConfirmeInscription and handles the error */
+  async ConfirmeInscription(params: { "insc-token": string }) {
+    this.startRequest();
+    try {
+      const out = await this.rawConfirmeInscription(params);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
   }
 
   protected async rawLoadData(params: {
@@ -256,26 +219,6 @@ export abstract class AbstractAPI {
     this.startRequest();
     try {
       const out = await this.rawSearchHistory(params);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected async rawConfirmeInscription(params: { "insc-token": string }) {
-    const fullUrl = this.baseUrl + "/inscription/confirme";
-    await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-      params: { "insc-token": params["insc-token"] },
-    });
-    return true;
-  }
-
-  /** ConfirmeInscription wraps rawConfirmeInscription and handles the error */
-  async ConfirmeInscription(params: { "insc-token": string }) {
-    this.startRequest();
-    try {
-      const out = await this.rawConfirmeInscription(params);
       return out;
     } catch (error) {
       this.handleError(error);

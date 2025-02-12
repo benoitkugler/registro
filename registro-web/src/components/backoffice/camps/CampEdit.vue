@@ -138,8 +138,8 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import type { Camp } from "@/logic/app/api";
-import { Camps, copy } from "@/logic/app/logic";
+import type { Camp } from "@/logic/backoffice/api";
+import { Camps, copy } from "@/logic/backoffice/logic";
 const props = defineProps<{
   camp: Camp;
 }>();

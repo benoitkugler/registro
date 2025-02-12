@@ -35,7 +35,7 @@
 
 <script lang="ts" setup>
 import { ref } from "vue";
-import { controller } from "./logic/app/logic";
+import { controller } from "./logic/backoffice/logic";
 
 const message = ref("");
 const messageColor = ref("secondary");

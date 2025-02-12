@@ -47,7 +47,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import type { StatistiquesInscrits } from "@/logic/app/api";
+import type { StatistiquesInscrits } from "@/logic/backoffice/api";
 const props = defineProps<{
   stats: StatistiquesInscrits;
 }>();

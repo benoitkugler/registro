@@ -32,8 +32,8 @@
 </template>
 
 <script setup lang="ts">
-import type { Date_, Int } from "@/logic/app/api";
-import { newDate_ } from "@/logic/app/logic";
+import type { Date_, Int } from "@/logic/backoffice/api";
+import { newDate_ } from "@/logic/backoffice/logic";
 import { ref } from "vue";
 import { useDate } from "vuetify";
 const props = defineProps<{
