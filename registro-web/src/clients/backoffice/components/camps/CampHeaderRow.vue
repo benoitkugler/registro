@@ -102,8 +102,9 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import type { CampHeader, Camp } from "@/logic/backoffice/api";
-import { Camps, copy } from "@/logic/backoffice/logic";
+import type { CampHeader, Camp } from "@/clients/backoffice/logic/api";
+import { Camps, copy } from "@/clients/backoffice/logic/logic";
+import CampStats from "./CampStats.vue";
 const props = defineProps<{
   camp: CampHeader;
 }>();

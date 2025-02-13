@@ -70,13 +70,13 @@ import {
   type IdTaux,
   type Int,
   type Taux,
-} from "@/logic/backoffice/api";
+} from "@/clients/backoffice/logic/api";
 import {
   controller,
   copy,
   mapFromObject,
   round,
-} from "@/logic/backoffice/logic";
+} from "@/clients/backoffice/logic/logic";
 
 onMounted(fetch);
 

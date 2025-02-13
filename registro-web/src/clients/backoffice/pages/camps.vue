@@ -141,14 +141,18 @@
 
 <script lang="ts" setup>
 import { ref, computed, onMounted, reactive } from "vue";
-import { Camps, controller, normalize } from "@/logic/backoffice/logic";
+import { Camps, controller, normalize } from "@/clients/backoffice/logic/logic";
 import type {
   Camp,
   CampHeader,
   IdCamp,
   Int,
   Taux,
-} from "@/logic/backoffice/api";
+} from "@/clients/backoffice/logic/api";
+import NavBar from "../components/NavBar.vue";
+import CampEdit from "../components/camps/CampEdit.vue";
+import TauxSelect from "../components/camps/TauxSelect.vue";
+import CampHeaderRow from "../components/camps/CampHeaderRow.vue";
 
 onMounted(fetchCamps);
 

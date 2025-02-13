@@ -39,8 +39,8 @@ import {
   CurrencyLabels,
   type Int,
   type Montant,
-} from "@/logic/backoffice/api";
-import { round } from "@/logic/backoffice/logic";
+} from "@/clients/backoffice/logic/api";
+import { round } from "@/clients/backoffice/logic/logic";
 const props = defineProps<{
   label: string;
   hideDetails?: boolean;

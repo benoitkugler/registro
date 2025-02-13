@@ -15,7 +15,7 @@
     <v-list-item
       prepend-icon="mdi-bed"
       link
-      :to="{ path: '/app/camps' }"
+      :to="{ path: '/camps' }"
       color="primary"
     >
       Camps
