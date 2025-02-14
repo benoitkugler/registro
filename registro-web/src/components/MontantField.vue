@@ -34,13 +34,8 @@
 </template>
 
 <script setup lang="ts">
-import {
-  Currency,
-  CurrencyLabels,
-  type Int,
-  type Montant,
-} from "@/clients/backoffice/logic/api";
-import { round } from "@/clients/backoffice/logic/logic";
+import { CurrencyLabels, type Montant } from "@/clients/backoffice/logic/api";
+import { round, selectItems } from "@/utils";
 const props = defineProps<{
   label: string;
   hideDetails?: boolean;
@@ -48,10 +43,7 @@ const props = defineProps<{
 
 const modelValue = defineModel<Montant>({ required: true });
 
-const currencyItems = Object.entries(CurrencyLabels).map((pair) => ({
-  value: Number(pair[0]) as Currency,
-  title: pair[1],
-}));
+const currencyItems = selectItems(CurrencyLabels);
 </script>
 
 <style scoped></style>

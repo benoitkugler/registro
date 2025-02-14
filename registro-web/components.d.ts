@@ -7,10 +7,15 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    copy: typeof import('./src/components/SexeField copy.vue')['default']
     DateField: typeof import('./src/components/DateField.vue')['default']
+    DateNaissanceField: typeof import('./src/components/DateNaissanceField.vue')['default']
     IntField: typeof import('./src/components/IntField.vue')['default']
     MontantField: typeof import('./src/components/MontantField.vue')['default']
+    PaysField: typeof import('./src/components/PaysField.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    SexeField: typeof import('./src/components/SexeField.vue')['default']
+    StringList: typeof import('./src/components/StringList.vue')['default']
   }
 }

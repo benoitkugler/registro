@@ -60,10 +60,26 @@ export function mapFromObject<T extends { Id: Int }>(
   );
 }
 
-export function newDate_(d: Date) {
-  const offset = d.getTimezoneOffset();
-  d = new Date(d.getTime() - offset * 60 * 1000);
-  return d.toISOString().split("T")[0] as Date_;
+const isZero = <T extends string | number>(a: T) => a == "" || a == 0;
+
+export function selectItems<T extends number | string>(
+  labels: {
+    [key in T]: string;
+  },
+  sort?: boolean
+) {
+  const out: { value: T; title: string }[] = [];
+  for (const value in labels) {
+    const title = labels[value];
+    out.push({ value, title });
+  }
+  if (sort) {
+    out.sort((a, b) => {
+      if (isZero(a.value)) return -1;
+      return a.title.localeCompare(b.title);
+    });
+  }
+  return out;
 }
 
 export function round(v: number) {
@@ -78,22 +94,3 @@ export function normalize(s: string) {
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
 }
-
-export function formatDate(date: Date, showYear = false, showWeekday = true) {
-  if (isNaN(date.valueOf()) || date.getFullYear() <= 1) {
-    return "";
-  }
-  const s = date.toLocaleString(undefined, {
-    year: showYear ? "numeric" : undefined,
-    day: "numeric",
-    month: "short",
-    // hour: "2-digit",
-    // minute: showMinute ? "2-digit" : undefined,
-  });
-  if (showWeekday) {
-    return `${_weekdays[date.getDay()]} ${s}`;
-  }
-  return s;
-}
-
-const _weekdays = ["Dim.", "Lun.", "Mar.", "Mer.", "Jeu.", "Ven.", "Sam."];
