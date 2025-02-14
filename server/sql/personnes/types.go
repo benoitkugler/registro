@@ -2,11 +2,10 @@ package personnes
 
 import (
 	"fmt"
+	"registro/sql/shared"
 	"strings"
 	"time"
 	"unicode/utf8"
-
-	"registro/sql/shared"
 )
 
 // Time is date and time
@@ -24,8 +23,8 @@ type Sexe uint8
 
 const (
 	Empty Sexe = iota //
-	Woman 			  // Femme
-	Man        		  // Homme
+	Woman             // Femme
+	Man               // Homme
 )
 
 // Tel is a phone number
@@ -89,9 +88,9 @@ func (p *Etatcivil) PrenomN() string {
 type Nationnalite uint8
 
 const (
-	Autre Nationnalite = iota
-	Francaise
-	Suisse
+	Autre     Nationnalite = iota // Autre
+	Francaise                     // Française
+	Suisse                        // Suisse
 )
 
 type Diplome uint8

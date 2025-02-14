@@ -141,7 +141,7 @@
 
 <script lang="ts" setup>
 import { ref, computed, onMounted, reactive } from "vue";
-import { Camps, controller, normalize } from "@/clients/backoffice/logic/logic";
+import { controller, isCampOpen } from "@/clients/backoffice/logic/logic";
 import type {
   Camp,
   CampHeader,
@@ -153,6 +153,7 @@ import NavBar from "../components/NavBar.vue";
 import CampEdit from "../components/camps/CampEdit.vue";
 import TauxSelect from "../components/camps/TauxSelect.vue";
 import CampHeaderRow from "../components/camps/CampHeaderRow.vue";
+import { Camps, normalize } from "@/utils";
 
 onMounted(fetchCamps);
 
@@ -167,7 +168,7 @@ const camps = computed(() => {
   const out = Array.from(campsData.values()).filter(
     (camp) =>
       Camps.match(camp.Camp.Camp, pattern) &&
-      (!filter.openOnly || Camps.open(camp.Camp))
+      (!filter.openOnly || isCampOpen(camp.Camp))
   );
   // most recent first
   out.sort(
@@ -262,7 +263,7 @@ const areCreateFieldsValid = computed(
 const isPlageTauxValid = computed(() => {
   const tauxCampsOpen = new Set(
     Array.from(campsData.values())
-      .filter((c) => Camps.open(c.Camp))
+      .filter((c) => isCampOpen(c.Camp))
       .map((c) => c.Camp.Camp.IdTaux)
   );
   return tauxCampsOpen.size <= 1;

@@ -12,6 +12,7 @@ declare module 'vue' {
     DateNaissanceField: typeof import('./src/components/DateNaissanceField.vue')['default']
     IntField: typeof import('./src/components/IntField.vue')['default']
     MontantField: typeof import('./src/components/MontantField.vue')['default']
+    NationaliteField: typeof import('./src/components/NationaliteField.vue')['default']
     PaysField: typeof import('./src/components/PaysField.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']

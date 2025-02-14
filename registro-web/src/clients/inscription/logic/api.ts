@@ -10,6 +10,7 @@ export type Int = number & { __opaque__: "Int" };
 // registro/controllers/inscriptions.CampExt
 export interface CampExt {
   Id: IdCamp;
+  Nom: string;
   DateDebut: Date;
   Duree: Int;
   Lieu: string;
@@ -18,7 +19,6 @@ export interface CampExt {
   Places: Int;
   AgeMin: Int;
   AgeMax: Int;
-  Label: string;
   Prix: string;
 }
 // registro/controllers/inscriptions.DataInscription
@@ -82,9 +82,9 @@ export const Nationnalite = {
 export type Nationnalite = (typeof Nationnalite)[keyof typeof Nationnalite];
 
 export const NationnaliteLabels: { [key in Nationnalite]: string } = {
-  [Nationnalite.Autre]: "",
-  [Nationnalite.Francaise]: "",
-  [Nationnalite.Suisse]: "",
+  [Nationnalite.Autre]: "Autre",
+  [Nationnalite.Francaise]: "Française",
+  [Nationnalite.Suisse]: "Suisse",
 };
 
 // registro/sql/personnes.Pays
@@ -125,17 +125,17 @@ export abstract class AbstractAPI {
     return { Authorization: "Bearer " + this.authToken };
   }
 
-  protected async rawAnonymous14213733() {
+  protected async rawAnonymous14217250() {
     const fullUrl = this.baseUrl + "/inscription";
     await Axios.get(fullUrl, { headers: this.getHeaders() });
     return true;
   }
 
-  /** Anonymous14213733 wraps rawAnonymous14213733 and handles the error */
-  async Anonymous14213733() {
+  /** Anonymous14217250 wraps rawAnonymous14217250 and handles the error */
+  async Anonymous14217250() {
     this.startRequest();
     try {
-      const out = await this.rawAnonymous14213733();
+      const out = await this.rawAnonymous14217250();
       return out;
     } catch (error) {
       this.handleError(error);

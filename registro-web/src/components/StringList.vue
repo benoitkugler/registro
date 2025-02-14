@@ -8,7 +8,7 @@
     closable-chips
     v-model="modelValue"
     @update:model-value="format"
-    :error-messages="props.error ? [props.error] : null"
+    :rules="props.rule ? [rule] : undefined"
   ></v-combobox>
 </template>
 
@@ -18,7 +18,7 @@ const props = defineProps<{
   formatter?: (s: string) => string;
   hideDetails?: boolean;
   readonly?: boolean;
-  error?: string;
+  rule?: (l: string[]) => true | string;
 }>();
 
 const modelValue = defineModel<string[] | null>({ required: true });
@@ -27,6 +27,10 @@ function format(v: string[] | null) {
   v = v || [];
   const fmt = props.formatter ?? ((s: string) => s);
   modelValue.value = v.map(fmt);
+}
+
+function rule(v: string[]) {
+  return props.rule!(v);
 }
 </script>
 

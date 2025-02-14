@@ -7,7 +7,7 @@
     :model-value="inner"
     @update:model-value="onType"
     :readonly="props.readonly"
-    :error-messages="props.error ? [props.error] : null"
+    :rules="props.rule ? [rule] : undefined"
     :hide-details="props.hideDetails"
     @blur="onBlur"
   >
@@ -24,6 +24,7 @@ const props = defineProps<{
   hideDetails?: boolean;
   readonly?: boolean;
   error?: string;
+  rule?: (s: Date_) => true | string;
 }>();
 
 const modelValue = defineModel<Date_>({ required: true });
@@ -47,6 +48,13 @@ function onBlur() {
   if (parse(inner.value) === undefined) {
     modelValue.value = "0001-01-01" as Date_;
   }
+}
+
+function rule(s: string) {
+  if (!s.length) return props.rule!("0001-01-01" as Date_);
+  const parsed = parse(s);
+  if (parsed === undefined) return false;
+  return props.rule!(parsed);
 }
 </script>
 

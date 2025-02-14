@@ -70,6 +70,7 @@ func (ct *Controller) LoadData(c echo.Context) error {
 // CampExt is a public version of [cps.Camp]
 type CampExt struct {
 	Id          cps.IdCamp
+	Nom string
 	DateDebut   shared.Date
 	Duree       int // nombre de jours date et fin inclus
 	Lieu        string
@@ -79,7 +80,6 @@ type CampExt struct {
 	AgeMin      int // inclusif
 	AgeMax      int // inclusif
 
-	Label string
 	// Formatted, possibly including several currencies
 	Prix string
 }
@@ -87,6 +87,7 @@ type CampExt struct {
 func newCampExt(camp cps.Camp, taux ds.Taux) CampExt {
 	return CampExt{
 		Id:          camp.Id,
+		Nom: camp.Nom,
 		DateDebut:   camp.DateDebut,
 		Duree:       camp.Duree,
 		Lieu:        camp.Lieu,
@@ -95,7 +96,6 @@ func newCampExt(camp cps.Camp, taux ds.Taux) CampExt {
 		Places:      camp.Places,
 		AgeMin:      camp.AgeMin,
 		AgeMax:      camp.AgeMax,
-		Label:       camp.Label(),
 		Prix:        taux.Convert(camp.Prix).String(),
 	}
 }

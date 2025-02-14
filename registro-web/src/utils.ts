@@ -1,4 +1,6 @@
 import type { Date_, Int } from "./clients/inscription/logic/api";
+import { newDate_ } from "./components/date";
+import { formatDate } from "./components/format";
 
 function arrayBufferToString(buffer: ArrayBuffer) {
   const uintArray = new Uint8Array(buffer);
@@ -62,6 +64,11 @@ export function mapFromObject<T extends { Id: Int }>(
 
 const isZero = <T extends string | number>(a: T) => a == "" || a == 0;
 
+function ensureNumber<T extends number | string>(s: T) {
+  const asNumber = Number(s);
+  return (isNaN(asNumber) ? s : asNumber) as T;
+}
+
 export function selectItems<T extends number | string>(
   labels: {
     [key in T]: string;
@@ -71,7 +78,7 @@ export function selectItems<T extends number | string>(
   const out: { value: T; title: string }[] = [];
   for (const value in labels) {
     const title = labels[value];
-    out.push({ value, title });
+    out.push({ value: ensureNumber<T>(value), title });
   }
   if (sort) {
     out.sort((a, b) => {
@@ -93,4 +100,51 @@ export function normalize(s: string) {
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
+}
+
+export namespace FormRules {
+  export function required(error: string) {
+    return (s: string | number) => {
+      return ensureNumber(s) ? true : error;
+    };
+  }
+
+  export function noEmptyList<T>(error: string) {
+    return (l: T[] | null) => {
+      return l?.length ? true : error;
+    };
+  }
+}
+
+interface Camp {
+  Nom: string;
+  DateDebut: Date_;
+  Duree: Int;
+  Lieu: string;
+}
+
+export namespace Camps {
+  export function year(camp: Camp) {
+    return new Date(camp.DateDebut).getUTCFullYear();
+  }
+  export function dateFin(camp: Camp): Date_ {
+    var date = new Date(camp.DateDebut);
+    date.setDate(date.getDate() + camp.Duree - 1);
+    return newDate_(date);
+  }
+  export function label(camp: Camp) {
+    return `${camp.Nom} - ${year(camp)}`;
+  }
+
+  export function formatPlage(camp: Camp) {
+    const debut = new Date(camp.DateDebut);
+    const fin = new Date(Camps.dateFin(camp));
+    return `${formatDate(debut)} au ${formatDate(fin)}`;
+  }
+
+  export function match(camp: Camp, normalizedPattern: string) {
+    if (normalizedPattern == "") return true;
+    const str = normalize(label(camp) + camp.Lieu);
+    return str.includes(normalizedPattern);
+  }
 }

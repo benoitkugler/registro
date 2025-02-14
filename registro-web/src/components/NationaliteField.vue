@@ -1,6 +1,6 @@
 <template>
   <v-select
-    label="Sexe"
+    label="Nationalité"
     variant="outlined"
     density="compact"
     :items="items"
@@ -12,7 +12,10 @@
 </template>
 
 <script setup lang="ts">
-import { Sexe, SexeLabels } from "@/clients/inscription/logic/api";
+import {
+  Nationnalite,
+  NationnaliteLabels,
+} from "@/clients/inscription/logic/api";
 import { selectItems } from "@/utils";
 const props = defineProps<{
   hideDetails?: boolean;
@@ -20,9 +23,9 @@ const props = defineProps<{
   rules?: any[];
 }>();
 
-const modelValue = defineModel<Sexe>({ required: true });
+const modelValue = defineModel<Nationnalite>({ required: true });
 
-const items = selectItems(SexeLabels);
+const items = selectItems(NationnaliteLabels);
 </script>
 
 <style scoped></style>
