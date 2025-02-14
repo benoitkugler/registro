@@ -1,4 +1,4 @@
-import { parseError } from "@/utils";
+import { normalize, parseError } from "@/utils";
 import {
   AbstractAPI,
   type Camp,
@@ -7,6 +7,8 @@ import {
   type Int,
 } from "./api";
 import { devToken } from "./env";
+import { formatDate } from "@/components/format";
+import { newDate_ } from "@/components/date";
 
 class Controller extends AbstractAPI {
   constructor(
@@ -71,60 +73,3 @@ export namespace Camps {
     return camp.Camp.Ouvert && !camp.IsTerminated;
   }
 }
-
-export function copy<T>(v: T): T {
-  return JSON.parse(JSON.stringify(v));
-}
-
-export function mapFromObject<T extends { Id: Int }>(
-  data:
-    | {
-        [key in T["Id"]]: T;
-      }
-    | null
-) {
-  return new Map<Int, T>(
-    Object.entries(data || {}).map((entry) => [
-      Number(entry[0]) as Int,
-      entry[1] as T,
-    ])
-  );
-}
-
-export function newDate_(d: Date) {
-  const offset = d.getTimezoneOffset();
-  d = new Date(d.getTime() - offset * 60 * 1000);
-  return d.toISOString().split("T")[0] as Date_;
-}
-
-export function round(v: number) {
-  return Math.round(v) as Int;
-}
-
-/** normalize returns s without spaces, accents and in lower case */
-export function normalize(s: string) {
-  return s
-    .replaceAll(" ", "")
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
-}
-
-function formatDate(date: Date, showYear = false, showWeekday = true) {
-  if (isNaN(date.valueOf()) || date.getFullYear() <= 1) {
-    return "";
-  }
-  const s = date.toLocaleString(undefined, {
-    year: showYear ? "numeric" : undefined,
-    day: "numeric",
-    month: "short",
-    // hour: "2-digit",
-    // minute: showMinute ? "2-digit" : undefined,
-  });
-  if (showWeekday) {
-    return `${_weekdays[date.getDay()]} ${s}`;
-  }
-  return s;
-}
-
-const _weekdays = ["Dim.", "Lun.", "Mar.", "Mer.", "Jeu.", "Ven.", "Sam."];

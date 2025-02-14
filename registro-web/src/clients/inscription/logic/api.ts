@@ -99,8 +99,8 @@ export type Sexe = (typeof Sexe)[keyof typeof Sexe];
 
 export const SexeLabels: { [key in Sexe]: string } = {
   [Sexe.Empty]: "",
-  [Sexe.Woman]: "",
-  [Sexe.Man]: "",
+  [Sexe.Woman]: "Femme",
+  [Sexe.Man]: "Homme",
 };
 
 // registro/sql/personnes.Tels
@@ -125,17 +125,17 @@ export abstract class AbstractAPI {
     return { Authorization: "Bearer " + this.authToken };
   }
 
-  protected async rawAnonymous14197249() {
+  protected async rawAnonymous14213733() {
     const fullUrl = this.baseUrl + "/inscription";
     await Axios.get(fullUrl, { headers: this.getHeaders() });
     return true;
   }
 
-  /** Anonymous14197249 wraps rawAnonymous14197249 and handles the error */
-  async Anonymous14197249() {
+  /** Anonymous14213733 wraps rawAnonymous14213733 and handles the error */
+  async Anonymous14213733() {
     this.startRequest();
     try {
-      const out = await this.rawAnonymous14197249();
+      const out = await this.rawAnonymous14213733();
       return out;
     } catch (error) {
       this.handleError(error);
