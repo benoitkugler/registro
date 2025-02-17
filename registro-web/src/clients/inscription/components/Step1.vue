@@ -124,7 +124,6 @@
 </template>
 
 <script lang="ts" setup>
-import { computed } from "vue";
 import type { Date_, ResponsableLegal, Tels } from "../logic/api";
 import { ageFrom, isDateZero } from "@/components/date";
 import { formatTel } from "@/components/format";

@@ -2,10 +2,11 @@ package personnes
 
 import (
 	"fmt"
-	"registro/sql/shared"
 	"strings"
 	"time"
 	"unicode/utf8"
+
+	"registro/sql/shared"
 )
 
 // Time is date and time
@@ -71,6 +72,11 @@ func (p *Etatcivil) FNom() string { return strings.ToUpper(p.Nom) }
 // NomPrenom return NOM Prenom
 func (p *Etatcivil) NomPrenom() string {
 	return p.FNom() + " " + p.FPrenom()
+}
+
+// PrenomNOM return NOM Prenom
+func (p *Etatcivil) PrenomNOM() string {
+	return p.FPrenom() + "  " + p.FNom()
 }
 
 // PrenomN returns Prenom N.

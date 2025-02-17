@@ -22,22 +22,38 @@ func TestSQL(t *testing.T) {
 	camp1, err = camp1.Insert(db)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, camp1.Id != 0)
-	personne, err := pr.Personne{}.Insert(db)
+	p1, err := pr.Personne{}.Insert(db)
 	tu.AssertNoErr(t, err)
-	dossier, err := dossiers.Dossier{IdResponsable: personne.Id, IdTaux: defautTaux.Id}.Insert(db)
+	p2, err := pr.Personne{}.Insert(db)
+	tu.AssertNoErr(t, err)
+	dossier, err := dossiers.Dossier{IdResponsable: p1.Id, IdTaux: defautTaux.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	t.Run("equipiers", func(t *testing.T) {
-		_, err = Equipier{IdPersonne: personne.Id, IdCamp: camp1.Id, Roles: Roles{Direction, AutreRole}}.Insert(db)
+		_, err = Equipier{IdPersonne: p1.Id, IdCamp: camp1.Id, Roles: Roles{Direction, AutreRole}}.Insert(db)
 		tu.AssertNoErr(t, err)
 		// only one directeur
-		_, err = Equipier{IdPersonne: personne.Id, IdCamp: camp1.Id, Roles: Roles{Direction, Menage}}.Insert(db)
+		_, err = Equipier{IdPersonne: p1.Id, IdCamp: camp1.Id, Roles: Roles{Direction, Menage}}.Insert(db)
 		tu.AssertErr(t, err)
+		// only one personne per camp
+		_, err = Equipier{IdPersonne: p1.Id, IdCamp: camp1.Id, Roles: Roles{Menage}}.Insert(db)
+		tu.AssertErr(t, err)
+		// other roles
+		_, err = Equipier{IdPersonne: p2.Id, IdCamp: camp1.Id, Roles: Roles{Animation, Adjoint}}.Insert(db)
+		tu.AssertNoErr(t, err)
+
+		equipiers, err := SelectEquipiersByIdCamps(db, camp1.Id)
+		tu.AssertNoErr(t, err)
+
+		dir, ok := equipiers.Directeur()
+		tu.Assert(t, ok && dir.IdPersonne == p1.Id)
+		l := equipiers.Direction()
+		tu.Assert(t, len(l) == 2 && l[0].IdPersonne == p1.Id && l[1].IdPersonne == p2.Id)
 	})
 
 	t.Run("participants et groupes", func(t *testing.T) {
 		part1 := randParticipant()
-		part1.IdCamp, part1.IdPersonne, part1.IdDossier = camp1.Id, personne.Id, dossier.Id
+		part1.IdCamp, part1.IdPersonne, part1.IdDossier = camp1.Id, p1.Id, dossier.Id
 		part1.IdTaux = camp1.IdTaux
 		part1, err = part1.Insert(db)
 		tu.AssertNoErr(t, err)
@@ -76,7 +92,7 @@ func TestSQL(t *testing.T) {
 		tu.AssertNoErr(t, err)
 
 		part1 := randParticipant()
-		part1.IdCamp, part1.IdPersonne, part1.IdDossier = camp1.Id, personne.Id, dossier.Id
+		part1.IdCamp, part1.IdPersonne, part1.IdDossier = camp1.Id, p1.Id, dossier.Id
 
 		part1.IdTaux = taux.Id
 		_, err = part1.Insert(db)
@@ -102,7 +118,7 @@ func TestSQL(t *testing.T) {
 		tu.AssertNoErr(t, err)
 
 		part3 := randParticipant()
-		part3.IdCamp, part3.IdPersonne, part3.IdDossier = camp3.Id, personne.Id, dossier.Id
+		part3.IdCamp, part3.IdPersonne, part3.IdDossier = camp3.Id, p1.Id, dossier.Id
 		_, err = part3.Insert(db)
 		tu.AssertErr(t, err) // IdTaux n'est pas cohérent
 	})

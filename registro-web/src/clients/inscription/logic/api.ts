@@ -20,12 +20,17 @@ export interface CampExt {
   AgeMin: Int;
   AgeMax: Int;
   Prix: string;
+  Direction: string;
 }
 // registro/controllers/inscriptions.DataInscription
 export interface DataInscription {
   Camps: CampExt[] | null;
   InitialInscription: Inscription;
   PreselectedCamp: IdCamp;
+  SupportBonsCAF: boolean;
+  SupportANCV: boolean;
+  EmailRetraitMedia: string;
+  ShowCharteConduite: boolean;
 }
 // registro/controllers/inscriptions.Inscription
 export interface Inscription {
@@ -125,17 +130,17 @@ export abstract class AbstractAPI {
     return { Authorization: "Bearer " + this.authToken };
   }
 
-  protected async rawAnonymous14217250() {
+  protected async rawAnonymous14219075() {
     const fullUrl = this.baseUrl + "/inscription";
     await Axios.get(fullUrl, { headers: this.getHeaders() });
     return true;
   }
 
-  /** Anonymous14217250 wraps rawAnonymous14217250 and handles the error */
-  async Anonymous14217250() {
+  /** Anonymous14219075 wraps rawAnonymous14219075 and handles the error */
+  async Anonymous14219075() {
     this.startRequest();
     try {
-      const out = await this.rawAnonymous14217250();
+      const out = await this.rawAnonymous14219075();
       return out;
     } catch (error) {
       this.handleError(error);

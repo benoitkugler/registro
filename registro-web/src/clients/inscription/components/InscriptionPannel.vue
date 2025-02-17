@@ -1,10 +1,10 @@
 <template>
-  <v-stepper>
+  <v-stepper v-model="tab" editable>
     <template v-slot:default="{ prev, next }">
       <v-stepper-header>
         <v-stepper-item
           title="Responsable"
-          value="1"
+          :value="1"
           :complete="isStep1Valid"
           :error="!isStep1Valid"
           :subtitle="isStep1Valid ? '' : 'Champs manquants'"
@@ -13,7 +13,7 @@
         <v-divider></v-divider>
         <v-stepper-item
           title="Participants"
-          value="2"
+          :value="2"
           :complete="isStep2Valid"
           :error="!isStep2Valid"
           :subtitle="isStep2Valid ? '' : 'Information manquante'"
@@ -22,17 +22,24 @@
         <v-divider></v-divider>
         <v-stepper-item
           title="Information sur le paiement"
-          value="3"
+          :value="3"
         ></v-stepper-item>
         <v-divider></v-divider>
-        <v-stepper-item title="Conclusion" value="4"></v-stepper-item>
+        <v-stepper-item
+          title="Conclusion"
+          :value="4"
+          :complete="isStep4Valid"
+          :error="!isStep4Valid"
+          :subtitle="isStep4Valid ? '' : 'Charte à accepter'"
+          :color="isStep4Valid ? 'primary' : 'red'"
+        ></v-stepper-item>
       </v-stepper-header>
 
       <v-stepper-window class="mb-0">
-        <v-stepper-window-item value="1">
+        <v-stepper-window-item :value="1">
           <Step1 v-model="data.Responsable"></Step1>
         </v-stepper-window-item>
-        <v-stepper-window-item value="2">
+        <v-stepper-window-item :value="2">
           <Step2
             :model-value="data.Participants || []"
             @update:model-value="(l) => (data.Participants = l)"
@@ -41,18 +48,37 @@
             :preselected="meta.PreselectedCamp"
           ></Step2>
         </v-stepper-window-item>
-        <v-stepper-window-item value="3">
-          <Step3></Step3>
+        <v-stepper-window-item :value="3">
+          <Step3 :data="meta"></Step3>
         </v-stepper-window-item>
-        <v-stepper-window-item value="4">
-          <Step4></Step4>
+        <v-stepper-window-item :value="4">
+          <Step4
+            v-model:partage-adresse="data.PartageAdressesOK"
+            v-model:mails="data.CopiesMails"
+            v-model:message="data.Message"
+            v-model:charte="isCharteOK"
+            :data="meta"
+          ></Step4>
         </v-stepper-window-item>
       </v-stepper-window>
 
-      <v-stepper-actions
-        @click:prev="prev"
-        @click:next="next"
-      ></v-stepper-actions>
+      <v-stepper-actions @click:prev="prev" @click:next="next">
+        <template v-slot:next>
+          <v-btn v-if="tab != 4" @click="next" variant="text">Suivant</v-btn>
+          <v-btn
+            v-else
+            color="green"
+            variant="outlined"
+            @click="onClickValid"
+            :disabled="!isInscValid"
+          >
+            <template v-slot:prepend>
+              <v-icon>mdi-check</v-icon>
+            </template>
+            Valider mon inscription
+          </v-btn>
+        </template>
+      </v-stepper-actions>
     </template>
   </v-stepper>
 </template>
@@ -105,6 +131,7 @@ const meta = ref<DataInscription>({
       AgeMax: 12 as Int,
       Nom: "C2",
       Prix: "35€ ou 25CHF",
+      Direction: "Vincent JONAC",
     },
     {
       Id: 2 as Int,
@@ -119,11 +146,32 @@ const meta = ref<DataInscription>({
       AgeMax: 90 as Int,
       Nom: "C4",
       Prix: "35€",
+      Direction: "Jon",
+    },
+    {
+      Id: 3 as Int,
+      DateDebut: "2025-02-12" as Date_,
+      Duree: 10 as Int,
+      Lieu: "Chamaloc",
+      Description: "",
+      Navette: { Actif: false, Commentaire: "Depuis Guilherand Granges" },
+      Places: 50 as Int,
+      AgeMin: 8 as Int,
+      AgeMax: 90 as Int,
+      Nom: "No desc",
+      Prix: "35€",
+      Direction: "Jon",
     },
   ],
   InitialInscription: data.value,
   PreselectedCamp: 0 as IdCamp,
+  SupportBonsCAF: false,
+  SupportANCV: true,
+  EmailRetraitMedia: "contact@acve.asso.fr",
+  ShowCharteConduite: true,
 });
+
+const tab = ref(1);
 
 const isStep1Valid = computed(() => {
   const resp = data.value.Responsable;
@@ -144,6 +192,41 @@ const isStep1Valid = computed(() => {
 
 const isStep2Valid = computed(() => {
   const parts = data.value.Participants;
-  return !!parts?.length;
+  return (
+    !!parts?.length &&
+    parts.every(
+      (p) =>
+        p.IdCamp > 0 &&
+        p.Nom.length &&
+        p.Prenom.length &&
+        p.Sexe != Sexe.Empty &&
+        !isDateZero(p.DateNaissance)
+    )
+  );
 });
+
+const isStep4Valid = computed(
+  () => isCharteOK.value || !meta.value.ShowCharteConduite
+);
+
+const isCharteOK = ref(false);
+
+const isInscValid = computed(() => {
+  return isStep1Valid.value && isStep2Valid.value && isStep4Valid;
+});
+
+function onClickValid() {
+  if (meta.value.ShowCharteConduite) {
+    // display the dialog and exit early
+    showCharteConduite.value = true;
+    return;
+  } else {
+    // directly trigger the validation
+    validInscription();
+  }
+}
+
+async function validInscription() {}
+
+const showCharteConduite = ref(false);
 </script>

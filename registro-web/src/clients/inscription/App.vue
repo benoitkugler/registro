@@ -8,7 +8,7 @@
               <v-img width="60" :src="logo" />
             </v-col>
             <v-col align-self="center">
-              Bienvenu sur le Portail des inscriptions !
+              Bienvenue sur le Portail des inscriptions !
             </v-col>
           </v-row>
         </v-app-bar-title>

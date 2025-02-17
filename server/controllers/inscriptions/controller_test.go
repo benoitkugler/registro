@@ -37,13 +37,19 @@ func TestController_load(t *testing.T) {
 	_, err = cps.Camp{IdTaux: 1, DateDebut: shared.NewDateFrom(now), Duree: duree, Ouvert: false}.Insert(db)
 	tu.AssertNoErr(t, err)
 
+	p1, err := pr.Personne{}.Insert(db)
+	tu.AssertNoErr(t, err)
+	_, err = cps.Equipier{IdCamp: c3.Id, IdPersonne: p1.Id, Roles: cps.Roles{cps.Direction}}.Insert(db)
+	tu.AssertNoErr(t, err)
+
 	ct := NewController(db.DB, crypto.Encrypter{}, config.SMTP{}, config.Asso{})
 
 	t.Run("loadCamps", func(t *testing.T) {
-		camps, tauxs, err := ct.loadCamps()
+		camps, tauxs, equipiers, personnes, err := ct.loadCamps()
 		tu.AssertNoErr(t, err)
 		tu.Assert(t, slices.Equal(camps.IDs(), []cps.IdCamp{c3.Id}))
 		tu.Assert(t, slices.Equal(tauxs.IDs(), []ds.IdTaux{1}))
+		tu.Assert(t, len(equipiers) == 1 && len(personnes) == 1)
 	})
 
 	t.Run("decodePreinscription", func(t *testing.T) {

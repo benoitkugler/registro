@@ -18,6 +18,10 @@ type Asso struct {
 	MailsSettings MailsSettings
 
 	BankName, BankIBAN string // displayed in espace perso
+
+	SupportBonsCAF, SupportANCV bool // if true, displayed in inscription form
+	EmailRetraitMedia           string
+	ShowCharteConduite          bool // if true, displayed in inscription form
 }
 
 var acve = Asso{
@@ -41,6 +45,10 @@ var acve = Asso{
 	},
 
 	BankName: "Crédit Mutuel",
+
+	SupportBonsCAF: true, SupportANCV: true,
+	EmailRetraitMedia:  "contact@acve.asso.fr",
+	ShowCharteConduite: false,
 }
 
 // TODO: collect Repere values

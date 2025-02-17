@@ -70,7 +70,7 @@ func (ct *Controller) LoadData(c echo.Context) error {
 // CampExt is a public version of [cps.Camp]
 type CampExt struct {
 	Id          cps.IdCamp
-	Nom string
+	Nom         string
 	DateDebut   shared.Date
 	Duree       int // nombre de jours date et fin inclus
 	Lieu        string
@@ -82,12 +82,27 @@ type CampExt struct {
 
 	// Formatted, possibly including several currencies
 	Prix string
+
+	// Nom et prénom du directeur et ses adjoints
+	Direction string
 }
 
-func newCampExt(camp cps.Camp, taux ds.Taux) CampExt {
+func newCampExt(camp cps.Camp, taux ds.Taux, direction []pr.Personne) CampExt {
+	chunks := make([]string, len(direction))
+	for i, p := range direction {
+		chunks[i] = p.PrenomNOM()
+	}
+	var dir string
+	if len(chunks) == 1 {
+		dir = chunks[0]
+	} else if len(chunks) >= 2 {
+		nminus1 := strings.Join(chunks[:len(chunks)-1], ", ")
+		dir = nminus1 + " et " + chunks[len(chunks)-1]
+	}
+
 	return CampExt{
 		Id:          camp.Id,
-		Nom: camp.Nom,
+		Nom:         camp.Nom,
 		DateDebut:   camp.DateDebut,
 		Duree:       camp.Duree,
 		Lieu:        camp.Lieu,
@@ -96,7 +111,10 @@ func newCampExt(camp cps.Camp, taux ds.Taux) CampExt {
 		Places:      camp.Places,
 		AgeMin:      camp.AgeMin,
 		AgeMax:      camp.AgeMax,
-		Prix:        taux.Convert(camp.Prix).String(),
+
+		Prix: taux.Convert(camp.Prix).String(),
+
+		Direction: dir,
 	}
 }
 
@@ -106,17 +124,27 @@ type DataInscription struct {
 	// PreselectedCamp is deduced from 'preselected' query param,
 	// and is 0 if empty or invalid
 	PreselectedCamp cps.IdCamp
+
+	SupportBonsCAF     bool
+	SupportANCV        bool
+	EmailRetraitMedia  string
+	ShowCharteConduite bool
 }
 
 func (ct *Controller) loadData(preselected, preinscription string) (DataInscription, error) {
-	camps, tauxs, err := ct.loadCamps()
+	camps, tauxs, equipiers, personnes, err := ct.loadCamps()
 	if err != nil {
 		return DataInscription{}, err
 	}
 
 	list := make([]CampExt, 0, len(camps))
 	for _, camp := range camps {
-		list = append(list, newCampExt(camp, tauxs[camp.IdTaux]))
+		eqs := equipiers[camp.Id].Direction()
+		direction := make([]pr.Personne, len(eqs))
+		for i, eq := range eqs {
+			direction[i] = personnes[eq.IdPersonne]
+		}
+		list = append(list, newCampExt(camp, tauxs[camp.IdTaux], direction))
 	}
 
 	var initialInscription Inscription
@@ -138,14 +166,18 @@ func (ct *Controller) loadData(preselected, preinscription string) (DataInscript
 		Camps:              list,
 		PreselectedCamp:    idPre,
 		InitialInscription: initialInscription,
+		SupportBonsCAF:     ct.asso.SupportBonsCAF,
+		SupportANCV:        ct.asso.SupportANCV,
+		EmailRetraitMedia:  ct.asso.EmailRetraitMedia,
+		ShowCharteConduite: ct.asso.ShowCharteConduite,
 	}, nil
 }
 
 // loadCamps renvoie les camps ouverts aux inscriptions et non terminés
-func (ct *Controller) loadCamps() (cps.Camps, ds.Tauxs, error) {
+func (ct *Controller) loadCamps() (cps.Camps, ds.Tauxs, map[cps.IdCamp]cps.Equipiers, pr.Personnes, error) {
 	camps, err := cps.SelectAllCamps(ct.db)
 	if err != nil {
-		return nil, nil, utils.SQLError(err)
+		return nil, nil, nil, nil, utils.SQLError(err)
 	}
 	now := time.Now()
 	for id, camp := range camps {
@@ -155,9 +187,18 @@ func (ct *Controller) loadCamps() (cps.Camps, ds.Tauxs, error) {
 	}
 	tauxs, err := ds.SelectTauxs(ct.db, camps.IdTauxs()...)
 	if err != nil {
-		return nil, nil, utils.SQLError(err)
+		return nil, nil, nil, nil, utils.SQLError(err)
 	}
-	return camps, tauxs, nil
+	link, err := cps.SelectEquipiersByIdCamps(ct.db, camps.IDs()...)
+	if err != nil {
+		return nil, nil, nil, nil, utils.SQLError(err)
+	}
+	personnes, err := pr.SelectPersonnes(ct.db, link.IdPersonnes()...)
+	if err != nil {
+		return nil, nil, nil, nil, utils.SQLError(err)
+	}
+
+	return camps, tauxs, link.ByIdCamp(), personnes, nil
 }
 
 // Inscription est la donnée publique correspondant
@@ -387,7 +428,7 @@ func (ct *Controller) SaveInscription(c echo.Context) error {
 }
 
 func (ct *Controller) buildInscription(publicInsc Inscription) (insc in.Inscription, ps in.InscriptionParticipants, _ error) {
-	camps, _, err := ct.loadCamps()
+	camps, _, _, _, err := ct.loadCamps()
 	if err != nil {
 		return insc, ps, err
 	}

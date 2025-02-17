@@ -18,17 +18,17 @@
       ></ParticipantRow>
     </v-card-text>
   </v-card>
+  <div ref="bottom"></div>
 </template>
 
 <script lang="ts" setup>
-import { ref } from "vue";
+import { nextTick, onMounted, ref, useTemplateRef } from "vue";
 import {
   Nationnalite,
   Sexe,
   type CampExt,
   type Date_,
   type IdCamp,
-  type Int,
   type Participant,
   type Pays,
   type ResponsableLegal,
@@ -43,6 +43,15 @@ const props = defineProps<{
 
 const participants = defineModel<Participant[]>({ required: true });
 
+onMounted(() => {
+  // make sure at least one participant is defined
+  if (!participants.length) {
+    addParticipant();
+  }
+});
+
+const bottomRef = useTemplateRef("bottom");
+
 function nationnaliteFromPays(s: Pays): Nationnalite {
   if (s == "FR") return Nationnalite.Francaise;
   if (s == "CH") return Nationnalite.Suisse;
@@ -50,20 +59,30 @@ function nationnaliteFromPays(s: Pays): Nationnalite {
 }
 
 // prend en compte une éventulle pré-sélection du séjour
-function emptyParticipant(): Participant {
-  return {
+// copie les données du responsable pour le premier participant
+function emptyParticipant() {
+  const out: Participant = {
+    PreIdent: "",
     Nom: props.responsable.Nom,
     Prenom: "",
     DateNaissance: "0001-01-01" as Date_,
     Sexe: Sexe.Empty,
     Nationnalite: nationnaliteFromPays(props.responsable.Pays),
-    PreIdent: "",
     IdCamp: props.preselected,
   };
+  if (!participants.value.length) {
+    out.Prenom = props.responsable.Prenom;
+    out.DateNaissance = props.responsable.DateNaissance;
+    out.Sexe = props.responsable.Sexe;
+  }
+  return out;
 }
 
 function addParticipant() {
   participants.value.push(emptyParticipant());
+  nextTick(() => {
+    if (bottomRef.value != null) bottomRef.value.scrollIntoView(true);
+  });
 }
 
 function deleteParticipant(index: number) {

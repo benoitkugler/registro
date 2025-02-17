@@ -3,6 +3,7 @@ package camps
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"time"
 
 	pr "registro/sql/personnes"
@@ -158,4 +159,32 @@ func (gs Groupes) TrouveGroupe(dateNaissance shared.Date) (Groupe, bool) {
 	}
 	// on a trouvé aucun groupe
 	return Groupe{}, false
+}
+
+// Directeur renvoie le directeur (unique par construction)
+// du camp donné, où false s'il n'existe pas.
+func (equipiers Equipiers) Directeur() (Equipier, bool) {
+	for _, eq := range equipiers {
+		if eq.Roles.Is(Direction) {
+			return eq, true
+		}
+	}
+	return Equipier{}, false
+}
+
+// Direction renvoie les équipiers dans la direction ou sous-direction.
+// S'il existe, le directeur est en premier
+func (equipiers Equipiers) Direction() []Equipier {
+	var direction, adjoints []Equipier
+	for _, eq := range equipiers {
+		if eq.Roles.Is(Direction) {
+			direction = append(direction, eq)
+		} else if eq.Roles.Is(Adjoint) {
+			adjoints = append(adjoints, eq)
+		}
+	}
+	slices.SortFunc(direction, func(a, b Equipier) int { return int(a.Id - b.Id) })
+	slices.SortFunc(adjoints, func(a, b Equipier) int { return int(a.Id - b.Id) })
+
+	return append(direction, adjoints...)
 }
