@@ -118,9 +118,7 @@ func newCampExt(camp cps.Camp, taux ds.Taux, direction []pr.Personne) CampExt {
 	}
 }
 
-type DataInscription struct {
-	Camps              []CampExt
-	InitialInscription Inscription
+type Settings struct {
 	// PreselectedCamp is deduced from 'preselected' query param,
 	// and is 0 if empty or invalid
 	PreselectedCamp cps.IdCamp
@@ -128,13 +126,20 @@ type DataInscription struct {
 	SupportBonsCAF     bool
 	SupportANCV        bool
 	EmailRetraitMedia  string
+	ShowFondSoutien    bool
 	ShowCharteConduite bool
 }
 
-func (ct *Controller) loadData(preselected, preinscription string) (DataInscription, error) {
+type Data struct {
+	Camps              []CampExt
+	InitialInscription Inscription
+	Settings           Settings
+}
+
+func (ct *Controller) loadData(preselected, preinscription string) (Data, error) {
 	camps, tauxs, equipiers, personnes, err := ct.loadCamps()
 	if err != nil {
-		return DataInscription{}, err
+		return Data{}, err
 	}
 
 	list := make([]CampExt, 0, len(camps))
@@ -151,7 +156,7 @@ func (ct *Controller) loadData(preselected, preinscription string) (DataInscript
 	if preinscription != "" {
 		initialInscription, err = ct.decodePreinscription(preinscription)
 		if err != nil {
-			return DataInscription{}, err
+			return Data{}, err
 		}
 	}
 	initialInscription.PartageAdressesOK = true // OK par défaut
@@ -162,14 +167,17 @@ func (ct *Controller) loadData(preselected, preinscription string) (DataInscript
 	// on error, the idPre will be 0
 	idPre, _ := utils.ParseInt[cps.IdCamp](preselected)
 
-	return DataInscription{
+	return Data{
 		Camps:              list,
-		PreselectedCamp:    idPre,
 		InitialInscription: initialInscription,
-		SupportBonsCAF:     ct.asso.SupportBonsCAF,
-		SupportANCV:        ct.asso.SupportANCV,
-		EmailRetraitMedia:  ct.asso.EmailRetraitMedia,
-		ShowCharteConduite: ct.asso.ShowCharteConduite,
+		Settings: Settings{
+			PreselectedCamp:    idPre,
+			SupportBonsCAF:     ct.asso.SupportBonsCAF,
+			SupportANCV:        ct.asso.SupportANCV,
+			EmailRetraitMedia:  ct.asso.EmailRetraitMedia,
+			ShowFondSoutien:    ct.asso.ShowFondSoutien,
+			ShowCharteConduite: ct.asso.ShowCharteConduite,
+		},
 	}, nil
 }
 

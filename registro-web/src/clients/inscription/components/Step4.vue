@@ -33,7 +33,7 @@
         Sur votre demande, nous nous engageons à retirer dans les plus brefs
         délais toute photo ou vidéo que nous aurions publiée. Pour cela, vous
         pouvez le spécifier en envoyant un mail à
-        <a :href="hrefRetraitMedia">{{ props.data.EmailRetraitMedia }}</a
+        <a :href="hrefRetraitMedia">{{ props.settings.EmailRetraitMedia }}</a
         >.
       </v-alert>
 
@@ -51,8 +51,8 @@
 
   <v-card
     title="Charte"
-    class="my-1 border-secondary border-lg"
-    v-if="props.data.ShowCharteConduite"
+    class="my-2 border-secondary border-lg"
+    v-if="props.settings.ShowCharteConduite"
   >
     <v-card-text style="line-height: 2em">
       Je m’engage à m’intéresser et à respecter la foi en Jésus-Christ. <br />
@@ -80,13 +80,20 @@
     </v-card-text>
   </v-card>
 
-  <v-card class="my-1 border-secondary border-lg" title="Message">
+  <v-card class="my-2 border-secondary border-lg" title="Message">
     <v-card-text>
+      <v-checkbox
+        v-if="settings.ShowFondSoutien"
+        color="primary"
+        v-model="fondSoutien"
+        label="Je souhaite être contacté par le fonds de soutien pour éviter que le prix du camp ne soit un obstacle à l'inscription."
+      >
+      </v-checkbox>
+
       <v-textarea
         variant="outlined"
         v-model="message"
         label="Une question, un souhait ... ?"
-        placeholder="Informations complémentaires..."
         rows="3"
       ></v-textarea>
     </v-card-text>
@@ -109,14 +116,17 @@
 
 <script lang="ts" setup>
 import { computed } from "vue";
-import type { DataInscription } from "../logic/api";
+import type { Settings } from "../logic/api";
 import { FormRules } from "@/utils";
 
 const props = defineProps<{
-  data: DataInscription;
+  settings: Settings;
 }>();
 
 const partageAdresse = defineModel<boolean>("partageAdresse", {
+  required: true,
+});
+const fondSoutien = defineModel<boolean>("fondSoutien", {
   required: true,
 });
 const mails = defineModel<string[] | null>("mails", {
@@ -131,6 +141,6 @@ const isCharteOK = defineModel<boolean>("charte", {
 });
 
 const hrefRetraitMedia = computed(
-  () => `mailto:${props.data.EmailRetraitMedia}`
+  () => `mailto:${props.settings.EmailRetraitMedia}`
 );
 </script>

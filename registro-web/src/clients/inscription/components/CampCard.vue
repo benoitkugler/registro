@@ -58,8 +58,4 @@ import { Camps } from "@/utils";
 const props = defineProps<{
   camp: CampExt;
 }>();
-
-const emit = defineEmits<{
-  (e: "delete"): void;
-}>();
 </script>

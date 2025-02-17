@@ -1,4 +1,22 @@
 <template>
+  <!-- confirmation après API call -->
+  <v-dialog v-model="showInscriptionSaved" max-width="600px">
+    <v-card title="Confirmation">
+      <v-card-text>
+        Merci pour votre demande d'inscription ! <br />
+        <br />
+        Par mesure de sécurité, nous devons vérifier votre adresse mail. Un mail
+        de confirmation a été envoyé à <b>{{ inner.Responsable.Mail }}</b> :
+        veuillez valider définitivement votre inscription en suivant le lien que
+        vous y trouverez. <br />
+        <br />
+        <div class="text-grey font-italic">
+          Vous pouvez désormais quitter cette page.
+        </div>
+      </v-card-text>
+    </v-card>
+  </v-dialog>
+
   <v-stepper v-model="tab" editable>
     <template v-slot:default="{ prev, next }">
       <v-stepper-header>
@@ -37,27 +55,28 @@
 
       <v-stepper-window class="mb-0">
         <v-stepper-window-item :value="1">
-          <Step1 v-model="data.Responsable"></Step1>
+          <Step1 v-model="inner.Responsable"></Step1>
         </v-stepper-window-item>
         <v-stepper-window-item :value="2">
           <Step2
-            :model-value="data.Participants || []"
-            @update:model-value="(l) => (data.Participants = l)"
-            :camps="meta.Camps || []"
-            :responsable="data.Responsable"
-            :preselected="meta.PreselectedCamp"
+            :model-value="inner.Participants || []"
+            @update:model-value="(l) => (inner.Participants = l)"
+            :camps="props.data.Camps || []"
+            :responsable="inner.Responsable"
+            :preselected="props.data.Settings.PreselectedCamp"
           ></Step2>
         </v-stepper-window-item>
         <v-stepper-window-item :value="3">
-          <Step3 :data="meta"></Step3>
+          <Step3 :settings="props.data.Settings"></Step3>
         </v-stepper-window-item>
         <v-stepper-window-item :value="4">
           <Step4
-            v-model:partage-adresse="data.PartageAdressesOK"
-            v-model:mails="data.CopiesMails"
-            v-model:message="data.Message"
+            v-model:partage-adresse="inner.PartageAdressesOK"
+            v-model:mails="inner.CopiesMails"
+            v-model:message="inner.Message"
             v-model:charte="isCharteOK"
-            :data="meta"
+            v-model:fond-soutien="inner.DemandeFondSoutien"
+            :settings="props.data.Settings"
           ></Step4>
         </v-stepper-window-item>
       </v-stepper-window>
@@ -69,8 +88,8 @@
             v-else
             color="green"
             variant="outlined"
-            @click="onClickValid"
-            :disabled="!isInscValid"
+            @click="validInscription"
+            :disabled="!isInscValid || isLoading"
           >
             <template v-slot:prepend>
               <v-icon>mdi-check</v-icon>
@@ -84,97 +103,26 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref } from "vue";
+import { computed, reactive, ref } from "vue";
 import Step1 from "./Step1.vue";
 import Step2 from "./Step2.vue";
 import Step3 from "./Step3.vue";
 import Step4 from "./Step4.vue";
-import {
-  Sexe,
-  type DataInscription,
-  type Date_,
-  type IdCamp,
-  type Inscription,
-  type Int,
-  type Participant,
-} from "../logic/api";
+import { Sexe, type Data } from "../logic/api";
 import { ageFrom, isDateZero } from "@/components/date";
+import { copy } from "@/utils";
+import { controller } from "../logic/logic";
 
-const data = ref<Inscription>({
-  Responsable: {
-    Nom: "",
-    Prenom: "",
-    Sexe: Sexe.Empty,
-    Mail: "",
-    Adresse: "",
-    CodePostal: "",
-    Ville: "",
-    Pays: "",
-    DateNaissance: "0001-01-01",
-    Tels: [] as string[],
-  },
-  Participants: [] as Participant[],
-} as Inscription);
+const props = defineProps<{
+  data: Data;
+}>();
 
-const meta = ref<DataInscription>({
-  Camps: [
-    {
-      Id: 1 as Int,
-      DateDebut: "2025-02-12" as Date_,
-      Duree: 10 as Int,
-      Lieu: "Chamaloc",
-      Description:
-        "Dans la lettre du directeur qui vous parviendra par mail juste après votre inscription, un lien vous sera communiqué afin de choisir les jours de présence de votre enfant.",
-      Navette: { Actif: true, Commentaire: "Depuis Guilherand Granges" },
-      Places: 50 as Int,
-      AgeMin: 8 as Int,
-      AgeMax: 12 as Int,
-      Nom: "C2",
-      Prix: "35€ ou 25CHF",
-      Direction: "Vincent JONAC",
-    },
-    {
-      Id: 2 as Int,
-      DateDebut: "2025-02-12" as Date_,
-      Duree: 10 as Int,
-      Lieu: "Chamaloc",
-      Description:
-        "Dans la lettre du directeur qui vous parviendra par mail juste après votre inscription, un lien vous sera communiqué afin de choisir les jours de présence de votre enfant.",
-      Navette: { Actif: false, Commentaire: "Depuis Guilherand Granges" },
-      Places: 50 as Int,
-      AgeMin: 8 as Int,
-      AgeMax: 90 as Int,
-      Nom: "C4",
-      Prix: "35€",
-      Direction: "Jon",
-    },
-    {
-      Id: 3 as Int,
-      DateDebut: "2025-02-12" as Date_,
-      Duree: 10 as Int,
-      Lieu: "Chamaloc",
-      Description: "",
-      Navette: { Actif: false, Commentaire: "Depuis Guilherand Granges" },
-      Places: 50 as Int,
-      AgeMin: 8 as Int,
-      AgeMax: 90 as Int,
-      Nom: "No desc",
-      Prix: "35€",
-      Direction: "Jon",
-    },
-  ],
-  InitialInscription: data.value,
-  PreselectedCamp: 0 as IdCamp,
-  SupportBonsCAF: false,
-  SupportANCV: true,
-  EmailRetraitMedia: "contact@acve.asso.fr",
-  ShowCharteConduite: true,
-});
+const inner = reactive(copy(props.data.InitialInscription));
 
 const tab = ref(1);
 
 const isStep1Valid = computed(() => {
-  const resp = data.value.Responsable;
+  const resp = inner.Responsable;
   const age = ageFrom(resp.DateNaissance) || 0;
   return !!(
     resp.Nom.length &&
@@ -191,7 +139,7 @@ const isStep1Valid = computed(() => {
 });
 
 const isStep2Valid = computed(() => {
-  const parts = data.value.Participants;
+  const parts = inner.Participants;
   return (
     !!parts?.length &&
     parts.every(
@@ -206,27 +154,22 @@ const isStep2Valid = computed(() => {
 });
 
 const isStep4Valid = computed(
-  () => isCharteOK.value || !meta.value.ShowCharteConduite
+  () => isCharteOK.value || !props.data.Settings.ShowCharteConduite
 );
-
 const isCharteOK = ref(false);
 
 const isInscValid = computed(() => {
   return isStep1Valid.value && isStep2Valid.value && isStep4Valid;
 });
 
-function onClickValid() {
-  if (meta.value.ShowCharteConduite) {
-    // display the dialog and exit early
-    showCharteConduite.value = true;
-    return;
-  } else {
-    // directly trigger the validation
-    validInscription();
-  }
+const isLoading = ref(false);
+const showInscriptionSaved = ref(false);
+async function validInscription() {
+  isLoading.value = true;
+  const out = await controller.SaveInscription(inner);
+  isLoading.value = false;
+  if (out === undefined) return;
+
+  showInscriptionSaved.value = true;
 }
-
-async function validInscription() {}
-
-const showCharteConduite = ref(false);
 </script>

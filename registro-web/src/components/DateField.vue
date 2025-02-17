@@ -32,10 +32,10 @@
 </template>
 
 <script setup lang="ts">
-import type { Date_, Int } from "@/clients/backoffice/logic/api";
-import { newDate_ } from "@/clients/backoffice/logic/logic";
+import type { Date_ } from "@/clients/backoffice/logic/api";
 import { ref } from "vue";
 import { useDate } from "vuetify";
+import { newDate_ } from "./date";
 const props = defineProps<{
   label: string;
   hideDetails?: boolean;

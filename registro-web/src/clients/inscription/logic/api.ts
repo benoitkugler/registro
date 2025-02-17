@@ -22,15 +22,11 @@ export interface CampExt {
   Prix: string;
   Direction: string;
 }
-// registro/controllers/inscriptions.DataInscription
-export interface DataInscription {
+// registro/controllers/inscriptions.Data
+export interface Data {
   Camps: CampExt[] | null;
   InitialInscription: Inscription;
-  PreselectedCamp: IdCamp;
-  SupportBonsCAF: boolean;
-  SupportANCV: boolean;
-  EmailRetraitMedia: string;
-  ShowCharteConduite: boolean;
+  Settings: Settings;
 }
 // registro/controllers/inscriptions.Inscription
 export interface Inscription {
@@ -55,6 +51,15 @@ export interface Participant {
 // registro/controllers/inscriptions.SearchHistoryOut
 export interface SearchHistoryOut {
   MailFound: boolean;
+}
+// registro/controllers/inscriptions.Settings
+export interface Settings {
+  PreselectedCamp: IdCamp;
+  SupportBonsCAF: boolean;
+  SupportANCV: boolean;
+  EmailRetraitMedia: string;
+  ShowFondSoutien: boolean;
+  ShowCharteConduite: boolean;
 }
 // registro/sql/camps.IdCamp
 export type IdCamp = Int;
@@ -130,49 +135,12 @@ export abstract class AbstractAPI {
     return { Authorization: "Bearer " + this.authToken };
   }
 
-  protected async rawAnonymous14219075() {
-    const fullUrl = this.baseUrl + "/inscription";
-    await Axios.get(fullUrl, { headers: this.getHeaders() });
-    return true;
-  }
-
-  /** Anonymous14219075 wraps rawAnonymous14219075 and handles the error */
-  async Anonymous14219075() {
-    this.startRequest();
-    try {
-      const out = await this.rawAnonymous14219075();
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected async rawConfirmeInscription(params: { "insc-token": string }) {
-    const fullUrl = this.baseUrl + "/inscription/confirme";
-    await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-      params: { "insc-token": params["insc-token"] },
-    });
-    return true;
-  }
-
-  /** ConfirmeInscription wraps rawConfirmeInscription and handles the error */
-  async ConfirmeInscription(params: { "insc-token": string }) {
-    this.startRequest();
-    try {
-      const out = await this.rawConfirmeInscription(params);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
   protected async rawLoadData(params: {
     preselected: string;
     preinscription: string;
   }) {
-    const fullUrl = this.baseUrl + "/inscription/v1/load";
-    const rep: AxiosResponse<DataInscription> = await Axios.get(fullUrl, {
+    const fullUrl = this.baseUrl + "/api/v1/inscription/load";
+    const rep: AxiosResponse<Data> = await Axios.get(fullUrl, {
       headers: this.getHeaders(),
       params: {
         preselected: params["preselected"],
@@ -194,7 +162,7 @@ export abstract class AbstractAPI {
   }
 
   protected async rawSaveInscription(params: Inscription) {
-    const fullUrl = this.baseUrl + "/inscription/v1/save";
+    const fullUrl = this.baseUrl + "/api/v1/inscription/save";
     await Axios.put(fullUrl, params, { headers: this.getHeaders() });
     return true;
   }
@@ -211,7 +179,7 @@ export abstract class AbstractAPI {
   }
 
   protected async rawSearchHistory(params: { mail: string }) {
-    const fullUrl = this.baseUrl + "/inscription/v1/search";
+    const fullUrl = this.baseUrl + "/api/v1/inscription/search";
     const rep: AxiosResponse<SearchHistoryOut> = await Axios.get(fullUrl, {
       headers: this.getHeaders(),
       params: { mail: params["mail"] },

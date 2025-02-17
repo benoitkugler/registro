@@ -21,6 +21,7 @@ type Asso struct {
 
 	SupportBonsCAF, SupportANCV bool // if true, displayed in inscription form
 	EmailRetraitMedia           string
+	ShowFondSoutien             bool // if true, displayed in inscription form
 	ShowCharteConduite          bool // if true, displayed in inscription form
 }
 
@@ -48,6 +49,7 @@ var acve = Asso{
 
 	SupportBonsCAF: true, SupportANCV: true,
 	EmailRetraitMedia:  "contact@acve.asso.fr",
+	ShowFondSoutien:    false,
 	ShowCharteConduite: false,
 }
 

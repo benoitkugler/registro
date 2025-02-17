@@ -22,7 +22,7 @@
 </template>
 
 <script lang="ts" setup>
-import { nextTick, onMounted, ref, useTemplateRef } from "vue";
+import { nextTick, onMounted, useTemplateRef } from "vue";
 import {
   Nationnalite,
   Sexe,
@@ -44,6 +44,8 @@ const props = defineProps<{
 const participants = defineModel<Participant[]>({ required: true });
 
 onMounted(() => {
+  console.log(participants.value);
+
   // make sure at least one participant is defined
   if (!participants.length) {
     addParticipant();

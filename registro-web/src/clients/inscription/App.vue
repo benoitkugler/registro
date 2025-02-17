@@ -15,7 +15,8 @@
       </v-app-bar>
 
       <v-container class="py-2" style="min-height: 92%">
-        <InscriptionPannel></InscriptionPannel>
+        <v-skeleton-loader v-if="data == null" type="card"></v-skeleton-loader>
+        <InscriptionPannel v-else :data="data"></InscriptionPannel>
       </v-container>
 
       <v-footer color="secondary">
@@ -56,9 +57,10 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import { controller } from "./logic/logic";
 import InscriptionPannel from "./components/InscriptionPannel.vue";
+import type { Data } from "./logic/api";
 
 const message = ref("");
 const messageColor = ref("secondary");
@@ -79,4 +81,21 @@ controller.showMessage = (s, color) => {
 const logo = `${import.meta.env.BASE_URL}${import.meta.env.VITE_ASSO}/logo.png`;
 const asso = import.meta.env.VITE_ASSO_TITLE;
 const version = `v${VITE_APP_VERSION}`;
+
+const data = ref<Data | null>(null);
+
+onMounted(fetchData);
+
+async function fetchData() {
+  // forward url params
+  const query = new URLSearchParams(window.location.search);
+  const preselected = query.get("preselected") || "";
+  const preinscription = query.get("preinscription") || "";
+  const res = await controller.LoadData({ preselected, preinscription });
+  if (res === undefined) return;
+  // vue reactivity does not work if Participants is null
+  res.InitialInscription.Participants =
+    res.InitialInscription.Participants || [];
+  data.value = res;
+}
 </script>

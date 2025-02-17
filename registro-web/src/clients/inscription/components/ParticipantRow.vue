@@ -103,7 +103,6 @@ import { computed, ref } from "vue";
 import type { CampExt, Date_, Participant } from "../logic/api";
 import { Camps, FormRules } from "@/utils";
 import { ageFrom, isDateZero } from "@/components/date";
-import { formatDate } from "@/components/format";
 import CampCard from "./CampCard.vue";
 
 const props = defineProps<{

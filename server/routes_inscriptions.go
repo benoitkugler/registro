@@ -8,7 +8,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
-//go:generate ../../../go/src/github.com/benoitkugler/gomacro/cmd/gomacro routes_inscriptions.go typescript/api:../registro-web/src/logic/inscriptions/api.ts
+//go:generate ../../../go/src/github.com/benoitkugler/gomacro/cmd/gomacro -http-api=/api routes_inscriptions.go typescript/api:../registro-web/src/logic/inscriptions/api.ts
 
 func setupRoutesInscriptions(e *echo.Echo, ct *inscriptions.Controller) {
 	// client app
@@ -18,7 +18,7 @@ func setupRoutesInscriptions(e *echo.Echo, ct *inscriptions.Controller) {
 	e.GET(inscriptions.EndpointConfirmeInscription, ct.ConfirmeInscription)
 
 	// JSON API
-	e.GET("/inscription/v1/load", ct.LoadData)
-	e.PUT("/inscription/v1/save", ct.SaveInscription)
-	e.GET("/inscription/v1/search", ct.SearchHistory)
+	e.GET("/api/v1/inscription/load", ct.LoadData)
+	e.PUT("/api/v1/inscription/save", ct.SaveInscription)
+	e.GET("/api/v1/inscription/search", ct.SearchHistory)
 }

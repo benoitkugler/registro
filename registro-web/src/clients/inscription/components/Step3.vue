@@ -18,7 +18,7 @@
         sur votre espace de suivi le <i>RIB</i> de l'association, ainsi qu'un
         <i>numéro</i> permettant d'identifier votre virement.
       </v-alert>
-      <v-alert class="my-1" v-if="props.data.SupportBonsCAF">
+      <v-alert class="my-1" v-if="props.settings.SupportBonsCAF">
         BONS CAFS : Nous sommes habilités à recevoir les bons CAF. Néanmoins,
         comme chaque CAF a une politique indépendante qui dépend du département
         d’origine de votre enfant, il vous appartient la contacter et de bien
@@ -26,7 +26,7 @@
         vous avez choisi. <br />
         Vous pourrez les déclarer sur votre espace de suivi.
       </v-alert>
-      <v-alert class="my-1" v-if="props.data.SupportANCV">
+      <v-alert class="my-1" v-if="props.settings.SupportANCV">
         ANCV : Nous acceptons les chèques ANCV.
       </v-alert>
       <v-alert class="my-1">
@@ -39,9 +39,9 @@
 </template>
 
 <script lang="ts" setup>
-import type { DataInscription } from "../logic/api";
+import type { Settings } from "../logic/api";
 
 const props = defineProps<{
-  data: DataInscription;
+  settings: Settings;
 }>();
 </script>
