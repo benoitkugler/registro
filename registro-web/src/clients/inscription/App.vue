@@ -14,9 +14,18 @@
         </v-app-bar-title>
       </v-app-bar>
 
-      <v-container class="py-2" style="min-height: 92%">
-        <v-skeleton-loader v-if="data == null" type="card"></v-skeleton-loader>
-        <InscriptionPannel v-else :data="data"></InscriptionPannel>
+      <v-container style="min-height: 92%" v-if="data == null">
+        <v-skeleton-loader type="card"></v-skeleton-loader>
+      </v-container>
+      <v-container class="fill-height" v-else-if="!data.Camps?.length">
+        <v-responsive>
+          <v-alert class="text-center">
+            Aucun camp n'est encore ouvert aux inscriptions.
+          </v-alert>
+        </v-responsive>
+      </v-container>
+      <v-container class="py-2" style="min-height: 92%" v-else>
+        <InscriptionPannel :data="data"></InscriptionPannel>
       </v-container>
 
       <v-footer color="secondary">
