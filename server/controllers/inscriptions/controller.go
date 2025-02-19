@@ -681,24 +681,15 @@ func (ct *Controller) confirmeInscription(id in.IdInscription) (ds.Dossier, erro
 		}
 
 		dossier = ds.Dossier{
-			IdTaux:            insc.IdTaux,
-			IdResponsable:     responsablePersonne.Id,
-			CopiesMails:       insc.CopiesMails,
-			PartageAdressesOK: insc.PartageAdressesOK,
-			IsValidated:       false,
+			IdTaux:             insc.IdTaux,
+			IdResponsable:      responsablePersonne.Id,
+			CopiesMails:        insc.CopiesMails,
+			PartageAdressesOK:  insc.PartageAdressesOK,
+			DemandeFondSoutien: insc.DemandeFondSoutien,
+			MomentInscription:  insc.DateHeure,
+			IsValidated:        false,
 		}
 		dossier, err = dossier.Insert(tx)
-		if err != nil {
-			return err
-		}
-
-		// on garde une trace du moment d'inscription
-		messageTime := events.Event{
-			IdDossier: dossier.Id,
-			Kind:      events.Inscription,
-			Created:   time.Now(),
-		}
-		_, err = messageTime.Insert(tx)
 		if err != nil {
 			return err
 		}

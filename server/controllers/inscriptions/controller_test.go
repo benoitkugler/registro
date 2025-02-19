@@ -236,6 +236,7 @@ func TestController_confirmeInscription(t *testing.T) {
 	dossier, err := ct.confirmeInscription(insc.Id)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, dossier.IsValidated == false)
+	tu.Assert(t, dossier.MomentInscription.Equal(insc.DateHeure))
 
 	insc, err = in.SelectInscription(ct.db, insc.Id)
 	tu.Assert(t, insc.IsConfirmed == true)
@@ -246,8 +247,47 @@ func TestController_confirmeInscription(t *testing.T) {
 
 	events, err := ev.SelectEventsByIdDossiers(ct.db, dossier.Id)
 	tu.AssertNoErr(t, err)
-	tu.Assert(t, len(events) == 2) // time, message
+	tu.Assert(t, len(events) == 1) //  message
 
 	_, err = ct.confirmeInscription(insc.Id) // already confirmed
 	tu.AssertErr(t, err)
+}
+
+// This test is more of a command helper for developping,
+// to generate on demande new inscriptions
+func TestDebug_createInscription(t *testing.T) {
+	t.Skip("dev only test")
+
+	cfg, creds := loadEnv(t)
+	sqlCreds, err := config.NewDB()
+	tu.AssertNoErr(t, err)
+	db, err := sqlCreds.ConnectPostgres()
+	tu.AssertNoErr(t, err)
+
+	ct := NewController(db, crypto.Encrypter{}, creds, cfg)
+
+	// assume we already have one camp
+	camps, _, _, _, err := ct.loadCamps()
+	tu.AssertNoErr(t, err)
+	camp := camps[camps.IDs()[0]]
+
+	insc, participants, err := ct.buildInscription(Inscription{
+		Responsable: in.ResponsableLegal{
+			Nom: "Kug", Prenom: "Ben",
+			DateNaissance: shared.NewDate(2000, 1, 1),
+		},
+		Participants: []Participant{
+			{IdCamp: camp.Id, DateNaissance: shared.Date(time.Now()), Nom: "Martin", Prenom: "Pierre"},
+			{IdCamp: camp.Id, DateNaissance: shared.Date(time.Now()), Nom: "Martin", Prenom: "Julie"},
+		},
+		Message: utils.RandString(30, true) + "\n" + utils.RandString(10, true),
+	})
+	tu.AssertNoErr(t, err)
+	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
+		insc, err = in.Create(tx, insc, participants)
+		return err
+	})
+	tu.AssertNoErr(t, err)
+	_, err = ct.confirmeInscription(insc.Id)
+	tu.AssertNoErr(t, err)
 }

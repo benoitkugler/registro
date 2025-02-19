@@ -16,13 +16,24 @@ type Event struct {
 	Content Content
 }
 
+type Events []Event
+
+func (evs Events) By(kind events.EventKind) []Event {
+	var out []Event
+	for _, ev := range evs {
+		if ev.Event.Kind == kind {
+			out = append(out, ev)
+		}
+	}
+	return out
+}
+
 // Event exposes on event on the dossier track
 type Content interface {
 	isContent()
 }
 
 func (Supprime) isContent()        {}
-func (Inscription) isContent()     {}
 func (AccuseReception) isContent() {}
 func (Message) isContent()         {}
 func (Facture) isContent()         {}
@@ -33,7 +44,6 @@ func (Sondage) isContent()         {}
 
 type (
 	Supprime        struct{}
-	Inscription     struct{}
 	AccuseReception struct{}
 )
 
@@ -193,31 +203,30 @@ func NewLoaderFor(db events.DB, dossiers ...ds.IdDossier) (out Loader, _ error) 
 	return out, nil
 }
 
-func (ld *Loader) Events(idDossier ds.IdDossier) []Event {
+func (ld *Loader) EventsFor(idDossier ds.IdDossier) Events {
 	raws := ld.events[idDossier]
-	out := make([]Event, len(raws))
-	for i, event := range raws {
-		out[i].Event = event
+	out := make([]Event, 0, len(raws))
+	for _, event := range raws {
+		val := Event{Event: event}
 		switch event.Kind {
 		case events.Supprime:
-			out[i].Content = Supprime{}
-		case events.Inscription:
-			out[i].Content = Inscription{}
+			val.Content = Supprime{}
 		case events.AccuseReception:
-			out[i].Content = AccuseReception{}
+			val.Content = AccuseReception{}
 		case events.Message:
-			out[i].Content = ld.newMessage(event)
+			val.Content = ld.newMessage(event)
 		case events.PlaceLiberee:
-			out[i].Content = ld.newPlaceLiberee(event)
+			val.Content = ld.newPlaceLiberee(event)
 		case events.Facture:
-			out[i].Content = Facture{}
+			val.Content = Facture{}
 		case events.CampDocs:
-			out[i].Content = ld.newCampDocs(event)
+			val.Content = ld.newCampDocs(event)
 		case events.Attestation:
-			out[i].Content = ld.newAttestation(event)
+			val.Content = ld.newAttestation(event)
 		case events.Sondage:
-			out[i].Content = ld.newSondage(event)
+			val.Content = ld.newSondage(event)
 		}
+		out = append(out, val)
 	}
 	return out
 }

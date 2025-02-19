@@ -22,7 +22,9 @@ func randDossier() Dossier {
 	s.IdResponsable = randper_IdPersonne()
 	s.CopiesMails = randper_Mails()
 	s.PartageAdressesOK = randbool()
+	s.DemandeFondSoutien = randbool()
 	s.IsValidated = randbool()
+	s.MomentInscription = randtTime()
 	s.LastConnection = randtTime()
 	s.KeyV1 = randstring()
 

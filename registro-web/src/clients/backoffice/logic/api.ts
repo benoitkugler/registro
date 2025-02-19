@@ -9,6 +9,10 @@ export type Ar4_Int = [Int, Int, Int, Int];
 export type Date_ = string & { __opaque__: "Date" };
 
 export type Int = number & { __opaque__: "Int" };
+
+// ISO date-time string
+export type Time = string & { __opaque__: "Time" };
+
 // registro/controllers/backoffice.CampHeader
 export interface CampHeader {
   Camp: CampExt;
@@ -25,6 +29,29 @@ export interface CampsSetTauxIn {
   IdCamp: IdCamp;
   Taux: Taux;
 }
+// registro/controllers/backoffice.Inscription
+export interface Inscription {
+  Dossier: Dossier;
+  Message: string;
+  Responsable: Personne;
+  Participants: ParticipantExt[] | null;
+}
+// registro/sql/camps.Bus
+export const Bus = {
+  NoBus: 0,
+  Aller: 1,
+  Retour: 2,
+  AllerRetour: 3,
+} as const;
+export type Bus = (typeof Bus)[keyof typeof Bus];
+
+export const BusLabels: { [key in Bus]: string } = {
+  [Bus.NoBus]: "",
+  [Bus.Aller]: "",
+  [Bus.Retour]: "",
+  [Bus.AllerRetour]: "",
+};
+
 // registro/sql/camps.Camp
 export interface Camp {
   Id: IdCamp;
@@ -52,6 +79,30 @@ export interface CampExt {
 }
 // registro/sql/camps.IdCamp
 export type IdCamp = Int;
+// registro/sql/camps.IdParticipant
+export type IdParticipant = Int;
+// registro/sql/camps.Jours
+export type Jours = Int[] | null;
+// registro/sql/camps.ListeAttente
+export const ListeAttente = {
+  AStatuer: 0,
+  AttenteProfilInvalide: 1,
+  Refuse: 2,
+  AttenteCampComplet: 3,
+  EnAttenteReponse: 4,
+  Inscrit: 5,
+} as const;
+export type ListeAttente = (typeof ListeAttente)[keyof typeof ListeAttente];
+
+export const ListeAttenteLabels: { [key in ListeAttente]: string } = {
+  [ListeAttente.AStatuer]: "",
+  [ListeAttente.AttenteProfilInvalide]: "",
+  [ListeAttente.Refuse]: "",
+  [ListeAttente.AttenteCampComplet]: "",
+  [ListeAttente.EnAttenteReponse]: "",
+  [ListeAttente.Inscrit]: "",
+};
+
 // registro/sql/camps.Navette
 export interface Navette {
   Actif: boolean;
@@ -81,6 +132,12 @@ export const OptionPrixKindLabels: { [key in OptionPrixKind]: string } = {
   [OptionPrixKind.PrixJour]: "",
 };
 
+// registro/sql/camps.OptionPrixParticipant
+export interface OptionPrixParticipant {
+  Semaine: Semaine;
+  IdStatut: Int;
+  Jour: Jours;
+}
 // registro/sql/camps.OptionQuotientFamilial
 export type OptionQuotientFamilial = Ar4_Int;
 // registro/sql/camps.OptionSemaineCamp
@@ -90,6 +147,26 @@ export interface OptionSemaineCamp {
   Prix1: Montant;
   Prix2: Montant;
 }
+// registro/sql/camps.Participant
+export interface Participant {
+  Id: IdParticipant;
+  IdCamp: IdCamp;
+  IdPersonne: IdPersonne;
+  IdDossier: IdDossier;
+  IdTaux: IdTaux;
+  Statut: ListeAttente;
+  Remises: Remises;
+  QuotientFamilial: Int;
+  OptionPrix: OptionPrixParticipant;
+  Details: string;
+  Bus: Bus;
+}
+// registro/sql/camps.ParticipantExt
+export interface ParticipantExt {
+  Camp: Camp;
+  Participant: Participant;
+  Personne: Personne;
+}
 // registro/sql/camps.PrixParStatut
 export interface PrixParStatut {
   Id: Int;
@@ -97,6 +174,26 @@ export interface PrixParStatut {
   Statut: string;
   Description: string;
 }
+// registro/sql/camps.Remises
+export interface Remises {
+  ReducEquipiers: Int;
+  ReducEnfants: Int;
+  ReducSpeciale: Montant;
+}
+// registro/sql/camps.Semaine
+export const Semaine = {
+  Tout: 0,
+  Semaine1: 1,
+  Semaine2: 2,
+} as const;
+export type Semaine = (typeof Semaine)[keyof typeof Semaine];
+
+export const SemaineLabels: { [key in Semaine]: string } = {
+  [Semaine.Tout]: "Camp complet",
+  [Semaine.Semaine1]: "Semaine 1",
+  [Semaine.Semaine2]: "Semaine 2",
+};
+
 // registro/sql/camps.StatistiquesInscrits
 export interface StatistiquesInscrits {
   Inscriptions: Int;
@@ -122,6 +219,20 @@ export const CurrencyLabels: { [key in Currency]: string } = {
   [Currency.FrancsSuisse]: "CHF",
 };
 
+// registro/sql/dossiers.Dossier
+export interface Dossier {
+  Id: IdDossier;
+  IdTaux: IdTaux;
+  IdResponsable: IdPersonne;
+  CopiesMails: Mails;
+  PartageAdressesOK: boolean;
+  IsValidated: boolean;
+  MomentInscription: Time;
+  LastConnection: Time;
+  KeyV1: string;
+}
+// registro/sql/dossiers.IdDossier
+export type IdDossier = Int;
 // registro/sql/dossiers.IdTaux
 export type IdTaux = Int;
 // registro/sql/dossiers.Montant
@@ -138,6 +249,147 @@ export interface Taux {
 }
 // registro/sql/dossiers.Tauxs
 export type Tauxs = { [key in IdTaux]: Taux } | null;
+// registro/sql/personnes.Approfondissement
+export const Approfondissement = {
+  AAucun: 0,
+  AAutre: 1,
+  ASb: 2,
+  ACanoe: 3,
+  AVoile: 4,
+  AMoto: 5,
+} as const;
+export type Approfondissement =
+  (typeof Approfondissement)[keyof typeof Approfondissement];
+
+export const ApprofondissementLabels: { [key in Approfondissement]: string } = {
+  [Approfondissement.AAucun]: "Non effectué",
+  [Approfondissement.AAutre]: "Approfondissement",
+  [Approfondissement.ASb]: "Surveillant de baignade",
+  [Approfondissement.ACanoe]: "Canoë - Kayak",
+  [Approfondissement.AVoile]: "Voile",
+  [Approfondissement.AMoto]: "Loisirs motocyclistes",
+};
+
+// registro/sql/personnes.Departement
+export type Departement = string;
+// registro/sql/personnes.Diplome
+export const Diplome = {
+  DAucun: 0,
+  DBafa: 1,
+  DBafaStag: 2,
+  DBafd: 3,
+  DBafdStag: 4,
+  DCap: 5,
+  DAssSociale: 6,
+  DEducSpe: 7,
+  DMonEduc: 8,
+  DInstit: 9,
+  DProf: 10,
+  DAgreg: 11,
+  DBjeps: 12,
+  DDut: 13,
+  DEje: 14,
+  DDeug: 15,
+  DStaps: 16,
+  DBapaat: 17,
+  DBeatep: 18,
+  DZzautre: 19,
+} as const;
+export type Diplome = (typeof Diplome)[keyof typeof Diplome];
+
+export const DiplomeLabels: { [key in Diplome]: string } = {
+  [Diplome.DAucun]: "Aucun",
+  [Diplome.DBafa]: "BAFA Titulaire",
+  [Diplome.DBafaStag]: "BAFA Stagiaire",
+  [Diplome.DBafd]: "BAFD titulaire",
+  [Diplome.DBafdStag]: "BAFD stagiaire",
+  [Diplome.DCap]: "CAP petit enfance",
+  [Diplome.DAssSociale]: "Assitante Sociale",
+  [Diplome.DEducSpe]: "Educ. spé.",
+  [Diplome.DMonEduc]: "Moniteur educateur",
+  [Diplome.DInstit]: "Professeur des écoles",
+  [Diplome.DProf]: "Enseignant du secondaire",
+  [Diplome.DAgreg]: "Agrégé",
+  [Diplome.DBjeps]: "BPJEPS",
+  [Diplome.DDut]: "DUT carrière sociale",
+  [Diplome.DEje]: "EJE",
+  [Diplome.DDeug]: "DEUG",
+  [Diplome.DStaps]: "STAPS",
+  [Diplome.DBapaat]: "BAPAAT",
+  [Diplome.DBeatep]: "BEATEP",
+  [Diplome.DZzautre]: "AUTRE",
+};
+
+// registro/sql/personnes.IdPersonne
+export type IdPersonne = Int;
+// registro/sql/personnes.Mails
+export type Mails = string[] | null;
+// registro/sql/personnes.Nationnalite
+export const Nationnalite = {
+  Autre: 0,
+  Francaise: 1,
+  Suisse: 2,
+} as const;
+export type Nationnalite = (typeof Nationnalite)[keyof typeof Nationnalite];
+
+export const NationnaliteLabels: { [key in Nationnalite]: string } = {
+  [Nationnalite.Autre]: "Autre",
+  [Nationnalite.Francaise]: "Française",
+  [Nationnalite.Suisse]: "Suisse",
+};
+
+// registro/sql/personnes.Pays
+export type Pays = string;
+// registro/sql/personnes.Personne
+export interface Personne {
+  Id: IdPersonne;
+  Nom: string;
+  Prenom: string;
+  Sexe: Sexe;
+  DateNaissance: Date;
+  VilleNaissance: string;
+  DepartementNaissance: Departement;
+  Nationnalite: Nationnalite;
+  Tels: Tels;
+  Mail: string;
+  Adresse: string;
+  CodePostal: string;
+  Ville: string;
+  Pays: Pays;
+  SecuriteSociale: string;
+  NomJeuneFille: string;
+  Profession: string;
+  Etudiant: boolean;
+  Fonctionnaire: boolean;
+  Diplome: Diplome;
+  Approfondissement: Approfondissement;
+  Publicite: Publicite;
+  IsTemp: boolean;
+}
+// registro/sql/personnes.Publicite
+export interface Publicite {
+  VersionPapier: boolean;
+  PubHiver: boolean;
+  PubEte: boolean;
+  EchoRocher: boolean;
+  Eonews: boolean;
+}
+// registro/sql/personnes.Sexe
+export const Sexe = {
+  Empty: 0,
+  Woman: 1,
+  Man: 2,
+} as const;
+export type Sexe = (typeof Sexe)[keyof typeof Sexe];
+
+export const SexeLabels: { [key in Sexe]: string } = {
+  [Sexe.Empty]: "",
+  [Sexe.Woman]: "Femme",
+  [Sexe.Man]: "Homme",
+};
+
+// registro/sql/personnes.Tels
+export type Tels = string[] | null;
 // registro/sql/shared.Date
 export type Date = Date_;
 // registro/sql/shared.Plage
@@ -293,6 +545,25 @@ export abstract class AbstractAPI {
     this.startRequest();
     try {
       const out = await this.rawCampsSetTaux(params);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected async rawInscriptionsGet() {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/inscriptions";
+    const rep: AxiosResponse<Inscription[] | null> = await Axios.get(fullUrl, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** InscriptionsGet wraps rawInscriptionsGet and handles the error */
+  async InscriptionsGet() {
+    this.startRequest();
+    try {
+      const out = await this.rawInscriptionsGet();
       return out;
     } catch (error) {
       this.handleError(error);

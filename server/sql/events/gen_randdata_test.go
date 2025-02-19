@@ -43,7 +43,7 @@ func randEventCampDocs() EventCampDocs {
 }
 
 func randEventKind() EventKind {
-	choix := [...]EventKind{Supprime, Inscription, AccuseReception, Message, PlaceLiberee, Facture, CampDocs, Attestation, Sondage}
+	choix := [...]EventKind{Supprime, AccuseReception, Message, PlaceLiberee, Facture, CampDocs, Attestation, Sondage}
 	i := rand.Intn(len(choix))
 	return choix[i]
 }

@@ -181,10 +181,10 @@ func TestAttestationPresence(t *testing.T) {
 		CodePostal: "07568",
 		Ville:      "Montélimar",
 	}, []camps.ParticipantExt{
-		{Camp: &camp, Personne: pr.Personne{Etatcivil: personne}},
-		{Camp: &camp, Personne: pr.Personne{Etatcivil: personne}},
-		{Camp: &camp, Personne: pr.Personne{Etatcivil: personne}},
-		{Camp: &camp, Personne: pr.Personne{Etatcivil: personne}},
+		{Camp: camp, Personne: pr.Personne{Etatcivil: personne}},
+		{Camp: camp, Personne: pr.Personne{Etatcivil: personne}},
+		{Camp: camp, Personne: pr.Personne{Etatcivil: personne}},
+		{Camp: camp, Personne: pr.Personne{Etatcivil: personne}},
 	})
 	fmt.Println(time.Since(ti))
 	tu.AssertNoErr(t, err)

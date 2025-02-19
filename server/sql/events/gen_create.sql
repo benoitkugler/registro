@@ -2,7 +2,7 @@
 CREATE TABLE events (
     Id serial PRIMARY KEY,
     IdDossier integer NOT NULL,
-    Kind smallint CHECK (Kind IN (0, 1, 2, 3, 4, 5, 6, 7, 8)) NOT NULL,
+    Kind smallint CHECK (Kind IN (0, 1, 2, 3, 4, 5, 6, 7)) NOT NULL,
     Created timestamp(0) with time zone NOT NULL
 );
 
@@ -10,13 +10,13 @@ CREATE TABLE event_attestations (
     IdEvent integer NOT NULL,
     Distribution smallint CHECK (Distribution IN (0, 1, 2)) NOT NULL,
     IsPresence boolean NOT NULL,
-    guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7, 8)) NOT NULL
+    guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7)) NOT NULL
 );
 
 CREATE TABLE event_camp_docss (
     IdEvent integer NOT NULL,
     IdCamp integer NOT NULL,
-    guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7, 8)) NOT NULL
+    guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7)) NOT NULL
 );
 
 CREATE TABLE event_messages (
@@ -26,25 +26,25 @@ CREATE TABLE event_messages (
     OrigineCamp integer,
     VuBackoffice boolean NOT NULL,
     VuEspaceperso boolean NOT NULL,
-    guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7, 8)) NOT NULL
+    guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7)) NOT NULL
 );
 
 CREATE TABLE event_message_vus (
     IdEvent integer NOT NULL,
     IdCamp integer NOT NULL,
-    guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7, 8)) NOT NULL
+    guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7)) NOT NULL
 );
 
 CREATE TABLE event_place_liberees (
     IdEvent integer NOT NULL,
     IdParticipant integer NOT NULL,
-    guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7, 8)) NOT NULL
+    guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7)) NOT NULL
 );
 
 CREATE TABLE event_sondages (
     IdEvent integer NOT NULL,
     IdCamp integer NOT NULL,
-    guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7, 8)) NOT NULL
+    guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7)) NOT NULL
 );
 
 -- constraints
@@ -77,12 +77,12 @@ ALTER TABLE event_messages
     ADD FOREIGN KEY (OrigineCamp) REFERENCES camps;
 
 ALTER TABLE event_messages
-    ALTER COLUMN guard SET DEFAULT 3
+    ALTER COLUMN guard SET DEFAULT 2
     /* EventKind.Message */
 ;
 
 ALTER TABLE event_messages
-    ADD CHECK (guard = 3
+    ADD CHECK (guard = 2
     /* EventKind.Message */);
 
 ALTER TABLE event_message_vus
@@ -98,12 +98,12 @@ ALTER TABLE event_message_vus
     ADD FOREIGN KEY (IdCamp) REFERENCES camps ON DELETE CASCADE;
 
 ALTER TABLE event_message_vus
-    ALTER COLUMN guard SET DEFAULT 3
+    ALTER COLUMN guard SET DEFAULT 2
     /* EventKind.Message */
 ;
 
 ALTER TABLE event_message_vus
-    ADD CHECK (guard = 3
+    ADD CHECK (guard = 2
     /* EventKind.Message */);
 
 ALTER TABLE event_camp_docss
@@ -119,12 +119,12 @@ ALTER TABLE event_camp_docss
     ADD FOREIGN KEY (IdCamp) REFERENCES camps;
 
 ALTER TABLE event_camp_docss
-    ALTER COLUMN guard SET DEFAULT 6
+    ALTER COLUMN guard SET DEFAULT 5
     /* EventKind.CampDocs */
 ;
 
 ALTER TABLE event_camp_docss
-    ADD CHECK (guard = 6
+    ADD CHECK (guard = 5
     /* EventKind.CampDocs */);
 
 ALTER TABLE event_sondages
@@ -140,12 +140,12 @@ ALTER TABLE event_sondages
     ADD FOREIGN KEY (IdCamp) REFERENCES camps;
 
 ALTER TABLE event_sondages
-    ALTER COLUMN guard SET DEFAULT 8
+    ALTER COLUMN guard SET DEFAULT 7
     /* EventKind.Sondage */
 ;
 
 ALTER TABLE event_sondages
-    ADD CHECK (guard = 8
+    ADD CHECK (guard = 7
     /* EventKind.Sondage */);
 
 ALTER TABLE event_place_liberees
@@ -161,12 +161,12 @@ ALTER TABLE event_place_liberees
     ADD FOREIGN KEY (IdParticipant) REFERENCES participants;
 
 ALTER TABLE event_place_liberees
-    ALTER COLUMN guard SET DEFAULT 4
+    ALTER COLUMN guard SET DEFAULT 3
     /* EventKind.PlaceLiberee */
 ;
 
 ALTER TABLE event_place_liberees
-    ADD CHECK (guard = 4
+    ADD CHECK (guard = 3
     /* EventKind.PlaceLiberee */);
 
 ALTER TABLE event_attestations
@@ -179,11 +179,11 @@ ALTER TABLE event_attestations
     ADD FOREIGN KEY (IdEvent) REFERENCES events ON DELETE CASCADE;
 
 ALTER TABLE event_attestations
-    ALTER COLUMN guard SET DEFAULT 7
+    ALTER COLUMN guard SET DEFAULT 6
     /* EventKind.Attestation */
 ;
 
 ALTER TABLE event_attestations
-    ADD CHECK (guard = 7
+    ADD CHECK (guard = 6
     /* EventKind.Attestation */);
 

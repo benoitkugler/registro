@@ -10,4 +10,4 @@ psql -v ON_ERROR_STOP=1 test < create_2_json_funcs.sql &&
 psql -v ON_ERROR_STOP=1 test < create_3_constraints.sql &&
 echo "Add predeclared items..." &&
 psql -v ON_ERROR_STOP=1 test < init.sql &&
-echo "Done."
+echo "Done (created DB 'test')."

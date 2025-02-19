@@ -51,7 +51,9 @@ CREATE TABLE dossiers (
     IdResponsable integer NOT NULL,
     CopiesMails text[],
     PartageAdressesOK boolean NOT NULL,
+    DemandeFondSoutien boolean NOT NULL,
     IsValidated boolean NOT NULL,
+    MomentInscription timestamp(0) with time zone NOT NULL,
     LastConnection timestamp(0) with time zone NOT NULL,
     KeyV1 text NOT NULL
 );
@@ -262,7 +264,7 @@ CREATE TABLE inscription_participants (
 CREATE TABLE events (
     Id serial PRIMARY KEY,
     IdDossier integer NOT NULL,
-    Kind smallint CHECK (Kind IN (0, 1, 2, 3, 4, 5, 6, 7, 8)) NOT NULL,
+    Kind smallint CHECK (Kind IN (0, 1, 2, 3, 4, 5, 6, 7)) NOT NULL,
     Created timestamp(0) with time zone NOT NULL
 );
 
@@ -270,13 +272,13 @@ CREATE TABLE event_attestations (
     IdEvent integer NOT NULL,
     Distribution smallint CHECK (Distribution IN (0, 1, 2)) NOT NULL,
     IsPresence boolean NOT NULL,
-    guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7, 8)) NOT NULL
+    guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7)) NOT NULL
 );
 
 CREATE TABLE event_camp_docss (
     IdEvent integer NOT NULL,
     IdCamp integer NOT NULL,
-    guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7, 8)) NOT NULL
+    guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7)) NOT NULL
 );
 
 CREATE TABLE event_messages (
@@ -286,25 +288,25 @@ CREATE TABLE event_messages (
     OrigineCamp integer,
     VuBackoffice boolean NOT NULL,
     VuEspaceperso boolean NOT NULL,
-    guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7, 8)) NOT NULL
+    guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7)) NOT NULL
 );
 
 CREATE TABLE event_message_vus (
     IdEvent integer NOT NULL,
     IdCamp integer NOT NULL,
-    guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7, 8)) NOT NULL
+    guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7)) NOT NULL
 );
 
 CREATE TABLE event_place_liberees (
     IdEvent integer NOT NULL,
     IdParticipant integer NOT NULL,
-    guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7, 8)) NOT NULL
+    guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7)) NOT NULL
 );
 
 CREATE TABLE event_sondages (
     IdEvent integer NOT NULL,
     IdCamp integer NOT NULL,
-    guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7, 8)) NOT NULL
+    guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7)) NOT NULL
 );
 
 CREATE TABLE dons (

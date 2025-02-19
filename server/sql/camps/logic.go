@@ -12,7 +12,7 @@ import (
 )
 
 type ParticipantExt struct {
-	Camp        *Camp
+	Camp        Camp
 	Participant Participant
 	Personne    pr.Personne
 }
@@ -71,7 +71,7 @@ type CampLoader struct {
 func (cd CampLoader) Stats() StatistiquesInscrits {
 	var stats StatistiquesInscrits
 	for _, participant := range cd.Participants {
-		ext := ParticipantExt{cd.Camp, participant, cd.Personnes[participant.IdPersonne]}
+		ext := ParticipantExt{*cd.Camp, participant, cd.Personnes[participant.IdPersonne]}
 		ext.add(&stats)
 	}
 	return stats
@@ -137,13 +137,13 @@ func (c *Camp) Check() error {
 }
 
 type CampExt struct {
-	Camp *Camp
+	Camp Camp
 	// IsTerminated is 'true' when the camp
 	// is over by (at least) 1 day, even if the 'Ouvert' tag is still on.
 	IsTerminated bool
 }
 
-func (cp *Camp) Ext() CampExt {
+func (cp Camp) Ext() CampExt {
 	return CampExt{cp, cp.isTerminated()}
 }
 

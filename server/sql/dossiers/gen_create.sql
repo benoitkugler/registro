@@ -10,7 +10,9 @@ CREATE TABLE dossiers (
     IdResponsable integer NOT NULL,
     CopiesMails text[],
     PartageAdressesOK boolean NOT NULL,
+    DemandeFondSoutien boolean NOT NULL,
     IsValidated boolean NOT NULL,
+    MomentInscription timestamp(0) with time zone NOT NULL,
     LastConnection timestamp(0) with time zone NOT NULL,
     KeyV1 text NOT NULL
 );

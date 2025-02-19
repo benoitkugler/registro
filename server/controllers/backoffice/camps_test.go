@@ -27,20 +27,20 @@ func TestCRUD(t *testing.T) {
 	tu.AssertNoErr(t, err)
 
 	t.Run("camps", func(t *testing.T) {
-		camps, err := ct.loadCamps()
+		camps, err := ct.getCamps()
 		tu.AssertNoErr(t, err)
 		tu.Assert(t, len(camps) == 0)
 
 		camp, err := ct.createCamp()
 		tu.AssertNoErr(t, err)
 
-		camps, err = ct.loadCamps()
+		camps, err = ct.getCamps()
 		tu.AssertNoErr(t, err)
 		tu.Assert(t, len(camps) == 1)
 
 		camp.Camp.Camp.Ouvert = true
 		camp.Camp.Camp.Navette = cps.Navette{Actif: true, Commentaire: "7 € Aller retour"}
-		updated, err := ct.updateCamp(*camp.Camp.Camp)
+		updated, err := ct.updateCamp(camp.Camp.Camp)
 		tu.AssertNoErr(t, err)
 		tu.Assert(t, updated.Camp.Ouvert)
 

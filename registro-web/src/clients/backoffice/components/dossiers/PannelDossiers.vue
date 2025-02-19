@@ -24,7 +24,5 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-const props = defineProps<{
-  title: string;
-}>();
+const props = defineProps<{}>();
 </script>

@@ -35,14 +35,14 @@ type CampHeader struct {
 }
 
 func (ct *Controller) CampsGet(c echo.Context) error {
-	out, err := ct.loadCamps()
+	out, err := ct.getCamps()
 	if err != nil {
 		return err
 	}
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) loadCamps() ([]CampHeader, error) {
+func (ct *Controller) getCamps() ([]CampHeader, error) {
 	camps, err := cp.SelectAllCamps(ct.db)
 	if err != nil {
 		return nil, utils.SQLError(err)

@@ -1,4 +1,4 @@
-// Package central implémente la logique
+// Package backoffice implémente la logique
 // du client central, qui permet notament de :
 //   - créer et gérer des séjours
 //   - suivre les inscriptions

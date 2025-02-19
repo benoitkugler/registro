@@ -12,8 +12,6 @@ type EventKind uint8
 const (
 	Supprime EventKind = iota // Message supprimé
 
-	// enregistre le moment d'inscription
-	Inscription     // Moment d'inscription
 	AccuseReception // Inscription validée
 
 	// peut provenir du backoffice, du portail directeurs
