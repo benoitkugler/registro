@@ -14,6 +14,59 @@
         </v-app-bar-title>
       </v-app-bar>
 
+      <v-dialog v-model="showPreinscription" max-width="600px">
+        <v-card title="Inscription rapide">
+          <v-card-text>
+            <div v-if="mailFound === null">
+              Vous avez déjà participé à un de nos séjours ? Pré-remplissez ce
+              formulaire en fournissant votre adresse e-mail !
+              <v-row justify="space-between" class="my-2">
+                <v-col align-self="center">
+                  <v-text-field
+                    variant="outlined"
+                    density="comfortable"
+                    label="Mail"
+                    hide-details
+                    v-model="search"
+                  >
+                  </v-text-field>
+                </v-col>
+                <v-col align-self="center" cols="auto">
+                  <v-btn
+                    color="secondary"
+                    :disabled="search.length < 3"
+                    @click="searchHistory"
+                  >
+                    <template v-slot:prepend>
+                      <v-icon>mdi-magnify</v-icon>
+                    </template>
+                    Rechercher</v-btn
+                  >
+                </v-col>
+              </v-row>
+            </div>
+            <div v-else-if="mailFound === true">
+              Votre adresse mail a bien été utilisée sur un de nos séjours.
+              <br />
+              Afin de protéger vos données personnelles, un
+              <b>lien sécurisé</b> vous y a été envoyé ({{ search }}).
+              <br /><br />
+
+              <div class="text-grey font-italic">
+                Vous pouvez quitter cette page, vous y serez ramené par le lien.
+              </div>
+            </div>
+            <div v-else-if="mailFound === false">
+              Votre adresse n'a pas été trouvée. Aucun problème, vous pouvez
+              reprendre l'inscription standard !
+            </div>
+          </v-card-text>
+          <v-card-actions v-if="mailFound === null">
+            <v-btn @click="showPreinscription = false">Ignorer</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
       <v-container style="min-height: 92%" v-if="data == null">
         <v-skeleton-loader type="card"></v-skeleton-loader>
       </v-container>
@@ -106,5 +159,15 @@ async function fetchData() {
   res.InitialInscription.Participants =
     res.InitialInscription.Participants || [];
   data.value = res;
+}
+
+// preinscription form
+const showPreinscription = ref(true);
+const search = ref("");
+const mailFound = ref<boolean | null>(null);
+async function searchHistory() {
+  const res = await controller.SearchHistory({ mail: search.value });
+  if (res === undefined) return;
+  mailFound.value = res.MailFound;
 }
 </script>
