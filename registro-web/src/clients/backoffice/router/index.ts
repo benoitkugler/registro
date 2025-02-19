@@ -2,10 +2,12 @@
 import { createRouter, createWebHistory } from "vue-router";
 import Index from "../pages/index.vue";
 import Camps from "../pages/camps.vue";
+import Inscriptions from "../pages/inscriptions.vue";
 
 const routes = [
   { path: "/", component: Index },
   { path: "/camps", component: Camps },
+  { path: "/inscriptions", component: Inscriptions },
 ];
 
 // TODO: check that

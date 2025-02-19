@@ -20,22 +20,14 @@
     >
       Camps
     </v-list-item>
-    <!-- <v-list-item
-        prepend-icon="mdi-currency-eur"
-        link
-        :to="{ name: 'budget' }"
-        color="primary"
-      >
-        Budget prévisionnel
-      </v-list-item>
-      <v-list-item
-        prepend-icon="mdi-view-list"
-        link
-        :to="{ name: 'records' }"
-        color="primary"
-      >
-        Enregistrements
-      </v-list-item> -->
+    <v-list-item
+      prepend-icon="mdi-calendar-multiple-check"
+      link
+      :to="{ path: '/inscriptions' }"
+      color="primary"
+    >
+      Inscriptions
+    </v-list-item>
   </v-navigation-drawer>
 
   <v-app-bar rounded elevation="4" color="secondary">
