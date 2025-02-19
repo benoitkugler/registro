@@ -87,9 +87,9 @@ func (cp *Camp) DateFin() sh.Date {
 }
 
 // isTerminated renvoie `true` si le camp est
-// passé d'au moins 45 jours.
+// passé d'au moins 1 jour.
 func (cp *Camp) isTerminated() bool {
-	const deltaTerminated = 45 * 24 * time.Hour
+	const deltaTerminated = 1 * 24 * time.Hour
 	dateFin := cp.DateFin().Time()
 	return time.Now().After(dateFin.Add(deltaTerminated))
 }
@@ -137,13 +137,13 @@ func (c *Camp) Check() error {
 }
 
 type CampExt struct {
-	Camp Camp
+	Camp *Camp
 	// IsTerminated is 'true' when the camp
-	// is over by, even if the 'Ouvert' tag is still on.
+	// is over by (at least) 1 day, even if the 'Ouvert' tag is still on.
 	IsTerminated bool
 }
 
-func (cp Camp) Ext() CampExt {
+func (cp *Camp) Ext() CampExt {
 	return CampExt{cp, cp.isTerminated()}
 }
 

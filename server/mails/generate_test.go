@@ -219,9 +219,12 @@ func TestPreinscription(t *testing.T) {
 }
 
 func TestConfirmeInscription(t *testing.T) {
-	cfg, _ := loadEnv(t)
+	cfg, creds := loadEnv(t)
 
 	html, err := ConfirmeInscription(cfg, Contact{Prenom: "Benoit", Sexe: pr.Woman}, "https://acve.fr/confirme?id='ee'")
 	tu.AssertNoErr(t, err)
 	tu.Write(t, "confirme_inscription.html", []byte(html))
+
+	err = NewMailer(creds, cfg.MailsSettings).SendMail("", "Vérification de l'adresse mail", html, nil, nil)
+	tu.AssertNoErr(t, err)
 }

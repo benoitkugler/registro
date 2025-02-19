@@ -11,6 +11,7 @@ import (
 
 	"registro/config"
 	"registro/controllers/backoffice"
+	"registro/controllers/espaceperso"
 	"registro/controllers/inscriptions"
 	"registro/crypto"
 	"registro/sql/files"
@@ -24,9 +25,10 @@ func main() {
 	flag.Parse()
 	isDev := *devPtr
 
-	asso, encrypter, dbCreds, fs := loadEnvs()
+	asso, encrypter, dbCreds, fs, smtp := loadEnvs(isDev)
+	fmt.Println("Loading env. -> OK.")
 	// TODO: setup APIS
-	smtp, joomeo, helloasso := config.SMTP{}, config.Joomeo{}, config.Helloasso{}
+	joomeo, helloasso := config.Joomeo{}, config.Helloasso{}
 
 	db, err := dbCreds.ConnectPostgres()
 	check(err)
@@ -45,6 +47,8 @@ func main() {
 
 	inscriptionsCt := inscriptions.NewController(db, encrypter, smtp, asso)
 
+	espacepersoCt := espaceperso.NewController(db, encrypter, smtp, asso)
+
 	if isDev {
 		fmt.Println("Running in dev mode")
 
@@ -62,6 +66,7 @@ func main() {
 
 	setupRoutesBackoffice(e, backofficeCt)
 	setupRoutesInscriptions(e, inscriptionsCt)
+	setupRoutesEspaceperso(e, espacepersoCt)
 
 	adress := getAdress(isDev)
 
@@ -70,7 +75,7 @@ func main() {
 	e.Logger.Fatal(e.Start(adress))
 }
 
-func loadEnvs() (config.Asso, crypto.Encrypter, config.DB, files.FileSystem) {
+func loadEnvs(devMode bool) (config.Asso, crypto.Encrypter, config.DB, files.FileSystem, config.SMTP) {
 	asso, err := config.NewAsso()
 	check(err)
 
@@ -89,12 +94,15 @@ func loadEnvs() (config.Asso, crypto.Encrypter, config.DB, files.FileSystem) {
 	}
 	fileSystem := files.NewFileSystem(fs)
 
-	return asso, encrypter, db, fileSystem
+	smtp, err := config.NewSMTP(!devMode)
+	check(err)
+
+	return asso, encrypter, db, fileSystem, smtp
 }
 
-func getAdress(dev bool) string {
+func getAdress(devMode bool) string {
 	var adress string
-	if dev {
+	if devMode {
 		adress = "localhost:1323"
 	} else {
 		// TODO: adapt to infomaniak

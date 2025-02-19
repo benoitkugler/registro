@@ -2,8 +2,10 @@ package camps
 
 import (
 	"testing"
+	"time"
 
 	pr "registro/sql/personnes"
+	"registro/sql/shared"
 	tu "registro/utils/testutils"
 )
 
@@ -56,4 +58,11 @@ func TestCampLoader_Stats(t *testing.T) {
 		}
 		tu.Assert(t, cd.Stats() == tt.want)
 	}
+}
+
+func TestCamp_isTerminated(t *testing.T) {
+	now := time.Now()
+	y, m, d := now.Year(), now.Month(), now.Day()
+	tu.Assert(t, (&Camp{DateDebut: shared.NewDate(y, m, d), Duree: 1}).isTerminated() == false)
+	tu.Assert(t, (&Camp{DateDebut: shared.NewDate(y, m, d-1), Duree: 1}).isTerminated() == true)
 }

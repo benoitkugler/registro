@@ -187,9 +187,8 @@ func (ct *Controller) loadCamps() (cps.Camps, ds.Tauxs, map[cps.IdCamp]cps.Equip
 	if err != nil {
 		return nil, nil, nil, nil, utils.SQLError(err)
 	}
-	now := time.Now()
 	for id, camp := range camps {
-		if isOver := camp.DateFin().Time().Before(now); isOver || !camp.Ouvert {
+		if camp.Ext().IsTerminated || !camp.Ouvert {
 			delete(camps, id)
 		}
 	}
