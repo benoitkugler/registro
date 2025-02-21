@@ -1,6 +1,8 @@
 package search
 
 import (
+	"cmp"
+	"slices"
 	"strings"
 
 	cps "registro/sql/camps"
@@ -37,9 +39,9 @@ func normalizeSearch(pattern string) (out []string) {
 	return out
 }
 
-type Filterable interface{ pr.Personne | cps.Camp }
+type filterable interface{ pr.Personne | cps.Camp }
 
-func stringify[T Filterable](v T) string {
+func stringify[T filterable](v T) string {
 	switch v := any(v).(type) {
 	case pr.Personne:
 		return v.NomPrenom()
@@ -50,7 +52,22 @@ func stringify[T Filterable](v T) string {
 	}
 }
 
-func Filter[T Filterable](list []T, pattern string) (out []T) {
+// FilterPersonnes ne se retreint pas automatiquement aux personnes non temporaires
+func FilterPersonnes(list pr.Personnes, pattern string) (out []PersonneHeader) {
+	rs := normalizeSearch(pattern)
+
+	for _, v := range list {
+		if matchAll(rs, stringify(v)) {
+			out = append(out, newPersonneHeader(v))
+		}
+	}
+
+	slices.SortFunc(out, func(a, b PersonneHeader) int { return cmp.Compare(a.Label, b.Label) })
+
+	return out
+}
+
+func FilterCamps(list cps.Camps, pattern string) (out []cps.Camp) {
 	rs := normalizeSearch(pattern)
 
 	for _, v := range list {

@@ -46,6 +46,6 @@ func TestSQL(t *testing.T) {
 	tu.AssertErr(t, err) // unique
 	_, err = Demande{MaxDocs: 1, Categorie: 0}.Insert(db)
 	tu.AssertNoErr(t, err) // shared constraints
-	_, err = Demande{MaxDocs: 1, Categorie: 0, IdDirecteur: OptIdPersonne{Id: pers.Id, Valid: true}}.Insert(db)
+	_, err = Demande{MaxDocs: 1, Categorie: 0, IdDirecteur: pers.Id.Opt()}.Insert(db)
 	tu.AssertNoErr(t, err)
 }

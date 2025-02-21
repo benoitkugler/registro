@@ -316,6 +316,16 @@ func DeletePersonnesByIDs(tx DB, ids ...IdPersonne) ([]IdPersonne, error) {
 	return ScanIdPersonneArray(rows)
 }
 
+// SelectPersonneByIdAndIsTemp return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectPersonneByIdAndIsTemp(tx DB, id IdPersonne, isTemp bool) (item Personne, found bool, err error) {
+	row := tx.QueryRow("SELECT id, nom, prenom, sexe, datenaissance, villenaissance, departementnaissance, nationnalite, tels, mail, adresse, codepostal, ville, pays, securitesociale, nomjeunefille, profession, etudiant, fonctionnaire, diplome, approfondissement, publicite, istemp FROM personnes WHERE Id = $1 AND IsTemp = $2", id, isTemp)
+	item, err = ScanPersonne(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
+}
+
 func loadJSON(out interface{}, src interface{}) error {
 	if src == nil {
 		return nil //zero value out

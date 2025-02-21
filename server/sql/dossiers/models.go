@@ -43,6 +43,8 @@ type Taux struct {
 //
 // Requise par la contrainte Participant
 // gomacro:SQL ADD UNIQUE(Id, IdTaux)
+//
+// gomacro:QUERY SwitchDossierPersonne UPDATE Dossier SET IdResponsable = $target$ WHERE IdResponsable = $temporaire$;
 type Dossier struct {
 	Id            IdDossier
 	IdTaux        IdTaux

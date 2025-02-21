@@ -18,5 +18,3 @@ type ResponsableLegal struct {
 	Ville      string
 	Pays       pr.Pays
 }
-
-type OptIdPersonne shared.OptID[pr.IdPersonne]

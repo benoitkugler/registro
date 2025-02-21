@@ -17,16 +17,19 @@ type IdInscription int64
 // Inscription enregistre l'inscription faite via le formulaire publique.
 //
 // L'inscription publique est transformée en [Dossier] dès réception,
-// cette table ne sert donc qu'à garder une trace en cas de problème.
+// cette table sert donc essentiellement à garder une trace en cas de problème.
 //
 // gomacro:SQL ADD UNIQUE(Id, IdTaux)
+//
+// Temp people must not be preidentified
+// gomacro:SQL ADD FOREIGN KEY (ResponsablePreIdent, guard) REFERENCES Personne(Id,IsTemp)
 type Inscription struct {
 	Id IdInscription
 
 	IdTaux dossiers.IdTaux // for consistency
 
 	Responsable         ResponsableLegal
-	ResponsablePreIdent OptIdPersonne `gomacro-sql-foreign:"Personne" gomacro-sql-on-delete:"SET NULL"`
+	ResponsablePreIdent pr.OptIdPersonne `gomacro-sql-foreign:"Personne" gomacro-sql-on-delete:"SET NULL"`
 
 	Message            string
 	CopiesMails        pr.Mails
@@ -40,11 +43,16 @@ type Inscription struct {
 	// Note that the [Dossier.IsValidated] is still false,
 	// since some personnes may still require to be identified by humans
 	IsConfirmed bool
+
+	guard bool `gomacro-sql-guard:"false"`
 }
 
 // InscriptionParticipant
 // gomacro:SQL ADD FOREIGN KEY (IdCamp, IdTaux) REFERENCES Camp (Id,IdTaux) ON DELETE CASCADE
 // gomacro:SQL ADD FOREIGN KEY (IdInscription, IdTaux) REFERENCES Inscription (Id,IdTaux) ON DELETE CASCADE
+//
+// Temp people must not be preidentified
+// gomacro:SQL ADD FOREIGN KEY (PreIdent, guard) REFERENCES Personne(Id,IsTemp)
 type InscriptionParticipant struct {
 	IdInscription IdInscription `gomacro-sql-on-delete:"CASCADE"`
 
@@ -53,13 +61,15 @@ type InscriptionParticipant struct {
 	IdTaux dossiers.IdTaux // for consistency
 
 	// Optionel
-	PreIdent OptIdPersonne `gomacro-sql-foreign:"Personne" gomacro-sql-on-delete:"SET NULL"`
+	PreIdent pr.OptIdPersonne `gomacro-sql-foreign:"Personne" gomacro-sql-on-delete:"SET NULL"`
 
 	Nom           string
 	Prenom        string
 	DateNaissance shared.Date
 	Sexe          pr.Sexe
 	Nationnalite  pr.Nationnalite
+
+	guard bool `gomacro-sql-guard:"false"`
 }
 
 // Create insert [insc], then update [participants] id's and insert them

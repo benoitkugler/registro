@@ -27,6 +27,16 @@ type PatternsSimilarite struct {
 	Mail          string
 }
 
+func NewPatternsSimilarite(pr pr.Personne) PatternsSimilarite {
+	return PatternsSimilarite{
+		Nom:           pr.Nom,
+		Prenom:        pr.Prenom,
+		Sexe:          pr.Sexe,
+		DateNaissance: pr.DateNaissance,
+		Mail:          pr.Mail,
+	}
+}
+
 func (in *PatternsSimilarite) normalize() {
 	in.Nom = utils.Normalize(in.Nom)
 	in.Prenom = utils.Normalize(in.Prenom)
@@ -114,12 +124,31 @@ func comparaison(p pr.Personne, in PatternsSimilarite) (score int) {
 	return score
 }
 
-type ScoredPersonne struct {
-	Score    int
-	Personne pr.Personne
+type PersonneHeader struct {
+	Id            pr.IdPersonne
+	Label         string
+	Sexe          pr.Sexe
+	DateNaissance shared.Date
 }
 
-// ChercheSimilaires renvoie les profils similaires à [in].
+func newPersonneHeader(p pr.Personne) PersonneHeader {
+	return PersonneHeader{
+		p.Id,
+		p.PrenomNOM(),
+		p.Sexe,
+		p.DateNaissance,
+	}
+}
+
+type ScoredPersonne struct {
+	ScorePercent int // between 0 and 100
+
+	Personne PersonneHeader
+}
+
+// ChercheSimilaires renvoie les profils similaires à [in],
+// triés par pertinence (meilleur en premier).
+//
 // Les personnes temporaires sont ignorées, puisque que l'on ne
 // veut pas fusionner un profil entrant à un profil temporaire.
 func ChercheSimilaires(personnes []pr.Personne, in PatternsSimilarite) (scoreMax int, out []ScoredPersonne) {
@@ -138,11 +167,14 @@ func ChercheSimilaires(personnes []pr.Personne, in PatternsSimilarite) (scoreMax
 		}
 		score := comparaison(p, in)
 		if score >= seuilRechercheSimilaire {
-			out = append(out, ScoredPersonne{score, p})
+			out = append(out, ScoredPersonne{
+				100 * score / scoreMax,
+				newPersonneHeader(p),
+			})
 		}
 	}
 
-	slices.SortFunc(out, func(a, b ScoredPersonne) int { return b.Score - a.Score }) // decroissant
+	slices.SortFunc(out, func(a, b ScoredPersonne) int { return b.ScorePercent - a.ScorePercent }) // decroissant
 
 	return scoreMax, out
 }

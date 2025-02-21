@@ -10,7 +10,8 @@ CREATE TABLE fichesanitaires (
     Tel text NOT NULL,
     Medecin jsonb NOT NULL,
     LastModif timestamp(0) with time zone NOT NULL,
-    Mails text[]
+    Mails text[],
+    guard boolean NOT NULL
 );
 
 CREATE TABLE personnes (
@@ -40,11 +41,23 @@ CREATE TABLE personnes (
 );
 
 -- constraints
+ALTER TABLE personnes
+    ADD UNIQUE (Id, IsTemp);
+
 ALTER TABLE fichesanitaires
     ADD UNIQUE (IdPersonne);
 
 ALTER TABLE fichesanitaires
+    ADD FOREIGN KEY (IdPersonne, guard) REFERENCES personnes (Id, IsTemp);
+
+ALTER TABLE fichesanitaires
     ADD FOREIGN KEY (IdPersonne) REFERENCES personnes ON DELETE CASCADE;
+
+ALTER TABLE fichesanitaires
+    ALTER COLUMN guard SET DEFAULT FALSE;
+
+ALTER TABLE fichesanitaires
+    ADD CHECK (guard = FALSE);
 
 CREATE OR REPLACE FUNCTION gomacro_validate_json_boolean (data jsonb)
     RETURNS boolean

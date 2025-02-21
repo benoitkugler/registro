@@ -1,0 +1,153 @@
+<template>
+  <v-card
+    title="Identifier le profil"
+    width="600px"
+    :subtitle="showManualSearch ? '' : 'Liste des profils similaires'"
+  >
+    <v-card-text class="pb-0">
+      <!-- manual mode -->
+      <div v-if="showManualSearch">
+        <DebounceField
+          v-model="manualPattern"
+          @update:model-value="manualSearch"
+          label="Rechercher un profil"
+          density="comfortable"
+          clearable
+          autofocus
+          hide-details
+        ></DebounceField>
+        <v-list density="compact">
+          <v-row
+            class="ma-2"
+            no-gutters
+            v-if="manualPattern.length >= 3 && !manualSearchCandidates.length"
+          >
+            <v-col class="text-center">
+              <i>Aucun profil ne correspond à votre recherche.</i>
+            </v-col>
+          </v-row>
+
+          <v-list-item
+            v-for="(pers, i) in manualSearchCandidates"
+            :key="i"
+            :title="pers.Label"
+            :subtitle="new Date(pers.DateNaissance).toLocaleDateString()"
+            :append-icon="sexeIcon(pers.Sexe)"
+            @click="rattacheTo(pers.Id)"
+          >
+          </v-list-item>
+        </v-list>
+      </div>
+      <!-- automatic mode (suggestion from server) -->
+      <v-list density="compact" v-else>
+        <v-row class="mx-2" no-gutters v-if="!suggestedCandidats.length">
+          <v-col class="text-center">
+            <i>Aucun profil existant sur la base n'est similaire.</i>
+          </v-col>
+        </v-row>
+
+        <v-list-item
+          v-for="(pers, i) in suggestedCandidats"
+          :key="i"
+          :title="pers.Personne.Label"
+          :subtitle="new Date(pers.Personne.DateNaissance).toLocaleDateString()"
+          :prepend-icon="sexeIcon(pers.Personne.Sexe)"
+          @click="rattacheTo(pers.Personne.Id)"
+        >
+          <template v-slot:append>
+            <v-chip :color="pertinenceColor(pers.ScorePercent)">
+              {{ pers.ScorePercent }} %
+            </v-chip>
+          </template>
+        </v-list-item>
+      </v-list>
+    </v-card-text>
+    <v-card-actions>
+      <v-btn
+        @click="
+          showManualSearch = !showManualSearch;
+          manualPattern = '';
+        "
+      >
+        {{
+          showManualSearch ? "Retour aux suggestions" : "Chercher manuellement"
+        }}
+      </v-btn>
+      <v-spacer></v-spacer>
+      <v-btn variant="elevated" elevation="1" @click="toNewProfile()">
+        <template v-slot:prepend>
+          <v-icon>mdi-plus</v-icon>
+        </template>
+        Créer un nouveau profil</v-btn
+      >
+    </v-card-actions>
+  </v-card>
+</template>
+
+<script setup lang="ts">
+import { onMounted, ref } from "vue";
+import type {
+  IdentTarget,
+  IdPersonne,
+  Int,
+  Personne,
+  PersonneHeader,
+  ScoredPersonne,
+} from "../../logic/api";
+import { controller } from "../../logic/logic";
+import { sexeIcon } from "@/components/format";
+
+const props = defineProps<{
+  personne: Personne;
+}>();
+
+const emit = defineEmits<{
+  (e: "identifie", params: IdentTarget): void;
+}>();
+
+onMounted(fetchSimilaires);
+
+const suggestedCandidats = ref<ScoredPersonne[]>([]);
+async function fetchSimilaires() {
+  const res = await controller.InscriptionsSearchSimilaires({
+    "id-personne": props.personne.Id,
+  });
+  if (res === undefined) return;
+  suggestedCandidats.value = res || [];
+}
+
+const showManualSearch = ref(false);
+
+const manualPattern = ref("");
+const manualSearchCandidates = ref<PersonneHeader[]>([]);
+async function manualSearch() {
+  if ((manualPattern.value || "").length < 3) return;
+  const res = await controller.InscriptionsSearchPersonnes({
+    pattern: manualPattern.value,
+  });
+  if (res === undefined) return;
+  manualSearchCandidates.value = res || [];
+}
+
+function toNewProfile() {
+  emit("identifie", {
+    IdTemporaire: props.personne.Id,
+    Rattache: false,
+    RattacheTo: 0 as Int,
+  });
+}
+
+function rattacheTo(id: IdPersonne) {
+  emit("identifie", {
+    IdTemporaire: props.personne.Id,
+    Rattache: true,
+    RattacheTo: id,
+  });
+}
+
+function pertinenceColor(percent: number) {
+  const green = Math.floor(percent * 2);
+  const color = `rgb(${255 - green},${green}, 15)`;
+  return color;
+}
+</script>

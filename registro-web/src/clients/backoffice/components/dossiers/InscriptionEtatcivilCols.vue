@@ -1,34 +1,60 @@
 <template>
-  <v-col align-self="center" cols="auto" class="mr-2">
-    <v-tooltip>
-      <template v-slot:activator="{ props: innerProps }">
-        <v-icon
-          v-bind="innerProps"
-          :icon="props.personne.IsTemp ? 'mdi-account' : 'mdi-account-check'"
-          :color="props.personne.IsTemp ? 'orange' : 'green'"
-        ></v-icon>
+  <v-col align-self="center" cols="4">
+    <v-menu :disabled="!props.personne.IsTemp" :close-on-content-click="false">
+      <template v-slot:activator="{ props: menuProps }">
+        <v-tooltip>
+          <template v-slot:activator="{ props: tooltipProps }">
+            <v-chip
+              class="mx-1"
+              label
+              v-bind="mergeProps(menuProps, tooltipProps)"
+            >
+              <template v-slot:prepend>
+                <v-icon
+                  class="mr-2"
+                  :icon="
+                    props.personne.IsTemp ? 'mdi-account' : 'mdi-account-check'
+                  "
+                  :color="props.personne.IsTemp ? 'orange' : 'green'"
+                ></v-icon>
+              </template>
+              {{ props.personne.Prenom }} {{ props.personne.Nom }}
+            </v-chip>
+          </template>
+          <!-- tooltip content -->
+          <template v-if="props.personne.IsTemp">
+            Ce profil est temporaire et doit être identifié.
+          </template>
+          <template v-else>
+            Ce profil est identifié (ID: {{ props.personne.Id }}).
+          </template>
+        </v-tooltip>
       </template>
-      <template v-if="props.personne.IsTemp">
-        Ce profil est temporaire et doit être identifié.
-      </template>
-      <template v-else> Ce profil est identifié. </template>
-    </v-tooltip>
+      <CardSimilaires
+        :personne="props.personne"
+        @identifie="(v) => emit('identifie', v)"
+      ></CardSimilaires>
+    </v-menu>
   </v-col>
-  <v-col align-self="center" cols="4"
-    >{{ props.personne.Nom }} {{ props.personne.Prenom }}</v-col
-  >
+  <v-col align-self="center" cols="auto">
+    <v-icon :icon="sexeIcon(props.personne.Sexe)" class="mx-4"></v-icon>
+  </v-col>
   <v-col align-self="center" cols="2"
-    >{{ SexeLabels[props.personne.Sexe] }}
-  </v-col>
-  <v-col align-self="center" cols="3"
-    >né(e) le
+    ><small class="text-grey">né(e) le</small>
     {{ new Date(props.personne.DateNaissance).toLocaleDateString() }}
   </v-col>
 </template>
 
 <script setup lang="ts">
-import { SexeLabels, type Personne } from "../../logic/api";
+import { sexeIcon } from "@/components/format";
+import { type IdentTarget, type Personne } from "../../logic/api";
+import CardSimilaires from "./CardSimilaires.vue";
+import { mergeProps } from "vue";
 const props = defineProps<{
   personne: Personne;
+}>();
+
+const emit = defineEmits<{
+  (e: "identifie", params: IdentTarget): void;
 }>();
 </script>

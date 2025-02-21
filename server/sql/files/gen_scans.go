@@ -1351,21 +1351,12 @@ func (s OptIdFile) Value() (driver.Value, error) {
 		Valid: s.Valid}.Value()
 }
 
-func (s *OptIdPersonne) Scan(src interface{}) error {
-	var tmp sql.NullInt64
-	err := tmp.Scan(src)
-	if err != nil {
-		return err
-	}
-	*s = OptIdPersonne{
-		Valid: tmp.Valid,
-		Id:    personnes.IdPersonne(tmp.Int64),
-	}
-	return nil
+func SwitchDemandePersonne(db DB, target personnes.OptIdPersonne, temporaire personnes.OptIdPersonne) error {
+	_, err := db.Exec("UPDATE demandes SET IdDirecteur = $1 WHERE IdDirecteur = $2;", target, temporaire)
+	return err
 }
 
-func (s OptIdPersonne) Value() (driver.Value, error) {
-	return sql.NullInt64{
-		Int64: int64(s.Id),
-		Valid: s.Valid}.Value()
+func SwitchFilePersonnePersonne(db DB, target personnes.IdPersonne, temporaire personnes.IdPersonne) error {
+	_, err := db.Exec("UPDATE file_personnes SET IdPersonne = $1 WHERE IdPersonne = $2;", target, temporaire)
+	return err
 }

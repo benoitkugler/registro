@@ -9,7 +9,8 @@ CREATE TABLE inscriptions (
     PartageAdressesOK boolean NOT NULL,
     DemandeFondSoutien boolean NOT NULL,
     DateHeure timestamp(0) with time zone NOT NULL,
-    IsConfirmed boolean NOT NULL
+    IsConfirmed boolean NOT NULL,
+    guard boolean NOT NULL
 );
 
 CREATE TABLE inscription_participants (
@@ -21,7 +22,8 @@ CREATE TABLE inscription_participants (
     Prenom text NOT NULL,
     DateNaissance date NOT NULL,
     Sexe smallint CHECK (Sexe IN (0, 1, 2)) NOT NULL,
-    Nationnalite smallint CHECK (Nationnalite IN (0, 1, 2)) NOT NULL
+    Nationnalite smallint CHECK (Nationnalite IN (0, 1, 2)) NOT NULL,
+    guard boolean NOT NULL
 );
 
 -- constraints
@@ -29,16 +31,28 @@ ALTER TABLE inscriptions
     ADD UNIQUE (Id, IdTaux);
 
 ALTER TABLE inscriptions
+    ADD FOREIGN KEY (ResponsablePreIdent, guard) REFERENCES personnes (Id, IsTemp);
+
+ALTER TABLE inscriptions
     ADD FOREIGN KEY (IdTaux) REFERENCES tauxs;
 
 ALTER TABLE inscriptions
     ADD FOREIGN KEY (ResponsablePreIdent) REFERENCES personnes ON DELETE SET NULL;
+
+ALTER TABLE inscriptions
+    ALTER COLUMN guard SET DEFAULT FALSE;
+
+ALTER TABLE inscriptions
+    ADD CHECK (guard = FALSE);
 
 ALTER TABLE inscription_participants
     ADD FOREIGN KEY (IdCamp, IdTaux) REFERENCES camps (Id, IdTaux) ON DELETE CASCADE;
 
 ALTER TABLE inscription_participants
     ADD FOREIGN KEY (IdInscription, IdTaux) REFERENCES inscriptions (Id, IdTaux) ON DELETE CASCADE;
+
+ALTER TABLE inscription_participants
+    ADD FOREIGN KEY (PreIdent, guard) REFERENCES personnes (Id, IsTemp);
 
 ALTER TABLE inscription_participants
     ADD FOREIGN KEY (IdInscription) REFERENCES inscriptions ON DELETE CASCADE;
@@ -51,6 +65,12 @@ ALTER TABLE inscription_participants
 
 ALTER TABLE inscription_participants
     ADD FOREIGN KEY (PreIdent) REFERENCES personnes ON DELETE SET NULL;
+
+ALTER TABLE inscription_participants
+    ALTER COLUMN guard SET DEFAULT FALSE;
+
+ALTER TABLE inscription_participants
+    ADD CHECK (guard = FALSE);
 
 CREATE OR REPLACE FUNCTION gomacro_validate_json_array_string (data jsonb)
     RETURNS boolean

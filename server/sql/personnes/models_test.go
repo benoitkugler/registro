@@ -27,6 +27,21 @@ func TestSQL(t *testing.T) {
 	p, err = SelectPersonne(db, p.Id)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, p.DateNaissance == date)
+
+	// check that FS is not allowed on temp people
+	p.IsTemp = true
+	_, err = p.Update(db)
+	tu.AssertNoErr(t, err)
+
+	err = Fichesanitaire{IdPersonne: p.Id}.Insert(db)
+	tu.AssertErr(t, err)
+
+	p.IsTemp = false
+	_, err = p.Update(db)
+	tu.AssertNoErr(t, err)
+
+	err = Fichesanitaire{IdPersonne: p.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
 }
 
 func TestDumpRandomDB(t *testing.T) {

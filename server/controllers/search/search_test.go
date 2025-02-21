@@ -6,7 +6,6 @@ import (
 	"time"
 
 	pr "registro/sql/personnes"
-	"registro/utils"
 	tu "registro/utils/testutils"
 )
 
@@ -17,15 +16,14 @@ func TestRechercheRapide(t *testing.T) {
 
 	m, err := pr.SelectAllPersonnes(db)
 	tu.AssertNoErr(t, err)
-	personnes := utils.MapValues(m)
 
 	s := time.Now()
-	res := Filter(personnes, "benoît kug")
+	res := FilterPersonnes(m, "benoît kug")
 	fmt.Println("filtered personnes in", time.Since(s))
 	tu.Assert(t, len(res) > 0)
 
-	tu.Assert(t, len(Filter(personnes, "*")) == len(personnes))
-	tu.Assert(t, len(Filter(personnes, "")) == len(personnes))
+	tu.Assert(t, len(FilterPersonnes(m, "*")) == len(m))
+	tu.Assert(t, len(FilterPersonnes(m, "")) == len(m))
 
 	// s = time.Now()
 	// fmt.Println("nb res :", len(base.RechercheRapideCamps("C2")))

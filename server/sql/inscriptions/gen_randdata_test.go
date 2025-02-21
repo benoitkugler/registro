@@ -20,7 +20,7 @@ func randInscription() Inscription {
 	s.Id = randIdInscription()
 	s.IdTaux = randdos_IdTaux()
 	s.Responsable = randResponsableLegal()
-	s.ResponsablePreIdent = randOptIdPersonne()
+	s.ResponsablePreIdent = randper_OptIdPersonne()
 	s.Message = randstring()
 	s.CopiesMails = randper_Mails()
 	s.PartageAdressesOK = randbool()
@@ -36,20 +36,12 @@ func randInscriptionParticipant() InscriptionParticipant {
 	s.IdInscription = randIdInscription()
 	s.IdCamp = randcam_IdCamp()
 	s.IdTaux = randdos_IdTaux()
-	s.PreIdent = randOptIdPersonne()
+	s.PreIdent = randper_OptIdPersonne()
 	s.Nom = randstring()
 	s.Prenom = randstring()
 	s.DateNaissance = randsha_Date()
 	s.Sexe = randper_Sexe()
 	s.Nationnalite = randper_Nationnalite()
-
-	return s
-}
-
-func randOptIdPersonne() OptIdPersonne {
-	var s OptIdPersonne
-	s.Id = randper_IdPersonne()
-	s.Valid = randbool()
 
 	return s
 }
@@ -108,6 +100,14 @@ func randper_Nationnalite() personnes.Nationnalite {
 	choix := [...]personnes.Nationnalite{personnes.Autre, personnes.Francaise, personnes.Suisse}
 	i := rand.Intn(len(choix))
 	return choix[i]
+}
+
+func randper_OptIdPersonne() personnes.OptIdPersonne {
+	var s personnes.OptIdPersonne
+	s.Id = randper_IdPersonne()
+	s.Valid = randbool()
+
+	return s
 }
 
 func randper_Pays() personnes.Pays {

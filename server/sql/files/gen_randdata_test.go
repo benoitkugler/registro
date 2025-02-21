@@ -19,7 +19,7 @@ func randDemande() Demande {
 	var s Demande
 	s.Id = randIdDemande()
 	s.IdFile = randOptIdFile()
-	s.IdDirecteur = randOptIdPersonne()
+	s.IdDirecteur = randper_OptIdPersonne()
 	s.Categorie = randCategorie()
 	s.Description = randstring()
 	s.MaxDocs = randint()
@@ -97,14 +97,6 @@ func randOptIdFile() OptIdFile {
 	return s
 }
 
-func randOptIdPersonne() OptIdPersonne {
-	var s OptIdPersonne
-	s.Id = randper_IdPersonne()
-	s.Valid = randbool()
-
-	return s
-}
-
 func randbool() bool {
 	i := rand.Int31n(2)
 	return i == 1
@@ -132,6 +124,14 @@ func randint64() int64 {
 
 func randper_IdPersonne() personnes.IdPersonne {
 	return personnes.IdPersonne(randint64())
+}
+
+func randper_OptIdPersonne() personnes.OptIdPersonne {
+	var s personnes.OptIdPersonne
+	s.Id = randper_IdPersonne()
+	s.Valid = randbool()
+
+	return s
 }
 
 var letterRunes2 = []rune("azertyuiopqsdfghjklmwxcvbn123456789é@!?&èïab ")

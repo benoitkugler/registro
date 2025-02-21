@@ -5,6 +5,9 @@ package personnes
 type IdPersonne int64
 
 // Personne représente les attributs d'une personne
+//
+// required by Fichesanitaire
+// gomacro:SQL ADD UNIQUE(Id, IsTemp)
 type Personne struct {
 	Id IdPersonne
 
@@ -43,6 +46,9 @@ func SelectByMail(db DB, mail string) (Personnes, error) {
 // the complete document.
 //
 // gomacro:SQL ADD UNIQUE(IdPersonne)
+//
+// Temp people must not have one Fichesanitaire
+// gomacro:SQL ADD FOREIGN KEY (IdPersonne, guard) REFERENCES Personne(Id,IsTemp)
 type Fichesanitaire struct {
 	IdPersonne IdPersonne `gomacro-sql-on-delete:"CASCADE"`
 
@@ -57,4 +63,6 @@ type Fichesanitaire struct {
 
 	LastModif Time  // dernière modification
 	Mails     Mails // owners
+
+	guard bool `gomacro-sql-guard:"false"`
 }

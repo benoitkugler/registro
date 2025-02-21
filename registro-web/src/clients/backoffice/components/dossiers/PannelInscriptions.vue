@@ -19,6 +19,7 @@
           v-for="(insc, i) in data"
           :key="i"
           :inscription="insc"
+          @identifie="(v) => identifie(insc.Dossier.Id, v)"
         ></InscriptionRow>
       </div>
     </v-card-text>
@@ -28,7 +29,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { controller } from "../../logic/logic";
-import type { Inscription } from "../../logic/api";
+import type { IdDossier, IdentTarget, Inscription } from "../../logic/api";
 import InscriptionRow from "./InscriptionRow.vue";
 const props = defineProps<{}>();
 
@@ -44,5 +45,17 @@ async function fetchInscriptions() {
   isLoading.value = false;
   if (res === undefined) return;
   data.value = res || [];
+}
+
+async function identifie(id: IdDossier, target: IdentTarget) {
+  const res = await controller.InscriptionsIdentifiePersonne({
+    IdDossier: id,
+    Target: target,
+  });
+  if (res === undefined) return;
+
+  controller.showMessage("Profil identifié avec succès.");
+  const index = data.value.findIndex((insc) => insc.Dossier.Id == id);
+  data.value[index] = res;
 }
 </script>

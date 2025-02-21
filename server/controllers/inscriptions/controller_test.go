@@ -253,7 +253,7 @@ func TestController_confirmeInscription(t *testing.T) {
 	tu.AssertErr(t, err)
 }
 
-// This test is more of a command helper for developping,
+// This test is a command helper for developping,
 // to generate on demande new inscriptions
 func TestDebug_createInscription(t *testing.T) {
 	t.Skip("dev only test")
@@ -275,10 +275,11 @@ func TestDebug_createInscription(t *testing.T) {
 		Responsable: in.ResponsableLegal{
 			Nom: "Kug", Prenom: "Ben",
 			DateNaissance: shared.NewDate(2000, 1, 1),
+			Sexe:          pr.Man,
 		},
 		Participants: []Participant{
 			{IdCamp: camp.Id, DateNaissance: shared.Date(time.Now()), Nom: "Martin", Prenom: "Pierre"},
-			{IdCamp: camp.Id, DateNaissance: shared.Date(time.Now()), Nom: "Martin", Prenom: "Julie"},
+			{IdCamp: camp.Id, DateNaissance: shared.Date(time.Now()), Nom: "Martin", Prenom: "Julie", Sexe: pr.Woman},
 		},
 		Message: utils.RandString(30, true) + "\n" + utils.RandString(10, true),
 	})

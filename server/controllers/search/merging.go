@@ -16,41 +16,22 @@ import (
 // et de façon semi-automatique sur le client pour rapprocher
 // une personne temporaire d'une personne existante.
 
-// TODO: cleanup ?
-
-// IdentResult est une union décrivant le résultat
-// d'une identification ("vers un nouveau profil" ou "rapprochement")
-type IdentResult interface {
-	isIdentResult()
-}
-
-type NouveauProfil struct{}
-
-func (NouveauProfil) isIdentResult() {}
-
-type Rattache struct {
-	IdTarget      pr.IdPersonne // la personne à laquelle se rattacher
-	Modifications pr.Etatcivil  // le résultat de la fusion, à appliquer à la cible
-}
-
-func (Rattache) isIdentResult() {}
-
 // résultat d'une comparaison
 type diff uint8
 
 const (
-	inZero    diff = iota // la valeur entrante est vide
-	existZero             // la valeur existante est vide
-	equal                 // les deux valeurs sont similaires
-	conflict              // les deux valeurs sont vraiments différentes
+	entrantEmpty  diff = iota // la valeur entrante est vide
+	existantEmpty             // la valeur existante est vide
+	equal                     // les deux valeurs sont similaires
+	conflict                  // les deux valeurs sont vraiments différentes
 )
 
 func cmpString[T interface{ ~string }](s1, s2 T) diff {
 	if s1 == "" {
-		return inZero
+		return entrantEmpty
 	}
 	if s2 == "" {
-		return existZero
+		return existantEmpty
 	}
 	ss1 := strings.Replace(utils.Normalize(string(s1)), " ", "", -1)
 	ss2 := strings.Replace(utils.Normalize(string(s2)), " ", "", -1)
@@ -62,10 +43,10 @@ func cmpString[T interface{ ~string }](s1, s2 T) diff {
 
 func cmpTels(t1, t2 pr.Tels) diff {
 	if len(t1) == 0 {
-		return inZero
+		return entrantEmpty
 	}
 	if len(t2) == 0 {
-		return existZero
+		return existantEmpty
 	}
 	uniques1, uniques2 := make(map[string]bool), make(map[string]bool)
 	for _, t := range t1 {
@@ -97,10 +78,10 @@ func cmpBool(in, out bool) diff {
 func cmpDate(in, out shared.Date) diff {
 	in_, out_ := in.Time(), out.Time()
 	if in_.IsZero() {
-		return inZero
+		return entrantEmpty
 	}
 	if out_.IsZero() {
-		return existZero
+		return existantEmpty
 	}
 	if in_.Equal(out_) {
 		return equal
@@ -114,10 +95,10 @@ type fieldEnum interface {
 
 func cmpEnum[T fieldEnum](in, out T) diff {
 	if in == 0 {
-		return inZero
+		return entrantEmpty
 	}
 	if out == 0 {
-		return existZero
+		return existantEmpty
 	}
 	if in == out {
 		return equal
@@ -186,9 +167,9 @@ func cmpGeneric[T fields](entrant, existant T) diff {
 func choose[T fields](entrant, existant T) (T, bool) {
 	d := cmpGeneric(entrant, existant)
 	switch d {
-	case inZero: // on garde l'existant
+	case entrantEmpty: // on garde l'existant
 		return existant, false
-	case existZero: // on ecrase l'existant
+	case existantEmpty: // on ecrase l'existant
 		return entrant, false
 	case equal: // on ecrase (c'est plus cohérent avec l'attente utilisateur)
 		return entrant, false

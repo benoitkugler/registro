@@ -2328,3 +2328,13 @@ func (s OptionnalPlage) Value() (driver.Value, error) { return dumpJSON(s) }
 
 func (s *Remises) Scan(src interface{}) error  { return loadJSON(s, src) }
 func (s Remises) Value() (driver.Value, error) { return dumpJSON(s) }
+
+func SwitchEquipierPersonne(db DB, target personnes.IdPersonne, temporaire personnes.IdPersonne) error {
+	_, err := db.Exec("UPDATE equipiers SET IdPersonne = $1 WHERE IdPersonne = $2;", target, temporaire)
+	return err
+}
+
+func SwitchParticipantPersonne(db DB, target personnes.IdPersonne, temporaire personnes.IdPersonne) error {
+	_, err := db.Exec("UPDATE participants SET IdPersonne = $1 WHERE IdPersonne = $2;", target, temporaire)
+	return err
+}

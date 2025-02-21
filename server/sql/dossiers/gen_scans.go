@@ -704,3 +704,8 @@ func (s IdTauxSet) Keys() []IdTaux {
 	}
 	return out
 }
+
+func SwitchDossierPersonne(db DB, target personnes.IdPersonne, temporaire personnes.IdPersonne) error {
+	_, err := db.Exec("UPDATE dossiers SET IdResponsable = $1 WHERE IdResponsable = $2;", target, temporaire)
+	return err
+}

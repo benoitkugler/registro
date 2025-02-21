@@ -6,7 +6,7 @@ import (
 	"time"
 
 	cps "registro/sql/camps"
-	"registro/sql/personnes"
+	pr "registro/sql/personnes"
 )
 
 type (
@@ -44,6 +44,8 @@ func NewFile(fileContent []byte, filename string) File {
 // gomacro:SQL ADD CONSTRAINT constraint_categorie CHECK(Categorie = 0 OR IdDirecteur IS NULL)
 // gomacro:SQL ADD CONSTRAINT constraint_maxdocs CHECK(MaxDocs >= 1)
 // gomacro:SQL CREATE UNIQUE INDEX ON Demande(Categorie) WHERE Categorie <> 0
+//
+// gomacro:QUERY SwitchDemandePersonne UPDATE Demande SET IdDirecteur = $target$ WHERE IdDirecteur = $temporaire$;
 type Demande struct {
 	Id IdDemande
 
@@ -52,7 +54,7 @@ type Demande struct {
 
 	// Pour les demandes 'custom', le directeur proprietaire de la contrainte
 	// ou vide pour indiquer une contrainte commune à tous les séjours
-	IdDirecteur OptIdPersonne `gomacro-sql-on-delete:"CASCADE" gomacro-sql-foreign:"Personne"`
+	IdDirecteur pr.OptIdPersonne `gomacro-sql-on-delete:"CASCADE" gomacro-sql-foreign:"Personne"`
 
 	Categorie Categorie
 
@@ -99,9 +101,11 @@ type FileCamp struct {
 // FilePersonne est une table de lien pour les documents liés aux personnes.
 //
 // gomacro:SQL ADD UNIQUE(IdFile)
+//
+// gomacro:QUERY SwitchFilePersonnePersonne UPDATE FilePersonne SET IdPersonne = $target$ WHERE IdPersonne = $temporaire$;
 type FilePersonne struct {
 	IdFile     IdFile `gomacro-sql-on-delete:"CASCADE"`
-	IdPersonne personnes.IdPersonne
+	IdPersonne pr.IdPersonne
 	IdDemande  IdDemande
 }
 

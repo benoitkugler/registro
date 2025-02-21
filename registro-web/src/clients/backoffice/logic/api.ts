@@ -29,12 +29,35 @@ export interface CampsSetTauxIn {
   IdCamp: IdCamp;
   Taux: Taux;
 }
+// registro/controllers/backoffice.IdentTarget
+export interface IdentTarget {
+  IdTemporaire: IdPersonne;
+  Rattache: boolean;
+  RattacheTo: IdPersonne;
+}
 // registro/controllers/backoffice.Inscription
 export interface Inscription {
   Dossier: Dossier;
   Message: string;
   Responsable: Personne;
   Participants: ParticipantExt[] | null;
+}
+// registro/controllers/backoffice.InscriptionIdentifieIn
+export interface InscriptionIdentifieIn {
+  IdDossier: IdDossier;
+  Target: IdentTarget;
+}
+// registro/controllers/search.PersonneHeader
+export interface PersonneHeader {
+  Id: IdPersonne;
+  Label: string;
+  Sexe: Sexe;
+  DateNaissance: Date;
+}
+// registro/controllers/search.ScoredPersonne
+export interface ScoredPersonne {
+  ScorePercent: Int;
+  Personne: PersonneHeader;
 }
 // registro/sql/camps.Bus
 export const Bus = {
@@ -226,6 +249,7 @@ export interface Dossier {
   IdResponsable: IdPersonne;
   CopiesMails: Mails;
   PartageAdressesOK: boolean;
+  DemandeFondSoutien: boolean;
   IsValidated: boolean;
   MomentInscription: Time;
   LastConnection: Time;
@@ -564,6 +588,74 @@ export abstract class AbstractAPI {
     this.startRequest();
     try {
       const out = await this.rawInscriptionsGet();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected async rawInscriptionsSearchSimilaires(params: {
+    "id-personne": Int;
+  }) {
+    const fullUrl =
+      this.baseUrl + "/api/v1/backoffice/inscriptions/search-similaires";
+    const rep: AxiosResponse<ScoredPersonne[] | null> = await Axios.get(
+      fullUrl,
+      {
+        headers: this.getHeaders(),
+        params: { "id-personne": String(params["id-personne"]) },
+      },
+    );
+    return rep.data;
+  }
+
+  /** InscriptionsSearchSimilaires wraps rawInscriptionsSearchSimilaires and handles the error */
+  async InscriptionsSearchSimilaires(params: { "id-personne": Int }) {
+    this.startRequest();
+    try {
+      const out = await this.rawInscriptionsSearchSimilaires(params);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected async rawInscriptionsSearchPersonnes(params: { pattern: string }) {
+    const fullUrl =
+      this.baseUrl + "/api/v1/backoffice/inscriptions/search-personnes";
+    const rep: AxiosResponse<PersonneHeader[] | null> = await Axios.get(
+      fullUrl,
+      { headers: this.getHeaders(), params: { pattern: params["pattern"] } },
+    );
+    return rep.data;
+  }
+
+  /** InscriptionsSearchPersonnes wraps rawInscriptionsSearchPersonnes and handles the error */
+  async InscriptionsSearchPersonnes(params: { pattern: string }) {
+    this.startRequest();
+    try {
+      const out = await this.rawInscriptionsSearchPersonnes(params);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected async rawInscriptionsIdentifiePersonne(
+    params: InscriptionIdentifieIn,
+  ) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/inscriptions/identifie";
+    const rep: AxiosResponse<Inscription> = await Axios.post(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** InscriptionsIdentifiePersonne wraps rawInscriptionsIdentifiePersonne and handles the error */
+  async InscriptionsIdentifiePersonne(params: InscriptionIdentifieIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawInscriptionsIdentifiePersonne(params);
       return out;
     } catch (error) {
       this.handleError(error);

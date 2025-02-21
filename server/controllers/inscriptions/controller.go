@@ -543,13 +543,13 @@ func (ct *Controller) saveInscription(host string, publicInsc Inscription) (err 
 
 const queryParamIdInscription = "insc-token"
 
-func (ct *Controller) decodePreIdent(crypted string) (in.OptIdPersonne, error) {
+func (ct *Controller) decodePreIdent(crypted string) (pr.OptIdPersonne, error) {
 	if crypted == "" { // pas de pré identification
-		return in.OptIdPersonne{}, nil
+		return pr.OptIdPersonne{}, nil
 	}
 
 	id, err := crypto.DecryptID[pr.IdPersonne](ct.key, crypted)
-	return in.OptIdPersonne{Id: id, Valid: true}, err
+	return id.Opt(), err
 }
 
 const EndpointEspacePerso = "espace-perso"
@@ -594,7 +594,7 @@ func (ct *Controller) confirmeInscription(id in.IdInscription) (ds.Dossier, erro
 
 	type identifiedPersonne struct {
 		personne pr.Personne
-		preIdent in.OptIdPersonne
+		preIdent pr.OptIdPersonne
 	}
 
 	var (

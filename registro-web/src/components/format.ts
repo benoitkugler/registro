@@ -1,3 +1,5 @@
+import { Sexe } from "@/clients/backoffice/logic/api";
+
 const reSepTel = /[ -/;\t]/g;
 
 function splitBySize(a: string) {
@@ -41,3 +43,14 @@ export function formatDate(date: Date, showYear = false, showWeekday = true) {
 }
 
 const _weekdays = ["Dim.", "Lun.", "Mar.", "Mer.", "Jeu.", "Ven.", "Sam."];
+
+export function sexeIcon(s: Sexe) {
+  switch (s) {
+    case Sexe.Empty:
+      return "";
+    case Sexe.Man:
+      return "mdi-gender-male";
+    case Sexe.Woman:
+      return "mdi-gender-female";
+  }
+}

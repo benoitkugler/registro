@@ -16,7 +16,8 @@ CREATE TABLE fichesanitaires (
     Tel text NOT NULL,
     Medecin jsonb NOT NULL,
     LastModif timestamp(0) with time zone NOT NULL,
-    Mails text[]
+    Mails text[],
+    guard boolean NOT NULL
 );
 
 CREATE TABLE personnes (
@@ -246,7 +247,8 @@ CREATE TABLE inscriptions (
     PartageAdressesOK boolean NOT NULL,
     DemandeFondSoutien boolean NOT NULL,
     DateHeure timestamp(0) with time zone NOT NULL,
-    IsConfirmed boolean NOT NULL
+    IsConfirmed boolean NOT NULL,
+    guard boolean NOT NULL
 );
 
 CREATE TABLE inscription_participants (
@@ -258,7 +260,8 @@ CREATE TABLE inscription_participants (
     Prenom text NOT NULL,
     DateNaissance date NOT NULL,
     Sexe smallint CHECK (Sexe IN (0, 1, 2)) NOT NULL,
-    Nationnalite smallint CHECK (Nationnalite IN (0, 1, 2)) NOT NULL
+    Nationnalite smallint CHECK (Nationnalite IN (0, 1, 2)) NOT NULL,
+    guard boolean NOT NULL
 );
 
 CREATE TABLE events (

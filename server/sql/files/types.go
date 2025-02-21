@@ -4,14 +4,11 @@ import (
 	"fmt"
 
 	cp "registro/sql/camps"
-	"registro/sql/personnes"
 	"registro/sql/shared"
 	"registro/utils"
 )
 
 type OptIdFile shared.OptID[IdFile]
-
-type OptIdPersonne shared.OptID[personnes.IdPersonne]
 
 type Categorie uint8
 

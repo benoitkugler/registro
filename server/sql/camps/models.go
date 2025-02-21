@@ -80,6 +80,8 @@ type LettreImage struct {
 //
 // Requise par la contrainte GroupeParticipant
 // gomacro:SQL ADD UNIQUE(Id, IdCamp)
+//
+// gomacro:QUERY SwitchParticipantPersonne UPDATE Participant SET IdPersonne = $target$ WHERE IdPersonne = $temporaire$;
 type Participant struct {
 	Id         IdParticipant
 	IdCamp     IdCamp
@@ -140,6 +142,8 @@ type GroupeParticipant struct {
 //
 // gomacro:SQL ADD UNIQUE(IdCamp, IdPersonne)
 // gomacro:SQL CREATE UNIQUE INDEX ON Equipier(IdCamp) WHERE #[Role.Direction] = ANY(Roles)
+//
+// gomacro:QUERY SwitchEquipierPersonne UPDATE Equipier SET IdPersonne = $target$ WHERE IdPersonne = $temporaire$;
 type Equipier struct {
 	Id         IdEquipier
 	IdCamp     IdCamp        `gomacro-sql-on-delete:"CASCADE"`
