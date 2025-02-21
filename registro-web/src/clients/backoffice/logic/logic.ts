@@ -2,10 +2,18 @@ import { parseError } from "@/utils";
 import { AbstractAPI, type CampExt } from "./api";
 import { devToken } from "./env";
 
+export type Action = {
+  title: string;
+  action: () => void;
+};
 class Controller extends AbstractAPI {
   constructor(
     public onError: (kind: string, htmlError: string) => void,
-    public showMessage: (message: string, color?: string) => void,
+    public showMessage: (
+      message: string,
+      color?: string,
+      action?: Action
+    ) => void,
     baseUrl: string,
     authToken: string
   ) {

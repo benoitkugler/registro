@@ -60,6 +60,8 @@ func (ct *Controller) loadInscriptionsContent(ids ...ds.IdDossier) ([]Inscriptio
 			})
 		}
 
+		slices.SortFunc(ps, func(a, b cps.ParticipantExt) int { return int(a.Participant.Id - b.Participant.Id) })
+
 		var message string
 		if l := ld.events.EventsFor(dossier.Id).By(evs.Message); len(l) != 0 {
 			content := l[0].Content.(evAPI.Message).Message

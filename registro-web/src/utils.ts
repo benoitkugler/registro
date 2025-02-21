@@ -1,3 +1,4 @@
+import type { Personne } from "./clients/backoffice/logic/api";
 import type { Date_, Int } from "./clients/inscription/logic/api";
 import { newDate_ } from "./components/date";
 import { formatDate } from "./components/format";
@@ -155,6 +156,14 @@ export namespace Camps {
   export function match(camp: Camp, normalizedPattern: string) {
     if (normalizedPattern == "") return true;
     const str = normalize(label(camp) + camp.Lieu);
+    return str.includes(normalizedPattern);
+  }
+}
+
+export namespace Personnes {
+  export function match(pr: Personne, normalizedPattern: string) {
+    if (normalizedPattern == "") return true;
+    const str = normalize(pr.Nom + pr.Prenom);
     return str.includes(normalizedPattern);
   }
 }

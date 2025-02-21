@@ -266,20 +266,22 @@ func TestDebug_createInscription(t *testing.T) {
 
 	ct := NewController(db, crypto.Encrypter{}, creds, cfg)
 
-	// assume we already have one camp
+	// assume we already have two camps
 	camps, _, _, _, err := ct.loadCamps()
 	tu.AssertNoErr(t, err)
-	camp := camps[camps.IDs()[0]]
+	campIds := camps.IDs()
+	c1, c2 := campIds[0], campIds[1]
 
 	insc, participants, err := ct.buildInscription(Inscription{
 		Responsable: in.ResponsableLegal{
-			Nom: "Kug", Prenom: "Ben",
+			Nom: "Yamina", Prenom: utils.RandString(10, false),
 			DateNaissance: shared.NewDate(2000, 1, 1),
 			Sexe:          pr.Man,
 		},
 		Participants: []Participant{
-			{IdCamp: camp.Id, DateNaissance: shared.Date(time.Now()), Nom: "Martin", Prenom: "Pierre"},
-			{IdCamp: camp.Id, DateNaissance: shared.Date(time.Now()), Nom: "Martin", Prenom: "Julie", Sexe: pr.Woman},
+			{IdCamp: c1, DateNaissance: shared.Date(time.Now()), Nom: "Martin", Prenom: "Pierre"},
+			{IdCamp: c1, DateNaissance: shared.Date(time.Now()), Nom: "Martin", Prenom: "Julie", Sexe: pr.Woman},
+			{IdCamp: c2, DateNaissance: shared.Date(time.Now()), Nom: "Martin", Prenom: "Julie", Sexe: pr.Woman},
 		},
 		Message: utils.RandString(30, true) + "\n" + utils.RandString(10, true),
 	})

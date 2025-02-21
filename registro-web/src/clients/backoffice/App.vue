@@ -14,6 +14,13 @@
         close-on-content-click
       >
         {{ message }}
+        <v-btn
+          v-if="messageAction"
+          @click="messageAction.action()"
+          class="ml-2"
+        >
+          {{ messageAction.title }}
+        </v-btn>
       </v-snackbar>
 
       <v-snackbar
@@ -35,10 +42,11 @@
 
 <script lang="ts" setup>
 import { ref } from "vue";
-import { controller } from "./logic/logic";
+import { controller, type Action } from "./logic/logic";
 
 const message = ref("");
 const messageColor = ref("secondary");
+const messageAction = ref<Action | undefined>(undefined);
 
 const errorKind = ref("");
 const errorHtml = ref("");
@@ -48,8 +56,9 @@ controller.onError = (s, m) => {
   errorHtml.value = m;
 };
 
-controller.showMessage = (s, color) => {
+controller.showMessage = (s, color, action) => {
   message.value = s;
   messageColor.value = color || "success";
+  messageAction.value = action;
 };
 </script>

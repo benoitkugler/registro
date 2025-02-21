@@ -4,6 +4,14 @@
       new Date(props.inscription.Dossier.MomentInscription).toLocaleString()
     "
   >
+    <template v-slot:append>
+      <v-btn :disabled="!allIdentified" @click="emit('valide')">
+        <template v-slot:prepend>
+          <v-icon>mdi-check</v-icon>
+        </template>
+        Valider</v-btn
+      >
+    </template>
     <v-card-text>
       <v-row>
         <v-col cols="7">
@@ -56,11 +64,19 @@
 import { Camps } from "@/utils";
 import { type IdentTarget, type Inscription } from "../../logic/api";
 import InscriptionEtatcivilCols from "./InscriptionEtatcivilCols.vue";
+import { computed } from "vue";
 const props = defineProps<{
   inscription: Inscription;
 }>();
 
 const emit = defineEmits<{
   (e: "identifie", params: IdentTarget): void;
+  (e: "valide"): void;
 }>();
+
+const allIdentified = computed(
+  () =>
+    !props.inscription.Responsable.IsTemp &&
+    !!props.inscription.Participants?.every((pr) => !pr.Personne.IsTemp)
+);
 </script>

@@ -4,14 +4,14 @@
   </NavBar>
 
   <v-tabs grow v-model="tab">
-    <v-tab value="1">Nouvelles inscriptions</v-tab>
-    <v-tab value="2">Suivi des dossiers</v-tab>
+    <v-tab value="insc">Nouvelles inscriptions</v-tab>
+    <v-tab value="doss">Suivi des dossiers</v-tab>
   </v-tabs>
   <v-tabs-window v-model="tab">
-    <v-tabs-window-item value="1">
-      <PannelInscriptions></PannelInscriptions>
+    <v-tabs-window-item value="insc">
+      <PannelInscriptions @go-to="goToDossier"></PannelInscriptions>
     </v-tabs-window-item>
-    <v-tabs-window-item value="2">
+    <v-tabs-window-item value="doss">
       <PannelDossiers></PannelDossiers>
     </v-tabs-window-item>
   </v-tabs-window>
@@ -20,8 +20,14 @@
 <script lang="ts" setup>
 import { ref } from "vue";
 import NavBar from "../components/NavBar.vue";
-import PannelInscriptions from "../components/dossiers/PannelInscriptions.vue";
-import PannelDossiers from "../components/dossiers/PannelDossiers.vue";
+import PannelInscriptions from "../components/inscriptions/PannelInscriptions.vue";
+import PannelDossiers from "../components/inscriptions/PannelDossiers.vue";
+import type { IdDossier } from "../logic/api";
 
-const tab = ref("1");
+const tab = ref<"insc" | "doss">("insc");
+
+function goToDossier(id: IdDossier) {
+  tab.value = "doss";
+  // TODO: select the proper one
+}
 </script>

@@ -6,6 +6,7 @@
         append-inner-icon="mdi-magnify"
         label="Rechercher"
         hide-details
+        v-model="search"
       ></v-text-field>
     </template>
     <v-card-text>
@@ -16,10 +17,11 @@
       <div v-else>
         <InscriptionRow
           class="my-1"
-          v-for="(insc, i) in data"
+          v-for="(insc, i) in displayed"
           :key="i"
           :inscription="insc"
           @identifie="(v) => identifie(insc.Dossier.Id, v)"
+          @valide="valide(insc.Dossier.Id)"
         ></InscriptionRow>
       </div>
     </v-card-text>
@@ -27,11 +29,17 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, computed, ref } from "vue";
 import { controller } from "../../logic/logic";
 import type { IdDossier, IdentTarget, Inscription } from "../../logic/api";
 import InscriptionRow from "./InscriptionRow.vue";
+import { normalize, Personnes, Camps } from "@/utils";
+
 const props = defineProps<{}>();
+
+const emit = defineEmits<{
+  (e: "goTo", id: IdDossier): void;
+}>();
 
 const isLoading = ref(false);
 
@@ -47,6 +55,20 @@ async function fetchInscriptions() {
   data.value = res || [];
 }
 
+const search = ref("");
+const displayed = computed(() => {
+  const pattern = normalize(search.value);
+  return data.value.filter((insc) => {
+    return (
+      Personnes.match(insc.Responsable, pattern) ||
+      insc.Participants?.some(
+        (p) =>
+          Personnes.match(p.Personne, pattern) || Camps.match(p.Camp, pattern)
+      )
+    );
+  });
+});
+
 async function identifie(id: IdDossier, target: IdentTarget) {
   const res = await controller.InscriptionsIdentifiePersonne({
     IdDossier: id,
@@ -57,5 +79,19 @@ async function identifie(id: IdDossier, target: IdentTarget) {
   controller.showMessage("Profil identifié avec succès.");
   const index = data.value.findIndex((insc) => insc.Dossier.Id == id);
   data.value[index] = res;
+}
+
+async function valide(id: IdDossier) {
+  const res = await controller.InscriptionsValide({
+    "id-dossier": id,
+  });
+  if (res === undefined) return;
+  controller.showMessage("Inscription validée avec succès.", "", {
+    title: "Aller au dossier",
+    action: () => emit("goTo", id),
+  });
+
+  // delete from this view
+  data.value = data.value.filter((insc) => insc.Dossier.Id != id);
 }
 </script>
