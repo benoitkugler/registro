@@ -63,7 +63,7 @@ func (ct *Controller) getCamps() ([]CampHeader, error) {
 
 	out := make([]CampHeader, 0, len(camps))
 	for _, camp := range camps {
-		loader := cp.CampLoader{Camp: &camp, Participants: byCamp[camp.Id], Personnes: personnes}
+		loader := cp.CampLoader{Camp: camp, Participants: byCamp[camp.Id], Personnes: personnes}
 		out = append(out, CampHeader{camp.Ext(), taux[camp.IdTaux], loader.Stats()})
 	}
 	return out, nil

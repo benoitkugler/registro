@@ -30,6 +30,7 @@ func main() {
 	// TODO: setup APIS
 	joomeo, helloasso := config.Joomeo{}, config.Helloasso{}
 
+	fmt.Println("Connecting to DB", dbCreds.Name, "at", dbCreds.Host)
 	db, err := dbCreds.ConnectPostgres()
 	check(err)
 	check(db.Ping())

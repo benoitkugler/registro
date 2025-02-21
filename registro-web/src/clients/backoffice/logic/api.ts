@@ -89,6 +89,7 @@ export interface Camp {
   Places: Int;
   AgeMin: Int;
   AgeMax: Int;
+  NeedEquilibreGF: boolean;
   Ouvert: boolean;
   Prix: Montant;
   OptionPrix: OptionPrixCamp;
@@ -656,6 +657,26 @@ export abstract class AbstractAPI {
     this.startRequest();
     try {
       const out = await this.rawInscriptionsIdentifiePersonne(params);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected async rawInscriptionsValide(params: { "id-dossier": Int }) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/inscriptions/valide";
+    await Axios.post(fullUrl, null, {
+      headers: this.getHeaders(),
+      params: { "id-dossier": String(params["id-dossier"]) },
+    });
+    return true;
+  }
+
+  /** InscriptionsValide wraps rawInscriptionsValide and handles the error */
+  async InscriptionsValide(params: { "id-dossier": Int }) {
+    this.startRequest();
+    try {
+      const out = await this.rawInscriptionsValide(params);
       return out;
     } catch (error) {
       this.handleError(error);

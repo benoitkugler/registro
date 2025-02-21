@@ -62,7 +62,7 @@ func (p ParticipantExt) add(stats *StatistiquesInscrits) {
 // CampLoader permet d'accéder à diverses
 // propriété d'un séjour nécessitant la liste des inscrits.
 type CampLoader struct {
-	Camp         *Camp
+	Camp         Camp
 	Participants Participants // liste (exacte) des participants du camp
 	// Doit contenir au moins les participants
 	Personnes pr.Personnes
@@ -71,10 +71,76 @@ type CampLoader struct {
 func (cd CampLoader) Stats() StatistiquesInscrits {
 	var stats StatistiquesInscrits
 	for _, participant := range cd.Participants {
-		ext := ParticipantExt{*cd.Camp, participant, cd.Personnes[participant.IdPersonne]}
+		ext := ParticipantExt{cd.Camp, participant, cd.Personnes[participant.IdPersonne]}
 		ext.add(&stats)
 	}
 	return stats
+}
+
+// restePlace vaut `true` si l'ajout de participants
+// ne dépasse pas le nombre de places autorisées
+func (cd *Camp) restePlace(stats StatistiquesInscrits, participants []pr.Personne) bool {
+	current := stats.Valides
+	return current+len(participants) <= cd.Places
+}
+
+// keepEquilibreGF renvoie `true` si l'ajout des [participants]
+// ne perturbe pas l'équilibre G/F (ou si le camp ne demande pas d'équilibre).
+func (cd *Camp) keepEquilibreGF(stats StatistiquesInscrits, participants []pr.Personne) bool {
+	if !cd.NeedEquilibreGF {
+		return true
+	}
+	var newG, newF int
+	for _, p := range participants {
+		if p.Sexe == pr.Woman {
+			newF += 1
+		} else {
+			newG += 1
+		}
+	}
+	currentG, currentF := stats.Valides-stats.ValidesFilles, stats.ValidesFilles
+	// on utilise l'heuristique suivante :
+	// dépasser 2/3 des places prévues détruit l'équilibre
+	seuil := cd.Places * 2 / 3
+	return currentG+newG <= seuil && currentF+newF <= seuil
+}
+
+// Statut expose une série de critère
+// de validité pour l'inscription d'un participant à un camp
+type Statut struct {
+	AgeMin, AgeMax, EquilibreGF, Place bool
+}
+
+// Hint renvoie comment placer le participant
+func (s Statut) Hint() ListeAttente {
+	if !(s.AgeMin && s.AgeMax) {
+		return AttenteProfilInvalide
+	}
+	if !(s.Place && s.EquilibreGF) {
+		return AttenteCampComplet
+	}
+	return Inscrit
+}
+
+// Status détermine la validité de l'inscription des personnes
+// données par [participants], renvoyant une liste de la même longueur
+func (cd CampLoader) Status(participants []pr.Personne) []Statut {
+	stats := cd.Stats()
+
+	restePlace := cd.Camp.restePlace(stats, participants)
+	equilibreGF := cd.Camp.keepEquilibreGF(stats, participants)
+
+	out := make([]Statut, len(participants))
+	for i, part := range participants {
+		isMinValid, isMaxValid := cd.Camp.IsAgeValide(part.DateNaissance)
+		out[i] = Statut{
+			AgeMin:      isMinValid,
+			AgeMax:      isMaxValid,
+			Place:       restePlace,
+			EquilibreGF: equilibreGF,
+		}
+	}
+	return out
 }
 
 // Label renvoie une description courte : Nom Année

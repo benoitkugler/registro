@@ -44,47 +44,24 @@ func (ct *Controller) getInscriptions() ([]Inscription, error) {
 }
 
 func (ct *Controller) loadInscriptionsContent(ids ...ds.IdDossier) ([]Inscription, error) {
-	dossiers, err := ds.SelectDossiers(ct.db, ids...)
+	ld, err := newDossierLoader(ct.db, ids...)
 	if err != nil {
-		return nil, utils.SQLError(err)
+		return nil, err
 	}
 
-	// select the participants and associated people
-	links, err := cps.SelectParticipantsByIdDossiers(ct.db, ids...)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-	participants := links.ByIdDossier()
-
-	personnes, err := pr.SelectPersonnes(ct.db, append(dossiers.IdResponsables(), links.IdPersonnes()...)...)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-
-	// load the camps
-	camps, err := cps.SelectCamps(ct.db, links.IdCamps()...)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-	// load the messages
-	ld, err := evAPI.NewLoaderFor(ct.db, ids...)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-
-	out := make([]Inscription, 0, len(dossiers))
-	for _, dossier := range dossiers {
+	out := make([]Inscription, 0, len(ld.dossiers))
+	for _, dossier := range ld.dossiers {
 		var ps []cps.ParticipantExt
-		for _, part := range participants[dossier.Id] {
+		for _, part := range ld.participants[dossier.Id] {
 			ps = append(ps, cps.ParticipantExt{
 				Participant: part,
-				Camp:        camps[part.IdCamp],
-				Personne:    personnes[part.IdPersonne],
+				Camp:        ld.camps[part.IdCamp],
+				Personne:    ld.personnes[part.IdPersonne],
 			})
 		}
 
 		var message string
-		if l := ld.EventsFor(dossier.Id).By(evs.Message); len(l) != 0 {
+		if l := ld.events.EventsFor(dossier.Id).By(evs.Message); len(l) != 0 {
 			content := l[0].Content.(evAPI.Message).Message
 			if content.Origine == evs.FromEspaceperso {
 				message = content.Contenu
@@ -93,7 +70,7 @@ func (ct *Controller) loadInscriptionsContent(ids ...ds.IdDossier) ([]Inscriptio
 
 		out = append(out, Inscription{
 			Dossier:      dossier,
-			Responsable:  personnes[dossier.IdResponsable],
+			Responsable:  ld.personnes[dossier.IdResponsable],
 			Participants: ps,
 			Message:      message,
 		})
@@ -262,6 +239,82 @@ func IdentifiePersonne(db *sql.DB, args IdentTarget) error {
 		}
 
 		return nil
+	})
+
+	return err
+}
+
+// InscriptionsValide marque l'inscription comme validée, après s'être assuré
+// qu'aucune personne impliquée n'est temporaire.
+//
+// Le statut des participants est aussi mis à jour (de manière automatique).
+func (ct *Controller) InscriptionsValide(c echo.Context) error {
+	id, err := utils.QueryParamInt[ds.IdDossier](c, "id-dossier")
+	if err != nil {
+		return err
+	}
+	err = ct.valideInscription(id)
+	if err != nil {
+		return err
+	}
+	return c.NoContent(200)
+}
+
+func (ct *Controller) valideInscription(id ds.IdDossier) error {
+	ld, err := newDossierLoader(ct.db, id)
+	if err != nil {
+		return err
+	}
+	data := ld.data(id)
+
+	// on s'assure qu'aucune personne n'est temporaire
+	for _, pe := range data.personnes() {
+		if pe.IsTemp {
+			return errors.New("internal error: personne should not be temporary")
+		}
+	}
+
+	// on calcule le statut des tmp (requiert les tmp et personnes déjà inscrites)
+	tmp, err := cps.SelectParticipantsByIdCamps(ct.db, data.camps.IDs()...)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	participants := tmp.ByIdCamp()
+
+	personnes, err := pr.SelectPersonnes(ct.db, tmp.IdPersonnes()...)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	// le status est calculé camp par camp
+	byCamp := data.participants.ByIdCamp()
+
+	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
+		for idCamp, partsM := range byCamp {
+			camp := cps.CampLoader{Camp: data.camps[idCamp], Participants: participants[idCamp], Personnes: personnes}
+
+			slice := utils.MapValues(partsM)
+			incomming := make([]pr.Personne, len(slice))
+			for index, part := range slice {
+				incomming[index] = data.personnesM[part.IdPersonne]
+			}
+
+			for index, status := range camp.Status(incomming) {
+				listeAttente := status.Hint()
+				part := slice[index]
+				// update the participant
+				part.Statut = listeAttente
+				_, err = part.Update(tx)
+				if err != nil {
+					return err
+				}
+			}
+		}
+		dossier := data.dossier
+		dossier.IsValidated = true
+		_, err = dossier.Update(tx)
+
+		return err
 	})
 
 	return err
