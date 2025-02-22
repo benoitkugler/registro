@@ -67,17 +67,26 @@
           </v-col>
         </v-row>
         <v-row>
-          <v-col cols="2">
+          <v-col align-self="center" cols="2">
             <IntField
               v-model="inner.Places"
               label="Nombre de places"
             ></IntField>
           </v-col>
-          <v-col cols="2">
+          <v-col align-self="center" cols="2">
             <IntField v-model="inner.AgeMin" label="Âge minimum"></IntField>
           </v-col>
-          <v-col cols="2">
+          <v-col align-self="center" cols="2">
             <IntField v-model="inner.AgeMax" label="Âge maximum"></IntField>
+          </v-col>
+          <v-col cols="6">
+            <v-checkbox
+              v-model="inner.NeedEquilibreGF"
+              label="Equilibre G/F demandé"
+              density="compact"
+              persistent-hint
+              hint="Place un inscrit en liste d'attente en cas de déséquilibre Garçons/Filles"
+            ></v-checkbox>
           </v-col>
         </v-row>
         <v-row>

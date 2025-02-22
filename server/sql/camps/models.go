@@ -31,14 +31,18 @@ type Camp struct {
 
 	IdTaux dossiers.IdTaux
 
-	Nom             string
-	DateDebut       sh.Date
-	Duree           int // nombre de jours date et fin inclus
-	Lieu            string
-	Agrement        string
-	Description     string // Description est affichée sur le formulaire d'inscription
-	Navette         Navette
-	Places          int  // nombre de places prévues pour le séjour
+	Nom         string
+	DateDebut   sh.Date
+	Duree       int // nombre de jours date et fin inclus
+	Lieu        string
+	Agrement    string
+	Description string // Description est affichée sur le formulaire d'inscription
+	Navette     Navette
+
+	// Places est le nombre de places prévues pour le séjour
+	// Les participants sont initialement passés en liste d'attente
+	// si ce seuil est dépassé.
+	Places          int
 	AgeMin          int  // inclusif
 	AgeMax          int  // inclusif
 	NeedEquilibreGF bool // si 'true', prend en compte le nombre de garçons et filles

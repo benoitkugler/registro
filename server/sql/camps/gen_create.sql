@@ -22,6 +22,7 @@ CREATE TABLE camps (
     Places integer NOT NULL,
     AgeMin integer NOT NULL,
     AgeMax integer NOT NULL,
+    NeedEquilibreGF boolean NOT NULL,
     Ouvert boolean NOT NULL,
     Prix Montant NOT NULL,
     OptionPrix jsonb NOT NULL,

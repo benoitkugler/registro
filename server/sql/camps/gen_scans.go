@@ -236,6 +236,7 @@ func scanOneCamp(row scanner) (Camp, error) {
 		&item.Places,
 		&item.AgeMin,
 		&item.AgeMax,
+		&item.NeedEquilibreGF,
 		&item.Ouvert,
 		&item.Prix,
 		&item.OptionPrix,
@@ -249,7 +250,7 @@ func ScanCamp(row *sql.Row) (Camp, error) { return scanOneCamp(row) }
 
 // SelectAll returns all the items in the camps table.
 func SelectAllCamps(db DB) (Camps, error) {
-	rows, err := db.Query("SELECT id, idtaux, nom, datedebut, duree, lieu, agrement, description, navette, places, agemin, agemax, ouvert, prix, optionprix, optionquotientfamilial, password FROM camps")
+	rows, err := db.Query("SELECT id, idtaux, nom, datedebut, duree, lieu, agrement, description, navette, places, agemin, agemax, needequilibregf, ouvert, prix, optionprix, optionquotientfamilial, password FROM camps")
 	if err != nil {
 		return nil, err
 	}
@@ -258,13 +259,13 @@ func SelectAllCamps(db DB) (Camps, error) {
 
 // SelectCamp returns the entry matching 'id'.
 func SelectCamp(tx DB, id IdCamp) (Camp, error) {
-	row := tx.QueryRow("SELECT id, idtaux, nom, datedebut, duree, lieu, agrement, description, navette, places, agemin, agemax, ouvert, prix, optionprix, optionquotientfamilial, password FROM camps WHERE id = $1", id)
+	row := tx.QueryRow("SELECT id, idtaux, nom, datedebut, duree, lieu, agrement, description, navette, places, agemin, agemax, needequilibregf, ouvert, prix, optionprix, optionquotientfamilial, password FROM camps WHERE id = $1", id)
 	return ScanCamp(row)
 }
 
 // SelectCamps returns the entry matching the given 'ids'.
 func SelectCamps(tx DB, ids ...IdCamp) (Camps, error) {
-	rows, err := tx.Query("SELECT id, idtaux, nom, datedebut, duree, lieu, agrement, description, navette, places, agemin, agemax, ouvert, prix, optionprix, optionquotientfamilial, password FROM camps WHERE id = ANY($1)", IdCampArrayToPQ(ids))
+	rows, err := tx.Query("SELECT id, idtaux, nom, datedebut, duree, lieu, agrement, description, navette, places, agemin, agemax, needequilibregf, ouvert, prix, optionprix, optionquotientfamilial, password FROM camps WHERE id = ANY($1)", IdCampArrayToPQ(ids))
 	if err != nil {
 		return nil, err
 	}
@@ -309,28 +310,28 @@ func ScanCamps(rs *sql.Rows) (Camps, error) {
 // Insert one Camp in the database and returns the item with id filled.
 func (item Camp) Insert(tx DB) (out Camp, err error) {
 	row := tx.QueryRow(`INSERT INTO camps (
-		idtaux, nom, datedebut, duree, lieu, agrement, description, navette, places, agemin, agemax, ouvert, prix, optionprix, optionquotientfamilial, password
+		idtaux, nom, datedebut, duree, lieu, agrement, description, navette, places, agemin, agemax, needequilibregf, ouvert, prix, optionprix, optionquotientfamilial, password
 		) VALUES (
-		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16
-		) RETURNING id, idtaux, nom, datedebut, duree, lieu, agrement, description, navette, places, agemin, agemax, ouvert, prix, optionprix, optionquotientfamilial, password;
-		`, item.IdTaux, item.Nom, item.DateDebut, item.Duree, item.Lieu, item.Agrement, item.Description, item.Navette, item.Places, item.AgeMin, item.AgeMax, item.Ouvert, item.Prix, item.OptionPrix, item.OptionQuotientFamilial, item.Password)
+		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17
+		) RETURNING id, idtaux, nom, datedebut, duree, lieu, agrement, description, navette, places, agemin, agemax, needequilibregf, ouvert, prix, optionprix, optionquotientfamilial, password;
+		`, item.IdTaux, item.Nom, item.DateDebut, item.Duree, item.Lieu, item.Agrement, item.Description, item.Navette, item.Places, item.AgeMin, item.AgeMax, item.NeedEquilibreGF, item.Ouvert, item.Prix, item.OptionPrix, item.OptionQuotientFamilial, item.Password)
 	return ScanCamp(row)
 }
 
 // Update Camp in the database and returns the new version.
 func (item Camp) Update(tx DB) (out Camp, err error) {
 	row := tx.QueryRow(`UPDATE camps SET (
-		idtaux, nom, datedebut, duree, lieu, agrement, description, navette, places, agemin, agemax, ouvert, prix, optionprix, optionquotientfamilial, password
+		idtaux, nom, datedebut, duree, lieu, agrement, description, navette, places, agemin, agemax, needequilibregf, ouvert, prix, optionprix, optionquotientfamilial, password
 		) = (
-		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16
-		) WHERE id = $17 RETURNING id, idtaux, nom, datedebut, duree, lieu, agrement, description, navette, places, agemin, agemax, ouvert, prix, optionprix, optionquotientfamilial, password;
-		`, item.IdTaux, item.Nom, item.DateDebut, item.Duree, item.Lieu, item.Agrement, item.Description, item.Navette, item.Places, item.AgeMin, item.AgeMax, item.Ouvert, item.Prix, item.OptionPrix, item.OptionQuotientFamilial, item.Password, item.Id)
+		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17
+		) WHERE id = $18 RETURNING id, idtaux, nom, datedebut, duree, lieu, agrement, description, navette, places, agemin, agemax, needequilibregf, ouvert, prix, optionprix, optionquotientfamilial, password;
+		`, item.IdTaux, item.Nom, item.DateDebut, item.Duree, item.Lieu, item.Agrement, item.Description, item.Navette, item.Places, item.AgeMin, item.AgeMax, item.NeedEquilibreGF, item.Ouvert, item.Prix, item.OptionPrix, item.OptionQuotientFamilial, item.Password, item.Id)
 	return ScanCamp(row)
 }
 
 // Deletes the Camp and returns the item
 func DeleteCampById(tx DB, id IdCamp) (Camp, error) {
-	row := tx.QueryRow("DELETE FROM camps WHERE id = $1 RETURNING id, idtaux, nom, datedebut, duree, lieu, agrement, description, navette, places, agemin, agemax, ouvert, prix, optionprix, optionquotientfamilial, password;", id)
+	row := tx.QueryRow("DELETE FROM camps WHERE id = $1 RETURNING id, idtaux, nom, datedebut, duree, lieu, agrement, description, navette, places, agemin, agemax, needequilibregf, ouvert, prix, optionprix, optionquotientfamilial, password;", id)
 	return ScanCamp(row)
 }
 
@@ -369,7 +370,7 @@ func (items Camps) IdTauxs() []dossiers.IdTaux {
 }
 
 func SelectCampsByIdTauxs(tx DB, idTauxs_ ...dossiers.IdTaux) (Camps, error) {
-	rows, err := tx.Query("SELECT id, idtaux, nom, datedebut, duree, lieu, agrement, description, navette, places, agemin, agemax, ouvert, prix, optionprix, optionquotientfamilial, password FROM camps WHERE idtaux = ANY($1)", dossiers.IdTauxArrayToPQ(idTauxs_))
+	rows, err := tx.Query("SELECT id, idtaux, nom, datedebut, duree, lieu, agrement, description, navette, places, agemin, agemax, needequilibregf, ouvert, prix, optionprix, optionquotientfamilial, password FROM camps WHERE idtaux = ANY($1)", dossiers.IdTauxArrayToPQ(idTauxs_))
 	if err != nil {
 		return nil, err
 	}
@@ -386,7 +387,7 @@ func DeleteCampsByIdTauxs(tx DB, idTauxs_ ...dossiers.IdTaux) ([]IdCamp, error) 
 
 // SelectCampByIdAndIdTaux return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectCampByIdAndIdTaux(tx DB, id IdCamp, idTaux dossiers.IdTaux) (item Camp, found bool, err error) {
-	row := tx.QueryRow("SELECT id, idtaux, nom, datedebut, duree, lieu, agrement, description, navette, places, agemin, agemax, ouvert, prix, optionprix, optionquotientfamilial, password FROM camps WHERE Id = $1 AND IdTaux = $2", id, idTaux)
+	row := tx.QueryRow("SELECT id, idtaux, nom, datedebut, duree, lieu, agrement, description, navette, places, agemin, agemax, needequilibregf, ouvert, prix, optionprix, optionquotientfamilial, password FROM camps WHERE Id = $1 AND IdTaux = $2", id, idTaux)
 	item, err = ScanCamp(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil

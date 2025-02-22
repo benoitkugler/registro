@@ -2,6 +2,7 @@
   <v-row no-gutters>
     <v-col cols="6">
       <v-text-field
+        class="mr-1"
         variant="outlined"
         density="compact"
         :hide-details="props.hideDetails"
