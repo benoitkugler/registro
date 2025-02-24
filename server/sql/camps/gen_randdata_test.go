@@ -347,7 +347,7 @@ func randSondage() Sondage {
 
 func randStructureaide() Structureaide {
 	var s Structureaide
-	s.Id = randint64()
+	s.Id = randIdStructureaide()
 	s.Nom = randstring()
 	s.Immatriculation = randstring()
 	s.Adresse = randstring()

@@ -175,7 +175,7 @@ type Sondage struct {
 }
 
 type Structureaide struct {
-	Id              int64
+	Id              IdStructureaide
 	Nom             string
 	Immatriculation string
 	Adresse         string

@@ -1787,24 +1787,24 @@ func SelectAllStructureaides(db DB) (Structureaides, error) {
 }
 
 // SelectStructureaide returns the entry matching 'id'.
-func SelectStructureaide(tx DB, id int64) (Structureaide, error) {
+func SelectStructureaide(tx DB, id IdStructureaide) (Structureaide, error) {
 	row := tx.QueryRow("SELECT id, nom, immatriculation, adresse, codepostal, ville, telephone, info FROM structureaides WHERE id = $1", id)
 	return ScanStructureaide(row)
 }
 
 // SelectStructureaides returns the entry matching the given 'ids'.
-func SelectStructureaides(tx DB, ids ...int64) (Structureaides, error) {
-	rows, err := tx.Query("SELECT id, nom, immatriculation, adresse, codepostal, ville, telephone, info FROM structureaides WHERE id = ANY($1)", int64ArrayToPQ(ids))
+func SelectStructureaides(tx DB, ids ...IdStructureaide) (Structureaides, error) {
+	rows, err := tx.Query("SELECT id, nom, immatriculation, adresse, codepostal, ville, telephone, info FROM structureaides WHERE id = ANY($1)", IdStructureaideArrayToPQ(ids))
 	if err != nil {
 		return nil, err
 	}
 	return ScanStructureaides(rows)
 }
 
-type Structureaides map[int64]Structureaide
+type Structureaides map[IdStructureaide]Structureaide
 
-func (m Structureaides) IDs() []int64 {
-	out := make([]int64, 0, len(m))
+func (m Structureaides) IDs() []IdStructureaide {
+	out := make([]IdStructureaide, 0, len(m))
 	for i := range m {
 		out = append(out, i)
 	}
@@ -1859,18 +1859,18 @@ func (item Structureaide) Update(tx DB) (out Structureaide, err error) {
 }
 
 // Deletes the Structureaide and returns the item
-func DeleteStructureaideById(tx DB, id int64) (Structureaide, error) {
+func DeleteStructureaideById(tx DB, id IdStructureaide) (Structureaide, error) {
 	row := tx.QueryRow("DELETE FROM structureaides WHERE id = $1 RETURNING id, nom, immatriculation, adresse, codepostal, ville, telephone, info;", id)
 	return ScanStructureaide(row)
 }
 
 // Deletes the Structureaide in the database and returns the ids.
-func DeleteStructureaidesByIDs(tx DB, ids ...int64) ([]int64, error) {
-	rows, err := tx.Query("DELETE FROM structureaides WHERE id = ANY($1) RETURNING id", int64ArrayToPQ(ids))
+func DeleteStructureaidesByIDs(tx DB, ids ...IdStructureaide) ([]IdStructureaide, error) {
+	rows, err := tx.Query("DELETE FROM structureaides WHERE id = ANY($1) RETURNING id", IdStructureaideArrayToPQ(ids))
 	if err != nil {
 		return nil, err
 	}
-	return Scanint64Array(rows)
+	return ScanIdStructureaideArray(rows)
 }
 
 func loadJSON(out interface{}, src interface{}) error {
@@ -2266,49 +2266,6 @@ func (s IdStructureaideSet) Has(id IdStructureaide) bool { return s[id] }
 
 func (s IdStructureaideSet) Keys() []IdStructureaide {
 	out := make([]IdStructureaide, 0, len(s))
-	for k := range s {
-		out = append(out, k)
-	}
-	return out
-}
-
-func int64ArrayToPQ(ids []int64) pq.Int64Array { return ids }
-
-// Scanint64Array scans the result of a query returning a
-// list of ID's.
-func Scanint64Array(rs *sql.Rows) ([]int64, error) {
-	defer rs.Close()
-	ints := make([]int64, 0, 16)
-	var err error
-	for rs.Next() {
-		var s int64
-		if err = rs.Scan(&s); err != nil {
-			return nil, err
-		}
-		ints = append(ints, s)
-	}
-	if err = rs.Err(); err != nil {
-		return nil, err
-	}
-	return ints, nil
-}
-
-type int64Set map[int64]bool
-
-func Newint64SetFrom(ids []int64) int64Set {
-	out := make(int64Set, len(ids))
-	for _, key := range ids {
-		out[key] = true
-	}
-	return out
-}
-
-func (s int64Set) Add(id int64) { s[id] = true }
-
-func (s int64Set) Has(id int64) bool { return s[id] }
-
-func (s int64Set) Keys() []int64 {
-	out := make([]int64, 0, len(s))
 	for k := range s {
 		out = append(out, k)
 	}
