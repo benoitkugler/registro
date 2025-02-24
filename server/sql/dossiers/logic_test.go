@@ -1,6 +1,7 @@
 package dossiers
 
 import (
+	"math/rand"
 	"testing"
 
 	tu "registro/utils/testutils"
@@ -25,7 +26,7 @@ func TestMontantTaux_Add(t *testing.T) {
 		// real conversion : 1CHF = 2€, avec virgules
 		{tableTaux{1000, 2000}, Montant{155, 0}, Montant{200, 1}, Montant{555, 0}},
 		{tableTaux{1000, 2000}, Montant{123, 1}, Montant{202, 0}, Montant{224, 1}},
-		{tableTaux{1000, 2000}, Montant{100, 1}, Montant{201, 0}, Montant{200, 1}},
+		{tableTaux{1000, 2000}, Montant{100, 1}, Montant{201, 0}, Montant{201, 1}},
 	}
 	for _, tt := range tests {
 		m := &MontantTaux{
@@ -74,5 +75,38 @@ func TestMontantTaux_String(t *testing.T) {
 			taux:    tt.taux,
 		}
 		tu.Assert(t, m.String() == tt.want)
+	}
+}
+
+func TestConversionsRoundtrip(t *testing.T) {
+	tu.Assert(t, Taux{Euros: 1000}.Zero().Currency == Euros)
+	tu.Assert(t, Taux{Euros: 1000, FrancsSuisse: 800}.Zero().Currency == Euros)
+	tu.Assert(t, Taux{Euros: 1000, FrancsSuisse: 1106}.Zero().Currency == FrancsSuisse)
+
+	for _, tauxCHF := range []int{
+		1000, 1100, 1110, 1111, 1106, 1007, 1230,
+		900, 850, 999, 990, 756,
+	} {
+		taux := Taux{Euros: 1000, FrancsSuisse: tauxCHF}
+		table := taux.Zero().taux
+		for range [20000]bool{} {
+			prix := Montant{rand.Intn(200000), Euros}
+			prixC := taux.Zero()
+			prixC.Add(prix)
+
+			// paiement in either units
+			inCHF := table.convertTo(prix, FrancsSuisse)
+			inEuros := table.convertTo(prix, Euros)
+
+			paiementCHF := taux.Zero()
+			paiementCHF.Add(inCHF)
+
+			paiementEuros := taux.Zero()
+			paiementEuros.Add(inEuros)
+
+			// check that converting back does not induce rouding errors
+			tu.Assert(t, prixC.Montant == paiementCHF.Montant)
+			tu.Assert(t, prixC.Montant == paiementEuros.Montant)
+		}
 	}
 }
