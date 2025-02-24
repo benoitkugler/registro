@@ -112,7 +112,7 @@ func newCampExt(camp cps.Camp, taux ds.Taux, direction []pr.Personne) CampExt {
 		AgeMin:      camp.AgeMin,
 		AgeMax:      camp.AgeMax,
 
-		Prix: taux.Convert(camp.Prix).String(),
+		Prix: taux.Convertible(camp.Prix).String(),
 
 		Direction: dir,
 	}

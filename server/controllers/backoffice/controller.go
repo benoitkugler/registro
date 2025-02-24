@@ -11,13 +11,9 @@ import (
 	"time"
 
 	"registro/config"
-	evAPI "registro/controllers/events"
 	"registro/crypto"
-	cps "registro/sql/camps"
-	ds "registro/sql/dossiers"
+
 	fs "registro/sql/files"
-	pr "registro/sql/personnes"
-	"registro/utils"
 
 	"github.com/golang-jwt/jwt/v5"
 	echojwt "github.com/labstack/echo-jwt/v4"
@@ -100,68 +96,4 @@ func (ct *Controller) NewToken(isAdmin bool) (string, error) {
 func JWTUser(c echo.Context) (isAdmin bool) {
 	meta := c.Get("user").(*jwt.Token).Claims.(*customClaims) // the token is valid here
 	return meta.IsAdmin
-}
-
-type dossiersLoader struct {
-	dossiers     ds.Dossiers
-	participants map[ds.IdDossier]cps.Participants
-	personnes    pr.Personnes
-	camps        cps.Camps
-	events       evAPI.Loader
-}
-
-// wrap the SQL error
-func newDossierLoader(db ds.DB, ids ...ds.IdDossier) (*dossiersLoader, error) {
-	dossiers, err := ds.SelectDossiers(db, ids...)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-
-	// select the participants and associated people
-	links, err := cps.SelectParticipantsByIdDossiers(db, ids...)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-	participants := links.ByIdDossier()
-
-	personnes, err := pr.SelectPersonnes(db, append(dossiers.IdResponsables(), links.IdPersonnes()...)...)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-
-	// load the camps
-	camps, err := cps.SelectCamps(db, links.IdCamps()...)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-	// load the messages
-	ld, err := evAPI.NewLoaderFor(db, ids...)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-
-	return &dossiersLoader{dossiers, participants, personnes, camps, ld}, nil
-}
-
-func (ld *dossiersLoader) data(id ds.IdDossier) dossierData {
-	dossier, participants := ld.dossiers[id], ld.participants[id]
-	events := ld.events.EventsFor(id)
-	return dossierData{dossier, participants, ld.personnes, ld.camps, events}
-}
-
-type dossierData struct {
-	dossier      ds.Dossier
-	participants cps.Participants // exact list
-	personnesM   pr.Personnes     // containing at least the reponsable and participants
-	camps        cps.Camps        // containing at least the camps for [participants]
-	events       evAPI.Events
-}
-
-// responsable always comes first
-func (ld *dossierData) personnes() (out []pr.Personne) {
-	out = append(out, ld.personnesM[ld.dossier.IdResponsable])
-	for _, part := range ld.participants {
-		out = append(out, ld.personnesM[part.IdPersonne])
-	}
-	return out
 }

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"registro/config"
+	"registro/controllers/logic"
 	"registro/crypto"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
@@ -145,11 +146,11 @@ func TestValideInscription(t *testing.T) {
 	err = ct.valideInscription(dossier1.Id)
 	tu.AssertNoErr(t, err)
 
-	ld, err := newDossierLoader(db, dossier1.Id)
+	ld, err := logic.LoadDossiers(db, dossier1.Id)
 	tu.AssertNoErr(t, err)
-	data := ld.data(dossier1.Id)
-	for _, part := range data.participants {
+	data := ld.For(dossier1.Id)
+	for _, part := range data.Participants {
 		tu.Assert(t, part.Statut == cps.AttenteProfilInvalide)
 	}
-	tu.Assert(t, data.dossier.IsValidated)
+	tu.Assert(t, data.Dossier.IsValidated)
 }

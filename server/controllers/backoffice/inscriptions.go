@@ -5,7 +5,7 @@ import (
 	"errors"
 	"slices"
 
-	evAPI "registro/controllers/events"
+	"registro/controllers/logic"
 	"registro/controllers/search"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
@@ -44,36 +44,29 @@ func (ct *Controller) getInscriptions() ([]Inscription, error) {
 }
 
 func (ct *Controller) loadInscriptionsContent(ids ...ds.IdDossier) ([]Inscription, error) {
-	ld, err := newDossierLoader(ct.db, ids...)
+	loader, err := logic.LoadDossiers(ct.db, ids...)
 	if err != nil {
 		return nil, err
 	}
 
-	out := make([]Inscription, 0, len(ld.dossiers))
-	for _, dossier := range ld.dossiers {
-		var ps []cps.ParticipantExt
-		for _, part := range ld.participants[dossier.Id] {
-			ps = append(ps, cps.ParticipantExt{
-				Participant: part,
-				Camp:        ld.camps[part.IdCamp],
-				Personne:    ld.personnes[part.IdPersonne],
-			})
-		}
-
-		slices.SortFunc(ps, func(a, b cps.ParticipantExt) int { return int(a.Participant.Id - b.Participant.Id) })
+	out := make([]Inscription, 0, len(ids))
+	for _, id := range ids {
+		dossier := loader.For(id)
 
 		var message string
-		if l := ld.events.EventsFor(dossier.Id).By(evs.Message); len(l) != 0 {
-			content := l[0].Content.(evAPI.Message).Message
+		// at this point, since the espace perso is in
+		// readonly mode, there is at most one message
+		if l := dossier.Events.By(evs.Message); len(l) != 0 {
+			content := l[0].Content.(logic.Message).Message
 			if content.Origine == evs.FromEspaceperso {
 				message = content.Contenu
 			}
 		}
 
 		out = append(out, Inscription{
-			Dossier:      dossier,
-			Responsable:  ld.personnes[dossier.IdResponsable],
-			Participants: ps,
+			Dossier:      dossier.Dossier,
+			Responsable:  dossier.Responsable(),
+			Participants: dossier.ParticipantsExt(),
 			Message:      message,
 		})
 	}
@@ -263,21 +256,24 @@ func (ct *Controller) InscriptionsValide(c echo.Context) error {
 }
 
 func (ct *Controller) valideInscription(id ds.IdDossier) error {
-	ld, err := newDossierLoader(ct.db, id)
+	ld, err := logic.LoadDossiers(ct.db, id)
 	if err != nil {
 		return err
 	}
-	data := ld.data(id)
+	data := ld.For(id)
 
 	// on s'assure qu'aucune personne n'est temporaire
-	for _, pe := range data.personnes() {
+	for _, pe := range data.Personnes() {
 		if pe.IsTemp {
 			return errors.New("internal error: personne should not be temporary")
 		}
 	}
 
-	// on calcule le statut des tmp (requiert les tmp et personnes déjà inscrites)
-	tmp, err := cps.SelectParticipantsByIdCamps(ct.db, data.camps.IDs()...)
+	// le status est calculé camp par camp
+	camps, byCamp := data.Camps(), data.Participants.ByIdCamp()
+
+	// on calcule le statut des participants (requiert les participants et personnes déjà inscrites)
+	tmp, err := cps.SelectParticipantsByIdCamps(ct.db, data.Camps().IDs()...)
 	if err != nil {
 		return utils.SQLError(err)
 	}
@@ -288,19 +284,12 @@ func (ct *Controller) valideInscription(id ds.IdDossier) error {
 		return utils.SQLError(err)
 	}
 
-	// le status est calculé camp par camp
-	byCamp := data.participants.ByIdCamp()
-
 	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
 		for idCamp, partsM := range byCamp {
-			camp := cps.CampLoader{Camp: data.camps[idCamp], Participants: participants[idCamp], Personnes: personnes}
+			camp := cps.CampLoader{Camp: camps[idCamp], Participants: participants[idCamp], Personnes: personnes}
 
 			slice := utils.MapValues(partsM)
-			incomming := make([]pr.Personne, len(slice))
-			for index, part := range slice {
-				incomming[index] = data.personnesM[part.IdPersonne]
-			}
-
+			incomming := data.PersonnesFor(slice)
 			for index, status := range camp.Status(incomming) {
 				listeAttente := status.Hint()
 				part := slice[index]
@@ -312,7 +301,7 @@ func (ct *Controller) valideInscription(id ds.IdDossier) error {
 				}
 			}
 		}
-		dossier := data.dossier
+		dossier := data.Dossier
 		dossier.IsValidated = true
 		_, err = dossier.Update(tx)
 
