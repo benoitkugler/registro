@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"registro/sql/dossiers"
 	pr "registro/sql/personnes"
 	"registro/sql/shared"
 	tu "registro/utils/testutils"
@@ -154,5 +155,32 @@ func TestCampLoader_Status(t *testing.T) {
 			Personnes:    personnes,
 		}
 		tu.Assert(t, reflect.DeepEqual(cd.Status(tt.participants), tt.want))
+	}
+}
+
+func TestAide_Resolve(t *testing.T) {
+	type fields struct {
+		Valeur     int
+		ParJour    bool
+		NbJoursMax int
+	}
+	tests := []struct {
+		fields  fields
+		nbJours int
+		want    int
+	}{
+		{fields{ParJour: true}, 0, 0},
+		{fields{Valeur: 100}, 20, 100},
+		{fields{ParJour: true, Valeur: 10}, 5, 50},
+		{fields{ParJour: true, Valeur: 10, NbJoursMax: 8}, 5, 50},
+		{fields{ParJour: true, Valeur: 10, NbJoursMax: 4}, 5, 40},
+	}
+	for _, tt := range tests {
+		ai := Aide{
+			Valeur:     dossiers.Montant{Cent: tt.fields.Valeur},
+			ParJour:    tt.fields.ParJour,
+			NbJoursMax: tt.fields.NbJoursMax,
+		}
+		tu.Assert(t, ai.Resolve(tt.nbJours) == dossiers.Montant{Cent: tt.want})
 	}
 }

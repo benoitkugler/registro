@@ -96,10 +96,9 @@ func (js Jours) Sanitize(duree int) error {
 }
 
 // NbJours renvoie le nombre de jours de présence
-// en évitant un éventuel doublon
-func (js Jours) NbJours(datesCamp shared.Plage) int {
+func (js Jours) NbJours(campDuree int) int {
 	if len(js) == 0 {
-		return datesCamp.Duree
+		return campDuree
 	}
 	return len(js.sorted())
 }
@@ -115,13 +114,13 @@ func (js Jours) ClosestPlage(datesCamp shared.Plage) shared.Plage {
 }
 
 // CalculePrix somme les prix des journées de présence
-func (js Jours) CalculePrix(prixParJour []Montant) Montant {
-	var total Montant
+func (js Jours) CalculePrix(prixParJour []int, currency dossiers.Currency) Montant {
+	total := Montant{Currency: currency}
 	for _, i := range js.sorted() {
 		if i >= len(prixParJour) { // ne devrait pas arriver
 			continue
 		}
-		total.Add(prixParJour[i])
+		total.Cent += prixParJour[i]
 	}
 	return total
 }
@@ -157,10 +156,12 @@ type OptionPrixCamp struct {
 
 	Semaine OptionSemaineCamp
 	Statuts []PrixParStatut
-	// Prix de chaque jour du camp (souvent constant)
+
+	// Prix de chaque jour du camp (souvent constant), en centimes.
+	// L'unité est celle du séjour associé.
 	// Le champ [Prix] du séjour peut être inférieur à la somme
 	// pour une remise.
-	Jour []Montant
+	Jours []int
 }
 
 type OptionSemaineCamp struct {
@@ -171,7 +172,7 @@ type OptionSemaineCamp struct {
 }
 
 type PrixParStatut struct {
-	Id          int64
+	Id          int16
 	Prix        Montant
 	Statut      string
 	Description string
@@ -182,22 +183,22 @@ type PrixParStatut struct {
 //   - elle est non nulle dans le participant
 type OptionPrixParticipant struct {
 	Semaine  Semaine
-	IdStatut int
+	IdStatut int16
 	Jour     Jours
 }
 
-// IsNonZero renvoie `true` si une option est active
+// IsEmpty renvoie `true` si aucune option n'est active
 // pour la catégorie demandée.
-func (op OptionPrixParticipant) IsNonZero(kind OptionPrixKind) bool {
+func (op OptionPrixParticipant) IsEmpty(kind OptionPrixKind) bool {
 	switch kind {
 	case PrixSemaine:
-		return op.Semaine != 0
+		return op.Semaine == 0
 	case PrixStatut:
-		return op.IdStatut != 0
+		return op.IdStatut == 0
 	case PrixJour:
-		return len(op.Jour) > 0
+		return len(op.Jour) == 0
 	default:
-		return false
+		return true
 	}
 }
 
@@ -208,16 +209,21 @@ func (op OptionPrixParticipant) IsNonZero(kind OptionPrixKind) bool {
 // Index 3 : plus de 715
 var grilleQF = [...]int{0, 359, 564, 714}
 
-// OptionQuotientFamilial applique un pourcentage sur le prix de base (exprimé en %),
+// PrixQuotientFamilial applique un pourcentage sur le prix de base (exprimé en %),
 // pour les categories définie par `QuotientFamilial`
 //
 // Par cohérence avec le prix de base, la dernière valeur vaut toujours 100
 // (sauf pour les entrées vides).
-type OptionQuotientFamilial [len(grilleQF)]int32
+type PrixQuotientFamilial [len(grilleQF)]int32
+
+// IsActive renvoie 'true' si la réduction est active
+func (oq PrixQuotientFamilial) IsActive() bool {
+	return oq == PrixQuotientFamilial{}
+}
 
 // Percentage renvoie le pourcentage appliqué au prix de base pour le quotient
 // familial donné.
-func (q OptionQuotientFamilial) Percentage(quotientFamilial int) int {
+func (q PrixQuotientFamilial) Percentage(quotientFamilial int) int {
 	N := len(grilleQF)
 	for i := 0; i < N-1; i++ {
 		q1, q2 := grilleQF[i], grilleQF[i+1]

@@ -93,7 +93,7 @@ export interface Camp {
   Ouvert: boolean;
   Prix: Montant;
   OptionPrix: OptionPrixCamp;
-  OptionQuotientFamilial: OptionQuotientFamilial;
+  OptionQuotientFamilial: PrixQuotientFamilial;
   Password: string;
 }
 // registro/sql/camps.CampExt
@@ -137,7 +137,7 @@ export interface OptionPrixCamp {
   Active: OptionPrixKind;
   Semaine: OptionSemaineCamp;
   Statuts: PrixParStatut[] | null;
-  Jour: Montant[] | null;
+  Jours: Int[] | null;
 }
 // registro/sql/camps.OptionPrixKind
 export const OptionPrixKind = {
@@ -162,8 +162,6 @@ export interface OptionPrixParticipant {
   IdStatut: Int;
   Jour: Jours;
 }
-// registro/sql/camps.OptionQuotientFamilial
-export type OptionQuotientFamilial = Ar4_Int;
 // registro/sql/camps.OptionSemaineCamp
 export interface OptionSemaineCamp {
   Plage1: Plage;
@@ -198,6 +196,8 @@ export interface PrixParStatut {
   Statut: string;
   Description: string;
 }
+// registro/sql/camps.PrixQuotientFamilial
+export type PrixQuotientFamilial = Ar4_Int;
 // registro/sql/camps.Remises
 export interface Remises {
   ReducEquipiers: Int;
@@ -677,6 +677,25 @@ export abstract class AbstractAPI {
     this.startRequest();
     try {
       const out = await this.rawInscriptionsValide(params);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected async rawDossiersSearch() {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/dossiers/search";
+    const rep: AxiosResponse<Int> = await Axios.post(fullUrl, null, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** DossiersSearch wraps rawDossiersSearch and handles the error */
+  async DossiersSearch() {
+    this.startRequest();
+    try {
+      const out = await this.rawDossiersSearch();
       return out;
     } catch (error) {
       this.handleError(error);

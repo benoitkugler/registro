@@ -230,29 +230,6 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION gomacro_validate_json_array_doss_Montant (data jsonb)
-    RETURNS boolean
-    AS $$
-BEGIN
-    IF jsonb_typeof(data) = 'null' THEN
-        RETURN TRUE;
-    END IF;
-    IF jsonb_typeof(data) != 'array' THEN
-        RETURN FALSE;
-    END IF;
-    IF jsonb_array_length(data) = 0 THEN
-        RETURN TRUE;
-    END IF;
-    RETURN (
-        SELECT
-            bool_and(gomacro_validate_json_doss_Montant (value))
-        FROM
-            jsonb_array_elements(data));
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
 CREATE OR REPLACE FUNCTION gomacro_validate_json_array_number (data jsonb)
     RETURNS boolean
     AS $$
@@ -324,13 +301,13 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Active', 'Semaine', 'Statuts', 'Jour'))
+            bool_and(key IN ('Active', 'Semaine', 'Statuts', 'Jours'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_camp_OptionPrixKind (data -> 'Active')
         AND gomacro_validate_json_camp_OptionSemaineCamp (data -> 'Semaine')
         AND gomacro_validate_json_array_camp_PrixParStatut (data -> 'Statuts')
-        AND gomacro_validate_json_array_doss_Montant (data -> 'Jour');
+        AND gomacro_validate_json_array_number (data -> 'Jours');
     RETURN is_valid;
 END;
 $$

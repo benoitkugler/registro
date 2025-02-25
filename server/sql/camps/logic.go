@@ -195,7 +195,7 @@ func (c *Camp) Check() error {
 		return errors.New("invalid Prix")
 	}
 	if c.OptionPrix.Active == PrixJour {
-		if c.Duree != len(c.OptionPrix.Jour) {
+		if c.Duree != len(c.OptionPrix.Jours) {
 			return errors.New("invalid OptionPrix.Jour length")
 		}
 	}
@@ -253,4 +253,19 @@ func (equipiers Equipiers) Direction() []Equipier {
 	slices.SortFunc(adjoints, func(a, b Equipier) int { return int(a.Id - b.Id) })
 
 	return append(direction, adjoints...)
+}
+
+// Resolve renvoie :
+//   - le montant dans le cas d'une aide absolue
+//   - le montant fois le nombre de jours (en prenant en compte une éventuelle limite) sinon
+func (ai Aide) Resolve(nbJours int) Montant {
+	val := ai.Valeur
+	if ai.ParJour {
+		limite := ai.NbJoursMax
+		if limite > 0 && limite < nbJours { // apply the limit
+			nbJours = limite
+		}
+		val.Cent = val.Cent * nbJours
+	}
+	return val
 }

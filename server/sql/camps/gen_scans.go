@@ -1892,7 +1892,7 @@ func dumpJSON(s interface{}) (driver.Value, error) {
 	return driver.Value(string(b)), nil
 }
 
-func (s *OptionQuotientFamilial) Scan(src interface{}) error {
+func (s *PrixQuotientFamilial) Scan(src interface{}) error {
 	var tmp pq.Int32Array
 	err := tmp.Scan(src)
 	if err != nil {
@@ -1905,7 +1905,7 @@ func (s *OptionQuotientFamilial) Scan(src interface{}) error {
 	return nil
 
 }
-func (s OptionQuotientFamilial) Value() (driver.Value, error) {
+func (s PrixQuotientFamilial) Value() (driver.Value, error) {
 	return pq.Int32Array(s[:]).Value()
 }
 

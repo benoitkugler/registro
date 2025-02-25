@@ -16,6 +16,16 @@ func (dossiers Dossiers) RestrictByValidated(validated bool) {
 	}
 }
 
+// Remise applique une remise de [percent]% sur le montant,
+// le résultat étant pallié à 0 si besoin.
+func (m Montant) Remise(percent int) Montant {
+	p := m.Cent * (100 - percent) / 100
+	if p < 0 {
+		p = 0
+	}
+	return Montant{p, m.Currency}
+}
+
 // currency -> (1 currency = val / 1000 €)
 type tableTaux [nbCurrencies]int
 
@@ -39,7 +49,12 @@ type MontantTaux struct {
 	taux tableTaux
 }
 
-func (t Taux) Convertible(m Montant) MontantTaux { return MontantTaux{m, newTableTaux(t)} }
+// Convertible is a shortcut for Zero() then Add(m)
+func (t Taux) Convertible(m Montant) MontantTaux {
+	out := t.Zero()
+	out.Add(m)
+	return out
+}
 
 // Zero return 0, expressed in the units with the higher taux.
 // This is required to avoid conversion rounding errors.
@@ -53,7 +68,7 @@ func (t Taux) Zero() MontantTaux {
 			higherCurrency = Currency(currency)
 		}
 	}
-	return t.Convertible(Montant{Currency: higherCurrency})
+	return MontantTaux{Montant{Currency: higherCurrency}, newTableTaux(t)}
 }
 
 // Add ajoute [other], en convertissant correctement l'unité si besoin.
@@ -61,6 +76,13 @@ func (t Taux) Zero() MontantTaux {
 // La fonction 'panic' si le taux de [m.Montant.Currency] vaut 0.
 func (m *MontantTaux) Add(other Montant) {
 	m.Montant.Cent += m.taux.convertTo(other, m.Montant.Currency).Cent
+}
+
+// Sub soustrait [other], en convertissant correctement l'unité si besoin.
+//
+// La fonction 'panic' si le taux de [m.Montant.Currency] vaut 0.
+func (m *MontantTaux) Sub(other Montant) {
+	m.Montant.Cent -= m.taux.convertTo(other, m.Montant.Currency).Cent
 }
 
 // String affiche le montant dans les unités pour

@@ -30,7 +30,8 @@ type Montant struct {
 	Currency Currency
 }
 
-func NewEuros(f float32) Montant { return Montant{int(f * 100), Euros} }
+func NewEuros(f float32) Montant        { return Montant{int(f * 100), Euros} }
+func NewFrancsuisses(f float32) Montant { return Montant{int(f * 100), FrancsSuisse} }
 
 func (m Montant) String() string {
 	val := strings.ReplaceAll(fmt.Sprintf("%g", float64(m.Cent)/100), ".", ",")
@@ -41,9 +42,6 @@ func (m Montant) String() string {
 		return val + m.Currency.String()
 	}
 }
-
-// Add assume the currency is the same.
-func (s *Montant) Add(other Montant) { s.Cent += other.Cent }
 
 type Currency uint8
 

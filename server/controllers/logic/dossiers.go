@@ -2,6 +2,7 @@ package logic
 
 import (
 	"slices"
+	"time"
 
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
@@ -12,7 +13,7 @@ import (
 // Dossiers stores enough data to
 // handle most of the [Dossier] related logic.
 type Dossiers struct {
-	dossiers        ds.Dossiers
+	Dossiers        ds.Dossiers
 	allParticipants []cps.IdParticipant
 	participants    map[ds.IdDossier]cps.Participants
 	personnes       pr.Personnes
@@ -54,7 +55,7 @@ func LoadDossiers(db ds.DB, ids ...ds.IdDossier) (Dossiers, error) {
 }
 
 func (ld *Dossiers) For(id ds.IdDossier) Dossier {
-	dossier, participants := ld.dossiers[id], ld.participants[id]
+	dossier, participants := ld.Dossiers[id], ld.participants[id]
 	events := ld.events.For(id)
 	return Dossier{dossier, participants, ld.personnes, ld.camps, events}
 }
@@ -109,4 +110,15 @@ func (de *Dossier) Camps() cps.Camps {
 		out[part.IdCamp] = de.camps[part.IdCamp]
 	}
 	return out
+}
+
+// Time returns the last interaction in the message track
+func (de *Dossier) Time() time.Time {
+	last := de.Dossier.MomentInscription // start with the inscription
+	for _, event := range de.Events {
+		if eventT := event.Event.Created; eventT.After(last) {
+			last = eventT
+		}
+	}
+	return last
 }

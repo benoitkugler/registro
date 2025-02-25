@@ -110,3 +110,23 @@ func TestConversionsRoundtrip(t *testing.T) {
 		}
 	}
 }
+
+func TestMontant_Remise(t *testing.T) {
+	tests := []struct {
+		Cent    int
+		percent int
+		want    int
+	}{
+		{100, 50, 50},
+		{100, 0, 100},
+		{200, 0, 200},
+		{200, 100, 0},
+		{200, 25, 150},
+		{200, 150, 0},
+		{200, 33, 200 - 66},
+	}
+	for _, tt := range tests {
+		m := Montant{Cent: tt.Cent}
+		tu.Assert(t, m.Remise(tt.percent) == Montant{Cent: tt.want})
+	}
+}

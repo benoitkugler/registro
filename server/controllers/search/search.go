@@ -12,23 +12,15 @@ import (
 
 // Fonctions de recherche rapide (par string)
 
-// matchAll returns true if [str] contains all [patterns]
-func matchAll(patterns []string, str string) bool {
-	str = utils.Normalize(str)
-	for _, r := range patterns {
-		if !strings.Contains(str, r) {
-			return false
-		}
-	}
-	return true
+// Query stores a "fuzzy" search
+type Query struct {
+	patterns []string
 }
 
-func normalizeSearch(pattern string) (out []string) {
-	// special case for no filter
-	if pattern == "*" {
-		return out
-	}
-
+// NewQuery normalizes the given pattern
+// Note that an empty [pattern] matches everything
+func NewQuery(pattern string) Query {
+	var out []string
 	for _, s := range strings.Fields(pattern) {
 		s = utils.Normalize(s)
 		if s == "" {
@@ -36,10 +28,24 @@ func normalizeSearch(pattern string) (out []string) {
 		}
 		out = append(out, s)
 	}
-	return out
+	return Query{out}
+}
+
+// match returns true if [str] matches the query.
+func (q Query) match(str string) bool {
+	str = utils.Normalize(str)
+	for _, r := range q.patterns {
+		if !strings.Contains(str, r) {
+			return false
+		}
+	}
+	return true
 }
 
 type filterable interface{ pr.Personne | cps.Camp }
+
+// QueryMatch returns true if [v] passes the query [qu]
+func QueryMatch[T filterable](qu Query, v T) bool { return qu.match(stringify(v)) }
 
 func stringify[T filterable](v T) string {
 	switch v := any(v).(type) {
@@ -54,10 +60,10 @@ func stringify[T filterable](v T) string {
 
 // FilterPersonnes ne se retreint pas automatiquement aux personnes non temporaires
 func FilterPersonnes(list pr.Personnes, pattern string) (out []PersonneHeader) {
-	rs := normalizeSearch(pattern)
+	rs := NewQuery(pattern)
 
 	for _, v := range list {
-		if matchAll(rs, stringify(v)) {
+		if QueryMatch(rs, v) {
 			out = append(out, newPersonneHeader(v))
 		}
 	}
@@ -68,10 +74,10 @@ func FilterPersonnes(list pr.Personnes, pattern string) (out []PersonneHeader) {
 }
 
 func FilterCamps(list cps.Camps, pattern string) (out []cps.Camp) {
-	rs := normalizeSearch(pattern)
+	rs := NewQuery(pattern)
 
 	for _, v := range list {
-		if matchAll(rs, stringify(v)) {
+		if QueryMatch(rs, v) {
 			out = append(out, v)
 		}
 	}

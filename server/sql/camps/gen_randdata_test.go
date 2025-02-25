@@ -56,7 +56,7 @@ func randCamp() Camp {
 	s.Ouvert = randbool()
 	s.Prix = randdos_Montant()
 	s.OptionPrix = randOptionPrixCamp()
-	s.OptionQuotientFamilial = randOptionQuotientFamilial()
+	s.OptionQuotientFamilial = randPrixQuotientFamilial()
 	s.Password = randstring()
 
 	return s
@@ -178,7 +178,7 @@ func randOptionPrixCamp() OptionPrixCamp {
 	s.Active = randOptionPrixKind()
 	s.Semaine = randOptionSemaineCamp()
 	s.Statuts = randSlicePrixParStatut()
-	s.Jour = randSlicedos_Montant()
+	s.Jours = randSliceint()
 
 	return s
 }
@@ -192,14 +192,10 @@ func randOptionPrixKind() OptionPrixKind {
 func randOptionPrixParticipant() OptionPrixParticipant {
 	var s OptionPrixParticipant
 	s.Semaine = randSemaine()
-	s.IdStatut = randint()
+	s.IdStatut = randint16()
 	s.Jour = randJours()
 
 	return s
-}
-
-func randOptionQuotientFamilial() OptionQuotientFamilial {
-	return OptionQuotientFamilial(randAr4_int32())
 }
 
 func randOptionSemaineCamp() OptionSemaineCamp {
@@ -240,12 +236,16 @@ func randParticipant() Participant {
 
 func randPrixParStatut() PrixParStatut {
 	var s PrixParStatut
-	s.Id = randint64()
+	s.Id = randint16()
 	s.Prix = randdos_Montant()
 	s.Statut = randstring()
 	s.Description = randstring()
 
 	return s
+}
+
+func randPrixQuotientFamilial() PrixQuotientFamilial {
+	return PrixQuotientFamilial(randAr4_int32())
 }
 
 func randRemises() Remises {
@@ -297,11 +297,11 @@ func randSliceRole() []Role {
 	return out
 }
 
-func randSlicedos_Montant() []dossiers.Montant {
+func randSliceint() []int {
 	l := 3 + rand.Intn(5)
-	out := make([]dossiers.Montant, l)
+	out := make([]int, l)
 	for i := range out {
-		out[i] = randdos_Montant()
+		out[i] = randint()
 	}
 	return out
 }
@@ -388,6 +388,10 @@ func randdos_Montant() dossiers.Montant {
 
 func randint() int {
 	return int(rand.Intn(1000000))
+}
+
+func randint16() int16 {
+	return int16(rand.Intn(1000000))
 }
 
 func randint32() int32 {

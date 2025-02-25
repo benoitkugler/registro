@@ -51,7 +51,7 @@ type Camp struct {
 
 	Prix                   Montant
 	OptionPrix             OptionPrixCamp
-	OptionQuotientFamilial OptionQuotientFamilial
+	OptionQuotientFamilial PrixQuotientFamilial
 
 	Password string
 }
@@ -99,7 +99,7 @@ type Participant struct {
 
 	Statut           ListeAttente
 	Remises          Remises
-	QuotientFamilial int
+	QuotientFamilial int // optional, 0 for inactive
 
 	OptionPrix OptionPrixParticipant
 

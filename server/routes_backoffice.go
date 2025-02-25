@@ -23,4 +23,6 @@ func setupRoutesBackoffice(e *echo.Echo, ct *backoffice.Controller) {
 	gr.GET("/api/v1/backoffice/inscriptions/search-personnes", ct.InscriptionsSearchPersonnes)
 	gr.POST("/api/v1/backoffice/inscriptions/identifie", ct.InscriptionsIdentifiePersonne)
 	gr.POST("/api/v1/backoffice/inscriptions/valide", ct.InscriptionsValide)
+
+	gr.POST("/api/v1/backoffice/dossiers/search", ct.DossiersSearch)
 }
