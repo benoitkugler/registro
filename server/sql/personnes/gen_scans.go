@@ -400,28 +400,6 @@ func ScanIdPersonneArray(rs *sql.Rows) ([]IdPersonne, error) {
 	return ints, nil
 }
 
-type IdPersonneSet map[IdPersonne]bool
-
-func NewIdPersonneSetFrom(ids []IdPersonne) IdPersonneSet {
-	out := make(IdPersonneSet, len(ids))
-	for _, key := range ids {
-		out[key] = true
-	}
-	return out
-}
-
-func (s IdPersonneSet) Add(id IdPersonne) { s[id] = true }
-
-func (s IdPersonneSet) Has(id IdPersonne) bool { return s[id] }
-
-func (s IdPersonneSet) Keys() []IdPersonne {
-	out := make([]IdPersonne, 0, len(s))
-	for k := range s {
-		out = append(out, k)
-	}
-	return out
-}
-
 func (s *Allergies) Scan(src interface{}) error  { return loadJSON(s, src) }
 func (s Allergies) Value() (driver.Value, error) { return dumpJSON(s) }
 

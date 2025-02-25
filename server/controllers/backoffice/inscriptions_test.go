@@ -146,11 +146,13 @@ func TestValideInscription(t *testing.T) {
 	err = ct.valideInscription(dossier1.Id)
 	tu.AssertNoErr(t, err)
 
-	ld, err := logic.LoadDossiers(db, dossier1.Id)
+	data, err := logic.LoadDossier(db, dossier1.Id)
 	tu.AssertNoErr(t, err)
-	data := ld.For(dossier1.Id)
 	for _, part := range data.Participants {
 		tu.Assert(t, part.Statut == cps.AttenteProfilInvalide)
 	}
 	tu.Assert(t, data.Dossier.IsValidated)
+
+	err = ct.deleteDossier(data.Dossier.Id)
+	tu.AssertNoErr(t, err)
 }

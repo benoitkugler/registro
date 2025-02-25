@@ -1261,28 +1261,6 @@ func ScanIdDemandeArray(rs *sql.Rows) ([]IdDemande, error) {
 	return ints, nil
 }
 
-type IdDemandeSet map[IdDemande]bool
-
-func NewIdDemandeSetFrom(ids []IdDemande) IdDemandeSet {
-	out := make(IdDemandeSet, len(ids))
-	for _, key := range ids {
-		out[key] = true
-	}
-	return out
-}
-
-func (s IdDemandeSet) Add(id IdDemande) { s[id] = true }
-
-func (s IdDemandeSet) Has(id IdDemande) bool { return s[id] }
-
-func (s IdDemandeSet) Keys() []IdDemande {
-	out := make([]IdDemande, 0, len(s))
-	for k := range s {
-		out = append(out, k)
-	}
-	return out
-}
-
 func IdFileArrayToPQ(ids []IdFile) pq.Int64Array {
 	out := make(pq.Int64Array, len(ids))
 	for i, v := range ids {
@@ -1308,28 +1286,6 @@ func ScanIdFileArray(rs *sql.Rows) ([]IdFile, error) {
 		return nil, err
 	}
 	return ints, nil
-}
-
-type IdFileSet map[IdFile]bool
-
-func NewIdFileSetFrom(ids []IdFile) IdFileSet {
-	out := make(IdFileSet, len(ids))
-	for _, key := range ids {
-		out[key] = true
-	}
-	return out
-}
-
-func (s IdFileSet) Add(id IdFile) { s[id] = true }
-
-func (s IdFileSet) Has(id IdFile) bool { return s[id] }
-
-func (s IdFileSet) Keys() []IdFile {
-	out := make([]IdFile, 0, len(s))
-	for k := range s {
-		out = append(out, k)
-	}
-	return out
 }
 
 func (s *OptIdFile) Scan(src interface{}) error {

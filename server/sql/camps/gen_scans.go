@@ -1956,28 +1956,6 @@ func ScanIdAideArray(rs *sql.Rows) ([]IdAide, error) {
 	return ints, nil
 }
 
-type IdAideSet map[IdAide]bool
-
-func NewIdAideSetFrom(ids []IdAide) IdAideSet {
-	out := make(IdAideSet, len(ids))
-	for _, key := range ids {
-		out[key] = true
-	}
-	return out
-}
-
-func (s IdAideSet) Add(id IdAide) { s[id] = true }
-
-func (s IdAideSet) Has(id IdAide) bool { return s[id] }
-
-func (s IdAideSet) Keys() []IdAide {
-	out := make([]IdAide, 0, len(s))
-	for k := range s {
-		out = append(out, k)
-	}
-	return out
-}
-
 func IdCampArrayToPQ(ids []IdCamp) pq.Int64Array {
 	out := make(pq.Int64Array, len(ids))
 	for i, v := range ids {
@@ -2003,28 +1981,6 @@ func ScanIdCampArray(rs *sql.Rows) ([]IdCamp, error) {
 		return nil, err
 	}
 	return ints, nil
-}
-
-type IdCampSet map[IdCamp]bool
-
-func NewIdCampSetFrom(ids []IdCamp) IdCampSet {
-	out := make(IdCampSet, len(ids))
-	for _, key := range ids {
-		out[key] = true
-	}
-	return out
-}
-
-func (s IdCampSet) Add(id IdCamp) { s[id] = true }
-
-func (s IdCampSet) Has(id IdCamp) bool { return s[id] }
-
-func (s IdCampSet) Keys() []IdCamp {
-	out := make([]IdCamp, 0, len(s))
-	for k := range s {
-		out = append(out, k)
-	}
-	return out
 }
 
 func IdEquipierArrayToPQ(ids []IdEquipier) pq.Int64Array {
@@ -2054,28 +2010,6 @@ func ScanIdEquipierArray(rs *sql.Rows) ([]IdEquipier, error) {
 	return ints, nil
 }
 
-type IdEquipierSet map[IdEquipier]bool
-
-func NewIdEquipierSetFrom(ids []IdEquipier) IdEquipierSet {
-	out := make(IdEquipierSet, len(ids))
-	for _, key := range ids {
-		out[key] = true
-	}
-	return out
-}
-
-func (s IdEquipierSet) Add(id IdEquipier) { s[id] = true }
-
-func (s IdEquipierSet) Has(id IdEquipier) bool { return s[id] }
-
-func (s IdEquipierSet) Keys() []IdEquipier {
-	out := make([]IdEquipier, 0, len(s))
-	for k := range s {
-		out = append(out, k)
-	}
-	return out
-}
-
 func IdGroupeArrayToPQ(ids []IdGroupe) pq.Int64Array {
 	out := make(pq.Int64Array, len(ids))
 	for i, v := range ids {
@@ -2101,28 +2035,6 @@ func ScanIdGroupeArray(rs *sql.Rows) ([]IdGroupe, error) {
 		return nil, err
 	}
 	return ints, nil
-}
-
-type IdGroupeSet map[IdGroupe]bool
-
-func NewIdGroupeSetFrom(ids []IdGroupe) IdGroupeSet {
-	out := make(IdGroupeSet, len(ids))
-	for _, key := range ids {
-		out[key] = true
-	}
-	return out
-}
-
-func (s IdGroupeSet) Add(id IdGroupe) { s[id] = true }
-
-func (s IdGroupeSet) Has(id IdGroupe) bool { return s[id] }
-
-func (s IdGroupeSet) Keys() []IdGroupe {
-	out := make([]IdGroupe, 0, len(s))
-	for k := range s {
-		out = append(out, k)
-	}
-	return out
 }
 
 func IdLettreImageArrayToPQ(ids []IdLettreImage) pq.Int64Array {
@@ -2152,28 +2064,6 @@ func ScanIdLettreImageArray(rs *sql.Rows) ([]IdLettreImage, error) {
 	return ints, nil
 }
 
-type IdLettreImageSet map[IdLettreImage]bool
-
-func NewIdLettreImageSetFrom(ids []IdLettreImage) IdLettreImageSet {
-	out := make(IdLettreImageSet, len(ids))
-	for _, key := range ids {
-		out[key] = true
-	}
-	return out
-}
-
-func (s IdLettreImageSet) Add(id IdLettreImage) { s[id] = true }
-
-func (s IdLettreImageSet) Has(id IdLettreImage) bool { return s[id] }
-
-func (s IdLettreImageSet) Keys() []IdLettreImage {
-	out := make([]IdLettreImage, 0, len(s))
-	for k := range s {
-		out = append(out, k)
-	}
-	return out
-}
-
 func IdParticipantArrayToPQ(ids []IdParticipant) pq.Int64Array {
 	out := make(pq.Int64Array, len(ids))
 	for i, v := range ids {
@@ -2201,28 +2091,6 @@ func ScanIdParticipantArray(rs *sql.Rows) ([]IdParticipant, error) {
 	return ints, nil
 }
 
-type IdParticipantSet map[IdParticipant]bool
-
-func NewIdParticipantSetFrom(ids []IdParticipant) IdParticipantSet {
-	out := make(IdParticipantSet, len(ids))
-	for _, key := range ids {
-		out[key] = true
-	}
-	return out
-}
-
-func (s IdParticipantSet) Add(id IdParticipant) { s[id] = true }
-
-func (s IdParticipantSet) Has(id IdParticipant) bool { return s[id] }
-
-func (s IdParticipantSet) Keys() []IdParticipant {
-	out := make([]IdParticipant, 0, len(s))
-	for k := range s {
-		out = append(out, k)
-	}
-	return out
-}
-
 func IdStructureaideArrayToPQ(ids []IdStructureaide) pq.Int64Array {
 	out := make(pq.Int64Array, len(ids))
 	for i, v := range ids {
@@ -2248,28 +2116,6 @@ func ScanIdStructureaideArray(rs *sql.Rows) ([]IdStructureaide, error) {
 		return nil, err
 	}
 	return ints, nil
-}
-
-type IdStructureaideSet map[IdStructureaide]bool
-
-func NewIdStructureaideSetFrom(ids []IdStructureaide) IdStructureaideSet {
-	out := make(IdStructureaideSet, len(ids))
-	for _, key := range ids {
-		out[key] = true
-	}
-	return out
-}
-
-func (s IdStructureaideSet) Add(id IdStructureaide) { s[id] = true }
-
-func (s IdStructureaideSet) Has(id IdStructureaide) bool { return s[id] }
-
-func (s IdStructureaideSet) Keys() []IdStructureaide {
-	out := make([]IdStructureaide, 0, len(s))
-	for k := range s {
-		out = append(out, k)
-	}
-	return out
 }
 
 func (s *Navette) Scan(src interface{}) error  { return loadJSON(s, src) }

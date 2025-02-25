@@ -322,7 +322,7 @@ func (ct *Controller) SearchHistory(c echo.Context) error {
 
 type candidatsPreinscription struct {
 	responsables    []pr.Personne
-	idsParticipants pr.IdPersonneSet // participants cumulés
+	idsParticipants utils.Set[pr.IdPersonne] // participants cumulés
 }
 
 // chercheMail renvoie les personnes ayant le mail fourni. Ignore les personnes temporaires.
@@ -337,7 +337,7 @@ func (ct *Controller) chercheMail(mail string) (out candidatsPreinscription, _ e
 	}
 	respoPs.RemoveTemp()
 
-	ids := pr.IdPersonneSet{}
+	ids := make(utils.Set[pr.IdPersonne])
 	for id, pers := range respoPs {
 		// ajoute seulement les personnes majeurs, afin d'éviter les
 		// confusions dans le cas ou un enfant a la même adresse que ses parents
@@ -365,7 +365,7 @@ func (ct *Controller) chercheMail(mail string) (out candidatsPreinscription, _ e
 		return out, utils.SQLError(err)
 	}
 	partPs.RemoveTemp()
-	out.idsParticipants = pr.NewIdPersonneSetFrom(partPs.IDs())
+	out.idsParticipants = utils.NewSet(partPs.IDs()...)
 	return out, nil
 }
 
@@ -373,7 +373,7 @@ func (ct *Controller) chercheMail(mail string) (out candidatsPreinscription, _ e
 // Cet object est crypté et inséré dans un email
 type preinscription struct {
 	IdResponsable  pr.IdPersonne
-	IdParticipants pr.IdPersonneSet
+	IdParticipants utils.Set[pr.IdPersonne]
 }
 
 func (ct Controller) buildPreinscription(host string, cd candidatsPreinscription) ([]mails.RespoWithLink, error) {
@@ -444,7 +444,7 @@ func (ct *Controller) BuildInscription(publicInsc Inscription) (insc in.Inscript
 		return insc, ps, err
 	}
 
-	allTaux := ds.IdTauxSet{} // check that all taux are the same
+	allTaux := make(utils.Set[ds.IdTaux]) // check that all taux are the same
 
 	for _, publicPart := range publicInsc.Participants {
 		camp, isCampValid := camps[publicPart.IdCamp]
@@ -600,7 +600,7 @@ func ConfirmeInscription(db *sql.DB, id in.IdInscription) (ds.Dossier, error) {
 	var (
 		// responsable et participants
 		allPers    []identifiedPersonne
-		allPersIDs = pr.IdPersonneSet{}
+		allPersIDs = make(utils.Set[pr.IdPersonne])
 	)
 
 	responsable := pr.Personne{

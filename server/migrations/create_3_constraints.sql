@@ -210,6 +210,9 @@ ALTER TABLE file_personnes
     ADD UNIQUE (IdFile);
 
 ALTER TABLE file_personnes
+    ADD FOREIGN KEY (IdPersonne, guard) REFERENCES personnes (Id, IsTemp);
+
+ALTER TABLE file_personnes
     ADD FOREIGN KEY (IdFile) REFERENCES files ON DELETE CASCADE;
 
 ALTER TABLE file_personnes
@@ -217,6 +220,12 @@ ALTER TABLE file_personnes
 
 ALTER TABLE file_personnes
     ADD FOREIGN KEY (IdDemande) REFERENCES demandes;
+
+ALTER TABLE file_personnes
+    ALTER COLUMN guard SET DEFAULT FALSE;
+
+ALTER TABLE file_personnes
+    ADD CHECK (guard = FALSE);
 
 ALTER TABLE file_aides
     ADD UNIQUE (IdFile);
@@ -288,7 +297,7 @@ ALTER TABLE event_messages
     ADD UNIQUE (IdEvent);
 
 ALTER TABLE event_messages
-    ADD FOREIGN KEY (IdEvent, guard) REFERENCES events (Id, Kind);
+    ADD FOREIGN KEY (IdEvent, guard) REFERENCES events (Id, Kind) ON DELETE CASCADE;
 
 ALTER TABLE event_messages
     ADD CHECK (Origine <> 2
@@ -316,7 +325,7 @@ ALTER TABLE event_messages
     /* EventKind.Message */);
 
 ALTER TABLE event_message_vus
-    ADD FOREIGN KEY (IdEvent, guard) REFERENCES events (Id, Kind);
+    ADD FOREIGN KEY (IdEvent, guard) REFERENCES events (Id, Kind) ON DELETE CASCADE;
 
 ALTER TABLE event_message_vus
     ADD UNIQUE (IdEvent, IdCamp);
@@ -340,7 +349,7 @@ ALTER TABLE event_camp_docss
     ADD UNIQUE (IdEvent);
 
 ALTER TABLE event_camp_docss
-    ADD FOREIGN KEY (IdEvent, guard) REFERENCES events (Id, Kind);
+    ADD FOREIGN KEY (IdEvent, guard) REFERENCES events (Id, Kind) ON DELETE CASCADE;
 
 ALTER TABLE event_camp_docss
     ADD FOREIGN KEY (IdEvent) REFERENCES events ON DELETE CASCADE;
@@ -361,7 +370,7 @@ ALTER TABLE event_sondages
     ADD UNIQUE (IdEvent);
 
 ALTER TABLE event_sondages
-    ADD FOREIGN KEY (IdEvent, guard) REFERENCES events (Id, Kind);
+    ADD FOREIGN KEY (IdEvent, guard) REFERENCES events (Id, Kind) ON DELETE CASCADE;
 
 ALTER TABLE event_sondages
     ADD FOREIGN KEY (IdEvent) REFERENCES events ON DELETE CASCADE;
@@ -382,7 +391,7 @@ ALTER TABLE event_place_liberees
     ADD UNIQUE (IdEvent);
 
 ALTER TABLE event_place_liberees
-    ADD FOREIGN KEY (IdEvent, guard) REFERENCES events (Id, Kind);
+    ADD FOREIGN KEY (IdEvent, guard) REFERENCES events (Id, Kind) ON DELETE CASCADE;
 
 ALTER TABLE event_place_liberees
     ADD FOREIGN KEY (IdEvent) REFERENCES events ON DELETE CASCADE;
@@ -403,7 +412,7 @@ ALTER TABLE event_attestations
     ADD UNIQUE (IdEvent);
 
 ALTER TABLE event_attestations
-    ADD FOREIGN KEY (IdEvent, guard) REFERENCES events (Id, Kind);
+    ADD FOREIGN KEY (IdEvent, guard) REFERENCES events (Id, Kind) ON DELETE CASCADE;
 
 ALTER TABLE event_attestations
     ADD FOREIGN KEY (IdEvent) REFERENCES events ON DELETE CASCADE;

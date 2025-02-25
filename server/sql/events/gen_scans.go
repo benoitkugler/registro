@@ -1255,28 +1255,6 @@ func ScanIdEventArray(rs *sql.Rows) ([]IdEvent, error) {
 	return ints, nil
 }
 
-type IdEventSet map[IdEvent]bool
-
-func NewIdEventSetFrom(ids []IdEvent) IdEventSet {
-	out := make(IdEventSet, len(ids))
-	for _, key := range ids {
-		out[key] = true
-	}
-	return out
-}
-
-func (s IdEventSet) Add(id IdEvent) { s[id] = true }
-
-func (s IdEventSet) Has(id IdEvent) bool { return s[id] }
-
-func (s IdEventSet) Keys() []IdEvent {
-	out := make([]IdEvent, 0, len(s))
-	for k := range s {
-		out = append(out, k)
-	}
-	return out
-}
-
 func (s *OptIdCamp) Scan(src interface{}) error {
 	var tmp sql.NullInt64
 	err := tmp.Scan(src)

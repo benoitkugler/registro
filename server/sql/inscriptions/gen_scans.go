@@ -494,27 +494,5 @@ func ScanIdInscriptionArray(rs *sql.Rows) ([]IdInscription, error) {
 	return ints, nil
 }
 
-type IdInscriptionSet map[IdInscription]bool
-
-func NewIdInscriptionSetFrom(ids []IdInscription) IdInscriptionSet {
-	out := make(IdInscriptionSet, len(ids))
-	for _, key := range ids {
-		out[key] = true
-	}
-	return out
-}
-
-func (s IdInscriptionSet) Add(id IdInscription) { s[id] = true }
-
-func (s IdInscriptionSet) Has(id IdInscription) bool { return s[id] }
-
-func (s IdInscriptionSet) Keys() []IdInscription {
-	out := make([]IdInscription, 0, len(s))
-	for k := range s {
-		out = append(out, k)
-	}
-	return out
-}
-
 func (s *ResponsableLegal) Scan(src interface{}) error  { return loadJSON(s, src) }
 func (s ResponsableLegal) Value() (driver.Value, error) { return dumpJSON(s) }

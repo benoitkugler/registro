@@ -131,6 +131,24 @@ func NoCache(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
+type Set[T comparable] map[T]struct{}
+
+func NewSet[T comparable](values ...T) Set[T] {
+	out := make(Set[T], len(values))
+	for _, v := range values {
+		out.Add(v)
+	}
+	return out
+}
+
+func (s Set[T]) Has(key T) bool { _, ok := s[key]; return ok }
+
+func (s Set[T]) Add(key T) { s[key] = struct{}{} }
+
+func (s Set[T]) Delete(key T) { delete(s, key) }
+
+func (s Set[T]) Keys() []T { return MapKeys(s) }
+
 func MapValues[K comparable, V any](m map[K]V) []V {
 	out := make([]V, 0, len(m))
 	for _, v := range m {

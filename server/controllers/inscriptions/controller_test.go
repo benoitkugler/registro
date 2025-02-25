@@ -58,7 +58,7 @@ func TestController_load(t *testing.T) {
 		part, err := pr.Personne{}.Insert(ct.db)
 		tu.AssertNoErr(t, err)
 
-		pre := preinscription{IdResponsable: resp.Id, IdParticipants: pr.IdPersonneSet{resp.Id: true, part.Id: true}}
+		pre := preinscription{IdResponsable: resp.Id, IdParticipants: utils.NewSet(resp.Id, part.Id)}
 		preinsc, err := ct.key.EncryptJSON(pre)
 		tu.AssertNoErr(t, err)
 		out, err := ct.decodePreinscription(preinsc)

@@ -21,7 +21,8 @@
           :key="i"
           :inscription="insc"
           @identifie="(v) => identifie(insc.Dossier.Id, v)"
-          @valide="valide(insc)"
+          @valide="valideInsc(insc)"
+          @delete="deleteInsc(insc)"
         ></InscriptionRow>
       </div>
     </v-card-text>
@@ -86,7 +87,7 @@ async function identifie(id: IdDossier, target: IdentTarget) {
   data.value[index] = res;
 }
 
-async function valide(insc: Inscription) {
+async function valideInsc(insc: Inscription) {
   const res = await controller.InscriptionsValide({
     "id-dossier": insc.Dossier.Id,
   });
@@ -96,6 +97,16 @@ async function valide(insc: Inscription) {
     title: "Aller au dossier",
     action: () => emit("goTo", insc.Dossier.Id, insc.Responsable),
   });
+
+  // delete from this view
+  data.value = data.value.filter((val) => val.Dossier.Id != insc.Dossier.Id);
+}
+
+async function deleteInsc(insc: Inscription) {
+  const res = await controller.InscriptionsDelete({ id: insc.Dossier.Id });
+  if (res === undefined) return;
+
+  controller.showMessage("Inscription supprimée avec succès.");
 
   // delete from this view
   data.value = data.value.filter((val) => val.Dossier.Id != insc.Dossier.Id);

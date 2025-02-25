@@ -256,11 +256,10 @@ func (ct *Controller) InscriptionsValide(c echo.Context) error {
 }
 
 func (ct *Controller) valideInscription(id ds.IdDossier) error {
-	ld, err := logic.LoadDossiers(ct.db, id)
+	data, err := logic.LoadDossier(ct.db, id)
 	if err != nil {
 		return err
 	}
-	data := ld.For(id)
 
 	// on s'assure qu'aucune personne n'est temporaire
 	for _, pe := range data.Personnes() {
@@ -309,4 +308,50 @@ func (ct *Controller) valideInscription(id ds.IdDossier) error {
 	})
 
 	return err
+}
+
+func (ct *Controller) InscriptionsDelete(c echo.Context) error {
+	id, err := utils.QueryParamInt[ds.IdDossier](c, "id")
+	if err != nil {
+		return err
+	}
+	err = ct.deleteDossier(id)
+	if err != nil {
+		return err
+	}
+	return c.NoContent(200)
+}
+
+func (ct *Controller) deleteDossier(id ds.IdDossier) error {
+	data, err := logic.LoadDossier(ct.db, id)
+	if err != nil {
+		return err
+	}
+	// garbage collect temporary personnes
+	// the other field will cascade
+	toDelete := make(utils.Set[pr.IdPersonne])
+	for _, pers := range data.Personnes() {
+		if pers.IsTemp {
+			toDelete.Add(pers.Id)
+		}
+	}
+
+	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
+		_, err = ds.DeleteDossierById(tx, id)
+		if err != nil {
+			return err
+		}
+		for id := range toDelete {
+			_, err = pr.DeletePersonneById(tx, id)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

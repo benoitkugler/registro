@@ -21,6 +21,15 @@ type Dossiers struct {
 	events          EventsData
 }
 
+// LoadDossier is a convenient wrapper around [LoadDossiers]
+func LoadDossier(db ds.DB, id ds.IdDossier) (Dossier, error) {
+	ld, err := LoadDossiers(db, id)
+	if err != nil {
+		return Dossier{}, err
+	}
+	return ld.For(id), nil
+}
+
 // LoadDossiers wraps the SQL error
 func LoadDossiers(db ds.DB, ids ...ds.IdDossier) (Dossiers, error) {
 	dossiers, err := ds.SelectDossiers(db, ids...)

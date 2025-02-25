@@ -41,7 +41,8 @@ CREATE TABLE file_camps (
 CREATE TABLE file_personnes (
     IdFile integer NOT NULL,
     IdPersonne integer NOT NULL,
-    IdDemande integer NOT NULL
+    IdDemande integer NOT NULL,
+    guard boolean NOT NULL
 );
 
 -- constraints
@@ -96,6 +97,9 @@ ALTER TABLE file_personnes
     ADD UNIQUE (IdFile);
 
 ALTER TABLE file_personnes
+    ADD FOREIGN KEY (IdPersonne, guard) REFERENCES personnes (Id, IsTemp);
+
+ALTER TABLE file_personnes
     ADD FOREIGN KEY (IdFile) REFERENCES files ON DELETE CASCADE;
 
 ALTER TABLE file_personnes
@@ -103,6 +107,12 @@ ALTER TABLE file_personnes
 
 ALTER TABLE file_personnes
     ADD FOREIGN KEY (IdDemande) REFERENCES demandes;
+
+ALTER TABLE file_personnes
+    ALTER COLUMN guard SET DEFAULT FALSE;
+
+ALTER TABLE file_personnes
+    ADD CHECK (guard = FALSE);
 
 ALTER TABLE file_aides
     ADD UNIQUE (IdFile);

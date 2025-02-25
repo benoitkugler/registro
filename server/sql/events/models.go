@@ -26,7 +26,7 @@ type Event struct {
 // EventMessage stocke le contenu d'un message libre
 //
 // gomacro:SQL ADD UNIQUE(IdEvent)
-// gomacro:SQL ADD FOREIGN KEY (IdEvent, guard) REFERENCES Event(Id,Kind)
+// gomacro:SQL ADD FOREIGN KEY (IdEvent, guard) REFERENCES Event(Id,Kind) ON DELETE CASCADE
 //
 // gomacro:SQL ADD CHECK(Origine <> #[MessageOrigine.FromDirecteur] OR OrigineCamp IS NOT NULL)
 // gomacro:SQL ADD CHECK(Origine = #[MessageOrigine.FromDirecteur] OR OrigineCamp IS NULL)
@@ -45,7 +45,7 @@ type EventMessage struct {
 
 // EventMessageView indique qu'un message a été lu par le directeur.
 //
-// gomacro:SQL ADD FOREIGN KEY (IdEvent, guard) REFERENCES Event(Id,Kind)
+// gomacro:SQL ADD FOREIGN KEY (IdEvent, guard) REFERENCES Event(Id,Kind) ON DELETE CASCADE
 // gomacro:SQL ADD UNIQUE(IdEvent, IdCamp)
 type EventMessageVu struct {
 	IdEvent IdEvent      `gomacro-sql-on-delete:"CASCADE"`
@@ -57,7 +57,7 @@ type EventMessageVu struct {
 // EventCampDocs indique le camp concerné par l'envoi des documents.
 //
 // gomacro:SQL ADD UNIQUE(IdEvent)
-// gomacro:SQL ADD FOREIGN KEY (IdEvent, guard) REFERENCES Event(Id,Kind)
+// gomacro:SQL ADD FOREIGN KEY (IdEvent, guard) REFERENCES Event(Id,Kind) ON DELETE CASCADE
 type EventCampDocs struct {
 	IdEvent IdEvent `gomacro-sql-on-delete:"CASCADE"`
 	IdCamp  camps.IdCamp
@@ -68,7 +68,7 @@ type EventCampDocs struct {
 // EventSondage indique le camp concerné par le sondage.
 //
 // gomacro:SQL ADD UNIQUE(IdEvent)
-// gomacro:SQL ADD FOREIGN KEY (IdEvent, guard) REFERENCES Event(Id,Kind)
+// gomacro:SQL ADD FOREIGN KEY (IdEvent, guard) REFERENCES Event(Id,Kind) ON DELETE CASCADE
 type EventSondage struct {
 	IdEvent IdEvent `gomacro-sql-on-delete:"CASCADE"`
 	IdCamp  camps.IdCamp
@@ -79,7 +79,7 @@ type EventSondage struct {
 // EventPlaceLiberee notifie qu'un participant a une place disponible.
 //
 // gomacro:SQL ADD UNIQUE(IdEvent)
-// gomacro:SQL ADD FOREIGN KEY (IdEvent, guard) REFERENCES Event(Id,Kind)
+// gomacro:SQL ADD FOREIGN KEY (IdEvent, guard) REFERENCES Event(Id,Kind) ON DELETE CASCADE
 type EventPlaceLiberee struct {
 	IdEvent       IdEvent `gomacro-sql-on-delete:"CASCADE"`
 	IdParticipant camps.IdParticipant
@@ -91,7 +91,7 @@ type EventPlaceLiberee struct {
 // à une facture acquittée/attestation de présence
 //
 // gomacro:SQL ADD UNIQUE(IdEvent)
-// gomacro:SQL ADD FOREIGN KEY (IdEvent, guard) REFERENCES Event(Id,Kind)
+// gomacro:SQL ADD FOREIGN KEY (IdEvent, guard) REFERENCES Event(Id,Kind) ON DELETE CASCADE
 type EventAttestation struct {
 	IdEvent      IdEvent `gomacro-sql-on-delete:"CASCADE"`
 	Distribution Distribution

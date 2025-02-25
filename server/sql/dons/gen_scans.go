@@ -160,25 +160,3 @@ func ScanIdDonArray(rs *sql.Rows) ([]IdDon, error) {
 	}
 	return ints, nil
 }
-
-type IdDonSet map[IdDon]bool
-
-func NewIdDonSetFrom(ids []IdDon) IdDonSet {
-	out := make(IdDonSet, len(ids))
-	for _, key := range ids {
-		out[key] = true
-	}
-	return out
-}
-
-func (s IdDonSet) Add(id IdDon) { s[id] = true }
-
-func (s IdDonSet) Has(id IdDon) bool { return s[id] }
-
-func (s IdDonSet) Keys() []IdDon {
-	out := make([]IdDon, 0, len(s))
-	for k := range s {
-		out = append(out, k)
-	}
-	return out
-}

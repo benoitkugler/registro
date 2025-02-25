@@ -767,6 +767,26 @@ export abstract class AbstractAPI {
     }
   }
 
+  protected async rawInscriptionsDelete(params: { id: Int }) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/inscriptions";
+    await Axios.delete(fullUrl, {
+      headers: this.getHeaders(),
+      params: { id: String(params["id"]) },
+    });
+    return true;
+  }
+
+  /** InscriptionsDelete wraps rawInscriptionsDelete and handles the error */
+  async InscriptionsDelete(params: { id: Int }) {
+    this.startRequest();
+    try {
+      const out = await this.rawInscriptionsDelete(params);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
   protected async rawDossiersSearch(params: SearchDossierIn) {
     const fullUrl = this.baseUrl + "/api/v1/backoffice/dossiers/search";
     const rep: AxiosResponse<SearchDossierOut> = await Axios.post(

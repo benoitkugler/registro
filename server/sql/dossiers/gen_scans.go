@@ -585,28 +585,6 @@ func ScanIdDossierArray(rs *sql.Rows) ([]IdDossier, error) {
 	return ints, nil
 }
 
-type IdDossierSet map[IdDossier]bool
-
-func NewIdDossierSetFrom(ids []IdDossier) IdDossierSet {
-	out := make(IdDossierSet, len(ids))
-	for _, key := range ids {
-		out[key] = true
-	}
-	return out
-}
-
-func (s IdDossierSet) Add(id IdDossier) { s[id] = true }
-
-func (s IdDossierSet) Has(id IdDossier) bool { return s[id] }
-
-func (s IdDossierSet) Keys() []IdDossier {
-	out := make([]IdDossier, 0, len(s))
-	for k := range s {
-		out = append(out, k)
-	}
-	return out
-}
-
 func IdPaiementArrayToPQ(ids []IdPaiement) pq.Int64Array {
 	out := make(pq.Int64Array, len(ids))
 	for i, v := range ids {
@@ -634,28 +612,6 @@ func ScanIdPaiementArray(rs *sql.Rows) ([]IdPaiement, error) {
 	return ints, nil
 }
 
-type IdPaiementSet map[IdPaiement]bool
-
-func NewIdPaiementSetFrom(ids []IdPaiement) IdPaiementSet {
-	out := make(IdPaiementSet, len(ids))
-	for _, key := range ids {
-		out[key] = true
-	}
-	return out
-}
-
-func (s IdPaiementSet) Add(id IdPaiement) { s[id] = true }
-
-func (s IdPaiementSet) Has(id IdPaiement) bool { return s[id] }
-
-func (s IdPaiementSet) Keys() []IdPaiement {
-	out := make([]IdPaiement, 0, len(s))
-	for k := range s {
-		out = append(out, k)
-	}
-	return out
-}
-
 func IdTauxArrayToPQ(ids []IdTaux) pq.Int64Array {
 	out := make(pq.Int64Array, len(ids))
 	for i, v := range ids {
@@ -681,28 +637,6 @@ func ScanIdTauxArray(rs *sql.Rows) ([]IdTaux, error) {
 		return nil, err
 	}
 	return ints, nil
-}
-
-type IdTauxSet map[IdTaux]bool
-
-func NewIdTauxSetFrom(ids []IdTaux) IdTauxSet {
-	out := make(IdTauxSet, len(ids))
-	for _, key := range ids {
-		out[key] = true
-	}
-	return out
-}
-
-func (s IdTauxSet) Add(id IdTaux) { s[id] = true }
-
-func (s IdTauxSet) Has(id IdTaux) bool { return s[id] }
-
-func (s IdTauxSet) Keys() []IdTaux {
-	out := make([]IdTaux, 0, len(s))
-	for k := range s {
-		out = append(out, k)
-	}
-	return out
 }
 
 func SwitchDossierPersonne(db DB, target personnes.IdPersonne, temporaire personnes.IdPersonne) error {

@@ -182,10 +182,21 @@ func match(dossier logic.DossierFinance,
 	return true
 }
 
-func (ct *Controller) GetCamps(c echo.Context) error {
-	out, err := logic.LoadCamps(ct.db)
+func (ct *Controller) DossiersLoad(c echo.Context) error {
+	id, err := utils.QueryParamInt[ds.IdDossier](c, "id")
+	if err != nil {
+		return err
+	}
+	out, err := ct.loadDossier(id)
 	if err != nil {
 		return err
 	}
 	return c.JSON(200, out)
+}
+
+type DossierExt struct{}
+
+// also marks the message as seen
+func (ct *Controller) loadDossier(id ds.IdDossier) (DossierExt, error) {
+	panic("unimplemented")
 }

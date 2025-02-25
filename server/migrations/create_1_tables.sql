@@ -235,7 +235,8 @@ CREATE TABLE file_camps (
 CREATE TABLE file_personnes (
     IdFile integer NOT NULL,
     IdPersonne integer NOT NULL,
-    IdDemande integer NOT NULL
+    IdDemande integer NOT NULL,
+    guard boolean NOT NULL
 );
 
 CREATE TABLE inscriptions (

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"registro/config"
+	"registro/controllers/logic"
 	"registro/crypto"
 
 	fs "registro/sql/files"
@@ -96,4 +97,12 @@ func (ct *Controller) NewToken(isAdmin bool) (string, error) {
 func JWTUser(c echo.Context) (isAdmin bool) {
 	meta := c.Get("user").(*jwt.Token).Claims.(*customClaims) // the token is valid here
 	return meta.IsAdmin
+}
+
+func (ct *Controller) GetCamps(c echo.Context) error {
+	out, err := logic.LoadCamps(ct.db)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
 }

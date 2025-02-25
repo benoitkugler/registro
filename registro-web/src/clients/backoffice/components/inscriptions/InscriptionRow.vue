@@ -11,6 +11,23 @@
         </template>
         Valider</v-btn
       >
+      <v-menu>
+        <template v-slot:activator="{ props: menuProps }">
+          <v-btn
+            v-bind="menuProps"
+            variant="flat"
+            icon="mdi-dots-vertical"
+            size="small"
+          ></v-btn>
+        </template>
+        <v-list density="compact">
+          <v-list-item
+            title="Supprimer"
+            prepend-icon="mdi-delete"
+            @click="emit('delete')"
+          ></v-list-item>
+        </v-list>
+      </v-menu>
     </template>
     <v-card-text>
       <v-row>
@@ -72,6 +89,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: "identifie", params: IdentTarget): void;
   (e: "valide"): void;
+  (e: "delete"): void;
 }>();
 
 const allIdentified = computed(

@@ -102,11 +102,16 @@ type FileCamp struct {
 //
 // gomacro:SQL ADD UNIQUE(IdFile)
 //
+// Temp people must not have documents
+// gomacro:SQL ADD FOREIGN KEY (IdPersonne, guard) REFERENCES Personne(Id,IsTemp)
+//
 // gomacro:QUERY SwitchFilePersonnePersonne UPDATE FilePersonne SET IdPersonne = $target$ WHERE IdPersonne = $temporaire$;
 type FilePersonne struct {
 	IdFile     IdFile `gomacro-sql-on-delete:"CASCADE"`
 	IdPersonne pr.IdPersonne
 	IdDemande  IdDemande
+
+	guard bool `gomacro-sql-guard:"false"`
 }
 
 // FileAide est une table de lien pour les justificatifs des aides
