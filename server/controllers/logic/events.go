@@ -29,6 +29,19 @@ func (evs Events) By(kind events.EventKind) []Event {
 	return out
 }
 
+// NewMessagesForBackoffice returns the [Event]s with kind [events.Message],
+// not yet seen by the backoffice
+func (evs Events) NewMessagesForBackoffice() (out []Event) {
+	for _, ev := range evs {
+		if message, ok := ev.Content.(Message); ok {
+			if !message.Message.VuBackoffice {
+				out = append(out, ev)
+			}
+		}
+	}
+	return out
+}
+
 // Event exposes on event on the dossier track
 type Content interface {
 	isContent()

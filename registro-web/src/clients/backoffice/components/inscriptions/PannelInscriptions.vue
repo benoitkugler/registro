@@ -21,7 +21,7 @@
           :key="i"
           :inscription="insc"
           @identifie="(v) => identifie(insc.Dossier.Id, v)"
-          @valide="valide(insc.Dossier.Id)"
+          @valide="valide(insc)"
         ></InscriptionRow>
       </div>
     </v-card-text>
@@ -31,14 +31,19 @@
 <script setup lang="ts">
 import { onMounted, computed, ref } from "vue";
 import { controller } from "../../logic/logic";
-import type { IdDossier, IdentTarget, Inscription } from "../../logic/api";
+import type {
+  IdDossier,
+  IdentTarget,
+  Inscription,
+  Personne,
+} from "../../logic/api";
 import InscriptionRow from "./InscriptionRow.vue";
 import { normalize, Personnes, Camps } from "@/utils";
 
 const props = defineProps<{}>();
 
 const emit = defineEmits<{
-  (e: "goTo", id: IdDossier): void;
+  (e: "goTo", id: IdDossier, resp: Personne): void;
 }>();
 
 const isLoading = ref(false);
@@ -81,17 +86,18 @@ async function identifie(id: IdDossier, target: IdentTarget) {
   data.value[index] = res;
 }
 
-async function valide(id: IdDossier) {
+async function valide(insc: Inscription) {
   const res = await controller.InscriptionsValide({
-    "id-dossier": id,
+    "id-dossier": insc.Dossier.Id,
   });
   if (res === undefined) return;
+
   controller.showMessage("Inscription validée avec succès.", "", {
     title: "Aller au dossier",
-    action: () => emit("goTo", id),
+    action: () => emit("goTo", insc.Dossier.Id, insc.Responsable),
   });
 
   // delete from this view
-  data.value = data.value.filter((insc) => insc.Dossier.Id != id);
+  data.value = data.value.filter((val) => val.Dossier.Id != insc.Dossier.Id);
 }
 </script>

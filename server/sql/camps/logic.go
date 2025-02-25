@@ -152,12 +152,12 @@ func (cp *Camp) DateFin() sh.Date {
 	return sh.Plage{From: cp.DateDebut, Duree: cp.Duree}.To()
 }
 
-// isTerminated renvoie `true` si le camp est
-// passé d'au moins 1 jour.
-func (cp *Camp) isTerminated() bool {
-	const deltaTerminated = 1 * 24 * time.Hour
+// IsPassedBy renvoie `true` si le camp est
+// passé d'au moins [jours].
+func (cp *Camp) IsPassedBy(jours int) bool {
+	const oneDay = 24 * time.Hour
 	dateFin := cp.DateFin().Time()
-	return time.Now().After(dateFin.Add(deltaTerminated))
+	return time.Now().After(dateFin.Add(time.Duration(jours) * oneDay))
 }
 
 // AgeDebutCamp renvoie l'âge qu'aura une personne née le 'dateNaissance' au premier jour
@@ -210,7 +210,7 @@ type CampExt struct {
 }
 
 func (cp Camp) Ext() CampExt {
-	return CampExt{cp, cp.isTerminated()}
+	return CampExt{cp, cp.IsPassedBy(1)}
 }
 
 // TrouveGroupe cherche parmis les groupes possibles celui qui pourrait convenir.

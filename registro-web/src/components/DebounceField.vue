@@ -1,9 +1,9 @@
 <template>
-  <v-text-field
-    v-bind="props"
-    v-model="inner"
-    @update:model-value="update"
-  ></v-text-field>
+  <v-text-field v-bind="props" v-model="inner" @update:model-value="update">
+    <template v-slot:append>
+      <slot name="append"></slot>
+    </template>
+  </v-text-field>
 </template>
 
 <script setup lang="ts">

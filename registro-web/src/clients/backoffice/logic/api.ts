@@ -29,6 +29,13 @@ export interface CampsSetTauxIn {
   IdCamp: IdCamp;
   Taux: Taux;
 }
+// registro/controllers/backoffice.DossierHeader
+export interface DossierHeader {
+  Id: IdDossier;
+  Responsable: string;
+  Participants: string;
+  NewMessages: Int;
+}
 // registro/controllers/backoffice.IdentTarget
 export interface IdentTarget {
   IdTemporaire: IdPersonne;
@@ -46,6 +53,57 @@ export interface Inscription {
 export interface InscriptionIdentifieIn {
   IdDossier: IdDossier;
   Target: IdentTarget;
+}
+// registro/controllers/backoffice.QueryAttente
+export const QueryAttente = {
+  EmptyQA: 0,
+  AvecAttente: 1,
+  AvecInscrits: 2,
+  AvecAttenteOnly: 3,
+} as const;
+export type QueryAttente = (typeof QueryAttente)[keyof typeof QueryAttente];
+
+export const QueryAttenteLabels: { [key in QueryAttente]: string } = {
+  [QueryAttente.EmptyQA]: "Indifférent",
+  [QueryAttente.AvecAttente]: "Avec liste d'attente",
+  [QueryAttente.AvecInscrits]: "Avec inscrits",
+  [QueryAttente.AvecAttenteOnly]: "Seulement avec liste d'attente",
+};
+
+// registro/controllers/backoffice.QueryReglement
+export const QueryReglement = {
+  EmptyQR: 0,
+  Zero: 1,
+  Partiel: 2,
+  Total: 3,
+} as const;
+export type QueryReglement =
+  (typeof QueryReglement)[keyof typeof QueryReglement];
+
+export const QueryReglementLabels: { [key in QueryReglement]: string } = {
+  [QueryReglement.EmptyQR]: "Indifférent",
+  [QueryReglement.Zero]: "Non commencé",
+  [QueryReglement.Partiel]: "En cours",
+  [QueryReglement.Total]: "Complété",
+};
+
+// registro/controllers/backoffice.SearchDossierIn
+export interface SearchDossierIn {
+  Pattern: string;
+  IdCamp: OptIdCamp;
+  Attente: QueryAttente;
+  Reglement: QueryReglement;
+}
+// registro/controllers/backoffice.SearchDossierOut
+export interface SearchDossierOut {
+  Dossiers: DossierHeader[] | null;
+  Total: Int;
+}
+// registro/controllers/logic.CampItem
+export interface CampItem {
+  Id: IdCamp;
+  Label: string;
+  IsOld: boolean;
 }
 // registro/controllers/search.PersonneHeader
 export interface PersonneHeader {
@@ -253,7 +311,7 @@ export interface Dossier {
   DemandeFondSoutien: boolean;
   IsValidated: boolean;
   MomentInscription: Time;
-  LastConnection: Time;
+  LastSeenEspaceperso: Time;
   KeyV1: string;
 }
 // registro/sql/dossiers.IdDossier
@@ -274,6 +332,11 @@ export interface Taux {
 }
 // registro/sql/dossiers.Tauxs
 export type Tauxs = { [key in IdTaux]: Taux } | null;
+// registro/sql/events.OptIdCamp
+export interface OptIdCamp {
+  Id: IdCamp;
+  Valid: boolean;
+}
 // registro/sql/personnes.Approfondissement
 export const Approfondissement = {
   AAucun: 0,
@@ -438,6 +501,27 @@ export abstract class AbstractAPI {
 
   getHeaders() {
     return { Authorization: "Bearer " + this.authToken };
+  }
+
+  protected async rawGetCamps() {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/shared";
+    const rep: AxiosResponse<CampItem[] | null> = await Axios.post(
+      fullUrl,
+      null,
+      { headers: this.getHeaders() },
+    );
+    return rep.data;
+  }
+
+  /** GetCamps wraps rawGetCamps and handles the error */
+  async GetCamps() {
+    this.startRequest();
+    try {
+      const out = await this.rawGetCamps();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
   }
 
   protected async rawCampsGet() {
@@ -683,19 +767,21 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected async rawDossiersSearch() {
+  protected async rawDossiersSearch(params: SearchDossierIn) {
     const fullUrl = this.baseUrl + "/api/v1/backoffice/dossiers/search";
-    const rep: AxiosResponse<Int> = await Axios.post(fullUrl, null, {
-      headers: this.getHeaders(),
-    });
+    const rep: AxiosResponse<SearchDossierOut> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() },
+    );
     return rep.data;
   }
 
   /** DossiersSearch wraps rawDossiersSearch and handles the error */
-  async DossiersSearch() {
+  async DossiersSearch(params: SearchDossierIn) {
     this.startRequest();
     try {
-      const out = await this.rawDossiersSearch();
+      const out = await this.rawDossiersSearch(params);
       return out;
     } catch (error) {
       this.handleError(error);

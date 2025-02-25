@@ -85,12 +85,13 @@ func (de *Dossier) ParticipantsExt() []cps.ParticipantExt {
 	return ps
 }
 
-// Personnes returns the responsable first
+// Personnes returns the responsable first, then sort by ID
 func (de *Dossier) Personnes() (out []pr.Personne) {
 	out = append(out, de.Responsable())
 	for _, part := range de.Participants {
 		out = append(out, de.personnesM[part.IdPersonne])
 	}
+	slices.SortFunc(out[1:], func(a, b pr.Personne) int { return int(a.Id - b.Id) })
 	return out
 }
 

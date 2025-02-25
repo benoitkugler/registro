@@ -12,22 +12,24 @@
       <PannelInscriptions @go-to="goToDossier"></PannelInscriptions>
     </v-tabs-window-item>
     <v-tabs-window-item value="doss">
-      <PannelDossiers></PannelDossiers>
+      <PannelDossiers ref="dossiers"></PannelDossiers>
     </v-tabs-window-item>
   </v-tabs-window>
 </template>
 
 <script lang="ts" setup>
-import { ref } from "vue";
+import { ref, useTemplateRef } from "vue";
 import NavBar from "../components/NavBar.vue";
 import PannelInscriptions from "../components/inscriptions/PannelInscriptions.vue";
 import PannelDossiers from "../components/inscriptions/PannelDossiers.vue";
-import type { IdDossier } from "../logic/api";
+import type { IdDossier, Personne } from "../logic/api";
 
 const tab = ref<"insc" | "doss">("insc");
 
-function goToDossier(id: IdDossier) {
+const dossiersPannel = useTemplateRef("dossiers");
+
+function goToDossier(id: IdDossier, responsable: Personne) {
   tab.value = "doss";
-  // TODO: select the proper one
+  dossiersPannel.value?.showDossier(id, responsable);
 }
 </script>

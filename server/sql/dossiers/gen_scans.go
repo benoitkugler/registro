@@ -39,7 +39,7 @@ func scanOneDossier(row scanner) (Dossier, error) {
 		&item.DemandeFondSoutien,
 		&item.IsValidated,
 		&item.MomentInscription,
-		&item.LastConnection,
+		&item.LastSeenEspaceperso,
 		&item.KeyV1,
 	)
 	return item, err
@@ -49,7 +49,7 @@ func ScanDossier(row *sql.Row) (Dossier, error) { return scanOneDossier(row) }
 
 // SelectAll returns all the items in the dossiers table.
 func SelectAllDossiers(db DB) (Dossiers, error) {
-	rows, err := db.Query("SELECT id, idtaux, idresponsable, copiesmails, partageadressesok, demandefondsoutien, isvalidated, momentinscription, lastconnection, keyv1 FROM dossiers")
+	rows, err := db.Query("SELECT id, idtaux, idresponsable, copiesmails, partageadressesok, demandefondsoutien, isvalidated, momentinscription, lastseenespaceperso, keyv1 FROM dossiers")
 	if err != nil {
 		return nil, err
 	}
@@ -58,13 +58,13 @@ func SelectAllDossiers(db DB) (Dossiers, error) {
 
 // SelectDossier returns the entry matching 'id'.
 func SelectDossier(tx DB, id IdDossier) (Dossier, error) {
-	row := tx.QueryRow("SELECT id, idtaux, idresponsable, copiesmails, partageadressesok, demandefondsoutien, isvalidated, momentinscription, lastconnection, keyv1 FROM dossiers WHERE id = $1", id)
+	row := tx.QueryRow("SELECT id, idtaux, idresponsable, copiesmails, partageadressesok, demandefondsoutien, isvalidated, momentinscription, lastseenespaceperso, keyv1 FROM dossiers WHERE id = $1", id)
 	return ScanDossier(row)
 }
 
 // SelectDossiers returns the entry matching the given 'ids'.
 func SelectDossiers(tx DB, ids ...IdDossier) (Dossiers, error) {
-	rows, err := tx.Query("SELECT id, idtaux, idresponsable, copiesmails, partageadressesok, demandefondsoutien, isvalidated, momentinscription, lastconnection, keyv1 FROM dossiers WHERE id = ANY($1)", IdDossierArrayToPQ(ids))
+	rows, err := tx.Query("SELECT id, idtaux, idresponsable, copiesmails, partageadressesok, demandefondsoutien, isvalidated, momentinscription, lastseenespaceperso, keyv1 FROM dossiers WHERE id = ANY($1)", IdDossierArrayToPQ(ids))
 	if err != nil {
 		return nil, err
 	}
@@ -109,28 +109,28 @@ func ScanDossiers(rs *sql.Rows) (Dossiers, error) {
 // Insert one Dossier in the database and returns the item with id filled.
 func (item Dossier) Insert(tx DB) (out Dossier, err error) {
 	row := tx.QueryRow(`INSERT INTO dossiers (
-		idtaux, idresponsable, copiesmails, partageadressesok, demandefondsoutien, isvalidated, momentinscription, lastconnection, keyv1
+		idtaux, idresponsable, copiesmails, partageadressesok, demandefondsoutien, isvalidated, momentinscription, lastseenespaceperso, keyv1
 		) VALUES (
 		$1, $2, $3, $4, $5, $6, $7, $8, $9
-		) RETURNING id, idtaux, idresponsable, copiesmails, partageadressesok, demandefondsoutien, isvalidated, momentinscription, lastconnection, keyv1;
-		`, item.IdTaux, item.IdResponsable, item.CopiesMails, item.PartageAdressesOK, item.DemandeFondSoutien, item.IsValidated, item.MomentInscription, item.LastConnection, item.KeyV1)
+		) RETURNING id, idtaux, idresponsable, copiesmails, partageadressesok, demandefondsoutien, isvalidated, momentinscription, lastseenespaceperso, keyv1;
+		`, item.IdTaux, item.IdResponsable, item.CopiesMails, item.PartageAdressesOK, item.DemandeFondSoutien, item.IsValidated, item.MomentInscription, item.LastSeenEspaceperso, item.KeyV1)
 	return ScanDossier(row)
 }
 
 // Update Dossier in the database and returns the new version.
 func (item Dossier) Update(tx DB) (out Dossier, err error) {
 	row := tx.QueryRow(`UPDATE dossiers SET (
-		idtaux, idresponsable, copiesmails, partageadressesok, demandefondsoutien, isvalidated, momentinscription, lastconnection, keyv1
+		idtaux, idresponsable, copiesmails, partageadressesok, demandefondsoutien, isvalidated, momentinscription, lastseenespaceperso, keyv1
 		) = (
 		$1, $2, $3, $4, $5, $6, $7, $8, $9
-		) WHERE id = $10 RETURNING id, idtaux, idresponsable, copiesmails, partageadressesok, demandefondsoutien, isvalidated, momentinscription, lastconnection, keyv1;
-		`, item.IdTaux, item.IdResponsable, item.CopiesMails, item.PartageAdressesOK, item.DemandeFondSoutien, item.IsValidated, item.MomentInscription, item.LastConnection, item.KeyV1, item.Id)
+		) WHERE id = $10 RETURNING id, idtaux, idresponsable, copiesmails, partageadressesok, demandefondsoutien, isvalidated, momentinscription, lastseenespaceperso, keyv1;
+		`, item.IdTaux, item.IdResponsable, item.CopiesMails, item.PartageAdressesOK, item.DemandeFondSoutien, item.IsValidated, item.MomentInscription, item.LastSeenEspaceperso, item.KeyV1, item.Id)
 	return ScanDossier(row)
 }
 
 // Deletes the Dossier and returns the item
 func DeleteDossierById(tx DB, id IdDossier) (Dossier, error) {
-	row := tx.QueryRow("DELETE FROM dossiers WHERE id = $1 RETURNING id, idtaux, idresponsable, copiesmails, partageadressesok, demandefondsoutien, isvalidated, momentinscription, lastconnection, keyv1;", id)
+	row := tx.QueryRow("DELETE FROM dossiers WHERE id = $1 RETURNING id, idtaux, idresponsable, copiesmails, partageadressesok, demandefondsoutien, isvalidated, momentinscription, lastseenespaceperso, keyv1;", id)
 	return ScanDossier(row)
 }
 
@@ -169,7 +169,7 @@ func (items Dossiers) IdTauxs() []IdTaux {
 }
 
 func SelectDossiersByIdTauxs(tx DB, idTauxs_ ...IdTaux) (Dossiers, error) {
-	rows, err := tx.Query("SELECT id, idtaux, idresponsable, copiesmails, partageadressesok, demandefondsoutien, isvalidated, momentinscription, lastconnection, keyv1 FROM dossiers WHERE idtaux = ANY($1)", IdTauxArrayToPQ(idTauxs_))
+	rows, err := tx.Query("SELECT id, idtaux, idresponsable, copiesmails, partageadressesok, demandefondsoutien, isvalidated, momentinscription, lastseenespaceperso, keyv1 FROM dossiers WHERE idtaux = ANY($1)", IdTauxArrayToPQ(idTauxs_))
 	if err != nil {
 		return nil, err
 	}
@@ -210,7 +210,7 @@ func (items Dossiers) IdResponsables() []personnes.IdPersonne {
 }
 
 func SelectDossiersByIdResponsables(tx DB, idResponsables_ ...personnes.IdPersonne) (Dossiers, error) {
-	rows, err := tx.Query("SELECT id, idtaux, idresponsable, copiesmails, partageadressesok, demandefondsoutien, isvalidated, momentinscription, lastconnection, keyv1 FROM dossiers WHERE idresponsable = ANY($1)", personnes.IdPersonneArrayToPQ(idResponsables_))
+	rows, err := tx.Query("SELECT id, idtaux, idresponsable, copiesmails, partageadressesok, demandefondsoutien, isvalidated, momentinscription, lastseenespaceperso, keyv1 FROM dossiers WHERE idresponsable = ANY($1)", personnes.IdPersonneArrayToPQ(idResponsables_))
 	if err != nil {
 		return nil, err
 	}
@@ -227,7 +227,7 @@ func DeleteDossiersByIdResponsables(tx DB, idResponsables_ ...personnes.IdPerson
 
 // SelectDossierByIdAndIdTaux return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectDossierByIdAndIdTaux(tx DB, id IdDossier, idTaux IdTaux) (item Dossier, found bool, err error) {
-	row := tx.QueryRow("SELECT id, idtaux, idresponsable, copiesmails, partageadressesok, demandefondsoutien, isvalidated, momentinscription, lastconnection, keyv1 FROM dossiers WHERE Id = $1 AND IdTaux = $2", id, idTaux)
+	row := tx.QueryRow("SELECT id, idtaux, idresponsable, copiesmails, partageadressesok, demandefondsoutien, isvalidated, momentinscription, lastseenespaceperso, keyv1 FROM dossiers WHERE Id = $1 AND IdTaux = $2", id, idTaux)
 	item, err = ScanDossier(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil

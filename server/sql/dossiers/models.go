@@ -69,7 +69,7 @@ type Dossier struct {
 	// (ou de la création pour les ajouts manuels)
 	MomentInscription time.Time
 
-	LastConnection time.Time // connection sur l'espace personnel
+	LastSeenEspaceperso time.Time // connection sur l'espace personnel
 
 	KeyV1 string // Deprecated: for backward compatibility only
 }

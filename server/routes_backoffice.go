@@ -10,6 +10,13 @@ import (
 
 func setupRoutesBackoffice(e *echo.Echo, ct *backoffice.Controller) {
 	gr := e.Group("", ct.JWTMiddleware())
+
+	// Shared
+
+	gr.POST("/api/v1/backoffice/shared", ct.GetCamps)
+
+	// Onglet Camps
+
 	gr.GET("/api/v1/backoffice/camps", ct.CampsGet)
 	gr.PUT("/api/v1/backoffice/camps", ct.CampsCreate)
 	gr.PUT("/api/v1/backoffice/camps-many", ct.CampsCreateMany)
@@ -17,6 +24,8 @@ func setupRoutesBackoffice(e *echo.Echo, ct *backoffice.Controller) {
 	gr.DELETE("/api/v1/backoffice/camps", ct.CampsDelete)
 	gr.GET("/api/v1/backoffice/camps-taux", ct.CampsGetTaux)
 	gr.POST("/api/v1/backoffice/camps-taux", ct.CampsSetTaux)
+
+	// Onglet Inscriptions
 
 	gr.GET("/api/v1/backoffice/inscriptions", ct.InscriptionsGet)
 	gr.GET("/api/v1/backoffice/inscriptions/search-similaires", ct.InscriptionsSearchSimilaires)

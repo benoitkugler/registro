@@ -33,17 +33,29 @@ const (
 )
 
 // The zero value defaults to returning everything
-type DossierQuery struct {
+type SearchDossierIn struct {
 	Pattern   string // Responsable et participants
 	IdCamp    events.OptIdCamp
 	Attente   QueryAttente
 	Reglement QueryReglement
 }
 
+type SearchDossierOut struct {
+	Dossiers []DossierHeader // passing the query
+	Total    int             // all dossiers in the DB, not just passing the query
+}
+
 // DossiersSearch returns a list of [Dossier] headers
 // matching the given query, sorted by activity time (defined by the messages)
 func (ct *Controller) DossiersSearch(c echo.Context) error {
-	var out int
+	var args SearchDossierIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+	out, err := ct.searchDossiers(args)
+	if err != nil {
+		return err
+	}
 	return c.JSON(200, out)
 }
 
@@ -51,7 +63,7 @@ type DossierHeader struct {
 	Id           ds.IdDossier
 	Responsable  string
 	Participants string
-	// TODO: probably new message notification
+	NewMessages  int
 }
 
 func newDossierHeader(dossier logic.DossierFinance) DossierHeader {
@@ -65,20 +77,21 @@ func newDossierHeader(dossier logic.DossierFinance) DossierHeader {
 		Id:           dossier.Dossier.Dossier.Id,
 		Responsable:  personnes[0].PrenomNOM(),
 		Participants: strings.Join(chunks, ", "),
+		NewMessages:  len(dossier.Events.NewMessagesForBackoffice()),
 	}
 }
 
-func (ct *Controller) searchDossiers(query DossierQuery) ([]DossierHeader, error) {
+func (ct *Controller) searchDossiers(query SearchDossierIn) (SearchDossierOut, error) {
 	dossiers, err := ds.SelectAllDossiers(ct.db)
 	if err != nil {
-		return nil, utils.SQLError(err)
+		return SearchDossierOut{}, utils.SQLError(err)
 	}
 	dossiers.RestrictByValidated(true)
 	ids := dossiers.IDs()
 
 	data, err := logic.NewDossiersFinances(ct.db, ids...)
 	if err != nil {
-		return nil, err
+		return SearchDossierOut{}, err
 	}
 
 	queryText := search.NewQuery(query.Pattern)
@@ -103,7 +116,7 @@ func (ct *Controller) searchDossiers(query DossierQuery) ([]DossierHeader, error
 	for i, v := range filtered {
 		out[i] = newDossierHeader(v)
 	}
-	return out, nil
+	return SearchDossierOut{out, len(ids)}, nil
 }
 
 func match(dossier logic.DossierFinance,
@@ -167,4 +180,12 @@ func match(dossier logic.DossierFinance,
 
 	// we have a match !
 	return true
+}
+
+func (ct *Controller) GetCamps(c echo.Context) error {
+	out, err := logic.LoadCamps(ct.db)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
 }

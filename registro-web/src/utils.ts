@@ -94,6 +94,19 @@ export function round(v: number) {
   return Math.round(v) as Int;
 }
 
+export function optToNullable<T extends Int>(opt: {
+  Id: T;
+  Valid: boolean;
+}): T | null {
+  return opt.Valid ? opt.Id : null;
+}
+
+export function nullableToOpt<T extends Int>(
+  id: T | null
+): { Id: T; Valid: boolean } {
+  return id === null ? { Valid: false, Id: 0 as T } : { Valid: true, Id: id };
+}
+
 /** normalize returns s without spaces, accents and in lower case */
 export function normalize(s: string) {
   return s

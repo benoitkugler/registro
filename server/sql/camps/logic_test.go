@@ -72,8 +72,8 @@ func TestCampLoader_Stats(t *testing.T) {
 func TestCamp_isTerminated(t *testing.T) {
 	now := time.Now()
 	y, m, d := now.Year(), now.Month(), now.Day()
-	tu.Assert(t, (&Camp{DateDebut: shared.NewDate(y, m, d), Duree: 1}).isTerminated() == false)
-	tu.Assert(t, (&Camp{DateDebut: shared.NewDate(y, m, d-1), Duree: 1}).isTerminated() == true)
+	tu.Assert(t, (&Camp{DateDebut: shared.NewDate(y, m, d), Duree: 1}).IsPassedBy(1) == false)
+	tu.Assert(t, (&Camp{DateDebut: shared.NewDate(y, m, d-1), Duree: 1}).IsPassedBy(1) == true)
 }
 
 func TestCampLoader_Status(t *testing.T) {
