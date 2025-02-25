@@ -1,6 +1,7 @@
 package testutils
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -34,12 +35,13 @@ func AssertErr(t *testing.T, err error) {
 	Assert(t, err != nil)
 }
 
-func LoadEnv(t *testing.T, file string) {
-	t.Helper()
-
+func ReadEnvFile(file string) (map[string]string, error) {
 	content, err := os.ReadFile(file)
-	AssertNoErr(t, err)
+	if err != nil {
+		return nil, err
+	}
 
+	out := map[string]string{}
 	for _, line := range strings.Split(string(content), "\n") {
 		if !strings.HasPrefix(line, "export ") {
 			continue
@@ -47,8 +49,20 @@ func LoadEnv(t *testing.T, file string) {
 		line = strings.TrimPrefix(line, "export ")
 		key, val, ok := strings.Cut(line, "=")
 		if !ok {
-			t.Fatalf("invalid env. line %s", line)
+			return nil, fmt.Errorf("invalid env. line %s", line)
 		}
+		out[key] = val
+	}
+	return out, nil
+}
+
+func LoadEnv(t *testing.T, file string) {
+	t.Helper()
+
+	vars, err := ReadEnvFile(file)
+	AssertNoErr(t, err)
+
+	for key, val := range vars {
 		t.Setenv(key, val)
 	}
 }

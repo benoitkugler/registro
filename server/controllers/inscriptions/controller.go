@@ -137,7 +137,7 @@ type Data struct {
 }
 
 func (ct *Controller) loadData(preselected, preinscription string) (Data, error) {
-	camps, tauxs, equipiers, personnes, err := ct.loadCamps()
+	camps, tauxs, equipiers, personnes, err := ct.LoadCamps()
 	if err != nil {
 		return Data{}, err
 	}
@@ -181,8 +181,8 @@ func (ct *Controller) loadData(preselected, preinscription string) (Data, error)
 	}, nil
 }
 
-// loadCamps renvoie les camps ouverts aux inscriptions et non terminés
-func (ct *Controller) loadCamps() (cps.Camps, ds.Tauxs, map[cps.IdCamp]cps.Equipiers, pr.Personnes, error) {
+// LoadCamps renvoie les camps ouverts aux inscriptions et non terminés
+func (ct *Controller) LoadCamps() (cps.Camps, ds.Tauxs, map[cps.IdCamp]cps.Equipiers, pr.Personnes, error) {
 	camps, err := cps.SelectAllCamps(ct.db)
 	if err != nil {
 		return nil, nil, nil, nil, utils.SQLError(err)
@@ -434,8 +434,8 @@ func (ct *Controller) SaveInscription(c echo.Context) error {
 	return c.NoContent(200)
 }
 
-func (ct *Controller) buildInscription(publicInsc Inscription) (insc in.Inscription, ps in.InscriptionParticipants, _ error) {
-	camps, _, _, _, err := ct.loadCamps()
+func (ct *Controller) BuildInscription(publicInsc Inscription) (insc in.Inscription, ps in.InscriptionParticipants, _ error) {
+	camps, _, _, _, err := ct.LoadCamps()
 	if err != nil {
 		return insc, ps, err
 	}
@@ -513,7 +513,7 @@ func (ct *Controller) buildInscription(publicInsc Inscription) (insc in.Inscript
 
 // envoie un mail de demande de confirmation
 func (ct *Controller) saveInscription(host string, publicInsc Inscription) (err error) {
-	insc, participants, err := ct.buildInscription(publicInsc)
+	insc, participants, err := ct.BuildInscription(publicInsc)
 	if err != nil {
 		return err
 	}
@@ -568,7 +568,7 @@ func (ct *Controller) ConfirmeInscription(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	dossier, err := ct.confirmeInscription(id)
+	dossier, err := ConfirmeInscription(ct.db, id)
 	if err != nil {
 		return err
 	}
@@ -578,12 +578,12 @@ func (ct *Controller) ConfirmeInscription(c echo.Context) error {
 
 // transforme l'inscription en dossier et l'enregistre,
 // renvoyant le dossier créé
-func (ct *Controller) confirmeInscription(id in.IdInscription) (ds.Dossier, error) {
-	insc, err := in.SelectInscription(ct.db, id)
+func ConfirmeInscription(db *sql.DB, id in.IdInscription) (ds.Dossier, error) {
+	insc, err := in.SelectInscription(db, id)
 	if err != nil {
 		return ds.Dossier{}, utils.SQLError(err)
 	}
-	participants, err := in.SelectInscriptionParticipantsByIdInscriptions(ct.db, id)
+	participants, err := in.SelectInscriptionParticipantsByIdInscriptions(db, id)
 	if err != nil {
 		return ds.Dossier{}, utils.SQLError(err)
 	}
@@ -633,7 +633,7 @@ func (ct *Controller) confirmeInscription(id in.IdInscription) (ds.Dossier, erro
 	}
 
 	var dossier ds.Dossier
-	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
+	err = utils.InTx(db, func(tx *sql.Tx) error {
 		// on charge les personnes pour la comparaison ...
 		personnes, err := pr.SelectPersonnes(tx, allPersIDs.Keys()...)
 		if err != nil {

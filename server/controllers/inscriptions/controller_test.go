@@ -45,7 +45,7 @@ func TestController_load(t *testing.T) {
 	ct := NewController(db.DB, crypto.Encrypter{}, config.SMTP{}, config.Asso{})
 
 	t.Run("loadCamps", func(t *testing.T) {
-		camps, tauxs, equipiers, personnes, err := ct.loadCamps()
+		camps, tauxs, equipiers, personnes, err := ct.LoadCamps()
 		tu.AssertNoErr(t, err)
 		tu.Assert(t, slices.Equal(camps.IDs(), []cps.IdCamp{c3.Id}))
 		tu.Assert(t, slices.Equal(tauxs.IDs(), []ds.IdTaux{1}))
@@ -214,7 +214,7 @@ func TestController_confirmeInscription(t *testing.T) {
 
 	ct := NewController(db.DB, crypto.Encrypter{}, creds, cfg)
 
-	insc, participants, err := ct.buildInscription(Inscription{
+	insc, participants, err := ct.BuildInscription(Inscription{
 		Responsable: in.ResponsableLegal{
 			Nom: "Kug", Prenom: "Ben",
 			DateNaissance: shared.NewDate(2000, 1, 1),
@@ -233,7 +233,7 @@ func TestController_confirmeInscription(t *testing.T) {
 	})
 	tu.AssertNoErr(t, err)
 
-	dossier, err := ct.confirmeInscription(insc.Id)
+	dossier, err := ConfirmeInscription(ct.db, insc.Id)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, dossier.IsValidated == false)
 	tu.Assert(t, dossier.MomentInscription.Equal(insc.DateHeure))
@@ -249,48 +249,6 @@ func TestController_confirmeInscription(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(events) == 1) //  message
 
-	_, err = ct.confirmeInscription(insc.Id) // already confirmed
+	_, err = ConfirmeInscription(ct.db, insc.Id) // already confirmed
 	tu.AssertErr(t, err)
-}
-
-// This test is a command helper for developping,
-// to generate on demande new inscriptions
-func TestDebug_createInscription(t *testing.T) {
-	t.Skip("dev only test")
-
-	cfg, creds := loadEnv(t)
-	sqlCreds, err := config.NewDB()
-	tu.AssertNoErr(t, err)
-	db, err := sqlCreds.ConnectPostgres()
-	tu.AssertNoErr(t, err)
-
-	ct := NewController(db, crypto.Encrypter{}, creds, cfg)
-
-	// assume we already have two camps
-	camps, _, _, _, err := ct.loadCamps()
-	tu.AssertNoErr(t, err)
-	campIds := camps.IDs()
-	c1, c2 := campIds[0], campIds[1]
-
-	insc, participants, err := ct.buildInscription(Inscription{
-		Responsable: in.ResponsableLegal{
-			Nom: "Yamina", Prenom: utils.RandString(10, false),
-			DateNaissance: shared.NewDate(2000, 1, 1),
-			Sexe:          pr.Man,
-		},
-		Participants: []Participant{
-			{IdCamp: c1, DateNaissance: shared.Date(time.Now()), Nom: "Martin", Prenom: "Pierre"},
-			{IdCamp: c1, DateNaissance: shared.Date(time.Now()), Nom: "Martin", Prenom: "Julie", Sexe: pr.Woman},
-			{IdCamp: c2, DateNaissance: shared.Date(time.Now()), Nom: "Martin", Prenom: "Julie", Sexe: pr.Woman},
-		},
-		Message: utils.RandString(30, true) + "\n" + utils.RandString(10, true),
-	})
-	tu.AssertNoErr(t, err)
-	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
-		insc, err = in.Create(tx, insc, participants)
-		return err
-	})
-	tu.AssertNoErr(t, err)
-	_, err = ct.confirmeInscription(insc.Id)
-	tu.AssertNoErr(t, err)
 }
