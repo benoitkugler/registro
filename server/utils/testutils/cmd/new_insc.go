@@ -2,9 +2,9 @@ package main
 
 import (
 	"database/sql"
+	"flag"
 	"fmt"
 	"os"
-	"time"
 
 	"registro/config"
 	api "registro/controllers/inscriptions"
@@ -25,6 +25,9 @@ func check(err error) {
 // This is a command helper for devs,
 // to generate on demand new inscriptions
 func main() {
+	partsCount := flag.Int("part", 2, "number of participants to create")
+	flag.Parse()
+
 	vars, err := testutils.ReadEnvFile("env.sh")
 	check(err)
 
@@ -60,6 +63,14 @@ func main() {
 		panic("expected at least 2 camps open for inscription")
 	}
 	c1, c2 := campIds[0], campIds[1]
+	parts := []api.Participant{
+		{IdCamp: c1, DateNaissance: shared.NewDate(2015, 1, 1), Nom: "Martin", Prenom: "Pierre"},
+		{IdCamp: c1, DateNaissance: shared.NewDate(2015, 1, 1), Nom: "Martin", Prenom: "Julie", Sexe: pr.Woman},
+		{IdCamp: c2, DateNaissance: shared.NewDate(2015, 1, 1), Nom: "Martin", Prenom: "Julie", Sexe: pr.Woman},
+	}
+	if count := *partsCount; count < len(parts) {
+		parts = parts[:count]
+	}
 
 	insc, participants, err := ct.BuildInscription(api.Inscription{
 		Responsable: in.ResponsableLegal{
@@ -67,12 +78,8 @@ func main() {
 			DateNaissance: shared.NewDate(2000, 1, 1),
 			Sexe:          pr.Man,
 		},
-		Participants: []api.Participant{
-			{IdCamp: c1, DateNaissance: shared.Date(time.Now()), Nom: "Martin", Prenom: "Pierre"},
-			{IdCamp: c1, DateNaissance: shared.Date(time.Now()), Nom: "Martin", Prenom: "Julie", Sexe: pr.Woman},
-			{IdCamp: c2, DateNaissance: shared.Date(time.Now()), Nom: "Martin", Prenom: "Julie", Sexe: pr.Woman},
-		},
-		Message: utils.RandString(30, true) + "\n" + utils.RandString(10, true),
+		Participants: parts,
+		Message:      utils.RandString(30, true) + "\n" + utils.RandString(10, true),
 	})
 	check(err)
 	err = utils.InTx(db, func(tx *sql.Tx) error {
@@ -83,5 +90,5 @@ func main() {
 	_, err = api.ConfirmeInscription(db, insc.Id)
 	check(err)
 
-	fmt.Println("Added insc.")
+	fmt.Println("Added insc. with participants", *partsCount)
 }

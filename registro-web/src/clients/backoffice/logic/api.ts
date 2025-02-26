@@ -29,6 +29,11 @@ export interface CampsSetTauxIn {
   IdCamp: IdCamp;
   Taux: Taux;
 }
+// registro/controllers/backoffice.DossierDetails
+export interface DossierDetails {
+  Dossier: DossierExt;
+  EspacepersoURL: string;
+}
 // registro/controllers/backoffice.DossierHeader
 export interface DossierHeader {
   Id: IdDossier;
@@ -99,12 +104,105 @@ export interface SearchDossierOut {
   Dossiers: DossierHeader[] | null;
   Total: Int;
 }
+// registro/controllers/logic.AccuseReception
+export type AccuseReception = Record<string, never>;
+// registro/controllers/logic.Attestation
+export interface Attestation {
+  Distribution: Distribution;
+  IsPresence: boolean;
+}
+// registro/controllers/logic.BilanFinancesExt
+export interface BilanFinancesExt {
+  Demande: string;
+  Recu: string;
+  Statut: StatutPaiement;
+}
+// registro/controllers/logic.CampDocs
+export interface CampDocs {
+  CampLabel: string;
+}
 // registro/controllers/logic.CampItem
 export interface CampItem {
   Id: IdCamp;
   Label: string;
   IsOld: boolean;
 }
+// registro/controllers/logic.DossierExt
+export interface DossierExt {
+  Dossier: Dossier;
+  Responsable: string;
+  Participants: ParticipantExt[] | null;
+  Events: Events;
+  Paiements: Paiements;
+  Bilan: BilanFinancesExt;
+}
+// registro/controllers/logic.Event
+export interface Event {
+  Id: IdEvent;
+  Created: Time;
+  Content: EventContent;
+}
+
+export const EventContentKind = {
+  AccuseReception: "AccuseReception",
+  Attestation: "Attestation",
+  CampDocs: "CampDocs",
+  Facture: "Facture",
+  Message: "Message",
+  PlaceLiberee: "PlaceLiberee",
+  Sondage: "Sondage",
+  Supprime: "Supprime",
+} as const;
+export type EventContentKind =
+  (typeof EventContentKind)[keyof typeof EventContentKind];
+
+// registro/controllers/logic.EventContent
+export type EventContent =
+  | { Kind: "AccuseReception"; Data: AccuseReception }
+  | { Kind: "Attestation"; Data: Attestation }
+  | { Kind: "CampDocs"; Data: CampDocs }
+  | { Kind: "Facture"; Data: Facture }
+  | { Kind: "Message"; Data: Message }
+  | { Kind: "PlaceLiberee"; Data: PlaceLiberee }
+  | { Kind: "Sondage"; Data: Sondage }
+  | { Kind: "Supprime"; Data: Supprime };
+
+// registro/controllers/logic.Events
+export type Events = Event[] | null;
+// registro/controllers/logic.Facture
+export type Facture = Record<string, never>;
+// registro/controllers/logic.Message
+export interface Message {
+  Message: EventMessage;
+  OrigineCampLabel: string;
+  VuParCamps: string[] | null;
+}
+// registro/controllers/logic.PlaceLiberee
+export interface PlaceLiberee {
+  ParticipantLabel: string;
+  CampLabel: string;
+}
+// registro/controllers/logic.Sondage
+export interface Sondage {
+  CampLabel: string;
+}
+// registro/controllers/logic.StatutPaiement
+export const StatutPaiement = {
+  Complet: 3,
+  EnCours: 2,
+  NonCommence: 1,
+} as const;
+export type StatutPaiement =
+  (typeof StatutPaiement)[keyof typeof StatutPaiement];
+
+export const StatutPaiementLabels: { [key in StatutPaiement]: string } = {
+  [StatutPaiement.Complet]: "",
+  [StatutPaiement.EnCours]: "",
+  [StatutPaiement.NonCommence]: "",
+};
+
+// registro/controllers/logic.Supprime
+export type Supprime = Record<string, never>;
 // registro/controllers/search.PersonneHeader
 export interface PersonneHeader {
   Id: IdPersonne;
@@ -316,13 +414,50 @@ export interface Dossier {
 }
 // registro/sql/dossiers.IdDossier
 export type IdDossier = Int;
+// registro/sql/dossiers.IdPaiement
+export type IdPaiement = Int;
 // registro/sql/dossiers.IdTaux
 export type IdTaux = Int;
+// registro/sql/dossiers.ModePaiement
+export const ModePaiement = {
+  Cheque: 0,
+  EnLigne: 1,
+  Virement: 2,
+  Especes: 3,
+  Ancv: 4,
+  Helloasso: 5,
+} as const;
+export type ModePaiement = (typeof ModePaiement)[keyof typeof ModePaiement];
+
+export const ModePaiementLabels: { [key in ModePaiement]: string } = {
+  [ModePaiement.Cheque]: "",
+  [ModePaiement.EnLigne]: "(carte bancaire, en ligne)",
+  [ModePaiement.Virement]: "",
+  [ModePaiement.Especes]: "",
+  [ModePaiement.Ancv]: "",
+  [ModePaiement.Helloasso]: "",
+};
+
 // registro/sql/dossiers.Montant
 export interface Montant {
   Cent: Int;
   Currency: Currency;
 }
+// registro/sql/dossiers.Paiement
+export interface Paiement {
+  Id: IdPaiement;
+  IdDossier: IdDossier;
+  IsAcompte: boolean;
+  IsRemboursement: boolean;
+  Montant: Montant;
+  Payeur: string;
+  Mode: ModePaiement;
+  Date: Date;
+  Label: string;
+  Details: string;
+}
+// registro/sql/dossiers.Paiements
+export type Paiements = { [key in IdPaiement]: Paiement } | null;
 // registro/sql/dossiers.Taux
 export interface Taux {
   Id: IdTaux;
@@ -332,6 +467,46 @@ export interface Taux {
 }
 // registro/sql/dossiers.Tauxs
 export type Tauxs = { [key in IdTaux]: Taux } | null;
+// registro/sql/events.Distribution
+export const Distribution = {
+  DEspacePerso: 0,
+  DMail: 1,
+  DMailAndDownloaded: 2,
+} as const;
+export type Distribution = (typeof Distribution)[keyof typeof Distribution];
+
+export const DistributionLabels: { [key in Distribution]: string } = {
+  [Distribution.DEspacePerso]: "Téléchargée depuis l'espace de suivi",
+  [Distribution.DMail]: "Notifiée par courriel",
+  [Distribution.DMailAndDownloaded]: "Téléchargée après notification",
+};
+
+// registro/sql/events.EventMessage
+export interface EventMessage {
+  IdEvent: IdEvent;
+  Contenu: string;
+  Origine: MessageOrigine;
+  OrigineCamp: OptIdCamp;
+  VuBackoffice: boolean;
+  VuEspaceperso: boolean;
+}
+// registro/sql/events.IdEvent
+export type IdEvent = Int;
+// registro/sql/events.MessageOrigine
+export const MessageOrigine = {
+  FromEspaceperso: 0,
+  FromBackoffice: 1,
+  FromDirecteur: 2,
+} as const;
+export type MessageOrigine =
+  (typeof MessageOrigine)[keyof typeof MessageOrigine];
+
+export const MessageOrigineLabels: { [key in MessageOrigine]: string } = {
+  [MessageOrigine.FromEspaceperso]: "",
+  [MessageOrigine.FromBackoffice]: "",
+  [MessageOrigine.FromDirecteur]: "",
+};
+
 // registro/sql/events.OptIdCamp
 export interface OptIdCamp {
   Id: IdCamp;
@@ -802,6 +977,26 @@ export abstract class AbstractAPI {
     this.startRequest();
     try {
       const out = await this.rawDossiersSearch(params);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected async rawDossiersLoad(params: { id: Int }) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/dossiers";
+    const rep: AxiosResponse<DossierDetails> = await Axios.get(fullUrl, {
+      headers: this.getHeaders(),
+      params: { id: String(params["id"]) },
+    });
+    return rep.data;
+  }
+
+  /** DossiersLoad wraps rawDossiersLoad and handles the error */
+  async DossiersLoad(params: { id: Int }) {
+    this.startRequest();
+    try {
+      const out = await this.rawDossiersLoad(params);
       return out;
     } catch (error) {
       this.handleError(error);

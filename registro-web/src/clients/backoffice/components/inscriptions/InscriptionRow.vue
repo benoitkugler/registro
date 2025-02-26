@@ -1,7 +1,7 @@
 <template>
   <v-card
     :subtitle="
-      new Date(props.inscription.Dossier.MomentInscription).toLocaleString()
+      Formatters.time(props.inscription.Dossier.MomentInscription, true, true)
     "
   >
     <template v-slot:append>
@@ -78,7 +78,7 @@
 </template>
 
 <script setup lang="ts">
-import { Camps } from "@/utils";
+import { Camps, Formatters } from "@/utils";
 import { type IdentTarget, type Inscription } from "../../logic/api";
 import InscriptionEtatcivilCols from "./InscriptionEtatcivilCols.vue";
 import { computed } from "vue";

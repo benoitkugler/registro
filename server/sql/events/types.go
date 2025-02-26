@@ -36,7 +36,7 @@ const (
 type Distribution uint8
 
 const (
-	DEspacePerso     Distribution = iota // Téléchargée depuis l'espace de suivi
-	DMail                                // Notifiée par courriel
-	DMailAndDownload                     // Téléchargée après notification
+	DEspacePerso       Distribution = iota // Téléchargée depuis l'espace de suivi
+	DMail                                  // Notifiée par courriel
+	DMailAndDownloaded                     // Téléchargée après notification
 )

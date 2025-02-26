@@ -16,8 +16,17 @@ type DossiersFinances struct {
 	paiements  map[ds.IdDossier]ds.Paiements
 }
 
-// LoadDossiers wraps the SQL error
-func NewDossiersFinances(db ds.DB, ids ...ds.IdDossier) (DossiersFinances, error) {
+// LoadDossiersFinance is a convenient wrapper around [LoadDossiersFinances]
+func LoadDossiersFinance(db ds.DB, id ds.IdDossier) (DossierFinance, error) {
+	ld, err := LoadDossiersFinances(db, id)
+	if err != nil {
+		return DossierFinance{}, err
+	}
+	return ld.For(id), nil
+}
+
+// LoadDossiersFinances wraps the SQL error
+func LoadDossiersFinances(db ds.DB, ids ...ds.IdDossier) (DossiersFinances, error) {
 	dossiers, err := LoadDossiers(db, ids...)
 	if err != nil {
 		return DossiersFinances{}, err
@@ -244,9 +253,9 @@ type StatutPaiement uint8
 
 const (
 	_ StatutPaiement = iota
-	Complet
-	EnCours
 	NonCommence
+	EnCours
+	Complet
 )
 
 func (b BilanFinances) StatutPaiement() StatutPaiement {

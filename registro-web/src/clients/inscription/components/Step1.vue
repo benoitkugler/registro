@@ -61,7 +61,7 @@
           <v-col md="6" sm="12">
             <StringList
               v-model="respo.Tels"
-              :formatter="formatTel"
+              :formatter="tel"
               label="Téléphones"
               :rule="
                 FormRules.noEmptyList(
@@ -126,7 +126,7 @@
 <script lang="ts" setup>
 import type { Date_, ResponsableLegal, Tels } from "../logic/api";
 import { ageFrom, isDateZero } from "@/components/date";
-import { formatTel } from "@/components/format";
+import { tel } from "@/components/format";
 import { FormRules } from "@/utils";
 
 const respo = defineModel<ResponsableLegal>({ required: true });

@@ -126,9 +126,37 @@ func (de *Dossier) Camps() cps.Camps {
 func (de *Dossier) Time() time.Time {
 	last := de.Dossier.MomentInscription // start with the inscription
 	for _, event := range de.Events {
-		if eventT := event.Event.Created; eventT.After(last) {
+		if eventT := event.Created; eventT.After(last) {
 			last = eventT
 		}
 	}
 	return last
+}
+
+// DossierExt is the public version of a [Dossier],
+// with all information resolved.
+type DossierExt struct {
+	Dossier      ds.Dossier
+	Responsable  string
+	Participants []cps.ParticipantExt
+	Events       Events
+	Paiements    ds.Paiements
+
+	Bilan BilanFinancesExt
+}
+
+type BilanFinancesExt struct {
+	Demande, Recu string
+	Statut        StatutPaiement
+}
+
+func (d DossierFinance) Publish() DossierExt {
+	taux := d.taux
+	b := d.Bilan()
+	bilan := BilanFinancesExt{
+		taux.Convertible(ds.Montant{Cent: b.demande, Currency: b.currency}).String(),
+		taux.Convertible(ds.Montant{Cent: b.recu, Currency: b.currency}).String(),
+		b.StatutPaiement(),
+	}
+	return DossierExt{d.Dossier.Dossier, d.Responsable().PrenomNOM(), d.ParticipantsExt(), d.Events, d.paiements, bilan}
 }

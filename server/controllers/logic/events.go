@@ -2,6 +2,7 @@ package logic
 
 import (
 	"slices"
+	"time"
 
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
@@ -10,10 +11,13 @@ import (
 	"registro/utils"
 )
 
+//go:generate ../../../../../go/src/github.com/benoitkugler/gomacro/cmd/gomacro events.go go/unions:events_gen.go
+
 // Event exposes on event on the dossier track
 type Event struct {
-	Event   events.Event
-	Content Content
+	Id      events.IdEvent
+	Created time.Time
+	Content EventContent
 }
 
 // Events stores the [Event] for one [Dossier]
@@ -22,7 +26,7 @@ type Events []Event
 func (evs Events) By(kind events.EventKind) []Event {
 	var out []Event
 	for _, ev := range evs {
-		if ev.Event.Kind == kind {
+		if ev.Content.kind() == kind {
 			out = append(out, ev)
 		}
 	}
@@ -43,18 +47,18 @@ func (evs Events) NewMessagesForBackoffice() (out []Event) {
 }
 
 // Event exposes on event on the dossier track
-type Content interface {
-	isContent()
+type EventContent interface {
+	kind() events.EventKind
 }
 
-func (Supprime) isContent()        {}
-func (AccuseReception) isContent() {}
-func (Message) isContent()         {}
-func (Facture) isContent()         {}
-func (CampDocs) isContent()        {}
-func (PlaceLiberee) isContent()    {}
-func (Attestation) isContent()     {}
-func (Sondage) isContent()         {}
+func (Supprime) kind() events.EventKind        { return events.Supprime }
+func (AccuseReception) kind() events.EventKind { return events.AccuseReception }
+func (Message) kind() events.EventKind         { return events.Message }
+func (Facture) kind() events.EventKind         { return events.Facture }
+func (CampDocs) kind() events.EventKind        { return events.CampDocs }
+func (PlaceLiberee) kind() events.EventKind    { return events.PlaceLiberee }
+func (Attestation) kind() events.EventKind     { return events.Attestation }
+func (Sondage) kind() events.EventKind         { return events.Sondage }
 
 type (
 	Supprime        struct{}
@@ -83,6 +87,7 @@ func (ld *EventsData) newMessage(ev events.Event) Message {
 type Facture struct{}
 
 type CampDocs struct {
+	IdCamp    cps.IdCamp
 	CampLabel string
 }
 
@@ -90,10 +95,12 @@ type CampDocs struct {
 func (ld *EventsData) newCampDocs(ev events.Event) CampDocs {
 	m := ld.campDocs[ev.Id]
 	camp := ld.camps[m.IdCamp]
-	return CampDocs{CampLabel: camp.Label()}
+	return CampDocs{IdCamp: m.IdCamp, CampLabel: camp.Label()}
 }
 
 type PlaceLiberee struct {
+	IdParticipant    cps.IdParticipant
+	IdCamp           cps.IdCamp
 	ParticipantLabel string
 	CampLabel        string
 }
@@ -104,7 +111,10 @@ func (ld *EventsData) newPlaceLiberee(ev events.Event) PlaceLiberee {
 	participant := ld.participants[m.IdParticipant]
 	camp := ld.camps[participant.IdCamp]
 	pers := ld.personnes[participant.IdPersonne]
-	return PlaceLiberee{ParticipantLabel: pers.PrenomN(), CampLabel: camp.Label()}
+	return PlaceLiberee{
+		IdParticipant: m.IdParticipant, IdCamp: participant.IdCamp,
+		ParticipantLabel: pers.PrenomN(), CampLabel: camp.Label(),
+	}
 }
 
 type Attestation struct {
@@ -121,6 +131,7 @@ func (ld *EventsData) newAttestation(ev events.Event) Attestation {
 }
 
 type Sondage struct {
+	IdCamp    cps.IdCamp
 	CampLabel string
 }
 
@@ -128,7 +139,7 @@ type Sondage struct {
 func (ld *EventsData) newSondage(ev events.Event) Sondage {
 	m := ld.campDocs[ev.Id]
 	camp := ld.camps[m.IdCamp]
-	return Sondage{CampLabel: camp.Label()}
+	return Sondage{IdCamp: m.IdCamp, CampLabel: camp.Label()}
 }
 
 type EventsData struct {
@@ -221,7 +232,7 @@ func (ld *EventsData) For(idDossier ds.IdDossier) Events {
 	raws := ld.events[idDossier]
 	out := make([]Event, 0, len(raws))
 	for _, event := range raws {
-		val := Event{Event: event}
+		val := Event{Id: event.Id, Created: event.Created}
 		switch event.Kind {
 		case events.Supprime:
 			val.Content = Supprime{}

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"registro/config"
+	"registro/controllers/espaceperso"
 	"registro/controllers/search"
 	"registro/crypto"
 	"registro/mails"
@@ -552,14 +553,6 @@ func (ct *Controller) decodePreIdent(crypted string) (pr.OptIdPersonne, error) {
 	return id.Opt(), err
 }
 
-const EndpointEspacePerso = "espace-perso"
-
-func URLEspacePerso(key crypto.Encrypter, host string, dossier ds.IdDossier, queryParams ...utils.QParam) string {
-	crypted := crypto.EncryptID(key, dossier)
-	queryParams = append(queryParams, utils.QP("key", crypted))
-	return utils.BuildUrl(host, EndpointEspacePerso, queryParams...)
-}
-
 // ConfirmeInscription valide l'inscription et crée le [Dossier] associé,
 // redirigeant ensuite vers l'espace perso.
 func (ct *Controller) ConfirmeInscription(c echo.Context) error {
@@ -572,7 +565,7 @@ func (ct *Controller) ConfirmeInscription(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	url := URLEspacePerso(ct.key, c.Request().Host, dossier.Id, utils.QP("from-inscription", "true"))
+	url := espaceperso.URLEspacePerso(ct.key, c.Request().Host, dossier.Id, utils.QP("from-inscription", "true"))
 	return c.Redirect(307, url)
 }
 

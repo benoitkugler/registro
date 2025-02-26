@@ -1,5 +1,6 @@
 <template>
   <v-row no-gutters class="ma-2">
+    <!-- liste de recherche -->
     <v-col cols="6">
       <v-card
         title="Dossiers"
@@ -119,7 +120,16 @@
         </v-card-text>
       </v-card>
     </v-col>
-    <v-col></v-col>
+    <!-- pannel de détails -->
+    <v-col>
+      <DossierDetailsPannel
+        v-if="dossierDetails != null"
+        :dossier="dossierDetails"
+      ></DossierDetailsPannel>
+      <div v-else class="text-center font-italic my-6">
+        Sélectionner un dossier...
+      </div>
+    </v-col>
   </v-row>
 </template>
 
@@ -136,10 +146,12 @@ import {
   type SearchDossierOut,
   type IdDossier,
   type Personne,
+  type DossierDetails,
 } from "../../logic/api";
 import { copy, nullableToOpt, optToNullable, selectItems } from "@/utils";
 import { controller } from "../../logic/logic";
 import DebounceField from "@/components/DebounceField.vue";
+import DossierDetailsPannel from "./DossierDetailsPannel.vue";
 const props = defineProps<{}>();
 
 defineExpose({ showDossier });
@@ -192,6 +204,11 @@ function showDossier(id: IdDossier, responsable: Personne) {
   loadDossier(id);
 }
 
+const dossierDetails = ref<DossierDetails | null>(null);
 // fetch the complete information and displays it in the right pannel
-async function loadDossier(id: IdDossier) {}
+async function loadDossier(id: IdDossier) {
+  const res = await controller.DossiersLoad({ id: id });
+  if (res === undefined) return;
+  dossierDetails.value = res;
+}
 </script>

@@ -35,4 +35,5 @@ func setupRoutesBackoffice(e *echo.Echo, ct *backoffice.Controller) {
 	gr.DELETE("/api/v1/backoffice/inscriptions", ct.InscriptionsDelete)
 
 	gr.POST("/api/v1/backoffice/dossiers/search", ct.DossiersSearch)
+	gr.GET("/api/v1/backoffice/dossiers", ct.DossiersLoad)
 }

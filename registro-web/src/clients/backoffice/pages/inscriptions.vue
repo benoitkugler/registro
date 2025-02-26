@@ -1,12 +1,11 @@
 <template>
   <NavBar title="Suivi des inscriptions">
-    <div>Boutons a venir</div>
+    <v-tabs v-model="tab">
+      <v-tab value="insc">Nouvelles inscriptions</v-tab>
+      <v-tab value="doss">Suivi des dossiers</v-tab>
+    </v-tabs>
   </NavBar>
 
-  <v-tabs grow v-model="tab">
-    <v-tab value="insc">Nouvelles inscriptions</v-tab>
-    <v-tab value="doss">Suivi des dossiers</v-tab>
-  </v-tabs>
   <v-tabs-window v-model="tab">
     <v-tabs-window-item value="insc">
       <PannelInscriptions @go-to="goToDossier"></PannelInscriptions>
@@ -18,7 +17,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, useTemplateRef } from "vue";
+import { nextTick, ref, useTemplateRef } from "vue";
 import NavBar from "../components/NavBar.vue";
 import PannelInscriptions from "../components/inscriptions/PannelInscriptions.vue";
 import PannelDossiers from "../components/inscriptions/PannelDossiers.vue";
@@ -30,6 +29,8 @@ const dossiersPannel = useTemplateRef("dossiers");
 
 function goToDossier(id: IdDossier, responsable: Personne) {
   tab.value = "doss";
-  dossiersPannel.value?.showDossier(id, responsable);
+  nextTick(() => {
+    dossiersPannel.value?.showDossier(id, responsable);
+  });
 }
 </script>

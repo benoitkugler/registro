@@ -7,6 +7,7 @@ import (
 	"registro/config"
 	"registro/crypto"
 	ds "registro/sql/dossiers"
+	"registro/utils"
 
 	"github.com/labstack/echo/v4"
 )
@@ -29,4 +30,12 @@ func (ct *Controller) TmpEspaceperso(c echo.Context) error {
 		return err
 	}
 	return c.String(200, fmt.Sprintf("Inscription validée: dossier %d", id))
+}
+
+const EndpointEspacePerso = "espace-perso"
+
+func URLEspacePerso(key crypto.Encrypter, host string, dossier ds.IdDossier, queryParams ...utils.QParam) string {
+	crypted := crypto.EncryptID(key, dossier)
+	queryParams = append(queryParams, utils.QP("key", crypted))
+	return utils.BuildUrl(host, EndpointEspacePerso, queryParams...)
 }

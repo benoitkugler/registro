@@ -1,7 +1,12 @@
-import type { Personne } from "./clients/backoffice/logic/api";
+import { Sexe } from "./clients/backoffice/logic/api";
+import type {
+  Paiement,
+  Personne,
+  Time,
+  Event,
+} from "./clients/backoffice/logic/api";
 import type { Date_, Int } from "./clients/inscription/logic/api";
 import { newDate_ } from "./components/date";
-import { formatDate } from "./components/format";
 
 function arrayBufferToString(buffer: ArrayBuffer) {
   const uintArray = new Uint8Array(buffer);
@@ -161,9 +166,9 @@ export namespace Camps {
   }
 
   export function formatPlage(camp: Camp) {
-    const debut = new Date(camp.DateDebut);
-    const fin = new Date(Camps.dateFin(camp));
-    return `${formatDate(debut)} au ${formatDate(fin)}`;
+    const debut = camp.DateDebut;
+    const fin = Camps.dateFin(camp);
+    return `${Formatters.date(debut)} au ${Formatters.date(fin)}`;
   }
 
   export function match(camp: Camp, normalizedPattern: string) {
@@ -174,9 +179,99 @@ export namespace Camps {
 }
 
 export namespace Personnes {
+  export function label(pr: Personne) {
+    return `${pr.Prenom} ${pr.Nom}`;
+  }
+
   export function match(pr: Personne, normalizedPattern: string) {
     if (normalizedPattern == "") return true;
     const str = normalize(pr.Nom + pr.Prenom);
     return str.includes(normalizedPattern);
   }
 }
+
+export namespace Formatters {
+  const reSepTel = /[ -/;\t]/g;
+
+  function splitBySize(a: string) {
+    const b = [];
+    for (var i = 2; i < a.length; i += 2) {
+      // length 2, for example
+      b.push(a.slice(i - 2, i));
+    }
+    b.push(a.slice(a.length - (2 - (a.length % 2)))); // last fragment
+    return b;
+  }
+
+  const _weekdays = ["Dim.", "Lun.", "Mar.", "Mer.", "Jeu.", "Ven.", "Sam."];
+
+  export function time(t: Time, showYear = false, showSeconds = false) {
+    const da = new Date(t);
+    const s = da.toLocaleString(undefined, {
+      year: showYear ? "numeric" : undefined,
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: showSeconds ? "2-digit" : undefined,
+    });
+    return `${_weekdays[da.getDay()]} ${s}`;
+  }
+
+  export function dateNaissance(d: Date_) {
+    return new Date(d).toLocaleDateString();
+  }
+
+  export function date(date: Date_, showYear = false, showWeekday = true) {
+    const da = new Date(date);
+    if (isNaN(da.valueOf()) || da.getFullYear() <= 1) {
+      return "";
+    }
+    const s = da.toLocaleString(undefined, {
+      year: showYear ? "numeric" : undefined,
+      day: "numeric",
+      month: "short",
+      // hour: "2-digit",
+      // minute: showMinute ? "2-digit" : undefined,
+    });
+    if (showWeekday) {
+      return `${_weekdays[da.getDay()]} ${s}`;
+    }
+    return s;
+  }
+
+  export function tel(tel: string) {
+    tel = tel.replace(reSepTel, "");
+    if (tel.length < 8) {
+      return splitBySize(tel).join(" ");
+    } // numéro incomplet, on insert des espaces
+    const start = tel.length - 8; // 8 derniers chiffres
+    const chunks = [tel.substring(0, start)];
+    for (let i = 0; i < 4; i++) {
+      chunks.push(tel.substring(start + 2 * i, start + 2 * i + 2));
+    }
+    return chunks.join(" ");
+  }
+
+  export function sexeIcon(s: Sexe) {
+    switch (s) {
+      case Sexe.Empty:
+        return "";
+      case Sexe.Man:
+        return "mdi-gender-male";
+      case Sexe.Woman:
+        return "mdi-gender-female";
+    }
+  }
+}
+
+export type PseudoEvent =
+  | { Kind: "event"; event: Event }
+  | {
+      Kind: "paiement";
+      Paiement: Paiement;
+    }
+  | {
+      Kind: "inscription-time";
+      Time: Time;
+    };

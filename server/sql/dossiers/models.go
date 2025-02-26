@@ -87,6 +87,6 @@ type Paiement struct {
 	Date    shared.Date
 	// Label peut stocker le numéro du chèque ou la banque
 	Label string
-	// Details peut stocker un motif ou la date d'encaissement d'un chèque
+	// Details peut stocker un ID externe ou la date d'encaissement d'un chèque
 	Details string
 }

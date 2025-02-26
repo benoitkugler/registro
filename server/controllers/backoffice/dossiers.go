@@ -4,6 +4,7 @@ import (
 	"slices"
 	"strings"
 
+	"registro/controllers/espaceperso"
 	"registro/controllers/logic"
 	"registro/controllers/search"
 	"registro/sql/camps"
@@ -89,7 +90,7 @@ func (ct *Controller) searchDossiers(query SearchDossierIn) (SearchDossierOut, e
 	dossiers.RestrictByValidated(true)
 	ids := dossiers.IDs()
 
-	data, err := logic.NewDossiersFinances(ct.db, ids...)
+	data, err := logic.LoadDossiersFinances(ct.db, ids...)
 	if err != nil {
 		return SearchDossierOut{}, err
 	}
@@ -187,16 +188,25 @@ func (ct *Controller) DossiersLoad(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	out, err := ct.loadDossier(id)
+	out, err := ct.loadDossier(c.Request().Host, id)
 	if err != nil {
 		return err
 	}
 	return c.JSON(200, out)
 }
 
-type DossierExt struct{}
+type DossierDetails struct {
+	Dossier        logic.DossierExt
+	EspacepersoURL string
+}
 
 // also marks the message as seen
-func (ct *Controller) loadDossier(id ds.IdDossier) (DossierExt, error) {
-	panic("unimplemented")
+func (ct *Controller) loadDossier(host string, id ds.IdDossier) (DossierDetails, error) {
+	dossier, err := logic.LoadDossiersFinance(ct.db, id)
+	if err != nil {
+		return DossierDetails{}, err
+	}
+	url := espaceperso.URLEspacePerso(ct.key, host, id)
+
+	return DossierDetails{dossier.Publish(), url}, nil
 }

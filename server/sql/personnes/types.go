@@ -96,12 +96,12 @@ func (p *Etatcivil) FPrenom() string { return formatPrenom(p.Prenom) }
 func (p *Etatcivil) FNom() string { return strings.ToUpper(p.Nom) }
 
 // NomPrenom return NOM Prenom
-func (p *Etatcivil) NomPrenom() string {
+func (p Etatcivil) NomPrenom() string {
 	return p.FNom() + " " + p.FPrenom()
 }
 
 // PrenomNOM return NOM Prenom
-func (p *Etatcivil) PrenomNOM() string {
+func (p Etatcivil) PrenomNOM() string {
 	return p.FPrenom() + "  " + p.FNom()
 }
 

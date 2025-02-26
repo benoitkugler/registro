@@ -31,8 +31,8 @@
             v-for="(pers, i) in manualSearchCandidates"
             :key="i"
             :title="pers.Label"
-            :subtitle="new Date(pers.DateNaissance).toLocaleDateString()"
-            :append-icon="sexeIcon(pers.Sexe)"
+            :subtitle="Formatters.dateNaissance(pers.DateNaissance)"
+            :append-icon="Formatters.sexeIcon(pers.Sexe)"
             @click="rattacheTo(pers.Id)"
           >
           </v-list-item>
@@ -50,8 +50,8 @@
           v-for="(pers, i) in suggestedCandidats"
           :key="i"
           :title="pers.Personne.Label"
-          :subtitle="new Date(pers.Personne.DateNaissance).toLocaleDateString()"
-          :prepend-icon="sexeIcon(pers.Personne.Sexe)"
+          :subtitle="Formatters.dateNaissance(pers.Personne.DateNaissance)"
+          :prepend-icon="Formatters.sexeIcon(pers.Personne.Sexe)"
           @click="rattacheTo(pers.Personne.Id)"
         >
           <template v-slot:append>
@@ -95,7 +95,7 @@ import type {
   ScoredPersonne,
 } from "../../logic/api";
 import { controller } from "../../logic/logic";
-import { sexeIcon } from "@/components/format";
+import { Formatters } from "@/utils";
 
 const props = defineProps<{
   personne: Personne;

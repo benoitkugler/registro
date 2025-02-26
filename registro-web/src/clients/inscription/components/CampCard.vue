@@ -4,8 +4,7 @@
       <v-row no-gutters class="mb-1">
         <v-col cols="8">
           <v-chip prepend-icon="mdi-calendar-blank">
-            du {{ formatDate(new Date(props.camp.DateDebut)) }} au
-            {{ formatDate(new Date(Camps.dateFin(props.camp))) }}
+            {{ Camps.formatPlage(props.camp) }}
           </v-chip>
         </v-col>
 
@@ -51,9 +50,8 @@
 </template>
 
 <script lang="ts" setup>
-import { formatDate } from "@/components/format";
 import type { CampExt } from "../logic/api";
-import { Camps } from "@/utils";
+import { Camps, Formatters } from "@/utils";
 
 const props = defineProps<{
   camp: CampExt;
