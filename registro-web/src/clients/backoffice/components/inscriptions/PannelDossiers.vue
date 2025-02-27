@@ -125,6 +125,7 @@
       <DossierDetailsPannel
         v-if="dossierDetails != null"
         :dossier="dossierDetails"
+        @update-dossier="updateDossier"
       ></DossierDetailsPannel>
       <div v-else class="text-center font-italic my-6">
         Sélectionner un dossier...
@@ -147,6 +148,7 @@ import {
   type IdDossier,
   type Personne,
   type DossierDetails,
+  type Dossier,
 } from "../../logic/api";
 import { copy, nullableToOpt, optToNullable, selectItems } from "@/utils";
 import { controller } from "../../logic/logic";
@@ -210,5 +212,19 @@ async function loadDossier(id: IdDossier) {
   const res = await controller.DossiersLoad({ id: id });
   if (res === undefined) return;
   dossierDetails.value = res;
+}
+
+async function updateDossier(dossier: Dossier) {
+  const res = await controller.DossiersUpdate(dossier);
+  if (res === undefined) return;
+  controller.showMessage("Dossier mis à jour avec succès.");
+
+  // properly update current display
+  if (dossierDetails.value != null) {
+    dossierDetails.value.Dossier.Dossier = dossier;
+    dossierDetails.value.Dossier.Responsable = res.Responsable;
+  }
+  const dossierHeader = data.value?.Dossiers?.find((d) => d.Id == dossier.Id);
+  if (dossierHeader) dossierHeader.Responsable = res.Responsable;
 }
 </script>

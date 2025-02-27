@@ -41,6 +41,10 @@ export interface DossierHeader {
   Participants: string;
   NewMessages: Int;
 }
+// registro/controllers/backoffice.DossiersUpdateOut
+export interface DossiersUpdateOut {
+  Responsable: string;
+}
 // registro/controllers/backoffice.IdentTarget
 export interface IdentTarget {
   IdTemporaire: IdPersonne;
@@ -699,7 +703,7 @@ export abstract class AbstractAPI {
   }
 
   protected async rawGetCamps() {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/shared";
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/shared/camps";
     const rep: AxiosResponse<CampItem[] | null> = await Axios.post(
       fullUrl,
       null,
@@ -713,6 +717,26 @@ export abstract class AbstractAPI {
     this.startRequest();
     try {
       const out = await this.rawGetCamps();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected async rawSelectPersonne(params: { search: string }) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/shared/personne";
+    const rep: AxiosResponse<PersonneHeader[] | null> = await Axios.get(
+      fullUrl,
+      { headers: this.getHeaders(), params: { search: params["search"] } },
+    );
+    return rep.data;
+  }
+
+  /** SelectPersonne wraps rawSelectPersonne and handles the error */
+  async SelectPersonne(params: { search: string }) {
+    this.startRequest();
+    try {
+      const out = await this.rawSelectPersonne(params);
       return out;
     } catch (error) {
       this.handleError(error);
@@ -900,27 +924,6 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected async rawInscriptionsSearchPersonnes(params: { pattern: string }) {
-    const fullUrl =
-      this.baseUrl + "/api/v1/backoffice/inscriptions/search-personnes";
-    const rep: AxiosResponse<PersonneHeader[] | null> = await Axios.get(
-      fullUrl,
-      { headers: this.getHeaders(), params: { pattern: params["pattern"] } },
-    );
-    return rep.data;
-  }
-
-  /** InscriptionsSearchPersonnes wraps rawInscriptionsSearchPersonnes and handles the error */
-  async InscriptionsSearchPersonnes(params: { pattern: string }) {
-    this.startRequest();
-    try {
-      const out = await this.rawInscriptionsSearchPersonnes(params);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
   protected async rawInscriptionsIdentifiePersonne(
     params: InscriptionIdentifieIn,
   ) {
@@ -1017,6 +1020,27 @@ export abstract class AbstractAPI {
     this.startRequest();
     try {
       const out = await this.rawDossiersLoad(params);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected async rawDossiersUpdate(params: Dossier) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/dossiers";
+    const rep: AxiosResponse<DossiersUpdateOut> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() },
+    );
+    return rep.data;
+  }
+
+  /** DossiersUpdate wraps rawDossiersUpdate and handles the error */
+  async DossiersUpdate(params: Dossier) {
+    this.startRequest();
+    try {
+      const out = await this.rawDossiersUpdate(params);
       return out;
     } catch (error) {
       this.handleError(error);

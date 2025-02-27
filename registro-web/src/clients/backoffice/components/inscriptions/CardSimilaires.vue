@@ -122,9 +122,7 @@ const manualPattern = ref("");
 const manualSearchCandidates = ref<PersonneHeader[]>([]);
 async function manualSearch() {
   if ((manualPattern.value || "").length < 3) return;
-  const res = await controller.InscriptionsSearchPersonnes({
-    pattern: manualPattern.value,
-  });
+  const res = await controller.SelectPersonne({ search: manualPattern.value });
   if (res === undefined) return;
   manualSearchCandidates.value = res || [];
 }

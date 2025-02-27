@@ -86,7 +86,7 @@
         v-if="settings.ShowFondSoutien"
         color="primary"
         v-model="fondSoutien"
-        label="Je souhaite être contacté par le fonds de soutien pour éviter que le prix du camp ne soit un obstacle à l'inscription."
+        label="Je souhaite être contacté par le fond de soutien pour éviter que le prix du camp ne soit un obstacle à l'inscription."
       >
       </v-checkbox>
 

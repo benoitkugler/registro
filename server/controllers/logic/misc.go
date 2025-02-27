@@ -3,7 +3,9 @@ package logic
 import (
 	"slices"
 
+	"registro/controllers/search"
 	cps "registro/sql/camps"
+	pr "registro/sql/personnes"
 	"registro/utils"
 )
 
@@ -25,6 +27,22 @@ func LoadCamps(db cps.DB) ([]CampItem, error) {
 	out := make([]CampItem, len(list))
 	for i, camp := range list {
 		out[i] = CampItem{camp.Id, camp.Label(), camp.IsPassedBy(deltaOld)}
+	}
+	return out, nil
+}
+
+func SelectPersonne(db pr.DB, pattern string, removeTemp bool) ([]search.PersonneHeader, error) {
+	const maxCount = 10
+	personnes, err := pr.SelectAllPersonnes(db)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	if removeTemp {
+		personnes.RemoveTemp()
+	}
+	out := search.FilterPersonnes(personnes, pattern)
+	if len(out) > maxCount {
+		out = out[:maxCount]
 	}
 	return out, nil
 }

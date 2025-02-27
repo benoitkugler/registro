@@ -106,3 +106,12 @@ func (ct *Controller) GetCamps(c echo.Context) error {
 	}
 	return c.JSON(200, out)
 }
+
+func (ct *Controller) SelectPersonne(c echo.Context) error {
+	search := c.QueryParam("search")
+	out, err := logic.SelectPersonne(ct.db, search, true)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}

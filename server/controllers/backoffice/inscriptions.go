@@ -76,31 +76,6 @@ func (ct *Controller) loadInscriptionsContent(ids ...ds.IdDossier) ([]Inscriptio
 	return out, nil
 }
 
-func (ct *Controller) InscriptionsSearchPersonnes(c echo.Context) error {
-	pattern := c.QueryParam("pattern")
-	out, err := SearchPersonnes(ct.db, pattern, true)
-	if err != nil {
-		return err
-	}
-	return c.JSON(200, out)
-}
-
-func SearchPersonnes(db pr.DB, pattern string, noTemp bool) ([]search.PersonneHeader, error) {
-	const maxCount = 10
-	personnes, err := pr.SelectAllPersonnes(db)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-	if noTemp {
-		personnes.RemoveTemp()
-	}
-	out := search.FilterPersonnes(personnes, pattern)
-	if len(out) > maxCount {
-		out = out[:maxCount]
-	}
-	return out, nil
-}
-
 func (ct *Controller) InscriptionsSearchSimilaires(c echo.Context) error {
 	id, err := utils.QueryParamInt[pr.IdPersonne](c, "id-personne")
 	if err != nil {

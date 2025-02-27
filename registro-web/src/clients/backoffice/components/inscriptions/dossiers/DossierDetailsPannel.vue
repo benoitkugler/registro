@@ -8,6 +8,38 @@
     "
     class="ml-2"
   >
+    <v-dialog v-model="showEditDossier" max-width="600px">
+      <DossierEditCard
+        :responsable="props.dossier.Dossier.Responsable"
+        :dossier="props.dossier.Dossier.Dossier"
+        @save="
+          (v) => {
+            showEditDossier = false;
+            emit('updateDossier', v);
+          }
+        "
+      ></DossierEditCard>
+    </v-dialog>
+
+    <template v-slot:append>
+      <v-menu>
+        <template v-slot:activator="{ props: menuProps }">
+          <v-btn v-bind="menuProps" icon="mdi-pencil"></v-btn>
+        </template>
+        <v-list density="compact">
+          <v-list-item
+            title="Modifier le dossier..."
+            @click="showEditDossier = true"
+          >
+          </v-list-item>
+          <v-list-item
+            title="Modifier les participants..."
+            @click="showEditParticipants = true"
+          >
+          </v-list-item>
+        </v-list>
+      </v-menu>
+    </template>
     <v-card-text>
       <!-- récap financier -->
       <v-row>
@@ -40,21 +72,22 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import {
   StatutPaiement,
+  type Dossier,
   type DossierDetails,
-  type IdentTarget,
 } from "../../../logic/api";
 import { Personnes, pseudoEventTime, type PseudoEvent } from "@/utils";
 import FactureCard from "./FactureCard.vue";
+import DossierEditCard from "./DossierEditCard.vue";
 
 const props = defineProps<{
   dossier: DossierDetails;
 }>();
 
 const emit = defineEmits<{
-  (e: "identifie", params: IdentTarget): void;
+  (e: "updateDossier", dossier: Dossier): void;
 }>();
 
 function statutColor(s: StatutPaiement) {
@@ -96,4 +129,7 @@ const events = computed(() => {
   );
   return out;
 });
+
+const showEditDossier = ref(false);
+const showEditParticipants = ref(false);
 </script>

@@ -10,6 +10,7 @@ import (
 	"registro/sql/camps"
 	ds "registro/sql/dossiers"
 	"registro/sql/events"
+	pr "registro/sql/personnes"
 	"registro/utils"
 
 	"github.com/labstack/echo/v4"
@@ -67,7 +68,7 @@ type DossierHeader struct {
 	NewMessages  int
 }
 
-func newDossierHeader(dossier logic.DossierFinance) DossierHeader {
+func newDossierHeader(dossier logic.Dossier) DossierHeader {
 	personnes := dossier.Personnes()
 	// extract participants
 	chunks := make([]string, 0, len(personnes)-1)
@@ -75,7 +76,7 @@ func newDossierHeader(dossier logic.DossierFinance) DossierHeader {
 		chunks = append(chunks, pe.PrenomNOM())
 	}
 	return DossierHeader{
-		Id:           dossier.Dossier.Dossier.Id,
+		Id:           dossier.Dossier.Id,
 		Responsable:  personnes[0].PrenomNOM(),
 		Participants: strings.Join(chunks, ", "),
 		NewMessages:  len(dossier.Events.NewMessagesForBackoffice()),
@@ -115,7 +116,7 @@ func (ct *Controller) searchDossiers(query SearchDossierIn) (SearchDossierOut, e
 	}
 	out := make([]DossierHeader, len(filtered))
 	for i, v := range filtered {
-		out[i] = newDossierHeader(v)
+		out[i] = newDossierHeader(v.Dossier)
 	}
 	return SearchDossierOut{out, len(ids)}, nil
 }
@@ -209,4 +210,42 @@ func (ct *Controller) loadDossier(host string, id ds.IdDossier) (DossierDetails,
 	url := espaceperso.URLEspacePerso(ct.key, host, id)
 
 	return DossierDetails{dossier.Publish(), url}, nil
+}
+
+func (ct *Controller) DossiersUpdate(c echo.Context) error {
+	var args ds.Dossier
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+	type DossiersUpdateOut struct {
+		Responsable string
+	}
+	out, err := ct.updateDossier(args)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, DossiersUpdateOut{out})
+}
+
+// returns the Responsable
+func (ct *Controller) updateDossier(args ds.Dossier) (string, error) {
+	current, err := ds.SelectDossier(ct.db, args.Id)
+	if err != nil {
+		return "", utils.SQLError(err)
+	}
+	responsable, err := pr.SelectPersonne(ct.db, args.IdResponsable)
+	if err != nil {
+		return "", utils.SQLError(err)
+	}
+
+	current.IdResponsable = args.IdResponsable
+	current.CopiesMails = args.CopiesMails
+	current.PartageAdressesOK = args.PartageAdressesOK
+	current.DemandeFondSoutien = args.DemandeFondSoutien
+	_, err = current.Update(ct.db)
+	if err != nil {
+		return "", utils.SQLError(err)
+	}
+
+	return responsable.PrenomNOM(), nil
 }
