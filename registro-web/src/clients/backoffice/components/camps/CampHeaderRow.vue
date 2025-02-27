@@ -49,17 +49,16 @@
             :model-value="props.camp.Stats.Valides"
             height="36"
             rounded
+            color="primary"
           >
-            <template v-slot:default="{ value }">
-              <strong
-                >{{ value }}/{{ props.camp.Camp.Camp.Places }}
-                <span v-if="allAttente > 0">
-                  (+
-                  {{ allAttente }})</span
-                >
-              </strong>
-            </template></v-progress-linear
-          >
+            <strong
+              >{{ props.camp.Stats.Valides }}/{{ props.camp.Camp.Camp.Places }}
+              <span v-if="allAttente > 0">
+                (+
+                {{ allAttente }})</span
+              >
+            </strong>
+          </v-progress-linear>
         </template>
         <CampStats :stats="props.camp.Stats"></CampStats>
       </v-menu>
