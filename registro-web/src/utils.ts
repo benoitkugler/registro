@@ -1,9 +1,10 @@
-import { Sexe } from "./clients/backoffice/logic/api";
+import { CurrencyLabels, Sexe } from "./clients/backoffice/logic/api";
 import type {
   Paiement,
   Personne,
   Time,
   Event,
+  Montant,
 } from "./clients/backoffice/logic/api";
 import type { Date_, Int } from "./clients/inscription/logic/api";
 import { newDate_ } from "./components/date";
@@ -263,6 +264,12 @@ export namespace Formatters {
         return "mdi-gender-female";
     }
   }
+
+  export function montant(m: Montant) {
+    const isInt = m.Cent % 100 == 0;
+    const val = m.Cent / 100;
+    return `${isInt ? val : val.toFixed(2)}${CurrencyLabels[m.Currency]}`;
+  }
 }
 
 export type PseudoEvent =
@@ -275,3 +282,14 @@ export type PseudoEvent =
       Kind: "inscription-time";
       Time: Time;
     };
+
+export function pseudoEventTime(event: PseudoEvent): Date {
+  switch (event.Kind) {
+    case "event":
+      return new Date(event.event.Created);
+    case "paiement":
+      return new Date(event.Paiement.Date);
+    case "inscription-time":
+      return new Date(event.Time);
+  }
+}

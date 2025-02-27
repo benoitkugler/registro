@@ -106,19 +106,36 @@ export interface SearchDossierOut {
 }
 // registro/controllers/logic.AccuseReception
 export type AccuseReception = Record<string, never>;
+// registro/controllers/logic.Aide
+export interface Aide {
+  Structure: string;
+  Montant: Montant;
+}
 // registro/controllers/logic.Attestation
 export interface Attestation {
   Distribution: Distribution;
   IsPresence: boolean;
 }
-// registro/controllers/logic.BilanFinancesExt
-export interface BilanFinancesExt {
+// registro/controllers/logic.BilanFinancesPub
+export interface BilanFinancesPub {
+  Inscrits: { [key in IdParticipant]: BilanParticipantPub } | null;
   Demande: string;
   Recu: string;
+  Restant: string;
   Statut: StatutPaiement;
+}
+// registro/controllers/logic.BilanParticipantPub
+export interface BilanParticipantPub {
+  AvecOption: Montant;
+  AvecOptionDescription: string;
+  Remises: Remises;
+  Aides: Aide[] | null;
+  AvecAides: string;
+  Net: string;
 }
 // registro/controllers/logic.CampDocs
 export interface CampDocs {
+  IdCamp: IdCamp;
   CampLabel: string;
 }
 // registro/controllers/logic.CampItem
@@ -134,7 +151,7 @@ export interface DossierExt {
   Participants: ParticipantExt[] | null;
   Events: Events;
   Paiements: Paiements;
-  Bilan: BilanFinancesExt;
+  Bilan: BilanFinancesPub;
 }
 // registro/controllers/logic.Event
 export interface Event {
@@ -179,11 +196,14 @@ export interface Message {
 }
 // registro/controllers/logic.PlaceLiberee
 export interface PlaceLiberee {
+  IdParticipant: IdParticipant;
+  IdCamp: IdCamp;
   ParticipantLabel: string;
   CampLabel: string;
 }
 // registro/controllers/logic.Sondage
 export interface Sondage {
+  IdCamp: IdCamp;
   CampLabel: string;
 }
 // registro/controllers/logic.StatutPaiement
@@ -322,8 +342,8 @@ export interface OptionPrixParticipant {
 export interface OptionSemaineCamp {
   Plage1: Plage;
   Plage2: Plage;
-  Prix1: Montant;
-  Prix2: Montant;
+  Prix1: Int;
+  Prix2: Int;
 }
 // registro/sql/camps.Participant
 export interface Participant {
@@ -348,8 +368,8 @@ export interface ParticipantExt {
 // registro/sql/camps.PrixParStatut
 export interface PrixParStatut {
   Id: Int;
-  Prix: Montant;
-  Statut: string;
+  Prix: Int;
+  Label: string;
   Description: string;
 }
 // registro/sql/camps.PrixQuotientFamilial

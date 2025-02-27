@@ -1,6 +1,7 @@
 package logic
 
 import (
+	"reflect"
 	"testing"
 
 	cps "registro/sql/camps"
@@ -8,18 +9,23 @@ import (
 	tu "registro/utils/testutils"
 )
 
+var (
+	eur = ds.NewEuros
+	chf = ds.NewFrancsuisses
+)
+
 func TestDossierFinance_Bilan(t *testing.T) {
 	taux := ds.Taux{Euros: 1000, FrancsSuisse: 2000}
 	camps := cps.Camps{
-		1: cps.Camp{Prix: ds.NewEuros(200), Duree: 10},
-		2: cps.Camp{Prix: ds.NewFrancsuisses(150)},
+		1: cps.Camp{Prix: eur(200), Duree: 10},
+		2: cps.Camp{Prix: chf(150)},
 	}
 	df := DossierFinance{
 		Dossier: Dossier{camps: camps}, taux: taux,
 		paiements: ds.Paiements{
-			1: ds.Paiement{IsRemboursement: true, Montant: ds.NewEuros(100)},
-			2: ds.Paiement{IsRemboursement: false, Montant: ds.NewEuros(200)},
-			3: ds.Paiement{IsRemboursement: false, Montant: ds.NewFrancsuisses(300)},
+			1: ds.Paiement{IsRemboursement: true, Montant: eur(100)},
+			2: ds.Paiement{IsRemboursement: false, Montant: eur(200)},
+			3: ds.Paiement{IsRemboursement: false, Montant: chf(300)},
 		},
 	}
 
@@ -30,7 +36,14 @@ func TestDossierFinance_Bilan(t *testing.T) {
 		3: cps.Participant{Id: 3, IdCamp: 2, Statut: cps.Inscrit},
 		4: cps.Participant{Id: 4, IdCamp: 2, Statut: cps.AStatuer},
 	}
-	tu.Assert(t, df.Bilan() == BilanFinances{ds.FrancsSuisse, 40000, 35000})
+	tu.Assert(t, reflect.DeepEqual(df.Bilan(), BilanFinances{
+		map[cps.IdParticipant]BilanParticipant{
+			1: {eur(200), "", cps.Remises{}, nil},
+			2: {chf(150), "", cps.Remises{}, nil},
+			3: {chf(150), "", cps.Remises{}, nil},
+		},
+		40000, 35000, ds.FrancsSuisse,
+	}))
 
 	// avec aides
 	df.Participants = cps.Participants{
@@ -41,16 +54,23 @@ func TestDossierFinance_Bilan(t *testing.T) {
 	}
 	df.aides = map[cps.IdParticipant]cps.Aides{
 		1: {
-			1: cps.Aide{Valide: true, Valeur: ds.NewEuros(20)},
-			2: cps.Aide{Valide: true, Valeur: ds.NewFrancsuisses(2), ParJour: true},
+			1: cps.Aide{Valide: true, Valeur: eur(20)},
+			2: cps.Aide{Valide: true, Valeur: chf(2), ParJour: true},
 		},
 	}
-	tu.Assert(t, df.Bilan() == BilanFinances{ds.FrancsSuisse, 40000 - 1000 - 200*10, 35000})
+	tu.Assert(t, reflect.DeepEqual(df.Bilan(), BilanFinances{
+		map[cps.IdParticipant]BilanParticipant{
+			1: {eur(200), "", cps.Remises{}, []Aide{{"", eur(20)}, {"", chf(20)}}},
+			2: {chf(150), "", cps.Remises{}, nil},
+			3: {chf(150), "", cps.Remises{}, nil},
+		},
+		40000 - 1000 - 200*10, 35000, ds.FrancsSuisse,
+	}))
 
 	// avec remises
 	df.Participants = cps.Participants{
 		1: cps.Participant{Id: 1, IdCamp: 1, Statut: cps.Inscrit, Remises: cps.Remises{
-			ReducSpeciale:  ds.NewEuros(10),
+			ReducSpeciale:  eur(10),
 			ReducEquipiers: 10,
 			ReducEnfants:   5,
 		}},
@@ -59,20 +79,103 @@ func TestDossierFinance_Bilan(t *testing.T) {
 		4: cps.Participant{Id: 4, IdCamp: 2, Statut: cps.AStatuer},
 	}
 	df.aides = nil
-	tu.Assert(t, df.Bilan() == BilanFinances{ds.FrancsSuisse, 40000 - 500 - 1500, 35000})
+	tu.Assert(t, reflect.DeepEqual(df.Bilan(), BilanFinances{
+		map[cps.IdParticipant]BilanParticipant{
+			1: {eur(200), "", cps.Remises{
+				ReducSpeciale:  eur(10),
+				ReducEquipiers: 10,
+				ReducEnfants:   5,
+			}, nil},
+			2: {chf(150), "", cps.Remises{}, nil},
+			3: {chf(150), "", cps.Remises{}, nil},
+		},
+		40000 - 500 - 1500, 35000, ds.FrancsSuisse,
+	}))
 
 	// avec remises et aides
 	df.Participants = cps.Participants{
 		1: cps.Participant{Id: 1, IdCamp: 1, Statut: cps.Inscrit, Remises: cps.Remises{
-			ReducSpeciale:  ds.NewEuros(10),
+			ReducSpeciale:  eur(10),
 			ReducEquipiers: 5,
 			ReducEnfants:   5,
 		}},
 	}
 	df.aides = map[cps.IdParticipant]cps.Aides{
 		1: {
-			1: cps.Aide{Valide: true, Valeur: ds.NewEuros(20)},
+			1: cps.Aide{Valide: true, Valeur: eur(20)},
 		},
 	}
-	tu.Assert(t, df.Bilan() == BilanFinances{ds.FrancsSuisse, 10000 - 1000 - 500 - 900, 35000})
+	tu.Assert(t, reflect.DeepEqual(df.Bilan(), BilanFinances{
+		map[cps.IdParticipant]BilanParticipant{
+			1: {eur(200), "", cps.Remises{
+				ReducSpeciale:  eur(10),
+				ReducEquipiers: 5,
+				ReducEnfants:   5,
+			}, []Aide{{"", eur(20)}}},
+		},
+		10000 - 1000 - 500 - 900, 35000, ds.FrancsSuisse,
+	}))
+}
+
+func Test_pc_prixBase(t *testing.T) {
+	semaine := cps.OptionSemaineCamp{Prix1: 6000, Prix2: 8000}
+	status := []cps.PrixParStatut{{1, 8000, "Enfant", ""}, {2, 9000, "Adulte", ""}}
+	jours := []int{1000, 2000, 3000, 4000}
+	type fields struct {
+		optPart cps.OptionPrixParticipant
+		optCamp cps.OptionPrixCamp
+		optQF   cps.PrixQuotientFamilial
+		prix    cps.Montant
+		duree   int
+		qf      int
+	}
+	tests := []struct {
+		fields fields
+		want   cps.Montant
+		want1  string
+	}{
+		// Simple
+		{fields{prix: eur(100)}, eur(100), ""},
+		// QF
+		{fields{prix: eur(100), qf: 100}, eur(100), ""},
+		{fields{prix: eur(100), optQF: cps.PrixQuotientFamilial{20, 40, 60, 100}}, eur(100), ""},
+		{fields{prix: eur(100), optQF: cps.PrixQuotientFamilial{20, 40, 60, 100}, qf: 100}, eur(20), "QF 100"},
+		{fields{prix: eur(100), optQF: cps.PrixQuotientFamilial{20, 40, 60, 100}, qf: 400}, eur(40), "QF 400"},
+		{fields{prix: eur(100), optQF: cps.PrixQuotientFamilial{20, 40, 60, 100}, qf: 600}, eur(60), "QF 600"},
+		{fields{prix: eur(100), optQF: cps.PrixQuotientFamilial{20, 40, 60, 100}, qf: 1000}, eur(100), "QF 1000"},
+		// Option semaine
+		{fields{prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixSemaine, Semaine: semaine}}, eur(100), ""},
+		{fields{prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixSemaine, Semaine: semaine}, optPart: cps.OptionPrixParticipant{Semaine: cps.Semaine1}}, eur(60), "Semaine 1"},
+		{fields{prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixSemaine, Semaine: semaine}, optPart: cps.OptionPrixParticipant{Semaine: cps.Semaine2}}, eur(80), "Semaine 2"},
+		// Option statut
+		{fields{prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixStatut, Statuts: status}}, eur(100), ""},
+		{fields{prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixStatut, Statuts: status}, optPart: cps.OptionPrixParticipant{IdStatut: 1}}, eur(80), "Enfant"},
+		{fields{prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixStatut, Statuts: status}, optPart: cps.OptionPrixParticipant{IdStatut: 2}}, eur(90), "Adulte"},
+		// Option jours
+		{fields{prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixJour, Jours: jours}}, eur(100), ""},
+		{fields{prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixJour, Jours: jours}, optPart: cps.OptionPrixParticipant{Jour: cps.Jours{}}}, eur(100), ""},
+		{fields{prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixJour, Jours: jours}, optPart: cps.OptionPrixParticipant{Jour: cps.Jours{0, 1, 2, 3}}}, eur(100), ""},
+		{fields{prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixJour, Jours: jours}, optPart: cps.OptionPrixParticipant{Jour: cps.Jours{0, 2}}}, eur(40), "2 jours"},
+		// Mélange
+		{
+			fields{
+				prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixJour, Jours: jours},
+				optPart: cps.OptionPrixParticipant{Jour: cps.Jours{0, 2}},
+				optQF:   cps.PrixQuotientFamilial{20, 40, 60, 100}, qf: 100,
+			}, eur(8), "2 jours - QF 100",
+		}, // 40 * 20%
+	}
+	for _, tt := range tests {
+		p := pc{
+			Participant: cps.Participant{OptionPrix: tt.fields.optPart, QuotientFamilial: tt.fields.qf},
+			Camp: cps.Camp{
+				OptionPrix:             tt.fields.optCamp,
+				OptionQuotientFamilial: tt.fields.optQF,
+				Prix:                   tt.fields.prix, Duree: tt.fields.duree,
+			},
+		}
+		got, got1 := p.prixBase()
+		tu.Assert(t, got == tt.want)
+		tu.Assert(t, got1 == tt.want1)
+	}
 }

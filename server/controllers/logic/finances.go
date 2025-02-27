@@ -1,6 +1,8 @@
 package logic
 
 import (
+	"fmt"
+
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
 	"registro/utils"
@@ -81,6 +83,7 @@ type DossierFinance struct {
 //
 // Les aides en cours de validation sont ignorées.
 func (df DossierFinance) Bilan() BilanFinances {
+	inscrits := map[cps.IdParticipant]BilanParticipant{}
 	demande, recu := df.taux.Zero(), df.taux.Zero()
 
 	for _, participant := range df.Participants {
@@ -88,8 +91,9 @@ func (df DossierFinance) Bilan() BilanFinances {
 			continue
 		}
 		data := pc{participant, df.camps[participant.IdCamp], df.aides[participant.Id], df.structures}
-		net := data.finances().Net(df.taux)
-		demande.Add(net)
+		bilan := data.bilan()
+		inscrits[participant.Id] = bilan
+		demande.Add(bilan.net(df.taux))
 	}
 
 	for _, paiement := range df.paiements {
@@ -101,145 +105,18 @@ func (df DossierFinance) Bilan() BilanFinances {
 	}
 
 	// [demande] and [recu] have the same currency
-	return BilanFinances{demande.Currency, demande.Cent, recu.Cent}
-}
-
-type pc struct {
-	cps.Participant
-	cps.Camp
-
-	aides      cps.Aides
-	structures cps.Structureaides // enough for [aides]
-}
-
-// BilanParticipant exposes the finances for one [Participant]
-type BilanParticipant struct {
-	Base    cps.Montant
-	Remises cps.Remises
-
-	// Aides validées
-	Aides []Aide
-}
-
-// prixSansRemises renvoie le prix du séjour si on applique les aides (extérieures)
-// mais pas les remises.
-func (bp BilanParticipant) prixSansRemises(taux ds.Taux) cps.Montant {
-	out := taux.Convertible(bp.Base)
-	out.Sub(bp.totalAides(taux))
-	p := out.Montant
-	if p.Cent < 0 {
-		p.Cent = 0
-	}
-	return p
-}
-
-// totalAides ignore les aides non validées
-func (bp BilanParticipant) totalAides(taux ds.Taux) cps.Montant {
-	out := taux.Zero()
-	for _, aide := range bp.Aides {
-		out.Add(aide.Montant)
-	}
-	return out.Montant
-}
-
-// Net renvoie le prix à payer après avoir déduit les aides extérieures et les remises
-func (bp BilanParticipant) Net(taux ds.Taux) cps.Montant {
-	v1 := bp.prixSansRemises(taux).Remise(bp.Remises.ReducEnfants + bp.Remises.ReducEquipiers)
-	val := taux.Convertible(v1)
-	val.Sub(bp.Remises.ReducSpeciale)
-	if val.Montant.Cent < 0 {
-		val.Montant.Cent = 0
-	}
-	return val.Montant
-}
-
-// Aide shows resolved [Aide]
-type Aide struct {
-	Structure string
-	Montant   cps.Montant
-}
-
-func (p pc) finances() (out BilanParticipant) {
-	out.Base = p.prixBase()
-	out.Remises = p.Participant.Remises
-
-	duree := p.duree()
-	for _, aide := range p.aides {
-		out.Aides = append(out.Aides, Aide{p.structures[aide.IdStructureaide].Nom, aide.Resolve(duree)})
-	}
-	return out
-}
-
-// duree renvoie le nombre de jours de présence du participant
-// en prenant en compte une éventuelle option SEMAINE ou JOUR.
-func (p pc) duree() int {
-	options := p.Camp.OptionPrix
-	optPart := p.Participant.OptionPrix
-
-	switch options.Active {
-	case cps.PrixSemaine:
-		detailsOpt := options.Semaine
-		switch optPart.Semaine {
-		case cps.Semaine1:
-			return detailsOpt.Plage1.Duree
-		case cps.Semaine2:
-			return detailsOpt.Plage2.Duree
-		}
-	case cps.PrixJour:
-		return optPart.Jour.NbJours(p.Camp.Duree)
-	}
-	return p.Camp.Duree
-}
-
-// prixBase renvoie le prix du camp, en prenant en compte une éventuelle option
-func (p pc) prixBase() cps.Montant {
-	optPart := p.Participant.OptionPrix
-	optCamp := p.Camp.OptionPrix
-
-	prix := p.Camp.Prix
-	switch optCamp.Active {
-	case cps.PrixSemaine:
-		semaine := optPart.Semaine
-		if semaine == cps.Semaine1 {
-			prix = optCamp.Semaine.Prix1
-		} else if semaine == cps.Semaine2 {
-			prix = optCamp.Semaine.Prix2
-		}
-	case cps.PrixStatut:
-		for _, info := range optCamp.Statuts {
-			if info.Id == optPart.IdStatut {
-				prix = info.Prix
-			}
-		}
-	case cps.PrixJour:
-		nbJours := optPart.Jour.NbJours(p.Camp.Duree)
-		prixJours := optCamp.Jours
-		if nbJours == 0 || nbJours >= len(prixJours) {
-			// invalide -> camp entier
-			// potentiellement < somme(prixJours)
-		} else {
-			prix = optPart.Jour.CalculePrix(prixJours, p.Camp.Prix.Currency)
-		}
-	}
-
-	// réduction quotient familial
-	qf := p.Participant.QuotientFamilial
-	if qfCamp := p.Camp.OptionQuotientFamilial; qfCamp.IsActive() && qf > 0 {
-		ratio := qfCamp.Percentage(qf)
-		prix.Cent = prix.Cent * ratio / 100
-	}
-
-	return prix
+	return BilanFinances{inscrits, demande.Cent, recu.Cent, demande.Currency}
 }
 
 // BilanFinances résume l'état financier d'un dossier
 type BilanFinances struct {
+	inscrits map[cps.IdParticipant]BilanParticipant
+
+	// totaux, en centimes
+
+	demande  int // montant demandé final (avant déduction des paiements déjà effectués)
+	recu     int // somme des paiements reçus
 	currency ds.Currency
-
-	// en centimes
-
-	demande int // montant demandé final (avant déduction des paiements déjà effectués)
-	recu    int // somme des paiements reçus
 }
 
 func (b BilanFinances) IsAcquitte() bool { return b.demande <= b.recu }
@@ -266,4 +143,155 @@ func (b BilanFinances) StatutPaiement() StatutPaiement {
 	} else {
 		return NonCommence
 	}
+}
+
+type pc struct {
+	cps.Participant
+	cps.Camp
+
+	aides      cps.Aides
+	structures cps.Structureaides // enough for [aides]
+}
+
+// BilanParticipant exposes the finances for one [Participant]
+//
+// Le prix final est calculé en suivant 3 étapes :
+//   - applique les options et le quotient familial
+//   - applique les aides extérieureurs
+//   - applique les remises internes
+type BilanParticipant struct {
+	AvecOption            cps.Montant // prend en compte une éventuelle option et le quotient familial
+	AvecOptionDescription string      // courte description affichée dans la facture
+
+	Remises cps.Remises
+
+	// Aides validées
+	Aides []Aide
+}
+
+// prixSansRemises renvoie le prix du séjour si on applique les aides (extérieures)
+// mais pas les remises.
+func (bp BilanParticipant) prixSansRemises(taux ds.Taux) cps.Montant {
+	out := taux.Convertible(bp.AvecOption)
+
+	// totalAides ignore les aides non validées
+	totalAide := taux.Zero()
+	for _, aide := range bp.Aides {
+		totalAide.Add(aide.Montant)
+	}
+	out.Sub(totalAide.Montant)
+
+	p := out.Montant
+	if p.Cent < 0 {
+		p.Cent = 0
+	}
+	return p
+}
+
+// Net renvoie le prix à payer après avoir déduit les aides extérieures et les remises
+func (bp BilanParticipant) net(taux ds.Taux) cps.Montant {
+	v1 := bp.prixSansRemises(taux).Remise(bp.Remises.ReducEnfants + bp.Remises.ReducEquipiers)
+	val := taux.Convertible(v1)
+	val.Sub(bp.Remises.ReducSpeciale)
+	if val.Montant.Cent < 0 {
+		val.Montant.Cent = 0
+	}
+	return val.Montant
+}
+
+// Aide shows resolved [Aide]
+type Aide struct {
+	Structure string
+	Montant   cps.Montant
+}
+
+func (p pc) bilan() (out BilanParticipant) {
+	out.AvecOption, out.AvecOptionDescription = p.prixBase()
+	out.Remises = p.Participant.Remises
+
+	duree := p.duree()
+
+	for _, id := range utils.MapKeysSorted(p.aides) {
+		aide := p.aides[id]
+		out.Aides = append(out.Aides, Aide{p.structures[aide.IdStructureaide].Nom, aide.Resolve(duree)})
+	}
+	return out
+}
+
+// duree renvoie le nombre de jours de présence du participant
+// en prenant en compte une éventuelle option SEMAINE ou JOUR.
+func (p pc) duree() int {
+	options := p.Camp.OptionPrix
+	optPart := p.Participant.OptionPrix
+
+	switch options.Active {
+	case cps.PrixSemaine:
+		detailsOpt := options.Semaine
+		switch optPart.Semaine {
+		case cps.Semaine1:
+			return detailsOpt.Plage1.Duree
+		case cps.Semaine2:
+			return detailsOpt.Plage2.Duree
+		}
+	case cps.PrixJour:
+		return optPart.Jour.NbJours(p.Camp.Duree)
+	}
+	return p.Camp.Duree
+}
+
+// prixBase renvoie le prix du camp, en prenant en compte une éventuelle option et le quotient familial
+// une courte description est aussi renvoyée
+func (p pc) prixBase() (cps.Montant, string) {
+	optPart := p.Participant.OptionPrix
+	optCamp := p.Camp.OptionPrix
+
+	prix := p.Camp.Prix
+	descOption, descQF := "", ""
+	switch optCamp.Active {
+	case cps.PrixSemaine:
+		semaine := optPart.Semaine
+		if semaine == cps.Semaine1 {
+			prix.Cent = optCamp.Semaine.Prix1
+			descOption = "Semaine 1"
+		} else if semaine == cps.Semaine2 {
+			prix.Cent = optCamp.Semaine.Prix2
+			descOption = "Semaine 2"
+		}
+	case cps.PrixStatut:
+		for _, info := range optCamp.Statuts {
+			if info.Id == optPart.IdStatut {
+				prix.Cent = info.Prix
+				descOption = info.Label
+			}
+		}
+	case cps.PrixJour:
+		nbJours := optPart.Jour.NbJours(p.Camp.Duree)
+		prixJours := optCamp.Jours
+		if nbJours == 0 || nbJours >= len(prixJours) {
+			// invalide -> camp entier
+			// potentiellement < somme(prixJours)
+		} else {
+			prix = optPart.Jour.CalculePrix(prixJours, p.Camp.Prix.Currency)
+			plural := ""
+			if nbJours > 1 {
+				plural = "s"
+			}
+			descOption = fmt.Sprintf("%d jour%s", nbJours, plural)
+		}
+	}
+
+	// réduction quotient familial
+	qf := p.Participant.QuotientFamilial
+	if qfCamp := p.Camp.OptionQuotientFamilial; qfCamp.IsActive() && qf > 0 {
+		ratio := qfCamp.Percentage(qf)
+		prix.Cent = prix.Cent * ratio / 100
+		descQF = fmt.Sprintf("QF %d", qf)
+	}
+
+	if descOption != "" && descQF != "" {
+		descOption += " - "
+	}
+	desc := descOption + descQF
+
+	return prix, desc
 }

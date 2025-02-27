@@ -139,23 +139,48 @@ type DossierExt struct {
 	Dossier      ds.Dossier
 	Responsable  string
 	Participants []cps.ParticipantExt
-	Events       Events
-	Paiements    ds.Paiements
 
-	Bilan BilanFinancesExt
+	Events    Events
+	Paiements ds.Paiements
+
+	Bilan BilanFinancesPub
 }
 
-type BilanFinancesExt struct {
-	Demande, Recu string
-	Statut        StatutPaiement
+type BilanParticipantPub struct {
+	BilanParticipant
+
+	AvecAides string
+	Net       string
+}
+
+func (bp BilanParticipant) publish(taux ds.Taux) BilanParticipantPub {
+	out := BilanParticipantPub{BilanParticipant: bp}
+
+	out.AvecAides = taux.Convertible(bp.prixSansRemises(taux)).String()
+	out.Net = taux.Convertible(bp.net(taux)).String()
+	return out
+}
+
+type BilanFinancesPub struct {
+	Inscrits map[cps.IdParticipant]BilanParticipantPub
+
+	Demande, Recu, Restant string
+	Statut                 StatutPaiement
 }
 
 func (d DossierFinance) Publish() DossierExt {
 	taux := d.taux
 	b := d.Bilan()
-	bilan := BilanFinancesExt{
+	inscrits := make(map[cps.IdParticipant]BilanParticipantPub, len(b.inscrits))
+	for k, v := range b.inscrits {
+		inscrits[k] = v.publish(taux)
+	}
+
+	bilan := BilanFinancesPub{
+		inscrits,
 		taux.Convertible(ds.Montant{Cent: b.demande, Currency: b.currency}).String(),
 		taux.Convertible(ds.Montant{Cent: b.recu, Currency: b.currency}).String(),
+		taux.Convertible(b.ApresPaiement()).String(),
 		b.StatutPaiement(),
 	}
 	return DossierExt{d.Dossier.Dossier, d.Responsable().PrenomNOM(), d.ParticipantsExt(), d.Events, d.paiements, bilan}

@@ -157,7 +157,7 @@ type OptionPrixCamp struct {
 	Semaine OptionSemaineCamp
 	Statuts []PrixParStatut
 
-	// Prix de chaque jour du camp (souvent constant), en centimes.
+	// Prix de chaque jour (0-based) du camp (souvent constant), en centimes.
 	// L'unité est celle du séjour associé.
 	// Le champ [Prix] du séjour peut être inférieur à la somme
 	// pour une remise.
@@ -165,17 +165,16 @@ type OptionPrixCamp struct {
 }
 
 type OptionSemaineCamp struct {
-	Plage1 shared.Plage
-	Plage2 shared.Plage
-	Prix1  Montant
-	Prix2  Montant
+	Plage1       shared.Plage
+	Plage2       shared.Plage
+	Prix1, Prix2 int // prix en centimes (l'unité est celle du camp)
 }
 
 type PrixParStatut struct {
 	Id          int16
-	Prix        Montant
-	Statut      string
-	Description string
+	Prix        int // prix en centimes (l'unité est celle du camp)
+	Label       string
+	Description string // longue description
 }
 
 // OptionPrixParticipant répond à OptionPrixCamp. L'option est active si :
@@ -213,13 +212,11 @@ var grilleQF = [...]int{0, 359, 564, 714}
 // pour les categories définie par `QuotientFamilial`
 //
 // Par cohérence avec le prix de base, la dernière valeur vaut toujours 100
-// (sauf pour les entrées vides).
+// (sauf pour la valeur zero).
 type PrixQuotientFamilial [len(grilleQF)]int32
 
 // IsActive renvoie 'true' si la réduction est active
-func (oq PrixQuotientFamilial) IsActive() bool {
-	return oq == PrixQuotientFamilial{}
-}
+func (oq PrixQuotientFamilial) IsActive() bool { return oq != PrixQuotientFamilial{} }
 
 // Percentage renvoie le pourcentage appliqué au prix de base pour le quotient
 // familial donné.

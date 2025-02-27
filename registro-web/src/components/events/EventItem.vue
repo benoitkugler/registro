@@ -15,7 +15,7 @@
       <v-col>
         <slot></slot>
       </v-col>
-      <v-col cols="auto" class="text-grey ml-2">
+      <v-col cols="auto" class="text-grey ml-4">
         <div v-if="props.time">
           {{ Formatters.time(props.time) }}
         </div>

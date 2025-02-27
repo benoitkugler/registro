@@ -202,8 +202,8 @@ func randOptionSemaineCamp() OptionSemaineCamp {
 	var s OptionSemaineCamp
 	s.Plage1 = randsha_Plage()
 	s.Plage2 = randsha_Plage()
-	s.Prix1 = randdos_Montant()
-	s.Prix2 = randdos_Montant()
+	s.Prix1 = randint()
+	s.Prix2 = randint()
 
 	return s
 }
@@ -237,8 +237,8 @@ func randParticipant() Participant {
 func randPrixParStatut() PrixParStatut {
 	var s PrixParStatut
 	s.Id = randint16()
-	s.Prix = randdos_Montant()
-	s.Statut = randstring()
+	s.Prix = randint()
+	s.Label = randstring()
 	s.Description = randstring()
 
 	return s

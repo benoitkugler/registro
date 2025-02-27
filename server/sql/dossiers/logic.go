@@ -3,6 +3,7 @@ package dossiers
 import (
 	"fmt"
 	"math"
+	"strconv"
 	"strings"
 )
 
@@ -24,6 +25,21 @@ func (m Montant) Remise(percent int) Montant {
 		p = 0
 	}
 	return Montant{p, m.Currency}
+}
+
+func (m Montant) String() string {
+	var val string
+	if m.Cent%100 == 0 {
+		val = strconv.Itoa(m.Cent / 100)
+	} else {
+		val = fmt.Sprintf("%.02f", float64(m.Cent)/100)
+	}
+	switch m.Currency {
+	case FrancsSuisse:
+		return m.Currency.String() + " " + val
+	default:
+		return val + m.Currency.String()
+	}
 }
 
 // currency -> (1 currency = val / 1000 €)

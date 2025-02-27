@@ -1,9 +1,6 @@
 package dossiers
 
 import (
-	"fmt"
-	"strings"
-
 	"registro/sql/shared"
 )
 
@@ -32,16 +29,6 @@ type Montant struct {
 
 func NewEuros(f float32) Montant        { return Montant{int(f * 100), Euros} }
 func NewFrancsuisses(f float32) Montant { return Montant{int(f * 100), FrancsSuisse} }
-
-func (m Montant) String() string {
-	val := strings.ReplaceAll(fmt.Sprintf("%g", float64(m.Cent)/100), ".", ",")
-	switch m.Currency {
-	case FrancsSuisse:
-		return m.Currency.String() + " " + val
-	default:
-		return val + m.Currency.String()
-	}
-}
 
 type Currency uint8
 

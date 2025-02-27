@@ -5,7 +5,7 @@
     :time="props.event.Created"
     size="x-large"
   >
-    <v-card class="mr-1">
+    <v-card>
       <v-card-text class="pa-1">
         <div
           v-for="(line, i) in props.content.Message.Contenu.split('\n')"

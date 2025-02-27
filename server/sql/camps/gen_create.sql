@@ -369,8 +369,8 @@ BEGIN
             jsonb_each(data))
         AND gomacro_validate_json_shar_Plage (data -> 'Plage1')
         AND gomacro_validate_json_shar_Plage (data -> 'Plage2')
-        AND gomacro_validate_json_doss_Montant (data -> 'Prix1')
-        AND gomacro_validate_json_doss_Montant (data -> 'Prix2');
+        AND gomacro_validate_json_number (data -> 'Prix1')
+        AND gomacro_validate_json_number (data -> 'Prix2');
     RETURN is_valid;
 END;
 $$
@@ -411,12 +411,12 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Id', 'Prix', 'Statut', 'Description'))
+            bool_and(key IN ('Id', 'Prix', 'Label', 'Description'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_number (data -> 'Id')
-        AND gomacro_validate_json_doss_Montant (data -> 'Prix')
-        AND gomacro_validate_json_string (data -> 'Statut')
+        AND gomacro_validate_json_number (data -> 'Prix')
+        AND gomacro_validate_json_string (data -> 'Label')
         AND gomacro_validate_json_string (data -> 'Description');
     RETURN is_valid;
 END;

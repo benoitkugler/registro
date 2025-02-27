@@ -65,8 +65,8 @@ func TestMontantTaux_String(t *testing.T) {
 		{tableTaux{1000}, Montant{100, Euros}, "1€"},
 		{tableTaux{0, 1000}, Montant{100, FrancsSuisse}, "CHF 1"},
 		// 1CHF = 2€
-		{tableTaux{1000, 2000}, Montant{100, Euros}, "1€ ou CHF 0,5"},
-		{tableTaux{1000, 2000}, Montant{182, Euros}, "1,82€ ou CHF 0,91"},
+		{tableTaux{1000, 2000}, Montant{100, Euros}, "1€ ou CHF 0.50"},
+		{tableTaux{1000, 2000}, Montant{182, Euros}, "1.82€ ou CHF 0.91"},
 		{tableTaux{1000, 2000}, Montant{100, FrancsSuisse}, "2€ ou CHF 1"},
 	}
 	for _, tt := range tests {

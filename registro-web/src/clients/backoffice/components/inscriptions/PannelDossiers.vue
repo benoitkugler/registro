@@ -151,7 +151,7 @@ import {
 import { copy, nullableToOpt, optToNullable, selectItems } from "@/utils";
 import { controller } from "../../logic/logic";
 import DebounceField from "@/components/DebounceField.vue";
-import DossierDetailsPannel from "./DossierDetailsPannel.vue";
+import DossierDetailsPannel from "./dossiers/DossierDetailsPannel.vue";
 const props = defineProps<{}>();
 
 defineExpose({ showDossier });
