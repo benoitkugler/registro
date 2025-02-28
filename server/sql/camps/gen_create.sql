@@ -301,11 +301,10 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Active', 'Semaine', 'Statuts', 'Jours'))
+            bool_and(key IN ('Active', 'Statuts', 'Jours'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_camp_OptionPrixKind (data -> 'Active')
-        AND gomacro_validate_json_camp_OptionSemaineCamp (data -> 'Semaine')
         AND gomacro_validate_json_array_camp_PrixParStatut (data -> 'Statuts')
         AND gomacro_validate_json_array_number (data -> 'Jours');
     RETURN is_valid;
@@ -319,7 +318,7 @@ CREATE OR REPLACE FUNCTION gomacro_validate_json_camp_OptionPrixKind (data jsonb
     AS $$
 DECLARE
     is_valid boolean := jsonb_typeof(data) = 'number'
-    AND data::int IN (0, 1, 2, 3);
+    AND data::int IN (0, 1, 2);
 BEGIN
     IF NOT is_valid THEN
         RAISE WARNING '% is not a camp_OptionPrixKind', data;
@@ -341,36 +340,11 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Semaine', 'IdStatut', 'Jour'))
+            bool_and(key IN ('IdStatut', 'Jour'))
         FROM
             jsonb_each(data))
-        AND gomacro_validate_json_camp_Semaine (data -> 'Semaine')
         AND gomacro_validate_json_number (data -> 'IdStatut')
         AND gomacro_validate_json_array_number (data -> 'Jour');
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION gomacro_validate_json_camp_OptionSemaineCamp (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean;
-BEGIN
-    IF jsonb_typeof(data) != 'object' THEN
-        RETURN FALSE;
-    END IF;
-    is_valid := (
-        SELECT
-            bool_and(key IN ('Plage1', 'Plage2', 'Prix1', 'Prix2'))
-        FROM
-            jsonb_each(data))
-        AND gomacro_validate_json_shar_Plage (data -> 'Plage1')
-        AND gomacro_validate_json_shar_Plage (data -> 'Plage2')
-        AND gomacro_validate_json_number (data -> 'Prix1')
-        AND gomacro_validate_json_number (data -> 'Prix2');
     RETURN is_valid;
 END;
 $$
@@ -441,22 +415,6 @@ BEGIN
         AND gomacro_validate_json_number (data -> 'ReducEquipiers')
         AND gomacro_validate_json_number (data -> 'ReducEnfants')
         AND gomacro_validate_json_doss_Montant (data -> 'ReducSpeciale');
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION gomacro_validate_json_camp_Semaine (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean := jsonb_typeof(data) = 'number'
-    AND data::int IN (0, 1, 2);
-BEGIN
-    IF NOT is_valid THEN
-        RAISE WARNING '% is not a camp_Semaine', data;
-    END IF;
     RETURN is_valid;
 END;
 $$

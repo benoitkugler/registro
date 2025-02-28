@@ -57,15 +57,6 @@ type Remises struct {
 	ReducSpeciale  Montant
 }
 
-// Semaine précise le choix d'une seule semaine de camp
-type Semaine uint8
-
-const (
-	Tout     Semaine = iota // Camp complet
-	Semaine1                // Semaine 1
-	Semaine2                // Semaine 2
-)
-
 // Jours stocke les indexes (0-based) des jours de présence
 // d'un participant à un séjour
 // Une liste vide indique la présence sur TOUT le séjour.
@@ -143,10 +134,9 @@ func (js Jours) Description(datesCamp shared.Plage) string {
 type OptionPrixKind uint8
 
 const (
-	NoOption OptionPrixKind = iota
-	PrixSemaine
-	PrixStatut
-	PrixJour
+	NoOption   OptionPrixKind = iota // Aucune
+	PrixStatut                       // Prix par statut
+	PrixJour                         // Prix à la journée
 )
 
 // OptionPrixCamp stocke une option sur le prix d'un camp. Une seule est effective,
@@ -154,7 +144,6 @@ const (
 type OptionPrixCamp struct {
 	Active OptionPrixKind
 
-	Semaine OptionSemaineCamp
 	Statuts []PrixParStatut
 
 	// Prix de chaque jour (0-based) du camp (souvent constant), en centimes.
@@ -162,12 +151,6 @@ type OptionPrixCamp struct {
 	// Le champ [Prix] du séjour peut être inférieur à la somme
 	// pour une remise.
 	Jours []int
-}
-
-type OptionSemaineCamp struct {
-	Plage1       shared.Plage
-	Plage2       shared.Plage
-	Prix1, Prix2 int // prix en centimes (l'unité est celle du camp)
 }
 
 type PrixParStatut struct {
@@ -181,7 +164,6 @@ type PrixParStatut struct {
 //   - elle est active dans le camp
 //   - elle est non nulle dans le participant
 type OptionPrixParticipant struct {
-	Semaine  Semaine
 	IdStatut int16
 	Jour     Jours
 }
@@ -190,8 +172,6 @@ type OptionPrixParticipant struct {
 // pour la catégorie demandée.
 func (op OptionPrixParticipant) IsEmpty(kind OptionPrixKind) bool {
 	switch kind {
-	case PrixSemaine:
-		return op.Semaine == 0
 	case PrixStatut:
 		return op.IdStatut == 0
 	case PrixJour:
@@ -216,7 +196,7 @@ var grilleQF = [...]int{0, 359, 564, 714}
 type PrixQuotientFamilial [len(grilleQF)]int32
 
 // IsActive renvoie 'true' si la réduction est active
-func (oq PrixQuotientFamilial) IsActive() bool { return oq != PrixQuotientFamilial{} }
+func (oq PrixQuotientFamilial) IsActive() bool { return oq[3] == 100 }
 
 // Percentage renvoie le pourcentage appliqué au prix de base pour le quotient
 // familial donné.

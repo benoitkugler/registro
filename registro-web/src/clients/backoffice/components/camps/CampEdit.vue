@@ -39,31 +39,74 @@
           </v-col>
         </v-row>
         <v-row>
-          <v-col cols="2">
+          <v-col align-self="center" cols="2">
             <DateField
               v-model="inner.DateDebut"
               label="Date de début"
+              hide-details
             ></DateField>
           </v-col>
-          <v-col cols="2">
-            <IntField label="Durée (en jours)" v-model="inner.Duree"></IntField>
+          <v-col align-self="center" cols="2">
+            <IntField
+              label="Durée (en jours)"
+              v-model="inner.Duree"
+              hide-details
+            ></IntField>
           </v-col>
-          <v-col cols="2">
+          <v-col align-self="center" cols="2">
             <DateField
               :model-value="Camps.dateFin(inner)"
               label="Date de fin"
               readonly
+              hide-details
             ></DateField>
           </v-col>
-          <v-col cols="3">
+          <v-col align-self="center" cols="3">
             <MontantField
               label="Prix"
               v-model="inner.Prix"
               hide-details
             ></MontantField>
           </v-col>
-          <v-col cols="3">
-            <v-btn>TODO: Options sur le prix</v-btn>
+          <v-col align-self="center" cols="3" class="text-center">
+            <v-menu :close-on-content-click="false">
+              <template v-slot:activator="{ props: menuProps }">
+                <v-chip v-bind="menuProps" elevation="1">
+                  <div
+                    class="mx-1"
+                    v-if="
+                      !Camps.isQuotientFamilialActive(
+                        inner.OptionQuotientFamilial
+                      ) && inner.OptionPrix.Active == OptionPrixKind.NoOption
+                    "
+                  >
+                    Aucune option
+                  </div>
+                  <div
+                    class="mx-1"
+                    v-if="
+                      Camps.isQuotientFamilialActive(
+                        inner.OptionQuotientFamilial
+                      )
+                    "
+                  >
+                    Quotient familial
+                  </div>
+                  <div
+                    class="mx-1"
+                    v-if="inner.OptionPrix.Active != OptionPrixKind.NoOption"
+                  >
+                    {{ OptionPrixKindLabels[inner.OptionPrix.Active] }}
+                  </div>
+                </v-chip>
+              </template>
+
+              <CampOptionsPrix
+                :camp="inner"
+                v-model:option-prix="inner.OptionPrix"
+                v-model:option-qf="inner.OptionQuotientFamilial"
+              ></CampOptionsPrix>
+            </v-menu>
           </v-col>
         </v-row>
         <v-row>
@@ -147,8 +190,13 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import type { Camp } from "@/clients/backoffice/logic/api";
+import {
+  OptionPrixKind,
+  OptionPrixKindLabels,
+  type Camp,
+} from "@/clients/backoffice/logic/api";
 import { Camps, copy } from "@/utils";
+import CampOptionsPrix from "./CampOptionsPrix.vue";
 const props = defineProps<{
   camp: Camp;
 }>();
@@ -160,7 +208,13 @@ const inner = ref(copy(props.camp));
 const areFieldsValid = computed(
   () =>
     new Date(inner.value.DateDebut).getFullYear() >= 2020 &&
+    inner.value.Places >= 1 &&
     inner.value.Nom != "" &&
-    inner.value.AgeMax >= inner.value.AgeMin
+    inner.value.AgeMax >= inner.value.AgeMin &&
+    inner.value.OptionQuotientFamilial.every((p) => 0 <= p && p <= 100) &&
+    !(
+      inner.value.OptionPrix.Active == OptionPrixKind.PrixStatut &&
+      !inner.value.OptionPrix.Statuts?.length
+    )
 );
 </script>

@@ -171,11 +171,11 @@ const camps = computed(() => {
       (!filter.openOnly || isCampOpen(camp.Camp))
   );
   // most recent first
-  out.sort(
-    (a, b) =>
-      new Date(b.Camp.Camp.DateDebut).valueOf() -
-      new Date(a.Camp.Camp.DateDebut).valueOf()
-  );
+  out.sort((a, b) => {
+    const da = new Date(b.Camp.Camp.DateDebut).valueOf();
+    const db = new Date(a.Camp.Camp.DateDebut).valueOf();
+    return da == db ? a.Camp.Camp.Id - b.Camp.Camp.Id : da - db;
+  });
   return out;
 });
 const pageList = computed(() =>

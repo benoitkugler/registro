@@ -176,7 +176,6 @@ func randNavette() Navette {
 func randOptionPrixCamp() OptionPrixCamp {
 	var s OptionPrixCamp
 	s.Active = randOptionPrixKind()
-	s.Semaine = randOptionSemaineCamp()
 	s.Statuts = randSlicePrixParStatut()
 	s.Jours = randSliceint()
 
@@ -184,26 +183,15 @@ func randOptionPrixCamp() OptionPrixCamp {
 }
 
 func randOptionPrixKind() OptionPrixKind {
-	choix := [...]OptionPrixKind{NoOption, PrixSemaine, PrixStatut, PrixJour}
+	choix := [...]OptionPrixKind{NoOption, PrixStatut, PrixJour}
 	i := rand.Intn(len(choix))
 	return choix[i]
 }
 
 func randOptionPrixParticipant() OptionPrixParticipant {
 	var s OptionPrixParticipant
-	s.Semaine = randSemaine()
 	s.IdStatut = randint16()
 	s.Jour = randJours()
-
-	return s
-}
-
-func randOptionSemaineCamp() OptionSemaineCamp {
-	var s OptionSemaineCamp
-	s.Plage1 = randsha_Plage()
-	s.Plage2 = randsha_Plage()
-	s.Prix1 = randint()
-	s.Prix2 = randint()
 
 	return s
 }
@@ -269,12 +257,6 @@ func randRoles() Roles {
 
 func randSatisfaction() Satisfaction {
 	choix := [...]Satisfaction{NoSatisfaction, Decevant, Moyen, Satisfaisant, Tressatisfaisant}
-	i := rand.Intn(len(choix))
-	return choix[i]
-}
-
-func randSemaine() Semaine {
-	choix := [...]Semaine{Tout, Semaine1, Semaine2}
 	i := rand.Intn(len(choix))
 	return choix[i]
 }

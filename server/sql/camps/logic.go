@@ -194,9 +194,19 @@ func (c *Camp) Check() error {
 	if c.Prix.Cent < 0 {
 		return errors.New("invalid Prix")
 	}
+	for _, perc := range c.OptionQuotientFamilial {
+		if !(0 <= perc && perc <= 100) {
+			return errors.New("invalid OptionQuotientFamilial percentage")
+		}
+	}
 	if c.OptionPrix.Active == PrixJour {
 		if c.Duree != len(c.OptionPrix.Jours) {
 			return errors.New("invalid OptionPrix.Jour length")
+		}
+	}
+	if c.OptionPrix.Active == PrixStatut {
+		if len(c.OptionPrix.Statuts) == 0 {
+			return errors.New("invalid OptionPrix.Status length")
 		}
 	}
 	return nil

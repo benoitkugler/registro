@@ -4,12 +4,13 @@
     density="compact"
     variant="outlined"
     type="number"
-    :min="props.min || 1"
+    :min="props.min === undefined ? 1 : props.min"
     :max="props.max"
     v-model.number="model"
     :hide-details="!hint"
     :hint="props.hint"
     :disabled="props.disabled"
+    :suffix="props.suffix"
   ></v-text-field>
 </template>
 
@@ -21,6 +22,7 @@ const props = defineProps<{
   min?: Int;
   max?: Int;
   disabled?: boolean;
+  suffix?: string;
 }>();
 
 const model = defineModel<Int>();
