@@ -21,6 +21,12 @@
       ></DossierEditCard>
     </v-dialog>
 
+    <v-dialog v-model="showEditParticipants" max-width="1200px">
+      <DossierParticipantsCard
+        :dossier="props.dossier.Dossier"
+      ></DossierParticipantsCard>
+    </v-dialog>
+
     <template v-slot:append>
       <v-menu>
         <template v-slot:activator="{ props: menuProps }">
@@ -81,6 +87,7 @@ import {
 import { Personnes, pseudoEventTime, type PseudoEvent } from "@/utils";
 import FactureCard from "./FactureCard.vue";
 import DossierEditCard from "./DossierEditCard.vue";
+import DossierParticipantsCard from "./DossierParticipantsCard.vue";
 
 const props = defineProps<{
   dossier: DossierDetails;

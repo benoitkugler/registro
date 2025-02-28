@@ -215,6 +215,10 @@ const areFieldsValid = computed(
     !(
       inner.value.OptionPrix.Active == OptionPrixKind.PrixStatut &&
       !inner.value.OptionPrix.Statuts?.length
+    ) &&
+    !(
+      inner.value.OptionPrix.Active == OptionPrixKind.PrixJour &&
+      inner.value.OptionPrix.Jours?.length != inner.value.Duree
     )
 );
 </script>

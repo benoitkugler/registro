@@ -139,6 +139,7 @@ type DossierExt struct {
 	Dossier      ds.Dossier
 	Responsable  string
 	Participants []cps.ParticipantExt
+	Aides        map[cps.IdParticipant]cps.Aides
 
 	Events    Events
 	Paiements ds.Paiements
@@ -183,5 +184,5 @@ func (d DossierFinance) Publish() DossierExt {
 		taux.Convertible(b.ApresPaiement()).String(),
 		b.StatutPaiement(),
 	}
-	return DossierExt{d.Dossier.Dossier, d.Responsable().PrenomNOM(), d.ParticipantsExt(), d.Events, d.paiements, bilan}
+	return DossierExt{d.Dossier.Dossier, d.Responsable().PrenomNOM(), d.ParticipantsExt(), d.aides, d.Events, d.paiements, bilan}
 }

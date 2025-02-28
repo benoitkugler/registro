@@ -108,7 +108,9 @@ func (js Jours) ClosestPlage(datesCamp shared.Plage) shared.Plage {
 func (js Jours) CalculePrix(prixParJour []int, currency dossiers.Currency) Montant {
 	total := Montant{Currency: currency}
 	for _, i := range js.sorted() {
-		if i >= len(prixParJour) { // ne devrait pas arriver
+		// npeut arriver si la durée d'un séjour est réduite
+		// après avoir déclaré une option sur un participant
+		if i >= len(prixParJour) {
 			continue
 		}
 		total.Cent += prixParJour[i]

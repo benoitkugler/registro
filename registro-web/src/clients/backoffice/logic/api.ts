@@ -110,8 +110,8 @@ export interface SearchDossierOut {
 }
 // registro/controllers/logic.AccuseReception
 export type AccuseReception = Record<string, never>;
-// registro/controllers/logic.Aide
-export interface Aide {
+// registro/controllers/logic.AideResolved
+export interface AideResolved {
   Structure: string;
   Montant: Montant;
 }
@@ -133,7 +133,7 @@ export interface BilanParticipantPub {
   AvecOption: Montant;
   AvecOptionDescription: string;
   Remises: Remises;
-  Aides: Aide[] | null;
+  Aides: AideResolved[] | null;
   AvecAides: string;
   Net: string;
 }
@@ -153,6 +153,7 @@ export interface DossierExt {
   Dossier: Dossier;
   Responsable: string;
   Participants: ParticipantExt[] | null;
+  Aides: { [key in IdParticipant]: Aides } | null;
   Events: Events;
   Paiements: Paiements;
   Bilan: BilanFinancesPub;
@@ -239,6 +240,18 @@ export interface ScoredPersonne {
   ScorePercent: Int;
   Personne: PersonneHeader;
 }
+// registro/sql/camps.Aide
+export interface Aide {
+  Id: IdAide;
+  IdStructureaide: IdStructureaide;
+  IdParticipant: IdParticipant;
+  Valide: boolean;
+  Valeur: Montant;
+  ParJour: boolean;
+  NbJoursMax: Int;
+}
+// registro/sql/camps.Aides
+export type Aides = { [key in IdAide]: Aide } | null;
 // registro/sql/camps.Bus
 export const Bus = {
   NoBus: 0,
@@ -281,10 +294,14 @@ export interface CampExt {
   Camp: Camp;
   IsTerminated: boolean;
 }
+// registro/sql/camps.IdAide
+export type IdAide = Int;
 // registro/sql/camps.IdCamp
 export type IdCamp = Int;
 // registro/sql/camps.IdParticipant
 export type IdParticipant = Int;
+// registro/sql/camps.IdStructureaide
+export type IdStructureaide = Int;
 // registro/sql/camps.Jours
 export type Jours = Int[] | null;
 // registro/sql/camps.ListeAttente
@@ -315,39 +332,28 @@ export interface Navette {
 // registro/sql/camps.OptionPrixCamp
 export interface OptionPrixCamp {
   Active: OptionPrixKind;
-  Semaine: OptionSemaineCamp;
   Statuts: PrixParStatut[] | null;
   Jours: Int[] | null;
 }
 // registro/sql/camps.OptionPrixKind
 export const OptionPrixKind = {
   NoOption: 0,
-  PrixSemaine: 1,
-  PrixStatut: 2,
-  PrixJour: 3,
+  PrixStatut: 1,
+  PrixJour: 2,
 } as const;
 export type OptionPrixKind =
   (typeof OptionPrixKind)[keyof typeof OptionPrixKind];
 
 export const OptionPrixKindLabels: { [key in OptionPrixKind]: string } = {
-  [OptionPrixKind.NoOption]: "",
-  [OptionPrixKind.PrixSemaine]: "",
-  [OptionPrixKind.PrixStatut]: "",
-  [OptionPrixKind.PrixJour]: "",
+  [OptionPrixKind.NoOption]: "Aucune",
+  [OptionPrixKind.PrixStatut]: "Prix par statut",
+  [OptionPrixKind.PrixJour]: "Prix à la journée",
 };
 
 // registro/sql/camps.OptionPrixParticipant
 export interface OptionPrixParticipant {
-  Semaine: Semaine;
   IdStatut: Int;
   Jour: Jours;
-}
-// registro/sql/camps.OptionSemaineCamp
-export interface OptionSemaineCamp {
-  Plage1: Plage;
-  Plage2: Plage;
-  Prix1: Int;
-  Prix2: Int;
 }
 // registro/sql/camps.Participant
 export interface Participant {
@@ -384,20 +390,6 @@ export interface Remises {
   ReducEnfants: Int;
   ReducSpeciale: Montant;
 }
-// registro/sql/camps.Semaine
-export const Semaine = {
-  Tout: 0,
-  Semaine1: 1,
-  Semaine2: 2,
-} as const;
-export type Semaine = (typeof Semaine)[keyof typeof Semaine];
-
-export const SemaineLabels: { [key in Semaine]: string } = {
-  [Semaine.Tout]: "Camp complet",
-  [Semaine.Semaine1]: "Semaine 1",
-  [Semaine.Semaine2]: "Semaine 2",
-};
-
 // registro/sql/camps.StatistiquesInscrits
 export interface StatistiquesInscrits {
   Inscriptions: Int;
@@ -679,11 +671,6 @@ export const SexeLabels: { [key in Sexe]: string } = {
 export type Tels = string[] | null;
 // registro/sql/shared.Date
 export type Date = Date_;
-// registro/sql/shared.Plage
-export interface Plage {
-  From: Date;
-  Duree: Int;
-}
 
 /** AbstractAPI provides auto-generated API calls and should be used 
 		as base class for an app controller.

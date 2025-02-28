@@ -60,7 +60,7 @@ func TestDossierFinance_Bilan(t *testing.T) {
 	}
 	tu.Assert(t, reflect.DeepEqual(df.Bilan(), BilanFinances{
 		map[cps.IdParticipant]BilanParticipant{
-			1: {eur(200), "", cps.Remises{}, []Aide{{"", eur(20)}, {"", chf(20)}}},
+			1: {eur(200), "", cps.Remises{}, []AideResolved{{"", eur(20)}, {"", chf(20)}}},
 			2: {chf(150), "", cps.Remises{}, nil},
 			3: {chf(150), "", cps.Remises{}, nil},
 		},
@@ -111,14 +111,13 @@ func TestDossierFinance_Bilan(t *testing.T) {
 				ReducSpeciale:  eur(10),
 				ReducEquipiers: 5,
 				ReducEnfants:   5,
-			}, []Aide{{"", eur(20)}}},
+			}, []AideResolved{{"", eur(20)}}},
 		},
 		10000 - 1000 - 500 - 900, 35000, ds.FrancsSuisse,
 	}))
 }
 
 func Test_pc_prixBase(t *testing.T) {
-	semaine := cps.OptionSemaineCamp{Prix1: 6000, Prix2: 8000}
 	status := []cps.PrixParStatut{{1, 8000, "Enfant", ""}, {2, 9000, "Adulte", ""}}
 	jours := []int{1000, 2000, 3000, 4000}
 	type fields struct {
@@ -143,10 +142,6 @@ func Test_pc_prixBase(t *testing.T) {
 		{fields{prix: eur(100), optQF: cps.PrixQuotientFamilial{20, 40, 60, 100}, qf: 400}, eur(40), "QF 400"},
 		{fields{prix: eur(100), optQF: cps.PrixQuotientFamilial{20, 40, 60, 100}, qf: 600}, eur(60), "QF 600"},
 		{fields{prix: eur(100), optQF: cps.PrixQuotientFamilial{20, 40, 60, 100}, qf: 1000}, eur(100), "QF 1000"},
-		// Option semaine
-		{fields{prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixSemaine, Semaine: semaine}}, eur(100), ""},
-		{fields{prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixSemaine, Semaine: semaine}, optPart: cps.OptionPrixParticipant{Semaine: cps.Semaine1}}, eur(60), "Semaine 1"},
-		{fields{prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixSemaine, Semaine: semaine}, optPart: cps.OptionPrixParticipant{Semaine: cps.Semaine2}}, eur(80), "Semaine 2"},
 		// Option statut
 		{fields{prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixStatut, Statuts: status}}, eur(100), ""},
 		{fields{prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixStatut, Statuts: status}, optPart: cps.OptionPrixParticipant{IdStatut: 1}}, eur(80), "Enfant"},

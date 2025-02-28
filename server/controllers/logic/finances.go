@@ -166,7 +166,7 @@ type BilanParticipant struct {
 	Remises cps.Remises
 
 	// Aides validées
-	Aides []Aide
+	Aides []AideResolved
 }
 
 // prixSansRemises renvoie le prix du séjour si on applique les aides (extérieures)
@@ -199,8 +199,8 @@ func (bp BilanParticipant) net(taux ds.Taux) cps.Montant {
 	return val.Montant
 }
 
-// Aide shows resolved [Aide]
-type Aide struct {
+// AideResolved shows resolved [AideResolved]
+type AideResolved struct {
 	Structure string
 	Montant   cps.Montant
 }
@@ -213,26 +213,18 @@ func (p pc) bilan() (out BilanParticipant) {
 
 	for _, id := range utils.MapKeysSorted(p.aides) {
 		aide := p.aides[id]
-		out.Aides = append(out.Aides, Aide{p.structures[aide.IdStructureaide].Nom, aide.Resolve(duree)})
+		out.Aides = append(out.Aides, AideResolved{p.structures[aide.IdStructureaide].Nom, aide.Resolve(duree)})
 	}
 	return out
 }
 
 // duree renvoie le nombre de jours de présence du participant
-// en prenant en compte une éventuelle option SEMAINE ou JOUR.
+// en prenant en compte une éventuelle option JOUR.
 func (p pc) duree() int {
 	options := p.Camp.OptionPrix
 	optPart := p.Participant.OptionPrix
 
 	switch options.Active {
-	case cps.PrixSemaine:
-		detailsOpt := options.Semaine
-		switch optPart.Semaine {
-		case cps.Semaine1:
-			return detailsOpt.Plage1.Duree
-		case cps.Semaine2:
-			return detailsOpt.Plage2.Duree
-		}
 	case cps.PrixJour:
 		return optPart.Jour.NbJours(p.Camp.Duree)
 	}
@@ -248,15 +240,6 @@ func (p pc) prixBase() (cps.Montant, string) {
 	prix := p.Camp.Prix
 	descOption, descQF := "", ""
 	switch optCamp.Active {
-	case cps.PrixSemaine:
-		semaine := optPart.Semaine
-		if semaine == cps.Semaine1 {
-			prix.Cent = optCamp.Semaine.Prix1
-			descOption = "Semaine 1"
-		} else if semaine == cps.Semaine2 {
-			prix.Cent = optCamp.Semaine.Prix2
-			descOption = "Semaine 2"
-		}
 	case cps.PrixStatut:
 		for _, info := range optCamp.Statuts {
 			if info.Id == optPart.IdStatut {

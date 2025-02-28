@@ -5,6 +5,7 @@ import type {
   Time,
   Event,
   Montant,
+  PrixQuotientFamilial,
 } from "./clients/backoffice/logic/api";
 import type { Date_, Int } from "./clients/inscription/logic/api";
 import { newDate_ } from "./components/date";
@@ -176,6 +177,10 @@ export namespace Camps {
     if (normalizedPattern == "") return true;
     const str = normalize(label(camp) + camp.Lieu);
     return str.includes(normalizedPattern);
+  }
+
+  export function isQuotientFamilialActive(opt: PrixQuotientFamilial) {
+    return opt[3] != 0;
   }
 }
 
