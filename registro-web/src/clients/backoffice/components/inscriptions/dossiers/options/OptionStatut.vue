@@ -13,7 +13,7 @@
         density="comfortable"
         hide-details
       >
-        <template v-slot:item="{ item, props: menuProps }">
+        <template #item="{ item, props: menuProps }">
           <v-list-item
             v-bind="menuProps"
             :title="item.title"

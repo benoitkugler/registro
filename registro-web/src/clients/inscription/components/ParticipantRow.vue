@@ -88,7 +88,7 @@
     </v-card-text>
     <v-card-actions>
       <v-btn color="red" @click="emit('delete')" variant="outlined">
-        <template v-slot:prepend>
+        <template #prepend>
           <v-icon>mdi-delete</v-icon>
           Enlever ce participant
         </template>

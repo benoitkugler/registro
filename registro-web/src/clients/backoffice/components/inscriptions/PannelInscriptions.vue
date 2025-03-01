@@ -1,6 +1,6 @@
 <template>
   <v-card title="Inscriptions" subtitle="En attente de validation" class="ma-2">
-    <template v-slot:append>
+    <template #append>
       <v-text-field
         width="300"
         append-inner-icon="mdi-magnify"

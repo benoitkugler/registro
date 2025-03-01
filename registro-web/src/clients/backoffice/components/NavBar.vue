@@ -45,7 +45,7 @@
       </v-row>
     </v-app-bar-title>
 
-    <template v-slot:append>
+    <template #append>
       <slot></slot>
       <div class="mr-2"></div>
     </template>

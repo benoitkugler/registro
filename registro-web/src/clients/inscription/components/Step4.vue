@@ -4,7 +4,7 @@
       <v-row>
         <v-col cols="12">
           <v-checkbox readonly :model-value="true" color="primary">
-            <template v-slot:label>
+            <template #label>
               <div>
                 Pour chaque participant dont j'ai la responsabilité, j'autorise
                 le transport dans les véhicules de l'association. <br />
@@ -18,7 +18,7 @@
       </v-row>
 
       <v-checkbox readonly :model-value="true" color="primary" hide-details>
-        <template v-slot:label>
+        <template #label>
           <div>
             Dans le cadre des activités de l'association, des photographies ou
             des séquences vidéo pourront être faites.
@@ -38,7 +38,7 @@
       </v-alert>
 
       <v-checkbox v-model="partageAdresse" color="primary">
-        <template v-slot:label>
+        <template #label>
           <div>
             J’autorise la diffusion de mes <b>coordonnées</b> (nom, adresse mail
             et commune) auprès des familles inscrites à ce séjour afin de

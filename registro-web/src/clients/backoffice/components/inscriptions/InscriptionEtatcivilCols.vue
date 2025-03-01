@@ -1,15 +1,15 @@
 <template>
   <v-col align-self="center" cols="4">
     <v-menu :disabled="!props.personne.IsTemp" :close-on-content-click="false">
-      <template v-slot:activator="{ props: menuProps }">
+      <template #activator="{ props: menuProps }">
         <v-tooltip>
-          <template v-slot:activator="{ props: tooltipProps }">
+          <template #activator="{ props: tooltipProps }">
             <v-chip
               class="mx-1"
               label
               v-bind="mergeProps(menuProps, tooltipProps)"
             >
-              <template v-slot:prepend>
+              <template #prepend>
                 <v-icon
                   class="mr-2"
                   :icon="

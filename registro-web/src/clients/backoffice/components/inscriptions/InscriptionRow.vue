@@ -4,15 +4,15 @@
       Formatters.time(props.inscription.Dossier.MomentInscription, true, true)
     "
   >
-    <template v-slot:append>
+    <template #append>
       <v-btn :disabled="!allIdentified" @click="emit('valide')">
-        <template v-slot:prepend>
+        <template #prepend>
           <v-icon>mdi-check</v-icon>
         </template>
         Valider</v-btn
       >
       <v-menu>
-        <template v-slot:activator="{ props: menuProps }">
+        <template #activator="{ props: menuProps }">
           <v-btn
             v-bind="menuProps"
             variant="flat"

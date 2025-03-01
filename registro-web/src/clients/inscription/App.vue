@@ -37,7 +37,7 @@
                     :disabled="search.length < 3"
                     @click="searchHistory"
                   >
-                    <template v-slot:prepend>
+                    <template #prepend>
                       <v-icon>mdi-magnify</v-icon>
                     </template>
                     Rechercher</v-btn

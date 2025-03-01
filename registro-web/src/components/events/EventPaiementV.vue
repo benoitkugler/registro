@@ -2,7 +2,7 @@
   <EventItem color="#ad9726" icon="mdi-currency-eur">
     Paiement de {{ props.paiement.Payeur }} d'un montant de
     <b> {{ Formatters.montant(props.paiement.Montant) }} </b>
-    <template v-slot:append>
+    <template #append>
       {{ Formatters.date(props.paiement.Date) }}
     </template>
   </EventItem>

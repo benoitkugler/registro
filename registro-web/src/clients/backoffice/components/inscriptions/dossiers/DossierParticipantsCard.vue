@@ -16,7 +16,7 @@
             :model-value="
               aideToCreate.IdStructure == 0 ? null : aideToCreate.IdStructure
             "
-            @update:model-value="(v) => (aideToCreate.IdStructure = v)"
+            @update:model-value="(v) => (aideToCreate!.IdStructure = v)"
           ></v-select>
         </v-card-text>
         <v-card-actions>

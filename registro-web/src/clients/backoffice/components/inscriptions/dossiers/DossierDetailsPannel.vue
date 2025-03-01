@@ -29,9 +29,9 @@
       ></DossierParticipantsCard>
     </v-dialog>
 
-    <template v-slot:append>
+    <template #append>
       <v-menu>
-        <template v-slot:activator="{ props: menuProps }">
+        <template #activator="{ props: menuProps }">
           <v-btn v-bind="menuProps" icon="mdi-pencil"></v-btn>
         </template>
         <v-list density="compact">
@@ -53,7 +53,7 @@
       <v-row>
         <v-col class="ml-2">
           <v-menu>
-            <template v-slot:activator="{ props: menuProps }">
+            <template #activator="{ props: menuProps }">
               <v-chip
                 v-bind="menuProps"
                 prepend-icon="mdi-currency-eur"

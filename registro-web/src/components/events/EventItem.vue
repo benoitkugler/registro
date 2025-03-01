@@ -6,7 +6,7 @@
     :size="props.size || 'medium'"
     :elevation="2"
   >
-    <template v-slot:icon>
+    <template #icon>
       <div class="ma-2">
         <v-icon :icon="props.icon"></v-icon>
       </div>

@@ -18,7 +18,7 @@
   </v-dialog>
 
   <v-stepper v-model="tab" editable>
-    <template v-slot:default="{ prev, next }">
+    <template #default="{ prev, next }">
       <v-stepper-header>
         <v-stepper-item
           title="Responsable"
@@ -82,7 +82,7 @@
       </v-stepper-window>
 
       <v-stepper-actions @click:prev="prev" @click:next="next">
-        <template v-slot:next>
+        <template #next>
           <v-btn v-if="tab != 4" @click="next" variant="text">Suivant</v-btn>
           <v-btn
             v-else
@@ -91,7 +91,7 @@
             @click="validInscription"
             :disabled="!isInscValid || isLoading"
           >
-            <template v-slot:prepend>
+            <template #prepend>
               <v-icon>mdi-check</v-icon>
             </template>
             Valider mon inscription

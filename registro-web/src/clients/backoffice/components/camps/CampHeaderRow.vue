@@ -41,7 +41,7 @@
     <v-col align-self="center"> {{ Camps.formatPlage(camp.Camp.Camp) }}</v-col>
     <v-col cols="2" align-self="center">
       <v-menu width="600" location="left">
-        <template v-slot:activator="{ props: innerProps }">
+        <template #activator="{ props: innerProps }">
           <v-progress-linear
             class="bg-white border-md border-primary"
             v-bind="innerProps"
@@ -66,7 +66,7 @@
     <v-col cols="1"></v-col>
     <v-col cols="auto" align-self="center">
       <v-menu>
-        <template v-slot:activator="{ props: innerProps }">
+        <template #activator="{ props: innerProps }">
           <v-btn
             v-bind="innerProps"
             size="x-small"

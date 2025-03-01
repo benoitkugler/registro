@@ -8,7 +8,7 @@
           data == null ? '-' : `${data.Dossiers?.length || 0} / ${data.Total}`
         "
       >
-        <template v-slot:append>
+        <template #append>
           <DebounceField
             width="350"
             density="compact"
@@ -20,9 +20,9 @@
             v-model="query.Pattern"
             @update:model-value="searchDossiers"
           >
-            <template v-slot:append>
+            <template #append>
               <v-tooltip text="Critères de recherche">
-                <template v-slot:activator="{ props: tooltipProps }">
+                <template #activator="{ props: tooltipProps }">
                   <v-btn
                     size="small"
                     variant="flat"
@@ -54,7 +54,7 @@
                   }
                 "
               >
-                <template v-slot:prepend>
+                <template #prepend>
                   <v-tooltip
                     :text="
                       showTerminatedCamps
@@ -62,7 +62,7 @@
                         : 'Afficher les camps terminés'
                     "
                   >
-                    <template v-slot:activator="{ props: tooltipProps }">
+                    <template #activator="{ props: tooltipProps }">
                       <v-btn
                         size="small"
                         :variant="showTerminatedCamps ? 'tonal' : 'flat'"
@@ -109,7 +109,7 @@
               :subtitle="dossier.Participants"
               @click="loadDossier(dossier.Id)"
             >
-              <template v-slot:append>
+              <template #append>
                 <v-badge
                   color="primary"
                   :content="dossier.NewMessages"

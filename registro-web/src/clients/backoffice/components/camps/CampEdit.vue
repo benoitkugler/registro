@@ -70,7 +70,7 @@
           </v-col>
           <v-col align-self="center" cols="3" class="text-center">
             <v-menu :close-on-content-click="false">
-              <template v-slot:activator="{ props: menuProps }">
+              <template #activator="{ props: menuProps }">
                 <v-chip v-bind="menuProps" elevation="1">
                   <div
                     class="mx-1"

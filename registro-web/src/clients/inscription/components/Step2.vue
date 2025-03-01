@@ -1,8 +1,8 @@
 <template>
   <v-card title="Participants" subtitle="Choix des séjours">
-    <template v-slot:append>
+    <template #append>
       <v-btn color="green" @click="addParticipant">
-        <template v-slot:prepend>
+        <template #prepend>
           <v-icon>mdi-plus</v-icon>
         </template>
         Ajouter un participant</v-btn

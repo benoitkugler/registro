@@ -63,7 +63,7 @@
   </v-dialog>
 
   <v-card title="Camps" :subtitle="campsData.size" class="ma-2">
-    <template v-slot:append>
+    <template #append>
       <v-row>
         <v-col align-self="center" style="width: 240px">
           <v-checkbox
@@ -94,9 +94,9 @@
         <v-divider vertical thickness="1"></v-divider>
         <v-col align-self="center">
           <v-menu>
-            <template v-slot:activator="{ props: innerProps }">
+            <template #activator="{ props: innerProps }">
               <v-btn v-bind="innerProps" color="success" :disabled="isLoading">
-                <template v-slot:prepend>
+                <template #prepend>
                   <v-icon>mdi-plus</v-icon>
                 </template>
                 Créer un camp...

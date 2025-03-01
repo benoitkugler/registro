@@ -54,7 +54,7 @@
           :prepend-icon="Formatters.sexeIcon(pers.Personne.Sexe)"
           @click="rattacheTo(pers.Personne.Id)"
         >
-          <template v-slot:append>
+          <template #append>
             <v-chip :color="pertinenceColor(pers.ScorePercent)">
               {{ pers.ScorePercent }} %
             </v-chip>
@@ -75,7 +75,7 @@
       </v-btn>
       <v-spacer></v-spacer>
       <v-btn variant="elevated" elevation="1" @click="toNewProfile()">
-        <template v-slot:prepend>
+        <template #prepend>
           <v-icon>mdi-plus</v-icon>
         </template>
         Créer un nouveau profil</v-btn

@@ -37,7 +37,7 @@
     <!-- options sur le prix -->
     <v-col align-self="center" cols="3" class="text-center">
       <v-menu :disabled="campNoOption" :close-on-content-click="false">
-        <template v-slot:activator="{ props: menuProps }">
+        <template #activator="{ props: menuProps }">
           <v-chip label v-bind="menuProps" :elevation="campNoOption ? 0 : 1">
             {{
               props.participant.Participant.QuotientFamilial
@@ -80,7 +80,7 @@
     <!-- actions -->
     <v-col align-self="center" cols="auto">
       <v-menu location="left">
-        <template v-slot:activator="{ props: menuProps }">
+        <template #activator="{ props: menuProps }">
           <v-btn
             v-bind="menuProps"
             icon="mdi-dots-vertical"

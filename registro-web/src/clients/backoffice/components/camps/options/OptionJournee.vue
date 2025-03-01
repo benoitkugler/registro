@@ -2,9 +2,9 @@
   <v-card
     subtitle="Le prix est variable en fonction des jours de participation au camp."
   >
-    <template v-slot:append>
+    <template #append>
       <v-tooltip text="Appliquer le prix du premier jour à tous.">
-        <template v-slot:activator="{ props: btnProps }">
+        <template #activator="{ props: btnProps }">
           <v-btn
             v-bind="btnProps"
             icon="mdi-skip-next"

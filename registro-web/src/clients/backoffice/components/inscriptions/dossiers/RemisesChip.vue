@@ -1,6 +1,6 @@
 <template>
   <v-menu :close-on-content-click="false" location="left">
-    <template v-slot:activator="{ props: menuProps }">
+    <template #activator="{ props: menuProps }">
       <v-chip label v-bind="menuProps" elevation="1">
         <template v-if="!isActive"> Pas de remises </template>
         <span class="mx-1" v-if="remises.ReducEnfants">

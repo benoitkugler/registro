@@ -46,7 +46,7 @@
       </v-card>
     </v-dialog>
 
-    <template v-slot:append>
+    <template #append>
       <v-btn icon size="x-small" @click="addStatut">
         <v-icon color="green">mdi-plus</v-icon>
       </v-btn>
@@ -62,7 +62,7 @@
           :subtitle="statut.Description"
           @click="toEdit = statut"
         >
-          <template v-slot:append>
+          <template #append>
             <v-row>
               <v-col align-self="center">
                 <v-chip>{{

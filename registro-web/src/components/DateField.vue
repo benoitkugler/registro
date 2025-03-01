@@ -11,7 +11,7 @@
   >
   </v-text-field>
   <v-menu v-else :close-on-content-click="false" v-model="showMenu">
-    <template v-slot:activator="{ props: innerProps }">
+    <template #activator="{ props: innerProps }">
       <v-text-field
         class="center-text"
         v-bind="innerProps"
