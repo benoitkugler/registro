@@ -1,5 +1,30 @@
 <template>
   <v-row>
+    <v-dialog
+      v-if="aideToRemove != null"
+      :model-value="aideToRemove != null"
+      @update:model-value="aideToRemove = null"
+    >
+      <v-card title="Supprimer l'aide">
+        <v-card-text>
+          Confirmez-vous la suppression de l'aide extérieure ? <br />
+
+          Attention, cette opération est irréversible.
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            color="red"
+            @click="
+              emit('deleteAide', aideToRemove.Id);
+              aideToRemove = null;
+            "
+            >Supprimer</v-btn
+          >
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <!-- identité -->
     <v-col align-self="center" cols="2">
       <v-list-item-title>
@@ -37,7 +62,12 @@
         v-for="aide in sortedAides"
         prepend-icon="mdi-cash-plus"
         color="green"
+        closable
       >
+        <template #close>
+          <v-icon icon="mdi-close-circle" @click.stop="aideToRemove = aide" />
+        </template>
+        {{ props.structures[aide.IdStructureaide].Info }} :
         {{ Formatters.montant(aide.Valeur) }}
       </v-chip>
     </v-col>
@@ -59,6 +89,12 @@
         </template>
         <v-list density="comfortable">
           <v-list-item
+            title="Ajouter une aide"
+            prepend-icon="mdi-cash-plus"
+            @click="emit('createAide')"
+          ></v-list-item>
+          <v-divider></v-divider>
+          <v-list-item
             v-if="props.hasManyParticipants"
             title="Appliquer au dossier"
             subtitle="Dupliquer les remises et options"
@@ -76,14 +112,13 @@
 
 <script setup lang="ts">
 import {
-  Currency,
   OptionPrixKind,
   type Aide,
   type Aides,
-  type Dossier,
-  type Int,
+  type IdAide,
   type OptionPrixParticipant,
   type ParticipantExt,
+  type Structureaides,
 } from "@/clients/backoffice/logic/api";
 import { Camps, copy, Formatters, FormRules, Personnes } from "@/utils";
 import { computed, ref } from "vue";
@@ -93,26 +128,17 @@ import RemisesChip from "./RemisesChip.vue";
 const props = defineProps<{
   participant: ParticipantExt;
   aides: Aides;
+  structures: NonNullable<Structureaides>;
   hasManyParticipants: boolean;
 }>();
 
 const emit = defineEmits<{
-  (e: "save", dossier: Dossier): void;
+  (e: "createAide"): void;
+  (e: "deleteAide", id: IdAide): void;
 }>();
 
-const aide: Aide = {
-  Id: 1 as Int,
-  IdStructureaide: 1 as Int,
-  IdParticipant: 1 as Int,
-  Valide: true,
-  ParJour: false,
-  NbJoursMax: 0 as Int,
-  Valeur: { Cent: 1000 as Int, Currency: Currency.Euros },
-};
-const aides: Aides = { [1 as Int]: aide };
-
 const sortedAides = computed(() => {
-  const out = Object.values(aides || {});
+  const out = Object.values(props.aides || {});
   out.sort((a, b) => a.Id - b.Id);
   return out;
 });
@@ -136,4 +162,6 @@ function formatOption(opt: OptionPrixParticipant) {
       return statut ? `Option ${statut.Label}` : "Pas d'option.";
   }
 }
+
+const aideToRemove = ref<Aide | null>(null);
 </script>

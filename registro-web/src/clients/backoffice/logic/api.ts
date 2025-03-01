@@ -13,6 +13,11 @@ export type Int = number & { __opaque__: "Int" };
 // ISO date-time string
 export type Time = string & { __opaque__: "Time" };
 
+// registro/controllers/backoffice.AidesCreateIn
+export interface AidesCreateIn {
+  IdParticipant: IdParticipant;
+  IdStructure: IdStructureaide;
+}
 // registro/controllers/backoffice.CampHeader
 export interface CampHeader {
   Camp: CampExt;
@@ -403,6 +408,19 @@ export interface StatistiquesInscrits {
   Exceptions: Int;
   Attente: Int;
 }
+// registro/sql/camps.Structureaide
+export interface Structureaide {
+  Id: IdStructureaide;
+  Nom: string;
+  Immatriculation: string;
+  Adresse: string;
+  CodePostal: string;
+  Ville: string;
+  Telephone: Tel;
+  Info: string;
+}
+// registro/sql/camps.Structureaides
+export type Structureaides = { [key in IdStructureaide]: Structureaide } | null;
 // registro/sql/dossiers.Currency
 export const Currency = {
   Euros: 0,
@@ -667,6 +685,8 @@ export const SexeLabels: { [key in Sexe]: string } = {
   [Sexe.Man]: "Homme",
 };
 
+// registro/sql/personnes.Tel
+export type Tel = string;
 // registro/sql/personnes.Tels
 export type Tels = string[] | null;
 // registro/sql/shared.Date
@@ -689,346 +709,347 @@ export abstract class AbstractAPI {
     return { Authorization: "Bearer " + this.authToken };
   }
 
-  protected async rawGetCamps() {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/shared/camps";
-    const rep: AxiosResponse<CampItem[] | null> = await Axios.post(
-      fullUrl,
-      null,
-      { headers: this.getHeaders() },
-    );
-    return rep.data;
-  }
-
-  /** GetCamps wraps rawGetCamps and handles the error */
+  /** GetCamps performs the request and handles the error */
   async GetCamps() {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/shared/camps";
     this.startRequest();
     try {
-      const out = await this.rawGetCamps();
-      return out;
+      const rep: AxiosResponse<CampItem[] | null> = await Axios.post(
+        fullUrl,
+        null,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected async rawSelectPersonne(params: { search: string }) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/shared/personne";
-    const rep: AxiosResponse<PersonneHeader[] | null> = await Axios.get(
-      fullUrl,
-      { headers: this.getHeaders(), params: { search: params["search"] } },
-    );
-    return rep.data;
-  }
-
-  /** SelectPersonne wraps rawSelectPersonne and handles the error */
+  /** SelectPersonne performs the request and handles the error */
   async SelectPersonne(params: { search: string }) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/shared/personne";
     this.startRequest();
     try {
-      const out = await this.rawSelectPersonne(params);
-      return out;
+      const rep: AxiosResponse<PersonneHeader[] | null> = await Axios.get(
+        fullUrl,
+        { headers: this.getHeaders(), params: { search: params["search"] } },
+      );
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected async rawCampsGet() {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/camps";
-    const rep: AxiosResponse<CampHeader[] | null> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
+  /** GetStructureaides performs the request and handles the error */
+  async GetStructureaides() {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/shared/structureaides";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<Structureaides> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
   }
 
-  /** CampsGet wraps rawCampsGet and handles the error */
+  /** CampsGet performs the request and handles the error */
   async CampsGet() {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/camps";
     this.startRequest();
     try {
-      const out = await this.rawCampsGet();
-      return out;
+      const rep: AxiosResponse<CampHeader[] | null> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected async rawCampsCreate() {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/camps";
-    const rep: AxiosResponse<CampHeader> = await Axios.put(fullUrl, null, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** CampsCreate wraps rawCampsCreate and handles the error */
+  /** CampsCreate performs the request and handles the error */
   async CampsCreate() {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/camps";
     this.startRequest();
     try {
-      const out = await this.rawCampsCreate();
-      return out;
+      const rep: AxiosResponse<CampHeader> = await Axios.put(fullUrl, null, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected async rawCampsCreateMany(params: CampsCreateManyIn) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/camps-many";
-    const rep: AxiosResponse<CampHeader[] | null> = await Axios.put(
-      fullUrl,
-      params,
-      { headers: this.getHeaders() },
-    );
-    return rep.data;
-  }
-
-  /** CampsCreateMany wraps rawCampsCreateMany and handles the error */
+  /** CampsCreateMany performs the request and handles the error */
   async CampsCreateMany(params: CampsCreateManyIn) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/camps-many";
     this.startRequest();
     try {
-      const out = await this.rawCampsCreateMany(params);
-      return out;
+      const rep: AxiosResponse<CampHeader[] | null> = await Axios.put(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected async rawCampsUpdate(params: Camp) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/camps";
-    const rep: AxiosResponse<CampExt> = await Axios.post(fullUrl, params, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** CampsUpdate wraps rawCampsUpdate and handles the error */
+  /** CampsUpdate performs the request and handles the error */
   async CampsUpdate(params: Camp) {
-    this.startRequest();
-    try {
-      const out = await this.rawCampsUpdate(params);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected async rawCampsDelete(params: { id: Int }) {
     const fullUrl = this.baseUrl + "/api/v1/backoffice/camps";
-    await Axios.delete(fullUrl, {
-      headers: this.getHeaders(),
-      params: { id: String(params["id"]) },
-    });
-    return true;
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<CampExt> = await Axios.post(fullUrl, params, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
   }
 
-  /** CampsDelete wraps rawCampsDelete and handles the error */
+  /** CampsDelete performs the request and handles the error */
   async CampsDelete(params: { id: Int }) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/camps";
     this.startRequest();
     try {
-      const out = await this.rawCampsDelete(params);
-      return out;
+      await Axios.delete(fullUrl, {
+        headers: this.getHeaders(),
+        params: { id: String(params["id"]) },
+      });
+      return true;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected async rawCampsGetTaux() {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/camps-taux";
-    const rep: AxiosResponse<Tauxs> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** CampsGetTaux wraps rawCampsGetTaux and handles the error */
+  /** CampsGetTaux performs the request and handles the error */
   async CampsGetTaux() {
-    this.startRequest();
-    try {
-      const out = await this.rawCampsGetTaux();
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected async rawCampsSetTaux(params: CampsSetTauxIn) {
     const fullUrl = this.baseUrl + "/api/v1/backoffice/camps-taux";
-    const rep: AxiosResponse<CampHeader> = await Axios.post(fullUrl, params, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<Tauxs> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
   }
 
-  /** CampsSetTaux wraps rawCampsSetTaux and handles the error */
+  /** CampsSetTaux performs the request and handles the error */
   async CampsSetTaux(params: CampsSetTauxIn) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/camps-taux";
     this.startRequest();
     try {
-      const out = await this.rawCampsSetTaux(params);
-      return out;
+      const rep: AxiosResponse<CampHeader> = await Axios.post(fullUrl, params, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected async rawInscriptionsGet() {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/inscriptions";
-    const rep: AxiosResponse<Inscription[] | null> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** InscriptionsGet wraps rawInscriptionsGet and handles the error */
+  /** InscriptionsGet performs the request and handles the error */
   async InscriptionsGet() {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/inscriptions";
     this.startRequest();
     try {
-      const out = await this.rawInscriptionsGet();
-      return out;
+      const rep: AxiosResponse<Inscription[] | null> = await Axios.get(
+        fullUrl,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected async rawInscriptionsSearchSimilaires(params: {
-    "id-personne": Int;
-  }) {
+  /** InscriptionsSearchSimilaires performs the request and handles the error */
+  async InscriptionsSearchSimilaires(params: { "id-personne": Int }) {
     const fullUrl =
       this.baseUrl + "/api/v1/backoffice/inscriptions/search-similaires";
-    const rep: AxiosResponse<ScoredPersonne[] | null> = await Axios.get(
-      fullUrl,
-      {
-        headers: this.getHeaders(),
-        params: { "id-personne": String(params["id-personne"]) },
-      },
-    );
-    return rep.data;
-  }
-
-  /** InscriptionsSearchSimilaires wraps rawInscriptionsSearchSimilaires and handles the error */
-  async InscriptionsSearchSimilaires(params: { "id-personne": Int }) {
     this.startRequest();
     try {
-      const out = await this.rawInscriptionsSearchSimilaires(params);
-      return out;
+      const rep: AxiosResponse<ScoredPersonne[] | null> = await Axios.get(
+        fullUrl,
+        {
+          headers: this.getHeaders(),
+          params: { "id-personne": String(params["id-personne"]) },
+        },
+      );
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected async rawInscriptionsIdentifiePersonne(
-    params: InscriptionIdentifieIn,
-  ) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/inscriptions/identifie";
-    const rep: AxiosResponse<Inscription> = await Axios.post(fullUrl, params, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** InscriptionsIdentifiePersonne wraps rawInscriptionsIdentifiePersonne and handles the error */
+  /** InscriptionsIdentifiePersonne performs the request and handles the error */
   async InscriptionsIdentifiePersonne(params: InscriptionIdentifieIn) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/inscriptions/identifie";
     this.startRequest();
     try {
-      const out = await this.rawInscriptionsIdentifiePersonne(params);
-      return out;
+      const rep: AxiosResponse<Inscription> = await Axios.post(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected async rawInscriptionsValide(params: { "id-dossier": Int }) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/inscriptions/valide";
-    await Axios.post(fullUrl, null, {
-      headers: this.getHeaders(),
-      params: { "id-dossier": String(params["id-dossier"]) },
-    });
-    return true;
-  }
-
-  /** InscriptionsValide wraps rawInscriptionsValide and handles the error */
+  /** InscriptionsValide performs the request and handles the error */
   async InscriptionsValide(params: { "id-dossier": Int }) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/inscriptions/valide";
     this.startRequest();
     try {
-      const out = await this.rawInscriptionsValide(params);
-      return out;
+      await Axios.post(fullUrl, null, {
+        headers: this.getHeaders(),
+        params: { "id-dossier": String(params["id-dossier"]) },
+      });
+      return true;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected async rawInscriptionsDelete(params: { id: Int }) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/inscriptions";
-    await Axios.delete(fullUrl, {
-      headers: this.getHeaders(),
-      params: { id: String(params["id"]) },
-    });
-    return true;
-  }
-
-  /** InscriptionsDelete wraps rawInscriptionsDelete and handles the error */
+  /** InscriptionsDelete performs the request and handles the error */
   async InscriptionsDelete(params: { id: Int }) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/inscriptions";
     this.startRequest();
     try {
-      const out = await this.rawInscriptionsDelete(params);
-      return out;
+      await Axios.delete(fullUrl, {
+        headers: this.getHeaders(),
+        params: { id: String(params["id"]) },
+      });
+      return true;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected async rawDossiersSearch(params: SearchDossierIn) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/dossiers/search";
-    const rep: AxiosResponse<SearchDossierOut> = await Axios.post(
-      fullUrl,
-      params,
-      { headers: this.getHeaders() },
-    );
-    return rep.data;
-  }
-
-  /** DossiersSearch wraps rawDossiersSearch and handles the error */
+  /** DossiersSearch performs the request and handles the error */
   async DossiersSearch(params: SearchDossierIn) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/dossiers/search";
     this.startRequest();
     try {
-      const out = await this.rawDossiersSearch(params);
-      return out;
+      const rep: AxiosResponse<SearchDossierOut> = await Axios.post(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected async rawDossiersLoad(params: { id: Int }) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/dossiers";
-    const rep: AxiosResponse<DossierDetails> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-      params: { id: String(params["id"]) },
-    });
-    return rep.data;
-  }
-
-  /** DossiersLoad wraps rawDossiersLoad and handles the error */
+  /** DossiersLoad performs the request and handles the error */
   async DossiersLoad(params: { id: Int }) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/dossiers";
     this.startRequest();
     try {
-      const out = await this.rawDossiersLoad(params);
-      return out;
+      const rep: AxiosResponse<DossierDetails> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { id: String(params["id"]) },
+      });
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected async rawDossiersUpdate(params: Dossier) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/dossiers";
-    const rep: AxiosResponse<DossiersUpdateOut> = await Axios.post(
-      fullUrl,
-      params,
-      { headers: this.getHeaders() },
-    );
-    return rep.data;
-  }
-
-  /** DossiersUpdate wraps rawDossiersUpdate and handles the error */
+  /** DossiersUpdate performs the request and handles the error */
   async DossiersUpdate(params: Dossier) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/dossiers";
     this.startRequest();
     try {
-      const out = await this.rawDossiersUpdate(params);
-      return out;
+      const rep: AxiosResponse<DossiersUpdateOut> = await Axios.post(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** AidesCreate performs the request and handles the error */
+  async AidesCreate(params: AidesCreateIn) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/aides";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<Aide> = await Axios.put(fullUrl, params, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** AidesUpdate performs the request and handles the error */
+  async AidesUpdate(params: Aide) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/aides";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** AidesDelete performs the request and handles the error */
+  async AidesDelete(params: { id: Int }) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/aides";
+    this.startRequest();
+    try {
+      await Axios.delete(fullUrl, {
+        headers: this.getHeaders(),
+        params: { id: String(params["id"]) },
+      });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** AidesJustificatifUpload performs the request and handles the error */
+  async AidesJustificatifUpload(file: File, params: { "id-aide": Int }) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/aides/justificatif";
+    this.startRequest();
+    try {
+      const formData = new FormData();
+      formData.append("file", file, file.name);
+      await Axios.post(fullUrl, formData, {
+        headers: this.getHeaders(),
+        params: { "id-aide": String(params["id-aide"]) },
+      });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** AidesJustificatifDelete performs the request and handles the error */
+  async AidesJustificatifDelete(params: { "id-aide": Int }) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/aides/justificatif";
+    this.startRequest();
+    try {
+      await Axios.delete(fullUrl, {
+        headers: this.getHeaders(),
+        params: { "id-aide": String(params["id-aide"]) },
+      });
+      return true;
     } catch (error) {
       this.handleError(error);
     }

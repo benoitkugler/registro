@@ -29,10 +29,6 @@ type File struct {
 	DateHeureModif time.Time
 }
 
-func NewFile(fileContent []byte, filename string) File {
-	return File{Taille: len(fileContent), NomClient: filename, DateHeureModif: time.Now()}
-}
-
 // Demande encode la catégorie d'un fichier à fournir.
 // On différencie deux types de catégories :
 //   - les documents connus en avances (doc. équipiers, vaccins)

@@ -4,8 +4,11 @@ import (
 	"bytes"
 	"cmp"
 	"database/sql"
+	"errors"
 	"fmt"
+	"io"
 	"math/rand"
+	"mime/multipart"
 	"net/url"
 	"slices"
 	"strconv"
@@ -67,6 +70,30 @@ func ParseInt[T interface{ ~int64 | int }](v string) (T, error) {
 // QueryParamInt parse the query param `name` to an int
 func QueryParamInt[T interface{ ~int64 | int }](c echo.Context, name string) (T, error) {
 	return ParseInt[T](c.QueryParam(name))
+}
+
+// ReadUpload checks the file size and reads its content
+func ReadUpload(fileHeader *multipart.FileHeader) (content []byte, filename string, err error) {
+	const MB = 1000000
+	const maxSize = 5 * MB
+	if fileHeader.Size > maxSize {
+		return nil, "", fmt.Errorf("file too large (%d MB)", fileHeader.Size/MB)
+	}
+
+	f, err := fileHeader.Open()
+	if err != nil {
+		return nil, "", err
+	}
+	defer f.Close()
+
+	content, err = io.ReadAll(f)
+	if err != nil {
+		return nil, "", err
+	}
+	if int64(len(content)) != fileHeader.Size {
+		return nil, "", errors.New("invalid file size")
+	}
+	return content, fileHeader.Filename, nil
 }
 
 // SQLError wraps [*pq.Error] errors only

@@ -125,7 +125,9 @@
       <DossierDetailsPannel
         v-if="dossierDetails != null"
         :dossier="dossierDetails"
+        :structures="structures"
         @update-dossier="updateDossier"
+        @create-aide="createAide"
       ></DossierDetailsPannel>
       <div v-else class="text-center font-italic my-6">
         Sélectionner un dossier...
@@ -149,6 +151,9 @@ import {
   type Personne,
   type DossierDetails,
   type Dossier,
+  type AidesCreateIn,
+  type IdStructureaide,
+  type Structureaides,
 } from "../../logic/api";
 import { copy, nullableToOpt, optToNullable, selectItems } from "@/utils";
 import { controller } from "../../logic/logic";
@@ -171,6 +176,7 @@ const query = reactive<SearchDossierIn>(copy(emptyQuery));
 
 onMounted(() => {
   loadCamps();
+  loadStructureaides();
   searchDossiers();
 });
 
@@ -185,6 +191,13 @@ async function loadCamps() {
   const res = await controller.GetCamps();
   if (res === undefined) return;
   campsData.value = res || [];
+}
+
+const structures = ref<NonNullable<Structureaides>>({});
+async function loadStructureaides() {
+  const res = await controller.GetStructureaides();
+  if (res === undefined) return;
+  structures.value = res || {};
 }
 
 const data = ref<SearchDossierOut | null>(null);
@@ -226,5 +239,20 @@ async function updateDossier(dossier: Dossier) {
   }
   const dossierHeader = data.value?.Dossiers?.find((d) => d.Id == dossier.Id);
   if (dossierHeader) dossierHeader.Responsable = res.Responsable;
+}
+
+async function createAide(params: AidesCreateIn) {
+  const res = await controller.AidesCreate(params);
+  if (res === undefined) return;
+  controller.showMessage("Aide ajoutée avec succès.");
+
+  // la nouvelle aide ne modifie pas le statut du dossier :
+  // pas de besoin de [loadDossier]
+  if (dossierDetails.value == null) return;
+  const allAides = dossierDetails.value.Dossier.Aides || {};
+  const thisPart = allAides[params.IdParticipant] || {};
+  thisPart[res.Id] = res;
+  allAides[params.IdParticipant] = thisPart;
+  dossierDetails.value.Dossier.Aides = allAides;
 }
 </script>

@@ -28,11 +28,11 @@ func Init() error {
 	return nil
 }
 
-// ComputeMiniature réduit le document entrant à une image png.
+// computeMiniature réduit le document entrant à une image png.
 // Les formats supportés sont .pdf, .png, .jpg, .jpeg
 //
 // Le format .pdf requiert l'utilisation de Ghostscript.
-func ComputeMiniature(extension string, doc io.Reader) ([]byte, error) {
+func computeMiniature(extension string, doc io.Reader) ([]byte, error) {
 	var miniature bytes.Buffer
 	ext := strings.ToLower(filepath.Ext(extension))
 	switch ext {
@@ -65,5 +65,5 @@ func ComputeMiniature(extension string, doc io.Reader) ([]byte, error) {
 
 // ComputeMiniaturePDF est un raccourci pour les fichier PDF (voir ComputeMiniature)
 func ComputeMiniaturePDF(pdfBytes []byte) (miniature []byte, err error) {
-	return ComputeMiniature(".pdf", bytes.NewReader(pdfBytes))
+	return computeMiniature(".pdf", bytes.NewReader(pdfBytes))
 }

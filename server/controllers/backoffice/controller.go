@@ -14,6 +14,7 @@ import (
 	"registro/controllers/logic"
 	"registro/crypto"
 
+	"registro/sql/camps"
 	fs "registro/sql/files"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -101,6 +102,14 @@ func JWTUser(c echo.Context) (isAdmin bool) {
 
 func (ct *Controller) GetCamps(c echo.Context) error {
 	out, err := logic.LoadCamps(ct.db)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) GetStructureaides(c echo.Context) error {
+	out, err := camps.SelectAllStructureaides(ct.db)
 	if err != nil {
 		return err
 	}

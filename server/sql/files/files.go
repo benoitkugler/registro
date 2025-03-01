@@ -1,9 +1,13 @@
 package files
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
+
+	"registro/utils"
 )
 
 // filepath returns the file location
@@ -51,11 +55,36 @@ func (fs FileSystem) Load(id IdFile, miniature bool) ([]byte, error) {
 	return content, nil
 }
 
-func (fs FileSystem) Save(doc IdFile, fileContent []byte, miniature bool) error {
+func (fs FileSystem) save(doc IdFile, fileContent []byte, miniature bool) error {
 	filepath := doc.filepath(fs.root, miniature)
 	err := os.WriteFile(filepath, fileContent, os.ModePerm)
 	if err != nil {
 		return fmt.Errorf("failed to save document (ID %d) : %s", doc, err)
 	}
 	return nil
+}
+
+// UploadFile computes the miniature, stores the content on the file system
+// and updates the metadata.
+// The file size is not checked.
+func UploadFile(fs FileSystem, db DB, id IdFile, fileContent []byte, filename string) (File, error) {
+	ext := filepath.Ext(filename)
+	minContent, err := computeMiniature(ext, bytes.NewReader(fileContent))
+	if err != nil {
+		return File{}, err
+	}
+	err = fs.save(id, fileContent, false)
+	if err != nil {
+		return File{}, err
+	}
+	err = fs.save(id, minContent, true)
+	if err != nil {
+		return File{}, err
+	}
+	meta := File{Id: id, Taille: len(fileContent), NomClient: filename, DateHeureModif: time.Now()}
+	meta, err = meta.Update(db)
+	if err != nil {
+		return File{}, utils.SQLError(err)
+	}
+	return meta, nil
 }

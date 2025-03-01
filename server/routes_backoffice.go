@@ -15,6 +15,7 @@ func setupRoutesBackoffice(e *echo.Echo, ct *backoffice.Controller) {
 
 	gr.POST("/api/v1/backoffice/shared/camps", ct.GetCamps)
 	gr.GET("/api/v1/backoffice/shared/personne", ct.SelectPersonne)
+	gr.GET("/api/v1/backoffice/shared/structureaides", ct.GetStructureaides)
 
 	// Onglet Camps
 
@@ -37,4 +38,10 @@ func setupRoutesBackoffice(e *echo.Echo, ct *backoffice.Controller) {
 	gr.POST("/api/v1/backoffice/dossiers/search", ct.DossiersSearch)
 	gr.GET("/api/v1/backoffice/dossiers", ct.DossiersLoad)
 	gr.POST("/api/v1/backoffice/dossiers", ct.DossiersUpdate)
+
+	gr.PUT("/api/v1/backoffice/aides", ct.AidesCreate)
+	gr.POST("/api/v1/backoffice/aides", ct.AidesUpdate)
+	gr.DELETE("/api/v1/backoffice/aides", ct.AidesDelete)
+	gr.POST("/api/v1/backoffice/aides/justificatif", ct.AidesJustificatifUpload)
+	gr.DELETE("/api/v1/backoffice/aides/justificatif", ct.AidesJustificatifDelete)
 }

@@ -1,15 +1,17 @@
 package backoffice
 
 import (
+	"database/sql"
 	"slices"
 	"strings"
 
 	"registro/controllers/espaceperso"
 	"registro/controllers/logic"
 	"registro/controllers/search"
-	"registro/sql/camps"
+	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
 	"registro/sql/events"
+	fs "registro/sql/files"
 	pr "registro/sql/personnes"
 	"registro/utils"
 
@@ -155,7 +157,7 @@ func match(dossier logic.DossierFinance,
 			if idCamp.Valid && idCamp.Id != part.IdCamp {
 				continue
 			}
-			if part.Statut == camps.Inscrit {
+			if part.Statut == cps.Inscrit {
 				hasAtLeastOneInscrit = true
 				hasAllAttente = false
 			} else {
@@ -248,4 +250,180 @@ func (ct *Controller) updateDossier(args ds.Dossier) (string, error) {
 	}
 
 	return responsable.PrenomNOM(), nil
+}
+
+type AidesCreateIn struct {
+	IdParticipant cps.IdParticipant
+	IdStructure   cps.IdStructureaide
+}
+
+func (ct *Controller) AidesCreate(c echo.Context) error {
+	var args AidesCreateIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+	out, err := ct.createAide(args)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) createAide(args AidesCreateIn) (cps.Aide, error) {
+	// Considère l'aide valide car venant du backoffice
+	out, err := cps.Aide{IdParticipant: args.IdParticipant, IdStructureaide: args.IdStructure, Valide: true}.Insert(ct.db)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+	return out, nil
+}
+
+func (ct *Controller) AidesUpdate(c echo.Context) error {
+	var args cps.Aide
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+	err := ct.updateAide(args)
+	if err != nil {
+		return err
+	}
+	return c.NoContent(200)
+}
+
+func (ct *Controller) updateAide(args cps.Aide) error {
+	current, err := cps.SelectAide(ct.db, args.Id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	current.Valide = args.Valide
+	current.Valeur = args.Valeur
+	current.ParJour = args.ParJour
+	current.NbJoursMax = args.NbJoursMax
+	_, err = current.Update(ct.db)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	return nil
+}
+
+func (ct *Controller) AidesJustificatifUpload(c echo.Context) error {
+	id, err := utils.QueryParamInt[cps.IdAide](c, "id-aide")
+	if err != nil {
+		return err
+	}
+	fileHeader, err := c.FormFile("file")
+	if err != nil {
+		return err
+	}
+	content, name, err := utils.ReadUpload(fileHeader)
+	if err != nil {
+		return err
+	}
+	err = ct.uploadAideJustificatif(id, content, name)
+	if err != nil {
+		return err
+	}
+	return c.NoContent(200)
+}
+
+// uploadJustificatif create or update the link table
+func (ct *Controller) uploadAideJustificatif(idAide cps.IdAide, content []byte, filename string) error {
+	item, found, err := fs.SelectFileAideByIdAide(ct.db, idAide)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	idFile := item.IdFile
+
+	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
+		if !found { // create one file and a link
+			file, err := fs.File{}.Insert(tx)
+			if err != nil {
+				return err
+			}
+			err = fs.FileAide{IdFile: file.Id, IdAide: idAide}.Insert(tx)
+			if err != nil {
+				return err
+			}
+			idFile = file.Id
+		}
+		_, err = fs.UploadFile(ct.files, tx, idFile, content, filename)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+
+	return err
+}
+
+func (ct *Controller) AidesJustificatifDelete(c echo.Context) error {
+	id, err := utils.QueryParamInt[cps.IdAide](c, "id-aide")
+	if err != nil {
+		return err
+	}
+	err = ct.deleteAideJustificatif(id)
+	if err != nil {
+		return err
+	}
+	return c.NoContent(200)
+}
+
+func (ct *Controller) deleteAideJustificatif(id cps.IdAide) error {
+	return utils.InTx(ct.db, func(tx *sql.Tx) error {
+		links, err := fs.DeleteFileAidesByIdAides(tx, id)
+		if err != nil {
+			return err
+		}
+		deleted, err := fs.DeleteFilesByIDs(tx, links.IdFiles()...)
+		if err != nil {
+			return err
+		}
+		err = ct.files.Delete(deleted...)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func (ct *Controller) AidesDelete(c echo.Context) error {
+	id, err := utils.QueryParamInt[cps.IdAide](c, "id")
+	if err != nil {
+		return err
+	}
+	err = ct.deleteAide(id)
+	if err != nil {
+		return err
+	}
+	return c.NoContent(200)
+}
+
+// returns the dossier the [Aide] was linked
+func (ct *Controller) deleteAide(id cps.IdAide) error {
+	var files []fs.IdFile
+	err := utils.InTx(ct.db, func(tx *sql.Tx) error {
+		// remove associated documents
+		links, err := fs.DeleteFileAidesByIdAides(tx, id)
+		if err != nil {
+			return err
+		}
+		files, err = fs.DeleteFilesByIDs(tx, links.IdFiles()...)
+		if err != nil {
+			return err
+		}
+		_, err = cps.DeleteAideById(tx, id)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	err = ct.files.Delete(files...)
+	if err != nil {
+		return err
+	}
+	return nil
 }

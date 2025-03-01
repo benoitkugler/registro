@@ -82,7 +82,7 @@ func loadEnvs(devMode bool) (config.Asso, crypto.Encrypter, config.DB, files.Fil
 
 	serverKey := os.Getenv("SERVER_KEY")
 	if serverKey == "" {
-		log.Fatal("missing encryption key")
+		log.Fatal("missing env. SERVER_KEY (encryption key)")
 	}
 	encrypter := crypto.NewEncrypter(serverKey)
 
@@ -91,7 +91,7 @@ func loadEnvs(devMode bool) (config.Asso, crypto.Encrypter, config.DB, files.Fil
 
 	fs := os.Getenv("FILES_ROOT")
 	if fs == "" {
-		log.Fatal("missing encryption key")
+		log.Fatal("missing env. FILES_ROOT (files directory)")
 	}
 	fileSystem := files.NewFileSystem(fs)
 

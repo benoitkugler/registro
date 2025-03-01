@@ -24,6 +24,8 @@
     <v-dialog v-model="showEditParticipants" max-width="1200px">
       <DossierParticipantsCard
         :dossier="props.dossier.Dossier"
+        :structures="props.structures"
+        @create-aide="(v) => emit('createAide', v)"
       ></DossierParticipantsCard>
     </v-dialog>
 
@@ -81,8 +83,10 @@
 import { computed, ref } from "vue";
 import {
   StatutPaiement,
+  type AidesCreateIn,
   type Dossier,
   type DossierDetails,
+  type Structureaides,
 } from "../../../logic/api";
 import { Personnes, pseudoEventTime, type PseudoEvent } from "@/utils";
 import FactureCard from "./FactureCard.vue";
@@ -91,10 +95,12 @@ import DossierParticipantsCard from "./DossierParticipantsCard.vue";
 
 const props = defineProps<{
   dossier: DossierDetails;
+  structures: NonNullable<Structureaides>;
 }>();
 
 const emit = defineEmits<{
   (e: "updateDossier", dossier: Dossier): void;
+  (e: "createAide", args: AidesCreateIn): void;
 }>();
 
 function statutColor(s: StatutPaiement) {
