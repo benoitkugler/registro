@@ -7,7 +7,7 @@
         <template #activator="{ props: btnProps }">
           <v-btn
             v-bind="btnProps"
-            icon="mdi-skip-next"
+            icon="mdi-arrow-expand"
             size="x-small"
             :disabled="!(modelValue || [])[0]"
             @click="propagateFirst"

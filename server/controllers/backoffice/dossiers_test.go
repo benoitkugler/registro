@@ -14,6 +14,52 @@ import (
 	tu "registro/utils/testutils"
 )
 
+func TestController_participants(t *testing.T) {
+	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
+		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",
+		"../../migrations/init.sql")
+	defer db.Remove()
+
+	pe1, err := pr.Personne{IsTemp: false, Etatcivil: pr.Etatcivil{DateNaissance: shared.Date(time.Now())}}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	camp1, err := cps.Camp{IdTaux: 1, Places: 20, AgeMin: 6, AgeMax: 12}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	structure, err := cps.Structureaide{}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	dossier1, err := ds.Dossier{IdResponsable: pe1.Id, IdTaux: 1, MomentInscription: time.Now()}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	ct, err := NewController(db.DB, crypto.Encrypter{}, fs.NewFileSystem(t.TempDir()), config.SMTP{}, config.Joomeo{}, config.Helloasso{})
+	tu.AssertNoErr(t, err)
+
+	part, err := ct.createParticipant(ParticipantsCreateIn{IdDossier: dossier1.Id, IdCamp: camp1.Id, IdPersonne: pe1.Id})
+	tu.AssertNoErr(t, err)
+
+	part.Statut = cps.Inscrit
+	part.QuotientFamilial = 48
+	err = ct.updateParticipant(part)
+	tu.AssertNoErr(t, err)
+
+	aide, err := ct.createAide(AidesCreateIn{IdParticipant: part.Id, IdStructure: structure.Id})
+	tu.AssertNoErr(t, err)
+	err = ct.uploadAideJustificatif(aide.Id, []byte(pngData), "test.png")
+	tu.AssertNoErr(t, err)
+
+	files, err := fs.SelectAllFiles(ct.db)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(files) == 1)
+
+	err = ct.deleteParticipant(part.Id)
+	tu.AssertNoErr(t, err)
+
+	files, err = fs.SelectAllFiles(ct.db)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(files) == 0)
+}
+
 const pngData = "\x89\x50\x4E\x47\x0D\x0A\x1A\x0A\x00\x00\x00\x0D\x49\x48\x44\x52" +
 	"\x00\x00\x01\x00\x00\x00\x01\x00\x01\x03\x00\x00\x00\x66\xBC\x3A" +
 	"\x25\x00\x00\x00\x03\x50\x4C\x54\x45\xB5\xD0\xD0\x63\x04\x16\xEA" +
@@ -66,5 +112,14 @@ func TestController_aides(t *testing.T) {
 	tu.AssertNoErr(t, err)
 
 	err = ct.deleteAide(aide.Id)
+	tu.AssertNoErr(t, err)
+
+	aide, err = ct.createAide(AidesCreateIn{IdParticipant: part.Id, IdStructure: structure.Id})
+	tu.AssertNoErr(t, err)
+
+	err = ct.uploadAideJustificatif(aide.Id, []byte(pngData), "test3.png")
+	tu.AssertNoErr(t, err)
+
+	err = ct.deleteDossier(dossier1.Id)
 	tu.AssertNoErr(t, err)
 }

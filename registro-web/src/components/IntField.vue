@@ -25,5 +25,5 @@ const props = defineProps<{
   suffix?: string;
 }>();
 
-const model = defineModel<Int>();
+const model = defineModel<Int>({ required: true });
 </script>

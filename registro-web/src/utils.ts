@@ -114,6 +114,16 @@ export function nullableToOpt<T extends Int>(
   return id === null ? { Valid: false, Id: 0 as T } : { Valid: true, Id: id };
 }
 
+// converts 0 to null
+export function zeroableToNullable<T extends Int>(id: T): T | null {
+  return id != 0 ? id : null;
+}
+
+// converts null to 0
+export function nullableToZeroable<T extends Int>(id: T | null): T {
+  return id === null ? (0 as T) : id;
+}
+
 /** normalize returns s without spaces, accents and in lower case */
 export function normalize(s: string) {
   return s

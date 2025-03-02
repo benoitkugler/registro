@@ -103,7 +103,7 @@ async function valideInsc(insc: Inscription) {
 }
 
 async function deleteInsc(insc: Inscription) {
-  const res = await controller.InscriptionsDelete({ id: insc.Dossier.Id });
+  const res = await controller.DeleteDossier({ id: insc.Dossier.Id });
   if (res === undefined) return;
 
   controller.showMessage("Inscription supprimée avec succès.");

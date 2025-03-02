@@ -2,6 +2,7 @@ package backoffice
 
 import (
 	"database/sql"
+	"fmt"
 	"slices"
 	"strings"
 
@@ -11,6 +12,7 @@ import (
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
 	"registro/sql/events"
+	"registro/sql/files"
 	fs "registro/sql/files"
 	pr "registro/sql/personnes"
 	"registro/utils"
@@ -252,6 +254,231 @@ func (ct *Controller) updateDossier(args ds.Dossier) (string, error) {
 	return responsable.PrenomNOM(), nil
 }
 
+func (ct *Controller) DeleteDossier(c echo.Context) error {
+	id, err := utils.QueryParamInt[ds.IdDossier](c, "id")
+	if err != nil {
+		return err
+	}
+	err = ct.deleteDossier(id)
+	if err != nil {
+		return err
+	}
+	return c.NoContent(200)
+}
+
+func (ct *Controller) deleteDossier(id ds.IdDossier) error {
+	data, err := logic.LoadDossier(ct.db, id)
+	if err != nil {
+		return err
+	}
+	// garbage collect temporary personnes
+	toDelete := make(utils.Set[pr.IdPersonne])
+	for _, pers := range data.Personnes() {
+		if pers.IsTemp {
+			toDelete.Add(pers.Id)
+		}
+	}
+	// also cleanup aides files; the other items will cascade
+	aides, err := cps.SelectAidesByIdParticipants(ct.db, data.Participants.IDs()...)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	links, err := files.SelectFileAidesByIdAides(ct.db, aides.IDs()...)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	return utils.InTx(ct.db, func(tx *sql.Tx) error {
+		deleted, err := files.DeleteFilesByIDs(tx, links.IdFiles()...)
+		if err != nil {
+			return err
+		}
+		err = ct.files.Delete(deleted...)
+		if err != nil {
+			return err
+		}
+
+		_, err = ds.DeleteDossierById(tx, id)
+		if err != nil {
+			return err
+		}
+		for id := range toDelete {
+			_, err = pr.DeletePersonneById(tx, id)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+type ParticipantsCreateIn struct {
+	IdDossier  ds.IdDossier
+	IdCamp     cps.IdCamp
+	IdPersonne pr.IdPersonne
+}
+
+// ParticipantsCreate ajoute un participant au séjour donné,
+// en résolvant statut et groupe.
+func (ct *Controller) ParticipantsCreate(c echo.Context) error {
+	var args ParticipantsCreateIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+	out, err := ct.createParticipant(args)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) createParticipant(args ParticipantsCreateIn) (cps.Participant, error) {
+	dossier, err := ds.SelectDossier(ct.db, args.IdDossier)
+	if err != nil {
+		return cps.Participant{}, utils.SQLError(err)
+	}
+	personne, err := pr.SelectPersonne(ct.db, args.IdPersonne)
+	if err != nil {
+		return cps.Participant{}, utils.SQLError(err)
+	}
+
+	// better error message if already present
+	_, alreadyHere, err := cps.SelectParticipantByIdCampAndIdPersonne(ct.db, args.IdCamp, args.IdPersonne)
+	if err != nil {
+		return cps.Participant{}, utils.SQLError(err)
+	}
+	if alreadyHere {
+		return cps.Participant{}, fmt.Errorf("Le profil %s est déjà présent sur ce camp !", personne.PrenomNOM())
+	}
+
+	// resolve Groupe...
+	groupes, err := cps.SelectGroupesByIdCamps(ct.db, args.IdCamp)
+	if err != nil {
+		return cps.Participant{}, utils.SQLError(err)
+	}
+	groupe, hasGroupe := groupes.TrouveGroupe(personne.DateNaissance)
+
+	// ... and Statut
+	loaders, err := cps.LoadCamps(ct.db, args.IdCamp)
+	if err != nil {
+		return cps.Participant{}, err
+	}
+	statut := loaders[0].Status([]pr.Personne{personne})[0]
+	participant := cps.Participant{
+		IdDossier:  args.IdDossier,
+		IdCamp:     args.IdCamp,
+		IdPersonne: args.IdPersonne,
+
+		IdTaux: dossier.IdTaux,
+		Statut: statut.Hint(),
+	}
+
+	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
+		participant, err = participant.Insert(tx)
+		if err != nil {
+			return err
+		}
+		if hasGroupe {
+			err = cps.GroupeParticipant{IdGroupe: groupe.Id, IdCamp: groupe.IdCamp, IdParticipant: participant.Id}.Insert(tx)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+
+	return participant, err
+}
+
+// ParticipantsUpdate modifie les champs d'un participant.
+//
+// Les champs [IdPersonne], [IdDossier], [IdTaux] et [IdCamp] sont ignorés.
+//
+// Le statut est modifié sans aucune notification.
+func (ct *Controller) ParticipantsUpdate(c echo.Context) error {
+	var args cps.Participant
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+	err := ct.updateParticipant(args)
+	if err != nil {
+		return err
+	}
+	return c.NoContent(200)
+}
+
+func (ct *Controller) updateParticipant(args cps.Participant) error {
+	current, err := cps.SelectParticipant(ct.db, args.Id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	current.Statut = args.Statut
+	current.Remises = args.Remises
+	current.QuotientFamilial = args.QuotientFamilial
+	current.OptionPrix = args.OptionPrix
+	current.Details = args.Details
+	current.Bus = args.Bus
+	_, err = current.Update(ct.db)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	return nil
+}
+
+// ParticipantsDelete supprime le participant donné.
+// Si la personne liée est temporaire, elle est aussi supprimée.
+func (ct *Controller) ParticipantsDelete(c echo.Context) error {
+	id, err := utils.QueryParamInt[cps.IdParticipant](c, "id")
+	if err != nil {
+		return err
+	}
+	err = ct.deleteParticipant(id)
+	if err != nil {
+		return err
+	}
+	return c.NoContent(200)
+}
+
+func (ct *Controller) deleteParticipant(id cps.IdParticipant) error {
+	// cleanup aides files and temp personne; the other items will cascade
+	aides, err := cps.SelectAidesByIdParticipants(ct.db, id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	links, err := files.SelectFileAidesByIdAides(ct.db, aides.IDs()...)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	return utils.InTx(ct.db, func(tx *sql.Tx) error {
+		deleted, err := files.DeleteFilesByIDs(tx, links.IdFiles()...)
+		if err != nil {
+			return err
+		}
+		err = ct.files.Delete(deleted...)
+		if err != nil {
+			return err
+		}
+
+		participant, err := cps.DeleteParticipantById(tx, id)
+		if err != nil {
+			return err
+		}
+		personne, err := pr.SelectPersonne(tx, participant.IdPersonne)
+		if err != nil {
+			return err
+		}
+		if personne.IsTemp { // cleanup
+			_, err = pr.DeletePersonneById(tx, personne.Id)
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+}
+
 type AidesCreateIn struct {
 	IdParticipant cps.IdParticipant
 	IdStructure   cps.IdStructureaide
@@ -295,6 +522,7 @@ func (ct *Controller) updateAide(args cps.Aide) error {
 	if err != nil {
 		return utils.SQLError(err)
 	}
+	current.IdStructureaide = args.IdStructureaide
 	current.Valide = args.Valide
 	current.Valeur = args.Valeur
 	current.ParJour = args.ParJour

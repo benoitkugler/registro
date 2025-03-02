@@ -1543,6 +1543,16 @@ func DeleteParticipantsByIdTauxs(tx DB, idTauxs_ ...dossiers.IdTaux) ([]IdPartic
 	return ScanIdParticipantArray(rows)
 }
 
+// SelectParticipantByIdCampAndIdPersonne return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectParticipantByIdCampAndIdPersonne(tx DB, idCamp IdCamp, idPersonne personnes.IdPersonne) (item Participant, found bool, err error) {
+	row := tx.QueryRow("SELECT id, idcamp, idpersonne, iddossier, idtaux, statut, remises, quotientfamilial, optionprix, details, bus FROM participants WHERE IdCamp = $1 AND IdPersonne = $2", idCamp, idPersonne)
+	item, err = ScanParticipant(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
+}
+
 // SelectParticipantByIdAndIdCamp return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectParticipantByIdAndIdCamp(tx DB, id IdParticipant, idCamp IdCamp) (item Participant, found bool, err error) {
 	row := tx.QueryRow("SELECT id, idcamp, idpersonne, iddossier, idtaux, statut, remises, quotientfamilial, optionprix, details, bus FROM participants WHERE Id = $1 AND IdCamp = $2", id, idCamp)

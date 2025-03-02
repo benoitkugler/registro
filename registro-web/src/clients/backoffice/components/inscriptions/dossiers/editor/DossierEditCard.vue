@@ -1,5 +1,5 @@
 <template>
-  <v-card title="Modifier le dossier">
+  <v-card>
     <v-card-text>
       <v-row>
         <v-col>
@@ -24,22 +24,22 @@
       </v-row>
       <v-row>
         <v-col>
-          <v-checkbox
+          <BoolField
             hide-details
             v-model="innerDossier.PartageAdressesOK"
             label="Partage des coordonnées"
           >
-          </v-checkbox
+          </BoolField
         ></v-col>
       </v-row>
       <v-row>
         <v-col>
-          <v-checkbox
+          <BoolField
             hide-details
             v-model="innerDossier.DemandeFondSoutien"
             label="Demande le fond de soutien"
           >
-          </v-checkbox>
+          </BoolField>
         </v-col>
       </v-row>
     </v-card-text>
@@ -51,10 +51,7 @@
 </template>
 
 <script setup lang="ts">
-import {
-  type Dossier,
-  type ParticipantExt,
-} from "@/clients/backoffice/logic/api";
+import { type Dossier } from "@/clients/backoffice/logic/api";
 import { copy, FormRules } from "@/utils";
 import { ref } from "vue";
 

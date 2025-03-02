@@ -13,8 +13,8 @@
     <v-card-text>
       <v-row>
         <v-col cols="3">Participant</v-col>
-        <v-col cols="2">Prix du camp</v-col>
-        <v-col cols="2">Prix avec option</v-col>
+        <v-col cols="2" class="text-center">Prix du camp</v-col>
+        <v-col cols="2" class="text-center">Prix avec option</v-col>
         <v-col cols="3" class="text-center">Aides extérieures</v-col>
         <v-col cols="2" class="text-right">Sous-total</v-col>
       </v-row>
@@ -27,8 +27,10 @@
               {{ part.Camp }}
             </span>
           </v-col>
-          <v-col align-self="center" cols="2">{{ part.Prix }}</v-col>
-          <v-col align-self="center" cols="2"
+          <v-col align-self="center" cols="2" class="text-center">{{
+            part.Prix
+          }}</v-col>
+          <v-col align-self="center" cols="2" class="text-center"
             >{{ Formatters.montant(part.Bilan.AvecOption) }} <br />
             <span class="text-grey">
               {{ part.Bilan.AvecOptionDescription }}
@@ -44,9 +46,15 @@
             {{ part.Bilan.AvecAides }}
           </v-col>
         </v-row>
-        <v-row v-if="hasRemise(part.Bilan)">
-          <!-- TODO -->
-          {{ part.Bilan.Remises }}
+        <v-row v-if="hasRemise(part.Bilan)" no-gutters>
+          <v-col cols="10" class="text-right">
+            <i>
+              {{ formatRemises(part.Bilan.Remises) }}
+            </i>
+          </v-col>
+          <v-col cols="2" class="text-right">
+            {{ part.Bilan.Net }}
+          </v-col>
         </v-row>
       </template>
 
@@ -90,6 +98,7 @@ import {
   ListeAttente,
   type BilanParticipantPub,
   type DossierExt,
+  type Remises,
 } from "@/clients/backoffice/logic/api";
 import { Camps, Formatters, Personnes } from "@/utils";
 import { computed } from "vue";
@@ -121,6 +130,16 @@ function hasRemise(b: BilanParticipantPub) {
     b.Remises.ReducEquipiers ||
     b.Remises.ReducSpeciale.Cent
   );
+}
+
+function formatRemises(remises: Remises) {
+  const chunks = [];
+  if (remises.ReducEnfants) chunks.push(`Enfants : ${remises.ReducEnfants}%`);
+  if (remises.ReducEquipiers)
+    chunks.push(`Enfants : ${remises.ReducEquipiers}%`);
+  if (remises.ReducSpeciale.Cent)
+    chunks.push(`Remise : ${Formatters.montant(remises.ReducSpeciale)}`);
+  return chunks.join("  ;  ");
 }
 
 const paiements = computed(() => {

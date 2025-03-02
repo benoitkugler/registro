@@ -27,21 +27,25 @@ func setupRoutesBackoffice(e *echo.Echo, ct *backoffice.Controller) {
 	gr.GET("/api/v1/backoffice/camps-taux", ct.CampsGetTaux)
 	gr.POST("/api/v1/backoffice/camps-taux", ct.CampsSetTaux)
 
-	// Onglet Inscriptions
+	// Onglet Inscriptions/Dossiers
 
 	gr.GET("/api/v1/backoffice/inscriptions", ct.InscriptionsGet)
 	gr.GET("/api/v1/backoffice/inscriptions/search-similaires", ct.InscriptionsSearchSimilaires)
 	gr.POST("/api/v1/backoffice/inscriptions/identifie", ct.InscriptionsIdentifiePersonne)
 	gr.POST("/api/v1/backoffice/inscriptions/valide", ct.InscriptionsValide)
-	gr.DELETE("/api/v1/backoffice/inscriptions", ct.InscriptionsDelete)
 
 	gr.POST("/api/v1/backoffice/dossiers/search", ct.DossiersSearch)
 	gr.GET("/api/v1/backoffice/dossiers", ct.DossiersLoad)
 	gr.POST("/api/v1/backoffice/dossiers", ct.DossiersUpdate)
+	gr.DELETE("/api/v1/backoffice/dossiers", ct.DeleteDossier)
 
 	gr.PUT("/api/v1/backoffice/aides", ct.AidesCreate)
 	gr.POST("/api/v1/backoffice/aides", ct.AidesUpdate)
 	gr.DELETE("/api/v1/backoffice/aides", ct.AidesDelete)
 	gr.POST("/api/v1/backoffice/aides/justificatif", ct.AidesJustificatifUpload)
 	gr.DELETE("/api/v1/backoffice/aides/justificatif", ct.AidesJustificatifDelete)
+
+	gr.PUT("/api/v1/backoffice/participants", ct.ParticipantsCreate)
+	gr.POST("/api/v1/backoffice/participants", ct.ParticipantsUpdate)
+	gr.DELETE("/api/v1/backoffice/participants", ct.ParticipantsDelete)
 }

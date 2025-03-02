@@ -83,6 +83,9 @@ type LettreImage struct {
 // gomacro:SQL ADD FOREIGN KEY (IdCamp, IdTaux) REFERENCES Camp (Id,IdTaux)
 // gomacro:SQL ADD FOREIGN KEY (IdDossier, IdTaux) REFERENCES Dossier (Id,IdTaux) ON DELETE CASCADE
 //
+// Une même personne ne peut être présent qu'une seule fois dans un séjour
+// gomacro:SQL ADD UNIQUE(IdCamp, IdPersonne)
+//
 // Requise par la contrainte GroupeParticipant
 // gomacro:SQL ADD UNIQUE(Id, IdCamp)
 //

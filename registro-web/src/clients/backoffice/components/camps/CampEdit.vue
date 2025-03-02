@@ -31,11 +31,11 @@
             ></v-text-field>
           </v-col>
           <v-col>
-            <v-checkbox
+            <BoolField
               label="Ouvert aux inscriptions"
               v-model="inner.Ouvert"
               hide-details
-            ></v-checkbox>
+            ></BoolField>
           </v-col>
         </v-row>
         <v-row>
@@ -123,13 +123,13 @@
             <IntField v-model="inner.AgeMax" label="Âge maximum"></IntField>
           </v-col>
           <v-col cols="6">
-            <v-checkbox
+            <BoolField
               v-model="inner.NeedEquilibreGF"
               label="Equilibre G/F demandé"
               density="compact"
               persistent-hint
               hint="Place un inscrit en liste d'attente en cas de déséquilibre Garçons/Filles"
-            ></v-checkbox>
+            ></BoolField>
           </v-col>
         </v-row>
         <v-row>
@@ -146,10 +146,10 @@
           </v-col>
           <v-col cols="2"> </v-col>
           <v-col cols="2">
-            <v-checkbox
+            <BoolField
               label="Navette"
               v-model="inner.Navette.Actif"
-            ></v-checkbox>
+            ></BoolField>
           </v-col>
           <v-col>
             <v-textarea

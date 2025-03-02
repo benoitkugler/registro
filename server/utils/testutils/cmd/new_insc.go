@@ -64,7 +64,7 @@ func main() {
 	}
 	c1, c2 := campIds[0], campIds[1]
 	parts := []api.Participant{
-		{IdCamp: c1, DateNaissance: shared.NewDate(2015, 1, 1), Nom: "Martin", Prenom: "Pierre"},
+		{IdCamp: c1, DateNaissance: shared.NewDate(2015, 1, 1), Nom: "Muler", Prenom: "Pierre"},
 		{IdCamp: c1, DateNaissance: shared.NewDate(2015, 1, 1), Nom: "Martin", Prenom: "Julie", Sexe: pr.Woman},
 		{IdCamp: c2, DateNaissance: shared.NewDate(2015, 1, 1), Nom: "Martin", Prenom: "Julie", Sexe: pr.Woman},
 	}

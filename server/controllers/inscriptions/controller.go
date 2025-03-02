@@ -641,7 +641,7 @@ func ConfirmeInscription(db *sql.DB, id in.IdInscription) (ds.Dossier, error) {
 		if err != nil {
 			return err
 		}
-		groupes := tmp.ByIdCamp()
+		groupesByCamp := tmp.ByIdCamp()
 
 		// mise à jour (ou création) des personnes
 		for i, inc := range allPers {
@@ -725,7 +725,7 @@ func ConfirmeInscription(db *sql.DB, id in.IdInscription) (ds.Dossier, error) {
 				return err
 			}
 
-			groupe, hasFound := groupes[participant.IdCamp].TrouveGroupe(personne.DateNaissance)
+			groupe, hasFound := groupesByCamp[participant.IdCamp].TrouveGroupe(personne.DateNaissance)
 			if hasFound {
 				// on ajoute automatiquement le nouveau participant au groupe
 				err = cps.GroupeParticipant{

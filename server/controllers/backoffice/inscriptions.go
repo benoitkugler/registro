@@ -244,29 +244,21 @@ func (ct *Controller) valideInscription(id ds.IdDossier) error {
 	}
 
 	// le status est calculé camp par camp
-	camps, byCamp := data.Camps(), data.Participants.ByIdCamp()
+	dossierByCamp := data.Participants.ByIdCamp()
 
 	// on calcule le statut des participants (requiert les participants et personnes déjà inscrites)
-	tmp, err := cps.SelectParticipantsByIdCamps(ct.db, data.Camps().IDs()...)
+	loaders, err := cps.LoadCamps(ct.db, data.Camps().IDs()...)
 	if err != nil {
-		return utils.SQLError(err)
-	}
-	participants := tmp.ByIdCamp()
-
-	personnes, err := pr.SelectPersonnes(ct.db, tmp.IdPersonnes()...)
-	if err != nil {
-		return utils.SQLError(err)
+		return err
 	}
 
 	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
-		for idCamp, partsM := range byCamp {
-			camp := cps.CampLoader{Camp: camps[idCamp], Participants: participants[idCamp], Personnes: personnes}
-
-			slice := utils.MapValues(partsM)
-			incomming := data.PersonnesFor(slice)
-			for index, status := range camp.Status(incomming) {
+		for _, loader := range loaders {
+			incommingPa := utils.MapValues(dossierByCamp[loader.Camp.Id])
+			incommingPe := data.PersonnesFor(incommingPa)
+			for index, status := range loader.Status(incommingPe) {
 				listeAttente := status.Hint()
-				part := slice[index]
+				part := incommingPa[index]
 				// update the participant
 				part.Statut = listeAttente
 				_, err = part.Update(tx)
@@ -283,50 +275,4 @@ func (ct *Controller) valideInscription(id ds.IdDossier) error {
 	})
 
 	return err
-}
-
-func (ct *Controller) InscriptionsDelete(c echo.Context) error {
-	id, err := utils.QueryParamInt[ds.IdDossier](c, "id")
-	if err != nil {
-		return err
-	}
-	err = ct.deleteDossier(id)
-	if err != nil {
-		return err
-	}
-	return c.NoContent(200)
-}
-
-func (ct *Controller) deleteDossier(id ds.IdDossier) error {
-	data, err := logic.LoadDossier(ct.db, id)
-	if err != nil {
-		return err
-	}
-	// garbage collect temporary personnes
-	// the other field will cascade
-	toDelete := make(utils.Set[pr.IdPersonne])
-	for _, pers := range data.Personnes() {
-		if pers.IsTemp {
-			toDelete.Add(pers.Id)
-		}
-	}
-
-	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
-		_, err = ds.DeleteDossierById(tx, id)
-		if err != nil {
-			return err
-		}
-		for id := range toDelete {
-			_, err = pr.DeletePersonneById(tx, id)
-			if err != nil {
-				return err
-			}
-		}
-		return nil
-	})
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

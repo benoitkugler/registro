@@ -9,6 +9,7 @@ import (
 	pr "registro/sql/personnes"
 	"registro/sql/shared"
 	sh "registro/sql/shared"
+	"registro/utils"
 )
 
 type ParticipantExt struct {
@@ -66,6 +67,28 @@ type CampLoader struct {
 	Participants Participants // liste (exacte) des participants du camp
 	// Doit contenir au moins les participants
 	Personnes pr.Personnes
+}
+
+// LoadCamps wraps the error
+func LoadCamps(db DB, ids ...IdCamp) ([]CampLoader, error) {
+	camps, err := SelectCamps(db, ids...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	participants, err := SelectParticipantsByIdCamps(db, ids...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	byCamp := participants.ByIdCamp()
+	personnes, err := pr.SelectPersonnes(db, participants.IdPersonnes()...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	out := make([]CampLoader, len(ids))
+	for index, id := range ids {
+		out[index] = CampLoader{camps[id], byCamp[id], personnes}
+	}
+	return out, nil
 }
 
 func (cd CampLoader) Stats() StatistiquesInscrits {

@@ -24,7 +24,7 @@
       subtitle="La modification n'est possible que si aucun participant n'est enregistré."
     >
       <v-card-text>
-        <TauxSelect v-model="toEditTaux.Taux"></TauxSelect>
+        <TauxSelect v-model="toEditTaux!.Taux"></TauxSelect>
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
@@ -66,13 +66,13 @@
     <template #append>
       <v-row>
         <v-col align-self="center" style="width: 240px">
-          <v-checkbox
+          <BoolField
             hide-details
             label="Inscriptions ouvertes seulement"
             v-model="filter.openOnly"
             @update:model-value="ensurePageValid"
           >
-          </v-checkbox>
+          </BoolField>
         </v-col>
         <v-col align-self="center" style="width: 240px">
           <v-text-field

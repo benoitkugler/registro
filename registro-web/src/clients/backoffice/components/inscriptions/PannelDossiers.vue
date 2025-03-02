@@ -40,12 +40,9 @@
         <v-expand-transition>
           <v-row v-show="showDetailsQuery" class="mx-0">
             <v-col cols="5">
-              <v-select
-                density="compact"
-                variant="outlined"
+              <SelectCamp
                 label="Camp"
-                :items="campItems"
-                clearable
+                :camps="allCamps"
                 :model-value="optToNullable(query.IdCamp)"
                 @update:model-value="
                   (id) => {
@@ -53,27 +50,7 @@
                     searchDossiers();
                   }
                 "
-              >
-                <template #prepend>
-                  <v-tooltip
-                    :text="
-                      showTerminatedCamps
-                        ? 'Masquer les camps terminés'
-                        : 'Afficher les camps terminés'
-                    "
-                  >
-                    <template #activator="{ props: tooltipProps }">
-                      <v-btn
-                        size="small"
-                        :variant="showTerminatedCamps ? 'tonal' : 'flat'"
-                        v-bind="tooltipProps"
-                        icon="mdi-history"
-                        @click="showTerminatedCamps = !showTerminatedCamps"
-                      ></v-btn>
-                    </template>
-                  </v-tooltip>
-                </template>
-              </v-select>
+              ></SelectCamp>
             </v-col>
             <v-col>
               <v-select
@@ -126,8 +103,15 @@
         v-if="dossierDetails != null"
         :dossier="dossierDetails"
         :structures="structures"
+        :camps="allCamps"
         @update-dossier="updateDossier"
+        @create-participant="createParticipant"
+        @update-participant="updateParticipant"
+        @delete-participant="deleteParticipant"
+        @expand-participant="expandParticipant"
         @create-aide="createAide"
+        @delete-aide="deleteAide"
+        @update-aide="updateAide"
       ></DossierDetailsPannel>
       <div v-else class="text-center font-italic my-6">
         Sélectionner un dossier...
@@ -152,8 +136,12 @@ import {
   type DossierDetails,
   type Dossier,
   type AidesCreateIn,
-  type IdStructureaide,
   type Structureaides,
+  type IdAide,
+  type Aide,
+  type Participant,
+  type ParticipantsCreateIn,
+  type IdParticipant,
 } from "../../logic/api";
 import { copy, nullableToOpt, optToNullable, selectItems } from "@/utils";
 import { controller } from "../../logic/logic";
@@ -180,17 +168,11 @@ onMounted(() => {
   searchDossiers();
 });
 
-const showTerminatedCamps = ref(false);
-const campsData = ref<CampItem[]>([]);
-const campItems = computed(() =>
-  campsData.value
-    .filter((c) => (showTerminatedCamps.value ? true : !c.IsOld))
-    .map((c) => ({ title: c.Label, value: c.Id }))
-);
+const allCamps = ref<CampItem[]>([]);
 async function loadCamps() {
   const res = await controller.GetCamps();
   if (res === undefined) return;
-  campsData.value = res || [];
+  allCamps.value = res || [];
 }
 
 const structures = ref<NonNullable<Structureaides>>({});
@@ -227,6 +209,12 @@ async function loadDossier(id: IdDossier) {
   dossierDetails.value = res;
 }
 
+// appelée si besoin de mettre à jour l'état financier
+async function ensureDossier() {
+  if (dossierDetails.value != null)
+    loadDossier(dossierDetails.value.Dossier.Dossier.Id);
+}
+
 async function updateDossier(dossier: Dossier) {
   const res = await controller.DossiersUpdate(dossier);
   if (res === undefined) return;
@@ -239,6 +227,55 @@ async function updateDossier(dossier: Dossier) {
   }
   const dossierHeader = data.value?.Dossiers?.find((d) => d.Id == dossier.Id);
   if (dossierHeader) dossierHeader.Responsable = res.Responsable;
+}
+
+async function createParticipant(args: ParticipantsCreateIn) {
+  const res = await controller.ParticipantsCreate(args);
+  if (res === undefined) return;
+
+  controller.showMessage("Participant ajouté avec succès.");
+  ensureDossier();
+}
+
+async function updateParticipant(participant: Participant) {
+  const res = await controller.ParticipantsUpdate(participant);
+  if (res === undefined) return;
+
+  controller.showMessage("Réglages du participant modifiés avec succès.");
+  ensureDossier();
+}
+
+async function deleteParticipant(id: IdParticipant) {
+  const res = await controller.ParticipantsDelete({ id });
+  if (res === undefined) return;
+
+  controller.showMessage("Participant supprimé avec succès.");
+  ensureDossier();
+}
+
+/** copy the [Remises] and [OptionPrix] (for same camp) fields */
+async function expandParticipant(participant: Participant) {
+  if (dossierDetails.value == null) return;
+  const others =
+    dossierDetails.value.Dossier.Participants?.map((p) => p.Participant).filter(
+      (p) => p.Id != participant.Id
+    ) || [];
+  if (!others.length) return;
+
+  // copy the fields
+  others.forEach((p) => {
+    p.Remises = participant.Remises;
+    p.QuotientFamilial = participant.QuotientFamilial;
+    if (p.IdCamp == participant.IdCamp) {
+      p.OptionPrix = participant.OptionPrix;
+    }
+  });
+  const res = await Promise.all(
+    others.map((p) => controller.ParticipantsUpdate(p))
+  );
+  if (res.includes(undefined)) return;
+  controller.showMessage("Réglages des participants modifiés avec succès.");
+  ensureDossier();
 }
 
 async function createAide(params: AidesCreateIn) {
@@ -254,5 +291,19 @@ async function createAide(params: AidesCreateIn) {
   thisPart[res.Id] = res;
   allAides[params.IdParticipant] = thisPart;
   dossierDetails.value.Dossier.Aides = allAides;
+}
+
+async function updateAide(aide: Aide) {
+  const res = await controller.AidesUpdate(aide);
+  if (res === undefined) return;
+  controller.showMessage("Aide modifiée avec succès.");
+  ensureDossier();
+}
+
+async function deleteAide(id: IdAide) {
+  const res = await controller.AidesDelete({ id });
+  if (res === undefined) return;
+  controller.showMessage("Aide supprimée avec succès.");
+  ensureDossier();
 }
 </script>

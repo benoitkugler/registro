@@ -68,6 +68,12 @@ export interface InscriptionIdentifieIn {
   IdDossier: IdDossier;
   Target: IdentTarget;
 }
+// registro/controllers/backoffice.ParticipantsCreateIn
+export interface ParticipantsCreateIn {
+  IdDossier: IdDossier;
+  IdCamp: IdCamp;
+  IdPersonne: IdPersonne;
+}
 // registro/controllers/backoffice.QueryAttente
 export const QueryAttente = {
   EmptyQA: 0,
@@ -920,21 +926,6 @@ export abstract class AbstractAPI {
     }
   }
 
-  /** InscriptionsDelete performs the request and handles the error */
-  async InscriptionsDelete(params: { id: Int }) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/inscriptions";
-    this.startRequest();
-    try {
-      await Axios.delete(fullUrl, {
-        headers: this.getHeaders(),
-        params: { id: String(params["id"]) },
-      });
-      return true;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
   /** DossiersSearch performs the request and handles the error */
   async DossiersSearch(params: SearchDossierIn) {
     const fullUrl = this.baseUrl + "/api/v1/backoffice/dossiers/search";
@@ -977,6 +968,21 @@ export abstract class AbstractAPI {
         { headers: this.getHeaders() },
       );
       return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** DeleteDossier performs the request and handles the error */
+  async DeleteDossier(params: { id: Int }) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/dossiers";
+    this.startRequest();
+    try {
+      await Axios.delete(fullUrl, {
+        headers: this.getHeaders(),
+        params: { id: String(params["id"]) },
+      });
+      return true;
     } catch (error) {
       this.handleError(error);
     }
@@ -1048,6 +1054,47 @@ export abstract class AbstractAPI {
       await Axios.delete(fullUrl, {
         headers: this.getHeaders(),
         params: { "id-aide": String(params["id-aide"]) },
+      });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** ParticipantsCreate performs the request and handles the error */
+  async ParticipantsCreate(params: ParticipantsCreateIn) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/participants";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<Participant> = await Axios.put(fullUrl, params, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** ParticipantsUpdate performs the request and handles the error */
+  async ParticipantsUpdate(params: Participant) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/participants";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** ParticipantsDelete performs the request and handles the error */
+  async ParticipantsDelete(params: { id: Int }) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/participants";
+    this.startRequest();
+    try {
+      await Axios.delete(fullUrl, {
+        headers: this.getHeaders(),
+        params: { id: String(params["id"]) },
       });
       return true;
     } catch (error) {

@@ -6,7 +6,7 @@ import (
 	"log"
 	"time"
 
-	cp "registro/sql/camps"
+	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
 	fs "registro/sql/files"
 	pr "registro/sql/personnes"
@@ -29,9 +29,9 @@ func (ct *Controller) loadTaux() (ds.Tauxs, error) {
 }
 
 type CampHeader struct {
-	Camp  cp.CampExt
+	Camp  cps.CampExt
 	Taux  ds.Taux
-	Stats cp.StatistiquesInscrits
+	Stats cps.StatistiquesInscrits
 }
 
 func (ct *Controller) CampsGet(c echo.Context) error {
@@ -43,7 +43,7 @@ func (ct *Controller) CampsGet(c echo.Context) error {
 }
 
 func (ct *Controller) getCamps() ([]CampHeader, error) {
-	camps, err := cp.SelectAllCamps(ct.db)
+	camps, err := cps.SelectAllCamps(ct.db)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
@@ -51,20 +51,14 @@ func (ct *Controller) getCamps() ([]CampHeader, error) {
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
-	participants, err := cp.SelectParticipantsByIdCamps(ct.db, camps.IDs()...)
+	loaders, err := cps.LoadCamps(ct.db, camps.IDs()...)
 	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-	byCamp := participants.ByIdCamp()
-	personnes, err := pr.SelectPersonnes(ct.db, participants.IdPersonnes()...)
-	if err != nil {
-		return nil, utils.SQLError(err)
+		return nil, err
 	}
 
-	out := make([]CampHeader, 0, len(camps))
-	for _, camp := range camps {
-		loader := cp.CampLoader{Camp: camp, Participants: byCamp[camp.Id], Personnes: personnes}
-		out = append(out, CampHeader{camp.Ext(), taux[camp.IdTaux], loader.Stats()})
+	out := make([]CampHeader, len(loaders))
+	for i, loader := range loaders {
+		out[i] = CampHeader{loader.Camp.Ext(), taux[loader.Camp.IdTaux], loader.Stats()}
 	}
 	return out, nil
 }
@@ -108,7 +102,7 @@ func (ct *Controller) createManyCamp(args CampsCreateManyIn) (out []CampHeader, 
 			if err != nil {
 				return err
 			}
-			out = append(out, CampHeader{camp.Ext(), args.Taux, cp.StatistiquesInscrits{}})
+			out = append(out, CampHeader{camp.Ext(), args.Taux, cps.StatistiquesInscrits{}})
 		}
 		return nil
 	})
@@ -123,8 +117,8 @@ func (ct *Controller) CampsCreate(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func defaultCamp(idTaux ds.IdTaux) cp.Camp {
-	return cp.Camp{
+func defaultCamp(idTaux ds.IdTaux) cps.Camp {
+	return cps.Camp{
 		IdTaux:    idTaux,
 		Nom:       "Nouveau séjour",
 		DateDebut: shared.NewDateFrom(time.Now()), Duree: 1,
@@ -134,12 +128,12 @@ func defaultCamp(idTaux ds.IdTaux) cp.Camp {
 }
 
 // select the last taux used
-func lastTaux(camps cp.Camps) ds.IdTaux {
+func lastTaux(camps cps.Camps) ds.IdTaux {
 	// there is always the defaut taux present in the DB, by construction
 	if len(camps) == 0 {
 		return 1
 	}
-	var last cp.Camp
+	var last cps.Camp
 	for _, camp := range camps {
 		if camp.DateDebut.Time().After(last.DateDebut.Time()) {
 			last = camp
@@ -149,7 +143,7 @@ func lastTaux(camps cp.Camps) ds.IdTaux {
 }
 
 func (ct *Controller) createCamp() (CampHeader, error) {
-	camps, err := cp.SelectAllCamps(ct.db)
+	camps, err := cps.SelectAllCamps(ct.db)
 	if err != nil {
 		return CampHeader{}, utils.SQLError(err)
 	}
@@ -163,11 +157,11 @@ func (ct *Controller) createCamp() (CampHeader, error) {
 	if err != nil {
 		return CampHeader{}, utils.SQLError(err)
 	}
-	return CampHeader{camp.Ext(), taux, cp.StatistiquesInscrits{}}, nil
+	return CampHeader{camp.Ext(), taux, cps.StatistiquesInscrits{}}, nil
 }
 
 func (ct *Controller) CampsUpdate(c echo.Context) error {
-	var args cp.Camp
+	var args cps.Camp
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
@@ -178,13 +172,13 @@ func (ct *Controller) CampsUpdate(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) updateCamp(args cp.Camp) (cp.CampExt, error) {
-	camp, err := cp.SelectCamp(ct.db, args.Id)
+func (ct *Controller) updateCamp(args cps.Camp) (cps.CampExt, error) {
+	camp, err := cps.SelectCamp(ct.db, args.Id)
 	if err != nil {
-		return cp.CampExt{}, utils.SQLError(err)
+		return cps.CampExt{}, utils.SQLError(err)
 	}
 	if err = args.Check(); err != nil {
-		return cp.CampExt{}, err
+		return cps.CampExt{}, err
 	}
 	camp.Nom = args.Nom
 	camp.DateDebut = args.DateDebut
@@ -204,14 +198,14 @@ func (ct *Controller) updateCamp(args cp.Camp) (cp.CampExt, error) {
 	camp.Password = args.Password
 	camp, err = camp.Update(ct.db)
 	if err != nil {
-		return cp.CampExt{}, utils.SQLError(err)
+		return cps.CampExt{}, utils.SQLError(err)
 	}
 
 	return camp.Ext(), nil
 }
 
 type CampsSetTauxIn struct {
-	IdCamp cp.IdCamp
+	IdCamp cps.IdCamp
 	// If Taux has an [Id] <= 0, it is created first,
 	// Otherwise, only its [Id] is used.
 	Taux ds.Taux
@@ -234,7 +228,7 @@ func (ct *Controller) CampsSetTaux(c echo.Context) error {
 
 func (ct *Controller) setTaux(args CampsSetTauxIn) (out CampHeader, _ error) {
 	err := utils.InTx(ct.db, func(tx *sql.Tx) error {
-		participants, err := cp.SelectParticipantsByIdCamps(tx, args.IdCamp)
+		participants, err := cps.SelectParticipantsByIdCamps(tx, args.IdCamp)
 		if err != nil {
 			return err
 		}
@@ -246,7 +240,7 @@ func (ct *Controller) setTaux(args CampsSetTauxIn) (out CampHeader, _ error) {
 		if err != nil {
 			return err
 		}
-		camp, err := cp.SelectCamp(tx, args.IdCamp)
+		camp, err := cps.SelectCamp(tx, args.IdCamp)
 		if err != nil {
 			return err
 		}
@@ -255,7 +249,7 @@ func (ct *Controller) setTaux(args CampsSetTauxIn) (out CampHeader, _ error) {
 		if err != nil {
 			return err
 		}
-		out = CampHeader{camp.Ext(), args.Taux, cp.StatistiquesInscrits{}} // no participants
+		out = CampHeader{camp.Ext(), args.Taux, cps.StatistiquesInscrits{}} // no participants
 		return nil
 	})
 	return out, err
@@ -264,7 +258,7 @@ func (ct *Controller) setTaux(args CampsSetTauxIn) (out CampHeader, _ error) {
 // CampsDelete supprime un camp SANS participants ni équipiers,
 // renvoie une erreur sinon.
 func (ct *Controller) CampsDelete(c echo.Context) error {
-	id, err := utils.QueryParamInt[cp.IdCamp](c, "id")
+	id, err := utils.QueryParamInt[cps.IdCamp](c, "id")
 	if err != nil {
 		return err
 	}
@@ -275,7 +269,7 @@ func (ct *Controller) CampsDelete(c echo.Context) error {
 	return c.NoContent(200)
 }
 
-func (ct *Controller) deleteCamp(id cp.IdCamp) error {
+func (ct *Controller) deleteCamp(id cps.IdCamp) error {
 	var toDelete []fs.IdFile
 	err := utils.InTx(ct.db, func(tx *sql.Tx) error {
 		// intégrité sur les participants
@@ -292,7 +286,7 @@ func (ct *Controller) deleteCamp(id cp.IdCamp) error {
 		}
 
 		// cascade sur les DemandeCamps et Groupes
-		_, err = cp.DeleteCampById(tx, id)
+		_, err = cps.DeleteCampById(tx, id)
 		if err != nil {
 			return err
 		}
@@ -316,7 +310,7 @@ func (ct *Controller) deleteCamp(id cp.IdCamp) error {
 
 type CreateEquipierIn struct {
 	IdPersonne pr.IdPersonne
-	IdCamp     cp.IdCamp
+	IdCamp     cps.IdCamp
 }
 
 func (ct *Controller) CampCreateEquipier(c echo.Context) error {
@@ -331,10 +325,10 @@ func (ct *Controller) CampCreateEquipier(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) createEquipier(args CreateEquipierIn) (out cp.Equipier, _ error) {
+func (ct *Controller) createEquipier(args CreateEquipierIn) (out cps.Equipier, _ error) {
 	err := utils.InTx(ct.db, func(tx *sql.Tx) error {
 		var err error
-		out, err = cp.Equipier{IdCamp: args.IdCamp, IdPersonne: args.IdPersonne}.Insert(tx)
+		out, err = cps.Equipier{IdCamp: args.IdCamp, IdPersonne: args.IdPersonne}.Insert(tx)
 		if err != nil {
 			return err
 		}
@@ -349,7 +343,7 @@ func (ct *Controller) createEquipier(args CreateEquipierIn) (out cp.Equipier, _ 
 }
 
 func (ct *Controller) CampUpdateEquipier(c echo.Context) error {
-	var args cp.Equipier
+	var args cps.Equipier
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
@@ -360,7 +354,7 @@ func (ct *Controller) CampUpdateEquipier(c echo.Context) error {
 	return c.NoContent(200)
 }
 
-func (ct *Controller) updateEquipier(args cp.Equipier) error {
+func (ct *Controller) updateEquipier(args cps.Equipier) error {
 	_, err := args.Update(ct.db)
 	if err != nil {
 		return utils.SQLError(err)

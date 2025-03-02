@@ -133,6 +133,9 @@ ALTER TABLE participants
     ADD FOREIGN KEY (IdDossier, IdTaux) REFERENCES dossiers (Id, IdTaux) ON DELETE CASCADE;
 
 ALTER TABLE participants
+    ADD UNIQUE (IdCamp, IdPersonne);
+
+ALTER TABLE participants
     ADD UNIQUE (Id, IdCamp);
 
 ALTER TABLE participants
