@@ -48,4 +48,8 @@ func setupRoutesBackoffice(e *echo.Echo, ct *backoffice.Controller) {
 	gr.PUT("/api/v1/backoffice/participants", ct.ParticipantsCreate)
 	gr.POST("/api/v1/backoffice/participants", ct.ParticipantsUpdate)
 	gr.DELETE("/api/v1/backoffice/participants", ct.ParticipantsDelete)
+
+	gr.GET("/api/v1/backoffice/paiements", ct.PaiementsCreate)
+	gr.POST("/api/v1/backoffice/paiements", ct.PaiementsUpdate)
+	gr.DELETE("/api/v1/backoffice/paiements", ct.PaiementsDelete)
 }

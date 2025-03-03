@@ -42,6 +42,12 @@ func (m Montant) String() string {
 	}
 }
 
+// Has returns 'true' is the taux is able to handle the
+// given [currency]
+func (ts Taux) Has(currency Currency) bool {
+	return newTableTaux(ts)[currency] != 0
+}
+
 // currency -> (1 currency = val / 1000 €)
 type tableTaux [nbCurrencies]int
 

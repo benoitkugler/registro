@@ -2,9 +2,11 @@ package backoffice
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"slices"
 	"strings"
+	"time"
 
 	"registro/controllers/espaceperso"
 	"registro/controllers/logic"
@@ -15,10 +17,13 @@ import (
 	"registro/sql/files"
 	fs "registro/sql/files"
 	pr "registro/sql/personnes"
+	"registro/sql/shared"
 	"registro/utils"
 
 	"github.com/labstack/echo/v4"
 )
+
+var offuscateurVirements = utils.Offuscateur[ds.IdDossier]{Prefix: "VI", M: 17, A: 15, B: 1}
 
 type QueryAttente uint8
 
@@ -654,4 +659,76 @@ func (ct *Controller) deleteAide(id cps.IdAide) error {
 		return err
 	}
 	return nil
+}
+
+func (ct *Controller) PaiementsCreate(c echo.Context) error {
+	idDossier, err := utils.QueryParamInt[ds.IdDossier](c, "id-dossier")
+	if err != nil {
+		return err
+	}
+	out, err := ct.createPaiement(idDossier)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) createPaiement(idDossier ds.IdDossier) (ds.Paiement, error) {
+	out, err := ds.Paiement{IdDossier: idDossier, Date: shared.NewDateFrom(time.Now()), Mode: ds.Cheque}.Insert(ct.db)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+	return out, nil
+}
+
+func (ct *Controller) PaiementsUpdate(c echo.Context) error {
+	var args ds.Paiement
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+	err := ct.updatePaiement(args)
+	if err != nil {
+		return err
+	}
+	return c.NoContent(200)
+}
+
+func (ct *Controller) updatePaiement(args ds.Paiement) error {
+	current, err := ds.SelectPaiement(ct.db, args.Id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	// check that currency is acceptable
+	dosssier, err := ds.SelectDossier(ct.db, current.IdDossier)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	taux, err := ds.SelectTaux(ct.db, dosssier.IdTaux)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	if !taux.Has(args.Montant.Currency) {
+		return errors.New("invalid Montant.Currency")
+	}
+
+	// enforce private fields
+	args.IdDossier = current.IdDossier
+	_, err = args.Update(ct.db)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	return nil
+}
+
+func (ct *Controller) PaiementsDelete(c echo.Context) error {
+	id, err := utils.QueryParamInt[ds.IdPaiement](c, "id")
+	if err != nil {
+		return err
+	}
+	_, err = ds.DeletePaiementById(ct.db, id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	return c.NoContent(200)
 }

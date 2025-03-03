@@ -123,3 +123,33 @@ func TestController_aides(t *testing.T) {
 	err = ct.deleteDossier(dossier1.Id)
 	tu.AssertNoErr(t, err)
 }
+
+func TestController_paiements(t *testing.T) {
+	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
+		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",
+		"../../migrations/init.sql")
+	defer db.Remove()
+
+	pe1, err := pr.Personne{IsTemp: false, Etatcivil: pr.Etatcivil{DateNaissance: shared.Date(time.Now())}}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	dossier1, err := ds.Dossier{IdResponsable: pe1.Id, IdTaux: 1, MomentInscription: time.Now()}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	ct, err := NewController(db.DB, crypto.Encrypter{}, fs.NewFileSystem(t.TempDir()), config.SMTP{}, config.Joomeo{}, config.Helloasso{})
+	tu.AssertNoErr(t, err)
+
+	out, err := ct.createPaiement(dossier1.Id)
+	tu.AssertNoErr(t, err)
+
+	out.Montant.Currency = ds.FrancsSuisse
+	err = ct.updatePaiement(out)
+	tu.AssertErr(t, err) // invalid currency
+
+	out.Montant = ds.NewEuros(56.5)
+	err = ct.updatePaiement(out)
+	tu.AssertNoErr(t, err) // invalid currency
+
+	err = ct.deleteDossier(dossier1.Id)
+	tu.AssertNoErr(t, err)
+}
