@@ -3,13 +3,16 @@ package crypto
 import (
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/md5"
 	"crypto/rand"
 	"crypto/sha256"
+	"encoding/base32"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
+	"strconv"
 
 	ds "registro/sql/dossiers"
 	in "registro/sql/inscriptions"
@@ -21,38 +24,6 @@ import (
 type Encrypter [32]byte
 
 func NewEncrypter(key string) Encrypter { return sha256.Sum256([]byte(key)) }
-
-func (enc Encrypter) encrypt(data []byte) ([]byte, error) {
-	block, _ := aes.NewCipher(enc[:])
-	gcm, err := cipher.NewGCM(block)
-	if err != nil {
-		return nil, err
-	}
-	nonce := make([]byte, gcm.NonceSize())
-	if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
-		return nil, err
-	}
-	ciphertext := gcm.Seal(nonce, nonce, data, nil)
-	return ciphertext, nil
-}
-
-func (enc Encrypter) decrypt(data []byte) ([]byte, error) {
-	block, err := aes.NewCipher(enc[:])
-	if err != nil {
-		return nil, err
-	}
-	gcm, err := cipher.NewGCM(block)
-	if err != nil {
-		return nil, err
-	}
-	nonceSize := gcm.NonceSize()
-	if len(data) <= nonceSize {
-		return nil, errors.New("data too short")
-	}
-	nonce, ciphertext := data[:nonceSize], data[nonceSize:]
-	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
-	return plaintext, err
-}
 
 type IDs interface {
 	~int64
@@ -74,11 +45,11 @@ type wrappedID[T IDs] struct {
 // EncryptID return a public version of the given ID.
 // In particular, it is suitable to be included in URLs
 func EncryptID[T IDs](key Encrypter, ID T) string {
-	out, _ := newEncryptedID(key, ID) // errors should never happen on safe data
+	out, _ := encryptID(key, ID) // errors should never happen on safe data
 	return out
 }
 
-func newEncryptedID[T IDs](key Encrypter, ID T) (string, error) {
+func encryptID[T IDs](key Encrypter, ID T) (string, error) {
 	data := wrappedID[T]{ID: ID}
 
 	switch any(ID).(type) {
@@ -126,7 +97,7 @@ func (key Encrypter) EncryptJSON(data interface{}) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	b, err = key.encrypt(b)
+	b, err = encryptAES(key[:], nil, b)
 	if err != nil {
 		return "", err
 	}
@@ -140,10 +111,76 @@ func (key Encrypter) DecryptJSON(data string, dst interface{}) error {
 	if err != nil {
 		return err
 	}
-	b, err = key.decrypt(b)
+	b, err = decryptAES(key[:], b)
 	if err != nil {
 		return err
 	}
 	err = json.Unmarshal(b, dst)
 	return err
+}
+
+// ShortEncrypter provides a semi-secure password generator
+type ShortEncrypter struct {
+	key   [32]byte
+	nonce [12]byte
+}
+
+func NewShortEncrypter(key string) ShortEncrypter {
+	nonce := md5.Sum([]byte(key))
+	return ShortEncrypter{sha256.Sum256([]byte(key)), [12]byte(nonce[:12])}
+}
+
+var enc32 = base32.StdEncoding.WithPadding(base32.NoPadding)
+
+func (se ShortEncrypter) shortKey(id pr.IdPersonne) (string, error) {
+	input := []byte(strconv.FormatInt(int64(id), 10))
+	bytes, err := encryptAES(se.key[:], se.nonce[:], input)
+	if err != nil {
+		return "", err
+	}
+	return enc32.EncodeToString(bytes[len(se.nonce):])[:8], nil
+}
+
+// ShortKey returns a 8 digit password with only 0-9A-Z characters
+func (key ShortEncrypter) ShortKey(id pr.IdPersonne) string {
+	s, _ := key.shortKey(id) // errors should never happen on safe data
+	return s
+}
+
+// The key argument should be the AES key,
+// either 16, 24, or 32 bytes.
+func encryptAES(key, nonce, data []byte) ([]byte, error) {
+	block, _ := aes.NewCipher(key)
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, err
+	}
+
+	if nonce == nil {
+		nonce = make([]byte, gcm.NonceSize())
+		if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
+			return nil, err
+		}
+	}
+
+	ciphertext := gcm.Seal(nonce, nonce, data, nil)
+	return ciphertext, nil
+}
+
+func decryptAES(key, data []byte) ([]byte, error) {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, err
+	}
+	nonceSize := gcm.NonceSize()
+	if len(data) <= nonceSize {
+		return nil, errors.New("data too short")
+	}
+	nonce, ciphertext := data[:nonceSize], data[nonceSize:]
+	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
+	return plaintext, err
 }

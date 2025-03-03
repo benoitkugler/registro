@@ -15,7 +15,7 @@ func TestEncryptionID(t *testing.T) {
 	otherKey := NewEncrypter("4")
 	for i := range [200]int{} {
 		v1 := 456 + 100*int64(i)
-		s, err := newEncryptedID(key, v1)
+		s, err := encryptID(key, v1)
 		tu.AssertNoErr(t, err)
 
 		v2, err := DecryptID[int64](key, s)
@@ -25,21 +25,21 @@ func TestEncryptionID(t *testing.T) {
 		tu.AssertErr(t, err)
 
 		r1 := pr.IdPersonne(v1 - 5)
-		s, err = newEncryptedID(key, r1)
+		s, err = encryptID(key, r1)
 		tu.AssertNoErr(t, err)
 		r2, err := DecryptID[pr.IdPersonne](key, s)
 		tu.AssertNoErr(t, err)
 		tu.Assert(t, r1 == r2)
 
 		i1 := in.IdInscription(v1 - 5)
-		s, err = newEncryptedID(key, i1)
+		s, err = encryptID(key, i1)
 		tu.AssertNoErr(t, err)
 		i2, err := DecryptID[in.IdInscription](key, s)
 		tu.AssertNoErr(t, err)
 		tu.Assert(t, i1 == i2)
 
 		d1 := ds.IdDossier(v1 - 5)
-		s, err = newEncryptedID(key, d1)
+		s, err = encryptID(key, d1)
 		tu.AssertNoErr(t, err)
 		d2, err := DecryptID[ds.IdDossier](key, s)
 		tu.AssertNoErr(t, err)
@@ -66,7 +66,7 @@ func TestJSON(t *testing.T) {
 		B string
 	}
 	v := T{A: 456, B: "sld"}
-	var k Encrypter
+	k := NewEncrypter("87sdfd4f")
 	s, err := k.EncryptJSON(v)
 	tu.AssertNoErr(t, err)
 
@@ -82,4 +82,17 @@ func TestJSON(t *testing.T) {
 	otherKey := NewEncrypter("44")
 	err = otherKey.DecryptJSON(s, &v2)
 	tu.AssertErr(t, err)
+}
+
+func TestPersonneShortKey(t *testing.T) {
+	k := NewShortEncrypter("sldsùldsù")
+	seen := map[string]bool{}
+	for id := 1; id < 10_000; id++ {
+		s, err := k.shortKey(pr.IdPersonne(id))
+		tu.AssertNoErr(t, err)
+		tu.Assert(t, !seen[s])
+		seen[s] = true
+
+	}
+	fmt.Println(k.ShortKey(1))
 }
