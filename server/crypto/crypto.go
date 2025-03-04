@@ -8,11 +8,11 @@ import (
 	"crypto/sha256"
 	"encoding/base32"
 	"encoding/base64"
+	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
-	"strconv"
 
 	ds "registro/sql/dossiers"
 	in "registro/sql/inscriptions"
@@ -119,21 +119,26 @@ func (key Encrypter) DecryptJSON(data string, dst interface{}) error {
 	return err
 }
 
-// ShortEncrypter provides a semi-secure password generator
+// ShortEncrypter provides a semi-secure ID to short password
+// encrypter
 type ShortEncrypter struct {
 	key   [32]byte
 	nonce [12]byte
 }
 
-func NewShortEncrypter(key string) ShortEncrypter {
-	nonce := md5.Sum([]byte(key))
-	return ShortEncrypter{sha256.Sum256([]byte(key)), [12]byte(nonce[:12])}
+func NewShortEncrypter(seed string) ShortEncrypter {
+	nonce := md5.Sum([]byte(seed))
+	key := sha256.Sum256([]byte(seed))
+	return ShortEncrypter{key, [12]byte(nonce[:12])}
 }
 
 var enc32 = base32.StdEncoding.WithPadding(base32.NoPadding)
 
 func (se ShortEncrypter) shortKey(id pr.IdPersonne) (string, error) {
-	input := []byte(strconv.FormatInt(int64(id), 10))
+	input := binary.BigEndian.AppendUint32(nil, uint32(id))
+	if id <= 0xFFFF {
+		input = input[2:]
+	}
 	bytes, err := encryptAES(se.key[:], se.nonce[:], input)
 	if err != nil {
 		return "", err
@@ -146,6 +151,8 @@ func (key ShortEncrypter) ShortKey(id pr.IdPersonne) string {
 	s, _ := key.shortKey(id) // errors should never happen on safe data
 	return s
 }
+
+// -------------------- shared routines --------------------
 
 // The key argument should be the AES key,
 // either 16, 24, or 32 bytes.

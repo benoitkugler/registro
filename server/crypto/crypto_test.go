@@ -87,12 +87,11 @@ func TestJSON(t *testing.T) {
 func TestPersonneShortKey(t *testing.T) {
 	k := NewShortEncrypter("sldsùldsù")
 	seen := map[string]bool{}
-	for id := 1; id < 10_000; id++ {
+	for id := 1; id < 20_000; id++ {
 		s, err := k.shortKey(pr.IdPersonne(id))
 		tu.AssertNoErr(t, err)
 		tu.Assert(t, !seen[s])
 		seen[s] = true
-
 	}
 	fmt.Println(k.ShortKey(1))
 }
