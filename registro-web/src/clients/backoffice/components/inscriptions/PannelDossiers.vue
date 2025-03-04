@@ -5,7 +5,9 @@
       <v-card
         title="Dossiers"
         :subtitle="
-          data == null ? '-' : `${data.Dossiers?.length || 0} / ${data.Total}`
+          headers == null
+            ? '-'
+            : `${headers.Dossiers?.length || 0} / ${headers.Total}`
         "
       >
         <template #append>
@@ -75,12 +77,12 @@
           </v-row>
         </v-expand-transition>
         <v-card-text>
-          <v-list v-if="data != null">
-            <v-list-item v-if="!data.Dossiers?.length" class="text-center">
+          <v-list v-if="headers != null">
+            <v-list-item v-if="!headers.Dossiers?.length" class="text-center">
               <i>Aucun dossier ne correspond à votre recherche.</i>
             </v-list-item>
             <v-list-item
-              v-for="(dossier, i) in data.Dossiers"
+              v-for="(dossier, i) in headers.Dossiers"
               :key="i"
               :title="dossier.Responsable"
               :subtitle="dossier.Participants"
@@ -105,6 +107,7 @@
         :structures="structures"
         :camps="allCamps"
         @update-dossier="updateDossier"
+        @delete-dossier="deleteDossier"
         @create-participant="createParticipant"
         @update-participant="updateParticipant"
         @delete-participant="deleteParticipant"
@@ -112,6 +115,8 @@
         @create-aide="createAide"
         @delete-aide="deleteAide"
         @update-aide="updateAide"
+        @create-paiement="createPaiement"
+        @update-paiement="updatePaiement"
       ></DossierDetailsPannel>
       <div v-else class="text-center font-italic my-6">
         Sélectionner un dossier...
@@ -142,11 +147,13 @@ import {
   type Participant,
   type ParticipantsCreateIn,
   type IdParticipant,
+  type Paiement,
 } from "../../logic/api";
 import { copy, nullableToOpt, optToNullable, selectItems } from "@/utils";
 import { controller } from "../../logic/logic";
 import DebounceField from "@/components/DebounceField.vue";
 import DossierDetailsPannel from "./dossiers/DossierDetailsPannel.vue";
+
 const props = defineProps<{}>();
 
 defineExpose({ showDossier });
@@ -182,11 +189,16 @@ async function loadStructureaides() {
   structures.value = res || {};
 }
 
-const data = ref<SearchDossierOut | null>(null);
+const headers = ref<SearchDossierOut | null>(null);
 async function searchDossiers() {
   const res = await controller.DossiersSearch(query);
   if (res === undefined) return;
-  data.value = res;
+  headers.value = res;
+
+  // if no dossier is yet selected, auto select the first
+  if (dossierDetails.value == null && res.Dossiers?.length) {
+    loadDossier(res.Dossiers[0].Id);
+  }
 }
 
 // showDossier may be called by the parent when switching to this pannel
@@ -225,8 +237,24 @@ async function updateDossier(dossier: Dossier) {
     dossierDetails.value.Dossier.Dossier = dossier;
     dossierDetails.value.Dossier.Responsable = res.Responsable;
   }
-  const dossierHeader = data.value?.Dossiers?.find((d) => d.Id == dossier.Id);
+  const dossierHeader = headers.value?.Dossiers?.find(
+    (d) => d.Id == dossier.Id
+  );
   if (dossierHeader) dossierHeader.Responsable = res.Responsable;
+}
+
+async function deleteDossier() {
+  if (dossierDetails.value == null) return;
+  const toDelete = dossierDetails.value.Dossier.Dossier.Id;
+  const res = await controller.DossiersDelete({
+    id: toDelete,
+  });
+  if (res === undefined) return;
+
+  controller.showMessage("Dossier supprimé avec succès.");
+  // properly cleanup
+  dossierDetails.value = null;
+  searchDossiers();
 }
 
 async function createParticipant(args: ParticipantsCreateIn) {
@@ -304,6 +332,23 @@ async function deleteAide(id: IdAide) {
   const res = await controller.AidesDelete({ id });
   if (res === undefined) return;
   controller.showMessage("Aide supprimée avec succès.");
+  ensureDossier();
+}
+
+async function createPaiement() {
+  if (dossierDetails.value == null) return;
+  const res = await controller.PaiementsCreate({
+    "id-dossier": dossierDetails.value.Dossier.Dossier.Id,
+  });
+  if (res === undefined) return;
+  controller.showMessage("Paiement créé avec succès.");
+  ensureDossier();
+}
+
+async function updatePaiement(paiement: Paiement) {
+  const res = await controller.PaiementsUpdate(paiement);
+  if (res === undefined) return;
+  controller.showMessage("Paiement modifié avec succès.");
   ensureDossier();
 }
 </script>

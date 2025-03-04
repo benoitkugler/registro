@@ -1,6 +1,7 @@
 package backoffice
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -13,6 +14,42 @@ import (
 	"registro/sql/shared"
 	tu "registro/utils/testutils"
 )
+
+func TestOffuscateur(t *testing.T) {
+	offuscateur := newOffuscateur[int64]("VI", 8, 3)
+	for id := int64(0); id < 500_000; id++ {
+		res, ok := offuscateur.Unmask(offuscateur.Mask(id))
+		tu.Assert(t, ok)
+		tu.Assert(t, res == id)
+	}
+	fmt.Println(offuscateur.Mask(1))
+	fmt.Println(offuscateur.Mask(456))
+	fmt.Println(offuscateur.Mask(15456))
+}
+
+func TestController_searchDossiers(t *testing.T) {
+	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
+		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",
+		"../../migrations/init.sql")
+	defer db.Remove()
+
+	pe1, err := pr.Personne{IsTemp: false, Etatcivil: pr.Etatcivil{DateNaissance: shared.Date(time.Now())}}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	dossier1, err := ds.Dossier{IdResponsable: pe1.Id, IdTaux: 1, MomentInscription: time.Now()}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	ct, err := NewController(db.DB, crypto.Encrypter{}, fs.FileSystem{}, config.SMTP{}, config.Joomeo{}, config.Helloasso{})
+	tu.AssertNoErr(t, err)
+
+	out, err := ct.searchDossiers(SearchDossierIn{Pattern: OffuscateurVirements.Mask(dossier1.Id)})
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(out.Dossiers) == 1)
+
+	out, err = ct.searchDossiers(SearchDossierIn{Pattern: "test"})
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(out.Dossiers) == 0)
+}
 
 func TestController_participants(t *testing.T) {
 	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",

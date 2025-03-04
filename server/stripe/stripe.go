@@ -10,7 +10,6 @@ import (
 	"registro/config"
 	"registro/sql/dossiers"
 	"registro/sql/personnes"
-	"registro/sql/shared"
 
 	"github.com/stripe/stripe-go/v81"
 	"github.com/stripe/stripe-go/v81/checkout/session"
@@ -42,7 +41,7 @@ func StartSession(key config.Stripe, idDossier dossiers.IdDossier, respo personn
 
 	md := stripeMetadata{
 		IdDossier: idDossier,
-		Payeur:    respo.NomPrenom(),
+		Payeur:    respo.NOMPrenom(),
 		IsAcompte: isAcompte,
 		Montant:   montant,
 	}
@@ -139,7 +138,7 @@ func parsePaiement(session *stripe.CheckoutSession) (dossiers.Paiement, error) {
 		Mode:      dossiers.EnLigne,
 		Label:     session.PaymentIntent.ID,
 		Montant:   md.Montant,
-		Date:      shared.NewDateFrom(time.Now()),
+		Time:      time.Now().Truncate(time.Second),
 		IsAcompte: md.IsAcompte,
 	}
 

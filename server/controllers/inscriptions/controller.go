@@ -350,7 +350,7 @@ func (ct *Controller) chercheMail(mail string) (out candidatsPreinscription, _ e
 		out.responsables = append(out.responsables, pers)
 	}
 	sort.Slice(out.responsables, func(i int, j int) bool {
-		return out.responsables[i].NomPrenom() < out.responsables[j].NomPrenom()
+		return out.responsables[i].NOMPrenom() < out.responsables[j].NOMPrenom()
 	})
 
 	dossiers, err := ds.SelectDossiersByIdResponsables(ct.db, ids.Keys()...)
@@ -386,7 +386,7 @@ func (ct Controller) buildPreinscription(host string, cd candidatsPreinscription
 			return nil, err
 		}
 		lien := utils.BuildUrl(host, EndpointInscription, utils.QP(preinscriptionKey, crypted))
-		out = append(out, mails.RespoWithLink{Lien: template.HTML(lien), NomPrenom: resp.NomPrenom()})
+		out = append(out, mails.RespoWithLink{Lien: template.HTML(lien), NomPrenom: resp.NOMPrenom()})
 	}
 	return out, nil
 }
@@ -501,7 +501,7 @@ func (ct *Controller) BuildInscription(publicInsc Inscription) (insc in.Inscript
 		PartageAdressesOK:  publicInsc.PartageAdressesOK,
 		DemandeFondSoutien: publicInsc.DemandeFondSoutien,
 
-		DateHeure:   time.Now(),
+		DateHeure:   time.Now().Truncate(time.Second),
 		IsConfirmed: false,
 	}
 	insc.ResponsablePreIdent, err = ct.decodePreIdent(publicInsc.ResponsablePreIdent)
@@ -692,7 +692,7 @@ func ConfirmeInscription(db *sql.DB, id in.IdInscription) (ds.Dossier, error) {
 			event := events.Event{
 				IdDossier: dossier.Id,
 				Kind:      events.Message,
-				Created:   time.Now().Add(time.Millisecond), // on s'assure que le message vient après le moment d'inscription
+				Created:   insc.DateHeure.Add(time.Second), // on s'assure que le message vient après le moment d'inscription
 			}
 			event, err = event.Insert(tx)
 			if err != nil {

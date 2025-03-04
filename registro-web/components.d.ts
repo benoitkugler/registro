@@ -8,7 +8,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     BoolField: typeof import('./src/components/BoolField.vue')['default']
-    copy: typeof import('./src/components/SelectPersonne copy.vue')['default']
+    copy: typeof import('./src/components/DateField copy.vue')['default']
     DateField: typeof import('./src/components/DateField.vue')['default']
     DateNaissanceField: typeof import('./src/components/DateNaissanceField.vue')['default']
     DebounceField: typeof import('./src/components/DebounceField.vue')['default']
@@ -25,6 +25,7 @@ declare module 'vue' {
     EventSupprimeV: typeof import('./src/components/events/EventSupprimeV.vue')['default']
     EventSwitch: typeof import('./src/components/EventSwitch.vue')['default']
     IntField: typeof import('./src/components/IntField.vue')['default']
+    ModePaiementField: typeof import('./src/components/ModePaiementField.vue')['default']
     MontantField: typeof import('./src/components/MontantField.vue')['default']
     NationaliteField: typeof import('./src/components/NationaliteField.vue')['default']
     PaysField: typeof import('./src/components/PaysField.vue')['default']
@@ -34,5 +35,6 @@ declare module 'vue' {
     SelectPersonne: typeof import('./src/components/SelectPersonne.vue')['default']
     SexeField: typeof import('./src/components/SexeField.vue')['default']
     StringList: typeof import('./src/components/StringList.vue')['default']
+    TimeField: typeof import('./src/components/TimeField.vue')['default']
   }
 }

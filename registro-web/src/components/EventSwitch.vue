@@ -6,6 +6,7 @@
   <EventPaiementV
     v-else-if="props.event.Kind == 'paiement'"
     :paiement="props.event.Paiement"
+    @edit="emit('editPaiement', props.event.Paiement)"
   >
   </EventPaiementV>
   <EventSupprimeV
@@ -75,7 +76,10 @@
 </template>
 
 <script setup lang="ts">
-import { EventContentKind } from "@/clients/backoffice/logic/api";
+import {
+  EventContentKind,
+  type Paiement,
+} from "@/clients/backoffice/logic/api";
 import EventMessageV from "./events/EventMessageV.vue";
 import EventPlaceLibereeV from "./events/EventPlaceLibereeV.vue";
 import EventSupprimeV from "./events/EventSupprimeV.vue";
@@ -88,6 +92,10 @@ import type { PseudoEvent } from "@/utils";
 
 const props = defineProps<{
   event: PseudoEvent;
+}>();
+
+const emit = defineEmits<{
+  (e: "editPaiement", paiement: Paiement): void;
 }>();
 </script>
 

@@ -25,7 +25,7 @@ CREATE TABLE paiements (
     Montant Montant NOT NULL,
     Payeur text NOT NULL,
     Mode smallint CHECK (Mode IN (0, 1, 2, 3, 4, 5)) NOT NULL,
-    Date date NOT NULL,
+    Time timestamp(0) with time zone NOT NULL,
     Label text NOT NULL,
     Details text NOT NULL
 );

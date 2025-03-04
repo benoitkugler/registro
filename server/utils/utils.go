@@ -197,28 +197,3 @@ func MapKeysSorted[K cmp.Ordered, V any](m map[K]V) []K {
 	slices.Sort(out)
 	return out
 }
-
-type Offuscateur[T ~int64] struct {
-	Prefix  string
-	M, A, B T // m * b > a
-}
-
-func (o Offuscateur[T]) Mask(id T) string {
-	v := (id+o.B)*o.M - o.A
-	return fmt.Sprintf("%s%d", o.Prefix, v)
-}
-
-func (o Offuscateur[T]) Unmask(code string) (id T, ok bool) {
-	if !strings.HasPrefix(code, o.Prefix) {
-		return 0, false
-	}
-	entry, err := strconv.ParseInt(strings.TrimPrefix(code, o.Prefix), 10, 64)
-	if err != nil {
-		return 0, false
-	}
-	a := T(entry) + o.A
-	if a%o.M != 0 {
-		return 0, false
-	}
-	return a/o.M - o.B, true
-}

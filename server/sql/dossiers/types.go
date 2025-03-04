@@ -12,13 +12,13 @@ func (Id IdTaux) Opt() OptIdTaux { return OptIdTaux{Id: Id, Valid: true} }
 type ModePaiement uint8
 
 const (
-	Cheque  ModePaiement = iota
-	EnLigne              // (carte bancaire, en ligne)
-	Virement
-	Especes
-	Ancv
+	Cheque   ModePaiement = iota // Chèque
+	EnLigne                      // Carte bancaire (en ligne)
+	Virement                     // Virement
+	Especes                      // Espèces
+	Ancv                         // ANCV
 	// uniquement pour les dons
-	Helloasso
+	Helloasso // Helloasso
 )
 
 // Montant représente un prix (avec son unité).

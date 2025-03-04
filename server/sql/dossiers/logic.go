@@ -5,6 +5,8 @@ import (
 	"math"
 	"strconv"
 	"strings"
+
+	"registro/sql/shared"
 )
 
 // RestrictByValidated only keep the [Dossier] with the given
@@ -125,11 +127,11 @@ func (m MontantTaux) String() string {
 func (r Paiement) DescriptionHTML(taux Taux) (string, string) {
 	var payeur string
 	if r.IsAcompte {
-		payeur = fmt.Sprintf("Acompte de <i>%s</i> au %s", r.Payeur, r.Date)
+		payeur = fmt.Sprintf("Acompte de <i>%s</i> au %s", r.Payeur, shared.NewDateFrom(r.Time))
 	} else if r.IsRemboursement {
-		payeur = fmt.Sprintf("Remboursement au %s", r.Date)
+		payeur = fmt.Sprintf("Remboursement au %s", shared.NewDateFrom(r.Time))
 	} else {
-		payeur = fmt.Sprintf("Paiement de <i>%s</i> au %s", r.Payeur, r.Date)
+		payeur = fmt.Sprintf("Paiement de <i>%s</i> au %s", r.Payeur, shared.NewDateFrom(r.Time))
 	}
 	m := r.Montant
 	if r.IsRemboursement {

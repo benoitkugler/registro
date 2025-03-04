@@ -470,12 +470,12 @@ export const ModePaiement = {
 export type ModePaiement = (typeof ModePaiement)[keyof typeof ModePaiement];
 
 export const ModePaiementLabels: { [key in ModePaiement]: string } = {
-  [ModePaiement.Cheque]: "",
-  [ModePaiement.EnLigne]: "(carte bancaire, en ligne)",
-  [ModePaiement.Virement]: "",
-  [ModePaiement.Especes]: "",
-  [ModePaiement.Ancv]: "",
-  [ModePaiement.Helloasso]: "",
+  [ModePaiement.Cheque]: "Chèque",
+  [ModePaiement.EnLigne]: "Carte bancaire (en ligne)",
+  [ModePaiement.Virement]: "Virement",
+  [ModePaiement.Especes]: "Espèces",
+  [ModePaiement.Ancv]: "ANCV",
+  [ModePaiement.Helloasso]: "Helloasso",
 };
 
 // registro/sql/dossiers.Montant
@@ -492,7 +492,7 @@ export interface Paiement {
   Montant: Montant;
   Payeur: string;
   Mode: ModePaiement;
-  Date: Date;
+  Time: Time;
   Label: string;
   Details: string;
 }
@@ -973,8 +973,8 @@ export abstract class AbstractAPI {
     }
   }
 
-  /** DeleteDossier performs the request and handles the error */
-  async DeleteDossier(params: { id: Int }) {
+  /** DossiersDelete performs the request and handles the error */
+  async DossiersDelete(params: { id: Int }) {
     const fullUrl = this.baseUrl + "/api/v1/backoffice/dossiers";
     this.startRequest();
     try {
@@ -1090,6 +1090,48 @@ export abstract class AbstractAPI {
   /** ParticipantsDelete performs the request and handles the error */
   async ParticipantsDelete(params: { id: Int }) {
     const fullUrl = this.baseUrl + "/api/v1/backoffice/participants";
+    this.startRequest();
+    try {
+      await Axios.delete(fullUrl, {
+        headers: this.getHeaders(),
+        params: { id: String(params["id"]) },
+      });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** PaiementsCreate performs the request and handles the error */
+  async PaiementsCreate(params: { "id-dossier": Int }) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/paiements";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<Paiement> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { "id-dossier": String(params["id-dossier"]) },
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** PaiementsUpdate performs the request and handles the error */
+  async PaiementsUpdate(params: Paiement) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/paiements";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** PaiementsDelete performs the request and handles the error */
+  async PaiementsDelete(params: { id: Int }) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/paiements";
     this.startRequest();
     try {
       await Axios.delete(fullUrl, {

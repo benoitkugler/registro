@@ -303,7 +303,7 @@ export function pseudoEventTime(event: PseudoEvent): Date {
     case "event":
       return new Date(event.event.Created);
     case "paiement":
-      return new Date(event.Paiement.Date);
+      return new Date(event.Paiement.Time);
     case "inscription-time":
       return new Date(event.Time);
   }

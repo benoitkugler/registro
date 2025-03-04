@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -17,13 +18,47 @@ import (
 	"registro/sql/files"
 	fs "registro/sql/files"
 	pr "registro/sql/personnes"
-	"registro/sql/shared"
 	"registro/utils"
 
 	"github.com/labstack/echo/v4"
 )
 
-var offuscateurVirements = utils.Offuscateur[ds.IdDossier]{Prefix: "VI", M: 17, A: 15, B: 1}
+var OffuscateurVirements = newOffuscateur[ds.IdDossier]("IN", 8, 3)
+
+type offuscateur[T ~int64] struct {
+	prefix  string
+	m, a, b T // m * b > a
+}
+
+// newOffuscateur panics if m < 2 or b < 2 or if prefix is empty
+func newOffuscateur[T ~int64](prefix string, m, b T) offuscateur[T] {
+	if m < 2 || b < 2 || prefix == "" {
+		panic("invalid Offuscateur parameters")
+	}
+	a := m*b - 1
+	return offuscateur[T]{prefix, m, a, b}
+}
+
+func (o offuscateur[T]) Mask(id T) string {
+	v := (id+o.b)*o.m - o.a
+	return fmt.Sprintf("%s%d", o.prefix, v)
+}
+
+func (o offuscateur[T]) Unmask(code string) (id T, ok bool) {
+	noPrefix := strings.TrimPrefix(code, o.prefix)
+	if len(noPrefix) == len(code) {
+		return 0, false
+	}
+	entry, err := strconv.ParseInt(noPrefix, 10, 64)
+	if err != nil {
+		return 0, false
+	}
+	a := T(entry) + o.a
+	if a%o.m != 0 {
+		return 0, false
+	}
+	return a/o.m - o.b, true
+}
 
 type QueryAttente uint8
 
@@ -93,11 +128,25 @@ func newDossierHeader(dossier logic.Dossier) DossierHeader {
 }
 
 func (ct *Controller) searchDossiers(query SearchDossierIn) (SearchDossierOut, error) {
-	dossiers, err := ds.SelectAllDossiers(ct.db)
-	if err != nil {
-		return SearchDossierOut{}, utils.SQLError(err)
+	var (
+		dossiers ds.Dossiers
+		err      error
+	)
+	// try for the special Virement label
+	idDossier, isVirementLabel := OffuscateurVirements.Unmask(strings.TrimSpace(query.Pattern))
+	if isVirementLabel {
+		dossiers, err = ds.SelectDossiers(ct.db, idDossier)
+		if err != nil {
+			return SearchDossierOut{}, utils.SQLError(err)
+		}
+		query = SearchDossierIn{} // reset the query to force the match
+	} else {
+		dossiers, err = ds.SelectAllDossiers(ct.db)
+		if err != nil {
+			return SearchDossierOut{}, utils.SQLError(err)
+		}
+		dossiers.RestrictByValidated(true)
 	}
-	dossiers.RestrictByValidated(true)
 	ids := dossiers.IDs()
 
 	data, err := logic.LoadDossiersFinances(ct.db, ids...)
@@ -259,7 +308,7 @@ func (ct *Controller) updateDossier(args ds.Dossier) (string, error) {
 	return responsable.PrenomNOM(), nil
 }
 
-func (ct *Controller) DeleteDossier(c echo.Context) error {
+func (ct *Controller) DossiersDelete(c echo.Context) error {
 	id, err := utils.QueryParamInt[ds.IdDossier](c, "id")
 	if err != nil {
 		return err
@@ -674,7 +723,22 @@ func (ct *Controller) PaiementsCreate(c echo.Context) error {
 }
 
 func (ct *Controller) createPaiement(idDossier ds.IdDossier) (ds.Paiement, error) {
-	out, err := ds.Paiement{IdDossier: idDossier, Date: shared.NewDateFrom(time.Now()), Mode: ds.Cheque}.Insert(ct.db)
+	// by default, fill with the responsable
+	dossier, err := ds.SelectDossier(ct.db, idDossier)
+	if err != nil {
+		return ds.Paiement{}, err
+	}
+	personne, err := pr.SelectPersonne(ct.db, dossier.IdResponsable)
+	if err != nil {
+		return ds.Paiement{}, err
+	}
+
+	out, err := ds.Paiement{
+		IdDossier: idDossier,
+		Time:      time.Now().Truncate(time.Second),
+		Mode:      ds.Cheque,
+		Payeur:    personne.NOMPrenom(),
+	}.Insert(ct.db)
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
@@ -710,6 +774,10 @@ func (ct *Controller) updatePaiement(args ds.Paiement) error {
 	}
 	if !taux.Has(args.Montant.Currency) {
 		return errors.New("invalid Montant.Currency")
+	}
+
+	if args.IsAcompte && args.IsRemboursement {
+		return errors.New("unsupported args.IsAcompte && args.IsRemboursement")
 	}
 
 	// enforce private fields

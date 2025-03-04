@@ -245,7 +245,7 @@ func scanOnePaiement(row scanner) (Paiement, error) {
 		&item.Montant,
 		&item.Payeur,
 		&item.Mode,
-		&item.Date,
+		&item.Time,
 		&item.Label,
 		&item.Details,
 	)
@@ -256,7 +256,7 @@ func ScanPaiement(row *sql.Row) (Paiement, error) { return scanOnePaiement(row) 
 
 // SelectAll returns all the items in the paiements table.
 func SelectAllPaiements(db DB) (Paiements, error) {
-	rows, err := db.Query("SELECT id, iddossier, isacompte, isremboursement, montant, payeur, mode, date, label, details FROM paiements")
+	rows, err := db.Query("SELECT id, iddossier, isacompte, isremboursement, montant, payeur, mode, time, label, details FROM paiements")
 	if err != nil {
 		return nil, err
 	}
@@ -265,13 +265,13 @@ func SelectAllPaiements(db DB) (Paiements, error) {
 
 // SelectPaiement returns the entry matching 'id'.
 func SelectPaiement(tx DB, id IdPaiement) (Paiement, error) {
-	row := tx.QueryRow("SELECT id, iddossier, isacompte, isremboursement, montant, payeur, mode, date, label, details FROM paiements WHERE id = $1", id)
+	row := tx.QueryRow("SELECT id, iddossier, isacompte, isremboursement, montant, payeur, mode, time, label, details FROM paiements WHERE id = $1", id)
 	return ScanPaiement(row)
 }
 
 // SelectPaiements returns the entry matching the given 'ids'.
 func SelectPaiements(tx DB, ids ...IdPaiement) (Paiements, error) {
-	rows, err := tx.Query("SELECT id, iddossier, isacompte, isremboursement, montant, payeur, mode, date, label, details FROM paiements WHERE id = ANY($1)", IdPaiementArrayToPQ(ids))
+	rows, err := tx.Query("SELECT id, iddossier, isacompte, isremboursement, montant, payeur, mode, time, label, details FROM paiements WHERE id = ANY($1)", IdPaiementArrayToPQ(ids))
 	if err != nil {
 		return nil, err
 	}
@@ -316,28 +316,28 @@ func ScanPaiements(rs *sql.Rows) (Paiements, error) {
 // Insert one Paiement in the database and returns the item with id filled.
 func (item Paiement) Insert(tx DB) (out Paiement, err error) {
 	row := tx.QueryRow(`INSERT INTO paiements (
-		iddossier, isacompte, isremboursement, montant, payeur, mode, date, label, details
+		iddossier, isacompte, isremboursement, montant, payeur, mode, time, label, details
 		) VALUES (
 		$1, $2, $3, $4, $5, $6, $7, $8, $9
-		) RETURNING id, iddossier, isacompte, isremboursement, montant, payeur, mode, date, label, details;
-		`, item.IdDossier, item.IsAcompte, item.IsRemboursement, item.Montant, item.Payeur, item.Mode, item.Date, item.Label, item.Details)
+		) RETURNING id, iddossier, isacompte, isremboursement, montant, payeur, mode, time, label, details;
+		`, item.IdDossier, item.IsAcompte, item.IsRemboursement, item.Montant, item.Payeur, item.Mode, item.Time, item.Label, item.Details)
 	return ScanPaiement(row)
 }
 
 // Update Paiement in the database and returns the new version.
 func (item Paiement) Update(tx DB) (out Paiement, err error) {
 	row := tx.QueryRow(`UPDATE paiements SET (
-		iddossier, isacompte, isremboursement, montant, payeur, mode, date, label, details
+		iddossier, isacompte, isremboursement, montant, payeur, mode, time, label, details
 		) = (
 		$1, $2, $3, $4, $5, $6, $7, $8, $9
-		) WHERE id = $10 RETURNING id, iddossier, isacompte, isremboursement, montant, payeur, mode, date, label, details;
-		`, item.IdDossier, item.IsAcompte, item.IsRemboursement, item.Montant, item.Payeur, item.Mode, item.Date, item.Label, item.Details, item.Id)
+		) WHERE id = $10 RETURNING id, iddossier, isacompte, isremboursement, montant, payeur, mode, time, label, details;
+		`, item.IdDossier, item.IsAcompte, item.IsRemboursement, item.Montant, item.Payeur, item.Mode, item.Time, item.Label, item.Details, item.Id)
 	return ScanPaiement(row)
 }
 
 // Deletes the Paiement and returns the item
 func DeletePaiementById(tx DB, id IdPaiement) (Paiement, error) {
-	row := tx.QueryRow("DELETE FROM paiements WHERE id = $1 RETURNING id, iddossier, isacompte, isremboursement, montant, payeur, mode, date, label, details;", id)
+	row := tx.QueryRow("DELETE FROM paiements WHERE id = $1 RETURNING id, iddossier, isacompte, isremboursement, montant, payeur, mode, time, label, details;", id)
 	return ScanPaiement(row)
 }
 
@@ -376,7 +376,7 @@ func (items Paiements) IdDossiers() []IdDossier {
 }
 
 func SelectPaiementsByIdDossiers(tx DB, idDossiers_ ...IdDossier) (Paiements, error) {
-	rows, err := tx.Query("SELECT id, iddossier, isacompte, isremboursement, montant, payeur, mode, date, label, details FROM paiements WHERE iddossier = ANY($1)", IdDossierArrayToPQ(idDossiers_))
+	rows, err := tx.Query("SELECT id, iddossier, isacompte, isremboursement, montant, payeur, mode, time, label, details FROM paiements WHERE iddossier = ANY($1)", IdDossierArrayToPQ(idDossiers_))
 	if err != nil {
 		return nil, err
 	}

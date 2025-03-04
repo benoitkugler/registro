@@ -3,7 +3,6 @@ package dossiers
 import (
 	"math/rand"
 	"registro/sql/personnes"
-	"registro/sql/shared"
 	"time"
 )
 
@@ -66,7 +65,7 @@ func randPaiement() Paiement {
 	s.Montant = randMontant()
 	s.Payeur = randstring()
 	s.Mode = randModePaiement()
-	s.Date = randsha_Date()
+	s.Time = randtTime()
 	s.Label = randstring()
 	s.Details = randstring()
 
@@ -113,10 +112,6 @@ func randper_Mails() personnes.Mails {
 	return personnes.Mails(randSlicestring())
 }
 
-func randsha_Date() shared.Date {
-	return shared.Date(randtDate())
-}
-
 var letterRunes2 = []rune("azertyuiopqsdfghjklmwxcvbn123456789é@!?&èïab ")
 
 func randstring() string {
@@ -126,10 +121,6 @@ func randstring() string {
 		b[i] = letterRunes2[rand.Intn(maxLength)]
 	}
 	return string(b)
-}
-
-func randtDate() time.Time {
-	return time.Unix(int64(rand.Int31()), 5)
 }
 
 func randtTime() time.Time {

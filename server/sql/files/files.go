@@ -81,7 +81,7 @@ func UploadFile(fs FileSystem, db DB, id IdFile, fileContent []byte, filename st
 	if err != nil {
 		return File{}, err
 	}
-	meta := File{Id: id, Taille: len(fileContent), NomClient: filename, DateHeureModif: time.Now()}
+	meta := File{Id: id, Taille: len(fileContent), NomClient: filename, DateHeureModif: time.Now().Truncate(time.Second)}
 	meta, err = meta.Update(db)
 	if err != nil {
 		return File{}, utils.SQLError(err)

@@ -6,7 +6,6 @@ import (
 	"time"
 
 	pr "registro/sql/personnes"
-	"registro/sql/shared"
 )
 
 type (
@@ -84,7 +83,7 @@ type Paiement struct {
 	Montant Montant
 	Payeur  string
 	Mode    ModePaiement
-	Date    shared.Date
+	Time    time.Time
 	// Label peut stocker le numéro du chèque ou la banque
 	Label string
 	// Details peut stocker un ID externe ou la date d'encaissement d'un chèque

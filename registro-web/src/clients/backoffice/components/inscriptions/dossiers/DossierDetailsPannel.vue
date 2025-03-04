@@ -8,6 +8,29 @@
     "
     class="ml-2"
   >
+    <!-- confirme delete dialog -->
+    <v-dialog v-model="showDeleteDialog" max-width="600px">
+      <v-card title="Supprimer le dossier">
+        <v-card-text>
+          Confirmez-vous la suppression du dossier et de ses participants ?
+          <br /><br />
+
+          Attention, cette opération est irréversible.
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            color="red"
+            @click="
+              emit('deleteDossier');
+              showDeleteDialog = false;
+            "
+            >Supprimer</v-btn
+          >
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <!-- participant create dialog -->
     <v-dialog
       v-if="participantToCreate != null"
@@ -58,7 +81,7 @@
       </v-card>
     </v-dialog>
 
-    <!-- editor -->
+    <!-- dossier editor -->
     <v-dialog v-model="showEditDialog">
       <v-card title="Modifier le dossier">
         <template v-slot:append>
@@ -114,8 +137,58 @@
       </v-card>
     </v-dialog>
 
+    <!-- paiement editor -->
+    <v-dialog
+      v-if="paiementToUpdate != null"
+      :model-value="paiementToUpdate != null"
+      @update:model-value="paiementToUpdate = null"
+      max-width="600px"
+    >
+      <PaiementEditCard
+        :paiement="paiementToUpdate"
+        @update="
+          (p) => {
+            emit('updatePaiement', p);
+            paiementToUpdate = null;
+          }
+        "
+      ></PaiementEditCard>
+    </v-dialog>
+
     <template #append>
       <v-btn icon="mdi-pencil" @click="showEditDialog = true"></v-btn>
+      <v-tooltip text="Ajouter un paiement" location="top">
+        <template #activator="{ props: tooltipProps }">
+          <v-btn
+            icon
+            size="small"
+            class="mx-1"
+            v-bind="tooltipProps"
+            @click="emit('createPaiement')"
+          >
+            <v-icon color="green">mdi-cash-plus</v-icon>
+          </v-btn>
+        </template>
+      </v-tooltip>
+
+      <v-menu>
+        <template #activator="{ props: menuProps }">
+          <v-btn
+            v-bind="menuProps"
+            icon="mdi-dots-vertical"
+            size="small"
+            class="mx-1"
+          >
+          </v-btn>
+        </template>
+        <v-list>
+          <v-list-item
+            prepend-icon="mdi-delete"
+            @click="showDeleteDialog = true"
+            title="Supprimer"
+          ></v-list-item>
+        </v-list>
+      </v-menu>
     </template>
 
     <v-card-text>
@@ -143,6 +216,7 @@
           :event="event"
           v-for="(event, i) in events"
           :key="i"
+          @edit-paiement="(p) => (paiementToUpdate = p)"
         ></EventSwitch>
       </v-timeline>
     </v-card-text>
@@ -161,6 +235,7 @@ import {
   type IdAide,
   type IdParticipant,
   type Int,
+  type Paiement,
   type Participant,
   type ParticipantsCreateIn,
   type Structureaides,
@@ -175,6 +250,7 @@ import {
 import FactureCard from "./FactureCard.vue";
 import DossierEditCard from "./editor/DossierEditCard.vue";
 import DossierParticipantRow from "./editor/DossierParticipantRow.vue";
+import PaiementEditCard from "./PaiementEditCard.vue";
 
 const props = defineProps<{
   dossier: DossierDetails;
@@ -184,6 +260,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: "updateDossier", dossier: Dossier): void;
+  (e: "deleteDossier"): void;
   (e: "createParticipant", participant: ParticipantsCreateIn): void;
   (e: "updateParticipant", participant: Participant): void;
   (e: "deleteParticipant", id: IdParticipant): void;
@@ -191,6 +268,8 @@ const emit = defineEmits<{
   (e: "createAide", args: AidesCreateIn): void;
   (e: "updateAide", aide: Aide): void;
   (e: "deleteAide", id: IdAide): void;
+  (e: "createPaiement"): void;
+  (e: "updatePaiement", paiement: Paiement): void;
 }>();
 
 function statutColor(s: StatutPaiement) {
@@ -227,13 +306,18 @@ const events = computed(() => {
     ...evList,
     ...paiements,
   ];
+  // last event first
   out.sort(
-    (a, b) => pseudoEventTime(a).valueOf() - pseudoEventTime(b).valueOf()
+    (a, b) => pseudoEventTime(b).valueOf() - pseudoEventTime(a).valueOf()
   );
   return out;
 });
 
+const showDeleteDialog = ref(false);
+
 const showEditDialog = ref(false);
 
 const participantToCreate = ref<ParticipantsCreateIn | null>(null);
+
+const paiementToUpdate = ref<Paiement | null>(null);
 </script>

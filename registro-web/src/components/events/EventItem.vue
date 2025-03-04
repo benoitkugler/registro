@@ -12,14 +12,11 @@
       </div>
     </template>
     <v-row justify="space-between" no-gutters>
-      <v-col>
+      <v-col align-self="center">
         <slot></slot>
       </v-col>
-      <v-col cols="auto" class="text-grey ml-4">
-        <div v-if="props.time">
-          {{ Formatters.time(props.time) }}
-        </div>
-        <slot v-else name="append"></slot>
+      <v-col cols="2" class="text-grey ml-4">
+        {{ Formatters.time(props.time) }}
       </v-col>
     </v-row>
   </v-timeline-item>
@@ -32,7 +29,7 @@ import { Formatters } from "@/utils";
 const props = defineProps<{
   color: string;
   icon: string;
-  time?: Time;
+  time: Time;
   size?: string;
 }>();
 </script>

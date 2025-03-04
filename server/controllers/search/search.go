@@ -50,7 +50,7 @@ func QueryMatch[T filterable](qu Query, v T) bool { return qu.match(stringify(v)
 func stringify[T filterable](v T) string {
 	switch v := any(v).(type) {
 	case pr.Personne:
-		return v.NomPrenom()
+		return v.NOMPrenom()
 	case cps.Camp:
 		return v.Nom + " " + v.DateDebut.String()
 	default:

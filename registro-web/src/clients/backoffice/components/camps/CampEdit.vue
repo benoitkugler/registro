@@ -71,7 +71,7 @@
           <v-col align-self="center" cols="3" class="text-center">
             <v-menu :close-on-content-click="false">
               <template #activator="{ props: menuProps }">
-                <v-chip v-bind="menuProps" elevation="1">
+                <v-chip v-bind="menuProps" elevation="1" label>
                   <div
                     class="mx-1"
                     v-if="
