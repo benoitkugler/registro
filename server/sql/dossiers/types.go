@@ -1,6 +1,7 @@
 package dossiers
 
 import (
+	"math"
 	"registro/sql/shared"
 )
 
@@ -27,8 +28,8 @@ type Montant struct {
 	Currency Currency
 }
 
-func NewEuros(f float32) Montant        { return Montant{int(f * 100), Euros} }
-func NewFrancsuisses(f float32) Montant { return Montant{int(f * 100), FrancsSuisse} }
+func NewEuros(f float64) Montant        { return Montant{int(math.Round(f * 100)), Euros} }
+func NewFrancsuisses(f float64) Montant { return Montant{int(math.Round(f * 100)), FrancsSuisse} }
 
 type Currency uint8
 
