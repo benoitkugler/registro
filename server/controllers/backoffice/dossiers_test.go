@@ -195,3 +195,46 @@ func TestController_paiements(t *testing.T) {
 	err = ct.deleteDossier(dossier1.Id)
 	tu.AssertNoErr(t, err)
 }
+
+func TestController_mergeDossiers(t *testing.T) {
+	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
+		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",
+		"../../migrations/init.sql")
+	defer db.Remove()
+
+	tu.LoadEnv(t, "../../env.sh")
+	cfg, err := config.NewAsso()
+	tu.AssertNoErr(t, err)
+	creds, err := config.NewSMTP(false)
+	tu.AssertNoErr(t, err)
+	
+	pe1, err := pr.Personne{IsTemp: false, Etatcivil: pr.Etatcivil{DateNaissance: shared.Date(time.Now())}}.Insert(db)
+	tu.AssertNoErr(t, err)
+	pe2, err := pr.Personne{IsTemp: false, Etatcivil: pr.Etatcivil{DateNaissance: shared.Date(time.Now())}}.Insert(db)
+	tu.AssertNoErr(t, err)
+	camp1, err := cps.Camp{IdTaux: 1, Places: 20, AgeMin: 6, AgeMax: 12}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	ct := Controller{db: db.DB, files: fs.NewFileSystem(t.TempDir()), smtp: creds, asso: cfg}
+
+	d1, err := ct.createDossier(pe1.Id)
+	tu.AssertNoErr(t, err)
+	d2, err := ct.createDossier(pe2.Id)
+	tu.AssertNoErr(t, err)
+
+	_, err = ct.createParticipant(CreateParticipantIn{IdDossier: d1.Id, IdPersonne: pe1.Id, IdCamp: camp1.Id})
+	tu.AssertNoErr(t, err)
+	_, err = ct.createParticipant(CreateParticipantIn{IdDossier: d2.Id, IdPersonne: pe2.Id, IdCamp: camp1.Id})
+	tu.AssertNoErr(t, err)
+
+	_, err = ct.createPaiement(d2.Id)
+	tu.AssertNoErr(t, err)
+
+	_, err = events.Event{Kind: events.Message, IdDossier: d2.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+	_, err = events.Event{Kind: events.AccuseReception, IdDossier: d2.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	err = ct.mergeDossier("", DossiersMergeIn{d2.Id, d1.Id, true})
+	tu.AssertNoErr(t, err)
+}
