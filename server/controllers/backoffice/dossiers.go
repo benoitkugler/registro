@@ -625,6 +625,15 @@ func (ct *Controller) updateAide(args cps.Aide) error {
 	if err != nil {
 		return utils.SQLError(err)
 	}
+	
+	participant, err := cps.SelectParticipant(ct.db, current.IdParticipant)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	if err := checkCurrency(ct.db, participant.IdTaux, args.Valeur.Currency); err != nil {
+		return err
+	}
+
 	current.IdStructureaide = args.IdStructureaide
 	current.Valide = args.Valide
 	current.Valeur = args.Valeur
@@ -806,6 +815,18 @@ func (ct *Controller) PaiementsUpdate(c echo.Context) error {
 	return c.NoContent(200)
 }
 
+// ensure the currency is supported by the taux
+func checkCurrency(db ds.DB, idTaux ds.IdTaux, currency ds.Currency) error {
+	taux, err := ds.SelectTaux(db, idTaux)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	if !taux.Has(currency) {
+		return errors.New("Montant.Currency unsupported by Taux")
+	}
+	return nil
+}
+
 func (ct *Controller) updatePaiement(args ds.Paiement) error {
 	current, err := ds.SelectPaiement(ct.db, args.Id)
 	if err != nil {
@@ -817,12 +838,8 @@ func (ct *Controller) updatePaiement(args ds.Paiement) error {
 	if err != nil {
 		return utils.SQLError(err)
 	}
-	taux, err := ds.SelectTaux(ct.db, dosssier.IdTaux)
-	if err != nil {
-		return utils.SQLError(err)
-	}
-	if !taux.Has(args.Montant.Currency) {
-		return errors.New("invalid Montant.Currency")
+	if err := checkCurrency(ct.db, dossier.IdTaux, args.Montant.Currency); err != nil {
+		return err
 	}
 
 	// enforce private fields
