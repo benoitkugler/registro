@@ -22,13 +22,12 @@ const metadataJSON = "metadata_json"
 type stripeMetadata struct {
 	IdDossier dossiers.IdDossier
 	Payeur    string
-	IsAcompte bool
 	Montant   dossiers.Montant
 }
 
 // StartSession should be called to start a paiement session.
 func StartSession(key config.Stripe, idDossier dossiers.IdDossier, respo personnes.Etatcivil, userProvidedMail bool,
-	isAcompte bool, montant dossiers.Montant,
+	montant dossiers.Montant,
 	succesURL, cancelURL string,
 ) (sessionID string, _ error) {
 	stripe.Key = key.Key
@@ -42,7 +41,6 @@ func StartSession(key config.Stripe, idDossier dossiers.IdDossier, respo personn
 	md := stripeMetadata{
 		IdDossier: idDossier,
 		Payeur:    respo.NOMPrenom(),
-		IsAcompte: isAcompte,
 		Montant:   montant,
 	}
 	mdJSON, err := json.Marshal(md)
@@ -139,7 +137,6 @@ func parsePaiement(session *stripe.CheckoutSession) (dossiers.Paiement, error) {
 		Label:     session.PaymentIntent.ID,
 		Montant:   md.Montant,
 		Time:      time.Now().Truncate(time.Second),
-		IsAcompte: md.IsAcompte,
 	}
 
 	return paiement, nil

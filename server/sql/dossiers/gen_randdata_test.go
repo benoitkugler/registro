@@ -60,7 +60,6 @@ func randPaiement() Paiement {
 	var s Paiement
 	s.Id = randIdPaiement()
 	s.IdDossier = randIdDossier()
-	s.IsAcompte = randbool()
 	s.IsRemboursement = randbool()
 	s.Montant = randMontant()
 	s.Payeur = randstring()

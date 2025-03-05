@@ -137,6 +137,7 @@
         @update-aide="updateAide"
         @create-paiement="createPaiement"
         @update-paiement="updatePaiement"
+        @delete-paiement="deletePaiement"
         ref="detailsPannel"
       ></DossierDetailsPannel>
       <div v-else class="text-center font-italic my-6">
@@ -387,6 +388,13 @@ async function updatePaiement(paiement: Paiement) {
   const res = await controller.PaiementsUpdate(paiement);
   if (res === undefined) return;
   controller.showMessage("Paiement modifié avec succès.");
+  ensureDossier();
+}
+
+async function deletePaiement(paiement: Paiement) {
+  const res = await controller.PaiementsDelete({ id: paiement.Id });
+  if (res === undefined) return;
+  controller.showMessage("Paiement supprimé avec succès.");
   ensureDossier();
 }
 </script>

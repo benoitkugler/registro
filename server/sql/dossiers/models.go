@@ -77,7 +77,6 @@ type Paiement struct {
 	Id        IdPaiement
 	IdDossier IdDossier `gomacro-sql-on-delete:"CASCADE"`
 
-	IsAcompte       bool
 	IsRemboursement bool
 
 	Montant Montant

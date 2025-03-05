@@ -152,6 +152,10 @@
             paiementToUpdate = null;
           }
         "
+        @delete="
+          emit('deletePaiement', paiementToUpdate);
+          paiementToUpdate = null;
+        "
       ></PaiementEditCard>
     </v-dialog>
 
@@ -270,6 +274,7 @@ const emit = defineEmits<{
   (e: "deleteAide", id: IdAide): void;
   (e: "createPaiement"): void;
   (e: "updatePaiement", paiement: Paiement): void;
+  (e: "deletePaiement", paiement: Paiement): void;
 }>();
 
 defineExpose({ showEditPaiement, showEditDossier });

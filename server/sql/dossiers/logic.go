@@ -126,9 +126,7 @@ func (m MontantTaux) String() string {
 // DescriptionHTML renvoie une description et le montant, au format HTML
 func (r Paiement) DescriptionHTML(taux Taux) (string, string) {
 	var payeur string
-	if r.IsAcompte {
-		payeur = fmt.Sprintf("Acompte de <i>%s</i> au %s", r.Payeur, shared.NewDateFrom(r.Time))
-	} else if r.IsRemboursement {
+	if r.IsRemboursement {
 		payeur = fmt.Sprintf("Remboursement au %s", shared.NewDateFrom(r.Time))
 	} else {
 		payeur = fmt.Sprintf("Paiement de <i>%s</i> au %s", r.Payeur, shared.NewDateFrom(r.Time))

@@ -6,20 +6,20 @@
       <v-snackbar
         style="z-index: 10000"
         app
-        :model-value="message != ''"
-        @update:model-value="message = ''"
-        :timeout="4000"
-        :color="messageColor"
+        :model-value="message.text != ''"
+        @update:model-value="message.text = ''"
+        :timeout="message.timeout"
+        :color="message.color"
         location="bottom left"
         close-on-content-click
       >
-        {{ message }}
+        {{ message.text }}
         <v-btn
-          v-if="messageAction"
-          @click="messageAction.action()"
+          v-if="message.action"
+          @click="message.action.action()"
           class="ml-2"
         >
-          {{ messageAction.title }}
+          {{ message.action.title }}
         </v-btn>
       </v-snackbar>
 
@@ -41,12 +41,15 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from "vue";
+import { reactive, ref } from "vue";
 import { controller, type Action } from "./logic/logic";
 
-const message = ref("");
-const messageColor = ref("secondary");
-const messageAction = ref<Action | undefined>(undefined);
+const message = reactive({
+  text: "",
+  color: "secondary",
+  action: undefined as Action | undefined,
+  timeout: 4000,
+});
 
 const errorKind = ref("");
 const errorHtml = ref("");
@@ -57,8 +60,11 @@ controller.onError = (s, m) => {
 };
 
 controller.showMessage = (s, color, action) => {
-  message.value = s;
-  messageColor.value = color || "success";
-  messageAction.value = action;
+  message.text = s;
+  message.color = color || "success";
+  message.action = action;
+  // reset the timeout by changing its value
+  message.timeout = 10_000;
+  message.timeout = 4000;
 };
 </script>

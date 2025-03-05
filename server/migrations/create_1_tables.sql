@@ -62,7 +62,6 @@ CREATE TABLE dossiers (
 CREATE TABLE paiements (
     Id serial PRIMARY KEY,
     IdDossier integer NOT NULL,
-    IsAcompte boolean NOT NULL,
     IsRemboursement boolean NOT NULL,
     Montant Montant NOT NULL,
     Payeur text NOT NULL,

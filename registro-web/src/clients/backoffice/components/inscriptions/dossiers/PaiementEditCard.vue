@@ -1,5 +1,24 @@
 <template>
   <v-card title="Modifier le paiement">
+    <v-dialog v-model="showConfirmeDelete" max-width="400px">
+      <v-card title="Confirmation">
+        <v-card-text>
+          Confirmez-vous la suppression de ce paiement ? <br /><br />
+          Attention, cette opération est irréversible.
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            color="red"
+            @click="
+              showConfirmeDelete = false;
+              emit('delete');
+            "
+            >Supprimer</v-btn
+          >
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
     <v-card-text>
       <v-row>
         <v-col>
@@ -43,14 +62,6 @@
           <v-checkbox
             hide-details
             density="compact"
-            label="Acompte ?"
-            v-model="inner.IsAcompte"
-          ></v-checkbox>
-        </v-col>
-        <v-col>
-          <v-checkbox
-            hide-details
-            density="compact"
             label="Remboursement ?"
             v-model="inner.IsRemboursement"
           ></v-checkbox>
@@ -74,6 +85,9 @@
       </v-row>
     </v-card-text>
     <v-card-actions>
+      <v-btn color="red" @click="showConfirmeDelete = true"
+        >Supprimer le paiement</v-btn
+      >
       <v-spacer></v-spacer>
       <v-btn @click="emit('update', inner)" :disabled="!isValid"
         >Enregistrer</v-btn
@@ -93,11 +107,12 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: "update", params: Paiement): void;
+  (e: "delete"): void;
 }>();
 
 const inner = ref(copy(props.paiement));
 
-const isValid = computed(
-  () => !(inner.value.IsAcompte && inner.value.IsRemboursement)
-);
+const isValid = computed(() => true);
+
+const showConfirmeDelete = ref(false);
 </script>

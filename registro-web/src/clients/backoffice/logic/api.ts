@@ -487,7 +487,6 @@ export interface Montant {
 export interface Paiement {
   Id: IdPaiement;
   IdDossier: IdDossier;
-  IsAcompte: boolean;
   IsRemboursement: boolean;
   Montant: Montant;
   Payeur: string;

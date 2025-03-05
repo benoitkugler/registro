@@ -823,10 +823,6 @@ func (ct *Controller) updatePaiement(args ds.Paiement) error {
 		return errors.New("invalid Montant.Currency")
 	}
 
-	if args.IsAcompte && args.IsRemboursement {
-		return errors.New("unsupported args.IsAcompte && args.IsRemboursement")
-	}
-
 	// enforce private fields
 	args.IdDossier = current.IdDossier
 	_, err = args.Update(ct.db)
