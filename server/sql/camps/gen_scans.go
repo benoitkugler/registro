@@ -2152,3 +2152,13 @@ func SwitchParticipantPersonne(db DB, target personnes.IdPersonne, temporaire pe
 	_, err := db.Exec("UPDATE participants SET IdPersonne = $1 WHERE IdPersonne = $2;", target, temporaire)
 	return err
 }
+
+func SwitchParticipantDossier(db DB, to dossiers.IdDossier, from dossiers.IdDossier) error {
+	_, err := db.Exec("UPDATE participants SET IdDossier = $1 WHERE IdDossier = $2;", to, from)
+	return err
+}
+
+func SwitchSondageDossier(db DB, to dossiers.IdDossier, from dossiers.IdDossier) error {
+	_, err := db.Exec("UPDATE sondages SET IdDossier = $1 WHERE IdDossier = $2;", to, from)
+	return err
+}

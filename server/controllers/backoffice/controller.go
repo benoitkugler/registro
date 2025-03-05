@@ -28,13 +28,14 @@ type Controller struct {
 	key       crypto.Encrypter
 	files     fs.FileSystem
 	smtp      config.SMTP
+	asso      config.Asso
 	joomeo    config.Joomeo
 	helloasso config.Helloasso
 
 	builtins fs.Builtins
 }
 
-func NewController(db *sql.DB, key crypto.Encrypter, files fs.FileSystem, smtp config.SMTP, joomeo config.Joomeo, helloasso config.Helloasso) (*Controller, error) {
+func NewController(db *sql.DB, key crypto.Encrypter, files fs.FileSystem, smtp config.SMTP, asso config.Asso, joomeo config.Joomeo, helloasso config.Helloasso) (*Controller, error) {
 	out := &Controller{
 		db:        db,
 		key:       key,

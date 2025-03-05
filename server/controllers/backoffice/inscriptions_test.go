@@ -5,9 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"registro/config"
 	"registro/controllers/logic"
-	"registro/crypto"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
 	"registro/sql/files"
@@ -46,8 +44,7 @@ func TestController_getInscriptions(t *testing.T) {
 	_, err = ds.Dossier{IdResponsable: pe1.Id, IdTaux: 1, MomentInscription: time.Now().Add(time.Hour), IsValidated: true}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	ct, err := NewController(db.DB, crypto.Encrypter{}, files.FileSystem{}, config.SMTP{}, config.Joomeo{}, config.Helloasso{})
-	tu.AssertNoErr(t, err)
+	ct := Controller{db: db.DB}
 
 	out, err := ct.getInscriptions()
 	tu.AssertNoErr(t, err)
@@ -72,8 +69,7 @@ func TestController_searchSimilaires(t *testing.T) {
 	})
 	tu.AssertNoErr(t, err)
 
-	ct, err := NewController(db.DB, crypto.Encrypter{}, files.FileSystem{}, config.SMTP{}, config.Joomeo{}, config.Helloasso{})
-	tu.AssertNoErr(t, err)
+	ct := Controller{db: db.DB}
 
 	ti := time.Now()
 	_, err = ct.searchSimilaires(1)
@@ -87,7 +83,7 @@ func TestIdentifieProfil(t *testing.T) {
 		"../../migrations/init.sql")
 	defer db.Remove()
 
-	pe1, err := pr.Personne{IsTemp: true}.Insert(db)
+	pe1, err := pr.Personne{IsTemp: false}.Insert(db)
 	tu.AssertNoErr(t, err)
 	pe2, err := pr.Personne{IsTemp: false}.Insert(db)
 	tu.AssertNoErr(t, err)
@@ -140,8 +136,7 @@ func TestValideInscription(t *testing.T) {
 	_, err = cps.Participant{IdCamp: camp1.Id, IdPersonne: pe2.Id, IdDossier: dossier1.Id, IdTaux: 1}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	ct, err := NewController(db.DB, crypto.Encrypter{}, files.FileSystem{}, config.SMTP{}, config.Joomeo{}, config.Helloasso{})
-	tu.AssertNoErr(t, err)
+	ct := Controller{db: db.DB}
 
 	err = ct.valideInscription(dossier1.Id)
 	tu.AssertNoErr(t, err)

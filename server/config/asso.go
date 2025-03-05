@@ -42,7 +42,7 @@ var acve = Asso{
 		Sauvegarde:          "acve@alwaysdata.net",
 		Unsubscribe:         "contact@acve.asso.fr",
 		ReplyTo:             "inscriptions@acve.asso.fr",
-		SignatureMailDefaut: "Pour le centre d'inscriptions, <br /> Marie-Pierre BUFFET",
+		SignatureMailCentre: "Pour le centre d'inscriptions, <br /> Marie-Pierre BUFFET",
 	},
 
 	BankName: "Crédit Mutuel",
@@ -61,7 +61,7 @@ type MailsSettings struct {
 	Sauvegarde          string // send copies to this adress
 	Unsubscribe         string // used in 'List-Unsubscribe' header
 	ReplyTo             string // Adresse à laquelle répondre
-	SignatureMailDefaut template.HTML
+	SignatureMailCentre template.HTML
 }
 
 // NewAsso read the ASSO env variable and returns the associated configuration.

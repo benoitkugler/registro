@@ -23,7 +23,7 @@ func TestCRUD(t *testing.T) {
 	pe, err := personnes.Personne{}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	ct, err := NewController(db.DB, crypto.Encrypter{}, files.FileSystem{}, config.SMTP{}, config.Joomeo{}, config.Helloasso{})
+	ct, err := NewController(db.DB, crypto.Encrypter{}, files.FileSystem{}, config.SMTP{}, config.Asso{}, config.Joomeo{}, config.Helloasso{})
 	tu.AssertNoErr(t, err)
 
 	t.Run("camps", func(t *testing.T) {

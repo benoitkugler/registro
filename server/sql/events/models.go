@@ -16,6 +16,8 @@ type IdEvent int64
 //
 // Requis pour référence
 // gomacro:SQL ADD UNIQUE(Id, Kind)
+//
+// gomacro:QUERY SwitchEventMessageDossier UPDATE Event SET IdDossier = $to$ WHERE IdDossier = $from$ AND Kind = #[EventKind.Message];
 type Event struct {
 	Id        IdEvent
 	IdDossier dossiers.IdDossier `gomacro-sql-on-delete:"CASCADE"`

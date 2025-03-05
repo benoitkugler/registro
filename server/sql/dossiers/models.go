@@ -73,6 +73,7 @@ type Dossier struct {
 	KeyV1 string // Deprecated: for backward compatibility only
 }
 
+// gomacro:QUERY SwitchPaiementDossier UPDATE Paiement SET IdDossier = $to$ WHERE IdDossier = $from$;
 type Paiement struct {
 	Id        IdPaiement
 	IdDossier IdDossier `gomacro-sql-on-delete:"CASCADE"`

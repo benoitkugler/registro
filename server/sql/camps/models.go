@@ -90,6 +90,7 @@ type LettreImage struct {
 // gomacro:SQL ADD UNIQUE(Id, IdCamp)
 //
 // gomacro:QUERY SwitchParticipantPersonne UPDATE Participant SET IdPersonne = $target$ WHERE IdPersonne = $temporaire$;
+// gomacro:QUERY SwitchParticipantDossier UPDATE Participant SET IdDossier = $to$ WHERE IdDossier = $from$;
 type Participant struct {
 	Id         IdParticipant
 	IdCamp     IdCamp
@@ -168,6 +169,8 @@ type Equipier struct {
 // Sondage enregistre les retours sur un séjour
 //
 // gomacro:SQL ADD UNIQUE(IdCamp, IdDossier)
+//
+// gomacro:QUERY SwitchSondageDossier UPDATE Sondage SET IdDossier = $to$ WHERE IdDossier = $from$;
 type Sondage struct {
 	IdSondage IdSondage
 	IdCamp    IdCamp             `gomacro-sql-on-delete:"CASCADE"`

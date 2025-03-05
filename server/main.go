@@ -43,7 +43,7 @@ func main() {
 		e.DefaultHTTPErrorHandler(err, c)
 	}
 
-	backofficeCt, err := backoffice.NewController(db, encrypter, fs, smtp, joomeo, helloasso)
+	backofficeCt, err := backoffice.NewController(db, encrypter, fs, smtp, asso, joomeo, helloasso)
 	check(err)
 
 	inscriptionsCt := inscriptions.NewController(db, encrypter, smtp, asso)

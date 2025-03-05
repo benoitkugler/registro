@@ -642,3 +642,8 @@ func SwitchDossierPersonne(db DB, target personnes.IdPersonne, temporaire person
 	_, err := db.Exec("UPDATE dossiers SET IdResponsable = $1 WHERE IdResponsable = $2;", target, temporaire)
 	return err
 }
+
+func SwitchPaiementDossier(db DB, to IdDossier, from IdDossier) error {
+	_, err := db.Exec("UPDATE paiements SET IdDossier = $1 WHERE IdDossier = $2;", to, from)
+	return err
+}

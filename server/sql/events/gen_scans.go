@@ -1273,3 +1273,8 @@ func (s OptIdCamp) Value() (driver.Value, error) {
 		Int64: int64(s.Id),
 		Valid: s.Valid}.Value()
 }
+
+func SwitchEventMessageDossier(db DB, to dossiers.IdDossier, from dossiers.IdDossier) error {
+	_, err := db.Exec("UPDATE events SET IdDossier = $1 WHERE IdDossier = $2 AND Kind = 2 /* EventKind.Message */;", to, from)
+	return err
+}

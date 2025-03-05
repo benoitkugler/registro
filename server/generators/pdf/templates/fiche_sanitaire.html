@@ -16,7 +16,7 @@
     <img src="{{ $.Asso.Icon }}" height="80px" />
   </div>
   <div style="text-align: right">
-    <div>{{ .Personne.NomPrenom }}</div>
+    <div>{{ .Personne.NOMPrenom }}</div>
     <div>né(e) le {{ .Personne.DateNaissance.String }}</div>
     <div>{{ .Personne.Sexe.String }}</div>
   </div>
@@ -105,7 +105,7 @@
 
   <div style="display: flex">
     <div>
-      <b>Nom : </b>{{ .Responsable.NomPrenom}} <br />
+      <b>Nom : </b>{{ .Responsable.NOMPrenom}} <br />
       <b>Sécurité sociale : </b> {{ .Responsable.SecuriteSociale }} <br />
       <b>Numéro d'urgence : </b> {{ .FicheSanitaire.Tel.String }}
     </div>

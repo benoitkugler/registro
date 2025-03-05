@@ -15,10 +15,11 @@ import (
 var templates embed.FS
 
 var (
-	inviteEquipierT      *template.Template
-	notifieDonT          *template.Template
-	confirmeInscriptionT *template.Template
-	preinscriptionT      *template.Template
+	inviteEquipierT       *template.Template
+	notifieDonT           *template.Template
+	confirmeInscriptionT  *template.Template
+	preinscriptionT       *template.Template
+	notifieFusionDossierT *template.Template
 )
 
 func init() {
@@ -26,6 +27,7 @@ func init() {
 	notifieDonT = parseTemplate("templates/notifieDon.html")
 	confirmeInscriptionT = parseTemplate("templates/confirmeInscription.html")
 	preinscriptionT = parseTemplate("templates/preinscription.html")
+	notifieFusionDossierT = parseTemplate("templates/notifieFusionDossier.html")
 }
 
 func parseTemplate(templateFile string) *template.Template {
@@ -44,71 +46,6 @@ func render(temp *template.Template, data interface{}) (string, error) {
 	err := temp.ExecuteTemplate(buf, "main.html", data)
 	return buf.String(), err
 }
-
-// type MailRenderer interface {
-// 	Render(messagePerso string) (string, error)
-// }
-
-// type parsedTemplates struct {
-// 	NotifieMessage            *template.Template
-// 	Preinscription            *template.Template
-// 	ValideMail                *template.Template
-// 	DebloqueFicheSanitaire    *template.Template
-// 	AccuseReceptionSimple     *template.Template
-// 	NotifEnvoisDocs           *template.Template
-// 	NotifDirecteur            *template.Template
-// 	InviteEquipier            *template.Template
-// 	RenvoieLienEspacePerso    *template.Template
-// 	NotificationDon           *template.Template
-// 	NotifFusion               *template.Template
-// 	RenvoieLienJoomeo         *template.Template
-// 	RenvoieLienFicheSanitaire *template.Template
-// }
-
-// // InitTemplates charge les templates depuis le dossier
-// // donné par `ressourcesPath`
-// func InitTemplates(ressourcesPath string) {
-// 	fp := func(filename string) string {
-// 		return filepath.Join(ressourcesPath, "templates_mails", filename)
-// 	}
-// 	templates.NotifieMessage = template.Must(template.New("").Funcs(FuncMap).ParseFiles(
-// 		fp("base.html"), fp("notifie_message.html")))
-
-// 	templates.Preinscription = template.Must(template.New("").Funcs(FuncMap).ParseFiles(
-// 		fp("base.html"), fp("preinscription.html")))
-
-// 	templates.ValideMail = template.Must(template.New("").Funcs(FuncMap).ParseFiles(
-// 		fp("base.html"), fp("valide_mail.html")))
-
-// 	templates.DebloqueFicheSanitaire = template.Must(template.New("").Funcs(FuncMap).ParseFiles(
-// 		fp("base.html"), fp("debloque_fiche_sanitaire.html")))
-
-// 	templates.AccuseReceptionSimple = template.Must(template.New("").Funcs(FuncMap).ParseFiles(
-// 		fp("base.html"), fp("accuse_reception_simple.html"), fp("coordonnees_centre.html")))
-
-// 	templates.NotifEnvoisDocs = template.Must(template.New("").Funcs(FuncMap).ParseFiles(fp("notif_envois_docs.html")))
-
-// 	templates.NotifDirecteur = template.Must(template.New("").Funcs(FuncMap).ParseFiles(
-// 		fp("base.html"), fp("notifie_directeur.html")))
-
-// 	templates.InviteEquipier = template.Must(template.New("").Funcs(FuncMap).ParseFiles(
-// 		fp("base.html"), fp("invite_equipier.html")))
-
-// 	templates.RenvoieLienEspacePerso = template.Must(template.New("").Funcs(FuncMap).ParseFiles(
-// 		fp("base.html"), fp("renvoie_lien_espace_perso.html")))
-
-// 	templates.NotificationDon = template.Must(template.New("").Funcs(FuncMap).ParseFiles(
-// 		fp("base.html"), fp("notifie_don.html")))
-
-// 	templates.NotifFusion = template.Must(template.New("").Funcs(FuncMap).ParseFiles(
-// 		fp("base.html"), fp("notifie_fusion_dossier.html")))
-
-// 	templates.RenvoieLienJoomeo = template.Must(template.New("").Funcs(FuncMap).ParseFiles(
-// 		fp("base.html"), fp("renvoie_lien_joomeo.html")))
-
-// 	templates.RenvoieLienFicheSanitaire = template.Must(template.New("").Funcs(FuncMap).ParseFiles(
-// 		fp("base.html"), fp("renvoie_lien_fiche_sanitaire.html")))
-// }
 
 type Contact struct {
 	Prenom string
@@ -130,6 +67,8 @@ func (c Contact) Salutations() string {
 	}
 	return fmt.Sprintf("%s %s,", out, c.Prenom)
 }
+
+const mailAutoSignature = template.HTML("<i>Ps : Ceci est un mail automatique, merci de ne pas y répondre.</i>")
 
 // type Participant struct {
 // 	NomPrenom, Sexe string
@@ -276,7 +215,7 @@ func Preinscription(asso config.Asso, mail string, responsables []RespoWithLink)
 		champsCommuns: champsCommuns{
 			Title:       "Inscription rapide",
 			Salutations: Contact{}.Salutations(),
-			Signature:   template.HTML("<i>Ps : Ceci est un mail automatique, merci de ne pas y répondre.</i>"),
+			Signature:   mailAutoSignature,
 			Asso:        asso,
 		},
 		Mail:         mail,
@@ -304,7 +243,7 @@ func ConfirmeInscription(asso config.Asso, contact Contact, urlConfirmeInscripti
 		champsCommuns: champsCommuns{
 			Title:       "Validation de l'adresse mail",
 			Salutations: contact.Salutations(),
-			Signature:   template.HTML("<i>Ps : Ceci est un mail automatique, merci de ne pas y répondre.</i>"),
+			Signature:   mailAutoSignature,
 			Asso:        asso,
 		},
 		URL: template.HTML(urlConfirmeInscription),
@@ -363,7 +302,7 @@ func InviteEquipier(cfg config.Asso, labelCamp string, directeur string, equipie
 			Title:       "Bienvenue dans l'équipe !",
 			Salutations: fmt.Sprintf("%s %s,", s, equipier.FPrenom()),
 			Asso:        cfg,
-			Signature:   template.HTML(directeur + "<br/><i>Ps : Ceci est un mail automatique, merci de ne pas y répondre.</i>"),
+			Signature:   template.HTML(directeur) + "<br/>" + mailAutoSignature,
 		},
 		labelCamp,
 		lienForumaire,
@@ -382,7 +321,7 @@ func NotifieDon(cfg config.Asso, contact Contact, montant dossiers.Montant, orga
 			Title:       "Merci pour votre don !",
 			Salutations: contact.Salutations(),
 			Asso:        cfg,
-			Signature:   "L'équipe ACVE",
+			Signature:   "L'équipe " + template.HTML(cfg.Title),
 		},
 		Montant:   montant.String(),
 		Organisme: organisme,
@@ -390,14 +329,23 @@ func NotifieDon(cfg config.Asso, contact Contact, montant dossiers.Montant, orga
 	return render(notifieDonT, args)
 }
 
-// func NewNotifFusion(contact Contact, lienEspacePerso string) (string, error) {
-// 	p := paramsNotifFusion{
-// 		champsCommuns:   newChampCommuns(contact, "Fusion de votre dossier"),
-// 		LienEspacePerso: lienEspacePerso,
-// 	}
-// 	p.SignatureMail += "<br/><br/><i>Merci de ne pas répondre directement à ce mail mais d'utiliser votre espace de suivi (ci-dessus).</i>"
-// 	return render(templates.NotifFusion, "base.html", p)
-// }
+func NotifieFusionDossier(cfg config.Asso, contact Contact, lienEspacePerso string) (string, error) {
+	const mailAuto template.HTML = "<br/><br/><i>PS: Merci de ne pas répondre directement à ce mail mais d'utiliser votre espace de suivi (ci-dessus).</i>"
+
+	args := struct {
+		champsCommuns
+		LienEspacePerso string
+	}{
+		champsCommuns: champsCommuns{
+			Title:       "Fusion de votre dossier",
+			Salutations: contact.Salutations(),
+			Asso:        cfg,
+			Signature:   cfg.MailsSettings.SignatureMailCentre + mailAuto,
+		},
+		LienEspacePerso: lienEspacePerso,
+	}
+	return render(notifieFusionDossierT, args)
+}
 
 // func NewRenvoieLienJoomeo(lien, login, password string) (string, error) {
 // 	commun := newChampCommuns(Contact{}, "Espace photo")

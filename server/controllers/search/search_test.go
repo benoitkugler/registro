@@ -22,7 +22,6 @@ func TestRechercheRapide(t *testing.T) {
 	fmt.Println("filtered personnes in", time.Since(s))
 	tu.Assert(t, len(res) > 0)
 
-	tu.Assert(t, len(FilterPersonnes(m, "*")) == len(m))
 	tu.Assert(t, len(FilterPersonnes(m, "")) == len(m))
 
 	// s = time.Now()

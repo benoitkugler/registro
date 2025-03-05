@@ -12,9 +12,10 @@ import (
 	"registro/controllers/espaceperso"
 	"registro/controllers/logic"
 	"registro/controllers/search"
+	"registro/mails"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
-	"registro/sql/events"
+	evs "registro/sql/events"
 	"registro/sql/files"
 	fs "registro/sql/files"
 	pr "registro/sql/personnes"
@@ -81,7 +82,7 @@ const (
 // The zero value defaults to returning everything
 type SearchDossierIn struct {
 	Pattern   string // Responsable et participants
-	IdCamp    events.OptIdCamp
+	IdCamp    evs.OptIdCamp
 	Attente   QueryAttente
 	Reglement QueryReglement
 }
@@ -180,7 +181,7 @@ func (ct *Controller) searchDossiers(query SearchDossierIn) (SearchDossierOut, e
 }
 
 func match(dossier logic.DossierFinance,
-	text search.Query, idCamp events.OptIdCamp, attente QueryAttente, reglement QueryReglement,
+	text search.Query, idCamp evs.OptIdCamp, attente QueryAttente, reglement QueryReglement,
 ) bool {
 	// critère camp
 	if idCamp.Valid {
@@ -843,4 +844,72 @@ func (ct *Controller) PaiementsDelete(c echo.Context) error {
 		return utils.SQLError(err)
 	}
 	return c.NoContent(200)
+}
+
+type DossiersMergeIn struct {
+	From    ds.IdDossier // dossier à fusionner
+	To      ds.IdDossier // destination
+	Notifie bool         // si oui, notifie par mail du changement d'espace perso
+}
+
+// DossiersMerge redirige les participants, paiements et messages
+// d'un dossier vers un autre, avant de supprimer le dossier
+// maintenant vide.
+// Un mail de notification au reponsable du dossier supprimé peut être envoyé.
+func (ct *Controller) DossiersMerge(c echo.Context) error {
+	var args DossiersMergeIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+	err := ct.mergeDossier(c.Request().Host, args)
+	if err != nil {
+		return err
+	}
+	return c.NoContent(200)
+}
+
+func (ct *Controller) mergeDossier(host string, args DossiersMergeIn) error {
+	from, err := ds.SelectDossier(ct.db, args.From)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	fromResp, err := pr.SelectPersonne(ct.db, from.IdResponsable)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	return utils.InTx(ct.db, func(tx *sql.Tx) error {
+		err = ds.SwitchPaiementDossier(tx, args.To, from.Id)
+		if err != nil {
+			return err
+		}
+		err = evs.SwitchEventMessageDossier(tx, args.To, from.Id)
+		if err != nil {
+			return err
+		}
+		err = cps.SwitchParticipantDossier(tx, args.To, from.Id)
+		if err != nil {
+			return err
+		}
+		// now delete the empty dossier
+		_, err = ds.DeleteDossierById(tx, from.Id)
+		if err != nil {
+			return err
+		}
+
+		if args.Notifie {
+			url := espaceperso.URLEspacePerso(ct.key, host, args.To)
+			html, err := mails.NotifieFusionDossier(ct.asso, mails.Contact{Prenom: fromResp.FPrenom(), Sexe: fromResp.Sexe}, url)
+			if err != nil {
+				return err
+			}
+			err = mails.NewMailer(ct.smtp, ct.asso.MailsSettings).SendMail(fromResp.Mail,
+				"Fusion de dossier", html, from.CopiesMails, nil)
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
 }

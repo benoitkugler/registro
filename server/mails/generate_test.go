@@ -189,7 +189,7 @@ func TestInviteEquipier(t *testing.T) {
 		pr.Etatcivil{Prenom: "Cl audie", Sexe: pr.Woman}, "http://test.fr")
 	tu.AssertNoErr(t, err)
 
-	tu.Write(t, "mail10_equipier.html", []byte(html))
+	tu.Write(t, "InviteEquipier.html", []byte(html))
 
 	err = NewMailer(creds, cfg.MailsSettings).SendMail("", "Test", html, nil, nil)
 	tu.AssertNoErr(t, err)
@@ -200,11 +200,11 @@ func TestNotificationDon(t *testing.T) {
 
 	html, err := NotifieDon(cfg, Contact{Prenom: "Benoit", Sexe: pr.Woman}, dossiers.NewEuros(45.48), "")
 	tu.AssertNoErr(t, err)
-	tu.Write(t, "notification_don_1.html", []byte(html))
+	tu.Write(t, "NotifieDon1.html", []byte(html))
 
 	html, err = NotifieDon(cfg, Contact{Prenom: "Beno it", Sexe: pr.Man}, dossiers.NewEuros(45.48), "Eglise de Montmeyran")
 	tu.AssertNoErr(t, err)
-	tu.Write(t, "notification_don_2.html", []byte(html))
+	tu.Write(t, "NotifieDon2.html", []byte(html))
 }
 
 func TestPreinscription(t *testing.T) {
@@ -215,7 +215,7 @@ func TestPreinscription(t *testing.T) {
 		{"Jean claude", "https://zmldz?454=46"},
 	})
 	tu.AssertNoErr(t, err)
-	tu.Write(t, "preinscription.html", []byte(html))
+	tu.Write(t, "Preinscription.html", []byte(html))
 }
 
 func TestConfirmeInscription(t *testing.T) {
@@ -223,8 +223,16 @@ func TestConfirmeInscription(t *testing.T) {
 
 	html, err := ConfirmeInscription(cfg, Contact{Prenom: "Benoit", Sexe: pr.Woman}, "https://acve.fr/confirme?id='ee'")
 	tu.AssertNoErr(t, err)
-	tu.Write(t, "confirme_inscription.html", []byte(html))
+	tu.Write(t, "ConfirmeInscription.html", []byte(html))
 
 	err = NewMailer(creds, cfg.MailsSettings).SendMail("", "Vérification de l'adresse mail", html, nil, nil)
 	tu.AssertNoErr(t, err)
+}
+
+func TestNotifieFusionDossier(t *testing.T) {
+	cfg, _ := loadEnv(t)
+
+	html, err := NotifieFusionDossier(cfg, Contact{Prenom: "Benoit", Sexe: pr.Woman}, "http://localhost/test")
+	tu.AssertNoErr(t, err)
+	tu.Write(t, "NotifieFusionDossier.html", []byte(html))
 }

@@ -46,9 +46,9 @@ func TestMontant_String(t *testing.T) {
 		{Montant{0, Euros}, "0€"},
 		{Montant{100, Euros}, "1€"},
 		{Montant{-100, Euros}, "-1€"},
-		{Montant{110, Euros}, "1,1€"},
-		{Montant{110, FrancsSuisse}, "CHF 1,1"},
-		{Montant{11589, FrancsSuisse}, "CHF 115,89"},
+		{Montant{110, Euros}, "1.10€"},
+		{Montant{110, FrancsSuisse}, "CHF 1.10"},
+		{Montant{11589, FrancsSuisse}, "CHF 115.89"},
 		{Montant{0, nbCurrencies}, "0<invalid currency>"},
 	} {
 		tu.Assert(t, test.m.String() == test.expected)

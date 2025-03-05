@@ -5,8 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"registro/config"
-	"registro/crypto"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
 	fs "registro/sql/files"
@@ -39,8 +37,7 @@ func TestController_searchDossiers(t *testing.T) {
 	dossier1, err := ds.Dossier{IdResponsable: pe1.Id, IdTaux: 1, MomentInscription: time.Now()}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	ct, err := NewController(db.DB, crypto.Encrypter{}, fs.FileSystem{}, config.SMTP{}, config.Joomeo{}, config.Helloasso{})
-	tu.AssertNoErr(t, err)
+	ct := Controller{db: db.DB}
 
 	out, err := ct.searchDossiers(SearchDossierIn{Pattern: OffuscateurVirements.Mask(dossier1.Id)})
 	tu.AssertNoErr(t, err)
@@ -74,8 +71,7 @@ func TestController_participants(t *testing.T) {
 	dossier1, err := ds.Dossier{IdResponsable: pe1.Id, IdTaux: 1, MomentInscription: time.Now()}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	ct, err := NewController(db.DB, crypto.Encrypter{}, fs.NewFileSystem(t.TempDir()), config.SMTP{}, config.Joomeo{}, config.Helloasso{})
-	tu.AssertNoErr(t, err)
+	ct := Controller{db: db.DB, files: fs.NewFileSystem(t.TempDir())}
 
 	part, err := ct.createParticipant(ParticipantsCreateIn{IdDossier: dossier1.Id, IdCamp: camp1.Id, IdPersonne: pe1.Id})
 	tu.AssertNoErr(t, err)
@@ -135,8 +131,7 @@ func TestController_aides(t *testing.T) {
 	structure, err := cps.Structureaide{}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	ct, err := NewController(db.DB, crypto.Encrypter{}, fs.NewFileSystem(t.TempDir()), config.SMTP{}, config.Joomeo{}, config.Helloasso{})
-	tu.AssertNoErr(t, err)
+	ct := Controller{db: db.DB, files: fs.NewFileSystem(t.TempDir())}
 
 	aide, err := ct.createAide(AidesCreateIn{IdParticipant: part.Id, IdStructure: structure.Id})
 	tu.AssertNoErr(t, err)
@@ -184,8 +179,7 @@ func TestController_paiements(t *testing.T) {
 	dossier1, err := ds.Dossier{IdResponsable: pe1.Id, IdTaux: 1, MomentInscription: time.Now()}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	ct, err := NewController(db.DB, crypto.Encrypter{}, fs.NewFileSystem(t.TempDir()), config.SMTP{}, config.Joomeo{}, config.Helloasso{})
-	tu.AssertNoErr(t, err)
+	ct := Controller{db: db.DB, files: fs.NewFileSystem(t.TempDir())}
 
 	out, err := ct.createPaiement(dossier1.Id)
 	tu.AssertNoErr(t, err)
