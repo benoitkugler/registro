@@ -5,8 +5,10 @@ import (
 	"testing"
 	"time"
 
+	"registro/config"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
+	"registro/sql/events"
 	fs "registro/sql/files"
 	pr "registro/sql/personnes"
 	"registro/sql/shared"
@@ -207,7 +209,7 @@ func TestController_mergeDossiers(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	creds, err := config.NewSMTP(false)
 	tu.AssertNoErr(t, err)
-	
+
 	pe1, err := pr.Personne{IsTemp: false, Etatcivil: pr.Etatcivil{DateNaissance: shared.Date(time.Now())}}.Insert(db)
 	tu.AssertNoErr(t, err)
 	pe2, err := pr.Personne{IsTemp: false, Etatcivil: pr.Etatcivil{DateNaissance: shared.Date(time.Now())}}.Insert(db)
@@ -222,9 +224,9 @@ func TestController_mergeDossiers(t *testing.T) {
 	d2, err := ct.createDossier(pe2.Id)
 	tu.AssertNoErr(t, err)
 
-	_, err = ct.createParticipant(CreateParticipantIn{IdDossier: d1.Id, IdPersonne: pe1.Id, IdCamp: camp1.Id})
+	_, err = ct.createParticipant(ParticipantsCreateIn{IdDossier: d1.Id, IdPersonne: pe1.Id, IdCamp: camp1.Id})
 	tu.AssertNoErr(t, err)
-	_, err = ct.createParticipant(CreateParticipantIn{IdDossier: d2.Id, IdPersonne: pe2.Id, IdCamp: camp1.Id})
+	_, err = ct.createParticipant(ParticipantsCreateIn{IdDossier: d2.Id, IdPersonne: pe2.Id, IdCamp: camp1.Id})
 	tu.AssertNoErr(t, err)
 
 	_, err = ct.createPaiement(d2.Id)

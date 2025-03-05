@@ -625,7 +625,7 @@ func (ct *Controller) updateAide(args cps.Aide) error {
 	if err != nil {
 		return utils.SQLError(err)
 	}
-	
+
 	participant, err := cps.SelectParticipant(ct.db, current.IdParticipant)
 	if err != nil {
 		return utils.SQLError(err)
@@ -834,7 +834,7 @@ func (ct *Controller) updatePaiement(args ds.Paiement) error {
 	}
 
 	// check that currency is acceptable
-	dosssier, err := ds.SelectDossier(ct.db, current.IdDossier)
+	dossier, err := ds.SelectDossier(ct.db, current.IdDossier)
 	if err != nil {
 		return utils.SQLError(err)
 	}

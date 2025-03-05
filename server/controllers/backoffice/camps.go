@@ -182,9 +182,9 @@ func (ct *Controller) updateCamp(args cps.Camp) (cps.CampExt, error) {
 		return cps.CampExt{}, err
 	}
 	if err := checkCurrency(ct.db, camp.IdTaux, args.Prix.Currency); err != nil {
-		return err
+		return cps.CampExt{}, err
 	}
-	
+
 	camp.Nom = args.Nom
 	camp.DateDebut = args.DateDebut
 	camp.Duree = args.Duree
