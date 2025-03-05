@@ -8,6 +8,78 @@
     "
     class="ml-2"
   >
+    <template #append>
+      <v-btn icon="mdi-pencil" @click="showEditDialog = true"></v-btn>
+      <v-tooltip text="Ajouter un paiement" location="top">
+        <template #activator="{ props: tooltipProps }">
+          <v-btn
+            icon
+            size="small"
+            class="mx-1"
+            v-bind="tooltipProps"
+            @click="emit('createPaiement')"
+          >
+            <v-icon color="green">mdi-cash-plus</v-icon>
+          </v-btn>
+        </template>
+      </v-tooltip>
+
+      <v-menu>
+        <template #activator="{ props: menuProps }">
+          <v-btn
+            v-bind="menuProps"
+            icon="mdi-dots-vertical"
+            size="small"
+            class="mx-1"
+          >
+          </v-btn>
+        </template>
+        <v-list>
+          <v-list-item
+            prepend-icon="mdi-link"
+            @click="showLinks = true"
+            title="Afficher les identifiants"
+          ></v-list-item>
+          <v-divider></v-divider>
+          <v-list-item
+            prepend-icon="mdi-delete"
+            @click="showDeleteDialog = true"
+            title="Supprimer"
+          ></v-list-item>
+        </v-list>
+      </v-menu>
+    </template>
+
+    <v-card-text>
+      <!-- récap financier -->
+      <v-row>
+        <v-col class="ml-2">
+          <v-menu>
+            <template #activator="{ props: menuProps }">
+              <v-chip
+                v-bind="menuProps"
+                prepend-icon="mdi-currency-eur"
+                :color="statutColor(props.dossier.Dossier.Bilan.Statut)"
+              >
+                {{ props.dossier.Dossier.Bilan.Recu }} payé sur
+                {{ props.dossier.Dossier.Bilan.Demande }}
+              </v-chip>
+            </template>
+            <FactureCard :dossier="props.dossier.Dossier"></FactureCard>
+          </v-menu>
+        </v-col>
+      </v-row>
+      <!-- fil des messages -->
+      <v-timeline side="end" class="mt-4" density="compact">
+        <EventSwitch
+          :event="event"
+          v-for="(event, i) in events"
+          :key="i"
+          @edit-paiement="(p) => (paiementToUpdate = p)"
+        ></EventSwitch>
+      </v-timeline>
+    </v-card-text>
+
     <!-- confirme delete dialog -->
     <v-dialog v-model="showDeleteDialog" max-width="600px">
       <v-card title="Supprimer le dossier">
@@ -159,71 +231,35 @@
       ></PaiementEditCard>
     </v-dialog>
 
-    <template #append>
-      <v-btn icon="mdi-pencil" @click="showEditDialog = true"></v-btn>
-      <v-tooltip text="Ajouter un paiement" location="top">
-        <template #activator="{ props: tooltipProps }">
-          <v-btn
-            icon
-            size="small"
-            class="mx-1"
-            v-bind="tooltipProps"
-            @click="emit('createPaiement')"
-          >
-            <v-icon color="green">mdi-cash-plus</v-icon>
-          </v-btn>
-        </template>
-      </v-tooltip>
-
-      <v-menu>
-        <template #activator="{ props: menuProps }">
-          <v-btn
-            v-bind="menuProps"
-            icon="mdi-dots-vertical"
-            size="small"
-            class="mx-1"
-          >
-          </v-btn>
-        </template>
-        <v-list>
-          <v-list-item
-            prepend-icon="mdi-delete"
-            @click="showDeleteDialog = true"
-            title="Supprimer"
-          ></v-list-item>
-        </v-list>
-      </v-menu>
-    </template>
-
-    <v-card-text>
-      <!-- récap financier -->
-      <v-row>
-        <v-col class="ml-2">
-          <v-menu>
-            <template #activator="{ props: menuProps }">
-              <v-chip
-                v-bind="menuProps"
-                prepend-icon="mdi-currency-eur"
-                :color="statutColor(props.dossier.Dossier.Bilan.Statut)"
-              >
-                {{ props.dossier.Dossier.Bilan.Recu }} payé sur
-                {{ props.dossier.Dossier.Bilan.Demande }}
-              </v-chip>
-            </template>
-            <FactureCard :dossier="props.dossier.Dossier"></FactureCard>
-          </v-menu>
-        </v-col>
-      </v-row>
-      <!-- fil des messages -->
-      <v-timeline side="end" class="mt-4" density="compact">
-        <EventSwitch
-          :event="event"
-          v-for="(event, i) in events"
-          :key="i"
-          @edit-paiement="(p) => (paiementToUpdate = p)"
-        ></EventSwitch>
-      </v-timeline>
-    </v-card-text>
+    <v-dialog v-model="showLinks" max-width="800px">
+      <v-card title="Liens et identifiants">
+        <v-card-text>
+          <v-row>
+            <v-col cols="3">Espace personnel</v-col>
+            <v-col class="text-truncate">
+              <a :href="props.dossier.EspacepersoURL" target="_blank"
+                >{{ props.dossier.EspacepersoURL }}
+              </a>
+            </v-col>
+            <v-col align-self="center" cols="auto">
+              <v-btn
+                icon="mdi-content-copy"
+                @click="copyEspacepersoURL"
+              ></v-btn>
+            </v-col>
+          </v-row>
+          <v-row>
+            <v-col cols="3">Identification de virement</v-col>
+            <v-col>
+              {{ props.dossier.VirementCode }}
+            </v-col>
+            <v-col align-self="center" cols="auto">
+              <v-btn icon="mdi-content-copy" @click="copyVirementCode"></v-btn>
+            </v-col>
+          </v-row>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
   </v-card>
 </template>
 
@@ -245,6 +281,7 @@ import {
   type Structureaides,
 } from "../../../logic/api";
 import {
+  copyToClipboard,
   nullableToZeroable,
   Personnes,
   pseudoEventTime,
@@ -255,6 +292,7 @@ import FactureCard from "./FactureCard.vue";
 import DossierEditCard from "./editor/DossierEditCard.vue";
 import DossierParticipantRow from "./editor/DossierParticipantRow.vue";
 import PaiementEditCard from "./PaiementEditCard.vue";
+import { controller } from "@/clients/backoffice/logic/logic";
 
 const props = defineProps<{
   dossier: DossierDetails;
@@ -331,5 +369,15 @@ const participantToCreate = ref<ParticipantsCreateIn | null>(null);
 const paiementToUpdate = ref<Paiement | null>(null);
 function showEditPaiement(paiement: Paiement) {
   paiementToUpdate.value = paiement;
+}
+
+const showLinks = ref(false);
+async function copyEspacepersoURL() {
+  await copyToClipboard(props.dossier.EspacepersoURL);
+  controller.showMessage("Lien vers l'espace personnel copié.");
+}
+async function copyVirementCode() {
+  await copyToClipboard(props.dossier.VirementCode);
+  controller.showMessage("Identifiant de virement copié.");
 }
 </script>

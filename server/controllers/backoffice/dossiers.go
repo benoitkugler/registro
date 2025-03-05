@@ -41,7 +41,7 @@ func newOffuscateur[T ~int64](prefix string, m, b T) offuscateur[T] {
 
 func (o offuscateur[T]) Mask(id T) string {
 	v := (id+o.b)*o.m - o.a
-	return fmt.Sprintf("%s%d", o.prefix, v)
+	return fmt.Sprintf("%s%04d", o.prefix, v)
 }
 
 func (o offuscateur[T]) Unmask(code string) (id T, ok bool) {
@@ -257,6 +257,7 @@ func (ct *Controller) DossiersLoad(c echo.Context) error {
 type DossierDetails struct {
 	Dossier        logic.DossierExt
 	EspacepersoURL string
+	VirementCode   string
 }
 
 // also marks the message as seen
@@ -266,8 +267,8 @@ func (ct *Controller) loadDossier(host string, id ds.IdDossier) (DossierDetails,
 		return DossierDetails{}, err
 	}
 	url := espaceperso.URLEspacePerso(ct.key, host, id)
-
-	return DossierDetails{dossier.Publish(), url}, nil
+	virement := OffuscateurVirements.Mask(id)
+	return DossierDetails{dossier.Publish(), url, virement}, nil
 }
 
 func (ct *Controller) DossiersCreate(c echo.Context) error {

@@ -38,6 +38,7 @@ export interface CampsSetTauxIn {
 export interface DossierDetails {
   Dossier: DossierExt;
   EspacepersoURL: string;
+  VirementCode: string;
 }
 // registro/controllers/backoffice.DossierHeader
 export interface DossierHeader {

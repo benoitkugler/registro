@@ -16,7 +16,7 @@ import (
 )
 
 func TestOffuscateur(t *testing.T) {
-	offuscateur := newOffuscateur[int64]("VI", 8, 3)
+	offuscateur := newOffuscateur[int64]("IN", 8, 3)
 	for id := int64(0); id < 500_000; id++ {
 		res, ok := offuscateur.Unmask(offuscateur.Mask(id))
 		tu.Assert(t, ok)

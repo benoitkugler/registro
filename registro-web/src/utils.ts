@@ -312,3 +312,7 @@ export function pseudoEventTime(event: PseudoEvent): Date {
       return new Date(event.Time);
   }
 }
+
+export async function copyToClipboard(text: string) {
+  await navigator.clipboard.writeText(text);
+}
