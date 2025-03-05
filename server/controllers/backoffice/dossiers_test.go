@@ -57,10 +57,15 @@ func TestController_participants(t *testing.T) {
 		"../../migrations/init.sql")
 	defer db.Remove()
 
+	taux2, err := ds.Taux{Label: "autre", Euros: 1000, FrancsSuisse: 1560}.Insert(db)
+	tu.AssertNoErr(t, err)
+
 	pe1, err := pr.Personne{IsTemp: false, Etatcivil: pr.Etatcivil{DateNaissance: shared.Date(time.Now())}}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	camp1, err := cps.Camp{IdTaux: 1, Places: 20, AgeMin: 6, AgeMax: 12}.Insert(db)
+	tu.AssertNoErr(t, err)
+	camp2, err := cps.Camp{IdTaux: taux2.Id, Places: 20, AgeMin: 6, AgeMax: 12}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	structure, err := cps.Structureaide{}.Insert(db)
@@ -89,12 +94,18 @@ func TestController_participants(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(files) == 1)
 
+	_, err = ct.createParticipant(ParticipantsCreateIn{IdDossier: dossier1.Id, IdCamp: camp2.Id, IdPersonne: pe1.Id})
+	tu.AssertErr(t, err) // inconsistent taux
+
 	err = ct.deleteParticipant(part.Id)
 	tu.AssertNoErr(t, err)
 
 	files, err = fs.SelectAllFiles(ct.db)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(files) == 0)
+
+	_, err = ct.createParticipant(ParticipantsCreateIn{IdDossier: dossier1.Id, IdCamp: camp2.Id, IdPersonne: pe1.Id})
+	tu.AssertNoErr(t, err) // now the change of taux is OK
 }
 
 const pngData = "\x89\x50\x4E\x47\x0D\x0A\x1A\x0A\x00\x00\x00\x0D\x49\x48\x44\x52" +

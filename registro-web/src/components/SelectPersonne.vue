@@ -10,7 +10,11 @@
     v-model:search="search"
     @update:search="updateSearch"
     clearable
-    no-data-text="Aucun profil ne correspond à votre recherche."
+    :no-data-text="
+      search.length
+        ? 'Aucun profil ne correspond à votre recherche.'
+        : 'Veuillez entrer une recherche.'
+    "
   ></v-autocomplete>
 </template>
 

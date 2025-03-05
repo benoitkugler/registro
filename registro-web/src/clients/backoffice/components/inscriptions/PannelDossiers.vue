@@ -1,43 +1,60 @@
 <template>
   <v-row no-gutters class="ma-2">
+    <!-- create dossier dialog -->
+    <v-dialog v-model="showCreateDossier" max-width="400px">
+      <CreateDossierCard @create="createDossier"></CreateDossierCard>
+    </v-dialog>
     <!-- liste de recherche -->
     <v-col cols="6">
       <v-card
         title="Dossiers"
         :subtitle="
-          headers == null
+          dossierHeaders == null
             ? '-'
-            : `${headers.Dossiers?.length || 0} / ${headers.Total}`
+            : `${dossierHeaders.Dossiers?.length || 0} / ${
+                dossierHeaders.Total
+              }`
         "
       >
         <template #append>
-          <DebounceField
-            width="350"
-            density="compact"
-            variant="outlined"
-            prepend-inner-icon="mdi-magnify"
-            label="Rechercher"
-            hide-details
-            clearable
-            v-model="query.Pattern"
-            @update:model-value="searchDossiers"
-          >
-            <template #append>
-              <v-tooltip text="Critères de recherche">
-                <template #activator="{ props: tooltipProps }">
-                  <v-btn
-                    size="small"
-                    variant="flat"
-                    v-bind="tooltipProps"
-                    :icon="
-                      showDetailsQuery ? 'mdi-chevron-up' : 'mdi-chevron-down'
-                    "
-                    @click="showDetailsQuery = !showDetailsQuery"
-                  ></v-btn>
+          <v-row>
+            <v-col align-self="center">
+              <DebounceField
+                width="350"
+                density="compact"
+                variant="outlined"
+                prepend-inner-icon="mdi-magnify"
+                label="Rechercher"
+                hide-details
+                clearable
+                v-model="query.Pattern"
+                @update:model-value="searchDossiers"
+              >
+                <template #append>
+                  <v-tooltip text="Critères de recherche">
+                    <template #activator="{ props: tooltipProps }">
+                      <v-btn
+                        size="small"
+                        variant="flat"
+                        v-bind="tooltipProps"
+                        :icon="
+                          showDetailsQuery
+                            ? 'mdi-chevron-up'
+                            : 'mdi-chevron-down'
+                        "
+                        @click="showDetailsQuery = !showDetailsQuery"
+                      ></v-btn>
+                    </template>
+                  </v-tooltip>
                 </template>
-              </v-tooltip>
-            </template>
-          </DebounceField>
+              </DebounceField>
+            </v-col>
+            <v-col align-self="center">
+              <v-btn icon size="small" @click="showCreateDossier = true">
+                <v-icon color="green">mdi-plus</v-icon>
+              </v-btn>
+            </v-col>
+          </v-row>
         </template>
         <v-expand-transition>
           <v-row v-show="showDetailsQuery" class="mx-0">
@@ -77,18 +94,21 @@
           </v-row>
         </v-expand-transition>
         <v-card-text>
-          <v-list v-if="headers != null">
-            <v-list-item v-if="!headers.Dossiers?.length" class="text-center">
+          <v-list v-if="dossierHeaders != null">
+            <v-list-item
+              v-if="!dossierHeaders.Dossiers?.length"
+              class="text-center"
+            >
               <i>Aucun dossier ne correspond à votre recherche.</i>
             </v-list-item>
             <v-list-item
-              v-for="(dossier, i) in headers.Dossiers"
+              v-for="(dossier, i) in dossierHeaders.Dossiers"
               :key="i"
               :title="dossier.Responsable"
               :subtitle="dossier.Participants"
               @click="loadDossier(dossier.Id)"
             >
-              <template #append>
+              <template #append v-if="dossier.NewMessages">
                 <v-badge
                   color="primary"
                   :content="dossier.NewMessages"
@@ -117,6 +137,7 @@
         @update-aide="updateAide"
         @create-paiement="createPaiement"
         @update-paiement="updatePaiement"
+        ref="detailsPannel"
       ></DossierDetailsPannel>
       <div v-else class="text-center font-italic my-6">
         Sélectionner un dossier...
@@ -126,7 +147,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from "vue";
+import { computed, onMounted, reactive, ref, useTemplateRef } from "vue";
 import {
   QueryAttente,
   QueryAttenteLabels,
@@ -137,7 +158,6 @@ import {
   type Int,
   type SearchDossierOut,
   type IdDossier,
-  type Personne,
   type DossierDetails,
   type Dossier,
   type AidesCreateIn,
@@ -148,11 +168,13 @@ import {
   type ParticipantsCreateIn,
   type IdParticipant,
   type Paiement,
+  type IdPersonne,
 } from "../../logic/api";
 import { copy, nullableToOpt, optToNullable, selectItems } from "@/utils";
 import { controller } from "../../logic/logic";
 import DebounceField from "@/components/DebounceField.vue";
 import DossierDetailsPannel from "./dossiers/DossierDetailsPannel.vue";
+import CreateDossierCard from "./dossiers/CreateDossierCard.vue";
 
 const props = defineProps<{}>();
 
@@ -175,6 +197,8 @@ onMounted(() => {
   searchDossiers();
 });
 
+const detailsPannel = useTemplateRef("detailsPannel");
+
 const allCamps = ref<CampItem[]>([]);
 async function loadCamps() {
   const res = await controller.GetCamps();
@@ -189,11 +213,11 @@ async function loadStructureaides() {
   structures.value = res || {};
 }
 
-const headers = ref<SearchDossierOut | null>(null);
+const dossierHeaders = ref<SearchDossierOut | null>(null);
 async function searchDossiers() {
   const res = await controller.DossiersSearch(query);
   if (res === undefined) return;
-  headers.value = res;
+  dossierHeaders.value = res;
 
   // if no dossier is yet selected, auto select the first
   if (dossierDetails.value == null && res.Dossiers?.length) {
@@ -201,16 +225,16 @@ async function searchDossiers() {
   }
 }
 
-// showDossier may be called by the parent when switching to this pannel
-function showDossier(id: IdDossier, responsable: Personne) {
+// showDossier may be called by the parent when switching to this pannel;
+//  it loads the dossier details
+async function showDossier(id: IdDossier, responsable: string) {
   // reset the query so that the given Dossier is found
   query.IdCamp = emptyQuery.IdCamp;
   query.Attente = emptyQuery.Attente;
   query.Reglement = emptyQuery.Reglement;
-
-  query.Pattern = `${responsable.Prenom} ${responsable.Nom}`;
+  query.Pattern = responsable;
   searchDossiers();
-  loadDossier(id);
+  await loadDossier(id);
 }
 
 const dossierDetails = ref<DossierDetails | null>(null);
@@ -227,6 +251,18 @@ async function ensureDossier() {
     loadDossier(dossierDetails.value.Dossier.Dossier.Id);
 }
 
+const showCreateDossier = ref(false);
+async function createDossier(idResponsable: IdPersonne) {
+  showCreateDossier.value = false;
+  const res = await controller.DossiersCreate({ idResponsable });
+  if (res === undefined) return;
+  controller.showMessage("Dossier créé avec succès.");
+  // add to the list and select it
+  await showDossier(res.Id, res.Responsable);
+  // also start editing
+  detailsPannel.value?.showEditDossier();
+}
+
 async function updateDossier(dossier: Dossier) {
   const res = await controller.DossiersUpdate(dossier);
   if (res === undefined) return;
@@ -237,7 +273,7 @@ async function updateDossier(dossier: Dossier) {
     dossierDetails.value.Dossier.Dossier = dossier;
     dossierDetails.value.Dossier.Responsable = res.Responsable;
   }
-  const dossierHeader = headers.value?.Dossiers?.find(
+  const dossierHeader = dossierHeaders.value?.Dossiers?.find(
     (d) => d.Id == dossier.Id
   );
   if (dossierHeader) dossierHeader.Responsable = res.Responsable;
@@ -343,6 +379,8 @@ async function createPaiement() {
   if (res === undefined) return;
   controller.showMessage("Paiement créé avec succès.");
   ensureDossier();
+  // show edit dialog
+  detailsPannel.value?.showEditPaiement(res);
 }
 
 async function updatePaiement(paiement: Paiement) {

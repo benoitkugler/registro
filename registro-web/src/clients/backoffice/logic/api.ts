@@ -957,6 +957,21 @@ export abstract class AbstractAPI {
     }
   }
 
+  /** DossiersCreate performs the request and handles the error */
+  async DossiersCreate(params: { idResponsable: Int }) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/dossiers";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<DossierHeader> = await Axios.put(fullUrl, null, {
+        headers: this.getHeaders(),
+        params: { idResponsable: String(params["idResponsable"]) },
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
   /** DossiersUpdate performs the request and handles the error */
   async DossiersUpdate(params: Dossier) {
     const fullUrl = this.baseUrl + "/api/v1/backoffice/dossiers";

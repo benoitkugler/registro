@@ -18,6 +18,7 @@
             variant="flat"
             icon="mdi-dots-vertical"
             size="small"
+            class="ml-1"
           ></v-btn>
         </template>
         <v-list density="compact">

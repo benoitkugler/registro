@@ -36,7 +36,10 @@ const tab = computed(
 function goToDossier(id: IdDossier, responsable: Personne) {
   setTab("doss");
   nextTick(() => {
-    dossiersPannel.value?.showDossier(id, responsable);
+    dossiersPannel.value?.showDossier(
+      id,
+      `${responsable.Prenom} ${responsable.Nom}`
+    );
   });
 }
 

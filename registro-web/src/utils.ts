@@ -238,7 +238,11 @@ export namespace Formatters {
     return new Date(d).toLocaleDateString();
   }
 
-  export function date(date: Date_, showYear = false, showWeekday = true) {
+  export function date(
+    date: Date_ | Time,
+    showYear = false,
+    showWeekday = true
+  ) {
     const da = new Date(date);
     if (isNaN(da.valueOf()) || da.getFullYear() <= 1) {
       return "";

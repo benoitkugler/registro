@@ -74,7 +74,7 @@
       <v-row v-for="paiement in paiements">
         <v-col>
           Paiement de {{ paiement.Payeur }}, le
-          {{ Formatters.date(paiement.Date) }}
+          {{ Formatters.date(paiement.Time) }}
         </v-col>
         <v-col cols="2" class="text-right">
           {{ Formatters.montant(paiement.Montant) }}
@@ -100,6 +100,7 @@ import {
   type DossierExt,
   type Remises,
 } from "@/clients/backoffice/logic/api";
+import { newDate_ } from "@/components/date";
 import { Camps, Formatters, Personnes } from "@/utils";
 import { computed } from "vue";
 
@@ -144,7 +145,7 @@ function formatRemises(remises: Remises) {
 
 const paiements = computed(() => {
   const out = Object.values(props.dossier.Paiements || {});
-  out.sort((a, b) => new Date(a.Date).valueOf() - new Date(b.Date).valueOf());
+  out.sort((a, b) => new Date(a.Time).valueOf() - new Date(b.Time).valueOf());
   return out;
 });
 </script>

@@ -272,6 +272,8 @@ const emit = defineEmits<{
   (e: "updatePaiement", paiement: Paiement): void;
 }>();
 
+defineExpose({ showEditPaiement, showEditDossier });
+
 function statutColor(s: StatutPaiement) {
   switch (s) {
     case StatutPaiement.NonCommence:
@@ -316,8 +318,13 @@ const events = computed(() => {
 const showDeleteDialog = ref(false);
 
 const showEditDialog = ref(false);
-
+function showEditDossier() {
+  showEditDialog.value = true;
+}
 const participantToCreate = ref<ParticipantsCreateIn | null>(null);
 
 const paiementToUpdate = ref<Paiement | null>(null);
+function showEditPaiement(paiement: Paiement) {
+  paiementToUpdate.value = paiement;
+}
 </script>

@@ -270,6 +270,33 @@ func (ct *Controller) loadDossier(host string, id ds.IdDossier) (DossierDetails,
 	return DossierDetails{dossier.Publish(), url}, nil
 }
 
+func (ct *Controller) DossiersCreate(c echo.Context) error {
+	idR, err := utils.QueryParamInt[pr.IdPersonne](c, "idResponsable")
+	if err != nil {
+		return err
+	}
+	out, err := ct.createDossier(idR)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) createDossier(idR pr.IdPersonne) (DossierHeader, error) {
+	responsable, err := pr.SelectPersonne(ct.db, idR)
+	if err != nil {
+		return DossierHeader{}, err
+	}
+	dossier, err := ds.Dossier{
+		IdTaux: 1, IdResponsable: responsable.Id, MomentInscription: time.Now().Truncate(time.Second),
+		IsValidated: true, PartageAdressesOK: true,
+	}.Insert(ct.db)
+	if err != nil {
+		return DossierHeader{}, err
+	}
+	return DossierHeader{Id: dossier.Id, Responsable: responsable.PrenomNOM()}, nil
+}
+
 func (ct *Controller) DossiersUpdate(c echo.Context) error {
 	var args ds.Dossier
 	if err := c.Bind(&args); err != nil {
@@ -405,6 +432,12 @@ func (ct *Controller) createParticipant(args ParticipantsCreateIn) (cps.Particip
 		return cps.Participant{}, fmt.Errorf("Le profil %s est déjà présent sur ce camp !", personne.PrenomNOM())
 	}
 
+	loaders, err := cps.LoadCamps(ct.db, args.IdCamp)
+	if err != nil {
+		return cps.Participant{}, err
+	}
+	camp := loaders[0]
+
 	// resolve Groupe...
 	groupes, err := cps.SelectGroupesByIdCamps(ct.db, args.IdCamp)
 	if err != nil {
@@ -413,11 +446,7 @@ func (ct *Controller) createParticipant(args ParticipantsCreateIn) (cps.Particip
 	groupe, hasGroupe := groupes.TrouveGroupe(personne.DateNaissance)
 
 	// ... and Statut
-	loaders, err := cps.LoadCamps(ct.db, args.IdCamp)
-	if err != nil {
-		return cps.Participant{}, err
-	}
-	statut := loaders[0].Status([]pr.Personne{personne})[0]
+	statut := camp.Status([]pr.Personne{personne})[0]
 	participant := cps.Participant{
 		IdDossier:  args.IdDossier,
 		IdCamp:     args.IdCamp,
@@ -427,7 +456,25 @@ func (ct *Controller) createParticipant(args ParticipantsCreateIn) (cps.Particip
 		Statut: statut.Hint(),
 	}
 
+	// if the dossier is empty (for instance if manually created), we want to allow
+	// a different taux (the one of the camp) to be used
+	existingP, err := cps.SelectParticipantsByIdDossiers(ct.db, args.IdDossier)
+	if err != nil {
+		return cps.Participant{}, utils.SQLError(err)
+	}
+
 	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
+		if len(existingP) == 0 {
+			// update the dossier ...
+			dossier.IdTaux = camp.Camp.IdTaux
+			_, err = dossier.Update(tx)
+			if err != nil {
+				return err
+			}
+			// ... and use this taux
+			participant.IdTaux = camp.Camp.IdTaux
+		}
+
 		participant, err = participant.Insert(tx)
 		if err != nil {
 			return err
