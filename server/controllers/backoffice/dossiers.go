@@ -124,7 +124,7 @@ func newDossierHeader(dossier logic.Dossier) DossierHeader {
 		Id:           dossier.Dossier.Id,
 		Responsable:  personnes[0].PrenomNOM(),
 		Participants: strings.Join(chunks, ", "),
-		NewMessages:  len(dossier.Events.NewMessagesForBackoffice()),
+		NewMessages:  len(dossier.Events.UnreadMessagesForBackoffice()),
 	}
 }
 
@@ -916,7 +916,7 @@ func (ct *Controller) mergeDossier(host string, args DossiersMergeIn) error {
 
 		if args.Notifie {
 			url := espaceperso.URLEspacePerso(ct.key, host, args.To)
-			html, err := mails.NotifieFusionDossier(ct.asso, mails.Contact{Prenom: fromResp.FPrenom(), Sexe: fromResp.Sexe}, url)
+			html, err := mails.NotifieFusionDossier(ct.asso, mails.NewContact(&fromResp), url)
 			if err != nil {
 				return err
 			}

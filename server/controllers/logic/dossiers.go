@@ -55,7 +55,7 @@ func LoadDossiers(db ds.DB, ids ...ds.IdDossier) (Dossiers, error) {
 		return Dossiers{}, utils.SQLError(err)
 	}
 	// load the messages
-	ld, err := LoadEvents(db, ids...)
+	ld, err := LoadEventsByDossiers(db, ids...)
 	if err != nil {
 		return Dossiers{}, utils.SQLError(err)
 	}

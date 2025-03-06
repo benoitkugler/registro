@@ -5,6 +5,7 @@ import (
 	"embed"
 	"fmt"
 	"html/template"
+	"strings"
 
 	"registro/config"
 	"registro/sql/dossiers"
@@ -20,6 +21,7 @@ var (
 	confirmeInscriptionT  *template.Template
 	preinscriptionT       *template.Template
 	notifieFusionDossierT *template.Template
+	notifieMessageT       *template.Template
 )
 
 func init() {
@@ -28,6 +30,7 @@ func init() {
 	confirmeInscriptionT = parseTemplate("templates/confirmeInscription.html")
 	preinscriptionT = parseTemplate("templates/preinscription.html")
 	notifieFusionDossierT = parseTemplate("templates/notifieFusionDossier.html")
+	notifieMessageT = parseTemplate("templates/notifieMessage.html")
 }
 
 func parseTemplate(templateFile string) *template.Template {
@@ -50,6 +53,10 @@ func render(temp *template.Template, data interface{}) (string, error) {
 type Contact struct {
 	Prenom string
 	Sexe   pr.Sexe
+}
+
+func NewContact(personne *pr.Personne) Contact {
+	return Contact{Prenom: personne.FPrenom(), Sexe: personne.Sexe}
 }
 
 func (c Contact) Salutations() string {
@@ -191,15 +198,24 @@ type champsCommuns struct {
 // 	return render(templates.AccuseReceptionSimple, "base.html", p)
 // }
 
-// func NewNotifieMessage(contact Contact, title, contenu, lienEspacePerso string) (string, error) {
-// 	p := paramsNotifieMessage{
-// 		champsCommuns:   newChampCommuns(contact, title),
-// 		Contenu:         contenu,
-// 		LienEspacePerso: lienEspacePerso,
-// 	}
-// 	p.SignatureMail += "<br/><br/><i>Merci de ne pas répondre directement à ce mail mais d'utiliser votre espace de suivi (ci-dessus).</i>"
-// 	return render(templates.NotifieMessage, "base.html", p)
-// }
+func NotifieMessage(asso config.Asso, contact Contact, contenu, lienEspacePerso string) (string, error) {
+	contenu = strings.ReplaceAll(contenu, "\n", "<br/>")
+	args := struct {
+		champsCommuns
+		Contenu         template.HTML
+		LienEspacePerso string
+	}{
+		champsCommuns: champsCommuns{
+			Title:       "Nouveau message",
+			Salutations: contact.Salutations(),
+			Asso:        asso,
+			Signature:   mailAuto,
+		},
+		Contenu:         template.HTML(contenu),
+		LienEspacePerso: lienEspacePerso,
+	}
+	return render(notifieMessageT, args)
+}
 
 type RespoWithLink struct {
 	NomPrenom string
@@ -329,9 +345,9 @@ func NotifieDon(cfg config.Asso, contact Contact, montant dossiers.Montant, orga
 	return render(notifieDonT, args)
 }
 
-func NotifieFusionDossier(cfg config.Asso, contact Contact, lienEspacePerso string) (string, error) {
-	const mailAuto template.HTML = "<br/><br/><i>PS: Merci de ne pas répondre directement à ce mail mais d'utiliser votre espace de suivi (ci-dessus).</i>"
+const mailAuto template.HTML = "<i>PS: Merci de ne pas répondre directement à ce mail mais d'utiliser votre espace de suivi (ci-dessus).</i>"
 
+func NotifieFusionDossier(cfg config.Asso, contact Contact, lienEspacePerso string) (string, error) {
 	args := struct {
 		champsCommuns
 		LienEspacePerso string
@@ -340,7 +356,7 @@ func NotifieFusionDossier(cfg config.Asso, contact Contact, lienEspacePerso stri
 			Title:       "Fusion de votre dossier",
 			Salutations: contact.Salutations(),
 			Asso:        cfg,
-			Signature:   cfg.MailsSettings.SignatureMailCentre + mailAuto,
+			Signature:   cfg.MailsSettings.SignatureMailCentre + "<br/><br/>" + mailAuto,
 		},
 		LienEspacePerso: lienEspacePerso,
 	}

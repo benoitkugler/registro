@@ -1,0 +1,43 @@
+{{ define "content" }}
+<table cellpadding="0">
+  <tr>
+    <td>Vous avez reçu le message ci-dessous.</td>
+  </tr>
+  <tr>
+    <td style="font-style: italic">
+      <br />
+      {{ .Contenu }}
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <br />
+      Vous pouvez répondre à ce message ou consulter votre dossier en cliquant
+      sur le bouton ci-dessous.
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <table width="100%" style="text-align: center" cellpadding="10">
+        <tr>
+          <td></td>
+          <td width="35%" bgcolor="#feee00" align="center">
+            <a
+              style="
+                text-decoration: none;
+                color: #000000;
+                display: inline-block;
+                width: 100%;
+              "
+              href="{{ .LienEspacePerso }}"
+            >
+              <b>MON ESPACE</b>
+            </a>
+          </td>
+          <td></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+{{ end }}

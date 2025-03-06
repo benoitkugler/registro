@@ -6,7 +6,7 @@ import (
 
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
-	"registro/sql/events"
+	evs "registro/sql/events"
 	pr "registro/sql/personnes"
 	"registro/utils"
 )
@@ -15,15 +15,20 @@ import (
 
 // Event exposes on event on the dossier track
 type Event struct {
-	Id      events.IdEvent
-	Created time.Time
-	Content EventContent
+	Id        evs.IdEvent
+	idDossier ds.IdDossier
+	Created   time.Time
+	Content   EventContent
+}
+
+func (ev Event) Raw() evs.Event {
+	return evs.Event{Id: ev.Id, IdDossier: ev.idDossier, Created: ev.Created, Kind: ev.Content.kind()}
 }
 
 // Events stores the [Event] for one [Dossier]
 type Events []Event
 
-func (evs Events) By(kind events.EventKind) []Event {
+func (evs Events) By(kind evs.EventKind) []Event {
 	var out []Event
 	for _, ev := range evs {
 		if ev.Content.kind() == kind {
@@ -33,9 +38,9 @@ func (evs Events) By(kind events.EventKind) []Event {
 	return out
 }
 
-// NewMessagesForBackoffice returns the [Event]s with kind [events.Message],
+// UnreadMessagesForBackoffice returns the [Event]s with kind [evs.Message],
 // not yet seen by the backoffice
-func (evs Events) NewMessagesForBackoffice() (out []Event) {
+func (evs Events) UnreadMessagesForBackoffice() (out []Event) {
 	for _, ev := range evs {
 		if message, ok := ev.Content.(Message); ok {
 			if !message.Message.VuBackoffice {
@@ -48,17 +53,17 @@ func (evs Events) NewMessagesForBackoffice() (out []Event) {
 
 // Event exposes on event on the dossier track
 type EventContent interface {
-	kind() events.EventKind
+	kind() evs.EventKind
 }
 
-func (Supprime) kind() events.EventKind        { return events.Supprime }
-func (AccuseReception) kind() events.EventKind { return events.AccuseReception }
-func (Message) kind() events.EventKind         { return events.Message }
-func (Facture) kind() events.EventKind         { return events.Facture }
-func (CampDocs) kind() events.EventKind        { return events.CampDocs }
-func (PlaceLiberee) kind() events.EventKind    { return events.PlaceLiberee }
-func (Attestation) kind() events.EventKind     { return events.Attestation }
-func (Sondage) kind() events.EventKind         { return events.Sondage }
+func (Supprime) kind() evs.EventKind        { return evs.Supprime }
+func (AccuseReception) kind() evs.EventKind { return evs.AccuseReception }
+func (Message) kind() evs.EventKind         { return evs.Message }
+func (Facture) kind() evs.EventKind         { return evs.Facture }
+func (CampDocs) kind() evs.EventKind        { return evs.CampDocs }
+func (PlaceLiberee) kind() evs.EventKind    { return evs.PlaceLiberee }
+func (Attestation) kind() evs.EventKind     { return evs.Attestation }
+func (Sondage) kind() evs.EventKind         { return evs.Sondage }
 
 type (
 	Supprime        struct{}
@@ -66,13 +71,13 @@ type (
 )
 
 type Message struct {
-	Message          events.EventMessage
+	Message          evs.EventMessage
 	OrigineCampLabel string   // optionnel
 	VuParCamps       []string // labels
 }
 
 // m must have kind [Message]
-func (ld *EventsData) newMessage(ev events.Event) Message {
+func (ld *eventsContent) newMessage(ev evs.Event) Message {
 	m := ld.messages[ev.Id]
 	out := Message{Message: m}
 	if m.OrigineCamp.Valid {
@@ -92,7 +97,7 @@ type CampDocs struct {
 }
 
 // m must have kind [CampDocs]
-func (ld *EventsData) newCampDocs(ev events.Event) CampDocs {
+func (ld *eventsContent) newCampDocs(ev evs.Event) CampDocs {
 	m := ld.campDocs[ev.Id]
 	camp := ld.camps[m.IdCamp]
 	return CampDocs{IdCamp: m.IdCamp, CampLabel: camp.Label()}
@@ -106,7 +111,7 @@ type PlaceLiberee struct {
 }
 
 // m must have kind [PlaceLiberee]
-func (ld *EventsData) newPlaceLiberee(ev events.Event) PlaceLiberee {
+func (ld *eventsContent) newPlaceLiberee(ev evs.Event) PlaceLiberee {
 	m := ld.placeLiberees[ev.Id]
 	participant := ld.participants[m.IdParticipant]
 	camp := ld.camps[participant.IdCamp]
@@ -118,14 +123,14 @@ func (ld *EventsData) newPlaceLiberee(ev events.Event) PlaceLiberee {
 }
 
 type Attestation struct {
-	Distribution events.Distribution
+	Distribution evs.Distribution
 	// IsPresence is true for 'Attestation de présence',
 	// false for 'Facture acquittée'.
 	IsPresence bool
 }
 
 // m must have kind [Attestation]
-func (ld *EventsData) newAttestation(ev events.Event) Attestation {
+func (ld *eventsContent) newAttestation(ev evs.Event) Attestation {
 	m := ld.attestations[ev.Id]
 	return Attestation{Distribution: m.Distribution, IsPresence: m.IsPresence}
 }
@@ -136,77 +141,68 @@ type Sondage struct {
 }
 
 // m must have kind [Sondage]
-func (ld *EventsData) newSondage(ev events.Event) Sondage {
+func (ld *eventsContent) newSondage(ev evs.Event) Sondage {
 	m := ld.campDocs[ev.Id]
 	camp := ld.camps[m.IdCamp]
 	return Sondage{IdCamp: m.IdCamp, CampLabel: camp.Label()}
 }
 
-type EventsData struct {
-	events       map[ds.IdDossier]events.Events
+type eventsContent struct {
 	camps        cps.Camps
 	participants cps.Participants
 	personnes    pr.Personnes
 
-	messages      map[events.IdEvent]events.EventMessage
-	vupars        map[events.IdEvent]events.EventMessageVus
-	campDocs      map[events.IdEvent]events.EventCampDocs
-	placeLiberees map[events.IdEvent]events.EventPlaceLiberee
-	attestations  map[events.IdEvent]events.EventAttestation
-	sondages      map[events.IdEvent]events.EventSondage
+	messages      map[evs.IdEvent]evs.EventMessage
+	vupars        map[evs.IdEvent]evs.EventMessageVus
+	campDocs      map[evs.IdEvent]evs.EventCampDocs
+	placeLiberees map[evs.IdEvent]evs.EventPlaceLiberee
+	attestations  map[evs.IdEvent]evs.EventAttestation
+	sondages      map[evs.IdEvent]evs.EventSondage
 }
 
-// LoadEvents loads the data required to build the events
-// linked to the given dossiers.
+// loadEventsContent loads the data required to build the given events.
 //
 // It does wrap any error encountered.
-func LoadEvents(db events.DB, dossiers ...ds.IdDossier) (out EventsData, _ error) {
-	allEvents, err := events.SelectEventsByIdDossiers(db, dossiers...)
+func loadEventsContent(db evs.DB, ids ...evs.IdEvent) (out eventsContent, _ error) {
+	tmp1, err := evs.SelectEventMessagesByIdEvents(db, ids...)
 	if err != nil {
-		return EventsData{}, utils.SQLError(err)
-	}
-	out.events = allEvents.ByIdDossier()
-	ids := allEvents.IDs()
-
-	tmp1, err := events.SelectEventMessagesByIdEvents(db, ids...)
-	if err != nil {
-		return EventsData{}, utils.SQLError(err)
+		return eventsContent{}, utils.SQLError(err)
 	}
 	out.messages = tmp1.ByIdEvent()
 
-	tmp1bis, err := events.SelectEventMessageVusByIdEvents(db, ids...)
+	tmp1bis, err := evs.SelectEventMessageVusByIdEvents(db, ids...)
 	if err != nil {
-		return EventsData{}, utils.SQLError(err)
+		return eventsContent{}, utils.SQLError(err)
 	}
 	out.vupars = tmp1bis.ByIdEvent()
 
-	tmp2, err := events.SelectEventCampDocssByIdEvents(db, ids...)
+	tmp2, err := evs.SelectEventCampDocssByIdEvents(db, ids...)
 	if err != nil {
-		return EventsData{}, utils.SQLError(err)
+		return eventsContent{}, utils.SQLError(err)
 	}
 	out.campDocs = tmp2.ByIdEvent()
 
-	tmp3, err := events.SelectEventPlaceLibereesByIdEvents(db, ids...)
+	tmp3, err := evs.SelectEventPlaceLibereesByIdEvents(db, ids...)
 	if err != nil {
-		return EventsData{}, utils.SQLError(err)
+		return eventsContent{}, utils.SQLError(err)
 	}
 	out.placeLiberees = tmp3.ByIdEvent()
 
-	tmp4, err := events.SelectEventAttestationsByIdEvents(db, ids...)
+	tmp4, err := evs.SelectEventAttestationsByIdEvents(db, ids...)
 	if err != nil {
-		return EventsData{}, utils.SQLError(err)
+		return eventsContent{}, utils.SQLError(err)
 	}
 	out.attestations = tmp4.ByIdEvent()
 
-	tmp5, err := events.SelectEventSondagesByIdEvents(db, ids...)
+	tmp5, err := evs.SelectEventSondagesByIdEvents(db, ids...)
 	if err != nil {
-		return EventsData{}, utils.SQLError(err)
+		return eventsContent{}, utils.SQLError(err)
 	}
 	out.sondages = tmp5.ByIdEvent()
 
 	out.participants, err = cps.SelectParticipants(db, tmp3.IdParticipants()...)
 	if err != nil {
-		return EventsData{}, utils.SQLError(err)
+		return eventsContent{}, utils.SQLError(err)
 	}
 
 	var idCamps []cps.IdCamp
@@ -218,13 +214,59 @@ func LoadEvents(db events.DB, dossiers ...ds.IdDossier) (out EventsData, _ error
 	idCamps = slices.Concat(idCamps, tmp1bis.IdCamps(), tmp5.IdCamps(), out.participants.IdCamps())
 	out.camps, err = cps.SelectCamps(db, idCamps...)
 	if err != nil {
-		return EventsData{}, utils.SQLError(err)
+		return eventsContent{}, utils.SQLError(err)
 	}
 	out.personnes, err = pr.SelectPersonnes(db, out.participants.IdPersonnes()...)
 	if err != nil {
-		return EventsData{}, utils.SQLError(err)
+		return eventsContent{}, utils.SQLError(err)
 	}
 
+	return out, nil
+}
+
+func (ec *eventsContent) build(event evs.Event) Event {
+	out := Event{Id: event.Id, idDossier: event.IdDossier, Created: event.Created}
+	switch event.Kind {
+	case evs.Supprime:
+		out.Content = Supprime{}
+	case evs.AccuseReception:
+		out.Content = AccuseReception{}
+	case evs.Message:
+		out.Content = ec.newMessage(event)
+	case evs.PlaceLiberee:
+		out.Content = ec.newPlaceLiberee(event)
+	case evs.Facture:
+		out.Content = Facture{}
+	case evs.CampDocs:
+		out.Content = ec.newCampDocs(event)
+	case evs.Attestation:
+		out.Content = ec.newAttestation(event)
+	case evs.Sondage:
+		out.Content = ec.newSondage(event)
+	}
+	return out
+}
+
+type EventsData struct {
+	events map[ds.IdDossier]evs.Events
+	eventsContent
+}
+
+// LoadEventsByDossiers loads the data required to build the events
+// linked to the given dossiers.
+//
+// It does wrap any error encountered.
+func LoadEventsByDossiers(db evs.DB, dossiers ...ds.IdDossier) (out EventsData, _ error) {
+	allEvents, err := evs.SelectEventsByIdDossiers(db, dossiers...)
+	if err != nil {
+		return EventsData{}, utils.SQLError(err)
+	}
+	out.events = allEvents.ByIdDossier()
+
+	out.eventsContent, err = loadEventsContent(db, allEvents.IDs()...)
+	if err != nil {
+		return EventsData{}, err
+	}
 	return out, nil
 }
 
@@ -232,26 +274,20 @@ func (ld *EventsData) For(idDossier ds.IdDossier) Events {
 	raws := ld.events[idDossier]
 	out := make([]Event, 0, len(raws))
 	for _, event := range raws {
-		val := Event{Id: event.Id, Created: event.Created}
-		switch event.Kind {
-		case events.Supprime:
-			val.Content = Supprime{}
-		case events.AccuseReception:
-			val.Content = AccuseReception{}
-		case events.Message:
-			val.Content = ld.newMessage(event)
-		case events.PlaceLiberee:
-			val.Content = ld.newPlaceLiberee(event)
-		case events.Facture:
-			val.Content = Facture{}
-		case events.CampDocs:
-			val.Content = ld.newCampDocs(event)
-		case events.Attestation:
-			val.Content = ld.newAttestation(event)
-		case events.Sondage:
-			val.Content = ld.newSondage(event)
-		}
-		out = append(out, val)
+		out = append(out, ld.eventsContent.build(event))
 	}
 	return out
+}
+
+// LoadEvent is a convenience method to load one [Event]
+func LoadEvent(db evs.DB, id evs.IdEvent) (Event, error) {
+	event, err := evs.SelectEvent(db, id)
+	if err != nil {
+		return Event{}, utils.SQLError(err)
+	}
+	content, err := loadEventsContent(db, id)
+	if err != nil {
+		return Event{}, utils.SQLError(err)
+	}
+	return content.build(event), nil
 }

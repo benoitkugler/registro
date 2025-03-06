@@ -71,20 +71,18 @@ import (
 // 	}
 // }
 
-// func TestNotifieMessage(t *testing.T) {
-// 	html, err := NewNotifieMessage(
-// 		Contact{Prenom: "Claudy", Sexe: "F"},
-// 		"Inscription validée",
-// 		"sdlmdmlk",
-// 		"http://acve.fr/ins  ription/valide?data:cryp4tedinscriptin",
-// 	)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-// 	if err := ioutil.WriteFile(PATH+"local/mail_01_notifie.html", []byte(html), 0o666); err != nil {
-// 		t.Fatal(err)
-// 	}
-// }
+func TestNotifieMessage(t *testing.T) {
+	asso, _ := loadEnv(t)
+
+	html, err := NotifieMessage(asso,
+		Contact{Prenom: "Claudy", Sexe: pr.Woman},
+		"sdlmdmlk\nmsldsm\n\nmsldk! smdlsmdlslùd",
+		"https://acve.fr/inscription/valide?data:cryp4tedinscriptin",
+	)
+	tu.AssertNoErr(t, err)
+
+	tu.Write(t, "NotifieMessage.html", []byte(html))
+}
 
 // func TestNotifFusion(t *testing.T) {
 // 	html, err := NewNotifFusion(
