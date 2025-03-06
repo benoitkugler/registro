@@ -47,6 +47,12 @@ export interface DossierHeader {
   Participants: string;
   NewMessages: Int;
 }
+// registro/controllers/backoffice.DossiersMergeIn
+export interface DossiersMergeIn {
+  From: IdDossier;
+  To: IdDossier;
+  Notifie: boolean;
+}
 // registro/controllers/backoffice.DossiersUpdateOut
 export interface DossiersUpdateOut {
   Responsable: string;
@@ -997,6 +1003,18 @@ export abstract class AbstractAPI {
         headers: this.getHeaders(),
         params: { id: String(params["id"]) },
       });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** DossiersMerge performs the request and handles the error */
+  async DossiersMerge(params: DossiersMergeIn) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/dossiers/merge";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
       return true;
     } catch (error) {
       this.handleError(error);

@@ -1,19 +1,9 @@
 <template>
-  <EventItem
-    color="#ad9726"
-    icon="mdi-currency-eur"
-    :time="props.paiement.Time"
-  >
+  <EventItem color="#ad9726" icon="mdi-cash" :time="props.paiement.Time">
     <v-row>
       <v-col align-self="center">
         <v-list-item-title>
-          {{
-            props.paiement.IsAcompte
-              ? "Acompte"
-              : props.paiement.IsRemboursement
-              ? "Remboursement"
-              : "Paiement"
-          }}
+          {{ props.paiement.IsRemboursement ? "Remboursement" : "Paiement" }}
           <template v-if="!props.paiement.IsRemboursement">
             de <i>{{ props.paiement.Payeur }}</i>
           </template>

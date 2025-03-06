@@ -9,113 +9,24 @@
       <v-card
         title="Dossiers"
         :subtitle="
-          dossierHeaders == null
+          dossiersCount == null
             ? '-'
-            : `${dossierHeaders.Dossiers?.length || 0} / ${
-                dossierHeaders.Total
-              }`
+            : `${dossiersCount.length} / ${dossiersCount.total}`
         "
       >
         <template #append>
-          <v-row>
-            <v-col align-self="center">
-              <DebounceField
-                width="350"
-                density="compact"
-                variant="outlined"
-                prepend-inner-icon="mdi-magnify"
-                label="Rechercher"
-                hide-details
-                clearable
-                v-model="query.Pattern"
-                @update:model-value="searchDossiers"
-              >
-                <template #append>
-                  <v-tooltip text="Critères de recherche">
-                    <template #activator="{ props: tooltipProps }">
-                      <v-btn
-                        size="small"
-                        variant="flat"
-                        v-bind="tooltipProps"
-                        :icon="
-                          showDetailsQuery
-                            ? 'mdi-chevron-up'
-                            : 'mdi-chevron-down'
-                        "
-                        @click="showDetailsQuery = !showDetailsQuery"
-                      ></v-btn>
-                    </template>
-                  </v-tooltip>
-                </template>
-              </DebounceField>
-            </v-col>
-            <v-col align-self="center">
-              <v-btn icon size="small" @click="showCreateDossier = true">
-                <v-icon color="green">mdi-plus</v-icon>
-              </v-btn>
-            </v-col>
-          </v-row>
+          <v-btn icon size="small" @click="showCreateDossier = true">
+            <v-icon color="green">mdi-plus</v-icon>
+          </v-btn>
         </template>
-        <v-expand-transition>
-          <v-row v-show="showDetailsQuery" class="mx-0">
-            <v-col cols="5">
-              <SelectCamp
-                label="Camp"
-                :camps="allCamps"
-                :model-value="optToNullable(query.IdCamp)"
-                @update:model-value="
-                  (id) => {
-                    query.IdCamp = nullableToOpt(id);
-                    searchDossiers();
-                  }
-                "
-              ></SelectCamp>
-            </v-col>
-            <v-col>
-              <v-select
-                density="compact"
-                variant="outlined"
-                label="Liste d'attente"
-                v-model="query.Attente"
-                :items="selectItems(QueryAttenteLabels)"
-                @update:model-value="searchDossiers"
-              ></v-select>
-            </v-col>
-            <v-col>
-              <v-select
-                density="compact"
-                variant="outlined"
-                label="Réglement"
-                v-model="query.Reglement"
-                :items="selectItems(QueryReglementLabels)"
-                @update:model-value="searchDossiers"
-              ></v-select>
-            </v-col>
-          </v-row>
-        </v-expand-transition>
+
         <v-card-text>
-          <v-list v-if="dossierHeaders != null">
-            <v-list-item
-              v-if="!dossierHeaders.Dossiers?.length"
-              class="text-center"
-            >
-              <i>Aucun dossier ne correspond à votre recherche.</i>
-            </v-list-item>
-            <v-list-item
-              v-for="(dossier, i) in dossierHeaders.Dossiers"
-              :key="i"
-              :title="dossier.Responsable"
-              :subtitle="dossier.Participants"
-              @click="loadDossier(dossier.Id)"
-            >
-              <template #append v-if="dossier.NewMessages">
-                <v-badge
-                  color="primary"
-                  :content="dossier.NewMessages"
-                ></v-badge>
-              </template>
-            </v-list-item>
-          </v-list>
+          <DossierList
+            :camps="allCamps"
+            v-model:query="query"
+            @click="(d) => loadDossier(d.Id)"
+            @update="onListChange"
+          ></DossierList>
         </v-card-text>
       </v-card>
     </v-col>
@@ -128,6 +39,7 @@
         :camps="allCamps"
         @update-dossier="updateDossier"
         @delete-dossier="deleteDossier"
+        @merge-dossier="mergeDossier"
         @create-participant="createParticipant"
         @update-participant="updateParticipant"
         @delete-participant="deleteParticipant"
@@ -148,16 +60,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, useTemplateRef } from "vue";
+import { onMounted, ref, useTemplateRef } from "vue";
 import {
   QueryAttente,
-  QueryAttenteLabels,
   QueryReglement,
-  QueryReglementLabels,
   type CampItem,
   type SearchDossierIn,
   type Int,
-  type SearchDossierOut,
   type IdDossier,
   type DossierDetails,
   type Dossier,
@@ -170,35 +79,29 @@ import {
   type IdParticipant,
   type Paiement,
   type IdPersonne,
+  type SearchDossierOut,
+  type DossiersMergeIn,
 } from "../../logic/api";
-import { copy, nullableToOpt, optToNullable, selectItems } from "@/utils";
-import { controller } from "../../logic/logic";
-import DebounceField from "@/components/DebounceField.vue";
+import { copy } from "@/utils";
+import { controller, emptyQuery } from "../../logic/logic";
 import DossierDetailsPannel from "./dossiers/DossierDetailsPannel.vue";
 import CreateDossierCard from "./dossiers/CreateDossierCard.vue";
+import DossierList from "./dossiers/DossierList.vue";
 
 const props = defineProps<{}>();
 
 defineExpose({ showDossier });
 
-const showDetailsQuery = ref(false);
-
-const emptyQuery: SearchDossierIn = {
-  Pattern: "",
-  IdCamp: { Valid: false, Id: 0 as Int },
-  Attente: QueryAttente.EmptyQA,
-  Reglement: QueryReglement.EmptyQR,
-};
-
-const query = reactive<SearchDossierIn>(copy(emptyQuery));
-
 onMounted(() => {
   loadCamps();
   loadStructureaides();
-  searchDossiers();
 });
 
 const detailsPannel = useTemplateRef("detailsPannel");
+
+const dossiersCount = ref<{ length: number; total: number } | null>(null);
+
+const query = ref<SearchDossierIn>(emptyQuery());
 
 const allCamps = ref<CampItem[]>([]);
 async function loadCamps() {
@@ -214,15 +117,11 @@ async function loadStructureaides() {
   structures.value = res || {};
 }
 
-const dossierHeaders = ref<SearchDossierOut | null>(null);
-async function searchDossiers() {
-  const res = await controller.DossiersSearch(query);
-  if (res === undefined) return;
-  dossierHeaders.value = res;
-
+function onListChange(v: SearchDossierOut) {
+  dossiersCount.value = { length: v.Dossiers?.length || 0, total: v.Total };
   // if no dossier is yet selected, auto select the first
-  if (dossierDetails.value == null && res.Dossiers?.length) {
-    loadDossier(res.Dossiers[0].Id);
+  if (dossierDetails.value == null && v.Dossiers?.length) {
+    loadDossier(v.Dossiers[0].Id);
   }
 }
 
@@ -230,11 +129,13 @@ async function searchDossiers() {
 //  it loads the dossier details
 async function showDossier(id: IdDossier, responsable: string) {
   // reset the query so that the given Dossier is found
-  query.IdCamp = emptyQuery.IdCamp;
-  query.Attente = emptyQuery.Attente;
-  query.Reglement = emptyQuery.Reglement;
-  query.Pattern = responsable;
-  searchDossiers();
+  const empty = emptyQuery();
+  query.value = {
+    IdCamp: empty.IdCamp,
+    Attente: empty.Attente,
+    Reglement: empty.Reglement,
+    Pattern: responsable,
+  };
   await loadDossier(id);
 }
 
@@ -274,10 +175,14 @@ async function updateDossier(dossier: Dossier) {
     dossierDetails.value.Dossier.Dossier = dossier;
     dossierDetails.value.Dossier.Responsable = res.Responsable;
   }
-  const dossierHeader = dossierHeaders.value?.Dossiers?.find(
-    (d) => d.Id == dossier.Id
-  );
-  if (dossierHeader) dossierHeader.Responsable = res.Responsable;
+  // reset the search
+  const empty = emptyQuery();
+  query.value = {
+    IdCamp: empty.IdCamp,
+    Attente: empty.Attente,
+    Reglement: empty.Reglement,
+    Pattern: res.Responsable,
+  };
 }
 
 async function deleteDossier() {
@@ -291,7 +196,28 @@ async function deleteDossier() {
   controller.showMessage("Dossier supprimé avec succès.");
   // properly cleanup
   dossierDetails.value = null;
-  searchDossiers();
+  // reset the search
+  query.value = {
+    IdCamp: query.value.IdCamp,
+    Attente: query.value.Attente,
+    Reglement: query.value.Reglement,
+    Pattern: "",
+  };
+}
+
+async function mergeDossier(args: DossiersMergeIn) {
+  const res = await controller.DossiersMerge(args);
+  if (res === undefined) return;
+
+  controller.showMessage("Dossier fusionné avec succès.");
+  // reset the search
+  query.value = {
+    IdCamp: query.value.IdCamp,
+    Attente: query.value.Attente,
+    Reglement: query.value.Reglement,
+    Pattern: "",
+  };
+  loadDossier(args.To);
 }
 
 async function createParticipant(args: ParticipantsCreateIn) {

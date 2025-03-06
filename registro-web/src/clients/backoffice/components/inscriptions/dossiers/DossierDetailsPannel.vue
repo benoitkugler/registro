@@ -8,6 +8,7 @@
     "
     class="ml-2"
   >
+    <!-- actions -->
     <template #append>
       <v-btn icon="mdi-pencil" @click="showEditDialog = true"></v-btn>
       <v-tooltip text="Ajouter un paiement" location="top">
@@ -39,6 +40,18 @@
             prepend-icon="mdi-link"
             @click="showLinks = true"
             title="Afficher les identifiants"
+          ></v-list-item>
+          <v-divider></v-divider>
+          <v-list-item
+            prepend-icon="mdi-file-move"
+            @click="
+              mergeParams = {
+                From: props.dossier.Dossier.Dossier.Id,
+                To: 0 as Int,
+                Notifie: true,
+              }
+            "
+            title="Fusionner vers ..."
           ></v-list-item>
           <v-divider></v-divider>
           <v-list-item
@@ -260,6 +273,53 @@
         </v-card-text>
       </v-card>
     </v-dialog>
+
+    <!-- merge dialog -->
+    <v-dialog
+      v-if="mergeParams != null"
+      :model-value="mergeParams != null"
+      @update:model-value="mergeParams = null"
+      max-width="1000px"
+    >
+      <v-card
+        title="Fusionner le dossier vers"
+        subtitle="Les participants, paiements et messages seront copiés vers le dossier cible."
+      >
+        <v-card-text>
+          <v-row>
+            <v-col cols="8">
+              <DossierList
+                v-model:query="mergeQuery"
+                :camps="props.camps"
+                @click="(v) => (mergeParams!.To = v.Id)"
+              ></DossierList>
+            </v-col>
+            <v-col cols="4">
+              <v-checkbox
+                density="comfortable"
+                label="Notifier par email"
+                hint="Le reponsable du dossier absorbé sera averti du changement d'espace personnel."
+                persistent-hint
+                v-model="mergeParams.Notifie"
+              ></v-checkbox>
+            </v-col>
+          </v-row>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            :disabled="
+              mergeParams.To == 0 || mergeParams.To == mergeParams.From
+            "
+            @click="
+              emit('mergeDossier', mergeParams);
+              mergeParams = null;
+            "
+            >Fusionner</v-btn
+          >
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-card>
 </template>
 
@@ -272,6 +332,7 @@ import {
   type CampItem,
   type Dossier,
   type DossierDetails,
+  type DossiersMergeIn,
   type IdAide,
   type IdParticipant,
   type Int,
@@ -292,7 +353,8 @@ import FactureCard from "./FactureCard.vue";
 import DossierEditCard from "./editor/DossierEditCard.vue";
 import DossierParticipantRow from "./editor/DossierParticipantRow.vue";
 import PaiementEditCard from "./PaiementEditCard.vue";
-import { controller } from "@/clients/backoffice/logic/logic";
+import { controller, emptyQuery } from "@/clients/backoffice/logic/logic";
+import DossierList from "./DossierList.vue";
 
 const props = defineProps<{
   dossier: DossierDetails;
@@ -303,6 +365,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: "updateDossier", dossier: Dossier): void;
   (e: "deleteDossier"): void;
+  (e: "mergeDossier", args: DossiersMergeIn): void;
   (e: "createParticipant", participant: ParticipantsCreateIn): void;
   (e: "updateParticipant", participant: Participant): void;
   (e: "deleteParticipant", id: IdParticipant): void;
@@ -380,4 +443,7 @@ async function copyVirementCode() {
   await copyToClipboard(props.dossier.VirementCode);
   controller.showMessage("Identifiant de virement copié.");
 }
+
+const mergeQuery = ref(emptyQuery());
+const mergeParams = ref<DossiersMergeIn | null>(null);
 </script>

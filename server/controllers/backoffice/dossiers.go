@@ -872,7 +872,7 @@ type DossiersMergeIn struct {
 // DossiersMerge redirige les participants, paiements et messages
 // d'un dossier vers un autre, avant de supprimer le dossier
 // maintenant vide.
-// Un mail de notification au reponsable du dossier supprimé peut être envoyé.
+// Un mail de notification au responsable du dossier supprimé peut être envoyé.
 func (ct *Controller) DossiersMerge(c echo.Context) error {
 	var args DossiersMergeIn
 	if err := c.Bind(&args); err != nil {

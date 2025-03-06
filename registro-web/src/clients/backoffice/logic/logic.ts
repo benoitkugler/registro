@@ -1,5 +1,12 @@
 import { parseError } from "@/utils";
-import { AbstractAPI, type CampExt } from "./api";
+import {
+  AbstractAPI,
+  QueryAttente,
+  QueryReglement,
+  type CampExt,
+  type Int,
+  type SearchDossierIn,
+} from "./api";
 import { devToken } from "./env";
 
 export type Action = {
@@ -46,4 +53,13 @@ export const controller = new Controller(
 
 export function isCampOpen(camp: CampExt) {
   return camp.Camp.Ouvert && !camp.IsTerminated;
+}
+
+export function emptyQuery(): SearchDossierIn {
+  return {
+    Pattern: "",
+    IdCamp: { Valid: false, Id: 0 as Int },
+    Attente: QueryAttente.EmptyQA,
+    Reglement: QueryReglement.EmptyQR,
+  };
 }
