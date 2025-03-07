@@ -4,11 +4,16 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
+	"math/rand"
 	"os"
+	"time"
 
 	"registro/config"
 	api "registro/controllers/inscriptions"
 	"registro/crypto"
+	cps "registro/sql/camps"
+	ds "registro/sql/dossiers"
+	"registro/sql/events"
 	in "registro/sql/inscriptions"
 	pr "registro/sql/personnes"
 	"registro/sql/shared"
@@ -22,9 +27,9 @@ func check(err error) {
 	}
 }
 
-// This is a command helper for devs,
-// to generate on demand new inscriptions
+// command helper for devs
 func main() {
+	action := flag.String("action", "", "action to perform: add_insc, add_messages")
 	partsCount := flag.Int("part", 2, "number of participants to create")
 	flag.Parse()
 
@@ -41,9 +46,9 @@ func main() {
 		}
 	}()
 
-	cfg, err := config.NewAsso()
+	asso, err := config.NewAsso()
 	check(err)
-	creds, err := config.NewSMTP(false)
+	smtp, err := config.NewSMTP(false)
 	check(err)
 
 	sqlCreds, err := config.NewDB()
@@ -53,7 +58,18 @@ func main() {
 
 	fmt.Println("Env loaded, using DB:", sqlCreds.Name)
 
-	ct := api.NewController(db, crypto.Encrypter{}, creds, cfg)
+	switch *action {
+	case "add_insc":
+		addInscriptions(db, smtp, asso, *partsCount)
+	case "add_messages":
+		addMessages(db)
+	default:
+		panic("invalid action")
+	}
+}
+
+func addInscriptions(db *sql.DB, smtp config.SMTP, asso config.Asso, count int) {
+	ct := api.NewController(db, crypto.Encrypter{}, smtp, asso)
 
 	// assume we already have two open camps
 	camps, _, _, _, err := ct.LoadCamps()
@@ -68,7 +84,7 @@ func main() {
 		{IdCamp: c1, DateNaissance: shared.NewDate(2015, 1, 1), Nom: "Martin", Prenom: "Julie", Sexe: pr.Woman},
 		{IdCamp: c2, DateNaissance: shared.NewDate(2015, 1, 1), Nom: "Martin", Prenom: "Julie", Sexe: pr.Woman},
 	}
-	if count := *partsCount; count < len(parts) {
+	if count < len(parts) {
 		parts = parts[:count]
 	}
 
@@ -90,5 +106,30 @@ func main() {
 	_, err = api.ConfirmeInscription(db, insc.Id)
 	check(err)
 
-	fmt.Println("Added insc. with participants", *partsCount)
+	fmt.Println("Added insc. with participants", count)
+}
+
+func addMessages(db *sql.DB) {
+	// expect one existing dossier
+	dossiers, err := ds.SelectAllDossiers(db)
+	check(err)
+	dossiers.RestrictByValidated(true)
+
+	ids := dossiers.IDs()
+	id := ids[rand.Intn(len(ids))]
+
+	err = events.CreateMessage(db, id, time.Now(), utils.RandString(20, true), events.FromEspaceperso, cps.OptIdCamp{})
+	check(err)
+
+	camps, err := cps.SelectAllCamps(db)
+	check(err)
+
+	if len(camps) == 0 {
+		return
+	}
+	camp := camps.IDs()[0]
+	err = events.CreateMessage(db, id, time.Now(), utils.RandString(20, true), events.FromDirecteur, camp.Opt())
+	check(err)
+
+	fmt.Println("Added messages to dossier", id)
 }
