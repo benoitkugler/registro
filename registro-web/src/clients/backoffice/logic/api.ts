@@ -57,6 +57,11 @@ export interface DossiersMergeIn {
 export interface DossiersUpdateOut {
   Responsable: string;
 }
+// registro/controllers/backoffice.EventsSendMessageIn
+export interface EventsSendMessageIn {
+  IdDossier: IdDossier;
+  Contenu: string;
+}
 // registro/controllers/backoffice.IdentTarget
 export interface IdentTarget {
   IdTemporaire: IdPersonne;
@@ -1165,6 +1170,33 @@ export abstract class AbstractAPI {
   /** PaiementsDelete performs the request and handles the error */
   async PaiementsDelete(params: { id: Int }) {
     const fullUrl = this.baseUrl + "/api/v1/backoffice/paiements";
+    this.startRequest();
+    try {
+      await Axios.delete(fullUrl, {
+        headers: this.getHeaders(),
+        params: { id: String(params["id"]) },
+      });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EventsSendMessage performs the request and handles the error */
+  async EventsSendMessage(params: EventsSendMessageIn) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/events/message";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EventsDelete performs the request and handles the error */
+  async EventsDelete(params: { id: Int }) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/events";
     this.startRequest();
     try {
       await Axios.delete(fullUrl, {

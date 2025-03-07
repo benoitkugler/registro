@@ -50,6 +50,8 @@
         @create-paiement="createPaiement"
         @update-paiement="updatePaiement"
         @delete-paiement="deletePaiement"
+        @send-message="sendMessage"
+        @delete-message="deleteMessage"
         ref="detailsPannel"
       ></DossierDetailsPannel>
       <div v-else class="text-center font-italic my-6">
@@ -81,6 +83,7 @@ import {
   type IdPersonne,
   type SearchDossierOut,
   type DossiersMergeIn,
+  type Event,
 } from "../../logic/api";
 import { copy } from "@/utils";
 import { controller, emptyQuery } from "../../logic/logic";
@@ -321,6 +324,26 @@ async function deletePaiement(paiement: Paiement) {
   const res = await controller.PaiementsDelete({ id: paiement.Id });
   if (res === undefined) return;
   controller.showMessage("Paiement supprimé avec succès.");
+  ensureDossier();
+}
+
+async function sendMessage(contenu: string) {
+  if (dossierDetails.value == null) return;
+  const res = await controller.EventsSendMessage({
+    IdDossier: dossierDetails.value.Dossier.Dossier.Id,
+    Contenu: contenu,
+  });
+  if (res === undefined) return;
+  controller.showMessage("Message envoyé avec succès.");
+  ensureDossier();
+}
+
+async function deleteMessage(event: Event) {
+  const res = await controller.EventsDelete({
+    id: event.Id,
+  });
+  if (res === undefined) return;
+  controller.showMessage("Message supprimé avec succès.");
   ensureDossier();
 }
 </script>

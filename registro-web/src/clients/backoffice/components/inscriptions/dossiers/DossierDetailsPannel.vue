@@ -10,7 +10,12 @@
   >
     <!-- actions -->
     <template #append>
-      <v-btn icon="mdi-pencil" @click="showEditDialog = true"></v-btn>
+      <v-btn
+        icon="mdi-pencil"
+        @click="showEditDialog = true"
+        class="mx-1"
+      ></v-btn>
+
       <v-tooltip text="Ajouter un paiement" location="top">
         <template #activator="{ props: tooltipProps }">
           <v-btn
@@ -21,6 +26,20 @@
             @click="emit('createPaiement')"
           >
             <v-icon color="green">mdi-cash-plus</v-icon>
+          </v-btn>
+        </template>
+      </v-tooltip>
+
+      <v-tooltip text="Envoyer un message" location="top">
+        <template #activator="{ props: tooltipProps }">
+          <v-btn
+            icon
+            size="small"
+            class="mx-1"
+            v-bind="tooltipProps"
+            @click="showMessage = true"
+          >
+            <v-icon color="green">mdi-email-plus</v-icon>
           </v-btn>
         </template>
       </v-tooltip>
@@ -66,7 +85,7 @@
     <v-card-text>
       <!-- récap financier -->
       <v-row>
-        <v-col class="ml-2">
+        <v-col class="ml-2 mb-1">
           <v-menu>
             <template #activator="{ props: menuProps }">
               <v-chip
@@ -83,14 +102,17 @@
         </v-col>
       </v-row>
       <!-- fil des messages -->
-      <v-timeline side="end" class="mt-4" density="compact">
-        <EventSwitch
-          :event="event"
-          v-for="(event, i) in events"
-          :key="i"
-          @edit-paiement="(p) => (paiementToUpdate = p)"
-        ></EventSwitch>
-      </v-timeline>
+      <div class="overflow-y-auto" style="height: 70vh">
+        <v-timeline side="end" class="mt-4" density="compact">
+          <EventSwitch
+            :event="event"
+            v-for="(event, i) in events"
+            :key="i"
+            @edit-paiement="(p) => (paiementToUpdate = p)"
+            @delete-message="(m) => emit('deleteMessage', m)"
+          ></EventSwitch>
+        </v-timeline>
+      </div>
     </v-card-text>
 
     <!-- confirme delete dialog -->
@@ -244,6 +266,7 @@
       ></PaiementEditCard>
     </v-dialog>
 
+    <!-- identifiants dialog -->
     <v-dialog v-model="showLinks" max-width="800px">
       <v-card title="Liens et identifiants">
         <v-card-text>
@@ -320,6 +343,37 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- message dialog -->
+    <v-dialog v-model="showMessage" max-width="600px">
+      <v-card
+        title="Nouveau message"
+        subtitle="Envoie un message sur le fil de suivi et une notification par mail."
+      >
+        <v-card-text>
+          <v-row>
+            <v-col>
+              <v-textarea
+                rows="5"
+                variant="outlined"
+                v-model="messageContenu"
+              ></v-textarea>
+            </v-col>
+          </v-row>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            :disabled="!messageContenu.length"
+            @click="
+              emit('sendMessage', messageContenu);
+              showMessage = false;
+            "
+            >Envoyer</v-btn
+          >
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-card>
 </template>
 
@@ -333,6 +387,7 @@ import {
   type Dossier,
   type DossierDetails,
   type DossiersMergeIn,
+  type Event,
   type IdAide,
   type IdParticipant,
   type Int,
@@ -366,16 +421,22 @@ const emit = defineEmits<{
   (e: "updateDossier", dossier: Dossier): void;
   (e: "deleteDossier"): void;
   (e: "mergeDossier", args: DossiersMergeIn): void;
+  // participants
   (e: "createParticipant", participant: ParticipantsCreateIn): void;
   (e: "updateParticipant", participant: Participant): void;
   (e: "deleteParticipant", id: IdParticipant): void;
   (e: "expandParticipant", participant: Participant): void;
+  // aides
   (e: "createAide", args: AidesCreateIn): void;
   (e: "updateAide", aide: Aide): void;
   (e: "deleteAide", id: IdAide): void;
+  // paiements
   (e: "createPaiement"): void;
   (e: "updatePaiement", paiement: Paiement): void;
   (e: "deletePaiement", paiement: Paiement): void;
+  // events
+  (e: "sendMessage", contenu: string): void;
+  (e: "deleteMessage", event: Event): void;
 }>();
 
 defineExpose({ showEditPaiement, showEditDossier });
@@ -414,9 +475,9 @@ const events = computed(() => {
     ...evList,
     ...paiements,
   ];
-  // last event first
+  // last event last
   out.sort(
-    (a, b) => pseudoEventTime(b).valueOf() - pseudoEventTime(a).valueOf()
+    (a, b) => pseudoEventTime(a).valueOf() - pseudoEventTime(b).valueOf()
   );
   return out;
 });
@@ -446,4 +507,7 @@ async function copyVirementCode() {
 
 const mergeQuery = ref(emptyQuery());
 const mergeParams = ref<DossiersMergeIn | null>(null);
+
+const showMessage = ref(false);
+const messageContenu = ref("");
 </script>

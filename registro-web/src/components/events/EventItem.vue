@@ -15,7 +15,7 @@
       <v-col align-self="center">
         <slot></slot>
       </v-col>
-      <v-col cols="2" class="text-grey ml-4">
+      <v-col align-self="center" cols="2" class="text-grey ml-4">
         {{ Formatters.time(props.time) }}
       </v-col>
     </v-row>

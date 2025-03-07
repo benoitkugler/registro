@@ -32,6 +32,7 @@
     "
     :event="props.event.event"
     :content="props.event.event.Content.Data"
+    @delete="emit('deleteMessage', props.event.event)"
   ></EventMessageV>
   <EventPlaceLibereeV
     v-else-if="
@@ -78,6 +79,7 @@
 <script setup lang="ts">
 import {
   EventContentKind,
+  type Event,
   type Paiement,
 } from "@/clients/backoffice/logic/api";
 import EventMessageV from "./events/EventMessageV.vue";
@@ -96,6 +98,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: "editPaiement", paiement: Paiement): void;
+  (e: "deleteMessage", event: Event): void;
 }>();
 </script>
 
