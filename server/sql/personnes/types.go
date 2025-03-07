@@ -1,7 +1,6 @@
 package personnes
 
 import (
-	"database/sql"
 	"database/sql/driver"
 	"fmt"
 	"strings"
@@ -15,25 +14,9 @@ type OptIdPersonne shared.OptID[IdPersonne]
 
 func (id IdPersonne) Opt() OptIdPersonne { return OptIdPersonne{Id: id, Valid: true} }
 
-func (s *OptIdPersonne) Scan(src interface{}) error {
-	var tmp sql.NullInt64
-	err := tmp.Scan(src)
-	if err != nil {
-		return err
-	}
-	*s = OptIdPersonne{
-		Valid: tmp.Valid,
-		Id:    IdPersonne(tmp.Int64),
-	}
-	return nil
-}
+func (s *OptIdPersonne) Scan(src any) error { return (*shared.OptID[IdPersonne])(s).Scan(src) }
 
-func (s OptIdPersonne) Value() (driver.Value, error) {
-	return sql.NullInt64{
-		Int64: int64(s.Id),
-		Valid: s.Valid,
-	}.Value()
-}
+func (s OptIdPersonne) Value() (driver.Value, error) { return (shared.OptID[IdPersonne])(s).Value() }
 
 // Time is date and time
 type Time time.Time

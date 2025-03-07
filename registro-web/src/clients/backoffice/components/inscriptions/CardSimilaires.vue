@@ -110,7 +110,7 @@ onMounted(fetchSimilaires);
 const suggestedCandidats = ref<ScoredPersonne[]>([]);
 async function fetchSimilaires() {
   const res = await controller.InscriptionsSearchSimilaires({
-    "id-personne": props.personne.Id,
+    idPersonne: props.personne.Id,
   });
   if (res === undefined) return;
   suggestedCandidats.value = res || [];

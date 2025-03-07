@@ -24,8 +24,9 @@
           <DossierList
             :camps="allCamps"
             v-model:query="query"
-            @click="(d) => loadDossier(d.Id)"
+            @click="onSelectDossier"
             @update="onListChange"
+            ref="dossierList"
           ></DossierList>
         </v-card-text>
       </v-card>
@@ -64,11 +65,8 @@
 <script setup lang="ts">
 import { onMounted, ref, useTemplateRef } from "vue";
 import {
-  QueryAttente,
-  QueryReglement,
   type CampItem,
   type SearchDossierIn,
-  type Int,
   type IdDossier,
   type DossierDetails,
   type Dossier,
@@ -84,8 +82,8 @@ import {
   type SearchDossierOut,
   type DossiersMergeIn,
   type Event,
+  type DossierHeader,
 } from "../../logic/api";
-import { copy } from "@/utils";
 import { controller, emptyQuery } from "../../logic/logic";
 import DossierDetailsPannel from "./dossiers/DossierDetailsPannel.vue";
 import CreateDossierCard from "./dossiers/CreateDossierCard.vue";
@@ -128,6 +126,11 @@ function onListChange(v: SearchDossierOut) {
   }
 }
 
+const dossierList = useTemplateRef("dossierList");
+function refreshDossierList() {
+  dossierList.value?.searchDossiers();
+}
+
 // showDossier may be called by the parent when switching to this pannel;
 //  it loads the dossier details
 async function showDossier(id: IdDossier, responsable: string) {
@@ -148,6 +151,14 @@ async function loadDossier(id: IdDossier) {
   const res = await controller.DossiersLoad({ id: id });
   if (res === undefined) return;
   dossierDetails.value = res;
+}
+
+async function onSelectDossier(d: DossierHeader) {
+  loadDossier(d.Id);
+  const res = await controller.EventsMarkMessagesSeen({ idDossier: d.Id });
+  if (res === undefined) return;
+  // update the list
+  refreshDossierList();
 }
 
 // appelée si besoin de mettre à jour l'état financier
@@ -179,13 +190,7 @@ async function updateDossier(dossier: Dossier) {
     dossierDetails.value.Dossier.Responsable = res.Responsable;
   }
   // reset the search
-  const empty = emptyQuery();
-  query.value = {
-    IdCamp: empty.IdCamp,
-    Attente: empty.Attente,
-    Reglement: empty.Reglement,
-    Pattern: res.Responsable,
-  };
+  refreshDossierList();
 }
 
 async function deleteDossier() {
@@ -200,12 +205,7 @@ async function deleteDossier() {
   // properly cleanup
   dossierDetails.value = null;
   // reset the search
-  query.value = {
-    IdCamp: query.value.IdCamp,
-    Attente: query.value.Attente,
-    Reglement: query.value.Reglement,
-    Pattern: "",
-  };
+  refreshDossierList();
 }
 
 async function mergeDossier(args: DossiersMergeIn) {
@@ -214,12 +214,8 @@ async function mergeDossier(args: DossiersMergeIn) {
 
   controller.showMessage("Dossier fusionné avec succès.");
   // reset the search
-  query.value = {
-    IdCamp: query.value.IdCamp,
-    Attente: query.value.Attente,
-    Reglement: query.value.Reglement,
-    Pattern: "",
-  };
+  refreshDossierList();
+
   loadDossier(args.To);
 }
 
@@ -304,7 +300,7 @@ async function deleteAide(id: IdAide) {
 async function createPaiement() {
   if (dossierDetails.value == null) return;
   const res = await controller.PaiementsCreate({
-    "id-dossier": dossierDetails.value.Dossier.Dossier.Id,
+    idDossier: dossierDetails.value.Dossier.Dossier.Id,
   });
   if (res === undefined) return;
   controller.showMessage("Paiement créé avec succès.");

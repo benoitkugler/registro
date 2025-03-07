@@ -2,10 +2,9 @@ package events
 
 import (
 	"registro/sql/camps"
-	"registro/sql/shared"
 )
 
-type OptIdCamp shared.OptID[camps.IdCamp]
+type OptIdCamp = camps.OptIdCamp
 
 type EventKind uint8
 

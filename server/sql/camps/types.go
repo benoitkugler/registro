@@ -1,6 +1,7 @@
 package camps
 
 import (
+	"database/sql/driver"
 	"fmt"
 	"sort"
 	"strings"
@@ -10,10 +11,15 @@ import (
 	"registro/utils"
 )
 
-type (
-	Montant   = dossiers.Montant
-	OptIdTaux = dossiers.OptIdTaux
-)
+type Montant = dossiers.Montant
+
+type OptIdCamp shared.OptID[IdCamp]
+
+func (id IdCamp) Opt() OptIdCamp { return OptIdCamp{Id: id, Valid: true} }
+
+func (s *OptIdCamp) Scan(src any) error { return (*shared.OptID[IdCamp])(s).Scan(src) }
+
+func (s OptIdCamp) Value() (driver.Value, error) { return (shared.OptID[IdCamp])(s).Value() }
 
 // ListeAttente définit le statut d'un participant
 // par rapport à la liste d'attente

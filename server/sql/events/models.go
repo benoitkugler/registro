@@ -45,6 +45,24 @@ type EventMessage struct {
 	guard EventKind `gomacro-sql-guard:"#[EventKind.Message]"`
 }
 
+// CreateMessage does not wrap errors
+func CreateMessage(db DB, idDossier dossiers.IdDossier, created time.Time,
+	contenu string,
+	origine MessageOrigine, origineCamp OptIdCamp,
+) error {
+	event, err := Event{IdDossier: idDossier, Kind: Message, Created: created}.Insert(db)
+	if err != nil {
+		return err
+	}
+	err = EventMessage{
+		IdEvent:     event.Id,
+		Contenu:     contenu,
+		Origine:     origine,
+		OrigineCamp: origineCamp,
+	}.Insert(db)
+	return err
+}
+
 // EventMessageView indique qu'un message a été lu par le directeur.
 //
 // gomacro:SQL ADD FOREIGN KEY (IdEvent, guard) REFERENCES Event(Id,Kind) ON DELETE CASCADE

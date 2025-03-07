@@ -128,6 +128,8 @@ func newDossierHeader(dossier logic.Dossier) DossierHeader {
 	}
 }
 
+const sortByMessagesPattern = "sort:messages"
+
 func (ct *Controller) searchDossiers(query SearchDossierIn) (SearchDossierOut, error) {
 	var (
 		dossiers ds.Dossiers
@@ -155,6 +157,11 @@ func (ct *Controller) searchDossiers(query SearchDossierIn) (SearchDossierOut, e
 		return SearchDossierOut{}, err
 	}
 
+	sortByMessages := false
+	if query.Pattern == sortByMessagesPattern {
+		sortByMessages = true
+		query.Pattern = "" // reset the query to force the match
+	}
 	queryText := search.NewQuery(query.Pattern)
 
 	var filtered []logic.DossierFinance
@@ -167,6 +174,12 @@ func (ct *Controller) searchDossiers(query SearchDossierIn) (SearchDossierOut, e
 
 	// sort by messages time
 	slices.SortFunc(filtered, func(a, b logic.DossierFinance) int { return a.Time().Compare(b.Time()) })
+
+	if sortByMessages {
+		slices.SortStableFunc(filtered, func(a, b logic.DossierFinance) int {
+			return len(b.Events.UnreadMessagesForBackoffice()) - len(a.Events.UnreadMessagesForBackoffice())
+		})
+	}
 
 	// paginate and return the headers only
 	const maxCount = 50
@@ -647,7 +660,7 @@ func (ct *Controller) updateAide(args cps.Aide) error {
 }
 
 func (ct *Controller) AidesJustificatifUpload(c echo.Context) error {
-	id, err := utils.QueryParamInt[cps.IdAide](c, "id-aide")
+	id, err := utils.QueryParamInt[cps.IdAide](c, "idAide")
 	if err != nil {
 		return err
 	}
@@ -697,7 +710,7 @@ func (ct *Controller) uploadAideJustificatif(idAide cps.IdAide, content []byte, 
 }
 
 func (ct *Controller) AidesJustificatifDelete(c echo.Context) error {
-	id, err := utils.QueryParamInt[cps.IdAide](c, "id-aide")
+	id, err := utils.QueryParamInt[cps.IdAide](c, "idAide")
 	if err != nil {
 		return err
 	}
@@ -769,7 +782,7 @@ func (ct *Controller) deleteAide(id cps.IdAide) error {
 }
 
 func (ct *Controller) PaiementsCreate(c echo.Context) error {
-	idDossier, err := utils.QueryParamInt[ds.IdDossier](c, "id-dossier")
+	idDossier, err := utils.QueryParamInt[ds.IdDossier](c, "idDossier")
 	if err != nil {
 		return err
 	}

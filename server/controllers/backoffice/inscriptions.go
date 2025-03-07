@@ -77,7 +77,7 @@ func (ct *Controller) loadInscriptionsContent(ids ...ds.IdDossier) ([]Inscriptio
 }
 
 func (ct *Controller) InscriptionsSearchSimilaires(c echo.Context) error {
-	id, err := utils.QueryParamInt[pr.IdPersonne](c, "id-personne")
+	id, err := utils.QueryParamInt[pr.IdPersonne](c, "idPersonne")
 	if err != nil {
 		return err
 	}
@@ -219,7 +219,7 @@ func IdentifiePersonne(db *sql.DB, args IdentTarget) error {
 //
 // Le statut des participants est aussi mis à jour (de manière automatique).
 func (ct *Controller) InscriptionsValide(c echo.Context) error {
-	id, err := utils.QueryParamInt[ds.IdDossier](c, "id-dossier")
+	id, err := utils.QueryParamInt[ds.IdDossier](c, "idDossier")
 	if err != nil {
 		return err
 	}

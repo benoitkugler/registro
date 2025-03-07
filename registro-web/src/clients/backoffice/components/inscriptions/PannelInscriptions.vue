@@ -89,7 +89,7 @@ async function identifie(id: IdDossier, target: IdentTarget) {
 
 async function valideInsc(insc: Inscription) {
   const res = await controller.InscriptionsValide({
-    "id-dossier": insc.Dossier.Id,
+    idDossier: insc.Dossier.Id,
   });
   if (res === undefined) return;
 

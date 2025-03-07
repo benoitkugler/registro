@@ -113,3 +113,41 @@ func (ct *Controller) deleteEvent(id evs.IdEvent) error {
 		return nil
 	})
 }
+
+// EventsMarkMessagesSeen set the messages of the given dossier as seen
+// by the backoffice.
+func (ct *Controller) EventsMarkMessagesSeen(c echo.Context) error {
+	idDossier, err := utils.QueryParamInt[ds.IdDossier](c, "idDossier")
+	if err != nil {
+		return err
+	}
+	err = ct.markMessagesSeen(idDossier)
+	if err != nil {
+		return err
+	}
+	return c.NoContent(200)
+}
+
+func (ct *Controller) markMessagesSeen(idDossier ds.IdDossier) error {
+	events, err := logic.LoadEventsByDossier(ct.db, idDossier)
+	if err != nil {
+		return err
+	}
+	var updates evs.EventMessages
+	for _, event := range events {
+		if message, isMessage := event.Content.(logic.Message); isMessage {
+			if message.Message.Origine != evs.FromBackoffice {
+				message.Message.VuBackoffice = true
+				updates = append(updates, message.Message)
+			}
+		}
+	}
+	return utils.InTx(ct.db, func(tx *sql.Tx) error {
+		_, err = evs.DeleteEventMessagesByIdEvents(tx, updates.IdEvents()...)
+		if err != nil {
+			return err
+		}
+		err = evs.InsertManyEventMessages(tx, updates...)
+		return err
+	})
+}

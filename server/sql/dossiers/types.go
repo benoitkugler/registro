@@ -2,12 +2,7 @@ package dossiers
 
 import (
 	"math"
-	"registro/sql/shared"
 )
-
-type OptIdTaux shared.OptID[IdTaux]
-
-func (Id IdTaux) Opt() OptIdTaux { return OptIdTaux{Id: Id, Valid: true} }
 
 // Mode de paiement
 type ModePaiement uint8

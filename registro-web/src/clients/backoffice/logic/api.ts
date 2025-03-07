@@ -888,7 +888,7 @@ export abstract class AbstractAPI {
   }
 
   /** InscriptionsSearchSimilaires performs the request and handles the error */
-  async InscriptionsSearchSimilaires(params: { "id-personne": Int }) {
+  async InscriptionsSearchSimilaires(params: { idPersonne: Int }) {
     const fullUrl =
       this.baseUrl + "/api/v1/backoffice/inscriptions/search-similaires";
     this.startRequest();
@@ -897,7 +897,7 @@ export abstract class AbstractAPI {
         fullUrl,
         {
           headers: this.getHeaders(),
-          params: { "id-personne": String(params["id-personne"]) },
+          params: { idPersonne: String(params["idPersonne"]) },
         },
       );
       return rep.data;
@@ -923,13 +923,13 @@ export abstract class AbstractAPI {
   }
 
   /** InscriptionsValide performs the request and handles the error */
-  async InscriptionsValide(params: { "id-dossier": Int }) {
+  async InscriptionsValide(params: { idDossier: Int }) {
     const fullUrl = this.baseUrl + "/api/v1/backoffice/inscriptions/valide";
     this.startRequest();
     try {
       await Axios.post(fullUrl, null, {
         headers: this.getHeaders(),
-        params: { "id-dossier": String(params["id-dossier"]) },
+        params: { idDossier: String(params["idDossier"]) },
       });
       return true;
     } catch (error) {
@@ -1068,7 +1068,7 @@ export abstract class AbstractAPI {
   }
 
   /** AidesJustificatifUpload performs the request and handles the error */
-  async AidesJustificatifUpload(file: File, params: { "id-aide": Int }) {
+  async AidesJustificatifUpload(file: File, params: { idAide: Int }) {
     const fullUrl = this.baseUrl + "/api/v1/backoffice/aides/justificatif";
     this.startRequest();
     try {
@@ -1076,7 +1076,7 @@ export abstract class AbstractAPI {
       formData.append("file", file, file.name);
       await Axios.post(fullUrl, formData, {
         headers: this.getHeaders(),
-        params: { "id-aide": String(params["id-aide"]) },
+        params: { idAide: String(params["idAide"]) },
       });
       return true;
     } catch (error) {
@@ -1085,13 +1085,13 @@ export abstract class AbstractAPI {
   }
 
   /** AidesJustificatifDelete performs the request and handles the error */
-  async AidesJustificatifDelete(params: { "id-aide": Int }) {
+  async AidesJustificatifDelete(params: { idAide: Int }) {
     const fullUrl = this.baseUrl + "/api/v1/backoffice/aides/justificatif";
     this.startRequest();
     try {
       await Axios.delete(fullUrl, {
         headers: this.getHeaders(),
-        params: { "id-aide": String(params["id-aide"]) },
+        params: { idAide: String(params["idAide"]) },
       });
       return true;
     } catch (error) {
@@ -1141,13 +1141,13 @@ export abstract class AbstractAPI {
   }
 
   /** PaiementsCreate performs the request and handles the error */
-  async PaiementsCreate(params: { "id-dossier": Int }) {
+  async PaiementsCreate(params: { idDossier: Int }) {
     const fullUrl = this.baseUrl + "/api/v1/backoffice/paiements";
     this.startRequest();
     try {
       const rep: AxiosResponse<Paiement> = await Axios.get(fullUrl, {
         headers: this.getHeaders(),
-        params: { "id-dossier": String(params["id-dossier"]) },
+        params: { idDossier: String(params["idDossier"]) },
       });
       return rep.data;
     } catch (error) {
@@ -1202,6 +1202,21 @@ export abstract class AbstractAPI {
       await Axios.delete(fullUrl, {
         headers: this.getHeaders(),
         params: { id: String(params["id"]) },
+      });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EventsMarkMessagesSeen performs the request and handles the error */
+  async EventsMarkMessagesSeen(params: { idDossier: Int }) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/events/message/seen";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, null, {
+        headers: this.getHeaders(),
+        params: { idDossier: String(params["idDossier"]) },
       });
       return true;
     } catch (error) {

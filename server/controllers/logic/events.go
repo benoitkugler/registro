@@ -6,6 +6,7 @@ import (
 
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
+	"registro/sql/events"
 	evs "registro/sql/events"
 	pr "registro/sql/personnes"
 	"registro/utils"
@@ -43,7 +44,7 @@ func (evs Events) By(kind evs.EventKind) []Event {
 func (evs Events) UnreadMessagesForBackoffice() (out []Event) {
 	for _, ev := range evs {
 		if message, ok := ev.Content.(Message); ok {
-			if !message.Message.VuBackoffice {
+			if message.Message.Origine != events.FromBackoffice && !message.Message.VuBackoffice {
 				out = append(out, ev)
 			}
 		}
@@ -250,6 +251,16 @@ func (ec *eventsContent) build(event evs.Event) Event {
 type EventsData struct {
 	events map[ds.IdDossier]evs.Events
 	eventsContent
+}
+
+// LoadEventsByDossier is a convience wrapper which calls
+// [LoadEventsByDossiers] for only one dossier.
+func LoadEventsByDossier(db evs.DB, dossier ds.IdDossier) (Events, error) {
+	loader, err := LoadEventsByDossiers(db, dossier)
+	if err != nil {
+		return nil, err
+	}
+	return loader.For(dossier), nil
 }
 
 // LoadEventsByDossiers loads the data required to build the events

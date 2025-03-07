@@ -58,4 +58,5 @@ func setupRoutesBackoffice(e *echo.Echo, ct *backoffice.Controller) {
 
 	gr.POST("/api/v1/backoffice/events/message", ct.EventsSendMessage)
 	gr.DELETE("/api/v1/backoffice/events", ct.EventsDelete)
+	gr.POST("/api/v1/backoffice/events/message/seen", ct.EventsMarkMessagesSeen)
 }

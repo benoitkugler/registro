@@ -4,7 +4,6 @@ package events
 
 import (
 	"database/sql"
-	"database/sql/driver"
 	"registro/sql/camps"
 	"registro/sql/dossiers"
 
@@ -1253,25 +1252,6 @@ func ScanIdEventArray(rs *sql.Rows) ([]IdEvent, error) {
 		return nil, err
 	}
 	return ints, nil
-}
-
-func (s *OptIdCamp) Scan(src interface{}) error {
-	var tmp sql.NullInt64
-	err := tmp.Scan(src)
-	if err != nil {
-		return err
-	}
-	*s = OptIdCamp{
-		Valid: tmp.Valid,
-		Id:    camps.IdCamp(tmp.Int64),
-	}
-	return nil
-}
-
-func (s OptIdCamp) Value() (driver.Value, error) {
-	return sql.NullInt64{
-		Int64: int64(s.Id),
-		Valid: s.Valid}.Value()
 }
 
 func SwitchEventMessageDossier(db DB, to dossiers.IdDossier, from dossiers.IdDossier) error {

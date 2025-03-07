@@ -1,6 +1,7 @@
 package shared
 
 import (
+	"database/sql"
 	"database/sql/driver"
 	"encoding"
 	"encoding/json"
@@ -185,4 +186,21 @@ func (s Plage) Value() (driver.Value, error) {
 type OptID[T ~int64] struct {
 	Id    T
 	Valid bool
+}
+
+func (s *OptID[T]) Scan(src any) error {
+	var tmp sql.NullInt64
+	err := tmp.Scan(src)
+	if err != nil {
+		return err
+	}
+	*s = OptID[T]{
+		Valid: tmp.Valid,
+		Id:    T(tmp.Int64),
+	}
+	return nil
+}
+
+func (s OptID[T]) Value() (driver.Value, error) {
+	return sql.NullInt64{Int64: int64(s.Id), Valid: s.Valid}.Value()
 }

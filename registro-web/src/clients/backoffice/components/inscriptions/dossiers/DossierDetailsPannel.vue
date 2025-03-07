@@ -85,7 +85,7 @@
     <v-card-text>
       <!-- récap financier -->
       <v-row>
-        <v-col class="ml-2 mb-1">
+        <v-col class="ml-2 mb-1 text-center">
           <v-menu>
             <template #activator="{ props: menuProps }">
               <v-chip
@@ -102,7 +102,7 @@
         </v-col>
       </v-row>
       <!-- fil des messages -->
-      <div class="overflow-y-auto" style="height: 70vh">
+      <div class="overflow-y-auto" style="max-height: 70vh">
         <v-timeline side="end" class="mt-4" density="compact">
           <EventSwitch
             :event="event"

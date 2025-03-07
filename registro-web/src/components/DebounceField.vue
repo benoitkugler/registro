@@ -1,5 +1,8 @@
 <template>
   <v-text-field v-bind="props" v-model="inner" @update:model-value="update">
+    <template #append-inner>
+      <slot name="append-inner"></slot>
+    </template>
     <template #append>
       <slot name="append"></slot>
     </template>

@@ -53,7 +53,7 @@ func randEventMessage() EventMessage {
 	s.IdEvent = randIdEvent()
 	s.Contenu = randstring()
 	s.Origine = randMessageOrigine()
-	s.OrigineCamp = randOptIdCamp()
+	s.OrigineCamp = randcam_OptIdCamp()
 	s.VuBackoffice = randbool()
 	s.VuEspaceperso = randbool()
 
@@ -94,14 +94,6 @@ func randMessageOrigine() MessageOrigine {
 	return choix[i]
 }
 
-func randOptIdCamp() OptIdCamp {
-	var s OptIdCamp
-	s.Id = randcam_IdCamp()
-	s.Valid = randbool()
-
-	return s
-}
-
 func randbool() bool {
 	i := rand.Int31n(2)
 	return i == 1
@@ -113,6 +105,14 @@ func randcam_IdCamp() camps.IdCamp {
 
 func randcam_IdParticipant() camps.IdParticipant {
 	return camps.IdParticipant(randint64())
+}
+
+func randcam_OptIdCamp() camps.OptIdCamp {
+	var s camps.OptIdCamp
+	s.Id = randcam_IdCamp()
+	s.Valid = randbool()
+
+	return s
 }
 
 func randdos_IdDossier() dossiers.IdDossier {

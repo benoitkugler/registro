@@ -35,8 +35,23 @@ func TestController_searchDossiers(t *testing.T) {
 
 	pe1, err := pr.Personne{IsTemp: false, Etatcivil: pr.Etatcivil{DateNaissance: shared.Date(time.Now())}}.Insert(db)
 	tu.AssertNoErr(t, err)
+	camp1, err := cps.Camp{IdTaux: 1, Places: 20, AgeMin: 6, AgeMax: 12}.Insert(db)
+	tu.AssertNoErr(t, err)
 
-	dossier1, err := ds.Dossier{IdResponsable: pe1.Id, IdTaux: 1, MomentInscription: time.Now()}.Insert(db)
+	dossier1, err := ds.Dossier{IsValidated: true, IdResponsable: pe1.Id, IdTaux: 1, MomentInscription: time.Now()}.Insert(db)
+	tu.AssertNoErr(t, err)
+	dossier2, err := ds.Dossier{IsValidated: true, IdResponsable: pe1.Id, IdTaux: 1, MomentInscription: time.Now()}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	err = createMessage(db, dossier1.Id, events.FromEspaceperso, cps.OptIdCamp{})
+	tu.AssertNoErr(t, err)
+	err = createMessage(db, dossier1.Id, events.FromDirecteur, camp1.Id.Opt())
+	tu.AssertNoErr(t, err)
+	err = createMessage(db, dossier2.Id, events.FromEspaceperso, cps.OptIdCamp{})
+	tu.AssertNoErr(t, err)
+	err = createMessage(db, dossier2.Id, events.FromBackoffice, cps.OptIdCamp{})
+	tu.AssertNoErr(t, err)
+	err = createMessage(db, dossier2.Id, events.FromBackoffice, cps.OptIdCamp{})
 	tu.AssertNoErr(t, err)
 
 	ct := Controller{db: db.DB}
@@ -48,6 +63,11 @@ func TestController_searchDossiers(t *testing.T) {
 	out, err = ct.searchDossiers(SearchDossierIn{Pattern: "test"})
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(out.Dossiers) == 0)
+
+	out, err = ct.searchDossiers(SearchDossierIn{Pattern: sortByMessagesPattern})
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(out.Dossiers) == 2)
+	tu.Assert(t, out.Dossiers[0].Id == dossier1.Id) // 2 messages
 }
 
 func TestController_participants(t *testing.T) {

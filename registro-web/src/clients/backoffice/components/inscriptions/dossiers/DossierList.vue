@@ -13,7 +13,21 @@
           @update:model-value="searchDossiers"
         >
           <template #append>
-            <v-tooltip text="Critères de recherche">
+            <v-tooltip text="Trier selon les nouveaux messages">
+              <template #activator="{ props: tooltipProps }">
+                <v-btn
+                  v-bind="tooltipProps"
+                  icon
+                  size="small"
+                  class="mr-1"
+                  @click="searchMessages"
+                >
+                  <v-icon color="light-blue-darken-3">mdi-email</v-icon>
+                </v-btn>
+              </template>
+            </v-tooltip>
+
+            <v-tooltip text="Autres critères de recherche">
               <template #activator="{ props: tooltipProps }">
                 <v-btn
                   size="small"
@@ -79,9 +93,13 @@
         :subtitle="dossier.Participants"
         :value="dossier.Id"
         @click="emit('click', dossier)"
+        class="my-1"
       >
         <template #append v-if="dossier.NewMessages">
-          <v-badge color="primary" :content="dossier.NewMessages"></v-badge>
+          <v-badge
+            color="light-blue-darken-3"
+            :content="dossier.NewMessages"
+          ></v-badge>
         </template>
       </v-list-item>
     </v-list>
@@ -112,6 +130,8 @@ const emit = defineEmits<{
 
 const query = defineModel<SearchDossierIn>("query", { required: true });
 
+defineExpose({ searchDossiers });
+
 watch(() => query.value, searchDossiers, { immediate: true });
 
 const showDetailsQuery = ref(false);
@@ -122,5 +142,10 @@ async function searchDossiers() {
   if (res === undefined) return;
   dossierHeaders.value = res;
   emit("update", res);
+}
+
+function searchMessages() {
+  query.value.Pattern = "sort:messages";
+  searchDossiers();
 }
 </script>
