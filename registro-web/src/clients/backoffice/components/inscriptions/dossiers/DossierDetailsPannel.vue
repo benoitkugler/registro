@@ -102,7 +102,7 @@
         </v-col>
       </v-row>
       <!-- fil des messages -->
-      <div class="overflow-y-auto" style="max-height: 70vh">
+      <div class="overflow-y-auto" style="max-height: 65vh">
         <v-timeline side="end" class="mt-4" density="compact">
           <EventSwitch
             :event="event"
@@ -112,6 +112,7 @@
             @delete-message="(m) => emit('deleteMessage', m)"
           ></EventSwitch>
         </v-timeline>
+        <div ref="timelineBottom"></div>
       </div>
     </v-card-text>
 
@@ -378,7 +379,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, nextTick, ref, useTemplateRef } from "vue";
 import {
   StatutPaiement,
   type Aide,
@@ -439,7 +440,7 @@ const emit = defineEmits<{
   (e: "deleteMessage", event: Event): void;
 }>();
 
-defineExpose({ showEditPaiement, showEditDossier });
+defineExpose({ showEditPaiement, showEditDossier, scrollToLastEvent });
 
 function statutColor(s: StatutPaiement) {
   switch (s) {
@@ -510,4 +511,9 @@ const mergeParams = ref<DossiersMergeIn | null>(null);
 
 const showMessage = ref(false);
 const messageContenu = ref("");
+
+const timelineBottom = useTemplateRef("timelineBottom");
+function scrollToLastEvent() {
+  nextTick(() => timelineBottom.value?.scrollIntoView());
+}
 </script>

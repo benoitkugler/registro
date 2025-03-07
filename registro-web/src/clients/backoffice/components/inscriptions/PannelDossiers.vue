@@ -151,6 +151,7 @@ async function loadDossier(id: IdDossier) {
   const res = await controller.DossiersLoad({ id: id });
   if (res === undefined) return;
   dossierDetails.value = res;
+  detailsPannel.value?.scrollToLastEvent();
 }
 
 async function onSelectDossier(d: DossierHeader) {
