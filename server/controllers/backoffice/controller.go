@@ -36,17 +36,20 @@ type Controller struct {
 }
 
 func NewController(db *sql.DB, key crypto.Encrypter, files fs.FileSystem, smtp config.SMTP, asso config.Asso, joomeo config.Joomeo, helloasso config.Helloasso) (*Controller, error) {
-	out := &Controller{
-		db:        db,
-		key:       key,
-		files:     files,
-		smtp:      smtp,
-		joomeo:    joomeo,
-		helloasso: helloasso,
+	builtins, err := fs.LoadBuiltins(db)
+	if err != nil {
+		return nil, err
 	}
-	var err error
-	out.builtins, err = fs.LoadBuiltins(db)
-	return out, err
+	return &Controller{
+		db,
+		key,
+		files,
+		smtp,
+		asso,
+		joomeo,
+		helloasso,
+		builtins,
+	}, nil
 }
 
 // customClaims are custom claims extending default ones.

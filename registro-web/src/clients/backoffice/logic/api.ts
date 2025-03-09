@@ -39,6 +39,8 @@ export interface DossierDetails {
   Dossier: DossierExt;
   EspacepersoURL: string;
   VirementCode: string;
+  BankName: string;
+  BankIBAN: string;
 }
 // registro/controllers/backoffice.DossierHeader
 export interface DossierHeader {
@@ -352,6 +354,11 @@ export interface Navette {
   Actif: boolean;
   Commentaire: string;
 }
+// registro/sql/camps.OptIdCamp
+export interface OptIdCamp {
+  Id: IdCamp;
+  Valid: boolean;
+}
 // registro/sql/camps.OptionPrixCamp
 export interface OptionPrixCamp {
   Active: OptionPrixKind;
@@ -558,11 +565,6 @@ export const MessageOrigineLabels: { [key in MessageOrigine]: string } = {
   [MessageOrigine.FromDirecteur]: "",
 };
 
-// registro/sql/events.OptIdCamp
-export interface OptIdCamp {
-  Id: IdCamp;
-  Valid: boolean;
-}
 // registro/sql/personnes.Approfondissement
 export const Approfondissement = {
   AAucun: 0,

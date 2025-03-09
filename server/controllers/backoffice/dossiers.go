@@ -272,9 +272,10 @@ type DossierDetails struct {
 	Dossier        logic.DossierExt
 	EspacepersoURL string
 	VirementCode   string
+	// also displayed in espace perso
+	BankName, BankIBAN string
 }
 
-// also marks the message as seen
 func (ct *Controller) loadDossier(host string, id ds.IdDossier) (DossierDetails, error) {
 	dossier, err := logic.LoadDossiersFinance(ct.db, id)
 	if err != nil {
@@ -282,7 +283,8 @@ func (ct *Controller) loadDossier(host string, id ds.IdDossier) (DossierDetails,
 	}
 	url := espaceperso.URLEspacePerso(ct.key, host, id)
 	virement := OffuscateurVirements.Mask(id)
-	return DossierDetails{dossier.Publish(), url, virement}, nil
+	bank, iban := ct.asso.BankName, ct.asso.BankIBAN
+	return DossierDetails{dossier.Publish(), url, virement, bank, iban}, nil
 }
 
 func (ct *Controller) DossiersCreate(c echo.Context) error {
