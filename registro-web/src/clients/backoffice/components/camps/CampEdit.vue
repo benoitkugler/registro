@@ -5,6 +5,7 @@
         <v-row>
           <v-col>
             <v-text-field
+              autofocus
               hide-details
               label="Nom"
               density="compact"

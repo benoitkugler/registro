@@ -39,7 +39,7 @@ func TestCRUD(t *testing.T) {
 		tu.Assert(t, len(camps) == 1)
 
 		camp.Camp.Camp.Ouvert = true
-		camp.Camp.Camp.Navette = cps.Navette{Actif: true, Commentaire: "7 € Aller retour"}
+		camp.Camp.Camp.Navette = cps.OptionNavette{Actif: true, Commentaire: "7 € Aller retour"}
 		updated, err := ct.updateCamp(camp.Camp.Camp)
 		tu.AssertNoErr(t, err)
 		tu.Assert(t, updated.Camp.Ouvert)

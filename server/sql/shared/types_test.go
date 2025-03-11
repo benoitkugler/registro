@@ -161,3 +161,26 @@ func TestPlage_Contains(t *testing.T) {
 		tu.Assert(t, pl.Contains(tt.d) == tt.want)
 	}
 }
+
+func TestPlage_HasBirthday(t *testing.T) {
+	type fields struct {
+		From  Date
+		Duree int
+	}
+	tests := []struct {
+		fields fields
+		d      Date
+		want   bool
+	}{
+		{fields{NewDate(2010, time.December, 20), 20}, NewDate(2001, time.January, 1), true},
+		{fields{NewDate(2010, time.January, 20), 20}, NewDate(2005, time.February, 1), true},
+		{fields{NewDate(2010, time.December, 20), 5}, NewDate(2001, time.January, 1), false},
+	}
+	for _, tt := range tests {
+		pl := Plage{
+			From:  tt.fields.From,
+			Duree: tt.fields.Duree,
+		}
+		tu.Assert(t, pl.HasBirthday(tt.d) == tt.want)
+	}
+}

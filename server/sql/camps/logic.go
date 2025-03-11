@@ -13,9 +13,15 @@ import (
 )
 
 type ParticipantExt struct {
-	Camp        Camp
+	Camp Camp
+	ParticipantPersonne
+}
+
+type ParticipantPersonne struct {
 	Participant Participant
 	Personne    pr.Personne
+
+	HasBirthday bool // anniversaire pendant le séjour ?
 }
 
 // StatistiquesInscrits détails le nombre d'inscriptions
@@ -27,7 +33,7 @@ type StatistiquesInscrits struct {
 	Refus, AStatuer, Exceptions, Attente    int
 }
 
-func (p ParticipantExt) add(stats *StatistiquesInscrits) {
+func (stats *StatistiquesInscrits) add(p ParticipantPersonne) {
 	stats.Inscriptions += 1
 
 	isFille := p.Personne.Sexe == pr.Woman
@@ -64,9 +70,19 @@ func (p ParticipantExt) add(stats *StatistiquesInscrits) {
 // propriété d'un séjour nécessitant la liste des inscrits.
 type CampLoader struct {
 	Camp         Camp
-	Participants Participants // liste (exacte) des participants du camp
+	participants Participants // liste (exacte) des participants du camp
 	// Doit contenir au moins les participants
-	Personnes pr.Personnes
+	personnes pr.Personnes
+}
+
+// LoadCamp is a convenient wrapper around [LoadCamps] for
+// a single camp.
+func LoadCamp(db DB, id IdCamp) (CampLoader, error) {
+	out, err := LoadCamps(db, id)
+	if err != nil {
+		return CampLoader{}, err
+	}
+	return out[0], nil
 }
 
 // LoadCamps wraps the error
@@ -91,11 +107,20 @@ func LoadCamps(db DB, ids ...IdCamp) ([]CampLoader, error) {
 	return out, nil
 }
 
+func (cd CampLoader) Participants() []ParticipantPersonne {
+	plage := sh.Plage{From: cd.Camp.DateDebut, Duree: cd.Camp.Duree}
+	out := make([]ParticipantPersonne, 0, len(cd.participants))
+	for _, participant := range cd.participants {
+		pe := cd.personnes[participant.IdPersonne]
+		out = append(out, ParticipantPersonne{participant, pe, plage.HasBirthday(pe.DateNaissance)})
+	}
+	return out
+}
+
 func (cd CampLoader) Stats() StatistiquesInscrits {
 	var stats StatistiquesInscrits
-	for _, participant := range cd.Participants {
-		ext := ParticipantExt{cd.Camp, participant, cd.Personnes[participant.IdPersonne]}
-		ext.add(&stats)
+	for _, p := range cd.Participants() {
+		stats.add(p)
 	}
 	return stats
 }

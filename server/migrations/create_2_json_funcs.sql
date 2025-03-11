@@ -192,7 +192,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION gomacro_validate_json_camp_Navette (data jsonb)
+CREATE OR REPLACE FUNCTION gomacro_validate_json_camp_OptionNavette (data jsonb)
     RETURNS boolean
     AS $$
 DECLARE

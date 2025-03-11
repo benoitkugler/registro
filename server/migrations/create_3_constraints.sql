@@ -145,7 +145,7 @@ ALTER TABLE aides
     ADD FOREIGN KEY (IdParticipant) REFERENCES participants ON DELETE CASCADE;
 
 ALTER TABLE camps
-    ADD CONSTRAINT Navette_gomacro CHECK (gomacro_validate_json_camp_Navette (Navette));
+    ADD CONSTRAINT Navette_gomacro CHECK (gomacro_validate_json_camp_OptionNavette (Navette));
 
 ALTER TABLE camps
     ADD CONSTRAINT OptionPrix_gomacro CHECK (gomacro_validate_json_camp_OptionPrixCamp (OptionPrix));

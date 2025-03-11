@@ -280,7 +280,7 @@ const campNoOption = computed(
 function formatOption(opt: OptionPrixParticipant) {
   switch (props.participant.Camp.OptionPrix.Active) {
     case OptionPrixKind.NoOption:
-      return "Camp sans option";
+      return "Séjour sans option";
     case OptionPrixKind.PrixJour:
       const count = opt.Jour?.length || 0;
       if (count == 0) return "Présent tous les jours";

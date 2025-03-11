@@ -1,5 +1,5 @@
 <template>
-  <NavBar title="Gestion des camps">
+  <NavBar title="Accueil">
     <div>Boutons a venir</div>
   </NavBar>
 

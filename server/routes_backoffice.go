@@ -27,6 +27,8 @@ func setupRoutesBackoffice(e *echo.Echo, ct *backoffice.Controller) {
 	gr.GET("/api/v1/backoffice/camps-taux", ct.CampsGetTaux)
 	gr.POST("/api/v1/backoffice/camps-taux", ct.CampsSetTaux)
 
+	gr.GET("/api/v1/backoffice/camps/load", ct.CampsLoad)
+
 	// Onglet Inscriptions/Dossiers
 
 	gr.GET("/api/v1/backoffice/inscriptions", ct.InscriptionsGet)

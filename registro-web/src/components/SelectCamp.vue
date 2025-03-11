@@ -12,8 +12,8 @@
       <v-tooltip
         :text="
           showTerminatedCamps
-            ? 'Masquer les camps terminés'
-            : 'Afficher les camps terminés'
+            ? 'Masquer les séjours terminés'
+            : 'Afficher les séjours terminés'
         "
       >
         <template #activator="{ props: tooltipProps }">

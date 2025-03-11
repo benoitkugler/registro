@@ -29,6 +29,11 @@ export interface CampsCreateManyIn {
   Taux: Taux;
   Count: Int;
 }
+// registro/controllers/backoffice.CampsLoadOut
+export interface CampsLoadOut {
+  Camp: CampExt;
+  Participants: ParticipantPersonne[] | null;
+}
 // registro/controllers/backoffice.CampsSetTauxIn
 export interface CampsSetTauxIn {
   IdCamp: IdCamp;
@@ -277,22 +282,6 @@ export interface Aide {
 }
 // registro/sql/camps.Aides
 export type Aides = { [key in IdAide]: Aide } | null;
-// registro/sql/camps.Bus
-export const Bus = {
-  NoBus: 0,
-  Aller: 1,
-  Retour: 2,
-  AllerRetour: 3,
-} as const;
-export type Bus = (typeof Bus)[keyof typeof Bus];
-
-export const BusLabels: { [key in Bus]: string } = {
-  [Bus.NoBus]: "",
-  [Bus.Aller]: "",
-  [Bus.Retour]: "",
-  [Bus.AllerRetour]: "",
-};
-
 // registro/sql/camps.Camp
 export interface Camp {
   Id: IdCamp;
@@ -303,7 +292,7 @@ export interface Camp {
   Lieu: string;
   Agrement: string;
   Description: string;
-  Navette: Navette;
+  Navette: OptionNavette;
   Places: Int;
   AgeMin: Int;
   AgeMax: Int;
@@ -341,23 +330,39 @@ export const ListeAttente = {
 export type ListeAttente = (typeof ListeAttente)[keyof typeof ListeAttente];
 
 export const ListeAttenteLabels: { [key in ListeAttente]: string } = {
-  [ListeAttente.AStatuer]: "",
-  [ListeAttente.AttenteProfilInvalide]: "",
-  [ListeAttente.Refuse]: "",
-  [ListeAttente.AttenteCampComplet]: "",
-  [ListeAttente.EnAttenteReponse]: "",
-  [ListeAttente.Inscrit]: "",
+  [ListeAttente.AStatuer]: "A statuer",
+  [ListeAttente.AttenteProfilInvalide]: "Profil invalide",
+  [ListeAttente.Refuse]: "Refusé définitivement",
+  [ListeAttente.AttenteCampComplet]: "Camp complet",
+  [ListeAttente.EnAttenteReponse]: "En attente de réponse",
+  [ListeAttente.Inscrit]: "Inscrit",
 };
 
-// registro/sql/camps.Navette
-export interface Navette {
-  Actif: boolean;
-  Commentaire: string;
-}
+// registro/sql/camps.Navettte
+export const Navettte = {
+  NoBus: 0,
+  Aller: 1,
+  Retour: 2,
+  AllerRetour: 3,
+} as const;
+export type Navettte = (typeof Navettte)[keyof typeof Navettte];
+
+export const NavettteLabels: { [key in Navettte]: string } = {
+  [Navettte.NoBus]: "Aucun",
+  [Navettte.Aller]: "Aller",
+  [Navettte.Retour]: "Retour",
+  [Navettte.AllerRetour]: "Aller-Retour",
+};
+
 // registro/sql/camps.OptIdCamp
 export interface OptIdCamp {
   Id: IdCamp;
   Valid: boolean;
+}
+// registro/sql/camps.OptionNavette
+export interface OptionNavette {
+  Actif: boolean;
+  Commentaire: string;
 }
 // registro/sql/camps.OptionPrixCamp
 export interface OptionPrixCamp {
@@ -397,13 +402,20 @@ export interface Participant {
   QuotientFamilial: Int;
   OptionPrix: OptionPrixParticipant;
   Details: string;
-  Bus: Bus;
+  Navette: Navettte;
 }
 // registro/sql/camps.ParticipantExt
 export interface ParticipantExt {
   Camp: Camp;
   Participant: Participant;
   Personne: Personne;
+  HasBirthday: boolean;
+}
+// registro/sql/camps.ParticipantPersonne
+export interface ParticipantPersonne {
+  Participant: Participant;
+  Personne: Personne;
+  HasBirthday: boolean;
 }
 // registro/sql/camps.PrixParStatut
 export interface PrixParStatut {
@@ -867,6 +879,21 @@ export abstract class AbstractAPI {
     try {
       const rep: AxiosResponse<CampHeader> = await Axios.post(fullUrl, params, {
         headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** CampsLoad performs the request and handles the error */
+  async CampsLoad(params: { idCamp: Int }) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/camps/load";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<CampsLoadOut> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { idCamp: String(params["idCamp"]) },
       });
       return rep.data;
     } catch (error) {

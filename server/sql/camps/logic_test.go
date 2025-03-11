@@ -62,8 +62,8 @@ func TestCampLoader_Stats(t *testing.T) {
 	for _, tt := range tests {
 		cd := CampLoader{
 			Camp:         Camp{},
-			Participants: tt.Participants,
-			Personnes:    tt.Personnes,
+			participants: tt.Participants,
+			personnes:    tt.Personnes,
 		}
 		tu.Assert(t, cd.Stats() == tt.want)
 	}
@@ -151,8 +151,8 @@ func TestCampLoader_Status(t *testing.T) {
 	for _, tt := range tests {
 		cd := CampLoader{
 			Camp:         tt.camp,
-			Participants: participants,
-			Personnes:    personnes,
+			participants: participants,
+			personnes:    personnes,
 		}
 		tu.Assert(t, reflect.DeepEqual(cd.Status(tt.participants), tt.want))
 	}

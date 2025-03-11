@@ -84,9 +84,11 @@ func (de *Dossier) ParticipantsExt() []cps.ParticipantExt {
 	ps := make([]cps.ParticipantExt, 0, len(de.Participants))
 	for _, part := range de.Participants {
 		ps = append(ps, cps.ParticipantExt{
-			Participant: part,
-			Camp:        de.camps[part.IdCamp],
-			Personne:    de.personnesM[part.IdPersonne],
+			Camp: de.camps[part.IdCamp],
+			ParticipantPersonne: cps.ParticipantPersonne{
+				Participant: part,
+				Personne:    de.personnesM[part.IdPersonne],
+			},
 		})
 	}
 

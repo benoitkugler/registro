@@ -96,6 +96,17 @@ func (d Date) Age(now time.Time) int {
 	return years - 1
 }
 
+// HasBirthday returns 'true' if someone born at [d]
+// has his birthday during [pl]
+func (pl Plage) HasBirthday(d Date) bool {
+	ti := d.Time()
+	from, to := pl.From.Time(), pl.toT()
+	if to.Year() > from.Year() { // 2000 -> 2001 : adjust the comparison
+		return avantNoYear(from, ti) || avantNoYear(ti, to)
+	}
+	return avantNoYear(from, ti) && avantNoYear(ti, to)
+}
+
 var weekDays = [...]string{
 	"Dim",
 	"Lun",

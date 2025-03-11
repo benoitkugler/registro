@@ -76,7 +76,7 @@ type CampExt struct {
 	Duree       int // nombre de jours date et fin inclus
 	Lieu        string
 	Description string // Description est affichée sur le formulaire d'inscription
-	Navette     cps.Navette
+	Navette     cps.OptionNavette
 	Places      int // nombre de places prévues pour le séjour
 	AgeMin      int // inclusif
 	AgeMax      int // inclusif

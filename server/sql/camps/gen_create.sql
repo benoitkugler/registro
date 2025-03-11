@@ -81,7 +81,7 @@ CREATE TABLE participants (
     QuotientFamilial integer NOT NULL,
     OptionPrix jsonb NOT NULL,
     Details text NOT NULL,
-    Bus smallint CHECK (Bus IN (0, 1, 2, 3)) NOT NULL
+    Navette smallint CHECK (Navette IN (0, 1, 2, 3)) NOT NULL
 );
 
 CREATE TABLE sondages (
@@ -271,7 +271,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION gomacro_validate_json_camp_Navette (data jsonb)
+CREATE OR REPLACE FUNCTION gomacro_validate_json_camp_OptionNavette (data jsonb)
     RETURNS boolean
     AS $$
 DECLARE
@@ -515,7 +515,7 @@ LANGUAGE 'plpgsql'
 IMMUTABLE;
 
 ALTER TABLE camps
-    ADD CONSTRAINT Navette_gomacro CHECK (gomacro_validate_json_camp_Navette (Navette));
+    ADD CONSTRAINT Navette_gomacro CHECK (gomacro_validate_json_camp_OptionNavette (Navette));
 
 ALTER TABLE camps
     ADD CONSTRAINT OptionPrix_gomacro CHECK (gomacro_validate_json_camp_OptionPrixCamp (OptionPrix));

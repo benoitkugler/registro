@@ -37,7 +37,7 @@ type Camp struct {
 	Lieu        string
 	Agrement    string
 	Description string // Description est affichée sur le formulaire d'inscription
-	Navette     Navette
+	Navette     OptionNavette
 
 	// Places est le nombre de places prévues pour le séjour
 	// Les participants sont initialement passés en liste d'attente
@@ -107,8 +107,8 @@ type Participant struct {
 
 	OptionPrix OptionPrixParticipant
 
-	Details string // rempli sur l'espace de suivi
-	Bus     Bus    // rempli sur l'espace de suivi
+	Details string   // rempli sur l'espace de suivi
+	Navette Navettte // rempli sur l'espace de suivi
 }
 
 // Groupe représente un groupe de participants

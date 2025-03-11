@@ -25,78 +25,84 @@
     </v-card>
   </v-dialog>
 
-  <v-row
-    :style="{ 'background-color': periodeColor }"
-    class="rounded my-1 pa-1"
-    no-gutters
-    justify="space-between"
-  >
-    <v-col>
-      <v-list-item
-        :title="props.camp.Camp.Camp.Nom"
-        :subtitle="Camps.year(props.camp.Camp.Camp)"
+  <v-card :color="periodeColor" no-gutters @click="emit('click')" class="my-1">
+    <v-row
+      :style="{ 'background-color': periodeColor }"
+      class="px-1"
+      no-gutters
+      justify="space-between"
+    >
+      <v-col>
+        <v-list-item
+          :title="props.camp.Camp.Camp.Nom"
+          :subtitle="Camps.year(props.camp.Camp.Camp)"
+        >
+        </v-list-item>
+      </v-col>
+      <v-col align-self="center">
+        {{ Camps.formatPlage(camp.Camp.Camp) }}</v-col
       >
-      </v-list-item>
-    </v-col>
-    <v-col align-self="center"> {{ Camps.formatPlage(camp.Camp.Camp) }}</v-col>
-    <v-col cols="2" align-self="center">
-      <v-menu width="600" location="left">
-        <template #activator="{ props: innerProps }">
-          <v-progress-linear
-            class="bg-white border-md border-primary"
-            v-bind="innerProps"
-            :max="props.camp.Camp.Camp.Places"
-            :model-value="props.camp.Stats.Valides"
-            height="36"
-            rounded
-            color="primary"
-          >
-            <strong
-              >{{ props.camp.Stats.Valides }}/{{ props.camp.Camp.Camp.Places }}
-              <span v-if="allAttente > 0">
-                (+
-                {{ allAttente }})</span
-              >
-            </strong>
-          </v-progress-linear>
-        </template>
-        <CampStats :stats="props.camp.Stats"></CampStats>
-      </v-menu>
-    </v-col>
-    <v-col cols="1"></v-col>
-    <v-col cols="auto" align-self="center">
-      <v-menu>
-        <template #activator="{ props: innerProps }">
-          <v-btn
-            v-bind="innerProps"
-            size="x-small"
-            class="mx-1"
-            flat
-            icon="mdi-dots-vertical"
-          ></v-btn>
-        </template>
-        <v-list density="compact">
-          <v-list-item prepend-icon="mdi-pencil" @click="emit('edit')"
-            >Modifier</v-list-item
-          >
+      <v-col cols="2" align-self="center">
+        <v-tooltip width="600" location="left" content-class="pa-0">
+          <template #activator="{ props: innerProps }">
+            <v-progress-linear
+              class="bg-white border-md border-primary"
+              v-bind="innerProps"
+              :max="props.camp.Camp.Camp.Places"
+              :model-value="props.camp.Stats.Valides"
+              height="36"
+              rounded
+              color="primary"
+            >
+              <strong
+                >{{ props.camp.Stats.Valides }}/{{
+                  props.camp.Camp.Camp.Places
+                }}
+                <span v-if="allAttente > 0">
+                  (+
+                  {{ allAttente }})</span
+                >
+              </strong>
+            </v-progress-linear>
+          </template>
+          <CampStats :stats="props.camp.Stats"></CampStats>
+        </v-tooltip>
+      </v-col>
+      <v-col cols="1"></v-col>
+      <v-col cols="auto" align-self="center">
+        <v-menu>
+          <template #activator="{ props: innerProps }">
+            <v-btn
+              v-bind="innerProps"
+              size="x-small"
+              class="mx-1"
+              flat
+              icon="mdi-dots-vertical"
+            ></v-btn>
+          </template>
+          <v-list density="compact">
+            <v-list-item prepend-icon="mdi-pencil" @click="emit('edit')"
+              >Modifier</v-list-item
+            >
 
-          <v-list-item
-            prepend-icon="mdi-currency-eur"
-            @click="emit('edit-taux')"
-            >Taux de conversion</v-list-item
-          >
+            <v-list-item
+              prepend-icon="mdi-currency-eur"
+              @click="emit('edit-taux')"
+              >Taux de conversion</v-list-item
+            >
 
-          <v-divider thickness="1"></v-divider>
-          <v-list-item
-            prepend-icon="mdi-delete"
-            :disabled="props.camp.Stats.Inscriptions > 0"
-            @click="showDelete = true"
-            >Supprimer</v-list-item
-          >
-        </v-list>
-      </v-menu>
-    </v-col>
-  </v-row>
+            <v-divider thickness="1"></v-divider>
+            <v-list-item
+              prepend-icon="mdi-delete"
+              :disabled="props.camp.Stats.Inscriptions > 0"
+              @click="showDelete = true"
+              >Supprimer</v-list-item
+            >
+          </v-list>
+        </v-menu>
+      </v-col>
+    </v-row>
+  </v-card>
 </template>
 
 <script setup lang="ts">
@@ -109,6 +115,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
+  (e: "click"): void;
   (e: "edit"): void;
   (e: "edit-taux"): void;
   (e: "delete"): void;

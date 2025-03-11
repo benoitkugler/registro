@@ -32,12 +32,6 @@ func randAr4_int32() [4]int32 {
 	return out
 }
 
-func randBus() Bus {
-	choix := [...]Bus{NoBus, Aller, Retour, AllerRetour}
-	i := rand.Intn(len(choix))
-	return choix[i]
-}
-
 func randCamp() Camp {
 	var s Camp
 	s.Id = randIdCamp()
@@ -48,7 +42,7 @@ func randCamp() Camp {
 	s.Lieu = randstring()
 	s.Agrement = randstring()
 	s.Description = randstring()
-	s.Navette = randNavette()
+	s.Navette = randOptionNavette()
 	s.Places = randint()
 	s.AgeMin = randint()
 	s.AgeMax = randint()
@@ -165,8 +159,14 @@ func randListeAttente() ListeAttente {
 	return choix[i]
 }
 
-func randNavette() Navette {
-	var s Navette
+func randNavettte() Navettte {
+	choix := [...]Navettte{NoBus, Aller, Retour, AllerRetour}
+	i := rand.Intn(len(choix))
+	return choix[i]
+}
+
+func randOptionNavette() OptionNavette {
+	var s OptionNavette
 	s.Actif = randbool()
 	s.Commentaire = randstring()
 
@@ -217,7 +217,7 @@ func randParticipant() Participant {
 	s.QuotientFamilial = randint()
 	s.OptionPrix = randOptionPrixParticipant()
 	s.Details = randstring()
-	s.Bus = randBus()
+	s.Navette = randNavettte()
 
 	return s
 }

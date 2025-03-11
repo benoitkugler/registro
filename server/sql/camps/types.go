@@ -27,29 +27,29 @@ type ListeAttente uint8
 
 const (
 	// personne n'a encore décidé ou placer le participant
-	AStatuer ListeAttente = iota
+	AStatuer ListeAttente = iota // A statuer
 	// le profil ne suit pas les conditions du camp
-	AttenteProfilInvalide
+	AttenteProfilInvalide // Profil invalide
 	// définitivment refusé (non concerné par une place libérée)
-	Refuse
+	Refuse // Refusé définitivement
 	// le camp est déjà complet
-	AttenteCampComplet
+	AttenteCampComplet // Camp complet
 	// une place s'est libérée et on attend une confirmation
-	EnAttenteReponse
+	EnAttenteReponse // En attente de réponse
 	// le participant apparait en liste principale
-	Inscrit
+	Inscrit // Inscrit
 )
 
-type Bus uint8
+type Navettte uint8
 
 const (
-	NoBus Bus = iota
-	Aller
-	Retour
-	AllerRetour
+	NoBus       Navettte = iota // Aucun
+	Aller                       // Aller
+	Retour                      // Retour
+	AllerRetour                 // Aller-Retour
 )
 
-func (b Bus) Includes(aller bool) bool {
+func (b Navettte) Includes(aller bool) bool {
 	if aller {
 		return b == Aller || b == AllerRetour
 	}
@@ -219,7 +219,7 @@ func (q PrixQuotientFamilial) Percentage(quotientFamilial int) int {
 	return 100
 }
 
-type Navette struct {
+type OptionNavette struct {
 	Actif       bool
 	Commentaire string
 }
