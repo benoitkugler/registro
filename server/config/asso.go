@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"os"
+	"strings"
 )
 
 type Asso struct {
@@ -17,7 +18,7 @@ type Asso struct {
 
 	MailsSettings MailsSettings
 
-	BankName, BankIBAN string // displayed in espace perso
+	BankNames, BankIBANs []string // displayed in espace perso
 
 	SupportBonsCAF, SupportANCV bool // if true, displayed in inscription form
 	EmailRetraitMedia           string
@@ -45,7 +46,7 @@ var acve = Asso{
 		SignatureMailCentre: "Pour le centre d'inscriptions, <br /> Marie-Pierre BUFFET",
 	},
 
-	BankName: "Crédit Mutuel",
+	BankNames: []string{"Crédit Mutuel"},
 
 	SupportBonsCAF: true, SupportANCV: true,
 	EmailRetraitMedia:  "contact@acve.asso.fr",
@@ -81,10 +82,14 @@ func NewAsso() (Asso, error) {
 		return Asso{}, fmt.Errorf("missing or unsupported ASSO env. (%s)", asso)
 	}
 
-	iban := os.Getenv("ASSO_BANK_IBAN")
-	if iban == "" {
+	ibans := os.Getenv("ASSO_BANK_IBAN")
+	if ibans == "" {
 		return Asso{}, errors.New("missing ASSO_BANK_IBAN env. variable")
 	}
-	out.BankIBAN = iban
+	out.BankIBANs = strings.Split(ibans, ",")
+	if len(out.BankIBANs) != len(out.BankNames) {
+		return Asso{}, errors.New("inconsistent length in ASSO_BANK_IBAN")
+	}
+
 	return out, nil
 }
