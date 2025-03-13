@@ -107,8 +107,8 @@ type Participant struct {
 
 	OptionPrix OptionPrixParticipant
 
-	Details string   // rempli sur l'espace de suivi
-	Navette Navettte // rempli sur l'espace de suivi
+	Details string  // rempli sur l'espace de suivi
+	Navette Navette // rempli sur l'espace de suivi
 }
 
 // Groupe représente un groupe de participants

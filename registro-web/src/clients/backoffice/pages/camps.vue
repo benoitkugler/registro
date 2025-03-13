@@ -1,6 +1,6 @@
 <template>
   <NavBar title="Gestion des séjours">
-    <v-btn v-if="current != null" @click="goBack">
+    <v-btn v-if="current !== undefined" @click="goBack">
       <template #prepend>
         <v-icon>mdi-view-list</v-icon>
       </template>
@@ -8,7 +8,7 @@
     >
   </NavBar>
 
-  <CampsList v-if="current == null" @click="goTo"></CampsList>
+  <CampsList v-if="current === undefined" @click="goTo"></CampsList>
   <CampParticipants :id="current" v-else></CampParticipants>
 </template>
 
@@ -19,13 +19,15 @@ import CampsList from "../components/camps/CampsList.vue";
 import type { CampHeader, IdCamp } from "../logic/api";
 import CampParticipants from "../components/camps/CampParticipants.vue";
 import { useRouter } from "vue-router";
+import type { QueryURLCamps } from "../router";
 
 const router = useRouter();
 
-const current = computed(() => {
-  const id = router.currentRoute.value.query["idCamp"];
-  return id ? (Number(id) as IdCamp) : null;
-});
+const queryURL = computed(
+  () => router.currentRoute.value.query as QueryURLCamps
+);
+
+const current = computed(() => queryURL.value.idCamp);
 
 function goTo(camp: CampHeader) {
   const current = router.currentRoute.value;

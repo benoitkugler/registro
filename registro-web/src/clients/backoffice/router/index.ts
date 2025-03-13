@@ -3,6 +3,13 @@ import { createRouter, createWebHistory } from "vue-router";
 import Index from "../pages/index.vue";
 import Camps from "../pages/camps.vue";
 import Inscriptions from "../pages/inscriptions.vue";
+import type {
+  IdCamp,
+  IdDossier,
+  IdParticipant,
+  IdPersonne,
+  Participant,
+} from "../logic/api";
 
 const routes = [
   { path: "/", component: Index },
@@ -36,5 +43,38 @@ router.onError((err, to) => {
 router.isReady().then(() => {
   localStorage.removeItem("vuetify:dynamic-reload");
 });
+
+export type QueryURLCamps = {
+  idCamp?: IdCamp;
+  idParticipant?: IdParticipant;
+};
+
+export function goToParticipant(participant: Participant) {
+  router.push({
+    path: "/camps",
+    query: {
+      idCamp: participant.IdCamp,
+      idParticipant: participant.Id,
+    } satisfies QueryURLCamps,
+  });
+}
+
+export type InscriptionsTab = "insc" | "doss";
+
+export type QueryURLInscriptions = {
+  tab?: InscriptionsTab;
+  idDossier?: IdDossier;
+};
+
+export function goToDossier(idDossier: IdDossier) {
+  router.push({
+    path: "/inscriptions",
+    query: { tab: "doss", idDossier } satisfies QueryURLInscriptions,
+  });
+}
+
+export function goToPersonne(idPersonne: IdPersonne) {
+  // TODO:
+}
 
 export default router;

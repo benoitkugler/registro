@@ -76,7 +76,6 @@
               v-bind="innerProps"
               size="x-small"
               class="mx-1"
-              flat
               icon="mdi-dots-vertical"
             ></v-btn>
           </template>

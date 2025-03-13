@@ -60,6 +60,14 @@ func TestController_searchDossiers(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(out.Dossiers) == 1)
 
+	out, err = ct.searchDossiers(SearchDossierIn{Pattern: fmt.Sprintf("id:%d", dossier2.Id)})
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(out.Dossiers) == 1)
+
+	out, err = ct.searchDossiers(SearchDossierIn{Pattern: fmt.Sprintf("id:%d", dossier2.Id+1)})
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(out.Dossiers) == 0)
+
 	out, err = ct.searchDossiers(SearchDossierIn{Pattern: "test"})
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(out.Dossiers) == 0)
@@ -98,12 +106,12 @@ func TestController_participants(t *testing.T) {
 	part, err := ct.createParticipant(ParticipantsCreateIn{IdDossier: dossier1.Id, IdCamp: camp1.Id, IdPersonne: pe1.Id})
 	tu.AssertNoErr(t, err)
 
-	part.Statut = cps.Inscrit
-	part.QuotientFamilial = 48
-	err = ct.updateParticipant(part)
+	part.Participant.Statut = cps.Inscrit
+	part.Participant.QuotientFamilial = 48
+	err = ct.updateParticipant(part.Participant)
 	tu.AssertNoErr(t, err)
 
-	aide, err := ct.createAide(AidesCreateIn{IdParticipant: part.Id, IdStructure: structure.Id})
+	aide, err := ct.createAide(AidesCreateIn{IdParticipant: part.Participant.Id, IdStructure: structure.Id})
 	tu.AssertNoErr(t, err)
 	err = ct.uploadAideJustificatif(aide.Id, []byte(pngData), "test.png")
 	tu.AssertNoErr(t, err)
@@ -115,7 +123,7 @@ func TestController_participants(t *testing.T) {
 	_, err = ct.createParticipant(ParticipantsCreateIn{IdDossier: dossier1.Id, IdCamp: camp2.Id, IdPersonne: pe1.Id})
 	tu.AssertErr(t, err) // inconsistent taux
 
-	err = ct.deleteParticipant(part.Id)
+	err = ct.deleteParticipant(part.Participant.Id)
 	tu.AssertNoErr(t, err)
 
 	files, err = fs.SelectAllFiles(ct.db)

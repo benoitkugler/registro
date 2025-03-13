@@ -13,10 +13,7 @@
     </v-card-text>
     <v-card-actions>
       <v-spacer></v-spacer>
-      <v-btn
-        color="green"
-        :disabled="resp == null"
-        @click="emit('create', resp!)"
+      <v-btn color="green" :disabled="resp == 0" @click="emit('create', resp!)"
         >Créer</v-btn
       >
     </v-card-actions>
@@ -24,7 +21,7 @@
 </template>
 
 <script setup lang="ts">
-import { type IdPersonne } from "@/clients/backoffice/logic/api";
+import { type IdPersonne, type Int } from "@/clients/backoffice/logic/api";
 import { ref } from "vue";
 
 const props = defineProps<{
@@ -35,5 +32,5 @@ const emit = defineEmits<{
   (e: "create", idResponsable: IdPersonne): void;
 }>();
 
-const resp = ref<IdPersonne | null>(null);
+const resp = ref<IdPersonne>(0 as Int);
 </script>

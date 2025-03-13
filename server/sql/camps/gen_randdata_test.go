@@ -159,8 +159,8 @@ func randListeAttente() ListeAttente {
 	return choix[i]
 }
 
-func randNavettte() Navettte {
-	choix := [...]Navettte{NoBus, Aller, Retour, AllerRetour}
+func randNavettte() Navette {
+	choix := [...]Navette{NoBus, Aller, Retour, AllerRetour}
 	i := rand.Intn(len(choix))
 	return choix[i]
 }

@@ -128,16 +128,34 @@ func newDossierHeader(dossier logic.Dossier) DossierHeader {
 	}
 }
 
-const sortByMessagesPattern = "sort:messages"
+const (
+	sortByMessagesPattern = "sort:messages"
+	byIdPrefix            = "id:"
+)
+
+// isIdQuery tries for the special Virement label or an Id pattern
+func isIdQuery(pattern string) (ds.IdDossier, bool) {
+	pattern = strings.TrimSpace(pattern)
+	idDossier, isVirementLabel := OffuscateurVirements.Unmask(pattern)
+	if isVirementLabel {
+		return idDossier, true
+	}
+	if after, ok := strings.CutPrefix(strings.ToLower(pattern), byIdPrefix); ok {
+		id, err := strconv.ParseInt(after, 10, 64)
+		if err == nil {
+			return ds.IdDossier(id), true
+		}
+	}
+	return 0, false
+}
 
 func (ct *Controller) searchDossiers(query SearchDossierIn) (SearchDossierOut, error) {
 	var (
 		dossiers ds.Dossiers
 		err      error
 	)
-	// try for the special Virement label
-	idDossier, isVirementLabel := OffuscateurVirements.Unmask(strings.TrimSpace(query.Pattern))
-	if isVirementLabel {
+
+	if idDossier, isId := isIdQuery(query.Pattern); isId {
 		dossiers, err = ds.SelectDossiers(ct.db, idDossier)
 		if err != nil {
 			return SearchDossierOut{}, utils.SQLError(err)
@@ -273,7 +291,8 @@ type DossierDetails struct {
 	EspacepersoURL string
 	VirementCode   string
 	// also displayed in espace perso
-	BankName, BankIBAN string
+	// name, IBAN
+	BankAccounts [][2]string
 }
 
 func (ct *Controller) loadDossier(host string, id ds.IdDossier) (DossierDetails, error) {
@@ -283,8 +302,8 @@ func (ct *Controller) loadDossier(host string, id ds.IdDossier) (DossierDetails,
 	}
 	url := espaceperso.URLEspacePerso(ct.key, host, id)
 	virement := OffuscateurVirements.Mask(id)
-	bank, iban := ct.asso.BankName, ct.asso.BankIBAN
-	return DossierDetails{dossier.Publish(), url, virement, bank, iban}, nil
+	accounts := ct.asso.BankAccounts()
+	return DossierDetails{dossier.Publish(), url, virement, accounts}, nil
 }
 
 func (ct *Controller) DossiersCreate(c echo.Context) error {
@@ -430,35 +449,34 @@ func (ct *Controller) ParticipantsCreate(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) createParticipant(args ParticipantsCreateIn) (cps.Participant, error) {
+func (ct *Controller) createParticipant(args ParticipantsCreateIn) (cps.ParticipantPersonne, error) {
 	dossier, err := ds.SelectDossier(ct.db, args.IdDossier)
 	if err != nil {
-		return cps.Participant{}, utils.SQLError(err)
+		return cps.ParticipantPersonne{}, utils.SQLError(err)
 	}
 	personne, err := pr.SelectPersonne(ct.db, args.IdPersonne)
 	if err != nil {
-		return cps.Participant{}, utils.SQLError(err)
+		return cps.ParticipantPersonne{}, utils.SQLError(err)
 	}
 
 	// better error message if already present
 	_, alreadyHere, err := cps.SelectParticipantByIdCampAndIdPersonne(ct.db, args.IdCamp, args.IdPersonne)
 	if err != nil {
-		return cps.Participant{}, utils.SQLError(err)
+		return cps.ParticipantPersonne{}, utils.SQLError(err)
 	}
 	if alreadyHere {
-		return cps.Participant{}, fmt.Errorf("Le profil %s est déjà présent sur ce camp !", personne.PrenomNOM())
+		return cps.ParticipantPersonne{}, fmt.Errorf("Le profil %s est déjà présent sur ce camp !", personne.PrenomNOM())
 	}
 
-	loaders, err := cps.LoadCamps(ct.db, args.IdCamp)
+	camp, err := cps.LoadCamp(ct.db, args.IdCamp)
 	if err != nil {
-		return cps.Participant{}, err
+		return cps.ParticipantPersonne{}, err
 	}
-	camp := loaders[0]
 
 	// resolve Groupe...
 	groupes, err := cps.SelectGroupesByIdCamps(ct.db, args.IdCamp)
 	if err != nil {
-		return cps.Participant{}, utils.SQLError(err)
+		return cps.ParticipantPersonne{}, utils.SQLError(err)
 	}
 	groupe, hasGroupe := groupes.TrouveGroupe(personne.DateNaissance)
 
@@ -477,7 +495,7 @@ func (ct *Controller) createParticipant(args ParticipantsCreateIn) (cps.Particip
 	// a different taux (the one of the camp) to be used
 	existingP, err := cps.SelectParticipantsByIdDossiers(ct.db, args.IdDossier)
 	if err != nil {
-		return cps.Participant{}, utils.SQLError(err)
+		return cps.ParticipantPersonne{}, utils.SQLError(err)
 	}
 
 	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
@@ -505,12 +523,12 @@ func (ct *Controller) createParticipant(args ParticipantsCreateIn) (cps.Particip
 		return nil
 	})
 
-	return participant, err
+	return cps.NewParticipantPersonne(participant, personne, camp.Camp), err
 }
 
 // ParticipantsUpdate modifie les champs d'un participant.
 //
-// Les champs [IdPersonne], [IdDossier], [IdTaux] et [IdCamp] sont ignorés.
+// Les champs [IdTaux] et [IdCamp] sont ignorés.
 //
 // Le statut est modifié sans aucune notification.
 func (ct *Controller) ParticipantsUpdate(c echo.Context) error {
@@ -530,6 +548,8 @@ func (ct *Controller) updateParticipant(args cps.Participant) error {
 	if err != nil {
 		return utils.SQLError(err)
 	}
+	current.IdPersonne = args.IdPersonne
+	current.IdDossier = args.IdDossier
 	current.Statut = args.Statut
 	current.Remises = args.Remises
 	current.QuotientFamilial = args.QuotientFamilial

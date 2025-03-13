@@ -84,18 +84,21 @@ import {
   type Event,
   type DossierHeader,
 } from "../../logic/api";
-import { controller, emptyQuery } from "../../logic/logic";
+import { controller, emptyQuery, idQuery } from "../../logic/logic";
 import DossierDetailsPannel from "./dossiers/DossierDetailsPannel.vue";
 import CreateDossierCard from "./dossiers/CreateDossierCard.vue";
 import DossierList from "./dossiers/DossierList.vue";
 
-const props = defineProps<{}>();
-
-defineExpose({ showDossier });
+const props = defineProps<{
+  initialDossier: IdDossier | null;
+}>();
 
 onMounted(() => {
   loadCamps();
   loadStructureaides();
+  if (props.initialDossier !== null) {
+    showDossier(props.initialDossier);
+  }
 });
 
 const detailsPannel = useTemplateRef("detailsPannel");
@@ -133,15 +136,9 @@ function refreshDossierList() {
 
 // showDossier may be called by the parent when switching to this pannel;
 //  it loads the dossier details
-async function showDossier(id: IdDossier, responsable: string) {
+async function showDossier(id: IdDossier) {
   // reset the query so that the given Dossier is found
-  const empty = emptyQuery();
-  query.value = {
-    IdCamp: empty.IdCamp,
-    Attente: empty.Attente,
-    Reglement: empty.Reglement,
-    Pattern: responsable,
-  };
+  query.value = idQuery(id);
   await loadDossier(id);
 }
 
@@ -175,7 +172,7 @@ async function createDossier(idResponsable: IdPersonne) {
   if (res === undefined) return;
   controller.showMessage("Dossier créé avec succès.");
   // add to the list and select it
-  await showDossier(res.Id, res.Responsable);
+  await showDossier(res.Id);
   // also start editing
   detailsPannel.value?.showEditDossier();
 }

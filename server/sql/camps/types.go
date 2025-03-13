@@ -40,16 +40,16 @@ const (
 	Inscrit // Inscrit
 )
 
-type Navettte uint8
+type Navette uint8
 
 const (
-	NoBus       Navettte = iota // Aucun
-	Aller                       // Aller
-	Retour                      // Retour
-	AllerRetour                 // Aller-Retour
+	NoBus       Navette = iota // Aucun trajet
+	Aller                      // Aller
+	Retour                     // Retour
+	AllerRetour                // Aller-Retour
 )
 
-func (b Navettte) Includes(aller bool) bool {
+func (b Navette) Includes(aller bool) bool {
 	if aller {
 		return b == Aller || b == AllerRetour
 	}

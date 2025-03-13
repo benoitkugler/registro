@@ -6,7 +6,7 @@
           density="compact"
           variant="outlined"
           prepend-inner-icon="mdi-magnify"
-          label="Rechercher"
+          label="Rechercher un dossier"
           hide-details
           clearable
           v-model="query.Pattern"

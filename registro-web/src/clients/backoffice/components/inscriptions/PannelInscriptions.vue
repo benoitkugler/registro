@@ -44,7 +44,7 @@ import { normalize, Personnes, Camps } from "@/utils";
 const props = defineProps<{}>();
 
 const emit = defineEmits<{
-  (e: "goTo", id: IdDossier, resp: Personne): void;
+  (e: "goTo", id: IdDossier): void;
 }>();
 
 const isLoading = ref(false);
@@ -95,7 +95,7 @@ async function valideInsc(insc: Inscription) {
 
   controller.showMessage("Inscription validée avec succès.", "", {
     title: "Aller au dossier",
-    action: () => emit("goTo", insc.Dossier.Id, insc.Responsable),
+    action: () => emit("goTo", insc.Dossier.Id),
   });
 
   // delete from this view

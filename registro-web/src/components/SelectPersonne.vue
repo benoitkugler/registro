@@ -6,7 +6,8 @@
     :readonly="props.readonly"
     hide-details
     :items="items"
-    v-model="modelValue"
+    :model-value="zeroableToNullable(modelValue)"
+    @update:model-value="(v) => (modelValue = nullableToZeroable(v))"
     v-model:search="search"
     @update:search="updateSearch"
     clearable
@@ -21,6 +22,7 @@
 <script setup lang="ts">
 import type { IdPersonne } from "@/clients/backoffice/logic/api";
 import { controller } from "@/clients/backoffice/logic/logic";
+import { nullableToZeroable, zeroableToNullable } from "@/utils";
 import { ref } from "vue";
 const props = defineProps<{
   label: string;
@@ -28,10 +30,10 @@ const props = defineProps<{
   readonly?: boolean;
 }>();
 
-const modelValue = defineModel<IdPersonne | null>({ required: true });
+const modelValue = defineModel<IdPersonne>({ required: true });
 
 const items = ref<{ title: string; value: IdPersonne }[]>(
-  modelValue.value == null
+  modelValue.value == 0
     ? []
     : [{ title: props.initialPersonne, value: modelValue.value }]
 );

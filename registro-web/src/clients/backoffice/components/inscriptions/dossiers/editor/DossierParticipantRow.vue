@@ -1,113 +1,14 @@
 <template>
   <v-row>
-    <!-- suppression participant -->
-    <v-dialog v-model="showConfirmeDelete" max-width="600px">
-      <v-card title="Supprimer le participant">
-        <v-card-text>
-          Confirmez-vous la suppression de ce participant ? <br />
-
-          Attention, cette opération est irréversible.
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn
-            color="red"
-            @click="
-              emit('delete');
-              showConfirmeDelete = false;
-            "
-            >Supprimer</v-btn
-          >
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-
-    <!-- création aide -->
-    <v-dialog
-      v-if="aideToCreate != null"
-      :model-value="aideToCreate != null"
-      @update:model-value="aideToCreate = null"
-      max-width="400px"
-    >
-      <v-card title="Ajouter une aide extérieure">
-        <v-card-text>
-          <v-select
-            variant="outlined"
-            density="comfortable"
-            label="Structure"
-            :items="structureItems"
-            :model-value="
-              aideToCreate.IdStructure == 0 ? null : aideToCreate.IdStructure
-            "
-            @update:model-value="(v) => (aideToCreate!.IdStructure = v)"
-          ></v-select>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn
-            color="green"
-            @click="
-              emit('createAide', aideToCreate);
-              aideToCreate = null;
-            "
-            :disabled="aideToCreate.IdStructure == 0"
-            >Créer</v-btn
-          >
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-
-    <!-- suppression aide -->
-    <v-dialog
-      v-if="aideToRemove != null"
-      :model-value="aideToRemove != null"
-      @update:model-value="aideToRemove = null"
-      max-width="600px"
-    >
-      <v-card title="Supprimer l'aide">
-        <v-card-text>
-          Confirmez-vous la suppression de l'aide extérieure ? <br />
-
-          Attention, cette opération est irréversible.
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn
-            color="red"
-            @click="
-              emit('deleteAide', aideToRemove.Id);
-              aideToRemove = null;
-            "
-            >Supprimer</v-btn
-          >
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-
-    <!-- edition aide -->
-    <v-dialog
-      v-if="aideToUpdate != null"
-      :model-value="aideToUpdate != null"
-      @update:model-value="aideToUpdate = null"
-      max-width="800px"
-    >
-      <AideEditCard
-        :aide="aideToUpdate"
-        :structures="props.structures"
-        :participant="props.participant"
-        @save="
-          (aide) => {
-            emit('updateAide', aide);
-            aideToUpdate = null;
-          }
-        "
-      ></AideEditCard>
-    </v-dialog>
-
     <!-- identité -->
     <v-col align-self="center" cols="3">
       <v-list-item-title>
-        {{ Personnes.label(props.participant.Personne) }}
+        <a
+          href="/camps"
+          @click.prevent="goToParticipant(props.participant.Participant)"
+        >
+          {{ Personnes.label(props.participant.Personne) }}
+        </a>
       </v-list-item-title>
       <v-list-item-subtitle>
         {{ Camps.label(props.participant.Camp) }}
@@ -225,6 +126,110 @@
         </v-list>
       </v-menu>
     </v-col>
+
+    <!-- suppression participant -->
+    <v-dialog v-model="showConfirmeDelete" max-width="600px">
+      <v-card title="Supprimer le participant">
+        <v-card-text>
+          Confirmez-vous la suppression de ce participant ? <br />
+
+          Attention, cette opération est irréversible.
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            color="red"
+            @click="
+              emit('delete');
+              showConfirmeDelete = false;
+            "
+            >Supprimer</v-btn
+          >
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- création aide -->
+    <v-dialog
+      v-if="aideToCreate != null"
+      :model-value="aideToCreate != null"
+      @update:model-value="aideToCreate = null"
+      max-width="400px"
+    >
+      <v-card title="Ajouter une aide extérieure">
+        <v-card-text>
+          <v-select
+            variant="outlined"
+            density="comfortable"
+            label="Structure"
+            :items="structureItems"
+            :model-value="
+              aideToCreate.IdStructure == 0 ? null : aideToCreate.IdStructure
+            "
+            @update:model-value="(v) => (aideToCreate!.IdStructure = v)"
+          ></v-select>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            color="green"
+            @click="
+              emit('createAide', aideToCreate);
+              aideToCreate = null;
+            "
+            :disabled="aideToCreate.IdStructure == 0"
+            >Créer</v-btn
+          >
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- suppression aide -->
+    <v-dialog
+      v-if="aideToRemove != null"
+      :model-value="aideToRemove != null"
+      @update:model-value="aideToRemove = null"
+      max-width="600px"
+    >
+      <v-card title="Supprimer l'aide">
+        <v-card-text>
+          Confirmez-vous la suppression de l'aide extérieure ? <br />
+
+          Attention, cette opération est irréversible.
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            color="red"
+            @click="
+              emit('deleteAide', aideToRemove.Id);
+              aideToRemove = null;
+            "
+            >Supprimer</v-btn
+          >
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- edition aide -->
+    <v-dialog
+      v-if="aideToUpdate != null"
+      :model-value="aideToUpdate != null"
+      @update:model-value="aideToUpdate = null"
+      max-width="800px"
+    >
+      <AideEditCard
+        :aide="aideToUpdate"
+        :structures="props.structures"
+        :participant="props.participant"
+        @save="
+          (aide) => {
+            emit('updateAide', aide);
+            aideToUpdate = null;
+          }
+        "
+      ></AideEditCard>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -246,6 +251,7 @@ import { computed, ref } from "vue";
 import ParticipantOptionPrix from "./ParticipantOptionPrix.vue";
 import RemisesChip from "./RemisesChip.vue";
 import AideEditCard from "./AideEditCard.vue";
+import { goToParticipant } from "@/clients/backoffice/router";
 
 const props = defineProps<{
   participant: ParticipantExt;

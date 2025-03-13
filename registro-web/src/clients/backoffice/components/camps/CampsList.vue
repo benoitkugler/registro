@@ -36,7 +36,7 @@
                 <template #prepend>
                   <v-icon>mdi-plus</v-icon>
                 </template>
-                Créer un séjour...
+                Créer un séjour
               </v-btn>
             </template>
             <v-list density="compact">

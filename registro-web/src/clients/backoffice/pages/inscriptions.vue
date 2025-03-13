@@ -1,50 +1,51 @@
 <template>
   <NavBar title="Suivi des inscriptions">
-    <v-tabs :model-value="tab" @update:model-value="v => setTab(v as tabValue)">
+    <v-tabs
+      :model-value="currentTab"
+      @update:model-value="v => setTab(v as InscriptionsTab)"
+    >
       <v-tab value="insc">Nouvelles inscriptions</v-tab>
       <v-tab value="doss">Suivi des dossiers</v-tab>
     </v-tabs>
   </NavBar>
 
-  <v-tabs-window :model-value="tab">
+  <v-tabs-window :model-value="currentTab">
     <v-tabs-window-item value="insc">
       <PannelInscriptions @go-to="goToDossier"></PannelInscriptions>
     </v-tabs-window-item>
     <v-tabs-window-item value="doss">
-      <PannelDossiers ref="dossiers"></PannelDossiers>
+      <PannelDossiers :initial-dossier="dossierToShow"></PannelDossiers>
     </v-tabs-window-item>
   </v-tabs-window>
 </template>
 
 <script lang="ts" setup>
-import { computed, nextTick, ref, useTemplateRef } from "vue";
+import { computed } from "vue";
 import NavBar from "../components/NavBar.vue";
 import PannelInscriptions from "../components/inscriptions/PannelInscriptions.vue";
 import PannelDossiers from "../components/inscriptions/PannelDossiers.vue";
-import type { IdDossier, Personne } from "../logic/api";
 import { useRouter } from "vue-router";
-
-type tabValue = "insc" | "doss";
-const dossiersPannel = useTemplateRef("dossiers");
+import {
+  goToDossier,
+  type InscriptionsTab,
+  type QueryURLInscriptions,
+} from "../router";
 
 const router = useRouter();
 
-const tab = computed(
-  () => (router.currentRoute.value.query["tab"] || "insc") as tabValue
+const query = computed(
+  () => router.currentRoute.value.query as QueryURLInscriptions
 );
 
-function goToDossier(id: IdDossier, responsable: Personne) {
-  setTab("doss");
-  nextTick(() => {
-    dossiersPannel.value?.showDossier(
-      id,
-      `${responsable.Prenom} ${responsable.Nom}`
-    );
-  });
-}
+const currentTab = computed(() => query.value.tab || "insc");
 
-function setTab(tab: tabValue) {
+const dossierToShow = computed(() => query.value.idDossier || null);
+
+function setTab(tab: InscriptionsTab) {
   const current = router.currentRoute.value;
-  router.push({ path: current.path, query: { tab: tab } });
+  router.push({
+    path: current.path,
+    query: { tab: tab } satisfies QueryURLInscriptions,
+  });
 }
 </script>

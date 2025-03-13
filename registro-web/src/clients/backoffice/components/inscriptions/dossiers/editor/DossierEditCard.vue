@@ -8,7 +8,7 @@
             :initial-personne="props.responsable"
             :model-value="innerDossier.IdResponsable"
             @update:model-value="
-              (v) => (v != null ? (innerDossier.IdResponsable = v) : undefined)
+              (v) => (v ? (innerDossier.IdResponsable = v) : undefined)
             "
           ></SelectPersonne>
         </v-col>

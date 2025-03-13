@@ -4,6 +4,7 @@ import {
   QueryAttente,
   QueryReglement,
   type CampExt,
+  type IdDossier,
   type Int,
   type SearchDossierIn,
 } from "./api";
@@ -62,4 +63,11 @@ export function emptyQuery(): SearchDossierIn {
     Attente: QueryAttente.EmptyQA,
     Reglement: QueryReglement.EmptyQR,
   };
+}
+
+/** build a query selecting only the given [id] */
+export function idQuery(id: IdDossier): SearchDossierIn {
+  const empty = emptyQuery();
+  empty.Pattern = `id:${id}`;
+  return empty;
 }

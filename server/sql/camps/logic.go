@@ -24,6 +24,11 @@ type ParticipantPersonne struct {
 	HasBirthday bool // anniversaire pendant le séjour ?
 }
 
+func NewParticipantPersonne(participant Participant, personne pr.Personne, camp Camp) ParticipantPersonne {
+	plage := sh.Plage{From: camp.DateDebut, Duree: camp.Duree}
+	return ParticipantPersonne{participant, personne, plage.HasBirthday(personne.DateNaissance)}
+}
+
 // StatistiquesInscrits détails le nombre d'inscriptions
 // sur un séjour
 type StatistiquesInscrits struct {
@@ -108,11 +113,10 @@ func LoadCamps(db DB, ids ...IdCamp) ([]CampLoader, error) {
 }
 
 func (cd CampLoader) Participants() []ParticipantPersonne {
-	plage := sh.Plage{From: cd.Camp.DateDebut, Duree: cd.Camp.Duree}
 	out := make([]ParticipantPersonne, 0, len(cd.participants))
 	for _, participant := range cd.participants {
 		pe := cd.personnes[participant.IdPersonne]
-		out = append(out, ParticipantPersonne{participant, pe, plage.HasBirthday(pe.DateNaissance)})
+		out = append(out, NewParticipantPersonne(participant, pe, cd.Camp))
 	}
 	return out
 }

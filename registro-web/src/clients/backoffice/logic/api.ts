@@ -3,6 +3,7 @@
 import type { AxiosResponse } from "axios";
 import Axios from "axios";
 
+export type Ar2_string = [string, string];
 export type Ar4_Int = [Int, Int, Int, Int];
 
 // AAAA-MM-YY date format
@@ -44,8 +45,7 @@ export interface DossierDetails {
   Dossier: DossierExt;
   EspacepersoURL: string;
   VirementCode: string;
-  BankName: string;
-  BankIBAN: string;
+  BankAccounts: Ar2_string[] | null;
 }
 // registro/controllers/backoffice.DossierHeader
 export interface DossierHeader {
@@ -338,20 +338,20 @@ export const ListeAttenteLabels: { [key in ListeAttente]: string } = {
   [ListeAttente.Inscrit]: "Inscrit",
 };
 
-// registro/sql/camps.Navettte
-export const Navettte = {
+// registro/sql/camps.Navette
+export const Navette = {
   NoBus: 0,
   Aller: 1,
   Retour: 2,
   AllerRetour: 3,
 } as const;
-export type Navettte = (typeof Navettte)[keyof typeof Navettte];
+export type Navette = (typeof Navette)[keyof typeof Navette];
 
-export const NavettteLabels: { [key in Navettte]: string } = {
-  [Navettte.NoBus]: "Aucun",
-  [Navettte.Aller]: "Aller",
-  [Navettte.Retour]: "Retour",
-  [Navettte.AllerRetour]: "Aller-Retour",
+export const NavetteLabels: { [key in Navette]: string } = {
+  [Navette.NoBus]: "Aucun trajet",
+  [Navette.Aller]: "Aller",
+  [Navette.Retour]: "Retour",
+  [Navette.AllerRetour]: "Aller-Retour",
 };
 
 // registro/sql/camps.OptIdCamp
@@ -402,7 +402,7 @@ export interface Participant {
   QuotientFamilial: Int;
   OptionPrix: OptionPrixParticipant;
   Details: string;
-  Navette: Navettte;
+  Navette: Navette;
 }
 // registro/sql/camps.ParticipantExt
 export interface ParticipantExt {
@@ -1133,9 +1133,11 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseUrl + "/api/v1/backoffice/participants";
     this.startRequest();
     try {
-      const rep: AxiosResponse<Participant> = await Axios.put(fullUrl, params, {
-        headers: this.getHeaders(),
-      });
+      const rep: AxiosResponse<ParticipantPersonne> = await Axios.put(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
       return rep.data;
     } catch (error) {
       this.handleError(error);
