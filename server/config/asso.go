@@ -18,12 +18,21 @@ type Asso struct {
 
 	MailsSettings MailsSettings
 
-	BankNames, BankIBANs []string // displayed in espace perso
+	bankNames, bankIBANs []string // displayed in espace perso
 
 	SupportBonsCAF, SupportANCV bool // if true, displayed in inscription form
 	EmailRetraitMedia           string
 	ShowFondSoutien             bool // if true, displayed in inscription form
 	ShowCharteConduite          bool // if true, displayed in inscription form
+}
+
+func (a *Asso) BankAccounts() [][2]string {
+	out := make([][2]string, len(a.bankNames))
+	for i, name := range a.bankNames {
+		iban := a.bankIBANs[i]
+		out[i] = [2]string{name, iban}
+	}
+	return out
 }
 
 var acve = Asso{
@@ -46,7 +55,7 @@ var acve = Asso{
 		SignatureMailCentre: "Pour le centre d'inscriptions, <br /> Marie-Pierre BUFFET",
 	},
 
-	BankNames: []string{"Crédit Mutuel"},
+	bankNames: []string{"Crédit Mutuel (FR)", "Crédit mutual (CHF)"},
 
 	SupportBonsCAF: true, SupportANCV: true,
 	EmailRetraitMedia:  "contact@acve.asso.fr",
@@ -86,8 +95,8 @@ func NewAsso() (Asso, error) {
 	if ibans == "" {
 		return Asso{}, errors.New("missing ASSO_BANK_IBAN env. variable")
 	}
-	out.BankIBANs = strings.Split(ibans, ",")
-	if len(out.BankIBANs) != len(out.BankNames) {
+	out.bankIBANs = strings.Split(ibans, ",")
+	if len(out.bankIBANs) != len(out.bankNames) {
 		return Asso{}, errors.New("inconsistent length in ASSO_BANK_IBAN")
 	}
 
