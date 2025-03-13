@@ -22,6 +22,7 @@ var (
 	preinscriptionT       *template.Template
 	notifieFusionDossierT *template.Template
 	notifieMessageT       *template.Template
+	notifiePlaceLibereeT  *template.Template
 )
 
 func init() {
@@ -31,6 +32,7 @@ func init() {
 	preinscriptionT = parseTemplate("templates/preinscription.html")
 	notifieFusionDossierT = parseTemplate("templates/notifieFusionDossier.html")
 	notifieMessageT = parseTemplate("templates/notifieMessage.html")
+	notifiePlaceLibereeT = parseTemplate("templates/notifiePlaceLiberee.html")
 }
 
 func parseTemplate(templateFile string) *template.Template {
@@ -187,15 +189,6 @@ type champsCommuns struct {
 // 		FooterInfos:   rd.Asso.Infos,
 // 		SignatureMail: rd.SignatureMail,
 // 	}
-// }
-
-// func NewAccuseReceptionSimple(camp rd.Camp, contact Contact) (string, error) {
-// 	commun := newChampCommuns(contact, "Inscription reçue")
-// 	p := paramsAccuseReceptionSimple{
-// 		Sejour:        camp.Label().String(),
-// 		champsCommuns: commun,
-// 	}
-// 	return render(templates.AccuseReceptionSimple, "base.html", p)
 // }
 
 func NotifieMessage(asso config.Asso, contact Contact, contenu, lienEspacePerso string) (string, error) {
@@ -361,6 +354,26 @@ func NotifieFusionDossier(cfg config.Asso, contact Contact, lienEspacePerso stri
 		LienEspacePerso: lienEspacePerso,
 	}
 	return render(notifieFusionDossierT, args)
+}
+
+func NotifiePlaceLiberee(cfg config.Asso, contact Contact, camp string, lienEspacePerso string) (string, error) {
+	args := struct {
+		champsCommuns
+		Contact         Contact
+		Camp            string
+		LienEspacePerso string
+	}{
+		champsCommuns: champsCommuns{
+			Title:       "Place disponible",
+			Salutations: contact.Salutations(),
+			Asso:        cfg,
+			Signature:   cfg.MailsSettings.SignatureMailCentre + "<br/><br/>" + mailAuto,
+		},
+		Contact:         contact,
+		Camp:            camp,
+		LienEspacePerso: lienEspacePerso,
+	}
+	return render(notifiePlaceLibereeT, args)
 }
 
 // func NewRenvoieLienJoomeo(lien, login, password string) (string, error) {

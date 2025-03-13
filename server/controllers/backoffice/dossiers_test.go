@@ -78,62 +78,6 @@ func TestController_searchDossiers(t *testing.T) {
 	tu.Assert(t, out.Dossiers[0].Id == dossier1.Id) // 2 messages
 }
 
-func TestController_participants(t *testing.T) {
-	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
-		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",
-		"../../migrations/init.sql")
-	defer db.Remove()
-
-	taux2, err := ds.Taux{Label: "autre", Euros: 1000, FrancsSuisse: 1560}.Insert(db)
-	tu.AssertNoErr(t, err)
-
-	pe1, err := pr.Personne{IsTemp: false, Etatcivil: pr.Etatcivil{DateNaissance: shared.Date(time.Now())}}.Insert(db)
-	tu.AssertNoErr(t, err)
-
-	camp1, err := cps.Camp{IdTaux: 1, Places: 20, AgeMin: 6, AgeMax: 12}.Insert(db)
-	tu.AssertNoErr(t, err)
-	camp2, err := cps.Camp{IdTaux: taux2.Id, Places: 20, AgeMin: 6, AgeMax: 12}.Insert(db)
-	tu.AssertNoErr(t, err)
-
-	structure, err := cps.Structureaide{}.Insert(db)
-	tu.AssertNoErr(t, err)
-
-	dossier1, err := ds.Dossier{IdResponsable: pe1.Id, IdTaux: 1, MomentInscription: time.Now()}.Insert(db)
-	tu.AssertNoErr(t, err)
-
-	ct := Controller{db: db.DB, files: fs.NewFileSystem(t.TempDir())}
-
-	part, err := ct.createParticipant(ParticipantsCreateIn{IdDossier: dossier1.Id, IdCamp: camp1.Id, IdPersonne: pe1.Id})
-	tu.AssertNoErr(t, err)
-
-	part.Participant.Statut = cps.Inscrit
-	part.Participant.QuotientFamilial = 48
-	err = ct.updateParticipant(part.Participant)
-	tu.AssertNoErr(t, err)
-
-	aide, err := ct.createAide(AidesCreateIn{IdParticipant: part.Participant.Id, IdStructure: structure.Id})
-	tu.AssertNoErr(t, err)
-	err = ct.uploadAideJustificatif(aide.Id, []byte(pngData), "test.png")
-	tu.AssertNoErr(t, err)
-
-	files, err := fs.SelectAllFiles(ct.db)
-	tu.AssertNoErr(t, err)
-	tu.Assert(t, len(files) == 1)
-
-	_, err = ct.createParticipant(ParticipantsCreateIn{IdDossier: dossier1.Id, IdCamp: camp2.Id, IdPersonne: pe1.Id})
-	tu.AssertErr(t, err) // inconsistent taux
-
-	err = ct.deleteParticipant(part.Participant.Id)
-	tu.AssertNoErr(t, err)
-
-	files, err = fs.SelectAllFiles(ct.db)
-	tu.AssertNoErr(t, err)
-	tu.Assert(t, len(files) == 0)
-
-	_, err = ct.createParticipant(ParticipantsCreateIn{IdDossier: dossier1.Id, IdCamp: camp2.Id, IdPersonne: pe1.Id})
-	tu.AssertNoErr(t, err) // now the change of taux is OK
-}
-
 const pngData = "\x89\x50\x4E\x47\x0D\x0A\x1A\x0A\x00\x00\x00\x0D\x49\x48\x44\x52" +
 	"\x00\x00\x01\x00\x00\x00\x01\x00\x01\x03\x00\x00\x00\x66\xBC\x3A" +
 	"\x25\x00\x00\x00\x03\x50\x4C\x54\x45\xB5\xD0\xD0\x63\x04\x16\xEA" +
@@ -226,17 +170,23 @@ func TestController_paiements(t *testing.T) {
 	tu.AssertNoErr(t, err)
 }
 
+func loadEnv(t *testing.T) (config.Asso, config.SMTP) {
+	tu.LoadEnv(t, "../../env.sh")
+
+	asso, err := config.NewAsso()
+	tu.AssertNoErr(t, err)
+	smtp, err := config.NewSMTP(false)
+	tu.AssertNoErr(t, err)
+	return asso, smtp
+}
+
 func TestController_mergeDossiers(t *testing.T) {
 	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
 		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",
 		"../../migrations/init.sql")
 	defer db.Remove()
 
-	tu.LoadEnv(t, "../../env.sh")
-	cfg, err := config.NewAsso()
-	tu.AssertNoErr(t, err)
-	creds, err := config.NewSMTP(false)
-	tu.AssertNoErr(t, err)
+	asso, smtp := loadEnv(t)
 
 	pe1, err := pr.Personne{IsTemp: false, Etatcivil: pr.Etatcivil{DateNaissance: shared.Date(time.Now())}}.Insert(db)
 	tu.AssertNoErr(t, err)
@@ -245,7 +195,7 @@ func TestController_mergeDossiers(t *testing.T) {
 	camp1, err := cps.Camp{IdTaux: 1, Places: 20, AgeMin: 6, AgeMax: 12}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	ct := Controller{db: db.DB, files: fs.NewFileSystem(t.TempDir()), smtp: creds, asso: cfg}
+	ct := Controller{db: db.DB, files: fs.NewFileSystem(t.TempDir()), smtp: smtp, asso: asso}
 
 	d1, err := ct.createDossier(pe1.Id)
 	tu.AssertNoErr(t, err)

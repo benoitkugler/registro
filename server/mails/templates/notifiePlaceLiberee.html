@@ -1,0 +1,36 @@
+{{ define "content" }}
+<table cellpadding="0">
+  <tr>
+    <td>
+      Bonne nouvelle, une place sur le séjour <b>{{ .Camp }}</b> se libère !
+      <br /><br />
+
+      Si vous êtes toujours intéréssé{{ .Contact.Sexe.Accord }} par ce séjour,
+      merci de nous le signaler en cliquant sur le bouton ci-dessous.
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <table width="100%" style="text-align: center" cellpadding="10">
+        <tr>
+          <td></td>
+          <td width="35%" bgcolor="#feee00" align="center">
+            <a
+              style="
+                text-decoration: none;
+                color: #000000;
+                display: inline-block;
+                width: 100%;
+              "
+              href="{{ .LienEspacePerso }}"
+            >
+              <b>MON ESPACE</b>
+            </a>
+          </td>
+          <td></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+{{ end }}

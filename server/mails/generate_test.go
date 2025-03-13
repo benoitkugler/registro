@@ -84,30 +84,6 @@ func TestNotifieMessage(t *testing.T) {
 	tu.Write(t, "NotifieMessage.html", []byte(html))
 }
 
-// func TestNotifFusion(t *testing.T) {
-// 	html, err := NewNotifFusion(
-// 		Contact{Prenom: "Claudy", Sexe: "F"},
-// 		"http://acve.fr/insription/valide?data:cryp4tedinscriptin",
-// 	)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-// 	if err := ioutil.WriteFile(PATH+"local/mail_01_fusion.html", []byte(html), 0o666); err != nil {
-// 		t.Fatal(err)
-// 	}
-// }
-
-// func TestAccuseSimple(t *testing.T) {
-// 	html, err := NewAccuseReceptionSimple(rd.Camp{Nom: "TEST", DateDebut: rd.Date(time.Now())},
-// 		Contact{Prenom: "Benoit", Sexe: "F"})
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-// 	if err := ioutil.WriteFile(PATH+"local/mail2_accuse_simple.html", []byte(html), 0o666); err != nil {
-// 		t.Fatal(err)
-// 	}
-// }
-
 // func TestDebloqueFS(t *testing.T) {
 // 	html, err := NewDebloqueFicheSanitaire(
 // 		"http://acve.fr/inscription/valide?data:cryptedinscription",
@@ -233,4 +209,12 @@ func TestNotifieFusionDossier(t *testing.T) {
 	html, err := NotifieFusionDossier(cfg, Contact{Prenom: "Benoit", Sexe: pr.Woman}, "http://localhost/test")
 	tu.AssertNoErr(t, err)
 	tu.Write(t, "NotifieFusionDossier.html", []byte(html))
+}
+
+func TestNotifiePlaceLiberee(t *testing.T) {
+	cfg, _ := loadEnv(t)
+
+	html, err := NotifiePlaceLiberee(cfg, Contact{Prenom: "Benoit", Sexe: pr.Woman}, "Vive la vie - 2056", "http://localhost/test?placelib=45")
+	tu.AssertNoErr(t, err)
+	tu.Write(t, "NotifiePlaceLiberee.html", []byte(html))
 }

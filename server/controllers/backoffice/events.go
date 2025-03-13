@@ -10,7 +10,6 @@ import (
 	"registro/mails"
 	ds "registro/sql/dossiers"
 	evs "registro/sql/events"
-	pr "registro/sql/personnes"
 	"registro/utils"
 
 	"github.com/labstack/echo/v4"
@@ -37,11 +36,7 @@ func (ct *Controller) EventsSendMessage(c echo.Context) error {
 
 // add a message and send a notification
 func (ct *Controller) sendMessage(host string, args EventsSendMessageIn) (event evs.Event, _ error) {
-	dossier, err := ds.SelectDossier(ct.db, args.IdDossier)
-	if err != nil {
-		return evs.Event{}, utils.SQLError(err)
-	}
-	responsable, err := pr.SelectPersonne(ct.db, dossier.IdResponsable)
+	dossier, responsable, err := dossierAndResp(ct.db, args.IdDossier)
 	if err != nil {
 		return evs.Event{}, utils.SQLError(err)
 	}

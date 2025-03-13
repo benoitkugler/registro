@@ -29,6 +29,13 @@ func setupRoutesBackoffice(e *echo.Echo, ct *backoffice.Controller) {
 
 	gr.GET("/api/v1/backoffice/camps/load", ct.CampsLoad)
 
+	gr.PUT("/api/v1/backoffice/participants", ct.ParticipantsCreate)
+	gr.POST("/api/v1/backoffice/participants", ct.ParticipantsUpdate)
+	gr.DELETE("/api/v1/backoffice/participants", ct.ParticipantsDelete)
+
+	gr.POST("/api/v1/backoffice/participants/move", ct.ParticipantsMove)
+	gr.POST("/api/v1/backoffice/participants/place-liberee", ct.ParticipantsSetPlaceLiberee)
+
 	// Onglet Inscriptions/Dossiers
 
 	gr.GET("/api/v1/backoffice/inscriptions", ct.InscriptionsGet)
@@ -49,10 +56,6 @@ func setupRoutesBackoffice(e *echo.Echo, ct *backoffice.Controller) {
 	gr.DELETE("/api/v1/backoffice/aides", ct.AidesDelete)
 	gr.POST("/api/v1/backoffice/aides/justificatif", ct.AidesJustificatifUpload)
 	gr.DELETE("/api/v1/backoffice/aides/justificatif", ct.AidesJustificatifDelete)
-
-	gr.PUT("/api/v1/backoffice/participants", ct.ParticipantsCreate)
-	gr.POST("/api/v1/backoffice/participants", ct.ParticipantsUpdate)
-	gr.DELETE("/api/v1/backoffice/participants", ct.ParticipantsDelete)
 
 	gr.GET("/api/v1/backoffice/paiements", ct.PaiementsCreate)
 	gr.POST("/api/v1/backoffice/paiements", ct.PaiementsUpdate)

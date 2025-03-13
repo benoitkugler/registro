@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"registro/config"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
 	"registro/sql/events"
@@ -24,11 +23,7 @@ func Test_messages(t *testing.T) {
 		"../../migrations/init.sql")
 	defer db.Remove()
 
-	tu.LoadEnv(t, "../../env.sh")
-	asso, err := config.NewAsso()
-	tu.AssertNoErr(t, err)
-	smtp, err := config.NewSMTP(false)
-	tu.AssertNoErr(t, err)
+	asso, smtp := loadEnv(t)
 
 	pe1, err := pr.Personne{Etatcivil: pr.Etatcivil{DateNaissance: shared.Date(time.Now()), Prenom: "Benoit"}}.Insert(db)
 	tu.AssertNoErr(t, err)

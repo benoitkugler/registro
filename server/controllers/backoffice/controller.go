@@ -13,9 +13,12 @@ import (
 	"registro/config"
 	"registro/controllers/logic"
 	"registro/crypto"
+	"registro/utils"
 
 	"registro/sql/camps"
+	ds "registro/sql/dossiers"
 	fs "registro/sql/files"
+	pr "registro/sql/personnes"
 
 	"github.com/golang-jwt/jwt/v5"
 	echojwt "github.com/labstack/echo-jwt/v4"
@@ -127,4 +130,16 @@ func (ct *Controller) SelectPersonne(c echo.Context) error {
 		return err
 	}
 	return c.JSON(200, out)
+}
+
+func dossierAndResp(db ds.DB, id ds.IdDossier) (ds.Dossier, pr.Personne, error) {
+	dossier, err := ds.SelectDossier(db, id)
+	if err != nil {
+		return ds.Dossier{}, pr.Personne{}, utils.SQLError(err)
+	}
+	responsable, err := pr.SelectPersonne(db, dossier.IdResponsable)
+	if err != nil {
+		return ds.Dossier{}, pr.Personne{}, utils.SQLError(err)
+	}
+	return dossier, responsable, nil
 }

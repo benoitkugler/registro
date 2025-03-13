@@ -313,31 +313,6 @@ func (ct *Controller) deleteCamp(id cps.IdCamp) error {
 	return nil
 }
 
-type CampsLoadOut struct {
-	Camp         cps.CampExt
-	Participants []cps.ParticipantPersonne
-}
-
-func (ct *Controller) CampsLoad(c echo.Context) error {
-	id, err := utils.QueryParamInt[cps.IdCamp](c, "idCamp")
-	if err != nil {
-		return err
-	}
-	out, err := ct.getParticipants(id)
-	if err != nil {
-		return err
-	}
-	return c.JSON(200, out)
-}
-
-func (ct *Controller) getParticipants(id cps.IdCamp) (CampsLoadOut, error) {
-	camp, err := cps.LoadCamp(ct.db, id)
-	if err != nil {
-		return CampsLoadOut{}, err
-	}
-	return CampsLoadOut{Camp: camp.Camp.Ext(), Participants: camp.Participants()}, nil
-}
-
 type CreateEquipierIn struct {
 	IdPersonne pr.IdPersonne
 	IdCamp     cps.IdCamp
