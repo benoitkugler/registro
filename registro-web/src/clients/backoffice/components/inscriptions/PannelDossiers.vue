@@ -90,13 +90,13 @@ import CreateDossierCard from "./dossiers/CreateDossierCard.vue";
 import DossierList from "./dossiers/DossierList.vue";
 
 const props = defineProps<{
-  initialDossier: IdDossier | null;
+  initialDossier?: IdDossier;
 }>();
 
 onMounted(() => {
   loadCamps();
   loadStructureaides();
-  if (props.initialDossier !== null) {
+  if (props.initialDossier !== undefined) {
     showDossier(props.initialDossier);
   }
 });

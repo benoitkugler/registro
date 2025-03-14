@@ -1,6 +1,6 @@
 <template>
   <NavBar title="Gestion des séjours">
-    <v-btn v-if="current !== undefined" @click="goBack">
+    <v-btn v-if="current !== null" @click="goBack">
       <template #prepend>
         <v-icon>mdi-view-list</v-icon>
       </template>
@@ -13,18 +13,18 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref } from "vue";
+import { computed } from "vue";
 import NavBar from "../components/NavBar.vue";
 import CampsList from "../components/camps/CampsList.vue";
 import type { CampHeader, IdCamp } from "../logic/api";
 import CampParticipants from "../components/camps/CampParticipants.vue";
 import { useRouter } from "vue-router";
-import type { QueryURLCamps } from "../router";
+import { parseQueryURLCamps, type QueryURLCamps } from "../router";
 
 const router = useRouter();
 
-const queryURL = computed(
-  () => router.currentRoute.value.query as QueryURLCamps
+const queryURL = computed(() =>
+  parseQueryURLCamps(router.currentRoute.value.query)
 );
 
 const current = computed(() => queryURL.value.idCamp);

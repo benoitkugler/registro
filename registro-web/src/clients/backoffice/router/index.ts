@@ -1,5 +1,5 @@
 // Composables
-import { createRouter, createWebHistory } from "vue-router";
+import { createRouter, createWebHistory, type LocationQuery } from "vue-router";
 import Index from "../pages/index.vue";
 import Camps from "../pages/camps.vue";
 import Inscriptions from "../pages/inscriptions.vue";
@@ -8,6 +8,7 @@ import type {
   IdDossier,
   IdParticipant,
   IdPersonne,
+  Int,
   Participant,
 } from "../logic/api";
 
@@ -44,12 +45,27 @@ router.isReady().then(() => {
   localStorage.removeItem("vuetify:dynamic-reload");
 });
 
+function enforceNumber<T extends number>(id: T | undefined) {
+  return id ? (Number(id) as T) : undefined;
+}
+
 export type QueryURLCamps = {
   idCamp?: IdCamp;
   idParticipant?: IdParticipant;
 };
 
-export function goToParticipant(participant: Participant) {
+export function parseQueryURLCamps(query: LocationQuery): QueryURLCamps {
+  const q = query as QueryURLCamps;
+  return {
+    idCamp: enforceNumber(q.idCamp),
+    idParticipant: enforceNumber(q.idParticipant),
+  };
+}
+
+export function goToParticipant(participant: {
+  IdCamp: IdCamp;
+  Id: IdParticipant;
+}) {
   router.push({
     path: "/camps",
     query: {
@@ -65,6 +81,13 @@ export type QueryURLInscriptions = {
   tab?: InscriptionsTab;
   idDossier?: IdDossier;
 };
+
+export function parseQueryURLInscriptions(
+  query: LocationQuery
+): QueryURLInscriptions {
+  const q = query as QueryURLInscriptions;
+  return { tab: q.tab, idDossier: enforceNumber(q.idDossier) };
+}
 
 export function goToDossier(idDossier: IdDossier) {
   router.push({

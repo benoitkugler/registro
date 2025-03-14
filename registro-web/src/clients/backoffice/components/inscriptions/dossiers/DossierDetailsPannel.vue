@@ -69,7 +69,7 @@
             @click="
               mergeParams = {
                 From: props.dossier.Dossier.Dossier.Id,
-                To: 0 as Int,
+                To: 0 as IdDossier,
                 Notifie: true,
               }
             "
@@ -157,10 +157,7 @@
               <SelectCamp
                 label="Camp"
                 :camps="props.camps"
-                :model-value="zeroableToNullable(participantToCreate!.IdCamp)"
-                @update:model-value="
-                                    (v) => (participantToCreate!.IdCamp = nullableToZeroable(v))
-                                "
+                v-model="participantToCreate.IdCamp"
               ></SelectCamp>
             </v-col>
             <v-col cols="12">
@@ -197,8 +194,8 @@
           <v-btn
             @click="
               participantToCreate = {
-                IdCamp: 0 as Int,
-                IdPersonne: 0 as Int,
+                IdCamp: 0 as IdCamp,
+                IdPersonne: 0 as IdPersonne,
                 IdDossier: props.dossier.Dossier.Dossier.Id,
               }
             "
@@ -405,7 +402,10 @@ import {
   type DossiersMergeIn,
   type Event,
   type IdAide,
+  type IdCamp,
+  type IdDossier,
   type IdParticipant,
+  type IdPersonne,
   type Int,
   type Paiement,
   type Participant,

@@ -29,17 +29,18 @@ import {
   goToDossier,
   type InscriptionsTab,
   type QueryURLInscriptions,
+  parseQueryURLInscriptions,
 } from "../router";
 
 const router = useRouter();
 
-const query = computed(
-  () => router.currentRoute.value.query as QueryURLInscriptions
+const query = computed(() =>
+  parseQueryURLInscriptions(router.currentRoute.value.query)
 );
 
 const currentTab = computed(() => query.value.tab || "insc");
 
-const dossierToShow = computed(() => query.value.idDossier || null);
+const dossierToShow = computed(() => query.value.idDossier);
 
 function setTab(tab: InscriptionsTab) {
   const current = router.currentRoute.value;

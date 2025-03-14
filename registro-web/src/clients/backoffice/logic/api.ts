@@ -93,6 +93,11 @@ export interface ParticipantsCreateIn {
   IdCamp: IdCamp;
   IdPersonne: IdPersonne;
 }
+// registro/controllers/backoffice.ParticipantsMoveIn
+export interface ParticipantsMoveIn {
+  Id: IdParticipant;
+  Target: IdCamp;
+}
 // registro/controllers/backoffice.QueryAttente
 export const QueryAttente = {
   EmptyQA: 0,
@@ -308,21 +313,17 @@ export interface CampExt {
   Camp: Camp;
   IsTerminated: boolean;
 }
-// registro/sql/camps.IdAide
-export type IdAide = Int;
-// registro/sql/camps.IdCamp
-export type IdCamp = Int;
-// registro/sql/camps.IdParticipant
-export type IdParticipant = Int;
-// registro/sql/camps.IdStructureaide
-export type IdStructureaide = Int;
+export type IdAide = number & { __opaque__: "IdAide" };
+export type IdCamp = number & { __opaque__: "IdCamp" };
+export type IdParticipant = number & { __opaque__: "IdParticipant" };
+export type IdStructureaide = number & { __opaque__: "IdStructureaide" };
 // registro/sql/camps.Jours
 export type Jours = Int[] | null;
 // registro/sql/camps.ListeAttente
 export const ListeAttente = {
   AStatuer: 0,
-  AttenteProfilInvalide: 1,
-  Refuse: 2,
+  Refuse: 1,
+  AttenteProfilInvalide: 2,
   AttenteCampComplet: 3,
   EnAttenteReponse: 4,
   Inscrit: 5,
@@ -331,8 +332,8 @@ export type ListeAttente = (typeof ListeAttente)[keyof typeof ListeAttente];
 
 export const ListeAttenteLabels: { [key in ListeAttente]: string } = {
   [ListeAttente.AStatuer]: "A statuer",
-  [ListeAttente.AttenteProfilInvalide]: "Profil invalide",
   [ListeAttente.Refuse]: "Refusé définitivement",
+  [ListeAttente.AttenteProfilInvalide]: "Profil limite",
   [ListeAttente.AttenteCampComplet]: "Camp complet",
   [ListeAttente.EnAttenteReponse]: "En attente de réponse",
   [ListeAttente.Inscrit]: "Inscrit",
@@ -483,12 +484,9 @@ export interface Dossier {
   LastSeenEspaceperso: Time;
   KeyV1: string;
 }
-// registro/sql/dossiers.IdDossier
-export type IdDossier = Int;
-// registro/sql/dossiers.IdPaiement
-export type IdPaiement = Int;
-// registro/sql/dossiers.IdTaux
-export type IdTaux = Int;
+export type IdDossier = number & { __opaque__: "IdDossier" };
+export type IdPaiement = number & { __opaque__: "IdPaiement" };
+export type IdTaux = number & { __opaque__: "IdTaux" };
 // registro/sql/dossiers.ModePaiement
 export const ModePaiement = {
   Cheque: 0,
@@ -560,8 +558,7 @@ export interface EventMessage {
   VuBackoffice: boolean;
   VuEspaceperso: boolean;
 }
-// registro/sql/events.IdEvent
-export type IdEvent = Int;
+export type IdEvent = number & { __opaque__: "IdEvent" };
 // registro/sql/events.MessageOrigine
 export const MessageOrigine = {
   FromEspaceperso: 0,
@@ -648,8 +645,7 @@ export const DiplomeLabels: { [key in Diplome]: string } = {
   [Diplome.DZzautre]: "AUTRE",
 };
 
-// registro/sql/personnes.IdPersonne
-export type IdPersonne = Int;
+export type IdPersonne = number & { __opaque__: "IdPersonne" };
 // registro/sql/personnes.Mails
 export type Mails = string[] | null;
 // registro/sql/personnes.Nationnalite
@@ -844,7 +840,7 @@ export abstract class AbstractAPI {
   }
 
   /** CampsDelete performs the request and handles the error */
-  async CampsDelete(params: { id: Int }) {
+  async CampsDelete(params: { id: IdCamp }) {
     const fullUrl = this.baseUrl + "/api/v1/backoffice/camps";
     this.startRequest();
     try {
@@ -887,13 +883,84 @@ export abstract class AbstractAPI {
   }
 
   /** CampsLoad performs the request and handles the error */
-  async CampsLoad(params: { idCamp: Int }) {
+  async CampsLoad(params: { idCamp: IdCamp }) {
     const fullUrl = this.baseUrl + "/api/v1/backoffice/camps/load";
     this.startRequest();
     try {
       const rep: AxiosResponse<CampsLoadOut> = await Axios.get(fullUrl, {
         headers: this.getHeaders(),
         params: { idCamp: String(params["idCamp"]) },
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** ParticipantsCreate performs the request and handles the error */
+  async ParticipantsCreate(params: ParticipantsCreateIn) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/participants";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<ParticipantPersonne> = await Axios.put(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** ParticipantsUpdate performs the request and handles the error */
+  async ParticipantsUpdate(params: Participant) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/participants";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** ParticipantsDelete performs the request and handles the error */
+  async ParticipantsDelete(params: { id: IdParticipant }) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/participants";
+    this.startRequest();
+    try {
+      await Axios.delete(fullUrl, {
+        headers: this.getHeaders(),
+        params: { id: String(params["id"]) },
+      });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** ParticipantsMove performs the request and handles the error */
+  async ParticipantsMove(params: ParticipantsMoveIn) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/participants/move";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** ParticipantsSetPlaceLiberee performs the request and handles the error */
+  async ParticipantsSetPlaceLiberee(params: { id: IdParticipant }) {
+    const fullUrl =
+      this.baseUrl + "/api/v1/backoffice/participants/place-liberee";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<Participant> = await Axios.post(fullUrl, null, {
+        headers: this.getHeaders(),
+        params: { id: String(params["id"]) },
       });
       return rep.data;
     } catch (error) {
@@ -917,7 +984,7 @@ export abstract class AbstractAPI {
   }
 
   /** InscriptionsSearchSimilaires performs the request and handles the error */
-  async InscriptionsSearchSimilaires(params: { idPersonne: Int }) {
+  async InscriptionsSearchSimilaires(params: { idPersonne: IdPersonne }) {
     const fullUrl =
       this.baseUrl + "/api/v1/backoffice/inscriptions/search-similaires";
     this.startRequest();
@@ -952,7 +1019,7 @@ export abstract class AbstractAPI {
   }
 
   /** InscriptionsValide performs the request and handles the error */
-  async InscriptionsValide(params: { idDossier: Int }) {
+  async InscriptionsValide(params: { idDossier: IdDossier }) {
     const fullUrl = this.baseUrl + "/api/v1/backoffice/inscriptions/valide";
     this.startRequest();
     try {
@@ -983,7 +1050,7 @@ export abstract class AbstractAPI {
   }
 
   /** DossiersLoad performs the request and handles the error */
-  async DossiersLoad(params: { id: Int }) {
+  async DossiersLoad(params: { id: IdDossier }) {
     const fullUrl = this.baseUrl + "/api/v1/backoffice/dossiers";
     this.startRequest();
     try {
@@ -998,7 +1065,7 @@ export abstract class AbstractAPI {
   }
 
   /** DossiersCreate performs the request and handles the error */
-  async DossiersCreate(params: { idResponsable: Int }) {
+  async DossiersCreate(params: { idResponsable: IdPersonne }) {
     const fullUrl = this.baseUrl + "/api/v1/backoffice/dossiers";
     this.startRequest();
     try {
@@ -1029,7 +1096,7 @@ export abstract class AbstractAPI {
   }
 
   /** DossiersDelete performs the request and handles the error */
-  async DossiersDelete(params: { id: Int }) {
+  async DossiersDelete(params: { id: IdDossier }) {
     const fullUrl = this.baseUrl + "/api/v1/backoffice/dossiers";
     this.startRequest();
     try {
@@ -1082,7 +1149,7 @@ export abstract class AbstractAPI {
   }
 
   /** AidesDelete performs the request and handles the error */
-  async AidesDelete(params: { id: Int }) {
+  async AidesDelete(params: { id: IdAide }) {
     const fullUrl = this.baseUrl + "/api/v1/backoffice/aides";
     this.startRequest();
     try {
@@ -1097,7 +1164,7 @@ export abstract class AbstractAPI {
   }
 
   /** AidesJustificatifUpload performs the request and handles the error */
-  async AidesJustificatifUpload(file: File, params: { idAide: Int }) {
+  async AidesJustificatifUpload(file: File, params: { idAide: IdAide }) {
     const fullUrl = this.baseUrl + "/api/v1/backoffice/aides/justificatif";
     this.startRequest();
     try {
@@ -1114,7 +1181,7 @@ export abstract class AbstractAPI {
   }
 
   /** AidesJustificatifDelete performs the request and handles the error */
-  async AidesJustificatifDelete(params: { idAide: Int }) {
+  async AidesJustificatifDelete(params: { idAide: IdAide }) {
     const fullUrl = this.baseUrl + "/api/v1/backoffice/aides/justificatif";
     this.startRequest();
     try {
@@ -1128,51 +1195,8 @@ export abstract class AbstractAPI {
     }
   }
 
-  /** ParticipantsCreate performs the request and handles the error */
-  async ParticipantsCreate(params: ParticipantsCreateIn) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/participants";
-    this.startRequest();
-    try {
-      const rep: AxiosResponse<ParticipantPersonne> = await Axios.put(
-        fullUrl,
-        params,
-        { headers: this.getHeaders() },
-      );
-      return rep.data;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  /** ParticipantsUpdate performs the request and handles the error */
-  async ParticipantsUpdate(params: Participant) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/participants";
-    this.startRequest();
-    try {
-      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-      return true;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  /** ParticipantsDelete performs the request and handles the error */
-  async ParticipantsDelete(params: { id: Int }) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/participants";
-    this.startRequest();
-    try {
-      await Axios.delete(fullUrl, {
-        headers: this.getHeaders(),
-        params: { id: String(params["id"]) },
-      });
-      return true;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
   /** PaiementsCreate performs the request and handles the error */
-  async PaiementsCreate(params: { idDossier: Int }) {
+  async PaiementsCreate(params: { idDossier: IdDossier }) {
     const fullUrl = this.baseUrl + "/api/v1/backoffice/paiements";
     this.startRequest();
     try {
@@ -1199,7 +1223,7 @@ export abstract class AbstractAPI {
   }
 
   /** PaiementsDelete performs the request and handles the error */
-  async PaiementsDelete(params: { id: Int }) {
+  async PaiementsDelete(params: { id: IdPaiement }) {
     const fullUrl = this.baseUrl + "/api/v1/backoffice/paiements";
     this.startRequest();
     try {
@@ -1226,7 +1250,7 @@ export abstract class AbstractAPI {
   }
 
   /** EventsDelete performs the request and handles the error */
-  async EventsDelete(params: { id: Int }) {
+  async EventsDelete(params: { id: IdEvent }) {
     const fullUrl = this.baseUrl + "/api/v1/backoffice/events";
     this.startRequest();
     try {
@@ -1241,7 +1265,7 @@ export abstract class AbstractAPI {
   }
 
   /** EventsMarkMessagesSeen performs the request and handles the error */
-  async EventsMarkMessagesSeen(params: { idDossier: Int }) {
+  async EventsMarkMessagesSeen(params: { idDossier: IdDossier }) {
     const fullUrl = this.baseUrl + "/api/v1/backoffice/events/message/seen";
     this.startRequest();
     try {

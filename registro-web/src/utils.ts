@@ -1,11 +1,12 @@
 import { CurrencyLabels, Sexe } from "./clients/backoffice/logic/api";
-import type {
-  Paiement,
-  Personne,
-  Time,
-  Event,
-  Montant,
-  PrixQuotientFamilial,
+import {
+  type Paiement,
+  type Personne,
+  type Time,
+  type Event,
+  type Montant,
+  type PrixQuotientFamilial,
+  ListeAttente,
 } from "./clients/backoffice/logic/api";
 import type { Date_, Int } from "./clients/inscription/logic/api";
 import { newDate_ } from "./components/date";
@@ -55,16 +56,16 @@ export function copy<T>(v: T): T {
   return JSON.parse(JSON.stringify(v));
 }
 
-export function mapFromObject<T extends { Id: Int }>(
+export function mapFromObject<S extends number, T extends { Id: S }>(
   data:
     | {
         [key in T["Id"]]: T;
       }
     | null
 ) {
-  return new Map<Int, T>(
+  return new Map<S, T>(
     Object.entries(data || {}).map((entry) => [
-      Number(entry[0]) as Int,
+      Number(entry[0]) as S,
       entry[1] as T,
     ])
   );
@@ -101,26 +102,26 @@ export function round(v: number) {
   return Math.round(v) as Int;
 }
 
-export function optToNullable<T extends Int>(opt: {
+export function optToNullable<T extends number>(opt: {
   Id: T;
   Valid: boolean;
 }): T | null {
   return opt.Valid ? opt.Id : null;
 }
 
-export function nullableToOpt<T extends Int>(
+export function nullableToOpt<T extends number>(
   id: T | null
 ): { Id: T; Valid: boolean } {
   return id === null ? { Valid: false, Id: 0 as T } : { Valid: true, Id: id };
 }
 
 // converts 0 to null
-export function zeroableToNullable<T extends Int>(id: T): T | null {
+export function zeroableToNullable<T extends number>(id: T): T | null {
   return id != 0 ? id : null;
 }
 
 // converts null to 0
-export function nullableToZeroable<T extends Int>(id: T | null): T {
+export function nullableToZeroable<T extends number>(id: T | null): T {
   return id === null ? (0 as T) : id;
 }
 
@@ -285,6 +286,21 @@ export namespace Formatters {
         return "mdi-gender-male";
       case Sexe.Woman:
         return "mdi-gender-female";
+    }
+  }
+
+  export function listeAttente(s: ListeAttente) {
+    switch (s) {
+      case ListeAttente.EnAttenteReponse:
+        return { icon: "mdi-clock", color: "yellow-darken-2" };
+      case ListeAttente.Refuse:
+        return { icon: "mdi-close-thick", color: "deep-orange" };
+      case ListeAttente.AStatuer:
+        return { icon: "mdi-help" };
+      case ListeAttente.Inscrit:
+        return { icon: "mdi-check", color: "green" };
+      default:
+        return { icon: "mdi-clock" };
     }
   }
 

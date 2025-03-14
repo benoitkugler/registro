@@ -149,6 +149,7 @@ import type {
   Camp,
   CampHeader,
   IdCamp,
+  IdTaux,
   Int,
   Taux,
 } from "@/clients/backoffice/logic/api";
@@ -254,7 +255,7 @@ async function setTaux() {
 const showCreateMany = ref(false);
 const createCount = ref(5 as Int);
 const createSelectedTaux = ref<Taux>({
-  Id: 1 as Int, // defaut taux
+  Id: 1 as IdTaux, // defaut taux
   Label: "",
   Euros: 0 as Int,
   FrancsSuisse: 0 as Int,

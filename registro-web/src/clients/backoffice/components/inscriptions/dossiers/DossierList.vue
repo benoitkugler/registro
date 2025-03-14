@@ -50,10 +50,10 @@
           <SelectCamp
             label="Camp"
             :camps="props.camps"
-            :model-value="optToNullable(query.IdCamp)"
+            :model-value="nullableToZeroable(optToNullable(query.IdCamp))"
             @update:model-value="
               (id) => {
-                query.IdCamp = nullableToOpt(id);
+                query.IdCamp = nullableToOpt(zeroableToNullable(id));
                 searchDossiers();
               }
             "
@@ -116,7 +116,13 @@ import {
   type SearchDossierOut,
 } from "@/clients/backoffice/logic/api";
 import { controller } from "@/clients/backoffice/logic/logic";
-import { nullableToOpt, optToNullable, selectItems } from "@/utils";
+import {
+  nullableToOpt,
+  nullableToZeroable,
+  optToNullable,
+  selectItems,
+  zeroableToNullable,
+} from "@/utils";
 import { ref, watch } from "vue";
 
 const props = defineProps<{

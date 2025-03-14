@@ -10,11 +10,13 @@
     :rules="props.rules"
   >
     <template #item="{ item, props: menuProps }">
-      <v-list-item
-        v-bind="menuProps"
-        :title="item.title"
-        :prepend-icon="item.raw.icon"
-      ></v-list-item>
+      <v-list-item v-bind="menuProps" :title="item.title">
+        <template #prepend>
+          <v-icon :color="item.raw.format.color">{{
+            item.raw.format.icon
+          }}</v-icon>
+        </template>
+      </v-list-item>
     </template>
   </v-select>
 </template>
@@ -24,7 +26,7 @@ import {
   ListeAttente,
   ListeAttenteLabels,
 } from "@/clients/backoffice/logic/api";
-import { selectItems } from "@/utils";
+import { Formatters, selectItems } from "@/utils";
 const props = defineProps<{
   hideDetails?: boolean;
   readonly?: boolean;
@@ -36,7 +38,7 @@ const modelValue = defineModel<ListeAttente>({ required: true });
 const items = selectItems(ListeAttenteLabels).map((statut) => ({
   value: statut.value,
   title: statut.title,
-  icon: statut.value == ListeAttente.Inscrit ? "mdi-check" : "mdi-clock",
+  format: Formatters.listeAttente(statut.value),
 }));
 </script>
 

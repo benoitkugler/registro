@@ -10,8 +10,8 @@
         @click="
           toCreate = {
             IdCamp: props.id,
-            IdDossier: 0 as Int,
-            IdPersonne: 0 as Int,
+            IdDossier: 0 as IdDossier,
+            IdPersonne: 0 as IdPersonne,
           }
         "
       >
@@ -36,18 +36,14 @@
                   :text="ListeAttenteLabels[p.Participant.Statut]"
                 >
                   <template #activator="{ props }">
-                    <v-icon v-bind="props"> mdi-clock </v-icon>
-                  </template>
-                </v-tooltip>
-
-                <v-tooltip
-                  v-else-if="p.HasBirthday"
-                  :text="`${p.Personne.Prenom} a son anniveraire pendant le camp !`"
-                >
-                  <template #activator="{ props }">
-                    <v-icon v-bind="props" color="amber"
-                      >mdi-cake-variant</v-icon
+                    <v-icon
+                      :color="
+                        Formatters.listeAttente(p.Participant.Statut).color
+                      "
+                      v-bind="props"
                     >
+                      {{ Formatters.listeAttente(p.Participant.Statut).icon }}
+                    </v-icon>
                   </template>
                 </v-tooltip>
               </template>
@@ -55,12 +51,28 @@
           </v-col>
 
           <v-col align-self="center" cols="auto">
-            <v-icon class="ma-2">
+            <v-icon class="ma-2 mr-4">
               {{ Formatters.sexeIcon(p.Personne.Sexe) }}
             </v-icon>
           </v-col>
-          <v-col align-self="center" cols="auto">
-            {{ Formatters.dateNaissance(p.Personne.DateNaissance) }}
+          <v-col align-self="center" cols="1">
+            <v-row no-gutters>
+              <v-col align-self="end">
+                {{ Formatters.dateNaissance(p.Personne.DateNaissance) }}
+              </v-col>
+              <v-col align-self="end" cols="auto">
+                <v-tooltip
+                  v-if="p.HasBirthday"
+                  :text="`${p.Personne.Prenom} a son anniveraire pendant le camp !`"
+                >
+                  <template #activator="{ props }">
+                    <v-icon v-bind="props" color="pink"
+                      >mdi-cake-variant</v-icon
+                    >
+                  </template>
+                </v-tooltip>
+              </v-col>
+            </v-row>
           </v-col>
           <v-col align-self="center" cols="1" class="text-center">
             {{
@@ -96,6 +108,27 @@
                   title="Modifier"
                   prepend-icon="mdi-pencil"
                   @click="toEdit = p"
+                ></v-list-item>
+                <v-divider></v-divider>
+                <v-list-item
+                  title="Changer de camp..."
+                  prepend-icon="mdi-file-move"
+                  @click="
+                    moveArgs = {
+                      Id: p.Participant.Id,
+                      Target: 0 as IdCamp,
+                    }
+                  "
+                ></v-list-item>
+                <v-list-item
+                  title="Notifier d'une place disponible."
+                  subtitle="Envoi un email"
+                  prepend-icon="mdi-email-alert"
+                  :disabled="
+                    p.Participant.Statut == ListeAttente.Inscrit ||
+                    p.Participant.Statut == ListeAttente.EnAttenteReponse
+                  "
+                  @click="confirmeSetPlaceLiberee = p"
                 ></v-list-item>
                 <v-divider></v-divider>
                 <v-list-item
@@ -188,12 +221,63 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- move participant -->
+    <v-dialog
+      v-if="moveArgs != null"
+      :model-value="moveArgs != null"
+      @update:model-value="moveArgs = null"
+      max-width="500px"
+    >
+      <v-card title="Déplacer le participant">
+        <v-card-text>
+          <SelectCamp
+            label="Nouveau séjour"
+            :camps="camps"
+            v-model="moveArgs.Target"
+          />
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            @click="moveParticipant"
+            :disabled="moveArgs.Target == props.id || !moveArgs.Target"
+            >Déplacer</v-btn
+          >
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- place libérée -->
+    <v-dialog
+      v-if="confirmeSetPlaceLiberee != null"
+      :model-value="confirmeSetPlaceLiberee != null"
+      @update:model-value="confirmeSetPlaceLiberee = null"
+      max-width="500px"
+    >
+      <v-card title="Notifier d'une place disponible">
+        <v-card-text>
+          Confirmez-vous l'envoi d'une notification au responsable de
+          {{ Personnes.label(confirmeSetPlaceLiberee.Personne) }} indiquant
+          qu'une place est disponible ? <br /><br />
+
+          Le nouveau statut de
+          {{ confirmeSetPlaceLiberee.Personne.Prenom }} sera :
+          <i>{{ ListeAttenteLabels[ListeAttente.EnAttenteReponse] }}</i
+          >.
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn @click="setPlaceLiberee">Notifier</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-card>
   <v-skeleton-loader v-else type="card"></v-skeleton-loader>
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed, watch } from "vue";
 import { controller } from "@/clients/backoffice/logic/logic";
 import {
   ListeAttente,
@@ -209,25 +293,23 @@ import {
   type Participant,
   type ParticipantPersonne,
   type ParticipantsCreateIn,
+  type ParticipantsMoveIn,
 } from "@/clients/backoffice/logic/api";
 import { Camps, Formatters, Personnes } from "@/utils";
 import { ageFrom } from "@/components/date";
 import ParticipantEdit from "./ParticipantEdit.vue";
-import { goToDossier, goToPersonne } from "../../router";
+import { goToDossier, goToParticipant, goToPersonne } from "../../router";
 
 const props = defineProps<{
   id: IdCamp;
-}>();
-
-const emit = defineEmits<{
-  (e: "goToPersonne", id: IdPersonne): void;
-  (e: "goToDossier", id: IdDossier): void;
 }>();
 
 onMounted(() => {
   loadCamp();
   fetchCamps();
 });
+
+watch(() => props.id, loadCamp);
 
 const isLoading = ref(false);
 
@@ -295,5 +377,34 @@ async function deleteParticipant() {
   data.value.Participants = (data.value.Participants || []).filter(
     (p) => p.Participant.Id != id
   );
+}
+
+const moveArgs = ref<ParticipantsMoveIn | null>(null);
+async function moveParticipant() {
+  const args = moveArgs.value;
+  if (args == null || data.value == null) return;
+  moveArgs.value = null;
+  const res = await controller.ParticipantsMove(args);
+  if (res === undefined) return;
+  controller.showMessage("Participant déplacé avec succès.", undefined, {
+    title: "Aller au nouveau séjour",
+    action: () => goToParticipant({ IdCamp: args.Target, Id: args.Id }),
+  });
+  data.value.Participants = (data.value.Participants || []).filter(
+    (p) => p.Participant.Id != args.Id
+  );
+}
+
+const confirmeSetPlaceLiberee = ref<ParticipantPersonne | null>(null);
+async function setPlaceLiberee() {
+  if (confirmeSetPlaceLiberee.value == null) return;
+  const id = confirmeSetPlaceLiberee.value.Participant.Id;
+  confirmeSetPlaceLiberee.value = null;
+  const res = await controller.ParticipantsSetPlaceLiberee({ id });
+  if (res === undefined) return;
+  // update the participant
+  if (data.value == null) return;
+  const item = data.value.Participants?.find((p) => p.Participant.Id == id)!;
+  item.Participant = res;
 }
 </script>

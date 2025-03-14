@@ -338,6 +338,10 @@ func (ct *Controller) setPlaceLiberee(host string, id cps.IdParticipant) (cps.Pa
 		return cps.Participant{}, err
 	}
 
+	if participant.Statut == cps.Inscrit || participant.Statut == cps.EnAttenteReponse {
+		return cps.Participant{}, errors.New("invalid Statut")
+	}
+
 	participant.Statut = cps.EnAttenteReponse
 
 	err = utils.InTx(ct.db, func(tx *sql.Tx) error {

@@ -131,7 +131,7 @@ function toNewProfile() {
   emit("identifie", {
     IdTemporaire: props.personne.Id,
     Rattache: false,
-    RattacheTo: 0 as Int,
+    RattacheTo: 0 as IdPersonne,
   });
 }
 

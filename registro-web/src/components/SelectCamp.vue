@@ -6,7 +6,8 @@
     :readonly="props.readonly"
     :items="campItems"
     clearable
-    v-model="modelValue"
+    :model-value="zeroableToNullable(modelValue)"
+    @update:model-value="(id) => (modelValue = nullableToZeroable(id))"
   >
     <template #prepend>
       <v-tooltip
@@ -32,6 +33,7 @@
 
 <script setup lang="ts">
 import type { CampItem, IdCamp } from "@/clients/backoffice/logic/api";
+import { nullableToZeroable, zeroableToNullable } from "@/utils";
 import { computed, ref, watch } from "vue";
 const props = defineProps<{
   label: string;
@@ -39,7 +41,7 @@ const props = defineProps<{
   readonly?: boolean;
 }>();
 
-const modelValue = defineModel<IdCamp | null>({ required: true });
+const modelValue = defineModel<IdCamp>({ required: true });
 
 const showTerminatedCamps = ref(false);
 const campItems = computed(() =>

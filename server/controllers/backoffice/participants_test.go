@@ -90,4 +90,7 @@ func TestController_participants(t *testing.T) {
 
 	_, err = ct.setPlaceLiberee("localhost", p2.Participant.Id)
 	tu.AssertNoErr(t, err)
+
+	_, err = ct.setPlaceLiberee("localhost", p2.Participant.Id)
+	tu.AssertErr(t, err) // already notified !
 }

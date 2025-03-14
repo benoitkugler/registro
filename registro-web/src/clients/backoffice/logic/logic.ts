@@ -4,11 +4,12 @@ import {
   QueryAttente,
   QueryReglement,
   type CampExt,
+  type IdCamp,
   type IdDossier,
   type Int,
   type SearchDossierIn,
 } from "./api";
-import { devToken } from "./env";
+import { devToken } from "../env";
 
 export type Action = {
   title: string;
@@ -59,7 +60,7 @@ export function isCampOpen(camp: CampExt) {
 export function emptyQuery(): SearchDossierIn {
   return {
     Pattern: "",
-    IdCamp: { Valid: false, Id: 0 as Int },
+    IdCamp: { Valid: false, Id: 0 as IdCamp },
     Attente: QueryAttente.EmptyQA,
     Reglement: QueryReglement.EmptyQR,
   };

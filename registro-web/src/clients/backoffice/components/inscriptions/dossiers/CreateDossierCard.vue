@@ -32,5 +32,5 @@ const emit = defineEmits<{
   (e: "create", idResponsable: IdPersonne): void;
 }>();
 
-const resp = ref<IdPersonne>(0 as Int);
+const resp = ref<IdPersonne>(0 as IdPersonne);
 </script>

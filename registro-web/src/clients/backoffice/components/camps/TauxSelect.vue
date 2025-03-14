@@ -103,12 +103,12 @@ async function fetch() {
 function onSwitch(useExistant: boolean | null) {
   if (useExistant) {
     if (selected.value == null) {
-      selected.value = 1 as Int; // defaut
+      selected.value = 1 as IdTaux; // defaut
     }
     modelValue.value = copy(tauxMap.value.get(selected.value)!);
   } else {
     selected.value = null;
-    modelValue.value.Id = 0 as Int;
+    modelValue.value.Id = 0 as IdTaux;
     modelValue.value.Label = "";
   }
 }

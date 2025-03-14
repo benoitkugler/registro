@@ -105,7 +105,7 @@
             @click="
               aideToCreate = {
                 IdParticipant: props.participant.Participant.Id,
-                IdStructure: 0 as Int,
+                IdStructure: 0 as IdStructureaide,
               }
             "
           ></v-list-item>
@@ -240,6 +240,7 @@ import {
   type Aides,
   type AidesCreateIn,
   type IdAide,
+  type IdStructureaide,
   type Int,
   type OptionPrixParticipant,
   type Participant,
