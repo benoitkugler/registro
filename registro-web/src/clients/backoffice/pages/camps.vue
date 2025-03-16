@@ -19,7 +19,7 @@ import CampsList from "../components/camps/CampsList.vue";
 import type { CampHeader, IdCamp } from "../logic/api";
 import CampParticipants from "../components/camps/CampParticipants.vue";
 import { useRouter } from "vue-router";
-import { parseQueryURLCamps, type QueryURLCamps } from "../router";
+import { parseQueryURLCamps, type QueryURLCamps } from "../plugins/router";
 
 const router = useRouter();
 

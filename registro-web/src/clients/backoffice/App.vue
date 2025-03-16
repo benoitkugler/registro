@@ -42,7 +42,8 @@
 
 <script lang="ts" setup>
 import { reactive, ref } from "vue";
-import { controller, type Action } from "./logic/logic";
+import { controller } from "./logic/logic";
+import type { Action } from "@/utils";
 
 const message = reactive({
   text: "",

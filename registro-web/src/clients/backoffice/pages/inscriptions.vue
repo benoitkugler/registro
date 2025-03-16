@@ -30,7 +30,7 @@ import {
   type InscriptionsTab,
   type QueryURLInscriptions,
   parseQueryURLInscriptions,
-} from "../router";
+} from "../plugins/router";
 
 const router = useRouter();
 

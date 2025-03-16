@@ -17,7 +17,7 @@
 import { computed, ref, watch } from "vue";
 import NavBar from "../components/NavBar.vue";
 import { useRouter } from "vue-router";
-import { parseQueryURLCamps, parseQueryURLPersonnes } from "../router";
+import { parseQueryURLPersonnes } from "../plugins/router";
 import type { IdPersonne, Personne } from "../logic/api";
 import PersonneEdit from "../components/annuaire/PersonneEdit.vue";
 import { controller } from "../logic/logic";

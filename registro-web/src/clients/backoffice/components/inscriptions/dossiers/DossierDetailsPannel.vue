@@ -425,7 +425,7 @@ import DossierEditCard from "./editor/DossierEditCard.vue";
 import DossierParticipantRow from "./editor/DossierParticipantRow.vue";
 import PaiementEditCard from "./PaiementEditCard.vue";
 import { controller, emptyQuery } from "@/clients/backoffice/logic/logic";
-import { goToParticipant } from "@/clients/backoffice/router";
+import { goToParticipant } from "@/clients/backoffice/plugins/router";
 
 const props = defineProps<{
   dossier: DossierDetails;

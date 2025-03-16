@@ -252,7 +252,7 @@ import { computed, ref } from "vue";
 import ParticipantOptionPrix from "./ParticipantOptionPrix.vue";
 import RemisesChip from "./RemisesChip.vue";
 import AideEditCard from "./AideEditCard.vue";
-import { goToParticipant } from "@/clients/backoffice/router";
+import { goToParticipant } from "@/clients/backoffice/plugins/router";
 
 const props = defineProps<{
   participant: ParticipantExt;

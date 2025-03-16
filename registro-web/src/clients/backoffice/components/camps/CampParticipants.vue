@@ -298,7 +298,11 @@ import {
 import { Camps, Formatters, Personnes } from "@/utils";
 import { ageFrom } from "@/components/date";
 import ParticipantEdit from "./ParticipantEdit.vue";
-import { goToDossier, goToParticipant, goToPersonne } from "../../router";
+import {
+  goToDossier,
+  goToParticipant,
+  goToPersonne,
+} from "../../plugins/router";
 
 const props = defineProps<{
   id: IdCamp;

@@ -12,18 +12,7 @@ import "vuetify/styles";
 import { createVuetify } from "vuetify";
 
 import { fr } from "vuetify/locale";
-
-const asso = import.meta.env.VITE_ASSO;
-
-const colorsAcve =
-  asso == "acve"
-    ? {
-        primary: "#c8db30",
-        secondary: "#b8dbf1",
-        accent: "#feee00",
-      }
-    : // TODO: couleurs repères
-      {};
+import { colorScheme } from "@/utils";
 
 // https://vuetifyjs.com/en/introduction/why-vuetify/#feature-guides
 export default createVuetify({
@@ -35,7 +24,7 @@ export default createVuetify({
     defaultTheme: "light",
     themes: {
       light: {
-        colors: colorsAcve,
+        colors: colorScheme,
       },
     },
   },

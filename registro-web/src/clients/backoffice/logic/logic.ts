@@ -1,4 +1,4 @@
-import { parseError } from "@/utils";
+import { parseError, type Action } from "@/utils";
 import {
   AbstractAPI,
   QueryAttente,
@@ -11,10 +11,6 @@ import {
 } from "./api";
 import { devToken } from "../env";
 
-export type Action = {
-  title: string;
-  action: () => void;
-};
 class Controller extends AbstractAPI {
   constructor(
     public onError: (kind: string, htmlError: string) => void,

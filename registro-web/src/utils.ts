@@ -11,6 +11,23 @@ import {
 import type { Date_, Int } from "./clients/inscription/logic/api";
 import { newDate_ } from "./components/date";
 
+const asso = import.meta.env.VITE_ASSO;
+
+export const colorScheme =
+  asso == "acve"
+    ? {
+        primary: "#c8db30",
+        secondary: "#b8dbf1",
+        accent: "#feee00",
+      }
+    : // TODO: couleurs repères
+      {};
+
+export type Action = {
+  title: string;
+  action: () => void;
+};
+
 function arrayBufferToString(buffer: ArrayBuffer) {
   const uintArray = new Uint8Array(buffer);
   const encodedString = String.fromCharCode.apply(null, Array.from(uintArray));
