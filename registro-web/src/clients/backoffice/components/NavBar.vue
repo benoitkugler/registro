@@ -28,6 +28,15 @@
     >
       Inscriptions
     </v-list-item>
+    <v-divider></v-divider>
+    <v-list-item
+      prepend-icon="mdi-account-multiple"
+      link
+      :to="{ path: '/annuaire' }"
+      color="primary"
+    >
+      Annuaire
+    </v-list-item>
   </v-navigation-drawer>
 
   <v-app-bar rounded elevation="4" color="secondary">

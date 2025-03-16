@@ -3,7 +3,7 @@
     variant="outlined"
     density="compact"
     placeholder="JJ/MM/AAAA"
-    :label="props.label"
+    :label="props.label || 'Date de naissance'"
     :model-value="inner"
     @update:model-value="onType"
     :readonly="props.readonly"
@@ -20,7 +20,7 @@ import { ref, watch } from "vue";
 import { useDate } from "vuetify";
 import { autocomplete, parse } from "./date";
 const props = defineProps<{
-  label: string;
+  label?: string;
   hideDetails?: boolean;
   readonly?: boolean;
   error?: string;

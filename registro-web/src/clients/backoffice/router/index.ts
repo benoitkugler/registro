@@ -8,14 +8,14 @@ import type {
   IdDossier,
   IdParticipant,
   IdPersonne,
-  Int,
-  Participant,
 } from "../logic/api";
+import Annuaire from "../pages/annuaire.vue";
 
 const routes = [
   { path: "/", component: Index },
   { path: "/camps", component: Camps },
   { path: "/inscriptions", component: Inscriptions },
+  { path: "/annuaire", component: Annuaire },
 ];
 
 // TODO: check that
@@ -96,8 +96,24 @@ export function goToDossier(idDossier: IdDossier) {
   });
 }
 
+export type QueryURLPersonnes = {
+  idPersonne?: IdPersonne;
+};
+
+export function parseQueryURLPersonnes(
+  query: LocationQuery
+): QueryURLPersonnes {
+  const q = query as QueryURLPersonnes;
+  return {
+    idPersonne: enforceNumber(q.idPersonne),
+  };
+}
+
 export function goToPersonne(idPersonne: IdPersonne) {
-  // TODO:
+  router.push({
+    path: "/annuaire",
+    query: { idPersonne } satisfies QueryURLPersonnes,
+  });
 }
 
 export default router;

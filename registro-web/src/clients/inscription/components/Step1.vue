@@ -37,7 +37,6 @@
           <v-col md="3" sm="8">
             <DateNaissanceField
               v-model="respo.DateNaissance"
-              label="Date de naissance"
               :rule="checkDateNaissance"
             ></DateNaissanceField>
           </v-col>

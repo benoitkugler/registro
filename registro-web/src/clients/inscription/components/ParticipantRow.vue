@@ -38,7 +38,6 @@
             <v-col cols="7">
               <DateNaissanceField
                 v-model="participant.DateNaissance"
-                label="Date de naissance"
                 :rule="checkDateNaissance"
               ></DateNaissanceField>
             </v-col>
