@@ -14,6 +14,7 @@ type Asso struct {
 	Icon               string       // included as image src attribute
 	Color, ColorAccent template.CSS // included as background-color
 
+	// TODO: préciser l'utilisation
 	ContactNom, ContactTel, ContactMail string
 
 	MailsSettings MailsSettings
@@ -63,8 +64,33 @@ var acve = Asso{
 	ShowCharteConduite: false,
 }
 
-// TODO: collect Repere values
-var repere = Asso{}
+var repere = Asso{
+	Title: "Repère",
+	Infos: "Association Repère 2022"
+
+	ContactNom:  "Repère - Centre d'inscriptions",
+	ContactTel:  "",
+	ContactMail: "info@lerepere.ch",
+
+	Icon: "assets/logo_repere.png"
+	Color:  "#2b678a",
+	ColorAccent: "#2eaadc",
+
+	MailsSettings: MailsSettings{
+		AssoName:            "Repère",
+		Sauvegarde:          "",
+		Unsubscribe:         "info@lerepere.ch",
+		ReplyTo:             "info@lerepere.ch",
+		SignatureMailCentre: "L'équipe Repère",
+	},
+
+	bankNames: []string{"Crédit Mutuel (FR)", "Crédit mutual (CHF)"},
+
+	SupportBonsCAF: false, SupportANCV: false,
+	EmailRetraitMedia:  "webmaster@lerepere.ch",
+	ShowFondSoutien:    true,
+	ShowCharteConduite: true,
+}
 
 type MailsSettings struct {
 	AssoName            string // used in adress and as object prefix
