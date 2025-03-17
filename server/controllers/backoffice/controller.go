@@ -107,6 +107,8 @@ func JWTUser(c echo.Context) (isAdmin bool) {
 	return meta.IsAdmin
 }
 
+// ---------------------------------- Shared API ----------------------------------
+
 func (ct *Controller) GetCamps(c echo.Context) error {
 	out, err := logic.LoadCamps(ct.db)
 	if err != nil {
