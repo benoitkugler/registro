@@ -66,14 +66,14 @@ var acve = Asso{
 
 var repere = Asso{
 	Title: "Repère",
-	Infos: "Association Repère 2022"
+	Infos: "Association Repère - 2022",
 
 	ContactNom:  "Repère - Centre d'inscriptions",
 	ContactTel:  "",
 	ContactMail: "info@lerepere.ch",
 
-	Icon: "assets/logo_repere.png"
-	Color:  "#2b678a",
+	Icon:        "assets/logo_repere.png",
+	Color:       "#2b678a",
 	ColorAccent: "#2eaadc",
 
 	MailsSettings: MailsSettings{
