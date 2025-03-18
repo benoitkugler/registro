@@ -69,19 +69,6 @@ export interface EventsSendMessageIn {
   IdDossier: IdDossier;
   Contenu: string;
 }
-// registro/controllers/backoffice.IdentTarget
-export interface IdentTarget {
-  IdTemporaire: IdPersonne;
-  Rattache: boolean;
-  RattacheTo: IdPersonne;
-}
-// registro/controllers/backoffice.Inscription
-export interface Inscription {
-  Dossier: Dossier;
-  Message: string;
-  Responsable: Personne;
-  Participants: ParticipantExt[] | null;
-}
 // registro/controllers/backoffice.InscriptionIdentifieIn
 export interface InscriptionIdentifieIn {
   IdDossier: IdDossier;
@@ -228,6 +215,20 @@ export type EventContent =
 export type Events = Event[] | null;
 // registro/controllers/logic.Facture
 export type Facture = Record<string, never>;
+// registro/controllers/logic.IdentTarget
+export interface IdentTarget {
+  IdTemporaire: IdPersonne;
+  Rattache: boolean;
+  RattacheTo: IdPersonne;
+}
+// registro/controllers/logic.Inscription
+export interface Inscription {
+  Dossier: Dossier;
+  Message: string;
+  Responsable: Personne;
+  Participants: ParticipantExt[] | null;
+  ValidatedBy: IdCamp[] | null;
+}
 // registro/controllers/logic.Message
 export interface Message {
   Message: EventMessage;

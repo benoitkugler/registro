@@ -15,7 +15,7 @@ export interface CampExt {
   Duree: Int;
   Lieu: string;
   Description: string;
-  Navette: Navette;
+  Navette: OptionNavette;
   Places: Int;
   AgeMin: Int;
   AgeMax: Int;
@@ -61,10 +61,9 @@ export interface Settings {
   ShowFondSoutien: boolean;
   ShowCharteConduite: boolean;
 }
-// registro/sql/camps.IdCamp
-export type IdCamp = Int;
-// registro/sql/camps.Navette
-export interface Navette {
+export type IdCamp = number & { __opaque__: "IdCamp" };
+// registro/sql/camps.OptionNavette
+export interface OptionNavette {
   Actif: boolean;
   Commentaire: string;
 }
@@ -135,64 +134,46 @@ export abstract class AbstractAPI {
     return { Authorization: "Bearer " + this.authToken };
   }
 
-  protected async rawLoadData(params: {
-    preselected: string;
-    preinscription: string;
-  }) {
-    const fullUrl = this.baseUrl + "/api/v1/inscription/load";
-    const rep: AxiosResponse<Data> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-      params: {
-        preselected: params["preselected"],
-        preinscription: params["preinscription"],
-      },
-    });
-    return rep.data;
-  }
-
-  /** LoadData wraps rawLoadData and handles the error */
+  /** LoadData performs the request and handles the error */
   async LoadData(params: { preselected: string; preinscription: string }) {
+    const fullUrl = this.baseUrl + "/api/v1/inscription/load";
     this.startRequest();
     try {
-      const out = await this.rawLoadData(params);
-      return out;
+      const rep: AxiosResponse<Data> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: {
+          preselected: params["preselected"],
+          preinscription: params["preinscription"],
+        },
+      });
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected async rawSaveInscription(params: Inscription) {
-    const fullUrl = this.baseUrl + "/api/v1/inscription/save";
-    await Axios.put(fullUrl, params, { headers: this.getHeaders() });
-    return true;
-  }
-
-  /** SaveInscription wraps rawSaveInscription and handles the error */
+  /** SaveInscription performs the request and handles the error */
   async SaveInscription(params: Inscription) {
+    const fullUrl = this.baseUrl + "/api/v1/inscription/save";
     this.startRequest();
     try {
-      const out = await this.rawSaveInscription(params);
-      return out;
+      await Axios.put(fullUrl, params, { headers: this.getHeaders() });
+      return true;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected async rawSearchHistory(params: { mail: string }) {
-    const fullUrl = this.baseUrl + "/api/v1/inscription/search";
-    const rep: AxiosResponse<SearchHistoryOut> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-      params: { mail: params["mail"] },
-    });
-    return rep.data;
-  }
-
-  /** SearchHistory wraps rawSearchHistory and handles the error */
+  /** SearchHistory performs the request and handles the error */
   async SearchHistory(params: { mail: string }) {
+    const fullUrl = this.baseUrl + "/api/v1/inscription/search";
     this.startRequest();
     try {
-      const out = await this.rawSearchHistory(params);
-      return out;
+      const rep: AxiosResponse<SearchHistoryOut> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { mail: params["mail"] },
+      });
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
