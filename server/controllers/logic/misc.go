@@ -46,3 +46,18 @@ func SelectPersonne(db pr.DB, pattern string, removeTemp bool) ([]search.Personn
 	}
 	return out, nil
 }
+
+func SearchSimilaires(db pr.DB, id pr.IdPersonne) ([]search.ScoredPersonne, error) {
+	const maxCount = 5
+	personnes, err := pr.SelectAllPersonnes(db)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	input := personnes[id]
+
+	_, filtered := search.ChercheSimilaires(utils.MapValues(personnes), search.NewPatternsSimilarite(input))
+	if len(filtered) > maxCount {
+		filtered = filtered[:maxCount]
+	}
+	return filtered, nil
+}

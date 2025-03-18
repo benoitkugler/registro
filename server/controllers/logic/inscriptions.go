@@ -3,14 +3,83 @@ package logic
 import (
 	"database/sql"
 	"errors"
+	"slices"
+	"strings"
 
 	"registro/controllers/search"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
+	evs "registro/sql/events"
 	"registro/sql/files"
 	pr "registro/sql/personnes"
 	"registro/utils"
 )
+
+type Inscription struct {
+	Dossier      ds.Dossier
+	Message      string // le message (optionnel) du formulaire d'inscription
+	Responsable  pr.Personne
+	Participants []cps.ParticipantExt
+	// ValidatedBy stores the camp which have validated
+	// this inscription, computed using the participants status.
+	// This field is ignored in backoffice, but used in directeurs
+	// to handle inscriptions with mixed camps.
+	ValidatedBy []cps.IdCamp
+}
+
+func newInscription(de Dossier) Inscription {
+	var chunks []string
+	// collect the messages
+	for _, event := range de.Events.By(evs.Message) {
+		content := event.Content.(Message).Message
+		if content.Origine == evs.FromEspaceperso {
+			chunks = append(chunks, content.Contenu)
+		}
+	}
+	message := strings.Join(chunks, "\n\n")
+
+	var validatedBy []cps.IdCamp
+	for idCamp, l := range de.Participants.ByIdCamp() {
+		validated := true
+		for _, p := range l {
+			if p.Statut == cps.AStatuer {
+				validated = false
+				break
+			}
+		}
+		if validated {
+			validatedBy = append(validatedBy, idCamp)
+		}
+	}
+
+	return Inscription{
+		Dossier:      de.Dossier,
+		Responsable:  de.Responsable(),
+		Participants: de.ParticipantsExt(),
+		Message:      message,
+		ValidatedBy:  validatedBy,
+	}
+}
+
+// LoadInscriptions sorts by time
+func LoadInscriptions(db ds.DB, ids ...ds.IdDossier) ([]Inscription, error) {
+	loader, err := LoadDossiers(db, ids...)
+	if err != nil {
+		return nil, err
+	}
+
+	out := make([]Inscription, len(ids))
+	for i, id := range ids {
+		out[i] = newInscription(loader.For(id))
+	}
+
+	// sort by time
+	slices.SortFunc(out, func(a, b Inscription) int {
+		return a.Dossier.MomentInscription.Compare(b.Dossier.MomentInscription)
+	})
+
+	return out, nil
+}
 
 // IdentTarget indique comment identifier une personne temporaire.
 //
@@ -88,4 +157,40 @@ func IdentifiePersonne(db *sql.DB, args IdentTarget) error {
 	})
 
 	return err
+}
+
+// PrepareValideInscription renvoie les participants modifiés,
+// à persister via une requête SQL.
+func (loader Dossier) PrepareValideInscription(db ds.DB) (cps.Participants, error) {
+	// on s'assure qu'aucune personne n'est temporaire
+	for _, pe := range loader.Personnes() {
+		if pe.IsTemp {
+			return nil, errors.New("internal error: personne should not be temporary")
+		}
+	}
+
+	// le status est calculé camp par camp
+	dossierByCamp := loader.Participants.ByIdCamp()
+
+	// on calcule le statut des participants (requiert les participants et personnes déjà inscrites)
+	camps, err := cps.LoadCamps(db, loader.Camps().IDs()...)
+	if err != nil {
+		return nil, err
+	}
+
+	out := make(cps.Participants)
+	for _, camp := range camps {
+		incommingPa := utils.MapValues(dossierByCamp[camp.Camp.Id])
+		incommingPe := loader.PersonnesFor(incommingPa)
+
+		for index, status := range camp.Status(incommingPe) {
+			listeAttente := status.Hint()
+			// update the participant
+			pa := incommingPa[index]
+			pa.Statut = listeAttente
+			out[pa.Id] = pa
+		}
+	}
+
+	return out, err
 }

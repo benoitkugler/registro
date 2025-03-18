@@ -76,7 +76,7 @@ const deltaToken = 3 * 24 * time.Hour
 
 // NewToken generate a connection token.
 //
-// It may be used to setup a dev. token.
+// It may be also used to setup a dev. token.
 func (ct *Controller) NewToken(idCamp cps.IdCamp) (string, error) {
 	// Set custom claims
 	claims := &customClaims{

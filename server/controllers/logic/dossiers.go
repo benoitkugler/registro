@@ -2,12 +2,10 @@ package logic
 
 import (
 	"slices"
-	"strings"
 	"time"
 
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
-	evs "registro/sql/events"
 	pr "registro/sql/personnes"
 	"registro/utils"
 )
@@ -69,52 +67,6 @@ func (ld *Dossiers) For(id ds.IdDossier) Dossier {
 	dossier, participants := ld.Dossiers[id], ld.participants[id]
 	events := ld.events.For(id)
 	return Dossier{dossier, participants, ld.personnes, ld.camps, events}
-}
-
-type Inscription struct {
-	Dossier      ds.Dossier
-	Message      string // le message (optionnel) du formulaire d'inscription
-	Responsable  pr.Personne
-	Participants []cps.ParticipantExt
-}
-
-func newInscription(de Dossier) Inscription {
-	var chunks []string
-	// collect the messages
-	for _, event := range de.Events.By(evs.Message) {
-		content := event.Content.(Message).Message
-		if content.Origine == evs.FromEspaceperso {
-			chunks = append(chunks, content.Contenu)
-		}
-	}
-	message := strings.Join(chunks, "\n\n")
-
-	return Inscription{
-		Dossier:      de.Dossier,
-		Responsable:  de.Responsable(),
-		Participants: de.ParticipantsExt(),
-		Message:      message,
-	}
-}
-
-// LoadInscriptions sorts by time
-func LoadInscriptions(db ds.DB, ids ...ds.IdDossier) ([]Inscription, error) {
-	loader, err := LoadDossiers(db, ids...)
-	if err != nil {
-		return nil, err
-	}
-
-	out := make([]Inscription, len(ids))
-	for i, id := range ids {
-		out[i] = newInscription(loader.For(id))
-	}
-
-	// sort by time
-	slices.SortFunc(out, func(a, b Inscription) int {
-		return a.Dossier.MomentInscription.Compare(b.Dossier.MomentInscription)
-	})
-
-	return out, nil
 }
 
 type Dossier struct {

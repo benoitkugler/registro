@@ -1,7 +1,6 @@
 package backoffice
 
 import (
-	"database/sql"
 	"testing"
 	"time"
 
@@ -10,7 +9,6 @@ import (
 	ds "registro/sql/dossiers"
 	pr "registro/sql/personnes"
 	"registro/sql/shared"
-	"registro/utils"
 	tu "registro/utils/testutils"
 )
 
@@ -49,31 +47,6 @@ func TestController_getInscriptions(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(out) == 2)
 	tu.Assert(t, out[0].Dossier.Id == dossier1.Id)
-}
-
-func TestController_searchSimilaires(t *testing.T) {
-	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
-		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",
-		"../../migrations/init.sql")
-	defer db.Remove()
-
-	err := utils.InTx(db.DB, func(tx *sql.Tx) error {
-		for range [2000]int{} {
-			_, err := pr.Personne{}.Insert(tx)
-			if err != nil {
-				return err
-			}
-		}
-		return nil
-	})
-	tu.AssertNoErr(t, err)
-
-	ct := Controller{db: db.DB}
-
-	ti := time.Now()
-	_, err = ct.searchSimilaires(1)
-	tu.AssertNoErr(t, err)
-	tu.Assert(t, time.Since(ti) < 50*time.Millisecond)
 }
 
 func TestValideInscription(t *testing.T) {

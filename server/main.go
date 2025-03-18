@@ -11,9 +11,11 @@ import (
 
 	"registro/config"
 	"registro/controllers/backoffice"
+	"registro/controllers/directeurs"
 	"registro/controllers/espaceperso"
 	"registro/controllers/inscriptions"
 	"registro/crypto"
+	cp "registro/sql/camps"
 	"registro/sql/files"
 
 	"github.com/labstack/echo/v4"
@@ -30,11 +32,11 @@ func main() {
 	// TODO: setup APIS
 	joomeo, helloasso := config.Joomeo{}, config.Helloasso{}
 
-	fmt.Println("Connecting to DB", dbCreds.Name, "at", dbCreds.Host)
+	fmt.Println("Connecting to DB", dbCreds.Name, "at", dbCreds.Host, "...")
 	db, err := dbCreds.ConnectPostgres()
 	check(err)
 	check(db.Ping())
-	fmt.Println("Ping DB -> OK.")
+	fmt.Println("Connecting DB -> OK.")
 
 	e := echo.New()
 	e.HideBanner = true
@@ -46,12 +48,15 @@ func main() {
 	backofficeCt, err := backoffice.NewController(db, encrypter, fs, smtp, asso, joomeo, helloasso)
 	check(err)
 
-	inscriptionsCt := inscriptions.NewController(db, encrypter, smtp, asso)
+	directeursCt, err := directeurs.NewController(db, encrypter, fs, smtp, asso, joomeo)
+	check(err)
 
 	espacepersoCt := espaceperso.NewController(db, encrypter, smtp, asso)
 
+	inscriptionsCt := inscriptions.NewController(db, encrypter, smtp, asso)
+
 	if isDev {
-		fmt.Println("Running in dev mode")
+		fmt.Println("Running in dev mode :")
 
 		e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 			AllowMethods:  append(middleware.DefaultCORSConfig.AllowMethods, http.MethodOptions),
@@ -60,14 +65,25 @@ func main() {
 		}))
 		fmt.Println("\tenabling CORS")
 
-		token, err := backofficeCt.NewToken(false)
+		tokenB, err := backofficeCt.NewToken(false)
 		check(err)
-		fmt.Println("\tcentral dev token:", token)
+		fmt.Println("\tbackoffice dev token:", tokenB)
+
+		// select and generate a directeur token
+		camps, err := cp.SelectAllCamps(db)
+		check(err)
+		ids := camps.IDs()
+		if len(ids) != 0 {
+			tokenC, err := directeursCt.NewToken(ids[0])
+			check(err)
+			fmt.Println("\tdirecteurs", ids[0], "dev token:", tokenC)
+		}
 	}
 
 	setupRoutesBackoffice(e, backofficeCt)
-	setupRoutesInscriptions(e, inscriptionsCt)
+	setupRoutesDirecteurs(e, directeursCt)
 	setupRoutesEspaceperso(e, espacepersoCt)
+	setupRoutesInscriptions(e, inscriptionsCt)
 
 	adress := getAdress(isDev)
 

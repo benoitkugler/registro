@@ -2,11 +2,8 @@ package backoffice
 
 import (
 	"database/sql"
-	"errors"
 
 	"registro/controllers/logic"
-	"registro/controllers/search"
-	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
 	pr "registro/sql/personnes"
 	"registro/utils"
@@ -38,26 +35,11 @@ func (ct *Controller) InscriptionsSearchSimilaires(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	out, err := ct.searchSimilaires(id)
+	out, err := logic.SearchSimilaires(ct.db, id)
 	if err != nil {
 		return err
 	}
 	return c.JSON(200, out)
-}
-
-func (ct *Controller) searchSimilaires(id pr.IdPersonne) ([]search.ScoredPersonne, error) {
-	const maxCount = 5
-	personnes, err := pr.SelectAllPersonnes(ct.db)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-	input := personnes[id]
-
-	_, filtered := search.ChercheSimilaires(utils.MapValues(personnes), search.NewPatternsSimilarite(input))
-	if len(filtered) > maxCount {
-		filtered = filtered[:maxCount]
-	}
-	return filtered, nil
 }
 
 type InscriptionIdentifieIn struct {
@@ -104,45 +86,25 @@ func (ct *Controller) InscriptionsValide(c echo.Context) error {
 }
 
 func (ct *Controller) valideInscription(id ds.IdDossier) error {
-	data, err := logic.LoadDossier(ct.db, id)
+	loader, err := logic.LoadDossier(ct.db, id)
 	if err != nil {
 		return err
 	}
 
-	// on s'assure qu'aucune personne n'est temporaire
-	for _, pe := range data.Personnes() {
-		if pe.IsTemp {
-			return errors.New("internal error: personne should not be temporary")
-		}
-	}
-
-	// le status est calculé camp par camp
-	dossierByCamp := data.Participants.ByIdCamp()
-
-	// on calcule le statut des participants (requiert les participants et personnes déjà inscrites)
-	loaders, err := cps.LoadCamps(ct.db, data.Camps().IDs()...)
+	participants, err := loader.PrepareValideInscription(ct.db)
 	if err != nil {
 		return err
 	}
 
 	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
-		for _, loader := range loaders {
-			incommingPa := utils.MapValues(dossierByCamp[loader.Camp.Id])
-			incommingPe := data.PersonnesFor(incommingPa)
-			for index, status := range loader.Status(incommingPe) {
-				listeAttente := status.Hint()
-				part := incommingPa[index]
-				// update the participant
-				part.Statut = listeAttente
-				_, err = part.Update(tx)
-				if err != nil {
-					return err
-				}
+		for _, part := range participants {
+			_, err = part.Update(tx)
+			if err != nil {
+				return err
 			}
 		}
-		dossier := data.Dossier
-		dossier.IsValidated = true
-		_, err = dossier.Update(tx)
+		loader.Dossier.IsValidated = true
+		_, err = loader.Dossier.Update(tx)
 
 		return err
 	})

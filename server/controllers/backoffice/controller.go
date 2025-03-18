@@ -83,7 +83,7 @@ const deltaToken = 3 * 24 * time.Hour
 
 // NewToken generate a connection token.
 //
-// It may be used to setup a dev. token.
+// It may also be used to setup a dev. token.
 func (ct *Controller) NewToken(isAdmin bool) (string, error) {
 	// Set custom claims
 	claims := &customClaims{
