@@ -15,8 +15,12 @@ type CampItem struct {
 	IsOld bool // true if the end is passed by 45 jours
 }
 
-func LoadCamps(db cps.DB) ([]CampItem, error) {
+func NewCampItem(camp cps.Camp) CampItem {
 	const deltaOld = 45
+	return CampItem{camp.Id, camp.Label(), camp.IsPassedBy(deltaOld)}
+}
+
+func LoadCamps(db cps.DB) ([]CampItem, error) {
 	camps, err := cps.SelectAllCamps(db)
 	if err != nil {
 		return nil, utils.SQLError(err)
@@ -26,7 +30,7 @@ func LoadCamps(db cps.DB) ([]CampItem, error) {
 
 	out := make([]CampItem, len(list))
 	for i, camp := range list {
-		out[i] = CampItem{camp.Id, camp.Label(), camp.IsPassedBy(deltaOld)}
+		out[i] = NewCampItem(camp)
 	}
 	return out, nil
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -14,6 +15,7 @@ import (
 	"registro/controllers/directeurs"
 	"registro/controllers/espaceperso"
 	"registro/controllers/inscriptions"
+	"registro/controllers/logic"
 	"registro/crypto"
 	cp "registro/sql/camps"
 	"registro/sql/files"
@@ -72,11 +74,15 @@ func main() {
 		// select and generate a directeur token
 		camps, err := cp.SelectAllCamps(db)
 		check(err)
+
 		ids := camps.IDs()
 		if len(ids) != 0 {
-			tokenC, err := directeursCt.NewToken(ids[0])
+			camp := camps[ids[0]]
+			tokenC, err := directeursCt.NewToken(camp.Id)
 			check(err)
-			fmt.Println("\tdirecteurs", ids[0], "dev token:", tokenC)
+			b, _ := json.Marshal(logic.NewCampItem(camp))
+			fmt.Println("\tdirecteurs dev env:")
+			fmt.Printf("export const devCamp = %s;\nexport const devToken = %q\n", b, tokenC)
 		}
 	}
 

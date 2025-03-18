@@ -8,6 +8,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     BoolField: typeof import('./src/components/BoolField.vue')['default']
+    CardSimilaires: typeof import('./src/components/inscriptions/CardSimilaires.vue')['default']
     copy: typeof import('./src/components/NavetteField copy.vue')['default']
     DateField: typeof import('./src/components/DateField.vue')['default']
     DateNaissanceField: typeof import('./src/components/DateNaissanceField.vue')['default']
@@ -24,6 +25,8 @@ declare module 'vue' {
     EventSondageV: typeof import('./src/components/events/EventSondageV.vue')['default']
     EventSupprimeV: typeof import('./src/components/events/EventSupprimeV.vue')['default']
     EventSwitch: typeof import('./src/components/EventSwitch.vue')['default']
+    InscriptionEtatcivilCols: typeof import('./src/components/inscriptions/InscriptionEtatcivilCols.vue')['default']
+    InscriptionRow: typeof import('./src/components/inscriptions/InscriptionRow.vue')['default']
     IntField: typeof import('./src/components/IntField.vue')['default']
     ListeAttenteField: typeof import('./src/components/ListeAttenteField.vue')['default']
     ModePaiementField: typeof import('./src/components/ModePaiementField.vue')['default']

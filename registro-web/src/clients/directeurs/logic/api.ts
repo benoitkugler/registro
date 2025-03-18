@@ -18,6 +18,12 @@ export interface InscriptionIdentifieIn {
   IdDossier: IdDossier;
   Target: IdentTarget;
 }
+// registro/controllers/logic.CampItem
+export interface CampItem {
+  Id: IdCamp;
+  Label: string;
+  IsOld: boolean;
+}
 // registro/controllers/logic.IdentTarget
 export interface IdentTarget {
   IdTemporaire: IdPersonne;
@@ -364,6 +370,37 @@ export abstract class AbstractAPI {
     return { Authorization: "Bearer " + this.authToken };
   }
 
+  /** GetCamps performs the request and handles the error */
+  async GetCamps() {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/shared/camps";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<CampItem[] | null> = await Axios.post(
+        fullUrl,
+        null,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** SelectPersonne performs the request and handles the error */
+  async SelectPersonne(params: { search: string }) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/shared/personne";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<PersonneHeader[] | null> = await Axios.get(
+        fullUrl,
+        { headers: this.getHeaders(), params: { search: params["search"] } },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
   /** InscriptionsGet performs the request and handles the error */
   async InscriptionsGet() {
     const fullUrl = this.baseUrl + "/api/v1/directeurs/inscriptions";
@@ -419,11 +456,11 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseUrl + "/api/v1/directeurs/inscriptions/valide";
     this.startRequest();
     try {
-      await Axios.post(fullUrl, null, {
+      const rep: AxiosResponse<Inscription> = await Axios.post(fullUrl, null, {
         headers: this.getHeaders(),
         params: { idDossier: String(params["idDossier"]) },
       });
-      return true;
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }

@@ -2,6 +2,7 @@ package directeurs
 
 import (
 	"database/sql"
+	"slices"
 
 	"registro/controllers/backoffice"
 	"registro/controllers/logic"
@@ -22,6 +23,17 @@ func (ct *Controller) InscriptionsGet(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
+func sortParticipants(insc logic.Inscription, user cps.IdCamp) {
+	slices.SortFunc(insc.Participants, func(a, b cps.ParticipantExt) int {
+		if a.Camp.Id == user {
+			return -1
+		} else if b.Camp.Id == user {
+			return 1
+		}
+		return 0
+	})
+}
+
 func (ct *Controller) getInscriptions(user cps.IdCamp) ([]logic.Inscription, error) {
 	parts, err := cps.SelectParticipantsByIdCamps(ct.db, user)
 	if err != nil {
@@ -34,7 +46,17 @@ func (ct *Controller) getInscriptions(user cps.IdCamp) ([]logic.Inscription, err
 	// restrict to new inscriptions
 	dossiers.RestrictByValidated(false)
 
-	return logic.LoadInscriptions(ct.db, dossiers.IDs()...)
+	out, err := logic.LoadInscriptions(ct.db, dossiers.IDs()...)
+	if err != nil {
+		return nil, err
+	}
+
+	// sort participant by camp
+	for _, insc := range out {
+		sortParticipants(insc, user)
+	}
+
+	return out, nil
 }
 
 func (ct *Controller) InscriptionsSearchSimilaires(c echo.Context) error {
@@ -54,6 +76,8 @@ type InscriptionIdentifieIn = backoffice.InscriptionIdentifieIn
 // InscriptionsIdentifiePersonne identifie et renvoie l'inscription
 // mise à jour
 func (ct *Controller) InscriptionsIdentifiePersonne(c echo.Context) error {
+	user := JWTUser(c)
+
 	var args InscriptionIdentifieIn
 	if err := c.Bind(&args); err != nil {
 		return err
@@ -69,6 +93,7 @@ func (ct *Controller) InscriptionsIdentifiePersonne(c echo.Context) error {
 		return err
 	}
 	out := l[0]
+	sortParticipants(out, user)
 
 	return c.JSON(200, out)
 }
@@ -87,7 +112,15 @@ func (ct *Controller) InscriptionsValide(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	return c.NoContent(200)
+
+	l, err := logic.LoadInscriptions(ct.db, id)
+	if err != nil {
+		return err
+	}
+	out := l[0]
+	sortParticipants(out, user)
+
+	return c.JSON(200, out)
 }
 
 func (ct *Controller) valideInscription(id ds.IdDossier, idCamp cps.IdCamp) error {

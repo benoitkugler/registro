@@ -20,9 +20,10 @@
           v-for="(insc, i) in displayed"
           :key="i"
           :inscription="insc"
+          hide-delete
+          :already-validated="insc.ValidatedBy?.includes(controller.camp!.Id)"
           @identifie="(v) => identifie(insc.Dossier.Id, v)"
           @valide="valideInsc(insc)"
-          @delete="deleteInsc(insc)"
           :api="{
             searchSimilaires:
               controller.InscriptionsSearchSimilaires.bind(controller),
@@ -38,13 +39,13 @@
 import { onMounted, computed, ref } from "vue";
 import { controller } from "../../logic/logic";
 import type { IdDossier, IdentTarget, Inscription } from "../../logic/api";
-import InscriptionRow from "../../../../components/inscriptions/InscriptionRow.vue";
+import InscriptionRow from "@/components/inscriptions/InscriptionRow.vue";
 import { normalize, Personnes, Camps } from "@/utils";
 
 const props = defineProps<{}>();
 
 const emit = defineEmits<{
-  (e: "goTo", id: IdDossier): void;
+  (e: "goTo"): void;
 }>();
 
 const isLoading = ref(false);
@@ -88,27 +89,21 @@ async function identifie(id: IdDossier, target: IdentTarget) {
 }
 
 async function valideInsc(insc: Inscription) {
-  const res = await controller.InscriptionsValide({
-    idDossier: insc.Dossier.Id,
-  });
+  const idDossier = insc.Dossier.Id;
+  const res = await controller.InscriptionsValide({ idDossier });
   if (res === undefined) return;
 
   controller.showMessage("Inscription validée avec succès.", "", {
-    title: "Aller au dossier",
-    action: () => emit("goTo", insc.Dossier.Id),
+    title: "Aller aux participants",
+    action: () => emit("goTo"),
   });
 
-  // delete from this view
-  data.value = data.value.filter((val) => val.Dossier.Id != insc.Dossier.Id);
-}
-
-async function deleteInsc(insc: Inscription) {
-  const res = await controller.DossiersDelete({ id: insc.Dossier.Id });
-  if (res === undefined) return;
-
-  controller.showMessage("Inscription supprimée avec succès.");
-
-  // delete from this view
-  data.value = data.value.filter((val) => val.Dossier.Id != insc.Dossier.Id);
+  // delete from this view if validated, only update otherwise
+  if (res.Dossier.IsValidated) {
+    data.value = data.value.filter((val) => val.Dossier.Id != idDossier);
+  } else {
+    const index = data.value.findIndex((val) => val.Dossier.Id == idDossier);
+    data.value[index] = res;
+  }
 }
 </script>

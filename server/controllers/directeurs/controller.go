@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"registro/config"
+	"registro/controllers/logic"
 	"registro/crypto"
 
 	cps "registro/sql/camps"
@@ -98,4 +99,23 @@ func (ct *Controller) NewToken(idCamp cps.IdCamp) (string, error) {
 func JWTUser(c echo.Context) (idCamp cps.IdCamp) {
 	meta := c.Get("user").(*jwt.Token).Claims.(*customClaims) // the token is valid here
 	return meta.IdCamp
+}
+
+// ---------------------------- shared API ----------------------------
+
+func (ct *Controller) GetCamps(c echo.Context) error {
+	out, err := logic.LoadCamps(ct.db)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) SelectPersonne(c echo.Context) error {
+	search := c.QueryParam("search")
+	out, err := logic.SelectPersonne(ct.db, search, true)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
 }

@@ -31,6 +31,7 @@
         </v-tooltip>
       </template>
       <CardSimilaires
+        :api="props.api"
         :personne="props.personne"
         @identifie="(v) => emit('identifie', v)"
       ></CardSimilaires>
@@ -49,12 +50,17 @@
 </template>
 
 <script setup lang="ts">
-import { type IdentTarget, type Personne } from "../../logic/api";
+import {
+  type IdentTarget,
+  type Personne,
+} from "../../clients/backoffice/logic/api";
 import CardSimilaires from "./CardSimilaires.vue";
 import { mergeProps } from "vue";
 import { Formatters, Personnes } from "@/utils";
+import type { SimilairesAPI } from "./types";
 const props = defineProps<{
   personne: Personne;
+  api: SimilairesAPI;
 }>();
 
 const emit = defineEmits<{

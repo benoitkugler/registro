@@ -89,16 +89,16 @@ import { onMounted, ref } from "vue";
 import type {
   IdentTarget,
   IdPersonne,
-  Int,
   Personne,
   PersonneHeader,
   ScoredPersonne,
-} from "../../logic/api";
-import { controller } from "../../logic/logic";
+} from "../../clients/backoffice/logic/api";
 import { Formatters } from "@/utils";
+import type { SimilairesAPI } from "./types";
 
 const props = defineProps<{
   personne: Personne;
+  api: SimilairesAPI;
 }>();
 
 const emit = defineEmits<{
@@ -109,7 +109,7 @@ onMounted(fetchSimilaires);
 
 const suggestedCandidats = ref<ScoredPersonne[]>([]);
 async function fetchSimilaires() {
-  const res = await controller.InscriptionsSearchSimilaires({
+  const res = await props.api.searchSimilaires({
     idPersonne: props.personne.Id,
   });
   if (res === undefined) return;
@@ -122,7 +122,7 @@ const manualPattern = ref("");
 const manualSearchCandidates = ref<PersonneHeader[]>([]);
 async function manualSearch() {
   if ((manualPattern.value || "").length < 3) return;
-  const res = await controller.SelectPersonne({ search: manualPattern.value });
+  const res = await props.api.selectPersonne({ search: manualPattern.value });
   if (res === undefined) return;
   manualSearchCandidates.value = res || [];
 }

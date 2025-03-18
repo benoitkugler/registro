@@ -13,7 +13,7 @@ import (
 	tu "registro/utils/testutils"
 )
 
-func TestValideInscription(t *testing.T) {
+func Test_inscriptions(t *testing.T) {
 	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
 		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",
 		"../../migrations/init.sql")
@@ -40,19 +40,39 @@ func TestValideInscription(t *testing.T) {
 
 	ct := Controller{db: db.DB}
 
-	err = ct.valideInscription(dossier1.Id, camp1.Id)
-	tu.AssertNoErr(t, err)
-	data, err := logic.LoadDossier(db, dossier1.Id)
-	tu.AssertNoErr(t, err)
-	tu.Assert(t, !data.Dossier.IsValidated)
+	t.Run("load", func(t *testing.T) {
+		l, err := ct.getInscriptions(camp1.Id)
+		tu.AssertNoErr(t, err)
+		tu.Assert(t, len(l) == 1)
+		insc := l[0]
+		tu.Assert(t, insc.Participants[0].Camp.Id == camp1.Id)
+		tu.Assert(t, insc.Participants[1].Camp.Id == camp1.Id)
+		tu.Assert(t, insc.Participants[2].Camp.Id == camp2.Id)
 
-	insc, err := ct.getInscriptions(camp1.Id)
-	tu.AssertNoErr(t, err)
-	tu.Assert(t, len(insc) == 1 && reflect.DeepEqual(insc[0].ValidatedBy, []cps.IdCamp{camp1.Id}))
+		l, err = ct.getInscriptions(camp2.Id)
+		tu.AssertNoErr(t, err)
+		tu.Assert(t, len(l) == 1)
+		insc = l[0]
+		tu.Assert(t, insc.Participants[0].Camp.Id == camp2.Id)
+		tu.Assert(t, insc.Participants[1].Camp.Id == camp1.Id)
+		tu.Assert(t, insc.Participants[2].Camp.Id == camp1.Id)
+	})
 
-	err = ct.valideInscription(dossier1.Id, camp2.Id)
-	tu.AssertNoErr(t, err)
-	data, err = logic.LoadDossier(db, dossier1.Id)
-	tu.AssertNoErr(t, err)
-	tu.Assert(t, data.Dossier.IsValidated)
+	t.Run("valide", func(t *testing.T) {
+		err = ct.valideInscription(dossier1.Id, camp1.Id)
+		tu.AssertNoErr(t, err)
+		data, err := logic.LoadDossier(db, dossier1.Id)
+		tu.AssertNoErr(t, err)
+		tu.Assert(t, !data.Dossier.IsValidated)
+
+		insc, err := ct.getInscriptions(camp1.Id)
+		tu.AssertNoErr(t, err)
+		tu.Assert(t, len(insc) == 1 && reflect.DeepEqual(insc[0].ValidatedBy, []cps.IdCamp{camp1.Id}))
+
+		err = ct.valideInscription(dossier1.Id, camp2.Id)
+		tu.AssertNoErr(t, err)
+		data, err = logic.LoadDossier(db, dossier1.Id)
+		tu.AssertNoErr(t, err)
+		tu.Assert(t, data.Dossier.IsValidated)
+	})
 }

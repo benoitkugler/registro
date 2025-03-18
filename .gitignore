@@ -1,3 +1,4 @@
 server/env.sh
 registro.code-workspace
 registro-web/src/clients/backoffice/env.ts
+registro-web/src/clients/directeurs/env.ts

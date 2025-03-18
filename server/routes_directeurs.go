@@ -11,6 +11,13 @@ import (
 func setupRoutesDirecteurs(e *echo.Echo, ct *directeurs.Controller) {
 	gr := e.Group("", ct.JWTMiddleware())
 
+	// Shared
+
+	gr.POST("/api/v1/backoffice/shared/camps", ct.GetCamps)
+	gr.GET("/api/v1/backoffice/shared/personne", ct.SelectPersonne)
+
+	// Inscriptions
+
 	gr.GET("/api/v1/directeurs/inscriptions", ct.InscriptionsGet)
 	gr.GET("/api/v1/directeurs/inscriptions/search-similaires", ct.InscriptionsSearchSimilaires)
 	gr.POST("/api/v1/directeurs/inscriptions/identifie", ct.InscriptionsIdentifiePersonne)

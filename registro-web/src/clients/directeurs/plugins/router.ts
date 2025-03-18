@@ -1,9 +1,12 @@
 // Composables
 import { createRouter, createWebHistory, type LocationQuery } from "vue-router";
 import Index from "../pages/index.vue";
-import type { IdCamp, IdParticipant } from "../logic/api";
+import Inscriptions from "../pages/inscriptions.vue";
 
-const routes = [{ path: "/", component: Index }];
+const routes = [
+  { path: "/", component: Index },
+  { path: "/inscriptions", component: Inscriptions },
+];
 
 // TODO: check that
 const baseUrl = import.meta.env.DEV ? "/src/clients/directeurs" : "/directeurs";
@@ -36,30 +39,18 @@ function enforceNumber<T extends number>(id: T | undefined) {
   return id ? (Number(id) as T) : undefined;
 }
 
-export type QueryURLCamps = {
-  idCamp?: IdCamp;
-  idParticipant?: IdParticipant;
+export type InscriptionsTab = "insc" | "participants";
+
+export type QueryURLInscriptions = {
+  tab?: InscriptionsTab;
+  //   idDossier?: IdDossier;
 };
 
-export function parseQueryURLCamps(query: LocationQuery): QueryURLCamps {
-  const q = query as QueryURLCamps;
-  return {
-    idCamp: enforceNumber(q.idCamp),
-    idParticipant: enforceNumber(q.idParticipant),
-  };
-}
-
-export function goToParticipant(participant: {
-  IdCamp: IdCamp;
-  Id: IdParticipant;
-}) {
-  router.push({
-    path: "/camps",
-    query: {
-      idCamp: participant.IdCamp,
-      idParticipant: participant.Id,
-    } satisfies QueryURLCamps,
-  });
+export function parseQueryURLInscriptions(
+  query: LocationQuery
+): QueryURLInscriptions {
+  const q = query as QueryURLInscriptions;
+  return { tab: q.tab };
 }
 
 export default router;

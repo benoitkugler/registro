@@ -5,13 +5,21 @@
     "
   >
     <template #append>
-      <v-btn :disabled="!allIdentified" @click="emit('valide')">
+      <v-tooltip
+        v-if="alreadyValidated"
+        text="En attente de validation par les autres séjours"
+      >
+        <template #activator="{ props: tooltipProps }">
+          <v-icon v-bind="tooltipProps" color="green"> mdi-check </v-icon>
+        </template>
+      </v-tooltip>
+      <v-btn v-else :disabled="!allIdentified" @click="emit('valide')">
         <template #prepend>
           <v-icon>mdi-check</v-icon>
         </template>
         Valider</v-btn
       >
-      <v-menu>
+      <v-menu v-if="!props.hideDelete">
         <template #activator="{ props: menuProps }">
           <v-btn
             v-bind="menuProps"
@@ -35,6 +43,7 @@
         <v-col cols="7">
           <v-row no-gutters class="my-0 py-1">
             <InscriptionEtatcivilCols
+              :api="props.api"
               :personne="props.inscription.Responsable"
               @identifie="(v) => emit('identifie', v)"
             ></InscriptionEtatcivilCols>
@@ -47,6 +56,7 @@
             :key="i"
           >
             <InscriptionEtatcivilCols
+              :api="props.api"
               :personne="part.Personne"
               @identifie="(v) => emit('identifie', v)"
             ></InscriptionEtatcivilCols>
@@ -80,11 +90,18 @@
 
 <script setup lang="ts">
 import { Camps, Formatters } from "@/utils";
-import { type IdentTarget, type Inscription } from "../../logic/api";
+import {
+  type IdentTarget,
+  type Inscription,
+} from "../../clients/backoffice/logic/api";
 import InscriptionEtatcivilCols from "./InscriptionEtatcivilCols.vue";
 import { computed } from "vue";
+import type { SimilairesAPI } from "./types";
 const props = defineProps<{
   inscription: Inscription;
+  api: SimilairesAPI;
+  hideDelete?: boolean;
+  alreadyValidated?: boolean;
 }>();
 
 const emit = defineEmits<{
