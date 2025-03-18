@@ -1,2 +1,0 @@
-export const devToken =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJc0FkbWluIjpmYWxzZSwiZXhwIjoxNzQyMjE5MjM0fQ.3WfLjf5jQyPRFQ_4b2VXuoIjOu5Su-LUZjng_VoEAhw";
