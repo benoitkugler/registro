@@ -24,131 +24,63 @@
     <v-card-text class="mt-4">
       <v-skeleton-loader type="table" v-if="isLoading"></v-skeleton-loader>
       <div v-else>
+        <ParticipantRowHeader></ParticipantRowHeader>
+
         <div class="text-center font-italic" v-if="!participants.length">
           Aucun participant n'est encore inscrit sur ce séjour.
         </div>
-        <v-row v-for="p in participants" no-gutters class="mx-2">
-          <v-col align-self="center" cols="3">
-            <v-list-item :title="Personnes.NOMPrenom(p.Personne)">
-              <template #prepend>
-                <v-tooltip
-                  v-if="p.Participant.Statut != ListeAttente.Inscrit"
-                  :text="ListeAttenteLabels[p.Participant.Statut]"
-                >
-                  <template #activator="{ props }">
-                    <v-icon
-                      :color="
-                        Formatters.listeAttente(p.Participant.Statut).color
-                      "
-                      v-bind="props"
-                    >
-                      {{ Formatters.listeAttente(p.Participant.Statut).icon }}
-                    </v-icon>
-                  </template>
-                </v-tooltip>
-              </template>
-            </v-list-item>
-          </v-col>
 
-          <v-col align-self="center" cols="auto">
-            <v-icon class="ma-2 mr-4">
-              {{ Formatters.sexeIcon(p.Personne.Sexe) }}
-            </v-icon>
-          </v-col>
-          <v-col align-self="center" cols="1">
-            <v-row no-gutters>
-              <v-col align-self="end">
-                {{ Formatters.dateNaissance(p.Personne.DateNaissance) }}
-              </v-col>
-              <v-col align-self="end" cols="auto">
-                <v-tooltip
-                  v-if="p.HasBirthday"
-                  :text="`${p.Personne.Prenom} a son anniveraire pendant le camp !`"
-                >
-                  <template #activator="{ props }">
-                    <v-icon v-bind="props" color="pink"
-                      >mdi-cake-variant</v-icon
-                    >
-                  </template>
-                </v-tooltip>
-              </v-col>
-            </v-row>
-          </v-col>
-          <v-col align-self="center" cols="1" class="text-center">
-            {{
-              ageFrom(
-                p.Personne.DateNaissance,
-                new Date(data.Camp.Camp.DateDebut)
-              )
-            }}
-            ans
-          </v-col>
-          <v-col align-self="center" class="text-center">
-            {{
-              p.Participant.Navette == Navette.NoBus
-                ? "-"
-                : NavetteLabels[p.Participant.Navette]
-            }}
-          </v-col>
-          <v-col align-self="center">
-            {{ p.Participant.Details }}
-          </v-col>
-          <v-spacer></v-spacer>
-          <v-col cols="auto">
-            <v-menu>
-              <template #activator="{ props: menuProps }">
-                <v-btn
-                  v-bind="menuProps"
-                  icon="mdi-dots-vertical"
-                  size="x-small"
-                ></v-btn>
-              </template>
-              <v-list density="comfortable">
-                <v-list-item
-                  title="Modifier"
-                  prepend-icon="mdi-pencil"
-                  @click="toEdit = p"
-                ></v-list-item>
-                <v-divider></v-divider>
-                <v-list-item
-                  title="Changer de camp..."
-                  prepend-icon="mdi-file-move"
-                  @click="
-                    moveArgs = {
-                      Id: p.Participant.Id,
-                      Target: 0 as IdCamp,
-                    }
-                  "
-                ></v-list-item>
-                <v-list-item
-                  title="Notifier d'une place disponible."
-                  subtitle="Envoi un email"
-                  prepend-icon="mdi-email-alert"
-                  :disabled="
-                    p.Participant.Statut == ListeAttente.Inscrit ||
-                    p.Participant.Statut == ListeAttente.EnAttenteReponse
-                  "
-                  @click="confirmeSetPlaceLiberee = p"
-                ></v-list-item>
-                <v-divider></v-divider>
-                <v-list-item
-                  title="Aller à la personne"
-                  @click="goToPersonne(p.Personne.Id)"
-                ></v-list-item>
-                <v-list-item
-                  title="Aller au dossier"
-                  @click="goToDossier(p.Participant.IdDossier)"
-                ></v-list-item>
-                <v-divider></v-divider>
-                <v-list-item
-                  title="Supprimer"
-                  prepend-icon="mdi-delete"
-                  @click="toDelete = p"
-                ></v-list-item>
-              </v-list>
-            </v-menu>
-          </v-col>
-        </v-row>
+        <ParticipantRow
+          v-for="(p, index) in participants"
+          :participant="p"
+          :index="index"
+        >
+          <template #actions>
+            <v-list density="comfortable">
+              <v-list-item
+                title="Modifier"
+                prepend-icon="mdi-pencil"
+                @click="toEdit = p"
+              ></v-list-item>
+              <v-divider></v-divider>
+              <v-list-item
+                title="Changer de camp..."
+                prepend-icon="mdi-file-move"
+                @click="
+                  moveArgs = {
+                    Id: p.Participant.Id,
+                    Target: 0 as IdCamp,
+                  }
+                "
+              ></v-list-item>
+              <v-list-item
+                title="Notifier d'une place disponible."
+                subtitle="Envoi un email"
+                prepend-icon="mdi-email-alert"
+                :disabled="
+                  p.Participant.Statut == ListeAttente.Inscrit ||
+                  p.Participant.Statut == ListeAttente.EnAttenteReponse
+                "
+                @click="confirmeSetPlaceLiberee = p"
+              ></v-list-item>
+              <v-divider></v-divider>
+              <v-list-item
+                title="Aller à la personne"
+                @click="goToPersonne(p.Personne.Id)"
+              ></v-list-item>
+              <v-list-item
+                title="Aller au dossier"
+                @click="goToDossier(p.Participant.IdDossier)"
+              ></v-list-item>
+              <v-divider></v-divider>
+              <v-list-item
+                title="Supprimer"
+                prepend-icon="mdi-delete"
+                @click="toDelete = p"
+              ></v-list-item>
+            </v-list>
+          </template>
+        </ParticipantRow>
       </div>
     </v-card-text>
 
@@ -282,22 +214,17 @@ import { controller } from "@/clients/backoffice/logic/logic";
 import {
   ListeAttente,
   ListeAttenteLabels,
-  Navette,
-  NavetteLabels,
   type CampItem,
   type CampsLoadOut,
   type IdCamp,
   type IdDossier,
   type IdPersonne,
-  type Int,
   type Participant,
-  type ParticipantPersonne,
+  type ParticipantExt,
   type ParticipantsCreateIn,
   type ParticipantsMoveIn,
 } from "@/clients/backoffice/logic/api";
-import { Camps, Formatters, Personnes } from "@/utils";
-import { ageFrom } from "@/components/date";
-import ParticipantEdit from "./ParticipantEdit.vue";
+import { Camps, Participants, Personnes } from "@/utils";
 import {
   goToDossier,
   goToParticipant,
@@ -327,16 +254,7 @@ async function fetchCamps() {
 // with sort
 const participants = computed(() => {
   const out = (data.value?.Participants || []).map((p) => p);
-  out.sort((a, b) => {
-    const sa = a.Participant.Statut;
-    const sb = b.Participant.Statut;
-    // By liste attente : Inscrit is higher
-    if (sa != sb) return sb - sa;
-    // By name :
-    return Personnes.NOMPrenom(a.Personne).localeCompare(
-      Personnes.NOMPrenom(b.Personne)
-    );
-  });
+  out.sort(Participants.cmp);
   return out;
 });
 
@@ -359,7 +277,7 @@ async function createParticipant() {
   data.value.Participants = (data.value.Participants || []).concat(res);
 }
 
-const toEdit = ref<ParticipantPersonne | null>(null);
+const toEdit = ref<ParticipantExt | null>(null);
 async function updateParticipant(p: Participant) {
   if (toEdit.value == null || data.value == null) return;
   const res = await controller.ParticipantsUpdate(p);
@@ -370,7 +288,7 @@ async function updateParticipant(p: Participant) {
   loadCamp();
 }
 
-const toDelete = ref<ParticipantPersonne | null>(null);
+const toDelete = ref<ParticipantExt | null>(null);
 async function deleteParticipant() {
   if (toDelete.value == null || data.value == null) return;
   const id = toDelete.value.Participant.Id;
@@ -399,7 +317,7 @@ async function moveParticipant() {
   );
 }
 
-const confirmeSetPlaceLiberee = ref<ParticipantPersonne | null>(null);
+const confirmeSetPlaceLiberee = ref<ParticipantExt | null>(null);
 async function setPlaceLiberee() {
   if (confirmeSetPlaceLiberee.value == null) return;
   const id = confirmeSetPlaceLiberee.value.Participant.Id;

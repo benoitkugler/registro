@@ -19,7 +19,7 @@ type Inscription struct {
 	Dossier      ds.Dossier
 	Message      string // le message (optionnel) du formulaire d'inscription
 	Responsable  pr.Personne
-	Participants []cps.ParticipantExt
+	Participants []cps.ParticipantCamp
 	// ValidatedBy stores the camp which have validated
 	// this inscription, computed using the participants status.
 	// This field is ignored in backoffice, but used in directeurs

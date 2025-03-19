@@ -1,4 +1,8 @@
-import { CurrencyLabels, Sexe } from "./clients/backoffice/logic/api";
+import {
+  CurrencyLabels,
+  Sexe,
+  type ParticipantExt,
+} from "./clients/backoffice/logic/api";
 import {
   type Paiement,
   type Personne,
@@ -352,4 +356,22 @@ export function pseudoEventTime(event: PseudoEvent): Date {
 
 export async function copyToClipboard(text: string) {
   await navigator.clipboard.writeText(text);
+}
+
+export namespace Participants {
+  export function cmp(a: ParticipantExt, b: ParticipantExt, byTime = false) {
+    if (byTime)
+      return (
+        new Date(b.MomentInscription).valueOf() -
+        new Date(a.MomentInscription).valueOf()
+      );
+    const sa = a.Participant.Statut;
+    const sb = b.Participant.Statut;
+    // By liste attente : Inscrit is higher
+    if (sa != sb) return sb - sa;
+    // By name :
+    return Personnes.NOMPrenom(a.Personne).localeCompare(
+      Personnes.NOMPrenom(b.Personne)
+    );
+  }
 }

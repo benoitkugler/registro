@@ -180,7 +180,7 @@ func TestAttestationPresence(t *testing.T) {
 		Adresse:    "200, Route de Dieulefit",
 		CodePostal: "07568",
 		Ville:      "Montélimar",
-	}, []camps.ParticipantExt{
+	}, []camps.ParticipantCamp{
 		{Camp: camp, ParticipantPersonne: camps.ParticipantPersonne{Personne: pr.Personne{Etatcivil: personne}}},
 		{Camp: camp, ParticipantPersonne: camps.ParticipantPersonne{Personne: pr.Personne{Etatcivil: personne}}},
 		{Camp: camp, ParticipantPersonne: camps.ParticipantPersonne{Personne: pr.Personne{Etatcivil: personne}}},

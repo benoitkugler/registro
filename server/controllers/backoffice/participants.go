@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"registro/controllers/espaceperso"
+	"registro/controllers/logic"
 	"registro/mails"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
@@ -20,7 +21,7 @@ import (
 
 type CampsLoadOut struct {
 	Camp         cps.CampExt
-	Participants []cps.ParticipantPersonne
+	Participants []logic.ParticipantExt
 }
 
 func (ct *Controller) CampsLoad(c echo.Context) error {
@@ -36,11 +37,11 @@ func (ct *Controller) CampsLoad(c echo.Context) error {
 }
 
 func (ct *Controller) getParticipants(id cps.IdCamp) (CampsLoadOut, error) {
-	camp, err := cps.LoadCamp(ct.db, id)
+	participants, camp, err := logic.LoadParticipants(ct.db, id)
 	if err != nil {
 		return CampsLoadOut{}, err
 	}
-	return CampsLoadOut{Camp: camp.Camp.Ext(), Participants: camp.Participants()}, nil
+	return CampsLoadOut{Camp: camp, Participants: participants}, nil
 }
 
 type ParticipantsCreateIn struct {
@@ -75,31 +76,31 @@ func checkParticipantDouble(db cps.DB, idCamp cps.IdCamp, idPersonne pr.IdPerson
 	return nil
 }
 
-func (ct *Controller) createParticipant(args ParticipantsCreateIn) (cps.ParticipantPersonne, error) {
+func (ct *Controller) createParticipant(args ParticipantsCreateIn) (logic.ParticipantExt, error) {
 	dossier, err := ds.SelectDossier(ct.db, args.IdDossier)
 	if err != nil {
-		return cps.ParticipantPersonne{}, utils.SQLError(err)
+		return logic.ParticipantExt{}, utils.SQLError(err)
 	}
 	personne, err := pr.SelectPersonne(ct.db, args.IdPersonne)
 	if err != nil {
-		return cps.ParticipantPersonne{}, utils.SQLError(err)
+		return logic.ParticipantExt{}, utils.SQLError(err)
 	}
 
 	if err := checkParticipantDouble(ct.db, args.IdCamp, args.IdPersonne); err != nil {
-		return cps.ParticipantPersonne{}, err
+		return logic.ParticipantExt{}, err
 	}
 
 	// resolve Groupe...
 	groupes, err := cps.SelectGroupesByIdCamps(ct.db, args.IdCamp)
 	if err != nil {
-		return cps.ParticipantPersonne{}, utils.SQLError(err)
+		return logic.ParticipantExt{}, utils.SQLError(err)
 	}
 	groupe, hasGroupe := groupes.TrouveGroupe(personne.DateNaissance)
 
 	// ... and Statut
 	camp, err := cps.LoadCamp(ct.db, args.IdCamp)
 	if err != nil {
-		return cps.ParticipantPersonne{}, err
+		return logic.ParticipantExt{}, err
 	}
 	statut := camp.Status([]pr.Personne{personne})[0]
 	participant := cps.Participant{
@@ -115,7 +116,7 @@ func (ct *Controller) createParticipant(args ParticipantsCreateIn) (cps.Particip
 	// a different taux (the one of the camp) to be used
 	existingP, err := cps.SelectParticipantsByIdDossiers(ct.db, args.IdDossier)
 	if err != nil {
-		return cps.ParticipantPersonne{}, utils.SQLError(err)
+		return logic.ParticipantExt{}, utils.SQLError(err)
 	}
 
 	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
@@ -143,7 +144,7 @@ func (ct *Controller) createParticipant(args ParticipantsCreateIn) (cps.Particip
 		return nil
 	})
 
-	return cps.NewParticipantPersonne(participant, personne, camp.Camp), err
+	return logic.NewParticipantExt(participant, personne, camp.Camp, dossier), err
 }
 
 // ParticipantsUpdate modifie les champs d'un participant.

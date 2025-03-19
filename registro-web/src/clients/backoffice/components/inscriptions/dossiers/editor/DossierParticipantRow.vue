@@ -241,10 +241,9 @@ import {
   type AidesCreateIn,
   type IdAide,
   type IdStructureaide,
-  type Int,
   type OptionPrixParticipant,
   type Participant,
-  type ParticipantExt,
+  type ParticipantCamp,
   type Structureaides,
 } from "@/clients/backoffice/logic/api";
 import { Camps, Formatters, Personnes } from "@/utils";
@@ -255,7 +254,7 @@ import AideEditCard from "./AideEditCard.vue";
 import { goToParticipant } from "@/clients/backoffice/plugins/router";
 
 const props = defineProps<{
-  participant: ParticipantExt;
+  participant: ParticipantCamp;
   aides: Aides;
   structures: NonNullable<Structureaides>;
   hasManyParticipants: boolean;

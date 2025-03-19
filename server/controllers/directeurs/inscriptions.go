@@ -24,7 +24,7 @@ func (ct *Controller) InscriptionsGet(c echo.Context) error {
 }
 
 func sortParticipants(insc logic.Inscription, user cps.IdCamp) {
-	slices.SortFunc(insc.Participants, func(a, b cps.ParticipantExt) int {
+	slices.SortFunc(insc.Participants, func(a, b cps.ParticipantCamp) int {
 		if a.Camp.Id == user {
 			return -1
 		} else if b.Camp.Id == user {

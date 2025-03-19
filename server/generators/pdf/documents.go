@@ -105,12 +105,12 @@ type Destinataire struct {
 }
 
 // CreateAttestationPresence returns a PDF document.
-func CreateAttestationPresence(cfg config.Asso, destinataire Destinataire, participants []cps.ParticipantExt) ([]byte, error) {
+func CreateAttestationPresence(cfg config.Asso, destinataire Destinataire, participants []cps.ParticipantCamp) ([]byte, error) {
 	type attestationPresenceTmplData struct {
 		Asso         config.Asso
 		Date         string // now
 		Destinataire Destinataire
-		Participants []cps.ParticipantExt
+		Participants []cps.ParticipantCamp
 	}
 
 	return templateToPDF(attestationPresenceTmpl, attestationPresenceTmplData{

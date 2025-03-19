@@ -2,7 +2,7 @@
   <v-card title="Editer le participant">
     <v-card-text>
       <v-form>
-        <v-row>
+        <v-row v-if="!props.hidePersonneDossier">
           <v-col>
             <SelectPersonne
               label="Personne"
@@ -56,6 +56,7 @@ import { copy, Personnes } from "@/utils";
 const props = defineProps<{
   participant: Participant;
   personne: Personne;
+  hidePersonneDossier?: boolean;
 }>();
 const emit = defineEmits<{
   (e: "save", camp: Participant): void;

@@ -35,8 +35,16 @@ export interface Inscription {
   Dossier: Dossier;
   Message: string;
   Responsable: Personne;
-  Participants: ParticipantExt[] | null;
+  Participants: ParticipantCamp[] | null;
   ValidatedBy: IdCamp[] | null;
+}
+// registro/controllers/logic.ParticipantExt
+export interface ParticipantExt {
+  Participant: Participant;
+  Personne: Personne;
+  Age: Int;
+  HasBirthday: boolean;
+  MomentInscription: Time;
 }
 // registro/controllers/search.PersonneHeader
 export interface PersonneHeader {
@@ -156,12 +164,11 @@ export interface Participant {
   Details: string;
   Navette: Navette;
 }
-// registro/sql/camps.ParticipantExt
-export interface ParticipantExt {
+// registro/sql/camps.ParticipantCamp
+export interface ParticipantCamp {
   Camp: Camp;
   Participant: Participant;
   Personne: Personne;
-  HasBirthday: boolean;
 }
 // registro/sql/camps.PrixParStatut
 export interface PrixParStatut {
@@ -461,6 +468,33 @@ export abstract class AbstractAPI {
         params: { idDossier: String(params["idDossier"]) },
       });
       return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** ParticipantsGet performs the request and handles the error */
+  async ParticipantsGet() {
+    const fullUrl = this.baseUrl + "/api/v1/directeurs/participants";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<ParticipantExt[] | null> = await Axios.get(
+        fullUrl,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** ParticipantsUpdate performs the request and handles the error */
+  async ParticipantsUpdate(params: Participant) {
+    const fullUrl = this.baseUrl + "/api/v1/directeurs/participants";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
     } catch (error) {
       this.handleError(error);
     }

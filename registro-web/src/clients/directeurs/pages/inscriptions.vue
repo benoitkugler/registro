@@ -15,14 +15,16 @@
         @go-to="() => setTab('participants')"
       ></PannelInscriptions>
     </v-tabs-window-item>
-    <v-tabs-window-item value="participants"> </v-tabs-window-item>
+    <v-tabs-window-item value="participants">
+      <PannelParticipants ref="participants"></PannelParticipants>
+    </v-tabs-window-item>
   </v-tabs-window>
 </template>
 
 <script lang="ts" setup>
 import { useRouter } from "vue-router";
 import NavBar from "../components/NavBar.vue";
-import { computed } from "vue";
+import { computed, useTemplateRef } from "vue";
 import {
   parseQueryURLInscriptions,
   type InscriptionsTab,
@@ -30,6 +32,7 @@ import {
 } from "../plugins/router";
 import PannelInscriptions from "../components/inscriptions/PannelInscriptions.vue";
 import { controller } from "../logic/logic";
+import PannelParticipants from "../components/inscriptions/PannelParticipants.vue";
 
 const router = useRouter();
 
@@ -39,11 +42,14 @@ const query = computed(() =>
 
 const currentTab = computed(() => query.value.tab || "insc");
 
+const participants = useTemplateRef("participants");
+
 function setTab(tab: InscriptionsTab) {
   const current = router.currentRoute.value;
   router.push({
     path: current.path,
     query: { tab: tab } satisfies QueryURLInscriptions,
   });
+  if (tab == "participants") participants.value?.loadParticipants();
 }
 </script>

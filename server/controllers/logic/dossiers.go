@@ -80,10 +80,10 @@ type Dossier struct {
 func (de *Dossier) Responsable() pr.Personne { return de.personnesM[de.Dossier.IdResponsable] }
 
 // ParticipantsExt is sorted by Id
-func (de *Dossier) ParticipantsExt() []cps.ParticipantExt {
-	ps := make([]cps.ParticipantExt, 0, len(de.Participants))
+func (de *Dossier) ParticipantsExt() []cps.ParticipantCamp {
+	ps := make([]cps.ParticipantCamp, 0, len(de.Participants))
 	for _, part := range de.Participants {
-		ps = append(ps, cps.ParticipantExt{
+		ps = append(ps, cps.ParticipantCamp{
 			Camp: de.camps[part.IdCamp],
 			ParticipantPersonne: cps.ParticipantPersonne{
 				Participant: part,
@@ -92,7 +92,7 @@ func (de *Dossier) ParticipantsExt() []cps.ParticipantExt {
 		})
 	}
 
-	slices.SortFunc(ps, func(a, b cps.ParticipantExt) int { return int(a.Participant.Id - b.Participant.Id) })
+	slices.SortFunc(ps, func(a, b cps.ParticipantCamp) int { return int(a.Participant.Id - b.Participant.Id) })
 	return ps
 }
 
@@ -140,7 +140,7 @@ func (de *Dossier) Time() time.Time {
 type DossierExt struct {
 	Dossier      ds.Dossier
 	Responsable  string
-	Participants []cps.ParticipantExt
+	Participants []cps.ParticipantCamp
 	Aides        map[cps.IdParticipant]cps.Aides
 
 	Events    Events

@@ -63,7 +63,7 @@
 import {
   type Aide,
   type Int,
-  type ParticipantExt,
+  type ParticipantCamp,
   type Structureaides,
 } from "@/clients/backoffice/logic/api";
 import { Camps, copy, Personnes } from "@/utils";
@@ -72,7 +72,7 @@ import { computed, ref } from "vue";
 const props = defineProps<{
   aide: Aide;
   structures: NonNullable<Structureaides>;
-  participant: ParticipantExt;
+  participant: ParticipantCamp;
 }>();
 
 const emit = defineEmits<{

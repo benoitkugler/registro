@@ -6,13 +6,14 @@ import (
 	"slices"
 	"time"
 
+	ds "registro/sql/dossiers"
 	pr "registro/sql/personnes"
 	"registro/sql/shared"
 	sh "registro/sql/shared"
 	"registro/utils"
 )
 
-type ParticipantExt struct {
+type ParticipantCamp struct {
 	Camp Camp
 	ParticipantPersonne
 }
@@ -20,13 +21,6 @@ type ParticipantExt struct {
 type ParticipantPersonne struct {
 	Participant Participant
 	Personne    pr.Personne
-
-	HasBirthday bool // anniversaire pendant le séjour ?
-}
-
-func NewParticipantPersonne(participant Participant, personne pr.Personne, camp Camp) ParticipantPersonne {
-	plage := sh.Plage{From: camp.DateDebut, Duree: camp.Duree}
-	return ParticipantPersonne{participant, personne, plage.HasBirthday(personne.DateNaissance)}
 }
 
 // StatistiquesInscrits détails le nombre d'inscriptions
@@ -116,9 +110,13 @@ func (cd CampLoader) Participants() []ParticipantPersonne {
 	out := make([]ParticipantPersonne, 0, len(cd.participants))
 	for _, participant := range cd.participants {
 		pe := cd.personnes[participant.IdPersonne]
-		out = append(out, NewParticipantPersonne(participant, pe, cd.Camp))
+		out = append(out, ParticipantPersonne{participant, pe})
 	}
 	return out
+}
+
+func (cd CampLoader) IdDossiers() []ds.IdDossier {
+	return cd.participants.IdDossiers()
 }
 
 func (cd CampLoader) Stats() StatistiquesInscrits {

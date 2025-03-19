@@ -9,7 +9,7 @@ declare module 'vue' {
   export interface GlobalComponents {
     BoolField: typeof import('./src/components/BoolField.vue')['default']
     CardSimilaires: typeof import('./src/components/inscriptions/CardSimilaires.vue')['default']
-    copy: typeof import('./src/components/NavetteField copy.vue')['default']
+    copy: typeof import('./src/components/inscriptions/ParticipantRow copy.vue')['default']
     DateField: typeof import('./src/components/DateField.vue')['default']
     DateNaissanceField: typeof import('./src/components/DateNaissanceField.vue')['default']
     DebounceField: typeof import('./src/components/DebounceField.vue')['default']
@@ -33,6 +33,9 @@ declare module 'vue' {
     MontantField: typeof import('./src/components/MontantField.vue')['default']
     NationaliteField: typeof import('./src/components/NationaliteField.vue')['default']
     NavetteField: typeof import('./src/components/NavetteField.vue')['default']
+    ParticipantEdit: typeof import('./src/components/inscriptions/ParticipantEdit.vue')['default']
+    ParticipantRow: typeof import('./src/components/inscriptions/ParticipantRow.vue')['default']
+    ParticipantRowHeader: typeof import('./src/components/inscriptions/ParticipantRowHeader.vue')['default']
     PaysField: typeof import('./src/components/PaysField.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']

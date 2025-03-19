@@ -33,7 +33,7 @@ export interface CampsCreateManyIn {
 // registro/controllers/backoffice.CampsLoadOut
 export interface CampsLoadOut {
   Camp: CampExt;
-  Participants: ParticipantPersonne[] | null;
+  Participants: ParticipantExt[] | null;
 }
 // registro/controllers/backoffice.CampsSetTauxIn
 export interface CampsSetTauxIn {
@@ -174,7 +174,7 @@ export interface CampItem {
 export interface DossierExt {
   Dossier: Dossier;
   Responsable: string;
-  Participants: ParticipantExt[] | null;
+  Participants: ParticipantCamp[] | null;
   Aides: { [key in IdParticipant]: Aides } | null;
   Events: Events;
   Paiements: Paiements;
@@ -226,7 +226,7 @@ export interface Inscription {
   Dossier: Dossier;
   Message: string;
   Responsable: Personne;
-  Participants: ParticipantExt[] | null;
+  Participants: ParticipantCamp[] | null;
   ValidatedBy: IdCamp[] | null;
 }
 // registro/controllers/logic.Message
@@ -234,6 +234,14 @@ export interface Message {
   Message: EventMessage;
   OrigineCampLabel: string;
   VuParCamps: string[] | null;
+}
+// registro/controllers/logic.ParticipantExt
+export interface ParticipantExt {
+  Participant: Participant;
+  Personne: Personne;
+  Age: Int;
+  HasBirthday: boolean;
+  MomentInscription: Time;
 }
 // registro/controllers/logic.PlaceLiberee
 export interface PlaceLiberee {
@@ -406,18 +414,11 @@ export interface Participant {
   Details: string;
   Navette: Navette;
 }
-// registro/sql/camps.ParticipantExt
-export interface ParticipantExt {
+// registro/sql/camps.ParticipantCamp
+export interface ParticipantCamp {
   Camp: Camp;
   Participant: Participant;
   Personne: Personne;
-  HasBirthday: boolean;
-}
-// registro/sql/camps.ParticipantPersonne
-export interface ParticipantPersonne {
-  Participant: Participant;
-  Personne: Personne;
-  HasBirthday: boolean;
 }
 // registro/sql/camps.PrixParStatut
 export interface PrixParStatut {
@@ -903,7 +904,7 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseUrl + "/api/v1/backoffice/participants";
     this.startRequest();
     try {
-      const rep: AxiosResponse<ParticipantPersonne> = await Axios.put(
+      const rep: AxiosResponse<ParticipantExt> = await Axios.put(
         fullUrl,
         params,
         { headers: this.getHeaders() },
