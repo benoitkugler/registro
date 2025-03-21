@@ -11,8 +11,8 @@ import (
 type Asso struct {
 	Title, Infos string // used in documents footer
 
-	Icon               string       // included as image src attribute
-	Color, ColorAccent template.CSS // included as background-color
+	Icon                         string       // included as image src attribute
+	ColorPrimary, ColorSecondary template.CSS // included as background-color
 
 	// TODO: préciser l'utilisation
 	ContactNom, ContactTel, ContactMail string
@@ -44,9 +44,9 @@ var acve = Asso{
 	ContactTel:  "04 75 22 03 95",
 	ContactMail: "inscriptions@acve.asso.fr",
 
-	Icon:        "assets/logo_acve.png",
-	Color:       "#b8dbf1", // rgb(184, 219, 241)
-	ColorAccent: "#feee00",
+	Icon:           "assets/logo_acve.png",
+	ColorPrimary:   "#b8dbf1", // rgb(184, 219, 241)
+	ColorSecondary: "#feee00",
 
 	MailsSettings: MailsSettings{
 		AssoName:            "ACVE",
@@ -72,9 +72,9 @@ var repere = Asso{
 	ContactTel:  "",
 	ContactMail: "info@lerepere.ch",
 
-	Icon:        "assets/logo_repere.png",
-	Color:       "#2b678a",
-	ColorAccent: "#2eaadc",
+	Icon:           "assets/logo_repere.png",
+	ColorPrimary:   "#2b678a",
+	ColorSecondary: "#2eaadc",
 
 	MailsSettings: MailsSettings{
 		AssoName:            "Repère",

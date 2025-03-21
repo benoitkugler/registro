@@ -7,6 +7,9 @@ import ViteFonts from "unplugin-fonts/vite";
 // Utilities
 import { defineConfig } from "vite";
 import { fileURLToPath, URL } from "node:url";
+import { dirname, resolve } from "node:path";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command }) => ({
@@ -53,6 +56,15 @@ export default defineConfig(({ command }) => ({
     preprocessorOptions: {
       sass: {
         api: "modern-compiler",
+      },
+    },
+  },
+  build: {
+    rollupOptions: {
+      input: {
+        backoffice: resolve(__dirname, "src/clients/backoffice/index.html"),
+        directeurs: resolve(__dirname, "src/clients/directeurs/index.html"),
+        inscription: resolve(__dirname, "src/clients/inscription/index.html"),
       },
     },
   },

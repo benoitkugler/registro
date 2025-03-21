@@ -22,10 +22,13 @@ export const colorScheme =
     ? {
         primary: "#c8db30",
         secondary: "#b8dbf1",
-        accent: "#feee00",
+        accent: "#b8dbf1",
       }
-    : // TODO: couleurs repères
-      {};
+    : {
+        primary: "#2b678a",
+        secondary: "#2eaadc",
+        accent: "#2eaadc",
+      };
 
 export type Action = {
   title: string;

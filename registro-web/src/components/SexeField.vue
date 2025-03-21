@@ -24,5 +24,3 @@ const modelValue = defineModel<Sexe>({ required: true });
 
 const items = selectItems(SexeLabels);
 </script>
-
-<style scoped></style>

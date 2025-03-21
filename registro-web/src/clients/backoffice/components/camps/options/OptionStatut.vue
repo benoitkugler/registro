@@ -99,7 +99,6 @@ import {
   type PrixParStatut,
 } from "@/clients/backoffice/logic/api";
 import { copy, Formatters } from "@/utils";
-import { log } from "console";
 const props = defineProps<{
   camp: Camp;
 }>();
@@ -111,8 +110,6 @@ function addStatut() {
     ? modelValue.value.map((s) => s.Id)
     : [0];
   const newId = Math.max(...current) + 1;
-  console.log(modelValue.value, newId);
-
   const newStatut = {
     Id: newId as Int,
     Label: "",

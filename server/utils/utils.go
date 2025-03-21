@@ -147,17 +147,6 @@ func BuildUrl(host, path string, params ...QParam) string {
 	return u.String()
 }
 
-// Empêche le navigateur de mettre en cache
-// pour avoir les dernières versions des fichiers statiques
-// (essentiellement les builds .js)
-func NoCache(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		c.Response().Header().Set("Cache-Control", "no-store")
-		c.Response().Header().Set("Expires", "0")
-		return next(c)
-	}
-}
-
 type Set[T comparable] map[T]struct{}
 
 func NewSet[T comparable](values ...T) Set[T] {
