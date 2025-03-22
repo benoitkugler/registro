@@ -1,5 +1,6 @@
 <template>
   <v-text-field
+    class="center-text"
     variant="outlined"
     density="compact"
     placeholder="JJ/MM/AAAA"
@@ -60,4 +61,8 @@ function rule(s: string) {
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+.center-text :deep(input) {
+  text-align: center;
+}
+</style>

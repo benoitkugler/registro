@@ -9,6 +9,8 @@ test("parse", () => {
   expect(parse("1/2/2000")).toBe("2000-02-01");
   expect(parse("01/03/2000")).toBe("2000-03-01");
   expect(parse("1/12/2000")).toBe("2000-12-01");
+  expect(parse("1-12-2000")).toBe("2000-12-01");
+  expect(parse("01-03-2000")).toBe("2000-03-01");
 });
 
 test("autocomplete", () => {

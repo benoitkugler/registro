@@ -1,7 +1,7 @@
 import type { Date_ } from "@/clients/inscription/logic/api";
 
-const isFull = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
-/** parse expects a JJ/MM/AAAA format */
+const isFull = /^(\d{1,2})[\/|-](\d{1,2})[\/|-](\d{4})$/;
+/** parse expects a JJ/MM/AAAA or JJ-MM-AAAA format */
 export function parse(s: string) {
   const match = s.match(isFull);
   if (!match) return;
