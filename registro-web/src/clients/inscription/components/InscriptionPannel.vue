@@ -23,19 +23,19 @@
         <v-stepper-item
           title="Responsable"
           :value="1"
-          :complete="isStep1Valid"
-          :error="!isStep1Valid"
-          :subtitle="isStep1Valid ? '' : 'Champs manquants'"
-          :color="isStep1Valid ? 'primary' : 'red'"
+          :complete="state1 === true"
+          :error="state1 === false"
+          :subtitle="state1 === false ? 'Champs manquants' : ''"
+          :color="state1 === true ? 'primary' : state1 === false ? 'red' : ''"
         ></v-stepper-item>
         <v-divider></v-divider>
         <v-stepper-item
           title="Participants"
           :value="2"
-          :complete="isStep2Valid"
-          :error="!isStep2Valid"
-          :subtitle="isStep2Valid ? '' : 'Information manquante'"
-          :color="isStep2Valid ? 'primary' : 'red'"
+          :complete="state2 === true"
+          :error="state2 === false"
+          :subtitle="state2 === false ? 'Information manquante' : ''"
+          :color="state2 === true ? 'primary' : state2 === false ? 'red' : ''"
         ></v-stepper-item>
         <v-divider></v-divider>
         <v-stepper-item
@@ -46,10 +46,10 @@
         <v-stepper-item
           title="Conclusion"
           :value="4"
-          :complete="isStep4Valid"
-          :error="!isStep4Valid"
-          :subtitle="isStep4Valid ? '' : 'Charte à accepter'"
-          :color="isStep4Valid ? 'primary' : 'red'"
+          :complete="state4 === true"
+          :error="state4 === false"
+          :subtitle="state4 === false ? 'Charte à accepter' : ''"
+          :color="state4 === true ? 'primary' : state4 === false ? 'red' : ''"
         ></v-stepper-item>
       </v-stepper-header>
 
@@ -103,7 +103,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, reactive, ref } from "vue";
+import { computed, reactive, ref, watch } from "vue";
 import Step1 from "./Step1.vue";
 import Step2 from "./Step2.vue";
 import Step3 from "./Step3.vue";
@@ -120,6 +120,29 @@ const props = defineProps<{
 const inner = reactive(copy(props.data.InitialInscription));
 
 const tab = ref(1);
+
+const hasStartedStep1 = ref(false);
+const hasStartedStep2 = ref(false);
+const hasStartedStep4 = ref(false);
+
+const state1 = computed(() =>
+  !hasStartedStep1.value ? undefined : isStep1Valid.value
+);
+const state2 = computed(() =>
+  !hasStartedStep2.value ? undefined : isStep2Valid.value
+);
+const state4 = computed(() =>
+  !hasStartedStep4.value ? undefined : isStep4Valid.value
+);
+
+watch(
+  () => tab.value,
+  (_, old) => {
+    if (old == 1) hasStartedStep1.value = true;
+    if (old == 2) hasStartedStep2.value = true;
+    if (old == 4) hasStartedStep4.value = true;
+  }
+);
 
 const isStep1Valid = computed(() => {
   const resp = inner.Responsable;

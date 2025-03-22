@@ -123,7 +123,7 @@
 </template>
 
 <script lang="ts" setup>
-import type { Date_, ResponsableLegal, Tels } from "../logic/api";
+import type { Date_, ResponsableLegal } from "../logic/api";
 import { ageFrom, isDateZero } from "@/components/date";
 import { FormRules, Formatters } from "@/utils";
 

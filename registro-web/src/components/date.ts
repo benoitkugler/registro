@@ -26,7 +26,7 @@ export function autocomplete(s: string) {
 
 export function isDateZero(d: Date_) {
   if (d.length != 10) return true;
-  if (d == "0001-01-01") return true;
+  if (d == "0001-01-01" || d == "1901-01-01") return true;
   return isNaN(new Date(d).valueOf());
 }
 

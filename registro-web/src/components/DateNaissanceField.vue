@@ -15,10 +15,10 @@
 </template>
 
 <script setup lang="ts">
-import type { Date_, Int } from "@/clients/backoffice/logic/api";
-import { ref, watch } from "vue";
+import type { Date_ } from "@/clients/backoffice/logic/api";
+import { ref } from "vue";
 import { useDate } from "vuetify";
-import { autocomplete, parse } from "./date";
+import { autocomplete, isDateZero, parse } from "./date";
 const props = defineProps<{
   label?: string;
   hideDetails?: boolean;
@@ -32,7 +32,9 @@ const modelValue = defineModel<Date_>({ required: true });
 const adapter = useDate();
 
 const inner = ref(
-  (adapter.parseISO(modelValue.value) as Date).toLocaleDateString()
+  isDateZero(modelValue.value)
+    ? ""
+    : (adapter.parseISO(modelValue.value) as Date).toLocaleDateString()
 );
 
 function onType(s: string) {
