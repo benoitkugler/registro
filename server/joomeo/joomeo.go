@@ -139,8 +139,8 @@ func (api ApiJoomeo) SpaceURL() string {
 	return baseURL + api.spaceName
 }
 
-// Kill termine la session, rendant `api` inutilisable.
-func (api ApiJoomeo) Kill() {
+// Close termine la session, rendant `api` inutilisable.
+func (api ApiJoomeo) Close() {
 	const url = baseUrl + "/session"
 	resp, err := sendRequest(http.MethodDelete, url, nil, map[string]string{
 		"X-API-KEY":   api.apiKey,

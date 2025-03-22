@@ -14,7 +14,9 @@ import (
 	"fmt"
 	"io"
 
+	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
+	"registro/sql/files"
 	in "registro/sql/inscriptions"
 	pr "registro/sql/personnes"
 )
@@ -27,7 +29,7 @@ func NewEncrypter(key string) Encrypter { return sha256.Sum256([]byte(key)) }
 
 type IDs interface {
 	~int64
-	pr.IdPersonne | in.IdInscription | ds.IdDossier | int64
+	files.IdFile | cps.IdEquipier | pr.IdPersonne | in.IdInscription | ds.IdDossier | int64
 }
 
 const (

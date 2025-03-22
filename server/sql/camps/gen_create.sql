@@ -1,4 +1,9 @@
 -- Code genererated by gomacro/generator/sql. DO NOT EDIT.
+CREATE TYPE PresenceOffsets AS (
+    Debut integer,
+    Fin integer
+);
+
 CREATE TABLE aides (
     Id serial PRIMARY KEY,
     IdStructureaide integer NOT NULL,
@@ -35,8 +40,8 @@ CREATE TABLE equipiers (
     IdCamp integer NOT NULL,
     IdPersonne integer NOT NULL,
     Roles smallint[],
-    Presence jsonb NOT NULL,
-    Invitation smallint CHECK (Invitation IN (0, 1, 2)) NOT NULL,
+    Presence PresenceOffsets NOT NULL,
+    FormStatus smallint CHECK (FormStatus IN (0, 1, 2)) NOT NULL,
     AccepteCharte boolean
 );
 
@@ -180,21 +185,6 @@ ALTER TABLE groupe_participants
 ALTER TABLE groupe_participants
     ADD FOREIGN KEY (IdCamp) REFERENCES camps;
 
-ALTER TABLE equipiers
-    ADD UNIQUE (IdCamp, IdPersonne);
-
-CREATE UNIQUE INDEX ON equipiers (IdCamp)
-WHERE
-    1
-    /* Role.Direction */
-    = ANY (Roles);
-
-ALTER TABLE equipiers
-    ADD FOREIGN KEY (IdCamp) REFERENCES camps ON DELETE CASCADE;
-
-ALTER TABLE equipiers
-    ADD FOREIGN KEY (IdPersonne) REFERENCES personnes ON DELETE CASCADE;
-
 ALTER TABLE sondages
     ADD UNIQUE (IdCamp, IdDossier);
 
@@ -209,6 +199,21 @@ ALTER TABLE aides
 
 ALTER TABLE aides
     ADD FOREIGN KEY (IdParticipant) REFERENCES participants ON DELETE CASCADE;
+
+ALTER TABLE equipiers
+    ADD UNIQUE (IdCamp, IdPersonne);
+
+CREATE UNIQUE INDEX ON equipiers (IdCamp)
+WHERE
+    1
+    /* Role.Direction */
+    = ANY (Roles);
+
+ALTER TABLE equipiers
+    ADD FOREIGN KEY (IdCamp) REFERENCES camps ON DELETE CASCADE;
+
+ALTER TABLE equipiers
+    ADD FOREIGN KEY (IdPersonne) REFERENCES personnes ON DELETE CASCADE;
 
 CREATE OR REPLACE FUNCTION gomacro_validate_json_array_camp_PrixParStatut (data jsonb)
     RETURNS boolean
@@ -348,29 +353,6 @@ BEGIN
             jsonb_each(data))
         AND gomacro_validate_json_number (data -> 'IdStatut')
         AND gomacro_validate_json_array_number (data -> 'Jour');
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION gomacro_validate_json_camp_OptionnalPlage (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean;
-BEGIN
-    IF jsonb_typeof(data) != 'object' THEN
-        RETURN FALSE;
-    END IF;
-    is_valid := (
-        SELECT
-            bool_and(key IN ('From', 'Duree', 'Active'))
-        FROM
-            jsonb_each(data))
-        AND gomacro_validate_json_string (data -> 'From')
-        AND gomacro_validate_json_number (data -> 'Duree')
-        AND gomacro_validate_json_boolean (data -> 'Active');
     RETURN is_valid;
 END;
 $$
@@ -522,9 +504,6 @@ ALTER TABLE camps
 
 ALTER TABLE participants
     ADD CONSTRAINT OptionPrix_gomacro CHECK (gomacro_validate_json_camp_OptionPrixParticipant (OptionPrix));
-
-ALTER TABLE equipiers
-    ADD CONSTRAINT Presence_gomacro CHECK (gomacro_validate_json_camp_OptionnalPlage (Presence));
 
 ALTER TABLE participants
     ADD CONSTRAINT Remises_gomacro CHECK (gomacro_validate_json_camp_Remises (Remises));

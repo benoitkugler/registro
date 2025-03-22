@@ -5,6 +5,11 @@ CREATE TYPE Montant AS (
     Currency smallint
 );
 
+CREATE TYPE PresenceOffsets AS (
+    Debut integer,
+    Fin integer
+);
+
 CREATE TABLE fichesanitaires (
     IdPersonne integer NOT NULL,
     TraitementMedical boolean NOT NULL,
@@ -114,8 +119,8 @@ CREATE TABLE equipiers (
     IdCamp integer NOT NULL,
     IdPersonne integer NOT NULL,
     Roles smallint[],
-    Presence jsonb NOT NULL,
-    Invitation smallint CHECK (Invitation IN (0, 1, 2)) NOT NULL,
+    Presence PresenceOffsets NOT NULL,
+    FormStatus smallint CHECK (FormStatus IN (0, 1, 2)) NOT NULL,
     AccepteCharte boolean
 );
 
@@ -210,14 +215,14 @@ CREATE TABLE demande_camps (
 CREATE TABLE demande_equipiers (
     IdEquipier integer NOT NULL,
     IdDemande integer NOT NULL,
-    Optionnel boolean NOT NULL
+    Optionnelle boolean NOT NULL
 );
 
 CREATE TABLE files (
     Id serial PRIMARY KEY,
     Taille integer NOT NULL,
     NomClient text NOT NULL,
-    DateHeureModif timestamp(0) with time zone NOT NULL
+    Uploaded timestamp(0) with time zone NOT NULL
 );
 
 CREATE TABLE file_aides (

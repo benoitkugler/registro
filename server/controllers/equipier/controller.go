@@ -1,0 +1,241 @@
+package equipier
+
+import (
+	"database/sql"
+	"errors"
+	"fmt"
+
+	"registro/config"
+	"registro/controllers/logic"
+	"registro/crypto"
+	"registro/joomeo"
+	cps "registro/sql/camps"
+	fs "registro/sql/files"
+	pr "registro/sql/personnes"
+	"registro/sql/shared"
+	"registro/utils"
+
+	"github.com/labstack/echo/v4"
+)
+
+const EndpointEquipier = "/equipier"
+
+type Controller struct {
+	db *sql.DB
+
+	key    crypto.Encrypter
+	joomeo config.Joomeo
+}
+
+func NewController(db *sql.DB, key crypto.Encrypter, joomeo config.Joomeo) *Controller {
+	return &Controller{db, key, joomeo}
+}
+
+func (ct *Controller) Load(c echo.Context) error {
+	key := c.QueryParam("key")
+	id, err := crypto.DecryptID[cps.IdEquipier](ct.key, key)
+	if err != nil {
+		return errors.New("Lien invalide.")
+	}
+	out, err := ct.load(id)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
+type Camp struct {
+	Label string
+	Plage shared.Plage
+}
+
+type DemandeEquipier struct {
+	Demande     fs.Demande
+	Optionnelle bool
+	Files       []logic.FilePublic // uploaded by the user
+}
+
+type EquipierExt struct {
+	Equipier cps.Equipier
+	Personne pr.Etatcivil
+	Camp     Camp
+
+	Demandes []DemandeEquipier
+}
+
+func (ct *Controller) load(id cps.IdEquipier) (EquipierExt, error) {
+	equipier, err := cps.SelectEquipier(ct.db, id)
+	if err != nil {
+		return EquipierExt{}, utils.SQLError(err)
+	}
+	personne, err := pr.SelectPersonne(ct.db, equipier.IdPersonne)
+	if err != nil {
+		return EquipierExt{}, utils.SQLError(err)
+	}
+	camp, err := cps.SelectCamp(ct.db, equipier.IdCamp)
+	if err != nil {
+		return EquipierExt{}, utils.SQLError(err)
+	}
+
+	links, err := fs.SelectDemandeEquipiersByIdEquipiers(ct.db, id)
+	if err != nil {
+		return EquipierExt{}, utils.SQLError(err)
+	}
+	demandesM, err := fs.SelectDemandes(ct.db, links.IdDemandes()...)
+	if err != nil {
+		return EquipierExt{}, utils.SQLError(err)
+	}
+	tmp, err := fs.SelectFilePersonnesByIdPersonnes(ct.db, equipier.IdPersonne)
+	if err != nil {
+		return EquipierExt{}, utils.SQLError(err)
+	}
+	allFiles, err := fs.SelectFiles(ct.db, tmp.IdFiles()...)
+	if err != nil {
+		return EquipierExt{}, utils.SQLError(err)
+	}
+	byDemande := tmp.ByIdDemande()
+
+	demandes := make([]DemandeEquipier, len(links))
+	for i, link := range links {
+		innerLinks := byDemande[link.IdDemande]
+		files := make([]logic.FilePublic, len(innerLinks))
+		for i, file := range innerLinks {
+			files[i] = logic.PublishFile(ct.key, allFiles[file.IdFile])
+		}
+		demandes[i] = DemandeEquipier{
+			Demande:     demandesM[link.IdDemande],
+			Optionnelle: link.Optionnelle,
+			Files:       files,
+		}
+	}
+
+	out := EquipierExt{equipier, personne.Etatcivil, Camp{camp.Label(), camp.Plage()}, demandes}
+	return out, nil
+}
+
+// LoadJoomeo loads the Joomeo data,
+// which may be quite slow
+func (ct *Controller) LoadJoomeo(c echo.Context) error {
+	key := c.QueryParam("key")
+	id, err := crypto.DecryptID[cps.IdEquipier](ct.key, key)
+	if err != nil {
+		return errors.New("Lien invalide.")
+	}
+	out, err := ct.loadJoomeo(id)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
+type Joomeo struct {
+	SpaceURL string
+	Login    string
+	Password string
+}
+
+func (ct *Controller) loadJoomeo(id cps.IdEquipier) (Joomeo, error) {
+	equipier, err := cps.SelectEquipier(ct.db, id)
+	if err != nil {
+		return Joomeo{}, utils.SQLError(err)
+	}
+	personne, err := pr.SelectPersonne(ct.db, equipier.IdPersonne)
+	if err != nil {
+		return Joomeo{}, utils.SQLError(err)
+	}
+
+	api, err := joomeo.InitApi(ct.joomeo)
+	if err != nil {
+		return Joomeo{}, err
+	}
+	defer api.Close()
+
+	contact, _, err := api.GetLoginFromMail(personne.Mail)
+	if err != nil {
+		return Joomeo{}, fmt.Errorf("accès Joomeo: %s", err)
+	}
+
+	return Joomeo{api.SpaceURL(), contact.Login, contact.Password}, nil
+}
+
+type UpdateIn struct {
+	Key string
+
+	Personne pr.Etatcivil
+	Presence cps.PresenceOffsets
+}
+
+// Update updates the Equipier and the underlying Personne
+func (ct *Controller) Update(c echo.Context) error {
+	var args UpdateIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	id, err := crypto.DecryptID[cps.IdEquipier](ct.key, args.Key)
+	if err != nil {
+		return err
+	}
+
+	err = ct.update(id, args)
+	if err != nil {
+		return err
+	}
+
+	return c.NoContent(200)
+}
+
+func (ct *Controller) update(id cps.IdEquipier, args UpdateIn) error {
+	equipier, err := cps.SelectEquipier(ct.db, id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	personne, err := pr.SelectPersonne(ct.db, equipier.IdPersonne)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	equipier.FormStatus = cps.Answered
+	equipier.Presence = args.Presence
+
+	personne.Etatcivil = args.Personne
+
+	return utils.InTx(ct.db, func(tx *sql.Tx) error {
+		_, err = personne.Update(tx)
+		if err != nil {
+			return err
+		}
+		_, err = equipier.Update(tx)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
+func (ct *Controller) UpdateCharte(c echo.Context) error {
+	key := c.QueryParam("key")
+	id, err := crypto.DecryptID[cps.IdEquipier](ct.key, key)
+	if err != nil {
+		return err
+	}
+	accept := utils.QueryParamBool(c, "accept")
+	err = ct.updateCharte(id, accept)
+	if err != nil {
+		return err
+	}
+	return c.NoContent(200)
+}
+
+func (ct *Controller) updateCharte(id cps.IdEquipier, accept bool) error {
+	equipier, err := cps.SelectEquipier(ct.db, id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	equipier.AccepteCharte = sql.NullBool{Valid: true, Bool: accept}
+	_, err = equipier.Update(ct.db)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	return nil
+}

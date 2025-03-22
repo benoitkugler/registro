@@ -6,7 +6,6 @@ import (
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
 	"registro/sql/personnes"
-	"registro/sql/shared"
 	"registro/utils"
 )
 
@@ -22,7 +21,7 @@ func NewParticipantExt(participant cps.Participant, personne personnes.Personne,
 	return ParticipantExt{
 		cps.ParticipantPersonne{Participant: participant, Personne: personne},
 		camp.AgeDebutCamp(personne.DateNaissance),
-		shared.Plage{From: camp.DateDebut, Duree: camp.Duree}.HasBirthday(personne.DateNaissance),
+		camp.Plage().HasBirthday(personne.DateNaissance),
 		dossier.MomentInscription,
 	}
 }

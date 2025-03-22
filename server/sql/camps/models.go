@@ -147,25 +147,6 @@ type GroupeParticipant struct {
 	Manuel bool
 }
 
-// Equipier représente un participant dans l'équipe d'un séjour
-//
-// gomacro:SQL ADD UNIQUE(IdCamp, IdPersonne)
-// gomacro:SQL CREATE UNIQUE INDEX ON Equipier(IdCamp) WHERE #[Role.Direction] = ANY(Roles)
-//
-// gomacro:QUERY SwitchEquipierPersonne UPDATE Equipier SET IdPersonne = $target$ WHERE IdPersonne = $temporaire$;
-type Equipier struct {
-	Id         IdEquipier
-	IdCamp     IdCamp        `gomacro-sql-on-delete:"CASCADE"`
-	IdPersonne pr.IdPersonne `gomacro-sql-on-delete:"CASCADE"`
-
-	Roles    Roles
-	Presence OptionnalPlage
-
-	Invitation InvitationEquipier
-	// validation de la charte ACVE
-	AccepteCharte sql.NullBool
-}
-
 // Sondage enregistre les retours sur un séjour
 //
 // gomacro:SQL ADD UNIQUE(IdCamp, IdDossier)
@@ -201,4 +182,26 @@ type Aide struct {
 	Valeur     Montant
 	ParJour    bool
 	NbJoursMax int
+}
+
+// ---------------------------- Equipiers ----------------------------
+
+// Equipier représente un participant dans l'équipe d'un séjour
+//
+// gomacro:SQL ADD UNIQUE(IdCamp, IdPersonne)
+// gomacro:SQL CREATE UNIQUE INDEX ON Equipier(IdCamp) WHERE #[Role.Direction] = ANY(Roles)
+//
+// gomacro:QUERY SwitchEquipierPersonne UPDATE Equipier SET IdPersonne = $target$ WHERE IdPersonne = $temporaire$;
+type Equipier struct {
+	Id         IdEquipier
+	IdCamp     IdCamp        `gomacro-sql-on-delete:"CASCADE"`
+	IdPersonne pr.IdPersonne `gomacro-sql-on-delete:"CASCADE"`
+
+	Roles    Roles
+	Presence PresenceOffsets
+
+	FormStatus FormStatusEquipier
+
+	// validation de la charte ACVE
+	AccepteCharte sql.NullBool
 }

@@ -106,9 +106,9 @@ func (builtinDemandes Builtins) Defaut(equipier cp.Equipier) DemandeEquipiers {
 			continue
 		}
 		demandes = append(demandes, DemandeEquipier{
-			IdEquipier: equipier.Id,
-			IdDemande:  builtinDemandes[cat],
-			Optionnel:  isDemandeOpt(Categorie(cat), equipier.Roles),
+			IdEquipier:  equipier.Id,
+			IdDemande:   builtinDemandes[cat],
+			Optionnelle: isDemandeOpt(Categorie(cat), equipier.Roles),
 		})
 	}
 	return demandes

@@ -57,8 +57,8 @@ const preinscriptionKey = "preinscription"
 // LoadData décode la (potentielle) préinscription et renvoie les
 // données des séjours.
 func (ct *Controller) LoadData(c echo.Context) error {
-	preselected := c.QueryParam("preselected")        // optionnel
-	preinscription := c.QueryParam(preinscriptionKey) // optionnel
+	preselected, _ := utils.QueryParamInt[cps.IdCamp](c, "preselected") // optionnel
+	preinscription := c.QueryParam(preinscriptionKey)                   // optionnel
 
 	out, err := ct.loadData(preselected, preinscription)
 	if err != nil {
@@ -137,7 +137,7 @@ type Data struct {
 	Settings           Settings
 }
 
-func (ct *Controller) loadData(preselected, preinscription string) (Data, error) {
+func (ct *Controller) loadData(preselected cps.IdCamp, preinscription string) (Data, error) {
 	camps, tauxs, equipiers, personnes, err := ct.LoadCamps()
 	if err != nil {
 		return Data{}, err
@@ -165,14 +165,11 @@ func (ct *Controller) loadData(preselected, preinscription string) (Data, error)
 		initialInscription.Responsable.Pays = "FR"
 	}
 
-	// on error, the idPre will be 0
-	idPre, _ := utils.ParseInt[cps.IdCamp](preselected)
-
 	return Data{
 		Camps:              list,
 		InitialInscription: initialInscription,
 		Settings: Settings{
-			PreselectedCamp:    idPre,
+			PreselectedCamp:    preselected,
 			SupportBonsCAF:     ct.asso.SupportBonsCAF,
 			SupportANCV:        ct.asso.SupportANCV,
 			EmailRetraitMedia:  ct.asso.EmailRetraitMedia,

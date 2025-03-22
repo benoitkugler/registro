@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"registro/sql/dossiers"
 	"registro/sql/personnes"
+	"strconv"
+	"strings"
 
 	"github.com/lib/pq"
 )
@@ -403,7 +405,7 @@ func scanOneEquipier(row scanner) (Equipier, error) {
 		&item.IdPersonne,
 		&item.Roles,
 		&item.Presence,
-		&item.Invitation,
+		&item.FormStatus,
 		&item.AccepteCharte,
 	)
 	return item, err
@@ -413,7 +415,7 @@ func ScanEquipier(row *sql.Row) (Equipier, error) { return scanOneEquipier(row) 
 
 // SelectAll returns all the items in the equipiers table.
 func SelectAllEquipiers(db DB) (Equipiers, error) {
-	rows, err := db.Query("SELECT id, idcamp, idpersonne, roles, presence, invitation, acceptecharte FROM equipiers")
+	rows, err := db.Query("SELECT id, idcamp, idpersonne, roles, presence, formstatus, acceptecharte FROM equipiers")
 	if err != nil {
 		return nil, err
 	}
@@ -422,13 +424,13 @@ func SelectAllEquipiers(db DB) (Equipiers, error) {
 
 // SelectEquipier returns the entry matching 'id'.
 func SelectEquipier(tx DB, id IdEquipier) (Equipier, error) {
-	row := tx.QueryRow("SELECT id, idcamp, idpersonne, roles, presence, invitation, acceptecharte FROM equipiers WHERE id = $1", id)
+	row := tx.QueryRow("SELECT id, idcamp, idpersonne, roles, presence, formstatus, acceptecharte FROM equipiers WHERE id = $1", id)
 	return ScanEquipier(row)
 }
 
 // SelectEquipiers returns the entry matching the given 'ids'.
 func SelectEquipiers(tx DB, ids ...IdEquipier) (Equipiers, error) {
-	rows, err := tx.Query("SELECT id, idcamp, idpersonne, roles, presence, invitation, acceptecharte FROM equipiers WHERE id = ANY($1)", IdEquipierArrayToPQ(ids))
+	rows, err := tx.Query("SELECT id, idcamp, idpersonne, roles, presence, formstatus, acceptecharte FROM equipiers WHERE id = ANY($1)", IdEquipierArrayToPQ(ids))
 	if err != nil {
 		return nil, err
 	}
@@ -473,28 +475,28 @@ func ScanEquipiers(rs *sql.Rows) (Equipiers, error) {
 // Insert one Equipier in the database and returns the item with id filled.
 func (item Equipier) Insert(tx DB) (out Equipier, err error) {
 	row := tx.QueryRow(`INSERT INTO equipiers (
-		idcamp, idpersonne, roles, presence, invitation, acceptecharte
+		idcamp, idpersonne, roles, presence, formstatus, acceptecharte
 		) VALUES (
 		$1, $2, $3, $4, $5, $6
-		) RETURNING id, idcamp, idpersonne, roles, presence, invitation, acceptecharte;
-		`, item.IdCamp, item.IdPersonne, item.Roles, item.Presence, item.Invitation, item.AccepteCharte)
+		) RETURNING id, idcamp, idpersonne, roles, presence, formstatus, acceptecharte;
+		`, item.IdCamp, item.IdPersonne, item.Roles, item.Presence, item.FormStatus, item.AccepteCharte)
 	return ScanEquipier(row)
 }
 
 // Update Equipier in the database and returns the new version.
 func (item Equipier) Update(tx DB) (out Equipier, err error) {
 	row := tx.QueryRow(`UPDATE equipiers SET (
-		idcamp, idpersonne, roles, presence, invitation, acceptecharte
+		idcamp, idpersonne, roles, presence, formstatus, acceptecharte
 		) = (
 		$1, $2, $3, $4, $5, $6
-		) WHERE id = $7 RETURNING id, idcamp, idpersonne, roles, presence, invitation, acceptecharte;
-		`, item.IdCamp, item.IdPersonne, item.Roles, item.Presence, item.Invitation, item.AccepteCharte, item.Id)
+		) WHERE id = $7 RETURNING id, idcamp, idpersonne, roles, presence, formstatus, acceptecharte;
+		`, item.IdCamp, item.IdPersonne, item.Roles, item.Presence, item.FormStatus, item.AccepteCharte, item.Id)
 	return ScanEquipier(row)
 }
 
 // Deletes the Equipier and returns the item
 func DeleteEquipierById(tx DB, id IdEquipier) (Equipier, error) {
-	row := tx.QueryRow("DELETE FROM equipiers WHERE id = $1 RETURNING id, idcamp, idpersonne, roles, presence, invitation, acceptecharte;", id)
+	row := tx.QueryRow("DELETE FROM equipiers WHERE id = $1 RETURNING id, idcamp, idpersonne, roles, presence, formstatus, acceptecharte;", id)
 	return ScanEquipier(row)
 }
 
@@ -533,7 +535,7 @@ func (items Equipiers) IdCamps() []IdCamp {
 }
 
 func SelectEquipiersByIdCamps(tx DB, idCamps_ ...IdCamp) (Equipiers, error) {
-	rows, err := tx.Query("SELECT id, idcamp, idpersonne, roles, presence, invitation, acceptecharte FROM equipiers WHERE idcamp = ANY($1)", IdCampArrayToPQ(idCamps_))
+	rows, err := tx.Query("SELECT id, idcamp, idpersonne, roles, presence, formstatus, acceptecharte FROM equipiers WHERE idcamp = ANY($1)", IdCampArrayToPQ(idCamps_))
 	if err != nil {
 		return nil, err
 	}
@@ -574,7 +576,7 @@ func (items Equipiers) IdPersonnes() []personnes.IdPersonne {
 }
 
 func SelectEquipiersByIdPersonnes(tx DB, idPersonnes_ ...personnes.IdPersonne) (Equipiers, error) {
-	rows, err := tx.Query("SELECT id, idcamp, idpersonne, roles, presence, invitation, acceptecharte FROM equipiers WHERE idpersonne = ANY($1)", personnes.IdPersonneArrayToPQ(idPersonnes_))
+	rows, err := tx.Query("SELECT id, idcamp, idpersonne, roles, presence, formstatus, acceptecharte FROM equipiers WHERE idpersonne = ANY($1)", personnes.IdPersonneArrayToPQ(idPersonnes_))
 	if err != nil {
 		return nil, err
 	}
@@ -591,7 +593,7 @@ func DeleteEquipiersByIdPersonnes(tx DB, idPersonnes_ ...personnes.IdPersonne) (
 
 // SelectEquipierByIdCampAndIdPersonne return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectEquipierByIdCampAndIdPersonne(tx DB, idCamp IdCamp, idPersonne personnes.IdPersonne) (item Equipier, found bool, err error) {
-	row := tx.QueryRow("SELECT id, idcamp, idpersonne, roles, presence, invitation, acceptecharte FROM equipiers WHERE IdCamp = $1 AND IdPersonne = $2", idCamp, idPersonne)
+	row := tx.QueryRow("SELECT id, idcamp, idpersonne, roles, presence, formstatus, acceptecharte FROM equipiers WHERE IdCamp = $1 AND IdPersonne = $2", idCamp, idPersonne)
 	item, err = ScanEquipier(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
@@ -1939,6 +1941,35 @@ func (s Roles) Value() (driver.Value, error) {
 	return tmp.Value()
 }
 
+func (s *PresenceOffsets) Scan(src interface{}) error {
+	bs, ok := src.([]byte)
+	if !ok {
+		return fmt.Errorf("unsupported type %T", src)
+	}
+	fields := strings.Split(string(bs[1:len(bs)-1]), ",")
+	if len(fields) != 2 {
+		return fmt.Errorf("unsupported number of fields %d", len(fields))
+	}
+
+	valDebut, err := strconv.Atoi(fields[0])
+	if err != nil {
+		return err
+	}
+	s.Debut = int(valDebut)
+
+	valFin, err := strconv.Atoi(fields[1])
+	if err != nil {
+		return err
+	}
+	s.Fin = int(valFin)
+
+	return nil
+}
+func (s PresenceOffsets) Value() (driver.Value, error) {
+	bs := fmt.Appendf(nil, "(%d, %d)", s.Debut, s.Fin)
+	return driver.Value(bs), nil
+}
+
 func IdAideArrayToPQ(ids []IdAide) pq.Int64Array {
 	out := make(pq.Int64Array, len(ids))
 	for i, v := range ids {
@@ -2136,9 +2167,6 @@ func (s OptionPrixCamp) Value() (driver.Value, error) { return dumpJSON(s) }
 
 func (s *OptionPrixParticipant) Scan(src interface{}) error  { return loadJSON(s, src) }
 func (s OptionPrixParticipant) Value() (driver.Value, error) { return dumpJSON(s) }
-
-func (s *OptionnalPlage) Scan(src interface{}) error  { return loadJSON(s, src) }
-func (s OptionnalPlage) Value() (driver.Value, error) { return dumpJSON(s) }
 
 func (s *Remises) Scan(src interface{}) error  { return loadJSON(s, src) }
 func (s Remises) Value() (driver.Value, error) { return dumpJSON(s) }

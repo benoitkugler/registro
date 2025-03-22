@@ -67,7 +67,7 @@ func TestController_load(t *testing.T) {
 		tu.AssertNoErr(t, err)
 		tu.Assert(t, id == pre.IdResponsable)
 
-		data, err := ct.loadData("", preinsc)
+		data, err := ct.loadData(0, preinsc)
 		tu.AssertNoErr(t, err)
 		tu.Assert(t, data.InitialInscription.ResponsablePreIdent != "")
 	})

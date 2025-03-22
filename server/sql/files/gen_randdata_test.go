@@ -40,7 +40,7 @@ func randDemandeEquipier() DemandeEquipier {
 	var s DemandeEquipier
 	s.IdEquipier = randcam_IdEquipier()
 	s.IdDemande = randIdDemande()
-	s.Optionnel = randbool()
+	s.Optionnelle = randbool()
 
 	return s
 }
@@ -50,7 +50,7 @@ func randFile() File {
 	s.Id = randIdFile()
 	s.Taille = randint()
 	s.NomClient = randstring()
-	s.DateHeureModif = randtTime()
+	s.Uploaded = randtTime()
 
 	return s
 }

@@ -114,21 +114,6 @@ ALTER TABLE groupe_participants
 ALTER TABLE groupe_participants
     ADD FOREIGN KEY (IdCamp) REFERENCES camps;
 
-ALTER TABLE equipiers
-    ADD UNIQUE (IdCamp, IdPersonne);
-
-CREATE UNIQUE INDEX ON equipiers (IdCamp)
-WHERE
-    1
-    /* Role.Direction */
-    = ANY (Roles);
-
-ALTER TABLE equipiers
-    ADD FOREIGN KEY (IdCamp) REFERENCES camps ON DELETE CASCADE;
-
-ALTER TABLE equipiers
-    ADD FOREIGN KEY (IdPersonne) REFERENCES personnes ON DELETE CASCADE;
-
 ALTER TABLE sondages
     ADD UNIQUE (IdCamp, IdDossier);
 
@@ -144,6 +129,21 @@ ALTER TABLE aides
 ALTER TABLE aides
     ADD FOREIGN KEY (IdParticipant) REFERENCES participants ON DELETE CASCADE;
 
+ALTER TABLE equipiers
+    ADD UNIQUE (IdCamp, IdPersonne);
+
+CREATE UNIQUE INDEX ON equipiers (IdCamp)
+WHERE
+    1
+    /* Role.Direction */
+    = ANY (Roles);
+
+ALTER TABLE equipiers
+    ADD FOREIGN KEY (IdCamp) REFERENCES camps ON DELETE CASCADE;
+
+ALTER TABLE equipiers
+    ADD FOREIGN KEY (IdPersonne) REFERENCES personnes ON DELETE CASCADE;
+
 ALTER TABLE camps
     ADD CONSTRAINT Navette_gomacro CHECK (gomacro_validate_json_camp_OptionNavette (Navette));
 
@@ -152,9 +152,6 @@ ALTER TABLE camps
 
 ALTER TABLE participants
     ADD CONSTRAINT OptionPrix_gomacro CHECK (gomacro_validate_json_camp_OptionPrixParticipant (OptionPrix));
-
-ALTER TABLE equipiers
-    ADD CONSTRAINT Presence_gomacro CHECK (gomacro_validate_json_camp_OptionnalPlage (Presence));
 
 ALTER TABLE participants
     ADD CONSTRAINT Remises_gomacro CHECK (gomacro_validate_json_camp_Remises (Remises));

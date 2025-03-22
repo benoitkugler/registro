@@ -62,11 +62,17 @@ func randEquipier() Equipier {
 	s.IdCamp = randIdCamp()
 	s.IdPersonne = randper_IdPersonne()
 	s.Roles = randRoles()
-	s.Presence = randOptionnalPlage()
-	s.Invitation = randInvitationEquipier()
+	s.Presence = randPresenceOffsets()
+	s.FormStatus = randFormStatusEquipier()
 	s.AccepteCharte = randsql_NullBool()
 
 	return s
+}
+
+func randFormStatusEquipier() FormStatusEquipier {
+	choix := [...]FormStatusEquipier{NotSend, Pending, Answered}
+	i := rand.Intn(len(choix))
+	return choix[i]
 }
 
 func randGroupe() Groupe {
@@ -122,12 +128,6 @@ func randIdStructureaide() IdStructureaide {
 	return IdStructureaide(randint64())
 }
 
-func randInvitationEquipier() InvitationEquipier {
-	choix := [...]InvitationEquipier{NonInvite, Invite, Verifie}
-	i := rand.Intn(len(choix))
-	return choix[i]
-}
-
 func randJours() Jours {
 	return Jours(randSliceint32())
 }
@@ -154,12 +154,12 @@ func randLettredirecteur() Lettredirecteur {
 }
 
 func randListeAttente() ListeAttente {
-	choix := [...]ListeAttente{AStatuer, AttenteProfilInvalide, Refuse, AttenteCampComplet, EnAttenteReponse, Inscrit}
+	choix := [...]ListeAttente{AStatuer, Refuse, AttenteProfilInvalide, AttenteCampComplet, EnAttenteReponse, Inscrit}
 	i := rand.Intn(len(choix))
 	return choix[i]
 }
 
-func randNavettte() Navette {
+func randNavette() Navette {
 	choix := [...]Navette{NoBus, Aller, Retour, AllerRetour}
 	i := rand.Intn(len(choix))
 	return choix[i]
@@ -196,15 +196,6 @@ func randOptionPrixParticipant() OptionPrixParticipant {
 	return s
 }
 
-func randOptionnalPlage() OptionnalPlage {
-	var s OptionnalPlage
-	s.From = randsha_Date()
-	s.Duree = randint()
-	s.Active = randbool()
-
-	return s
-}
-
 func randParticipant() Participant {
 	var s Participant
 	s.Id = randIdParticipant()
@@ -217,7 +208,15 @@ func randParticipant() Participant {
 	s.QuotientFamilial = randint()
 	s.OptionPrix = randOptionPrixParticipant()
 	s.Details = randstring()
-	s.Navette = randNavettte()
+	s.Navette = randNavette()
+
+	return s
+}
+
+func randPresenceOffsets() PresenceOffsets {
+	var s PresenceOffsets
+	s.Debut = randint()
+	s.Fin = randint()
 
 	return s
 }

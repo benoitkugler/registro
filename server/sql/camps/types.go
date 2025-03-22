@@ -331,19 +331,23 @@ func (rs Roles) Is(r Role) bool {
 	return false
 }
 
-// InvitationEquipier enregistre si
+// FormStatusEquipier enregistre si
 // l'équipier a validé son profil
-type InvitationEquipier uint8
+type FormStatusEquipier uint8
 
 const (
-	NonInvite InvitationEquipier = iota
-	Invite
-	Verifie
+	NotSend FormStatusEquipier = iota
+	Pending
+	Answered
 )
 
-type OptionnalPlage struct {
-	shared.Plage
-	Active bool
+// PresenceOffsets encode une différence par rapport
+// à une plage de référence (celle du camp).
+//
+// La valeur zéro correspond à la date par défaut.
+type PresenceOffsets struct {
+	// Nombre de jours à ajouter
+	Debut, Fin int
 }
 
 // Satisfaction est une énumération indiquant le

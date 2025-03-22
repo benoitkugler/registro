@@ -21,14 +21,14 @@ const albumidTest = "QVlJS3ZXTjE-MhfjH29qFA"
 
 func TestConnexion(t *testing.T) {
 	api, err := InitApi(devCreds(t))
-	defer api.Kill()
+	defer api.Close()
 	tu.AssertNoErr(t, err)
 }
 
 func TestContacts(t *testing.T) {
 	api, err := InitApi(devCreds(t))
 	tu.AssertNoErr(t, err)
-	defer api.Kill()
+	defer api.Close()
 
 	l, err := api.getContacts()
 	tu.AssertNoErr(t, err)
@@ -38,7 +38,7 @@ func TestContacts(t *testing.T) {
 func TestFolders(t *testing.T) {
 	api, err := InitApi(devCreds(t))
 	tu.AssertNoErr(t, err)
-	defer api.Kill()
+	defer api.Close()
 
 	l, err := api.getFolders("")
 	tu.AssertNoErr(t, err)
@@ -60,7 +60,7 @@ func TestFolders(t *testing.T) {
 func TestGetAlbumsContacts(t *testing.T) {
 	api, err := InitApi(devCreds(t))
 	tu.AssertNoErr(t, err)
-	defer api.Kill()
+	defer api.Close()
 
 	m1, m2, m3, err := api.GetAllAlbumsContacts()
 	tu.AssertNoErr(t, err)
@@ -72,7 +72,7 @@ func TestGetAlbumsContacts(t *testing.T) {
 func TestAjouteDirecteur(t *testing.T) {
 	api, err := InitApi(devCreds(t))
 	tu.AssertNoErr(t, err)
-	defer api.Kill()
+	defer api.Close()
 
 	c, err := api.AjouteDirecteur(albumidTest, "x.ben.x@free.fr", true)
 	tu.AssertNoErr(t, err)
@@ -85,7 +85,7 @@ func TestAjouteDirecteur(t *testing.T) {
 func TestAjouteContacts(t *testing.T) {
 	api, err := InitApi(devCreds(t))
 	tu.AssertNoErr(t, err)
-	defer api.Kill()
+	defer api.Close()
 
 	c, err := api.AjouteContacts("C2", 2019, albumidTest, []string{"x.ben.x@free.fr", "benoit.kugler@inria.fr"}, false)
 	tu.AssertNoErr(t, err)
@@ -111,7 +111,7 @@ func TestAjouteContacts(t *testing.T) {
 func TestSetUploader(t *testing.T) {
 	api, err := InitApi(devCreds(t))
 	tu.AssertNoErr(t, err)
-	defer api.Kill()
+	defer api.Close()
 
 	_, err = api.AjouteContacts("C2", 2019, albumidTest, []string{"x.ben.x@free.fr"}, false)
 	tu.AssertNoErr(t, err)
@@ -125,7 +125,7 @@ func TestSetUploader(t *testing.T) {
 func TestGetFromMail(t *testing.T) {
 	api, err := InitApi(devCreds(t))
 	tu.AssertNoErr(t, err)
-	defer api.Kill()
+	defer api.Close()
 
 	contact, albums, err := api.GetLoginFromMail("x.ben.x@free.fr")
 	tu.AssertNoErr(t, err)
@@ -138,7 +138,7 @@ func TestGetFromMail(t *testing.T) {
 func TestGetMetadatas(t *testing.T) {
 	api, err := InitApi(devCreds(t))
 	tu.AssertNoErr(t, err)
-	defer api.Kill()
+	defer api.Close()
 
 	alb, err := api.GetAlbumMetadatas(albumidTest)
 	tu.AssertNoErr(t, err)

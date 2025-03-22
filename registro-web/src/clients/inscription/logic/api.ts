@@ -135,14 +135,14 @@ export abstract class AbstractAPI {
   }
 
   /** LoadData performs the request and handles the error */
-  async LoadData(params: { preselected: string; preinscription: string }) {
+  async LoadData(params: { preselected: IdCamp; preinscription: string }) {
     const fullUrl = this.baseUrl + "/api/v1/inscription/load";
     this.startRequest();
     try {
       const rep: AxiosResponse<Data> = await Axios.get(fullUrl, {
         headers: this.getHeaders(),
         params: {
-          preselected: params["preselected"],
+          preselected: String(params["preselected"]),
           preinscription: params["preinscription"],
         },
       });

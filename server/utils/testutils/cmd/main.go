@@ -56,6 +56,8 @@ func main() {
 	db, err := sqlCreds.ConnectPostgres()
 	check(err)
 
+	enc := crypto.NewEncrypter(os.Getenv("SERVER_KEY"))
+
 	fmt.Println("Env loaded, using DB:", sqlCreds.Name)
 
 	switch *action {
@@ -63,6 +65,8 @@ func main() {
 		addInscriptions(db, smtp, asso, *partsCount)
 	case "add_messages":
 		addMessages(db)
+	case "equipier":
+		createEquipier(db, enc)
 	default:
 		panic("invalid action")
 	}
@@ -132,4 +136,20 @@ func addMessages(db *sql.DB) {
 	check(err)
 
 	fmt.Println("Added messages to dossier", id)
+}
+
+// expect at least one camp
+func createEquipier(db cps.DB, enc crypto.Encrypter) {
+	camps, err := cps.SelectAllCamps(db)
+	check(err)
+	camp := camps[camps.IDs()[0]]
+
+	personne, err := pr.Personne{}.Insert(db)
+	check(err)
+
+	equipier, err := cps.Equipier{IdCamp: camp.Id, IdPersonne: personne.Id}.Insert(db)
+	check(err)
+
+	key := crypto.EncryptID(enc, equipier.Id)
+	fmt.Printf("Created Equipier key=%s\n", key)
 }

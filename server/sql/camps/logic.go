@@ -198,9 +198,9 @@ func (c Camp) Label() string {
 	return fmt.Sprintf("%s %d", c.Nom, c.DateDebut.Time().Year())
 }
 
-func (cp *Camp) DateFin() sh.Date {
-	return sh.Plage{From: cp.DateDebut, Duree: cp.Duree}.To()
-}
+func (cp *Camp) Plage() sh.Plage { return sh.Plage{From: cp.DateDebut, Duree: cp.Duree} }
+
+func (cp *Camp) DateFin() sh.Date { return cp.Plage().To() }
 
 // IsPassedBy renvoie `true` si le camp est
 // passé d'au moins [jours].

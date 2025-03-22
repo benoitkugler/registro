@@ -25,8 +25,8 @@ type File struct {
 	Taille int
 	// as provided by the client,
 	// different from the file path
-	NomClient      string
-	DateHeureModif time.Time
+	NomClient string
+	Uploaded  time.Time
 }
 
 // Demande encode la catégorie d'un fichier à fournir.
@@ -70,9 +70,9 @@ type Demande struct {
 //
 // gomacro:SQL ADD UNIQUE(IdEquipier, IdDemande)
 type DemandeEquipier struct {
-	IdEquipier cps.IdEquipier `gomacro-sql-on-delete:"CASCADE"`
-	IdDemande  IdDemande
-	Optionnel  bool
+	IdEquipier  cps.IdEquipier `gomacro-sql-on-delete:"CASCADE"`
+	IdDemande   IdDemande
+	Optionnelle bool
 }
 
 // DemandeCamp représente un document demandé

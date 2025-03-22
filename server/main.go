@@ -13,6 +13,7 @@ import (
 	"registro/config"
 	"registro/controllers/backoffice"
 	"registro/controllers/directeurs"
+	equipiers "registro/controllers/equipier"
 	"registro/controllers/espaceperso"
 	"registro/controllers/inscriptions"
 	"registro/controllers/logic"
@@ -57,6 +58,8 @@ func main() {
 
 	inscriptionsCt := inscriptions.NewController(db, encrypter, smtp, asso)
 
+	equipiersCt := equipiers.NewController(db, encrypter, joomeo)
+
 	if isDev {
 		fmt.Println("Running in dev mode :")
 
@@ -89,7 +92,8 @@ func main() {
 	setupRoutesBackoffice(e, backofficeCt)
 	setupRoutesDirecteurs(e, directeursCt)
 	setupRoutesEspaceperso(e, espacepersoCt)
-	setupRoutesInscriptions(e, inscriptionsCt)
+	setupRoutesInscription(e, inscriptionsCt)
+	setupRoutesEquipier(e, equipiersCt)
 
 	setupClientApps(e)
 
@@ -178,6 +182,7 @@ func setupClientApps(e *echo.Echo) {
 
 	e.GET("/backoffice", serve("static/backoffice/index.html"), middleware.Gzip(), noCache)
 	e.GET(inscriptions.EndpointInscription, serve("static/inscription/index.html"), middleware.Gzip(), noCache)
+	e.GET(equipiers.EndpointEquipier, serve("static/equipier/index.html"), middleware.Gzip(), noCache)
 	e.GET("/directeurs", serve("static/directeurs/index.html"), middleware.Gzip(), noCache)
 
 	// global static files used by frontend apps

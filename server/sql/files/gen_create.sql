@@ -17,14 +17,14 @@ CREATE TABLE demande_camps (
 CREATE TABLE demande_equipiers (
     IdEquipier integer NOT NULL,
     IdDemande integer NOT NULL,
-    Optionnel boolean NOT NULL
+    Optionnelle boolean NOT NULL
 );
 
 CREATE TABLE files (
     Id serial PRIMARY KEY,
     Taille integer NOT NULL,
     NomClient text NOT NULL,
-    DateHeureModif timestamp(0) with time zone NOT NULL
+    Uploaded timestamp(0) with time zone NOT NULL
 );
 
 CREATE TABLE file_aides (

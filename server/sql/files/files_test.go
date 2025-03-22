@@ -30,5 +30,5 @@ func TestUploadFile(t *testing.T) {
 	tu.AssertNoErr(t, err)
 
 	tu.Assert(t, meta.Taille == len(f))
-	tu.Assert(t, meta.DateHeureModif.YearDay() == time.Now().YearDay())
+	tu.Assert(t, meta.Uploaded.YearDay() == time.Now().YearDay())
 }
