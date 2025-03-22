@@ -182,7 +182,7 @@ const isStep4Valid = computed(
 const isCharteOK = ref(false);
 
 const isInscValid = computed(() => {
-  return isStep1Valid.value && isStep2Valid.value && isStep4Valid;
+  return isStep1Valid.value && isStep2Valid.value && isStep4Valid.value;
 });
 
 const isLoading = ref(false);
