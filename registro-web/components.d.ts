@@ -28,6 +28,8 @@ declare module 'vue' {
     EventSondageV: typeof import('./src/components/events/EventSondageV.vue')['default']
     EventSupprimeV: typeof import('./src/components/events/EventSupprimeV.vue')['default']
     EventSwitch: typeof import('./src/components/EventSwitch.vue')['default']
+    FilesDemande: typeof import('./src/components/files/FilesDemande.vue')['default']
+    FileUpload: typeof import('./src/components/files/FileUpload.vue')['default']
     InscriptionEtatcivilCols: typeof import('./src/components/inscriptions/InscriptionEtatcivilCols.vue')['default']
     InscriptionRow: typeof import('./src/components/inscriptions/InscriptionRow.vue')['default']
     IntField: typeof import('./src/components/IntField.vue')['default']

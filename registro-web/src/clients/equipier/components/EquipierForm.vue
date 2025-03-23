@@ -254,13 +254,24 @@
     </v-card-text>
   </v-card>
 
-  <v-card title="Documents" class="my-2">
-    <v-card-text></v-card-text>
+  <v-card
+    title="Documents"
+    subtitle="Les documents ci-dessous sont à ajouter (ou vérifier)."
+    class="my-2"
+  >
+    <v-card-text>
+      <FilesDemande
+        :demande="demande.Demande"
+        :files="demande.Files || []"
+        :optionnelle="demande.Optionnelle"
+        v-for="demande in demandes"
+      ></FilesDemande>
+    </v-card-text>
   </v-card>
 </template>
 
 <script lang="ts" setup>
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { Sexe, type EquipierExt, type Joomeo } from "../logic/api";
 import { Camps, copy, Departements, Formatters, FormRules } from "@/utils";
 
@@ -272,9 +283,15 @@ const props = defineProps<{
 const inner = ref(copy(props.equipier.Personne));
 const innerPresences = ref(copy(props.equipier.Equipier.Presence));
 
-// async function fetchData() {
-//   const res = await controller.Load({ key: key.value });
-//   if (res === undefined) return;
-//   data.value = res;
-// }
+const demandes = computed(() => {
+  const out = (props.equipier.Demandes || []).map((p) => p);
+  out.sort((a, b) =>
+    a.Optionnelle == b.Optionnelle
+      ? a.Demande.Id - b.Demande.Id
+      : a.Optionnelle
+      ? 1
+      : -1
+  );
+  return out;
+});
 </script>
