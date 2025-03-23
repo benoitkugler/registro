@@ -7,11 +7,15 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    ApprofondissementField: typeof import('./src/components/ApprofondissementField.vue')['default']
     BoolField: typeof import('./src/components/BoolField.vue')['default']
     CardSimilaires: typeof import('./src/components/inscriptions/CardSimilaires.vue')['default']
+    copy: typeof import('./src/components/DiplomeField copy.vue')['default']
     DateField: typeof import('./src/components/DateField.vue')['default']
     DateNaissanceField: typeof import('./src/components/DateNaissanceField.vue')['default']
+    DayOffsetField: typeof import('./src/components/DayOffsetField.vue')['default']
     DebounceField: typeof import('./src/components/DebounceField.vue')['default']
+    DiplomeField: typeof import('./src/components/DiplomeField.vue')['default']
     EventAccuseReceptionV: typeof import('./src/components/events/EventAccuseReceptionV.vue')['default']
     EventAttestationV: typeof import('./src/components/events/EventAttestationV.vue')['default']
     EventCampDocsV: typeof import('./src/components/events/EventCampDocsV.vue')['default']

@@ -18,8 +18,9 @@ export interface NullBool {
 }
 // registro/controllers/equipier.Camp
 export interface Camp {
-  Label: string;
-  Plage: Plage;
+  Nom: string;
+  DateDebut: Date;
+  Duree: Int;
 }
 // registro/controllers/equipier.DemandeEquipier
 export interface DemandeEquipier {
@@ -313,11 +314,6 @@ export const SexeLabels: { [key in Sexe]: string } = {
 export type Tels = string[] | null;
 // registro/sql/shared.Date
 export type Date = Date_;
-// registro/sql/shared.Plage
-export interface Plage {
-  From: Date;
-  Duree: Int;
-}
 
 /** AbstractAPI provides auto-generated API calls and should be used 
 		as base class for an app controller.

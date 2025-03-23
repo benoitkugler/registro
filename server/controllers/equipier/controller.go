@@ -45,8 +45,9 @@ func (ct *Controller) Load(c echo.Context) error {
 }
 
 type Camp struct {
-	Label string
-	Plage shared.Plage
+	Nom       string
+	DateDebut shared.Date
+	Duree     int
 }
 
 type DemandeEquipier struct {
@@ -109,7 +110,7 @@ func (ct *Controller) load(id cps.IdEquipier) (EquipierExt, error) {
 		}
 	}
 
-	out := EquipierExt{equipier, personne.Etatcivil, Camp{camp.Label(), camp.Plage()}, demandes}
+	out := EquipierExt{equipier, personne.Etatcivil, Camp{camp.Nom, camp.DateDebut, camp.Duree}, demandes}
 	return out, nil
 }
 
@@ -177,7 +178,7 @@ func (ct *Controller) Update(c echo.Context) error {
 		return err
 	}
 
-	err = ct.update(id, args)
+	err = ct.update(id, args.Personne, args.Presence)
 	if err != nil {
 		return err
 	}
@@ -185,7 +186,7 @@ func (ct *Controller) Update(c echo.Context) error {
 	return c.NoContent(200)
 }
 
-func (ct *Controller) update(id cps.IdEquipier, args UpdateIn) error {
+func (ct *Controller) update(id cps.IdEquipier, argsP pr.Etatcivil, argsPre cps.PresenceOffsets) error {
 	equipier, err := cps.SelectEquipier(ct.db, id)
 	if err != nil {
 		return utils.SQLError(err)
@@ -194,11 +195,20 @@ func (ct *Controller) update(id cps.IdEquipier, args UpdateIn) error {
 	if err != nil {
 		return utils.SQLError(err)
 	}
+	camp, err := cps.SelectCamp(ct.db, equipier.IdCamp)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	// sanitize presence
+	if argsPre.Debut-argsPre.Fin >= camp.Duree {
+		return errors.New("invalid Presence")
+	}
 
 	equipier.FormStatus = cps.Answered
-	equipier.Presence = args.Presence
+	equipier.Presence = argsPre
 
-	personne.Etatcivil = args.Personne
+	personne.Etatcivil = argsP
 
 	return utils.InTx(ct.db, func(tx *sql.Tx) error {
 		_, err = personne.Update(tx)

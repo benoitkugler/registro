@@ -13,7 +13,7 @@ import {
   ListeAttente,
 } from "./clients/backoffice/logic/api";
 import type { Date_, Int } from "./clients/inscription/logic/api";
-import { isDateZero, newDate_ } from "./components/date";
+import { addDays, isDateZero, newDate_ } from "./components/date";
 
 const asso = import.meta.env.VITE_ASSO;
 
@@ -192,7 +192,6 @@ interface Camp {
   Nom: string;
   DateDebut: Date_;
   Duree: Int;
-  Lieu: string;
 }
 
 export namespace Camps {
@@ -200,9 +199,7 @@ export namespace Camps {
     return new Date(camp.DateDebut).getUTCFullYear();
   }
   export function dateFin(camp: Camp): Date_ {
-    var date = new Date(camp.DateDebut);
-    date.setDate(date.getDate() + camp.Duree - 1);
-    return newDate_(date);
+    return addDays(camp.DateDebut, (camp.Duree - 1) as Int);
   }
   export function label(camp: Camp) {
     return `${camp.Nom} - ${year(camp)}`;
@@ -214,7 +211,10 @@ export namespace Camps {
     return `${Formatters.date(debut)} au ${Formatters.date(fin)}`;
   }
 
-  export function match(camp: Camp, normalizedPattern: string) {
+  export function match(
+    camp: Camp & { Lieu: string },
+    normalizedPattern: string
+  ) {
     if (normalizedPattern == "") return true;
     const str = normalize(label(camp) + camp.Lieu);
     return str.includes(normalizedPattern);

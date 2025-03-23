@@ -1,3 +1,4 @@
+import type { Int } from "@/clients/backoffice/logic/api";
 import type { Date_ } from "@/clients/inscription/logic/api";
 
 const isFull = /^(\d{1,2})[\/|-](\d{1,2})[\/|-](\d{4})$/;
@@ -50,4 +51,10 @@ export function newDate_(d: Date) {
   const offset = d.getTimezoneOffset();
   d = new Date(d.getTime() - offset * 60 * 1000);
   return d.toISOString().split("T")[0] as Date_;
+}
+
+export function addDays(d: Date_, jours: Int) {
+  var date = new Date(d);
+  date.setDate(date.getDate() + jours);
+  return newDate_(date);
 }

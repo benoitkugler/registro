@@ -7,7 +7,9 @@
             <v-col align-self="center" cols="auto">
               <v-img width="60" :src="logo" />
             </v-col>
-            <v-col align-self="center"> Formulaire équipier </v-col>
+            <v-col align-self="center">
+              Formulaire équipier {{ data ? Camps.label(data.Camp) : "" }}
+            </v-col>
           </v-row>
         </v-app-bar-title>
       </v-app-bar>
@@ -51,6 +53,7 @@ import { onMounted, ref } from "vue";
 import { controller } from "./logic/logic";
 import type { EquipierExt, Joomeo } from "./logic/api";
 import EquipierForm from "./components/EquipierForm.vue";
+import { Camps } from "@/utils";
 
 const message = ref("");
 const messageColor = ref("secondary");
