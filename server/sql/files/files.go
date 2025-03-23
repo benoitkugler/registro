@@ -73,6 +73,11 @@ func UploadFile(fs FileSystem, db DB, id IdFile, fileContent []byte, filename st
 	if err != nil {
 		return File{}, err
 	}
+	meta := File{Id: id, Taille: len(fileContent), NomClient: filename, Uploaded: time.Now().Truncate(time.Second)}
+	meta, err = meta.Update(db)
+	if err != nil {
+		return File{}, utils.SQLError(err)
+	}
 	err = fs.save(id, fileContent, false)
 	if err != nil {
 		return File{}, err
@@ -80,11 +85,6 @@ func UploadFile(fs FileSystem, db DB, id IdFile, fileContent []byte, filename st
 	err = fs.save(id, minContent, true)
 	if err != nil {
 		return File{}, err
-	}
-	meta := File{Id: id, Taille: len(fileContent), NomClient: filename, Uploaded: time.Now().Truncate(time.Second)}
-	meta, err = meta.Update(db)
-	if err != nil {
-		return File{}, utils.SQLError(err)
 	}
 	return meta, nil
 }

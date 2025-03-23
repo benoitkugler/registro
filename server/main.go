@@ -15,11 +15,12 @@ import (
 	"registro/controllers/directeurs"
 	equipiers "registro/controllers/equipier"
 	"registro/controllers/espaceperso"
+	"registro/controllers/files"
 	"registro/controllers/inscriptions"
 	"registro/controllers/logic"
 	"registro/crypto"
 	cp "registro/sql/camps"
-	"registro/sql/files"
+	fs "registro/sql/files"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -58,7 +59,9 @@ func main() {
 
 	inscriptionsCt := inscriptions.NewController(db, encrypter, smtp, asso)
 
-	equipiersCt := equipiers.NewController(db, encrypter, joomeo)
+	equipiersCt := equipiers.NewController(db, encrypter, fs, joomeo)
+
+	filesCt := files.NewController(db, encrypter, fs)
 
 	if isDev {
 		fmt.Println("Running in dev mode :")
@@ -94,7 +97,7 @@ func main() {
 	setupRoutesEspaceperso(e, espacepersoCt)
 	setupRoutesInscription(e, inscriptionsCt)
 	setupRoutesEquipier(e, equipiersCt)
-
+	setupRoutesFiles(e, filesCt)
 	setupClientApps(e)
 
 	adress := getAdress(isDev)
@@ -104,7 +107,7 @@ func main() {
 	e.Logger.Fatal(e.Start(adress))
 }
 
-func loadEnvs(devMode bool) (config.Asso, crypto.Encrypter, config.DB, files.FileSystem, config.SMTP) {
+func loadEnvs(devMode bool) (config.Asso, crypto.Encrypter, config.DB, fs.FileSystem, config.SMTP) {
 	asso, err := config.NewAsso()
 	check(err)
 
@@ -117,11 +120,11 @@ func loadEnvs(devMode bool) (config.Asso, crypto.Encrypter, config.DB, files.Fil
 	db, err := config.NewDB()
 	check(err)
 
-	fs := os.Getenv("FILES_ROOT")
-	if fs == "" {
+	root := os.Getenv("FILES_ROOT")
+	if root == "" {
 		log.Fatal("missing env. FILES_ROOT (files directory)")
 	}
-	fileSystem := files.NewFileSystem(fs)
+	fileSystem := fs.NewFileSystem(root)
 
 	smtp, err := config.NewSMTP(!devMode)
 	check(err)
@@ -187,4 +190,9 @@ func setupClientApps(e *echo.Echo) {
 
 	// global static files used by frontend apps
 	e.Group("/static", middleware.Gzip(), cacheStatic).Static("/*", "static")
+}
+
+func setupRoutesFiles(e *echo.Echo, filesCt *files.Controller) {
+	e.GET("/documents", filesCt.Get)
+	e.GET("/documents/miniature", filesCt.Get)
 }

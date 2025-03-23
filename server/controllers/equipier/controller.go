@@ -24,11 +24,12 @@ type Controller struct {
 	db *sql.DB
 
 	key    crypto.Encrypter
+	files  fs.FileSystem
 	joomeo config.Joomeo
 }
 
-func NewController(db *sql.DB, key crypto.Encrypter, joomeo config.Joomeo) *Controller {
-	return &Controller{db, key, joomeo}
+func NewController(db *sql.DB, key crypto.Encrypter, files fs.FileSystem, joomeo config.Joomeo) *Controller {
+	return &Controller{db, key, files, joomeo}
 }
 
 func (ct *Controller) Load(c echo.Context) error {
@@ -53,7 +54,7 @@ type Camp struct {
 type DemandeEquipier struct {
 	Demande     fs.Demande
 	Optionnelle bool
-	Files       []logic.FilePublic // uploaded by the user
+	Files       []logic.PublicFile // uploaded by the user
 }
 
 type EquipierExt struct {
@@ -99,9 +100,9 @@ func (ct *Controller) load(id cps.IdEquipier) (EquipierExt, error) {
 	demandes := make([]DemandeEquipier, len(links))
 	for i, link := range links {
 		innerLinks := byDemande[link.IdDemande]
-		files := make([]logic.FilePublic, len(innerLinks))
+		files := make([]logic.PublicFile, len(innerLinks))
 		for i, file := range innerLinks {
-			files[i] = logic.PublishFile(ct.key, allFiles[file.IdFile])
+			files[i] = logic.NewPublicFile(ct.key, allFiles[file.IdFile])
 		}
 		demandes[i] = DemandeEquipier{
 			Demande:     demandesM[link.IdDemande],
@@ -248,4 +249,58 @@ func (ct *Controller) updateCharte(id cps.IdEquipier, accept bool) error {
 		return utils.SQLError(err)
 	}
 	return nil
+}
+
+func (ct *Controller) UploadDocument(c echo.Context) error {
+	key := c.QueryParam("key")
+	idEquipier, err := crypto.DecryptID[cps.IdEquipier](ct.key, key)
+	if err != nil {
+		return err
+	}
+	idDemande, err := utils.ParseInt[fs.IdDemande](c.FormValue("idDemande"))
+	if err != nil {
+		return err
+	}
+	header, err := c.FormFile("document")
+	if err != nil {
+		return err
+	}
+	content, filename, err := utils.ReadUpload(header)
+	if err != nil {
+		return err
+	}
+
+	filePub, err := ct.uploadDocument(idEquipier, idDemande, content, filename)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, filePub)
+}
+
+func (ct *Controller) uploadDocument(idEquipier cps.IdEquipier, idDemande fs.IdDemande, content []byte, filename string) (logic.PublicFile, error) {
+	equipier, err := cps.SelectEquipier(ct.db, idEquipier)
+	if err != nil {
+		return logic.PublicFile{}, utils.SQLError(err)
+	}
+
+	var file fs.File
+	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
+		// create a new file, and the associated metadata
+		file, err = fs.File{}.Insert(tx)
+		if err != nil {
+			return err
+		}
+		err = fs.FilePersonne{IdFile: file.Id, IdPersonne: equipier.IdPersonne, IdDemande: idDemande}.Insert(tx)
+		if err != nil {
+			return err
+		}
+		file, err = fs.UploadFile(ct.files, tx, file.Id, content, filename)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+
+	return logic.NewPublicFile(ct.key, file), nil
 }

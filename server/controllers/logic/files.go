@@ -7,9 +7,9 @@ import (
 	"registro/sql/files"
 )
 
-// FilePublic expose un accès protégé à un fichier,
+// PublicFile expose un accès protégé à un fichier,
 // permettant téléchargement/suppression/modification.
-type FilePublic struct {
+type PublicFile struct {
 	Id string // crypted
 
 	// En bytes
@@ -18,8 +18,8 @@ type FilePublic struct {
 	Uploaded  time.Time
 }
 
-func PublishFile(key crypto.Encrypter, file files.File) FilePublic {
-	return FilePublic{
+func NewPublicFile(key crypto.Encrypter, file files.File) PublicFile {
+	return PublicFile{
 		Id:        crypto.EncryptID(key, file.Id),
 		Taille:    file.Taille,
 		NomClient: file.NomClient,

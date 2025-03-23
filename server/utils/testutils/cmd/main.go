@@ -14,6 +14,7 @@ import (
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
 	"registro/sql/events"
+	fs "registro/sql/files"
 	in "registro/sql/inscriptions"
 	pr "registro/sql/personnes"
 	"registro/sql/shared"
@@ -139,7 +140,7 @@ func addMessages(db *sql.DB) {
 }
 
 // expect at least one camp
-func createEquipier(db cps.DB, enc crypto.Encrypter) {
+func createEquipier(db *sql.DB, enc crypto.Encrypter) {
 	camps, err := cps.SelectAllCamps(db)
 	check(err)
 	camp := camps[camps.IDs()[0]]
@@ -147,7 +148,19 @@ func createEquipier(db cps.DB, enc crypto.Encrypter) {
 	personne, err := pr.Personne{}.Insert(db)
 	check(err)
 
-	equipier, err := cps.Equipier{IdCamp: camp.Id, IdPersonne: personne.Id}.Insert(db)
+	equipier, err := cps.Equipier{
+		IdCamp: camp.Id, IdPersonne: personne.Id,
+		Roles: cps.Roles{cps.Adjoint, cps.Infirmerie, cps.Cuisine},
+	}.Insert(db)
+	check(err)
+
+	builtins, err := fs.LoadBuiltins(db)
+	check(err)
+
+	demandes := builtins.Defaut(equipier)
+	err = utils.InTx(db, func(tx *sql.Tx) error {
+		return fs.InsertManyDemandeEquipiers(tx, demandes...)
+	})
 	check(err)
 
 	key := crypto.EncryptID(enc, equipier.Id)

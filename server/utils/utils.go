@@ -58,8 +58,8 @@ func Normalize(s string) string {
 	return string(removeAccents(bytes.ToLower(bytes.TrimSpace([]byte(s)))))
 }
 
-// parseInt parse [v] to an int
-func parseInt[T interface{ ~int64 | int }](v string) (T, error) {
+// ParseInt parse [v] to an int
+func ParseInt[T interface{ ~int64 | int }](v string) (T, error) {
 	id, err := strconv.ParseInt(v, 10, 64)
 	if err != nil {
 		return 0, fmt.Errorf("invalid ID parameter %s : %s", v, err)
@@ -69,7 +69,7 @@ func parseInt[T interface{ ~int64 | int }](v string) (T, error) {
 
 // QueryParamInt parse the query param `name` to an int
 func QueryParamInt[T interface{ ~int64 | int }](c echo.Context, name string) (T, error) {
-	return parseInt[T](c.QueryParam(name))
+	return ParseInt[T](c.QueryParam(name))
 }
 
 func QueryParamBool(c echo.Context, name string) bool {
@@ -77,7 +77,8 @@ func QueryParamBool(c echo.Context, name string) bool {
 	return value != ""
 }
 
-// ReadUpload checks the file size and reads its content
+// ReadUpload checks the file size and reads its content.
+// The size of the file is checked against the max 5MB
 func ReadUpload(fileHeader *multipart.FileHeader) (content []byte, filename string, err error) {
 	const MB = 1000000
 	const maxSize = 5 * MB

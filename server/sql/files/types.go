@@ -38,7 +38,7 @@ type Builtins [nbCategorieEquipier]IdDemande
 
 // LoadBuiltins charge les demandes 'builtin', qui doivent
 // être prédéclarées dans la base de données.
-func LoadBuiltins(db DB) (out [nbCategorieEquipier]IdDemande, err error) {
+func LoadBuiltins(db DB) (out Builtins, err error) {
 	ds, err := SelectAllDemandes(db)
 	if err != nil {
 		return out, utils.SQLError(err)
