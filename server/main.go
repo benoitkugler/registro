@@ -193,6 +193,7 @@ func setupClientApps(e *echo.Echo) {
 }
 
 func setupRoutesFiles(e *echo.Echo, filesCt *files.Controller) {
-	e.GET("/documents", filesCt.Get)
-	e.GET("/documents/miniature", filesCt.Get)
+	// every endpoint expected a key=<idCrypted> query param
+	e.GET("/api/v1/documents", filesCt.Get)
+	e.GET("/api/v1/documents/miniature", filesCt.GetMiniature)
 }

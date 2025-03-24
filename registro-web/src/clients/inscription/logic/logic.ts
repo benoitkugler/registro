@@ -1,4 +1,4 @@
-import { parseError } from "@/utils";
+import { baseUrl, parseError } from "@/utils";
 import { AbstractAPI } from "./api";
 
 class Controller extends AbstractAPI {
@@ -18,13 +18,8 @@ class Controller extends AbstractAPI {
   protected startRequest(): void {}
 }
 
-const localhost = "http://localhost:1323";
-
-/** `isDev` is true when the client app is served in dev mode */
-const isDev = import.meta.env.DEV;
-
 export const controller = new Controller(
   (_, __) => {},
   (_, __) => {},
-  isDev ? localhost : window.location.origin
+  baseUrl()
 );

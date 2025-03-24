@@ -26,7 +26,7 @@ export interface Camp {
 export interface DemandeEquipier {
   Demande: Demande;
   Optionnelle: boolean;
-  Files: FilePublic[] | null;
+  Files: PublicFile[] | null;
 }
 // registro/controllers/equipier.EquipierExt
 export interface EquipierExt {
@@ -43,12 +43,12 @@ export interface Joomeo {
 }
 // registro/controllers/equipier.UpdateIn
 export interface UpdateIn {
-  Key: string;
+  Token: string;
   Personne: Etatcivil;
   Presence: PresenceOffsets;
 }
-// registro/controllers/logic.FilePublic
-export interface FilePublic {
+// registro/controllers/files.PublicFile
+export interface PublicFile {
   Id: string;
   Taille: Int;
   NomClient: string;
@@ -333,13 +333,13 @@ export abstract class AbstractAPI {
   }
 
   /** Load performs the request and handles the error */
-  async Load(params: { key: string }) {
+  async Load(params: { token: string }) {
     const fullUrl = this.baseUrl + "/api/v1/equipier";
     this.startRequest();
     try {
       const rep: AxiosResponse<EquipierExt> = await Axios.get(fullUrl, {
         headers: this.getHeaders(),
-        params: { key: params["key"] },
+        params: { token: params["token"] },
       });
       return rep.data;
     } catch (error) {
@@ -348,13 +348,13 @@ export abstract class AbstractAPI {
   }
 
   /** LoadJoomeo performs the request and handles the error */
-  async LoadJoomeo(params: { key: string }) {
+  async LoadJoomeo(params: { token: string }) {
     const fullUrl = this.baseUrl + "/api/v1/equipier/joomeo";
     this.startRequest();
     try {
       const rep: AxiosResponse<Joomeo> = await Axios.get(fullUrl, {
         headers: this.getHeaders(),
-        params: { key: params["key"] },
+        params: { token: params["token"] },
       });
       return rep.data;
     } catch (error) {
@@ -375,13 +375,58 @@ export abstract class AbstractAPI {
   }
 
   /** UpdateCharte performs the request and handles the error */
-  async UpdateCharte(params: { key: string; accept: boolean }) {
+  async UpdateCharte(params: { token: string; accept: boolean }) {
     const fullUrl = this.baseUrl + "/api/v1/equipier/charte";
     this.startRequest();
     try {
       await Axios.post(fullUrl, null, {
         headers: this.getHeaders(),
-        params: { key: params["key"], accept: params["accept"] ? "ok" : "" },
+        params: {
+          token: params["token"],
+          accept: params["accept"] ? "ok" : "",
+        },
+      });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** UploadDocument performs the request and handles the error */
+  async UploadDocument(
+    file: File,
+    params: { token: string; idDemande: IdDemande },
+  ) {
+    const fullUrl = this.baseUrl + "/api/v1/equipier/upload";
+    this.startRequest();
+    try {
+      const formData = new FormData();
+      formData.append("document", file, file.name);
+      const rep: AxiosResponse<PublicFile> = await Axios.put(
+        fullUrl,
+        formData,
+        {
+          headers: this.getHeaders(),
+          params: {
+            token: params["token"],
+            idDemande: String(params["idDemande"]),
+          },
+        },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** DeleteDocument performs the request and handles the error */
+  async DeleteDocument(params: { key: string }) {
+    const fullUrl = this.baseUrl + "/api/v1/equipier/upload";
+    this.startRequest();
+    try {
+      await Axios.delete(fullUrl, {
+        headers: this.getHeaders(),
+        params: { key: params["key"] },
       });
       return true;
     } catch (error) {

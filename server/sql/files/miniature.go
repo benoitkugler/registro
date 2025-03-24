@@ -16,7 +16,7 @@ import (
 
 const (
 	miniatureWidth  = 200 // in pixels
-	miniatureHeight = 300 // in pixels
+	miniatureHeight = 280 // in pixels
 )
 
 // Init checks that Ghostscript is properly installed

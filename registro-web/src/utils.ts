@@ -35,6 +35,13 @@ export type Action = {
   action: () => void;
 };
 
+const localhost = "http://localhost:1323";
+
+/** `isDev` is true when the client app is served in dev mode */
+const isDev = import.meta.env.DEV;
+
+export const baseUrl = () => (isDev ? localhost : window.location.origin);
+
 function arrayBufferToString(buffer: ArrayBuffer) {
   const uintArray = new Uint8Array(buffer);
   const encodedString = String.fromCharCode.apply(null, Array.from(uintArray));

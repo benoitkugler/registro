@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"registro/controllers/espaceperso"
+	filesAPI "registro/controllers/files"
 	"registro/controllers/logic"
 	"registro/controllers/search"
 	"registro/mails"
@@ -502,7 +503,7 @@ func (ct *Controller) AidesJustificatifUpload(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	content, name, err := utils.ReadUpload(fileHeader)
+	content, name, err := filesAPI.ReadUpload(fileHeader)
 	if err != nil {
 		return err
 	}

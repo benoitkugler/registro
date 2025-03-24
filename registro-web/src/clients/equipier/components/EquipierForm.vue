@@ -130,7 +130,7 @@
           </v-col>
         </v-row>
         <v-row>
-          <v-col md="4" sm="6">
+          <v-col md="3" sm="6">
             <v-textarea
               variant="outlined"
               density="compact"
@@ -143,7 +143,7 @@
             >
             </v-textarea>
           </v-col>
-          <v-col md="4" sm="6">
+          <v-col md="3" sm="6">
             <v-text-field
               variant="outlined"
               density="compact"
@@ -154,7 +154,7 @@
               ]"
             ></v-text-field>
           </v-col>
-          <v-col md="4" sm="6">
+          <v-col md="3" sm="6">
             <v-text-field
               variant="outlined"
               density="compact"
@@ -164,6 +164,9 @@
                 FormRules.required(`Ton adresse est requise par l'URSSAF.`),
               ]"
             ></v-text-field>
+          </v-col>
+          <v-col md="3">
+            <PaysField v-model="inner.Pays"></PaysField>
           </v-col>
         </v-row>
         <v-row>
@@ -259,32 +262,99 @@
     subtitle="Les documents ci-dessous sont à ajouter (ou vérifier)."
     class="my-2"
   >
+    <template #append>
+      <v-chip
+        :color="missingFiles.length ? 'orange' : 'green'"
+        :prepend-icon="missingFiles.length ? 'mdi-alert' : 'mdi-check'"
+      >
+        {{
+          missingFiles.length ? `${missingFiles.length}  à fournir` : "A jour"
+        }}
+      </v-chip>
+    </template>
     <v-card-text>
       <FilesDemande
         :demande="demande.Demande"
         :files="demande.Files || []"
         :optionnelle="demande.Optionnelle"
         v-for="demande in demandes"
+        @upload="(f) => uploadFile(f, demande.Demande.Id)"
+        @delete="(f) => deleteFile(f, demande.Demande.Id)"
       ></FilesDemande>
     </v-card-text>
   </v-card>
+
+  <v-row>
+    <v-col cols="3">
+      <v-btn
+        :color="innerCharte.Bool ? 'green' : 'info'"
+        @click="showCharteDialog = true"
+        :variant="innerCharte.Bool ? 'outlined' : undefined"
+      >
+        <template #prepend>
+          <v-icon v-if="innerCharte.Bool">mdi-check</v-icon>
+        </template>
+        Charte d'engagement
+      </v-btn>
+    </v-col>
+    <v-spacer></v-spacer>
+    <v-col cols="6">
+      <v-btn block color="green" @click="save" :disabled="!isFormValid">
+        Enregistrer</v-btn
+      >
+    </v-col>
+  </v-row>
+
+  <v-dialog v-model="showMissingFilesDialog" max-width="600px">
+    <v-card title="Documents manquants">
+      <v-card-text>
+        Attention, il te reste à fournir les documents suivants :
+
+        <div class="my-2 text-center">
+          <v-chip v-for="piece in missingFiles" color="warning">
+            {{ CategorieLabels[piece.Demande.Categorie] }}
+          </v-chip>
+        </div>
+
+        Merci de revenir les ajouter !
+      </v-card-text>
+    </v-card>
+  </v-dialog>
+
+  <v-dialog v-model="showCharteDialog">
+    <CharteEquipier :sexe="inner.Sexe" @update="updateCharte"></CharteEquipier>
+  </v-dialog>
 </template>
 
 <script lang="ts" setup>
 import { computed, ref } from "vue";
-import { Sexe, type EquipierExt, type Joomeo } from "../logic/api";
+import {
+  Categorie,
+  CategorieLabels,
+  Sexe,
+  type EquipierExt,
+  type IdDemande,
+  type Joomeo,
+  type PublicFile,
+} from "../logic/api";
 import { Camps, copy, Departements, Formatters, FormRules } from "@/utils";
+import { controller } from "../logic/logic";
+import { isDateZero } from "@/components/date";
+import CharteEquipier from "./CharteEquipier.vue";
 
 const props = defineProps<{
+  token: string;
   equipier: EquipierExt;
   joomeo: Joomeo | null;
 }>();
 
 const inner = ref(copy(props.equipier.Personne));
 const innerPresences = ref(copy(props.equipier.Equipier.Presence));
+const innerCharte = ref(copy(props.equipier.Equipier.AccepteCharte));
+const demandesL = ref(copy(props.equipier.Demandes || []));
 
 const demandes = computed(() => {
-  const out = (props.equipier.Demandes || []).map((p) => p);
+  const out = demandesL.value.map((p) => p);
   out.sort((a, b) =>
     a.Optionnelle == b.Optionnelle
       ? a.Demande.Id - b.Demande.Id
@@ -294,4 +364,94 @@ const demandes = computed(() => {
   );
   return out;
 });
+
+async function uploadFile(file: File, idDemande: IdDemande) {
+  const res = await controller.UploadDocument(file, {
+    token: props.token,
+    idDemande,
+  });
+  if (res === undefined) return;
+  controller.showMessage("Document téléversé avec succès.");
+  const item = demandesL.value.find((d) => d.Demande.Id == idDemande)!;
+  item.Files = (item.Files || []).concat(res);
+}
+
+async function deleteFile(file: PublicFile, idDemande: IdDemande) {
+  const res = await controller.DeleteDocument({ key: file.Id });
+  if (res === undefined) return;
+  controller.showMessage("Document supprimé avec succès.");
+  const item = demandesL.value.find((d) => d.Demande.Id == idDemande)!;
+  item.Files = (item.Files || []).filter((f) => f.Id != file.Id);
+}
+
+const missingFiles = computed(() => {
+  const bafa = demandesL.value.find(
+    (p) => p.Demande.Categorie == Categorie.Bafa
+  );
+  const bafd = demandesL.value.find(
+    (p) => p.Demande.Categorie == Categorie.Bafd
+  );
+
+  return demandesL.value
+    .filter((dem) => !dem.Optionnelle) // contraintes bloquantes uniquement
+    .filter((dem) => {
+      // doc nons remplis
+      const notOK = (dem.Files || []).length == 0;
+      // cas spécial pour les catégories équivalent bafa et équivalent bafd,
+      let okByEquiv = false;
+      if (dem.Demande.Categorie == Categorie.BafaEquiv) {
+        okByEquiv = bafa != undefined && (bafa.Files || []).length != 0;
+      }
+      if (dem.Demande.Categorie == Categorie.BafdEquiv) {
+        okByEquiv = bafd != undefined && (bafd.Files || []).length != 0;
+      }
+      return notOK && !okByEquiv;
+    });
+});
+
+const showMissingFilesDialog = ref(false);
+const showCharteDialog = ref(false);
+
+const isFormValid = computed(
+  () =>
+    !!(
+      inner.value.Nom &&
+      inner.value.Prenom &&
+      inner.value.Sexe != Sexe.Empty &&
+      !isDateZero(inner.value.DateNaissance) &&
+      inner.value.VilleNaissance &&
+      inner.value.DepartementNaissance &&
+      inner.value.Mail &&
+      inner.value.Adresse &&
+      inner.value.CodePostal &&
+      //   inner.value.Pays &&
+      inner.value.Profession &&
+      inner.value.SecuriteSociale
+    )
+);
+async function save() {
+  const res = await controller.Update({
+    Token: props.token,
+    Personne: inner.value,
+    Presence: innerPresences.value,
+  });
+  if (res === undefined) return;
+  controller.showMessage("Profil mis à jour avec succès.");
+  // s'il y a des documents manquants, affiche une alerte
+  if (missingFiles.value.length) {
+    showMissingFilesDialog.value = true;
+  }
+  // si la charte n'a pas encore été remplie, affiche la
+  if (!innerCharte.value.Valid) {
+    showCharteDialog.value = true;
+  }
+}
+
+async function updateCharte(accept: boolean) {
+  showCharteDialog.value = false;
+  const res = await controller.UpdateCharte({ token: props.token, accept });
+  if (res === undefined) return;
+  innerCharte.value = { Valid: true, Bool: accept };
+  controller.showMessage("Ton avis a bien été pris en compte. Merci !");
+}
 </script>

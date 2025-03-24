@@ -18,7 +18,11 @@
         <v-skeleton-loader type="card"></v-skeleton-loader>
       </v-container>
       <v-container class="py-2" style="min-height: 92%" v-else>
-        <EquipierForm :equipier="data" :joomeo="joomeo"></EquipierForm>
+        <EquipierForm
+          :token="token"
+          :equipier="data"
+          :joomeo="joomeo"
+        ></EquipierForm>
       </v-container>
 
       <v-snackbar
@@ -77,26 +81,26 @@ const version = `v${VITE_APP_VERSION}`;
 
 const data = ref<EquipierExt | null>(null);
 
-// id key
-const key = ref("");
+// id token
+const token = ref("");
 
 onMounted(() => {
-  // store ID key
+  // store ID token
   const query = new URLSearchParams(window.location.search);
-  key.value = query.get("key") || "";
+  token.value = query.get("token") || "";
   fetchData();
-  fetchJoomeo();
+  fetchJoomeo(); // separate request to avoid blocking to long
 });
 
 async function fetchData() {
-  const res = await controller.Load({ key: key.value });
+  const res = await controller.Load({ token: token.value });
   if (res === undefined) return;
   data.value = res;
 }
 
 const joomeo = ref<Joomeo | null>(null);
 async function fetchJoomeo() {
-  const res = await controller.LoadJoomeo({ key: key.value });
+  const res = await controller.LoadJoomeo({ token: token.value });
   if (res === undefined) return;
   joomeo.value = res;
 }

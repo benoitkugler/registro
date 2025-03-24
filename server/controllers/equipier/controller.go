@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"registro/config"
-	"registro/controllers/logic"
+	filesAPI "registro/controllers/files"
 	"registro/crypto"
 	"registro/joomeo"
 	cps "registro/sql/camps"
@@ -33,8 +33,8 @@ func NewController(db *sql.DB, key crypto.Encrypter, files fs.FileSystem, joomeo
 }
 
 func (ct *Controller) Load(c echo.Context) error {
-	key := c.QueryParam("key")
-	id, err := crypto.DecryptID[cps.IdEquipier](ct.key, key)
+	token := c.QueryParam("token")
+	id, err := crypto.DecryptID[cps.IdEquipier](ct.key, token)
 	if err != nil {
 		return errors.New("Lien invalide.")
 	}
@@ -54,7 +54,7 @@ type Camp struct {
 type DemandeEquipier struct {
 	Demande     fs.Demande
 	Optionnelle bool
-	Files       []logic.PublicFile // uploaded by the user
+	Files       []filesAPI.PublicFile // uploaded by the user
 }
 
 type EquipierExt struct {
@@ -100,9 +100,9 @@ func (ct *Controller) load(id cps.IdEquipier) (EquipierExt, error) {
 	demandes := make([]DemandeEquipier, len(links))
 	for i, link := range links {
 		innerLinks := byDemande[link.IdDemande]
-		files := make([]logic.PublicFile, len(innerLinks))
+		files := make([]filesAPI.PublicFile, len(innerLinks))
 		for i, file := range innerLinks {
-			files[i] = logic.NewPublicFile(ct.key, allFiles[file.IdFile])
+			files[i] = filesAPI.NewPublicFile(ct.key, allFiles[file.IdFile])
 		}
 		demandes[i] = DemandeEquipier{
 			Demande:     demandesM[link.IdDemande],
@@ -118,8 +118,8 @@ func (ct *Controller) load(id cps.IdEquipier) (EquipierExt, error) {
 // LoadJoomeo loads the Joomeo data,
 // which may be quite slow
 func (ct *Controller) LoadJoomeo(c echo.Context) error {
-	key := c.QueryParam("key")
-	id, err := crypto.DecryptID[cps.IdEquipier](ct.key, key)
+	token := c.QueryParam("token")
+	id, err := crypto.DecryptID[cps.IdEquipier](ct.key, token)
 	if err != nil {
 		return errors.New("Lien invalide.")
 	}
@@ -161,7 +161,7 @@ func (ct *Controller) loadJoomeo(id cps.IdEquipier) (Joomeo, error) {
 }
 
 type UpdateIn struct {
-	Key string
+	Token string
 
 	Personne pr.Etatcivil
 	Presence cps.PresenceOffsets
@@ -174,7 +174,7 @@ func (ct *Controller) Update(c echo.Context) error {
 		return err
 	}
 
-	id, err := crypto.DecryptID[cps.IdEquipier](ct.key, args.Key)
+	id, err := crypto.DecryptID[cps.IdEquipier](ct.key, args.Token)
 	if err != nil {
 		return err
 	}
@@ -225,8 +225,8 @@ func (ct *Controller) update(id cps.IdEquipier, argsP pr.Etatcivil, argsPre cps.
 }
 
 func (ct *Controller) UpdateCharte(c echo.Context) error {
-	key := c.QueryParam("key")
-	id, err := crypto.DecryptID[cps.IdEquipier](ct.key, key)
+	token := c.QueryParam("token")
+	id, err := crypto.DecryptID[cps.IdEquipier](ct.key, token)
 	if err != nil {
 		return err
 	}
@@ -252,12 +252,12 @@ func (ct *Controller) updateCharte(id cps.IdEquipier, accept bool) error {
 }
 
 func (ct *Controller) UploadDocument(c echo.Context) error {
-	key := c.QueryParam("key")
-	idEquipier, err := crypto.DecryptID[cps.IdEquipier](ct.key, key)
+	token := c.QueryParam("token")
+	idEquipier, err := crypto.DecryptID[cps.IdEquipier](ct.key, token)
 	if err != nil {
 		return err
 	}
-	idDemande, err := utils.ParseInt[fs.IdDemande](c.FormValue("idDemande"))
+	idDemande, err := utils.QueryParamInt[fs.IdDemande](c, "idDemande")
 	if err != nil {
 		return err
 	}
@@ -265,7 +265,7 @@ func (ct *Controller) UploadDocument(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	content, filename, err := utils.ReadUpload(header)
+	content, filename, err := filesAPI.ReadUpload(header)
 	if err != nil {
 		return err
 	}
@@ -278,10 +278,10 @@ func (ct *Controller) UploadDocument(c echo.Context) error {
 	return c.JSON(200, filePub)
 }
 
-func (ct *Controller) uploadDocument(idEquipier cps.IdEquipier, idDemande fs.IdDemande, content []byte, filename string) (logic.PublicFile, error) {
+func (ct *Controller) uploadDocument(idEquipier cps.IdEquipier, idDemande fs.IdDemande, content []byte, filename string) (filesAPI.PublicFile, error) {
 	equipier, err := cps.SelectEquipier(ct.db, idEquipier)
 	if err != nil {
-		return logic.PublicFile{}, utils.SQLError(err)
+		return filesAPI.PublicFile{}, utils.SQLError(err)
 	}
 
 	var file fs.File
@@ -302,5 +302,14 @@ func (ct *Controller) uploadDocument(idEquipier cps.IdEquipier, idDemande fs.IdD
 		return nil
 	})
 
-	return logic.NewPublicFile(ct.key, file), nil
+	return filesAPI.NewPublicFile(ct.key, file), nil
+}
+
+func (ct *Controller) DeleteDocument(c echo.Context) error {
+	key := c.QueryParam("key")
+	err := filesAPI.Delete(ct.db, ct.key, ct.files, key)
+	if err != nil {
+		return err
+	}
+	return c.NoContent(200)
 }
