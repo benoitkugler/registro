@@ -122,7 +122,7 @@
 import { onMounted, ref } from "vue";
 import { controller } from "./logic/logic";
 import InscriptionPannel from "./components/InscriptionPannel.vue";
-import type { Data } from "./logic/api";
+import type { Data, IdCamp } from "./logic/api";
 
 const message = ref("");
 const messageColor = ref("secondary");
@@ -153,7 +153,10 @@ async function fetchData() {
   const query = new URLSearchParams(window.location.search);
   const preselected = query.get("preselected") || "";
   const preinscription = query.get("preinscription") || "";
-  const res = await controller.LoadData({ preselected, preinscription });
+  const res = await controller.LoadData({
+    preselected: (preselected ? Number(preselected) : 0) as IdCamp,
+    preinscription,
+  });
   if (res === undefined) return;
   // vue reactivity does not work if Participants is null
   res.InitialInscription.Participants =

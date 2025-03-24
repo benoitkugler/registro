@@ -5,6 +5,7 @@ bun run build &&
 echo "Copying files" &&
 rm -rf ../server/static/* &&
 cp -r dist/assets ../server/static &&
+# one folder per supported association
 cp -r dist/acve ../server/static &&
 cp -r dist/repere ../server/static &&
 cd dist/src/clients/ && 

@@ -3,7 +3,7 @@
   <v-alert type="info" class="my-2">
     Bienvenu{{ props.equipier.Personne.Sexe == Sexe.Woman ? "e" : "" }}
     <b>{{ props.equipier.Personne.Prenom }}</b
-    >, et merci pour ton engagement avec l'ACVE !<br />
+    >, et merci pour ton engagement !<br />
     Ce formulaire te permet de remplir directement les informations et documents
     nécessaires à Jeunesse et Sport.
     <br />
@@ -30,7 +30,7 @@
   <!-- formulaire -->
   <v-card title="Informations personnelles">
     <v-card-text>
-      <v-form ref="form" class="my-6">
+      <v-form class="my-6">
         <v-row>
           <v-col md="4" sm="6">
             <v-text-field

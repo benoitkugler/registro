@@ -65,6 +65,7 @@ export default defineConfig(({ command }) => ({
         backoffice: resolve(__dirname, "src/clients/backoffice/index.html"),
         directeurs: resolve(__dirname, "src/clients/directeurs/index.html"),
         inscription: resolve(__dirname, "src/clients/inscription/index.html"),
+        equipier: resolve(__dirname, "src/clients/equipier/index.html"),
       },
     },
   },
