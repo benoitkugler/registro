@@ -8,7 +8,7 @@ import (
 // Keys expose the passwords/keys used to
 // authenticate/crypt
 type Keys struct {
-	ServerEnc  string // used for encryption key
+	EncryptKey string // used for encryption key
 	Backoffice string // password
 	Directeurs string // global password
 }
@@ -16,8 +16,8 @@ type Keys struct {
 // NewKeys uses env. variables to load the credentials :
 // SERVER_KEY, BACKOFFICE_PASSWORD, DIRECTEURS_PASSWORD
 func NewKeys() (keys Keys, _ error) {
-	keys.ServerEnc = os.Getenv("SERVER_KEY")
-	if keys.ServerEnc == "" {
+	keys.EncryptKey = os.Getenv("SERVER_KEY")
+	if keys.EncryptKey == "" {
 		return keys, errors.New("missing env. SERVER_KEY (encryption key)")
 	}
 	keys.Backoffice = os.Getenv("BACKOFFICE_PASSWORD")

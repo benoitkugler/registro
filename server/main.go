@@ -32,7 +32,7 @@ func main() {
 	isDev := *devPtr
 
 	asso, keys, dbCreds, fs, smtp := loadEnvs(isDev)
-	encrypter := crypto.NewEncrypter(keys.ServerEnc)
+	encrypter := crypto.NewEncrypter(keys.EncryptKey)
 	fmt.Println("Loading env. -> OK.")
 
 	// TODO: setup APIS
@@ -54,7 +54,7 @@ func main() {
 	backofficeCt, err := backoffice.NewController(db, encrypter, keys.Backoffice, fs, smtp, asso, joomeo, helloasso)
 	check(err)
 
-	directeursCt, err := directeurs.NewController(db, encrypter, keys.Directeurs, fs, smtp, asso, joomeo)
+	directeursCt, err := directeurs.NewController(db, keys.EncryptKey, keys.Directeurs, fs, smtp, asso, joomeo)
 	check(err)
 
 	espacepersoCt := espaceperso.NewController(db, encrypter, smtp, asso)

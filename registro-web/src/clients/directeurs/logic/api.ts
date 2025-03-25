@@ -18,6 +18,11 @@ export interface InscriptionIdentifieIn {
   IdDossier: IdDossier;
   Target: IdentTarget;
 }
+// registro/controllers/directeurs.LogginOut
+export interface LogginOut {
+  IsValid: boolean;
+  Token: string;
+}
 // registro/controllers/logic.CampItem
 export interface CampItem {
   Id: IdCamp;
@@ -377,9 +382,27 @@ export abstract class AbstractAPI {
     return { Authorization: "Bearer " + this.authToken };
   }
 
+  /** Loggin performs the request and handles the error */
+  async Loggin(params: { password: string; idCamp: IdCamp }) {
+    const fullUrl = this.baseUrl + "/api/v1/directeurs/loggin";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<LogginOut> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: {
+          password: params["password"],
+          idCamp: String(params["idCamp"]),
+        },
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
   /** GetCamps performs the request and handles the error */
   async GetCamps() {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/shared/camps";
+    const fullUrl = this.baseUrl + "/api/v1/directeurs/shared/camps";
     this.startRequest();
     try {
       const rep: AxiosResponse<CampItem[] | null> = await Axios.post(
@@ -395,7 +418,7 @@ export abstract class AbstractAPI {
 
   /** SelectPersonne performs the request and handles the error */
   async SelectPersonne(params: { search: string }) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/shared/personne";
+    const fullUrl = this.baseUrl + "/api/v1/directeurs/shared/personne";
     this.startRequest();
     try {
       const rep: AxiosResponse<PersonneHeader[] | null> = await Axios.get(

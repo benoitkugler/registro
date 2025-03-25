@@ -109,6 +109,28 @@ func JWTUser(c echo.Context) (isAdmin bool) {
 	return meta.IsAdmin
 }
 
+type LogginOut struct {
+	IsValid bool
+	Token   string
+}
+
+// Loggin is called to enter the web app,
+// and returns a token if the password is valid.
+func (ct *Controller) Loggin(c echo.Context) error {
+	password := c.QueryParam("password")
+
+	var out LogginOut
+	if ct.password == password {
+		token, err := ct.NewToken(false)
+		if err != nil {
+			return err
+		}
+		out = LogginOut{IsValid: true, Token: token}
+	}
+
+	return c.JSON(200, out)
+}
+
 // ---------------------------------- Shared API ----------------------------------
 
 func (ct *Controller) GetCamps(c echo.Context) error {

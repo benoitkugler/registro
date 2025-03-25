@@ -59,7 +59,7 @@ func main() {
 
 	keys, err := config.NewKeys()
 	check(err)
-	enc := crypto.NewEncrypter(keys.ServerEnc)
+	enc := crypto.NewEncrypter(keys.EncryptKey)
 
 	fmt.Println("Env loaded, using DB:", sqlCreds.Name)
 

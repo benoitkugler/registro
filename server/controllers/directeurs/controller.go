@@ -12,6 +12,7 @@ import (
 	"registro/config"
 	"registro/controllers/logic"
 	"registro/crypto"
+	"registro/utils"
 
 	cps "registro/sql/camps"
 	fs "registro/sql/files"
@@ -25,6 +26,8 @@ type Controller struct {
 	db *sql.DB
 
 	key      crypto.Encrypter
+	shortKey crypto.ShortEncrypter
+
 	password string // global password
 	files    fs.FileSystem
 	smtp     config.SMTP
@@ -34,14 +37,15 @@ type Controller struct {
 	builtins fs.Builtins
 }
 
-func NewController(db *sql.DB, key crypto.Encrypter, password string, files fs.FileSystem, smtp config.SMTP, asso config.Asso, joomeo config.Joomeo) (*Controller, error) {
+func NewController(db *sql.DB, encryptKey, password string, files fs.FileSystem, smtp config.SMTP, asso config.Asso, joomeo config.Joomeo) (*Controller, error) {
 	builtins, err := fs.LoadBuiltins(db)
 	if err != nil {
 		return nil, err
 	}
 	return &Controller{
 		db,
-		key,
+		crypto.NewEncrypter(encryptKey),
+		crypto.NewShortEncrypter(encryptKey),
 		password,
 		files,
 		smtp,
@@ -101,6 +105,61 @@ func (ct *Controller) NewToken(idCamp cps.IdCamp) (string, error) {
 func JWTUser(c echo.Context) (idCamp cps.IdCamp) {
 	meta := c.Get("user").(*jwt.Token).Claims.(*customClaims) // the token is valid here
 	return meta.IdCamp
+}
+
+type LogginOut struct {
+	IsValid bool
+	Token   string
+}
+
+// Loggin is called to enter the web app,
+// and returns a token if the password is valid.
+func (ct *Controller) Loggin(c echo.Context) error {
+	password := c.QueryParam("password")
+	id, err := utils.QueryParamInt[cps.IdCamp](c, "idCamp")
+	if err != nil {
+		return err
+	}
+
+	out, err := ct.loggin(id, password)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) loggin(id cps.IdCamp, password string) (LogginOut, error) {
+	camp, err := cps.SelectCamp(ct.db, id)
+	if err != nil {
+		return LogginOut{}, utils.SQLError(err)
+	}
+
+	// fetch the directeur
+	equipiers, err := cps.SelectEquipiersByIdCamps(ct.db, id)
+	if err != nil {
+		return LogginOut{}, utils.SQLError(err)
+	}
+	var directeurPassword string
+	directeur, hasDirecteur := equipiers.Directeur()
+	if hasDirecteur {
+		directeurPassword = ct.shortKey.ShortKey(directeur.IdPersonne)
+	}
+
+	// we support 3 authentication:
+	//	- global password
+	//	- directeur password
+	//	- camp password
+	if password == ct.password ||
+		(hasDirecteur && password == directeurPassword) ||
+		password == camp.Password {
+		token, err := ct.NewToken(id)
+		if err != nil {
+			return LogginOut{}, err
+		}
+		return LogginOut{IsValid: true, Token: token}, nil
+	}
+	return LogginOut{IsValid: false}, nil
 }
 
 // ---------------------------- shared API ----------------------------

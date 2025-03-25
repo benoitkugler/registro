@@ -74,6 +74,11 @@ export interface InscriptionIdentifieIn {
   IdDossier: IdDossier;
   Target: IdentTarget;
 }
+// registro/controllers/backoffice.LogginOut
+export interface LogginOut {
+  IsValid: boolean;
+  Token: string;
+}
 // registro/controllers/backoffice.ParticipantsCreateIn
 export interface ParticipantsCreateIn {
   IdDossier: IdDossier;
@@ -736,6 +741,21 @@ export abstract class AbstractAPI {
 
   getHeaders() {
     return { Authorization: "Bearer " + this.authToken };
+  }
+
+  /** Loggin performs the request and handles the error */
+  async Loggin(params: { password: string }) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/loggin";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<LogginOut> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { password: params["password"] },
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
   }
 
   /** GetCamps performs the request and handles the error */

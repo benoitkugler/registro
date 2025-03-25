@@ -9,6 +9,9 @@ import (
 //go:generate ../../../go/src/github.com/benoitkugler/gomacro/cmd/gomacro routes_backoffice.go typescript/api:../registro-web/src/clients/backoffice/logic/api.ts
 
 func setupRoutesBackoffice(e *echo.Echo, ct *backoffice.Controller) {
+	// no token yet for the loggin route
+	e.GET("/api/v1/backoffice/loggin", ct.Loggin)
+
 	gr := e.Group("", ct.JWTMiddleware())
 
 	// Shared
