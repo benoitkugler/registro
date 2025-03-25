@@ -128,6 +128,7 @@ func loadEnvs(devMode bool) (config.Asso, config.Keys, config.DB, fs.FileSystem,
 	if !dir.IsDir() {
 		log.Fatal("invalid FILES_ROOT", root)
 	}
+	fmt.Println("using FILES_ROOT:", root)
 	fileSystem := fs.NewFileSystem(root)
 
 	smtp, err := config.NewSMTP(!devMode)
