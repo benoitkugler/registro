@@ -27,7 +27,7 @@ import (
 )
 
 func main() {
-	devPtr := flag.Bool("dev", false, "utilise les crédences de développement")
+	devPtr := flag.Bool("dev", false, "utilise un mode de développement (mail, localhost)")
 	flag.Parse()
 	isDev := *devPtr
 
@@ -102,10 +102,9 @@ func main() {
 	setupRoutesFiles(e, filesCt)
 	setupClientApps(e)
 
+	fmt.Println("Setup done. Starting...")
+
 	adress := getAdress(isDev)
-
-	fmt.Println("Setup done.")
-
 	e.Logger.Fatal(e.Start(adress))
 }
 
@@ -122,6 +121,12 @@ func loadEnvs(devMode bool) (config.Asso, config.Keys, config.DB, fs.FileSystem,
 	root := os.Getenv("FILES_ROOT")
 	if root == "" {
 		log.Fatal("missing env. FILES_ROOT (files directory)")
+	}
+	// check that the dir exists
+	dir, err := os.Stat(root)
+	check(err)
+	if !dir.IsDir() {
+		log.Fatal("invalid FILES_ROOT", root)
 	}
 	fileSystem := fs.NewFileSystem(root)
 
