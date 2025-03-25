@@ -183,9 +183,11 @@ func setupClientApps(e *echo.Echo) {
 	}
 
 	e.GET("/backoffice", serve("static/backoffice/index.html"), middleware.Gzip(), noCache)
+	e.GET("/backoffice/*", serve("static/backoffice/index.html"), middleware.Gzip(), noCache)
 	e.GET(inscriptions.EndpointInscription, serve("static/inscription/index.html"), middleware.Gzip(), noCache)
 	e.GET(equipiers.EndpointEquipier, serve("static/equipier/index.html"), middleware.Gzip(), noCache)
 	e.GET("/directeurs", serve("static/directeurs/index.html"), middleware.Gzip(), noCache)
+	e.GET("/directeurs/*", serve("static/directeurs/index.html"), middleware.Gzip(), noCache)
 
 	// global static files used by frontend apps
 	e.Group("/static", middleware.Gzip(), cacheStatic).Static("/*", "static")
