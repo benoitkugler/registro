@@ -5,14 +5,6 @@
     <v-divider></v-divider>
 
     <v-list-item
-      prepend-icon="mdi-home"
-      link
-      :to="{ path: '/' }"
-      color="primary"
-    >
-      Accueil
-    </v-list-item>
-    <v-list-item
       prepend-icon="mdi-calendar-multiple-check"
       link
       :to="{ path: '/inscriptions' }"
@@ -20,10 +12,20 @@
     >
       Inscriptions
     </v-list-item>
+    <v-divider></v-divider>
+    <v-list-item
+      prepend-icon="mdi-logout"
+      link
+      :to="{ path: '/' }"
+      color="primary"
+    >
+      Se déconnecter
+    </v-list-item>
   </v-navigation-drawer>
 
   <v-app-bar rounded elevation="4" color="secondary">
     <v-app-bar-nav-icon
+      v-if="!props.hideMenu"
       @click="showSideBar = !showSideBar"
     ></v-app-bar-nav-icon>
     <v-app-bar-title>
@@ -47,12 +49,14 @@
 <script setup lang="ts">
 import { ref } from "vue";
 
+const props = defineProps<{
+  title: string;
+  hideMenu?: boolean;
+}>();
+
 const logo = `${import.meta.env.BASE_URL}${import.meta.env.VITE_ASSO}/logo.png`;
 
 const version = `v${VITE_APP_VERSION}`;
 
 const showSideBar = ref(false);
-const props = defineProps<{
-  title: string;
-}>();
 </script>

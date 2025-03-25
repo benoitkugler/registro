@@ -1,7 +1,7 @@
 <template>
   <v-select
-    density="compact"
-    variant="outlined"
+    :density="props.defaultStyle ? undefined : 'compact'"
+    :variant="props.defaultStyle ? undefined : 'outlined'"
     :label="props.label"
     :readonly="props.readonly"
     :items="campItems"
@@ -39,6 +39,7 @@ const props = defineProps<{
   label: string;
   camps: CampItem[];
   readonly?: boolean;
+  defaultStyle?: boolean;
 }>();
 
 const modelValue = defineModel<IdCamp>({ required: true });

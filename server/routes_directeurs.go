@@ -10,13 +10,13 @@ import (
 
 func setupRoutesDirecteurs(e *echo.Echo, ct *directeurs.Controller) {
 	// no token yet for the loggin route
+	e.POST("/api/v1/directeurs/shared/camps", ct.GetCamps)
 	e.GET("/api/v1/directeurs/loggin", ct.Loggin)
 
 	gr := e.Group("", ct.JWTMiddleware())
 
 	// Shared
 
-	gr.POST("/api/v1/directeurs/shared/camps", ct.GetCamps)
 	gr.GET("/api/v1/directeurs/shared/personne", ct.SelectPersonne)
 
 	// Inscriptions
