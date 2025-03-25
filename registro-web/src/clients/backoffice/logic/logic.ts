@@ -25,6 +25,10 @@ class Controller extends AbstractAPI {
     super(baseUrl, authToken);
   }
 
+  hasToken() {
+    return this.authToken != "";
+  }
+
   setToken(token: string) {
     this.authToken = token;
   }

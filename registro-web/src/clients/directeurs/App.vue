@@ -41,9 +41,10 @@
 </template>
 
 <script lang="ts" setup>
-import { reactive, ref } from "vue";
+import { onMounted, reactive, ref } from "vue";
 import { controller } from "./logic/logic";
 import type { Action } from "@/utils";
+import { useRouter } from "vue-router";
 
 const message = reactive({
   text: "",
@@ -68,4 +69,14 @@ controller.showMessage = (s, color, action) => {
   message.timeout = 10_000;
   message.timeout = 4000;
 };
+
+// if we are not yet logged in,
+// redirect to the index page
+const router = useRouter();
+router.beforeEach(async (to, from) => {
+  if (!controller.hasToken() && to.path !== "/") {
+    // redirect the user to the login page
+    return { path: "/" };
+  }
+});
 </script>

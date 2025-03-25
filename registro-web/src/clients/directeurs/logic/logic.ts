@@ -20,6 +20,10 @@ class Controller extends AbstractAPI {
     super(baseUrl, authToken);
   }
 
+  hasToken() {
+    return this.authToken != "";
+  }
+
   setCamp(camp: CampItem, token: string) {
     this.camp = camp;
     this.authToken = token;
