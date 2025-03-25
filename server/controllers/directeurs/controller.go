@@ -24,16 +24,17 @@ import (
 type Controller struct {
 	db *sql.DB
 
-	key    crypto.Encrypter
-	files  fs.FileSystem
-	smtp   config.SMTP
-	asso   config.Asso
-	joomeo config.Joomeo
+	key      crypto.Encrypter
+	password string // global password
+	files    fs.FileSystem
+	smtp     config.SMTP
+	asso     config.Asso
+	joomeo   config.Joomeo
 
 	builtins fs.Builtins
 }
 
-func NewController(db *sql.DB, key crypto.Encrypter, files fs.FileSystem, smtp config.SMTP, asso config.Asso, joomeo config.Joomeo) (*Controller, error) {
+func NewController(db *sql.DB, key crypto.Encrypter, password string, files fs.FileSystem, smtp config.SMTP, asso config.Asso, joomeo config.Joomeo) (*Controller, error) {
 	builtins, err := fs.LoadBuiltins(db)
 	if err != nil {
 		return nil, err
@@ -41,6 +42,7 @@ func NewController(db *sql.DB, key crypto.Encrypter, files fs.FileSystem, smtp c
 	return &Controller{
 		db,
 		key,
+		password,
 		files,
 		smtp,
 		asso,

@@ -30,7 +30,7 @@ func check(err error) {
 
 // command helper for devs
 func main() {
-	action := flag.String("action", "", "action to perform: add_insc, add_messages")
+	action := flag.String("action", "", "action to perform: add_insc, add_messages, add_equipier")
 	partsCount := flag.Int("part", 2, "number of participants to create")
 	flag.Parse()
 
@@ -57,7 +57,9 @@ func main() {
 	db, err := sqlCreds.ConnectPostgres()
 	check(err)
 
-	enc := crypto.NewEncrypter(os.Getenv("SERVER_KEY"))
+	keys, err := config.NewKeys()
+	check(err)
+	enc := crypto.NewEncrypter(keys.ServerEnc)
 
 	fmt.Println("Env loaded, using DB:", sqlCreds.Name)
 
@@ -66,7 +68,7 @@ func main() {
 		addInscriptions(db, smtp, asso, *partsCount)
 	case "add_messages":
 		addMessages(db)
-	case "equipier":
+	case "add_equipier":
 		createEquipier(db, enc)
 	default:
 		panic("invalid action")

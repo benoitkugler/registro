@@ -31,8 +31,10 @@ func main() {
 	flag.Parse()
 	isDev := *devPtr
 
-	asso, encrypter, dbCreds, fs, smtp := loadEnvs(isDev)
+	asso, keys, dbCreds, fs, smtp := loadEnvs(isDev)
+	encrypter := crypto.NewEncrypter(keys.ServerEnc)
 	fmt.Println("Loading env. -> OK.")
+
 	// TODO: setup APIS
 	joomeo, helloasso := config.Joomeo{}, config.Helloasso{}
 
@@ -49,10 +51,10 @@ func main() {
 		e.DefaultHTTPErrorHandler(err, c)
 	}
 
-	backofficeCt, err := backoffice.NewController(db, encrypter, fs, smtp, asso, joomeo, helloasso)
+	backofficeCt, err := backoffice.NewController(db, encrypter, keys.Backoffice, fs, smtp, asso, joomeo, helloasso)
 	check(err)
 
-	directeursCt, err := directeurs.NewController(db, encrypter, fs, smtp, asso, joomeo)
+	directeursCt, err := directeurs.NewController(db, encrypter, keys.Directeurs, fs, smtp, asso, joomeo)
 	check(err)
 
 	espacepersoCt := espaceperso.NewController(db, encrypter, smtp, asso)
@@ -107,15 +109,12 @@ func main() {
 	e.Logger.Fatal(e.Start(adress))
 }
 
-func loadEnvs(devMode bool) (config.Asso, crypto.Encrypter, config.DB, fs.FileSystem, config.SMTP) {
+func loadEnvs(devMode bool) (config.Asso, config.Keys, config.DB, fs.FileSystem, config.SMTP) {
 	asso, err := config.NewAsso()
 	check(err)
 
-	serverKey := os.Getenv("SERVER_KEY")
-	if serverKey == "" {
-		log.Fatal("missing env. SERVER_KEY (encryption key)")
-	}
-	encrypter := crypto.NewEncrypter(serverKey)
+	keys, err := config.NewKeys()
+	check(err)
 
 	db, err := config.NewDB()
 	check(err)
@@ -129,7 +128,7 @@ func loadEnvs(devMode bool) (config.Asso, crypto.Encrypter, config.DB, fs.FileSy
 	smtp, err := config.NewSMTP(!devMode)
 	check(err)
 
-	return asso, encrypter, db, fileSystem, smtp
+	return asso, keys, db, fileSystem, smtp
 }
 
 func getAdress(devMode bool) string {
