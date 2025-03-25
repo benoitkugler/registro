@@ -5,14 +5,6 @@
     <v-divider></v-divider>
 
     <v-list-item
-      prepend-icon="mdi-home"
-      link
-      :to="{ path: '/' }"
-      color="primary"
-    >
-      Accueil
-    </v-list-item>
-    <v-list-item
       prepend-icon="mdi-bed"
       link
       :to="{ path: '/camps' }"
@@ -37,10 +29,20 @@
     >
       Annuaire
     </v-list-item>
+    <v-divider> </v-divider>
+    <v-list-item
+      prepend-icon="mdi-logout"
+      link
+      :to="{ path: '/' }"
+      color="primary"
+    >
+      Se déconnecter
+    </v-list-item>
   </v-navigation-drawer>
 
   <v-app-bar rounded elevation="4" color="secondary">
     <v-app-bar-nav-icon
+      v-if="!hideMenu"
       @click="showSideBar = !showSideBar"
     ></v-app-bar-nav-icon>
     <v-app-bar-title>
@@ -71,5 +73,6 @@ const version = `v${VITE_APP_VERSION}`;
 const showSideBar = ref(false);
 const props = defineProps<{
   title: string;
+  hideMenu?: boolean;
 }>();
 </script>
