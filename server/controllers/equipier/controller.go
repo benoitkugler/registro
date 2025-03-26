@@ -18,8 +18,6 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-const EndpointEquipier = "/equipier"
-
 type Controller struct {
 	db *sql.DB
 

@@ -69,6 +69,7 @@ type Demande struct {
 // DemandeEquipier représente un document demandé à un équpier
 //
 // gomacro:SQL ADD UNIQUE(IdEquipier, IdDemande)
+// gomacro:SQL _SELECT KEY(IdEquipier, IdDemande)
 type DemandeEquipier struct {
 	IdEquipier  cps.IdEquipier `gomacro-sql-on-delete:"CASCADE"`
 	IdDemande   IdDemande

@@ -33,17 +33,17 @@ func TestBuiltins(t *testing.T) {
 }
 
 func TestBuiltins_Defaut(t *testing.T) {
-	b := Builtins{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14}
+	b := Builtins{{Id: 0}, {Id: 1}, {Id: 2}, {Id: 3}, {Id: 4}, {Id: 5}, {Id: 6}, {Id: 7}, {Id: 8}, {Id: 9}, {Id: 10}, {Id: 11}, {Id: 12}, {Id: 13}, {Id: 14}}
 	tests := []struct {
 		equipier cp.Equipier
 		want     DemandeEquipiers
 	}{
 		{cp.Equipier{Id: 1, Roles: cp.Roles{}}, nil},
 		{cp.Equipier{Id: 1, Roles: cp.Roles{cp.Direction}}, DemandeEquipiers{
-			{1, b[CarteId], true}, {1, b[Permis], true}, {1, b[SB], true}, {1, b[Bafa], true}, {1, b[Bafd], true}, {1, b[CarteVitale], true}, {1, b[Vaccins], true}, {1, b[BafdEquiv], true},
+			{1, b[CarteId].Id, true}, {1, b[Permis].Id, true}, {1, b[SB].Id, true}, {1, b[Bafa].Id, true}, {1, b[Bafd].Id, true}, {1, b[CarteVitale].Id, true}, {1, b[Vaccins].Id, true}, {1, b[BafdEquiv].Id, true},
 		}},
 		{cp.Equipier{Id: 1, Roles: cp.Roles{cp.Direction, cp.Infirmerie}}, DemandeEquipiers{
-			{1, b[CarteId], true}, {1, b[Permis], true}, {1, b[SB], true}, {1, b[Secourisme], false}, {1, b[Bafa], true}, {1, b[Bafd], true}, {1, b[CarteVitale], true}, {1, b[Vaccins], true}, {1, b[BafdEquiv], true},
+			{1, b[CarteId].Id, true}, {1, b[Permis].Id, true}, {1, b[SB].Id, true}, {1, b[Secourisme].Id, false}, {1, b[Bafa].Id, true}, {1, b[Bafd].Id, true}, {1, b[CarteVitale].Id, true}, {1, b[Vaccins].Id, true}, {1, b[BafdEquiv].Id, true},
 		}},
 	}
 	for _, tt := range tests {

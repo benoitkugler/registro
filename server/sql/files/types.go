@@ -34,7 +34,7 @@ const (
 )
 
 // Builtins indique les demandes connues à l'avance
-type Builtins [nbCategorieEquipier]IdDemande
+type Builtins [nbCategorieEquipier]Demande
 
 // LoadBuiltins charge les demandes 'builtin', qui doivent
 // être prédéclarées dans la base de données.
@@ -46,12 +46,16 @@ func LoadBuiltins(db DB) (out Builtins, err error) {
 	return ds.builtins()
 }
 
-func (ds Demandes) builtins() (out [nbCategorieEquipier]IdDemande, err error) {
+func (bs Builtins) List() []Demande {
+	return bs[1:] // remove the NoBuiltin
+}
+
+func (ds Demandes) builtins() (out [nbCategorieEquipier]Demande, err error) {
 	for _, demande := range ds {
 		if demande.Categorie == NoBuiltin {
 			continue
 		}
-		out[demande.Categorie] = demande.Id
+		out[demande.Categorie] = demande
 	}
 
 	// check that all builtins are properly defined
@@ -59,7 +63,7 @@ func (ds Demandes) builtins() (out [nbCategorieEquipier]IdDemande, err error) {
 		if cat == 0 { //  ignore the empty categorie
 			continue
 		}
-		if v == 0 {
+		if v.Id == 0 {
 			return out, fmt.Errorf("missing builtin Categorie %d", cat)
 		}
 	}
@@ -107,7 +111,7 @@ func (builtinDemandes Builtins) Defaut(equipier cp.Equipier) DemandeEquipiers {
 		}
 		demandes = append(demandes, DemandeEquipier{
 			IdEquipier:  equipier.Id,
-			IdDemande:   builtinDemandes[cat],
+			IdDemande:   builtinDemandes[cat].Id,
 			Optionnelle: isDemandeOpt(Categorie(cat), equipier.Roles),
 		})
 	}

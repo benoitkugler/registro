@@ -12,6 +12,14 @@
     >
       Inscriptions
     </v-list-item>
+    <v-list-item
+      prepend-icon="mdi-account"
+      link
+      :to="{ path: '/equipiers' }"
+      color="primary"
+    >
+      Equipiers
+    </v-list-item>
     <v-divider></v-divider>
     <v-list-item
       prepend-icon="mdi-logout"

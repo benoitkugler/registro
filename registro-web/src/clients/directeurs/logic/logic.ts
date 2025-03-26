@@ -14,10 +14,9 @@ class Controller extends AbstractAPI {
       color?: string,
       action?: Action
     ) => void,
-    baseUrl: string,
-    authToken: string
+    baseUrl: string
   ) {
-    super(baseUrl, authToken);
+    super(baseUrl, "");
   }
 
   hasToken() {
@@ -43,8 +42,7 @@ const isDev = import.meta.env.DEV;
 export const controller = new Controller(
   (_, __) => {},
   (_, __) => {},
-  baseUrl(),
-  isDev ? devToken : ""
+  baseUrl()
 );
 
 if (isDev) controller.setCamp(devCamp as CampItem, devToken);

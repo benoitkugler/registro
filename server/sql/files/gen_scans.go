@@ -522,6 +522,25 @@ func DeleteDemandeEquipiersByIdDemandes(tx DB, idDemandes_ ...IdDemande) (Demand
 	return ScanDemandeEquipiers(rows)
 }
 
+// SelectDemandeEquipiersByIdEquipierAndIdDemande selects the items matching the given fields.
+func SelectDemandeEquipiersByIdEquipierAndIdDemande(tx DB, idEquipier camps.IdEquipier, idDemande IdDemande) (item DemandeEquipiers, err error) {
+	rows, err := tx.Query("SELECT idequipier, iddemande, optionnelle FROM demande_equipiers WHERE IdEquipier = $1 AND IdDemande = $2", idEquipier, idDemande)
+	if err != nil {
+		return nil, err
+	}
+	return ScanDemandeEquipiers(rows)
+}
+
+// DeleteDemandeEquipiersByIdEquipierAndIdDemande deletes the item matching the given fields, returning
+// the deleted items.
+func DeleteDemandeEquipiersByIdEquipierAndIdDemande(tx DB, idEquipier camps.IdEquipier, idDemande IdDemande) (item DemandeEquipiers, err error) {
+	rows, err := tx.Query("DELETE FROM demande_equipiers WHERE IdEquipier = $1 AND IdDemande = $2 RETURNING idequipier, iddemande, optionnelle", idEquipier, idDemande)
+	if err != nil {
+		return nil, err
+	}
+	return ScanDemandeEquipiers(rows)
+}
+
 // SelectDemandeEquipierByIdEquipierAndIdDemande return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectDemandeEquipierByIdEquipierAndIdDemande(tx DB, idEquipier camps.IdEquipier, idDemande IdDemande) (item DemandeEquipier, found bool, err error) {
 	row := tx.QueryRow("SELECT idequipier, iddemande, optionnelle FROM demande_equipiers WHERE IdEquipier = $1 AND IdDemande = $2", idEquipier, idDemande)

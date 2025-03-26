@@ -35,13 +35,10 @@
       </v-snackbar>
     </v-main>
   </v-app>
-
-  <!-- <router-view v-if="isLoggedIn" />
-      <v-skeleton-loader v-else type="card"></v-skeleton-loader> -->
 </template>
 
 <script lang="ts" setup>
-import { onMounted, reactive, ref } from "vue";
+import { reactive, ref } from "vue";
 import { controller } from "./logic/logic";
 import type { Action } from "@/utils";
 import { useRouter } from "vue-router";

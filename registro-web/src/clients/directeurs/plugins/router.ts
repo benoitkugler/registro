@@ -2,10 +2,12 @@
 import { createRouter, createWebHistory, type LocationQuery } from "vue-router";
 import Index from "../pages/index.vue";
 import Inscriptions from "../pages/inscriptions.vue";
+import Equipiers from "../pages/equipiers.vue";
 
 const routes = [
   { path: "/", component: Index },
   { path: "/inscriptions", component: Inscriptions },
+  { path: "/equipiers", component: Equipiers },
 ];
 
 // TODO: check that

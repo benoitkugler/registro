@@ -16,7 +16,7 @@ import (
 
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
-	"registro/sql/files"
+	fs "registro/sql/files"
 	in "registro/sql/inscriptions"
 	pr "registro/sql/personnes"
 )
@@ -28,12 +28,13 @@ type Encrypter [32]byte
 func NewEncrypter(key string) Encrypter { return sha256.Sum256([]byte(key)) }
 
 type IDs interface {
-	~int64
-	files.IdFile | cps.IdEquipier | pr.IdPersonne | in.IdInscription | ds.IdDossier | int64
+	fs.IdFile | cps.IdEquipier | pr.IdPersonne | in.IdInscription | ds.IdDossier | int64
 }
 
 const (
 	tOther = iota
+	tFile
+	tEquipier
 	tPersonne
 	tInscription
 	tDossier
@@ -61,6 +62,10 @@ func encryptID[T IDs](key Encrypter, ID T) (string, error) {
 		data.Type = tInscription
 	case ds.IdDossier:
 		data.Type = tDossier
+	case cps.IdEquipier:
+		data.Type = tEquipier
+	case fs.IdFile:
+		data.Type = tFile
 	default:
 		data.Type = tOther
 	}
@@ -83,6 +88,10 @@ func DecryptID[T IDs](key Encrypter, enc string) (T, error) {
 		typeMatch = wr.Type == tInscription
 	case ds.IdDossier:
 		typeMatch = wr.Type == tDossier
+	case cps.IdEquipier:
+		typeMatch = wr.Type == tEquipier
+	case fs.IdFile:
+		typeMatch = wr.Type == tFile
 	default:
 		typeMatch = wr.Type == tOther
 	}

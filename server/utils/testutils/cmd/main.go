@@ -147,7 +147,7 @@ func createEquipier(db *sql.DB, enc crypto.Encrypter) {
 	check(err)
 	camp := camps[camps.IDs()[0]]
 
-	personne, err := pr.Personne{}.Insert(db)
+	personne, err := pr.Personne{Etatcivil: pr.Etatcivil{Nom: utils.RandString(10, false)}}.Insert(db)
 	check(err)
 
 	equipier, err := cps.Equipier{

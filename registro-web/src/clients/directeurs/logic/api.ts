@@ -13,15 +13,69 @@ export type Int = number & { __opaque__: "Int" };
 // ISO date-time string
 export type Time = string & { __opaque__: "Time" };
 
+// database/sql.NullBool
+export interface NullBool {
+  Bool: boolean;
+  Valid: boolean;
+}
 // registro/controllers/backoffice.InscriptionIdentifieIn
 export interface InscriptionIdentifieIn {
   IdDossier: IdDossier;
   Target: IdentTarget;
 }
+// registro/controllers/directeurs.DemandeKey
+export interface DemandeKey {
+  IdEquipier: IdEquipier;
+  IdDemande: IdDemande;
+}
+// registro/controllers/directeurs.DemandeState
+export const DemandeState = {
+  NonDemande: 0,
+  Optionnelle: 1,
+  Obligatoire: 2,
+} as const;
+export type DemandeState = (typeof DemandeState)[keyof typeof DemandeState];
+
+export const DemandeStateLabels: { [key in DemandeState]: string } = {
+  [DemandeState.NonDemande]: "-",
+  [DemandeState.Optionnelle]: "En option",
+  [DemandeState.Obligatoire]: "Requis",
+};
+
+// registro/controllers/directeurs.DemandesOut
+export interface DemandesOut {
+  Demandes: Demande[] | null;
+  Equipiers: EquipierDemandes[] | null;
+}
+// registro/controllers/directeurs.EquipierDemandes
+export interface EquipierDemandes {
+  Key: DemandeKey;
+  State: DemandeState;
+  Files: PublicFile[] | null;
+}
+// registro/controllers/directeurs.EquipierExt
+export interface EquipierExt {
+  Equipier: Equipier;
+  Personne: string;
+  FormURL: string;
+}
+// registro/controllers/directeurs.EquipiersDemandeSetIn
+export interface EquipiersDemandeSetIn {
+  IdEquipier: IdEquipier;
+  IdDemande: IdDemande;
+  State: DemandeState;
+}
 // registro/controllers/directeurs.LogginOut
 export interface LogginOut {
   IsValid: boolean;
   Token: string;
+}
+// registro/controllers/files.PublicFile
+export interface PublicFile {
+  Id: string;
+  Taille: Int;
+  NomClient: string;
+  Uploaded: Time;
 }
 // registro/controllers/logic.CampItem
 export interface CampItem {
@@ -84,7 +138,34 @@ export interface Camp {
   OptionQuotientFamilial: PrixQuotientFamilial;
   Password: string;
 }
+// registro/sql/camps.Equipier
+export interface Equipier {
+  Id: IdEquipier;
+  IdCamp: IdCamp;
+  IdPersonne: IdPersonne;
+  Roles: Roles;
+  Presence: PresenceOffsets;
+  FormStatus: FormStatusEquipier;
+  AccepteCharte: NullBool;
+}
+// registro/sql/camps.FormStatusEquipier
+export const FormStatusEquipier = {
+  NotSend: 0,
+  Pending: 1,
+  Answered: 2,
+} as const;
+export type FormStatusEquipier =
+  (typeof FormStatusEquipier)[keyof typeof FormStatusEquipier];
+
+export const FormStatusEquipierLabels: { [key in FormStatusEquipier]: string } =
+  {
+    [FormStatusEquipier.NotSend]: "",
+    [FormStatusEquipier.Pending]: "",
+    [FormStatusEquipier.Answered]: "",
+  };
+
 export type IdCamp = number & { __opaque__: "IdCamp" };
+export type IdEquipier = number & { __opaque__: "IdEquipier" };
 export type IdParticipant = number & { __opaque__: "IdParticipant" };
 // registro/sql/camps.Jours
 export type Jours = Int[] | null;
@@ -175,6 +256,11 @@ export interface ParticipantCamp {
   Participant: Participant;
   Personne: Personne;
 }
+// registro/sql/camps.PresenceOffsets
+export interface PresenceOffsets {
+  Debut: Int;
+  Fin: Int;
+}
 // registro/sql/camps.PrixParStatut
 export interface PrixParStatut {
   Id: Int;
@@ -190,6 +276,42 @@ export interface Remises {
   ReducEnfants: Int;
   ReducSpeciale: Montant;
 }
+// registro/sql/camps.Role
+export const Role = {
+  AutreRole: 0,
+  Direction: 1,
+  Adjoint: 2,
+  Animation: 3,
+  AideAnimation: 4,
+  Chauffeur: 5,
+  Intendance: 6,
+  Babysiter: 7,
+  Menage: 8,
+  Factotum: 9,
+  Infirmerie: 10,
+  Cuisine: 11,
+  Lingerie: 12,
+} as const;
+export type Role = (typeof Role)[keyof typeof Role];
+
+export const RoleLabels: { [key in Role]: string } = {
+  [Role.AutreRole]: "Autre",
+  [Role.Direction]: "Direction",
+  [Role.Adjoint]: "Adjoint",
+  [Role.Animation]: "Animation",
+  [Role.AideAnimation]: "Aide-animateur",
+  [Role.Chauffeur]: "Chauffeur",
+  [Role.Intendance]: "Intendance",
+  [Role.Babysiter]: "Baby-sitter",
+  [Role.Menage]: "Ménage",
+  [Role.Factotum]: "Factotum",
+  [Role.Infirmerie]: "Assistant sanitaire",
+  [Role.Cuisine]: "Cuisine",
+  [Role.Lingerie]: "Lingerie",
+};
+
+// registro/sql/camps.Roles
+export type Roles = Role[] | null;
 // registro/sql/dossiers.Currency
 export const Currency = {
   Euros: 0,
@@ -221,6 +343,63 @@ export type IdTaux = number & { __opaque__: "IdTaux" };
 export interface Montant {
   Cent: Int;
   Currency: Currency;
+}
+// registro/sql/files.Categorie
+export const Categorie = {
+  NoBuiltin: 0,
+  CarteId: 1,
+  Permis: 2,
+  SB: 3,
+  Secourisme: 4,
+  Bafa: 5,
+  Bafd: 6,
+  CarteVitale: 7,
+  Vaccins: 8,
+  Haccp: 9,
+  BafdEquiv: 10,
+  BafaEquiv: 11,
+  CertMedicalCuisine: 12,
+  Scolarite: 13,
+  Autre: 14,
+  nbCategorieEquipier: 15,
+} as const;
+export type Categorie = (typeof Categorie)[keyof typeof Categorie];
+
+export const CategorieLabels: { [key in Categorie]: string } = {
+  [Categorie.NoBuiltin]: "-",
+  [Categorie.CarteId]: "Carte d'identité/Passeport",
+  [Categorie.Permis]: "Permis de conduire",
+  [Categorie.SB]: "Surveillant de baignade",
+  [Categorie.Secourisme]: "Secourisme (PSC1 - AFPS)",
+  [Categorie.Bafa]: "BAFA",
+  [Categorie.Bafd]: "BAFD",
+  [Categorie.CarteVitale]: "Carte Vitale",
+  [Categorie.Vaccins]: "Vaccins",
+  [Categorie.Haccp]: "Cuisine (HACCP)",
+  [Categorie.BafdEquiv]: "Equivalent BAFD",
+  [Categorie.BafaEquiv]: "Equivalent BAFA",
+  [Categorie.CertMedicalCuisine]: "Certificat médical cuisine",
+  [Categorie.Scolarite]: "Certificat de scolarité",
+  [Categorie.Autre]: "Autre",
+  [Categorie.nbCategorieEquipier]: "",
+};
+
+// registro/sql/files.Demande
+export interface Demande {
+  Id: IdDemande;
+  IdFile: OptIdFile;
+  IdDirecteur: OptIdPersonne;
+  Categorie: Categorie;
+  Description: string;
+  MaxDocs: Int;
+  JoursValide: Int;
+}
+export type IdDemande = number & { __opaque__: "IdDemande" };
+export type IdFile = number & { __opaque__: "IdFile" };
+// registro/sql/files.OptIdFile
+export interface OptIdFile {
+  Id: IdFile;
+  Valid: boolean;
 }
 // registro/sql/personnes.Approfondissement
 export const Approfondissement = {
@@ -310,6 +489,11 @@ export const NationnaliteLabels: { [key in Nationnalite]: string } = {
   [Nationnalite.Suisse]: "Suisse",
 };
 
+// registro/sql/personnes.OptIdPersonne
+export interface OptIdPersonne {
+  Id: IdPersonne;
+  Valid: boolean;
+}
 // registro/sql/personnes.Pays
 export type Pays = string;
 // registro/sql/personnes.Personne
@@ -382,6 +566,22 @@ export abstract class AbstractAPI {
     return { Authorization: "Bearer " + this.authToken };
   }
 
+  /** GetCamps performs the request and handles the error */
+  async GetCamps() {
+    const fullUrl = this.baseUrl + "/api/v1/directeurs/shared/camps";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<CampItem[] | null> = await Axios.post(
+        fullUrl,
+        null,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
   /** Loggin performs the request and handles the error */
   async Loggin(params: { password: string; idCamp: IdCamp }) {
     const fullUrl = this.baseUrl + "/api/v1/directeurs/loggin";
@@ -394,22 +594,6 @@ export abstract class AbstractAPI {
           idCamp: String(params["idCamp"]),
         },
       });
-      return rep.data;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  /** GetCamps performs the request and handles the error */
-  async GetCamps() {
-    const fullUrl = this.baseUrl + "/api/v1/directeurs/shared/camps";
-    this.startRequest();
-    try {
-      const rep: AxiosResponse<CampItem[] | null> = await Axios.post(
-        fullUrl,
-        null,
-        { headers: this.getHeaders() },
-      );
       return rep.data;
     } catch (error) {
       this.handleError(error);
@@ -514,6 +698,47 @@ export abstract class AbstractAPI {
   /** ParticipantsUpdate performs the request and handles the error */
   async ParticipantsUpdate(params: Participant) {
     const fullUrl = this.baseUrl + "/api/v1/directeurs/participants";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EquipiersGet performs the request and handles the error */
+  async EquipiersGet() {
+    const fullUrl = this.baseUrl + "/api/v1/directeurs/equipiers";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<EquipierExt[] | null> = await Axios.get(
+        fullUrl,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EquipiersDemandesGet performs the request and handles the error */
+  async EquipiersDemandesGet() {
+    const fullUrl = this.baseUrl + "/api/v1/directeurs/equipiers/demandes";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<DemandesOut> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EquipiersDemandeSet performs the request and handles the error */
+  async EquipiersDemandeSet(params: EquipiersDemandeSetIn) {
+    const fullUrl = this.baseUrl + "/api/v1/directeurs/equipiers/demandes";
     this.startRequest();
     try {
       await Axios.post(fullUrl, params, { headers: this.getHeaders() });
