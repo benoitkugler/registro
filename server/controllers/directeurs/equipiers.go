@@ -34,6 +34,12 @@ type EquipierExt struct {
 	FormURL string
 }
 
+func newEquipierExt(key crypto.Encrypter, host string, equipier cps.Equipier, personne pr.Personne) EquipierExt {
+	token := crypto.EncryptID(key, equipier.Id)
+	url := utils.BuildUrl(host, EndpointEquipier, utils.QP("token", token))
+	return EquipierExt{equipier, personne.NOMPrenom(), url}
+}
+
 func (ct *Controller) getEquipiers(host string, user cps.IdCamp) ([]EquipierExt, error) {
 	equipiers, err := cps.SelectEquipiersByIdCamps(ct.db, user)
 	if err != nil {
@@ -45,13 +51,74 @@ func (ct *Controller) getEquipiers(host string, user cps.IdCamp) ([]EquipierExt,
 	}
 	out := make([]EquipierExt, 0, len(equipiers))
 	for _, equipier := range equipiers {
-		token := crypto.EncryptID(ct.key, equipier.Id)
-		url := utils.BuildUrl(host, EndpointEquipier, utils.QP("token", token))
-		personne := personnes[equipier.IdPersonne].NOMPrenom()
-		out = append(out, EquipierExt{equipier, personne, url})
+		out = append(out, newEquipierExt(ct.key, host, equipier,personnes[equipier.IdPersonne]))
 	}
 
 	return out, nil
+}
+
+type EquipiersCreateIn struct {
+	CreatePersonne bool 
+	Personne PatternsSimilarite // valid if CreatePersonne is true
+	IdPersonne pr.IdPersonne  // valid if CreatePersonne if false 
+	
+	Roles cps.Roles 
+}
+
+func (ct *Controller) EquipiersCreate(c echo.Context) error {
+	user := JWTUser(c)
+
+	var args EquipiersCreateIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	out, err := ct.createEquipier(c.Request().Host, args, user)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) createEquipier(host string, args EquipiersCreateIn, user cps.IdCamp) (EquipierExt, error) {
+	// check Directeur unicity : this avoid cryptic error messages 
+	equipiers, err := cps.SelectEquipiersByIdCamp(ct.db, user)
+	if err != nil {
+		return EquipierExt{}, utils.SQLError(err)
+	}
+	if _ , hasDirecteur := equipiers.Directeur();  roles.Has(cps.Direction) && hasDirecteur {
+		return EquipierExt{}, errors.New("Le séjour a déjà un directeur.")
+	}
+	
+	var (
+		equipier cps.Equipier
+		personne pe.Personne
+	)
+	err := utils.InTx(ct.db, func (tx *sql.Tx) error {
+		// two modes : create or link Personne
+		if args.CreatePersonne {
+			// we do not mark as tmp since it would prevent document uploading
+			pe, err := args.Personne.Personne().Insert(tx)
+			if err != nil {
+				return err
+			}
+			personne = pe 
+	    } else {
+			personne, err = pr.SelectPersonne(tx, args.IdPersonne)
+			if err != nil {
+				return err
+			}
+		}
+		equipier, err = cps.Equipier{IdPersonne: personne.Id, IdCamp: user, Roles: args.Roles}.Insert(tx)
+		if err != nil {
+			return err
+		}
+	})
+	if err != nil {
+		return EquipierExt{}, err 
+	}
+	return newEquipierExt(ct.key, host, equipier, personne), nil 
 }
 
 type DemandeState uint8

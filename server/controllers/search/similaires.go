@@ -37,6 +37,16 @@ func NewPatternsSimilarite(pr pr.Personne) PatternsSimilarite {
 	}
 }
 
+func (ps *PatternsSimilarite) Personne() pr.Personne {
+	return pr.Personne{EtatCivil: pr.EtatCivil{
+		Nom:           ps.Nom,
+		Prenom:        ps.Prenom,
+		Sexe:          ps.Sexe,
+		DateNaissance: ps.DateNaissance,
+		Mail:          ps.Mail,
+	}}
+}
+
 func (in *PatternsSimilarite) normalize() {
 	in.Nom = utils.Normalize(in.Nom)
 	in.Prenom = utils.Normalize(in.Prenom)
