@@ -8,6 +8,7 @@
     clearable
     :model-value="zeroableToNullable(modelValue)"
     @update:model-value="(id) => (modelValue = nullableToZeroable(id))"
+    no-data-text="Aucun séjour n'existe."
   >
     <template #prepend>
       <v-tooltip

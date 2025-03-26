@@ -38,7 +38,7 @@ func NewPatternsSimilarite(pr pr.Personne) PatternsSimilarite {
 }
 
 func (ps *PatternsSimilarite) Personne() pr.Personne {
-	return pr.Personne{EtatCivil: pr.EtatCivil{
+	return pr.Personne{Etatcivil: pr.Etatcivil{
 		Nom:           ps.Nom,
 		Prenom:        ps.Prenom,
 		Sexe:          ps.Sexe,

@@ -45,10 +45,10 @@ export const DemandeStateLabels: { [key in DemandeState]: string } = {
 // registro/controllers/directeurs.DemandesOut
 export interface DemandesOut {
   Demandes: Demande[] | null;
-  Equipiers: EquipierDemandes[] | null;
+  Equipiers: EquipierDemande[] | null;
 }
-// registro/controllers/directeurs.EquipierDemandes
-export interface EquipierDemandes {
+// registro/controllers/directeurs.EquipierDemande
+export interface EquipierDemande {
   Key: DemandeKey;
   State: DemandeState;
   Files: PublicFile[] | null;
@@ -159,9 +159,9 @@ export type FormStatusEquipier =
 
 export const FormStatusEquipierLabels: { [key in FormStatusEquipier]: string } =
   {
-    [FormStatusEquipier.NotSend]: "",
-    [FormStatusEquipier.Pending]: "",
-    [FormStatusEquipier.Answered]: "",
+    [FormStatusEquipier.NotSend]: "Non envoyé",
+    [FormStatusEquipier.Pending]: "En attente",
+    [FormStatusEquipier.Answered]: "Répondu",
   };
 
 export type IdCamp = number & { __opaque__: "IdCamp" };

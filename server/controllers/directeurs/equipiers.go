@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"registro/controllers/files"
+	"registro/controllers/search"
 	"registro/crypto"
 	cps "registro/sql/camps"
 	fs "registro/sql/files"
@@ -51,18 +52,18 @@ func (ct *Controller) getEquipiers(host string, user cps.IdCamp) ([]EquipierExt,
 	}
 	out := make([]EquipierExt, 0, len(equipiers))
 	for _, equipier := range equipiers {
-		out = append(out, newEquipierExt(ct.key, host, equipier,personnes[equipier.IdPersonne]))
+		out = append(out, newEquipierExt(ct.key, host, equipier, personnes[equipier.IdPersonne]))
 	}
 
 	return out, nil
 }
 
 type EquipiersCreateIn struct {
-	CreatePersonne bool 
-	Personne PatternsSimilarite // valid if CreatePersonne is true
-	IdPersonne pr.IdPersonne  // valid if CreatePersonne if false 
-	
-	Roles cps.Roles 
+	CreatePersonne bool
+	Personne       search.PatternsSimilarite // valid if CreatePersonne is true
+	IdPersonne     pr.IdPersonne             // valid if CreatePersonne if false
+
+	Roles cps.Roles
 }
 
 func (ct *Controller) EquipiersCreate(c echo.Context) error {
@@ -82,20 +83,20 @@ func (ct *Controller) EquipiersCreate(c echo.Context) error {
 }
 
 func (ct *Controller) createEquipier(host string, args EquipiersCreateIn, user cps.IdCamp) (EquipierExt, error) {
-	// check Directeur unicity : this avoid cryptic error messages 
-	equipiers, err := cps.SelectEquipiersByIdCamp(ct.db, user)
+	// check Directeur unicity : this avoid cryptic error messages
+	equipiers, err := cps.SelectEquipiersByIdCamps(ct.db, user)
 	if err != nil {
 		return EquipierExt{}, utils.SQLError(err)
 	}
-	if _ , hasDirecteur := equipiers.Directeur();  roles.Has(cps.Direction) && hasDirecteur {
+	if _, hasDirecteur := equipiers.Directeur(); args.Roles.Is(cps.Direction) && hasDirecteur {
 		return EquipierExt{}, errors.New("Le séjour a déjà un directeur.")
 	}
-	
+
 	var (
 		equipier cps.Equipier
-		personne pe.Personne
+		personne pr.Personne
 	)
-	err := utils.InTx(ct.db, func (tx *sql.Tx) error {
+	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
 		// two modes : create or link Personne
 		if args.CreatePersonne {
 			// we do not mark as tmp since it would prevent document uploading
@@ -103,8 +104,8 @@ func (ct *Controller) createEquipier(host string, args EquipiersCreateIn, user c
 			if err != nil {
 				return err
 			}
-			personne = pe 
-	    } else {
+			personne = pe
+		} else {
 			personne, err = pr.SelectPersonne(tx, args.IdPersonne)
 			if err != nil {
 				return err
@@ -114,11 +115,12 @@ func (ct *Controller) createEquipier(host string, args EquipiersCreateIn, user c
 		if err != nil {
 			return err
 		}
+		return nil
 	})
 	if err != nil {
-		return EquipierExt{}, err 
+		return EquipierExt{}, err
 	}
-	return newEquipierExt(ct.key, host, equipier, personne), nil 
+	return newEquipierExt(ct.key, host, equipier, personne), nil
 }
 
 type DemandeState uint8
@@ -129,7 +131,7 @@ const (
 	Obligatoire                     // Requis
 )
 
-type EquipierDemandes struct {
+type EquipierDemande struct {
 	Key DemandeKey
 
 	State DemandeState
@@ -143,7 +145,7 @@ type DemandeKey struct {
 
 type DemandesOut struct {
 	Demandes  []fs.Demande // all possible, builtins, sorted
-	Equipiers []EquipierDemandes
+	Equipiers []EquipierDemande
 }
 
 func (ct *Controller) EquipiersDemandesGet(c echo.Context) error {
@@ -189,7 +191,7 @@ func (ct *Controller) getDemandesEquipiers(user cps.IdCamp) (DemandesOut, error)
 	}
 	// ... then the current files
 	demandes := ct.builtins.List()
-	var list []EquipierDemandes
+	var list []EquipierDemande
 	for _, equipier := range equipiers {
 		current := filesByPersonne[equipier.IdPersonne].ByIdDemande()
 		for _, demande := range demandes {
@@ -201,7 +203,7 @@ func (ct *Controller) getDemandesEquipiers(user cps.IdCamp) (DemandesOut, error)
 			}
 
 			key := DemandeKey{equipier.Id, demande.Id}
-			list = append(list, EquipierDemandes{key, states[key], publicFiles})
+			list = append(list, EquipierDemande{key, states[key], publicFiles})
 		}
 	}
 

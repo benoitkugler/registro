@@ -1,6 +1,8 @@
 package camps
 
 import (
+	"encoding/json"
+	"reflect"
 	"testing"
 	"time"
 
@@ -138,4 +140,16 @@ func TestCamp_DateFin(t *testing.T) {
 		got := (&Camp{DateDebut: test.debut, Duree: test.duree}).DateFin()
 		tu.Assert(t, got == test.expected)
 	}
+}
+
+func TestRolesJSON(t *testing.T) {
+	r := Roles{Direction, Infirmerie}
+	b, err := json.Marshal(r)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, b[0] == '[')
+
+	var r2 Roles
+	err = json.Unmarshal(b, &r2)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, reflect.DeepEqual(r, r2))
 }

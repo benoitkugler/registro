@@ -2,6 +2,7 @@ package camps
 
 import (
 	"database/sql/driver"
+	"encoding/json"
 	"fmt"
 	"sort"
 	"strings"
@@ -331,14 +332,29 @@ func (rs Roles) Is(r Role) bool {
 	return false
 }
 
+var (
+	_ json.Marshaler   = (Role)(0)
+	_ json.Unmarshaler = (*Role)(nil)
+)
+
+// MarshalText makes sure [Roles] is not encoded as a []byte slice
+func (d Role) MarshalJSON() ([]byte, error) {
+	// By default a slice of SignSymbol is marshalled as string by Go
+	return json.Marshal(uint8(d))
+}
+
+func (d *Role) UnmarshalJSON(src []byte) error {
+	return json.Unmarshal(src, (*uint8)(d))
+}
+
 // FormStatusEquipier enregistre si
 // l'équipier a validé son profil
 type FormStatusEquipier uint8
 
 const (
-	NotSend FormStatusEquipier = iota
-	Pending
-	Answered
+	NotSend  FormStatusEquipier = iota // Non envoyé
+	Pending                            // En attente
+	Answered                           // Répondu
 )
 
 // PresenceOffsets encode une différence par rapport
