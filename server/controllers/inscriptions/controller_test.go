@@ -194,6 +194,23 @@ func TestController_saveInscription(t *testing.T) {
 	tu.AssertNoErr(t, err)
 }
 
+func buildAndConfirme(ct *Controller, publicInsc Inscription) (in.Inscription, ds.Dossier, error) {
+	insc, participants, err := ct.BuildInscription(publicInsc)
+	if err != nil {
+		return insc, ds.Dossier{}, err
+	}
+	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
+		insc, err = in.Create(tx, insc, participants)
+		return err
+	})
+	if err != nil {
+		return insc, ds.Dossier{}, err
+	}
+
+	out, err := ConfirmeInscription(ct.db, insc.Id)
+	return insc, out, err
+}
+
 func TestController_confirmeInscription(t *testing.T) {
 	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
 		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",
@@ -203,6 +220,8 @@ func TestController_confirmeInscription(t *testing.T) {
 	cfg, creds := loadEnv(t)
 
 	camp, err := cps.Camp{IdTaux: 1, DateDebut: shared.NewDateFrom(time.Now()), Duree: 3, Ouvert: true}.Insert(db)
+	tu.AssertNoErr(t, err)
+	camp2, err := cps.Camp{IdTaux: 1, DateDebut: shared.NewDateFrom(time.Now()), Duree: 3, Ouvert: true}.Insert(db)
 	tu.AssertNoErr(t, err)
 	_, err = cps.Groupe{IdCamp: camp.Id, Plage: shared.Plage{
 		From:  shared.NewDateFrom(time.Now().Add(-50 * 24 * time.Hour)),
@@ -214,41 +233,89 @@ func TestController_confirmeInscription(t *testing.T) {
 
 	ct := NewController(db.DB, crypto.Encrypter{}, creds, cfg)
 
-	insc, participants, err := ct.BuildInscription(Inscription{
-		Responsable: in.ResponsableLegal{
-			Nom: "Kug", Prenom: "Ben",
+	t.Run("simple", func(t *testing.T) {
+		insc, dossier, err := buildAndConfirme(ct, Inscription{
+			Responsable: in.ResponsableLegal{
+				Nom: "Kug", Prenom: "Ben",
+				DateNaissance: shared.NewDate(2000, 1, 1),
+			},
+			ResponsablePreIdent: crypto.EncryptID(ct.key, pers.Id),
+			Participants: []Participant{
+				{IdCamp: camp.Id, DateNaissance: shared.Date(time.Now()), PreIdent: crypto.EncryptID(ct.key, pers.Id)},
+				{IdCamp: camp.Id, DateNaissance: shared.Date(time.Now())},
+			},
+			Message: "Haha joli !",
+		})
+		tu.AssertNoErr(t, err)
+
+		tu.Assert(t, dossier.IsValidated == false)
+		tu.Assert(t, dossier.MomentInscription.Equal(insc.DateHeure))
+
+		insc, err = in.SelectInscription(ct.db, insc.Id)
+		tu.Assert(t, insc.IsConfirmed == true)
+
+		respo, err := pr.SelectPersonne(ct.db, dossier.IdResponsable)
+		tu.AssertNoErr(t, err)
+		tu.Assert(t, !respo.IsTemp)
+		tu.Assert(t, respo.Publicite.PubEte && respo.Publicite.PubHiver)
+
+		events, err := ev.SelectEventsByIdDossiers(ct.db, dossier.Id)
+		tu.AssertNoErr(t, err)
+		tu.Assert(t, len(events) == 1) //  message
+
+		_, err = ConfirmeInscription(ct.db, insc.Id) // already confirmed
+		tu.AssertErr(t, err)
+	})
+
+	// check that the same participant are
+	// properly identified to the same profil
+	t.Run("same profiles", func(t *testing.T) {
+		resp := in.ResponsableLegal{
+			Nom: "Kug", Prenom: "Ben", Sexe: pr.Woman,
 			DateNaissance: shared.NewDate(2000, 1, 1),
-		},
-		ResponsablePreIdent: crypto.EncryptID(ct.key, pers.Id),
-		Participants: []Participant{
-			{IdCamp: camp.Id, DateNaissance: shared.Date(time.Now()), PreIdent: crypto.EncryptID(ct.key, pers.Id)},
-			{IdCamp: camp.Id, DateNaissance: shared.Date(time.Now())},
-		},
-		Message: "Haha joli !",
+		}
+		p1 := Participant{IdCamp: camp.Id, Nom: resp.Nom, Prenom: resp.Prenom, Sexe: resp.Sexe, DateNaissance: resp.DateNaissance}
+		p2 := p1
+		p2.IdCamp = camp2.Id
+
+		_, dossier, err := buildAndConfirme(ct, Inscription{
+			Responsable:  resp,
+			Participants: []Participant{p1, p2},
+		})
+		tu.AssertNoErr(t, err)
+
+		identified, err := cps.SelectParticipantsByIdDossiers(ct.db, dossier.Id)
+		tu.AssertNoErr(t, err)
+		tu.Assert(t, len(identified) == 2)
+		ids := identified.IDs()
+		pa1, pa2 := identified[ids[0]], identified[ids[1]]
+		tu.Assert(t, pa1.IdPersonne == dossier.IdResponsable && pa2.IdPersonne == dossier.IdResponsable)
 	})
-	tu.AssertNoErr(t, err)
-	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
-		insc, err = in.Create(tx, insc, participants)
-		return err
+
+	// check that two participant on the same camp
+	// create a temp. profil
+	t.Run("duplicate profil", func(t *testing.T) {
+		resp := in.ResponsableLegal{
+			Nom: "Kug", Prenom: "Aurore", Sexe: pr.Man,
+			DateNaissance: shared.NewDate(2000, 1, 1),
+		}
+		p1 := Participant{IdCamp: camp.Id, Nom: resp.Nom, Prenom: resp.Prenom, Sexe: resp.Sexe, DateNaissance: resp.DateNaissance}
+		p2 := p1
+
+		_, dossier, err := buildAndConfirme(ct, Inscription{
+			Responsable:  resp,
+			Participants: []Participant{p1, p2},
+		})
+		tu.AssertNoErr(t, err)
+
+		identified, err := cps.SelectParticipantsByIdDossiers(ct.db, dossier.Id)
+		tu.AssertNoErr(t, err)
+		tu.Assert(t, len(identified) == 2)
+		ids := identified.IDs()
+		pa1, pa2 := identified[ids[0]], identified[ids[1]]
+		tu.Assert(t, pa1.IdPersonne != pa2.IdPersonne)
+		pe2, err := pr.SelectPersonne(ct.db, pa2.IdPersonne)
+		tu.AssertNoErr(t, err)
+		tu.Assert(t, pe2.IsTemp)
 	})
-	tu.AssertNoErr(t, err)
-
-	dossier, err := ConfirmeInscription(ct.db, insc.Id)
-	tu.AssertNoErr(t, err)
-	tu.Assert(t, dossier.IsValidated == false)
-	tu.Assert(t, dossier.MomentInscription.Equal(insc.DateHeure))
-
-	insc, err = in.SelectInscription(ct.db, insc.Id)
-	tu.Assert(t, insc.IsConfirmed == true)
-
-	respo, err := pr.SelectPersonne(ct.db, dossier.IdResponsable)
-	tu.AssertNoErr(t, err)
-	tu.Assert(t, respo.Publicite.PubEte && respo.Publicite.PubHiver)
-
-	events, err := ev.SelectEventsByIdDossiers(ct.db, dossier.Id)
-	tu.AssertNoErr(t, err)
-	tu.Assert(t, len(events) == 1) //  message
-
-	_, err = ConfirmeInscription(ct.db, insc.Id) // already confirmed
-	tu.AssertErr(t, err)
 }

@@ -100,7 +100,7 @@ func (ct *Controller) createEquipier(host string, args EquipiersCreateIn, user c
 		// two modes : create or link Personne
 		if args.CreatePersonne {
 			// we do not mark as tmp since it would prevent document uploading
-			pe, err := args.Personne.Personne().Insert(tx)
+			pe, err := pr.Personne{Etatcivil: args.Personne.Personne()}.Insert(tx)
 			if err != nil {
 				return err
 			}

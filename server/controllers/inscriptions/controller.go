@@ -566,8 +566,8 @@ func (ct *Controller) ConfirmeInscription(c echo.Context) error {
 	return c.Redirect(307, url)
 }
 
-// transforme l'inscription en dossier et l'enregistre,
-// renvoyant le dossier créé
+// ConfirmeInscription transforme l'inscription en dossier,
+// et rapproche (automatiquement) les profils.
 func ConfirmeInscription(db *sql.DB, id in.IdInscription) (ds.Dossier, error) {
 	insc, err := in.SelectInscription(db, id)
 	if err != nil {
@@ -582,19 +582,26 @@ func ConfirmeInscription(db *sql.DB, id in.IdInscription) (ds.Dossier, error) {
 		return ds.Dossier{}, errors.New("inscription déjà confirmé")
 	}
 
-	type identifiedPersonne struct {
-		personne pr.Personne
-		preIdent pr.OptIdPersonne
+	// on charge l'index une fois pour toutes ...
+	index, err := search.SelectAllFieldsForSimilaires(db)
+	if err != nil {
+		return ds.Dossier{}, utils.SQLError(err)
 	}
+	// ... et les camps et groupes
+	camps, err := cps.SelectCamps(db, participants.IdCamps()...)
+	if err != nil {
+		return ds.Dossier{}, utils.SQLError(err)
+	}
+	tmp, err := cps.SelectGroupesByIdCamps(db, camps.IDs()...)
+	if err != nil {
+		return ds.Dossier{}, utils.SQLError(err)
+	}
+	groupesByCamp := tmp.ByIdCamp()
 
-	var (
-		// responsable et participants
-		allPers    []identifiedPersonne
-		allPersIDs = make(utils.Set[pr.IdPersonne])
-	)
-
-	responsable := pr.Personne{
-		Etatcivil: pr.Etatcivil{
+	var dossier ds.Dossier
+	err = utils.InTx(db, func(tx *sql.Tx) error {
+		// mise à jour (ou création) des personnes
+		responsable := pr.Etatcivil{
 			Nom:           insc.Responsable.Nom,
 			Prenom:        insc.Responsable.Prenom,
 			DateNaissance: insc.Responsable.DateNaissance,
@@ -605,62 +612,12 @@ func ConfirmeInscription(db *sql.DB, id in.IdInscription) (ds.Dossier, error) {
 			CodePostal:    insc.Responsable.CodePostal,
 			Ville:         insc.Responsable.Ville,
 			Pays:          insc.Responsable.Pays,
-		},
-	}
-
-	allPers = append(allPers, identifiedPersonne{responsable, insc.ResponsablePreIdent})
-	allPersIDs.Add(insc.ResponsablePreIdent.Id) // maybe 0, which will be ignored
-	for _, part := range participants {
-		pers := pr.Personne{Etatcivil: pr.Etatcivil{
-			Nom:           part.Nom,
-			Prenom:        part.Prenom,
-			Sexe:          part.Sexe,
-			DateNaissance: part.DateNaissance,
-			Nationnalite:  part.Nationnalite,
-		}}
-		allPers = append(allPers, identifiedPersonne{pers, part.PreIdent})
-		allPersIDs.Add(part.PreIdent.Id) // maybe 0, which will be ignored
-	}
-
-	var dossier ds.Dossier
-	err = utils.InTx(db, func(tx *sql.Tx) error {
-		// on charge les personnes pour la comparaison ...
-		personnes, err := pr.SelectPersonnes(tx, allPersIDs.Keys()...)
+		}
+		responsablePersonne, err := rapprochePersonne(tx, &index, responsable, insc.ResponsablePreIdent, cps.OptIdCamp{})
 		if err != nil {
 			return err
 		}
-		// ... et les camps et groupes
-		camps, err := cps.SelectCamps(tx, participants.IdCamps()...)
-		if err != nil {
-			return err
-		}
-		tmp, err := cps.SelectGroupesByIdCamps(tx, camps.IDs()...)
-		if err != nil {
-			return err
-		}
-		groupesByCamp := tmp.ByIdCamp()
-
-		// mise à jour (ou création) des personnes
-		for i, inc := range allPers {
-			if existante, exists := personnes[inc.preIdent.Id]; inc.preIdent.Valid && exists {
-				// si l'inscription est préidentifiée, on fusionne automatiquement
-				// l'inscription avec le profil
-				existante.Etatcivil, _ = search.Merge(inc.personne.Etatcivil, existante.Etatcivil)
-				allPers[i].personne, err = existante.Update(tx)
-			} else {
-				// sinon, on crée une nouvelle personne temporaire
-				inc.personne.IsTemp = true
-				allPers[i].personne, err = inc.personne.Insert(tx)
-			}
-			if err != nil {
-				return err
-			}
-		}
-
-		responsablePersonne := allPers[0].personne // le responsable est en premier
-		participantPersonnes := allPers[1:]
-
-		// on active automatiquement l'envoi des pub été/ hiver pour le responsable
+		// on active automatiquement l'envoi des pub été/hiver pour le responsable
 		responsablePersonne.Publicite = pr.Publicite{
 			PubEte:   true,
 			PubHiver: true,
@@ -670,6 +627,7 @@ func ConfirmeInscription(db *sql.DB, id in.IdInscription) (ds.Dossier, error) {
 			return err
 		}
 
+		// on crée le dossier (requis pour les participants)
 		dossier = ds.Dossier{
 			IdTaux:             insc.IdTaux,
 			IdResponsable:      responsablePersonne.Id,
@@ -684,34 +642,25 @@ func ConfirmeInscription(db *sql.DB, id in.IdInscription) (ds.Dossier, error) {
 			return err
 		}
 
-		// on insert le message du formulaire
-		if content := strings.TrimSpace(insc.Message); content != "" {
-			event := events.Event{
-				IdDossier: dossier.Id,
-				Kind:      events.Message,
-				Created:   insc.DateHeure.Add(time.Second), // on s'assure que le message vient après le moment d'inscription
-			}
-			event, err = event.Insert(tx)
-			if err != nil {
-				return err
-			}
-			err = events.EventMessage{
-				IdEvent: event.Id,
-				Contenu: content, Origine: events.FromEspaceperso,
-			}.Insert(tx)
-			if err != nil {
-				return err
-			}
-		}
-
 		// on crée maintenant les participants, avec le statut [AStatuer]
 		// le calcul du statut précis est repoussé au moment de la validation humaine
 		// mais l'éventuel groupe est calculé
 
-		for i, inscPart := range participants {
-			personne := participantPersonnes[i].personne // personne créée ou mise à jour
+		for _, part := range participants {
+			pers := pr.Etatcivil{
+				Nom:           part.Nom,
+				Prenom:        part.Prenom,
+				Sexe:          part.Sexe,
+				DateNaissance: part.DateNaissance,
+				Nationnalite:  part.Nationnalite,
+			}
+			personne, err := rapprochePersonne(tx, &index, pers, part.PreIdent, part.IdCamp.Opt())
+			if err != nil {
+				return err
+			}
+
 			participant := cps.Participant{
-				IdCamp:     inscPart.IdCamp,
+				IdCamp:     part.IdCamp,
 				IdPersonne: personne.Id,
 				IdDossier:  dossier.Id,
 				IdTaux:     insc.IdTaux,
@@ -735,6 +684,26 @@ func ConfirmeInscription(db *sql.DB, id in.IdInscription) (ds.Dossier, error) {
 			}
 		}
 
+		// on insert le message du formulaire
+		if content := strings.TrimSpace(insc.Message); content != "" {
+			event := events.Event{
+				IdDossier: dossier.Id,
+				Kind:      events.Message,
+				Created:   insc.DateHeure.Add(time.Second), // on s'assure que le message vient après le moment d'inscription
+			}
+			event, err = event.Insert(tx)
+			if err != nil {
+				return err
+			}
+			err = events.EventMessage{
+				IdEvent: event.Id,
+				Contenu: content, Origine: events.FromEspaceperso,
+			}.Insert(tx)
+			if err != nil {
+				return err
+			}
+		}
+
 		// tag the inscription as Confirmed
 		insc.IsConfirmed = true
 		_, err = insc.Update(tx)
@@ -742,4 +711,70 @@ func ConfirmeInscription(db *sql.DB, id in.IdInscription) (ds.Dossier, error) {
 	})
 
 	return dossier, err
+}
+
+// rapprochePersonne effectue un rattachement automatique avec les profils connus :
+//   - si une préidentification existe, on l'utilise
+//   - sinon, on cherche un profil correspondant "exactement"
+//   - enfin, on crée un nouveau profil
+//
+// Si le profil existant est déjà présent sur le séjour, on crée un nouveau profil avec
+// le statut temporaire, pour indiquer une situation anormale
+//
+// Si un nouveau profil (non temporaire) est créé, il est aussi ajouté à l'index
+func rapprochePersonne(tx *sql.Tx, index *[]pr.Personne, incomming pr.Etatcivil, target pr.OptIdPersonne,
+	idCampToCheck cps.OptIdCamp,
+) (pr.Personne, error) {
+	if !target.Valid { // trust the pre-identification if valid
+		match, hasMatch := search.Match(*index, search.NewPatternsSimilarite(incomming))
+		if hasMatch {
+			target = match.Opt()
+		}
+	}
+
+	// on vérifie que la personne n'est pas déjà présente sur le séjour
+	markTemp := false
+	if target.Valid && idCampToCheck.Valid {
+		_, found, err := cps.SelectParticipantByIdCampAndIdPersonne(tx, idCampToCheck.Id, target.Id)
+		if err != nil {
+			return pr.Personne{}, err
+		}
+		if found {
+			// c'est embêtant: plutôt que de refuser l'inscription,
+			// on préfère créer un profil avec le marqueur IsTemp
+			target = pr.OptIdPersonne{}
+			markTemp = true
+		}
+	}
+
+	var (
+		out pr.Personne
+		err error
+	)
+	if target.Valid {
+		// si l'inscription est préidentifiée, on fusionne automatiquement
+		// l'inscription avec le profil existant
+		out, err = pr.SelectPersonne(tx, target.Id)
+		if err != nil {
+			return pr.Personne{}, err
+		}
+		out.Etatcivil, _ = search.Merge(incomming, out.Etatcivil)
+		out, err = out.Update(tx)
+		if err != nil {
+			return pr.Personne{}, err
+		}
+	} else {
+		// sinon, on crée une nouvelle personne
+		out = pr.Personne{Etatcivil: incomming, IsTemp: markTemp}
+		out, err = out.Insert(tx)
+		if err != nil {
+			return pr.Personne{}, err
+		}
+	}
+
+	if !out.IsTemp {
+		*index = append(*index, out)
+	}
+
+	return out, nil
 }

@@ -43,7 +43,7 @@ type PatternsSimilarite struct {
 	DateNaissance shared.Date
 }
 
-func NewPatternsSimilarite(pr pr.Personne) PatternsSimilarite {
+func NewPatternsSimilarite(pr pr.Etatcivil) PatternsSimilarite {
 	return PatternsSimilarite{
 		Nom:           pr.Nom,
 		Prenom:        pr.Prenom,
@@ -52,13 +52,13 @@ func NewPatternsSimilarite(pr pr.Personne) PatternsSimilarite {
 	}
 }
 
-func (ps *PatternsSimilarite) Personne() pr.Personne {
-	return pr.Personne{Etatcivil: pr.Etatcivil{
+func (ps *PatternsSimilarite) Personne() pr.Etatcivil {
+	return pr.Etatcivil{
 		Nom:           ps.Nom,
 		Prenom:        ps.Prenom,
 		Sexe:          ps.Sexe,
 		DateNaissance: ps.DateNaissance,
-	}}
+	}
 }
 
 // match returns true if the pattern precisely matches
@@ -136,14 +136,14 @@ func newPersonneHeader(p pr.Personne) PersonneHeader {
 // et renvoie le premier profil correspondant.
 //
 // Voir aussi [SelectAllFieldsForSimilaires]
-func Match(personnes []pr.Personne, in PatternsSimilarite) (PersonneHeader, bool) {
+func Match(personnes []pr.Personne, in PatternsSimilarite) (pr.IdPersonne, bool) {
 	in.normalize()
 	for _, personne := range personnes {
 		if in.match(personne.Etatcivil) {
-			return newPersonneHeader(personne), true
+			return personne.Id, true
 		}
 	}
-	return PersonneHeader{}, false
+	return 0, false
 }
 
 type ScoredPersonne struct {
