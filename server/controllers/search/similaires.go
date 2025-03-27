@@ -3,16 +3,33 @@ package search
 import (
 	"slices"
 	"strings"
+	"unicode"
 
 	pr "registro/sql/personnes"
 	"registro/sql/shared"
 	"registro/utils"
+
+	"golang.org/x/text/runes"
+	"golang.org/x/text/unicode/norm"
+	"golang.org/x/text/unicode/rangetable"
 )
+
+var alphaNum = rangetable.Merge(unicode.L, unicode.Digit)
+
+// normalize remove accents, white space and any non alphanumeric caracters
+func normalize(s string) string {
+	b := []byte(s)
+	b = norm.NFD.Bytes(b)
+	b = runes.Remove(runes.In(unicode.Mn)).Bytes(b)
+	b = norm.NFC.Bytes(b)
+	b = runes.Remove(runes.NotIn(alphaNum)).Bytes(b)
+	b = runes.Map(unicode.ToLower).Bytes(b)
+	return string(b)
+}
 
 const (
 	poidsNom           = 3
 	poidsPrenom        = 2
-	poidsMail          = 4
 	poidsDateNaissance = 3
 	poidsSexe          = 1
 )
@@ -24,7 +41,6 @@ type PatternsSimilarite struct {
 	Prenom        string
 	Sexe          pr.Sexe
 	DateNaissance shared.Date
-	Mail          string
 }
 
 func NewPatternsSimilarite(pr pr.Personne) PatternsSimilarite {
@@ -33,7 +49,6 @@ func NewPatternsSimilarite(pr pr.Personne) PatternsSimilarite {
 		Prenom:        pr.Prenom,
 		Sexe:          pr.Sexe,
 		DateNaissance: pr.DateNaissance,
-		Mail:          pr.Mail,
 	}
 }
 
@@ -43,14 +58,23 @@ func (ps *PatternsSimilarite) Personne() pr.Personne {
 		Prenom:        ps.Prenom,
 		Sexe:          ps.Sexe,
 		DateNaissance: ps.DateNaissance,
-		Mail:          ps.Mail,
 	}}
 }
 
+// match returns true if the pattern precisely matches
+// the given [candidate], that is if all the fields matches,
+// using normalization.
+// [ps] should have been normalized beforehand.
+func (ps *PatternsSimilarite) match(candidate pr.Etatcivil) bool {
+	return ps.Nom == normalize(candidate.Nom) &&
+		ps.Prenom == normalize(candidate.Prenom) &&
+		ps.Sexe == candidate.Sexe &&
+		ps.DateNaissance == candidate.DateNaissance
+}
+
 func (in *PatternsSimilarite) normalize() {
-	in.Nom = utils.Normalize(in.Nom)
-	in.Prenom = utils.Normalize(in.Prenom)
-	in.Mail = utils.Normalize(in.Mail)
+	in.Nom = normalize(in.Nom)
+	in.Prenom = normalize(in.Prenom)
 }
 
 func (in PatternsSimilarite) scoreMax() (scoreMax int) {
@@ -59,9 +83,6 @@ func (in PatternsSimilarite) scoreMax() (scoreMax int) {
 	}
 	if in.Prenom != "" {
 		scoreMax += poidsPrenom
-	}
-	if in.Mail != "" {
-		scoreMax += poidsMail
 	}
 	if in.Sexe != 0 {
 		scoreMax += poidsSexe
@@ -72,53 +93,14 @@ func (in PatternsSimilarite) scoreMax() (scoreMax int) {
 	return scoreMax
 }
 
-// SelectAllPatternSimilaires ne charge que les champs requis
-// par `PatternsSimilarite`
-func SelectAllPatternSimilaires(db pr.DB) ([]pr.Personne, error) {
-	// Champs utilisés par la recherche de profil : on évite de charger tous les champs
-	const query = "SELECT Id, Nom, Prenom, Sexe, DateNaissance, Mail, IsTemp FROM personnes"
-
-	rows, err := db.Query(query)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-	defer rows.Close()
-
-	var personnes []pr.Personne
-	for rows.Next() {
-		var item pr.Personne
-		err := rows.Scan(
-			&item.Id,
-			&item.Nom,
-			&item.Prenom,
-			&item.Sexe,
-			&item.DateNaissance,
-			&item.Mail,
-			&item.IsTemp,
-		)
-		if err != nil {
-			return nil, utils.SQLError(err)
-		}
-		personnes = append(personnes, item)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, utils.SQLError(err)
-	}
-
-	return personnes, nil
-}
-
 // Enlève les accents de full et renvoie true si subs est dans full
 // Renvoi false si une des deux chaines est vide.
 func isIn(full, substr string) bool {
 	return substr != "" && full != "" && strings.Contains(
-		utils.Normalize(full), substr)
+		normalize(full), substr)
 }
 
 func comparaison(p pr.Personne, in PatternsSimilarite) (score int) {
-	if in.Mail != "" && isIn(p.Mail, in.Mail) {
-		score += poidsMail
-	}
 	if !p.DateNaissance.Time().IsZero() && in.DateNaissance == p.DateNaissance {
 		score += poidsDateNaissance
 	}
@@ -150,6 +132,20 @@ func newPersonneHeader(p pr.Personne) PersonneHeader {
 	}
 }
 
+// Match vérifie si [in] est déjà présent dans la liste [personnes],
+// et renvoie le premier profil correspondant.
+//
+// Voir aussi [SelectAllFieldsForSimilaires]
+func Match(personnes []pr.Personne, in PatternsSimilarite) (PersonneHeader, bool) {
+	in.normalize()
+	for _, personne := range personnes {
+		if in.match(personne.Etatcivil) {
+			return newPersonneHeader(personne), true
+		}
+	}
+	return PersonneHeader{}, false
+}
+
 type ScoredPersonne struct {
 	ScorePercent int // between 0 and 100
 
@@ -159,8 +155,7 @@ type ScoredPersonne struct {
 // ChercheSimilaires renvoie les profils similaires à [in],
 // triés par pertinence (meilleur en premier).
 //
-// Les personnes temporaires sont ignorées, puisque que l'on ne
-// veut pas fusionner un profil entrant à un profil temporaire.
+// Voir aussi [SelectAllFieldsForSimilaires]
 func ChercheSimilaires(personnes []pr.Personne, in PatternsSimilarite) (scoreMax int, out []ScoredPersonne) {
 	const seuilRechercheSimilaire = 2
 
@@ -170,13 +165,9 @@ func ChercheSimilaires(personnes []pr.Personne, in PatternsSimilarite) (scoreMax
 	}
 	in.normalize()
 
-	out = make([]ScoredPersonne, 0, 20)
+	out = make([]ScoredPersonne, 0, 8)
 	for _, p := range personnes {
-		if p.IsTemp {
-			continue
-		}
-		score := comparaison(p, in)
-		if score >= seuilRechercheSimilaire {
+		if score := comparaison(p, in); score >= seuilRechercheSimilaire {
 			out = append(out, ScoredPersonne{
 				100 * score / scoreMax,
 				newPersonneHeader(p),
@@ -187,4 +178,42 @@ func ChercheSimilaires(personnes []pr.Personne, in PatternsSimilarite) (scoreMax
 	slices.SortFunc(out, func(a, b ScoredPersonne) int { return b.ScorePercent - a.ScorePercent }) // decroissant
 
 	return scoreMax, out
+}
+
+// SelectAllFieldsForSimilaires ne charge que les champs requis
+// par `PatternsSimilarite`.
+// Les personnes temporaires sont ignorées, puisque que l'on ne
+// veut pas fusionner un profil entrant à un profil temporaire.
+//
+// Errors are wrapped with [utils.SQLError]
+func SelectAllFieldsForSimilaires(db pr.DB) ([]pr.Personne, error) {
+	// Champs utilisés par la recherche de profil : on évite de charger tous les champs
+	const query = "SELECT Id, Nom, Prenom, Sexe, DateNaissance FROM personnes WHERE IsTemp IS False;"
+
+	rows, err := db.Query(query)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	defer rows.Close()
+
+	var personnes []pr.Personne
+	for rows.Next() {
+		var item pr.Personne
+		err := rows.Scan(
+			&item.Id,
+			&item.Nom,
+			&item.Prenom,
+			&item.Sexe,
+			&item.DateNaissance,
+		)
+		if err != nil {
+			return nil, utils.SQLError(err)
+		}
+		personnes = append(personnes, item)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, utils.SQLError(err)
+	}
+
+	return personnes, nil
 }

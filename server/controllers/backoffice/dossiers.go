@@ -226,7 +226,7 @@ func match(dossier logic.DossierFinance,
 	// critère texte
 	matchText := false
 	for _, personne := range dossier.Personnes() {
-		if search.QueryMatch(text, personne) {
+		if text.Match(personne) {
 			matchText = true
 			break
 		}

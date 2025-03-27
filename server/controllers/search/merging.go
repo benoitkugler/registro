@@ -2,11 +2,8 @@
 package search
 
 import (
-	"strings"
-
 	pr "registro/sql/personnes"
 	"registro/sql/shared"
-	"registro/utils"
 )
 
 // Ce fichier implémente un algorithme de comparaison
@@ -33,8 +30,8 @@ func cmpString[T interface{ ~string }](s1, s2 T) diff {
 	if s2 == "" {
 		return existantEmpty
 	}
-	ss1 := strings.Replace(utils.Normalize(string(s1)), " ", "", -1)
-	ss2 := strings.Replace(utils.Normalize(string(s2)), " ", "", -1)
+	ss1 := normalize(string(s1))
+	ss2 := normalize(string(s2))
 	if ss1 == ss2 {
 		return equal
 	}
@@ -106,8 +103,10 @@ func cmpEnum[T fieldEnum](in, out T) diff {
 	return conflict
 }
 
-// Conflicts indique quels champs n'ont pu être automatiquement fusionnés
-type Conflicts struct {
+// conflicts indique quels champs n'ont pu être automatiquement fusionnés,
+// c'est à dire ceux pour lesquels les deux profils ont une valeur (sensiblement)
+// différente
+type conflicts struct {
 	Nom                  bool
 	NomJeuneFille        bool
 	Prenom               bool
@@ -182,7 +181,7 @@ func choose[T fields](entrant, existant T) (T, bool) {
 
 // Merge compare champs par champs les deux personnes et renvoie
 // le résultat de la fusion et un crible d'alerte
-func Merge(entrant pr.Etatcivil, existant pr.Etatcivil) (merged pr.Etatcivil, conflicts Conflicts) {
+func Merge(entrant pr.Etatcivil, existant pr.Etatcivil) (merged pr.Etatcivil, conflicts conflicts) {
 	merged.Nom, conflicts.Nom = choose(entrant.Nom, existant.Nom)
 	merged.Prenom, conflicts.Prenom = choose(entrant.Prenom, existant.Prenom)
 	merged.Sexe, conflicts.Sexe = choose(entrant.Sexe, existant.Sexe)

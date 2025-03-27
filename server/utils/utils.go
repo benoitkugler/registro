@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"bytes"
 	"cmp"
 	"database/sql"
 	"fmt"
@@ -10,13 +9,9 @@ import (
 	"slices"
 	"strconv"
 	"strings"
-	"unicode"
 
 	"github.com/labstack/echo/v4"
 	"github.com/lib/pq"
-	"golang.org/x/text/runes"
-	"golang.org/x/text/transform"
-	"golang.org/x/text/unicode/norm"
 )
 
 var (
@@ -40,20 +35,6 @@ func RandString(n int, specialChars bool) string {
 // RandPassword returns a [a-z0-9] password
 // with n chars.
 func RandPassword(n int) string { return RandString(n, false) }
-
-var noAccent = transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
-
-func removeAccents(s []byte) []byte {
-	output, _, err := transform.Bytes(noAccent, s)
-	if err != nil {
-		return s
-	}
-	return output
-}
-
-func Normalize(s string) string {
-	return string(removeAccents(bytes.ToLower(bytes.TrimSpace([]byte(s)))))
-}
 
 // ParseInt parse [v] to an int
 func ParseInt[T interface{ ~int64 | int }](v string) (T, error) {

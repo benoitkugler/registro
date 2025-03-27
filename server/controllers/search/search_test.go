@@ -10,12 +10,10 @@ import (
 )
 
 func TestRechercheRapide(t *testing.T) {
-	db, err := tu.SampleDBACVE.ConnectPostgres()
-	tu.AssertNoErr(t, err)
-	defer db.Close()
-
-	m, err := pr.SelectAllPersonnes(db)
-	tu.AssertNoErr(t, err)
+	m := make(pr.Personnes)
+	for _, p := range loadPersonnes(t) {
+		m[p.Id] = p
+	}
 
 	s := time.Now()
 	res := FilterPersonnes(m, "benoît kug")
@@ -23,32 +21,4 @@ func TestRechercheRapide(t *testing.T) {
 	tu.Assert(t, len(res) > 0)
 
 	tu.Assert(t, len(FilterPersonnes(m, "")) == len(m))
-
-	// s = time.Now()
-	// fmt.Println("nb res :", len(base.RechercheRapideCamps("C2")))
-	// fmt.Println("Camps :", time.Since(s))
-	// if len(base.RechercheRapideCamps("*")) != len(base.Camps) {
-	// 	t.FailNow()
-	// }
-
-	// s = time.Now()
-	// fmt.Println("nb res :", len(base.RechercheRapideParticipants("C1")))
-	// fmt.Println("Participants :", time.Since(s))
-	// if len(base.RechercheRapideParticipants("*")) != len(base.Participants) {
-	// 	t.FailNow()
-	// }
-
-	// s = time.Now()
-	// fmt.Println("nb res:", len(base.RechercheRapideStructureaides("dr")))
-	// fmt.Println("Structure aides :", time.Since(s))
-	// if len(base.RechercheRapideStructureaides("*")) != len(base.Structureaides) {
-	// 	t.FailNow()
-	// }
-
-	// s = time.Now()
-	// fmt.Println("nb res:", len(base.RechercheRapideFactures("2018")))
-	// fmt.Println(time.Since(s))
-	// if len(base.RechercheRapideFactures("*")) != len(base.Factures) {
-	// 	t.FailNow()
-	// }
 }

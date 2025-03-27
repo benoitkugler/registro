@@ -53,13 +53,13 @@ func SelectPersonne(db pr.DB, pattern string, removeTemp bool) ([]search.Personn
 
 func SearchSimilaires(db pr.DB, id pr.IdPersonne) ([]search.ScoredPersonne, error) {
 	const maxCount = 5
-	personnes, err := pr.SelectAllPersonnes(db)
+	personnes, err := search.SelectAllFieldsForSimilaires(db)
 	if err != nil {
-		return nil, utils.SQLError(err)
+		return nil, err
 	}
 	input := personnes[id]
 
-	_, filtered := search.ChercheSimilaires(utils.MapValues(personnes), search.NewPatternsSimilarite(input))
+	_, filtered := search.ChercheSimilaires(personnes, search.NewPatternsSimilarite(input))
 	if len(filtered) > maxCount {
 		filtered = filtered[:maxCount]
 	}

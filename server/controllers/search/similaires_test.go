@@ -4,8 +4,11 @@ import (
 	"encoding/json"
 	"os"
 	"testing"
+	"time"
 
+	cps "registro/sql/camps"
 	pr "registro/sql/personnes"
+	"registro/sql/shared"
 	tu "registro/utils/testutils"
 )
 
@@ -18,6 +21,19 @@ func loadPersonnes(t *testing.T) []pr.Personne {
 	return personnes
 }
 
+func loadCamps(t *testing.T) cps.Camps {
+	b, err := os.ReadFile("test/camps.json")
+	tu.AssertNoErr(t, err)
+	var camps []cps.Camp
+	err = json.Unmarshal(b, &camps)
+	tu.AssertNoErr(t, err)
+	out := make(cps.Camps)
+	for _, camp := range camps {
+		out[camp.Id] = camp
+	}
+	return out
+}
+
 func TestLoadPattern(t *testing.T) {
 	db := tu.NewTestDB(t, "../../sql/personnes/gen_create.sql")
 	defer db.Remove()
@@ -28,7 +44,7 @@ func TestLoadPattern(t *testing.T) {
 		tu.AssertNoErr(t, err)
 	}
 
-	pers, err := SelectAllPatternSimilaires(db)
+	pers, err := SelectAllFieldsForSimilaires(db)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(pers) == len(personnes))
 	tu.Assert(t, pers[0].Adresse == "")
@@ -50,9 +66,86 @@ func TestLoadAndSearchSimilaires(t *testing.T) {
 	})
 	tu.Assert(t, len(res1) == len(res2))
 
-	tu.Assert(t, !personnes[0].IsTemp)
-	_, res3 := ChercheSimilaires(personnes, PatternsSimilarite{
-		Mail: personnes[0].Mail,
+	_, ok := Match(personnes, PatternsSimilarite{
+		Nom:           "JOnac",
+		Prenom:        "Tom",
+		DateNaissance: shared.NewDate(2021, time.May, 6),
+		Sexe:          pr.Woman,
 	})
-	tu.Assert(t, len(res3) == 1) // all mails are distincts
+	tu.Assert(t, ok)
+}
+
+func Test_normalize(t *testing.T) {
+	tests := []struct {
+		args string
+		want string
+	}{
+		{"Benoit", "benoit"},
+		{"Benoît", "benoit"},
+		{"Benoît!ï", "benoiti"},
+		{"Jean-Pierre", "jeanpierre"},
+		{"Jean-Pier re", "jeanpierre"},
+	}
+	for _, tt := range tests {
+		tu.Assert(t, normalize(tt.args) == tt.want)
+	}
+}
+
+func TestPatternsSimilarite_match(t *testing.T) {
+	d1 := shared.NewDate(1994, time.April, 2)
+	d2 := shared.NewDate(1994, time.April, 3)
+	c1 := pr.Etatcivil{
+		Nom:           "Benoit",
+		Prenom:        "Kugler",
+		Sexe:          pr.Man,
+		DateNaissance: d1,
+	}
+	c2 := pr.Etatcivil{
+		Nom:           "Léo",
+		Prenom:        "Kugler",
+		Sexe:          pr.Man,
+		DateNaissance: d1,
+	}
+	c3 := pr.Etatcivil{
+		Nom:           "Léa",
+		Prenom:        "Kugler",
+		Sexe:          pr.Woman,
+		DateNaissance: d1,
+	}
+	c4 := pr.Etatcivil{
+		Nom:           "Dominique",
+		Prenom:        "Kugler",
+		Sexe:          pr.Woman,
+		DateNaissance: d1,
+	}
+	type fields struct {
+		Nom           string
+		Prenom        string
+		Sexe          pr.Sexe
+		DateNaissance shared.Date
+	}
+
+	tests := []struct {
+		fields    fields
+		candidate pr.Etatcivil
+		want      bool
+	}{
+		{fields{"Benoit", "Kugler", pr.Man, d1}, c1, true},
+		{fields{"Benoit", "Kugler", pr.Man, d2}, c1, false},
+		{fields{"Benoît", "Kugler", pr.Man, d1}, c1, true},
+		{fields{"Benoît", "Kugler", pr.Man, d1}, c2, false},
+		{fields{"Léo", "Kugler", pr.Woman, d1}, c3, false},
+		{fields{"Dominique", "Kugler", pr.Woman, d1}, c4, true},
+		{fields{"Dominique", "Kugler", pr.Man, d1}, c4, false},
+	}
+	for _, tt := range tests {
+		ps := &PatternsSimilarite{
+			Nom:           tt.fields.Nom,
+			Prenom:        tt.fields.Prenom,
+			Sexe:          tt.fields.Sexe,
+			DateNaissance: tt.fields.DateNaissance,
+		}
+		ps.normalize()
+		tu.Assert(t, ps.match(tt.candidate) == tt.want)
+	}
 }
