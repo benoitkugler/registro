@@ -186,6 +186,8 @@ func (ct *Controller) updateParticipant(args cps.Participant) error {
 
 // ParticipantsDelete supprime le participant donné.
 // Si la personne liée est temporaire, elle est aussi supprimée.
+// Si le participant n'est pas encore validé et que la personne
+// n'est pas référencé ailleurs, elle est aussi supprimée.
 func (ct *Controller) ParticipantsDelete(c echo.Context) error {
 	id, err := utils.QueryParamInt[cps.IdParticipant](c, "id")
 	if err != nil {
@@ -208,8 +210,16 @@ func (ct *Controller) deleteParticipant(id cps.IdParticipant) error {
 	if err != nil {
 		return utils.SQLError(err)
 	}
-
 	return utils.InTx(ct.db, func(tx *sql.Tx) error {
+		events, err := evs.DeleteEventPlaceLibereesByIdParticipants(tx, id)
+		if err != nil {
+			return err
+		}
+		_, err = evs.DeleteEventsByIDs(tx, events.IdEvents()...)
+		if err != nil {
+			return err
+		}
+
 		deleted, err := files.DeleteFilesByIDs(tx, links.IdFiles()...)
 		if err != nil {
 			return err
@@ -223,11 +233,19 @@ func (ct *Controller) deleteParticipant(id cps.IdParticipant) error {
 		if err != nil {
 			return err
 		}
+		dossier, err := ds.SelectDossier(ct.db, participant.IdDossier)
+		if err != nil {
+			return err
+		}
 		personne, err := pr.SelectPersonne(tx, participant.IdPersonne)
 		if err != nil {
 			return err
 		}
-		if personne.IsTemp { // cleanup
+		refs, err := logic.CheckPersonneReferences(tx, personne.Id)
+		if err != nil {
+			return err
+		}
+		if personne.IsTemp || (!dossier.IsValidated && refs.Empty()) { // cleanup
 			_, err = pr.DeletePersonneById(tx, personne.Id)
 			if err != nil {
 				return err

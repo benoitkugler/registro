@@ -21,3 +21,5 @@ type Don struct {
 	// champ caché, optionnel
 	IdPaiementHelloasso string
 }
+
+// TODO: organismes et donateurs

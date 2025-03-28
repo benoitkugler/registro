@@ -5,6 +5,9 @@ import (
 
 	"registro/controllers/search"
 	cps "registro/sql/camps"
+	"registro/sql/dons"
+	ds "registro/sql/dossiers"
+	fs "registro/sql/files"
 	pr "registro/sql/personnes"
 	"registro/utils"
 )
@@ -64,4 +67,57 @@ func SearchSimilaires(db pr.DB, id pr.IdPersonne) ([]search.ScoredPersonne, erro
 		filtered = filtered[:maxCount]
 	}
 	return filtered, nil
+}
+
+// not included, will cascade on delete : Fichesanitaire, Demande
+type PersonneReferences struct {
+	Participants []cps.IdParticipant
+	Equipiers    []cps.IdEquipier
+	Dossiers     []ds.IdDossier
+	Files        []fs.IdFile
+	Dons         []dons.IdDon // TODO
+}
+
+func (pr PersonneReferences) Empty() bool {
+	return len(pr.Participants) == 0 &&
+		len(pr.Equipiers) == 0 &&
+		len(pr.Dossiers) == 0 &&
+		len(pr.Files) == 0 &&
+		len(pr.Dons) == 0
+}
+
+// check all the use of [id] in other tables
+// wraps error
+func CheckPersonneReferences(db pr.DB, id pr.IdPersonne) (out PersonneReferences, _ error) {
+	parts, err := cps.SelectParticipantsByIdPersonnes(db, id)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+	out.Participants = parts.IDs()
+
+	equipiers, err := cps.SelectEquipiersByIdPersonnes(db, id)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+	out.Equipiers = equipiers.IDs()
+
+	dossiers, err := ds.SelectDossiersByIdResponsables(db, id)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+	out.Dossiers = dossiers.IDs()
+
+	links1, err := fs.SelectFilePersonnesByIdPersonnes(db, id)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+	out.Files = links1.IdFiles()
+
+	// links2, err := rd.SelectDonDonateursByIdPersonnes(db, id)
+	// if err != nil {
+	// 	return out, utils.SQLError(err)
+	// }
+	// out.Dons = links2
+
+	return out, nil
 }

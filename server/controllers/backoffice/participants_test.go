@@ -70,27 +70,72 @@ func TestController_participants(t *testing.T) {
 	p2, err := ct.createParticipant(ParticipantsCreateIn{IdDossier: dossier1.Id, IdCamp: camp2.Id, IdPersonne: pe1.Id})
 	tu.AssertNoErr(t, err) // now the change of taux is OK
 
-	err = ct.moveParticipant(ParticipantsMoveIn{Id: p2.Participant.Id, Target: camp1.Id})
-	tu.AssertErr(t, err) // invalid taux
+	t.Run("move", func(t *testing.T) {
+		err = ct.moveParticipant(ParticipantsMoveIn{Id: p2.Participant.Id, Target: camp1.Id})
+		tu.AssertErr(t, err) // invalid taux
 
-	err = ct.moveParticipant(ParticipantsMoveIn{Id: p2.Participant.Id, Target: camp2.Id})
-	tu.AssertErr(t, err) // same camp
+		err = ct.moveParticipant(ParticipantsMoveIn{Id: p2.Participant.Id, Target: camp2.Id})
+		tu.AssertErr(t, err) // same camp
 
-	p3, err := ct.createParticipant(ParticipantsCreateIn{IdDossier: dossier1.Id, IdCamp: camp3.Id, IdPersonne: pe1.Id})
-	tu.AssertNoErr(t, err)
+		p3, err := ct.createParticipant(ParticipantsCreateIn{IdDossier: dossier1.Id, IdCamp: camp3.Id, IdPersonne: pe1.Id})
+		tu.AssertNoErr(t, err)
 
-	err = ct.moveParticipant(ParticipantsMoveIn{Id: p2.Participant.Id, Target: camp3.Id})
-	tu.AssertErr(t, err) // already in camp
+		err = ct.moveParticipant(ParticipantsMoveIn{Id: p2.Participant.Id, Target: camp3.Id})
+		tu.AssertErr(t, err) // already in camp
 
-	err = ct.deleteParticipant(p3.Participant.Id)
-	tu.AssertNoErr(t, err)
+		err = ct.deleteParticipant(p3.Participant.Id)
+		tu.AssertNoErr(t, err)
 
-	err = ct.moveParticipant(ParticipantsMoveIn{Id: p2.Participant.Id, Target: camp3.Id})
-	tu.AssertNoErr(t, err)
+		err = ct.moveParticipant(ParticipantsMoveIn{Id: p2.Participant.Id, Target: camp3.Id})
+		tu.AssertNoErr(t, err)
+	})
 
-	_, err = ct.setPlaceLiberee("localhost", p2.Participant.Id)
-	tu.AssertNoErr(t, err)
+	t.Run("place liberee", func(t *testing.T) {
+		_, err = ct.setPlaceLiberee("localhost", p2.Participant.Id)
+		tu.AssertNoErr(t, err)
 
-	_, err = ct.setPlaceLiberee("localhost", p2.Participant.Id)
-	tu.AssertErr(t, err) // already notified !
+		_, err = ct.setPlaceLiberee("localhost", p2.Participant.Id)
+		tu.AssertErr(t, err) // already notified !
+	})
+
+	t.Run("delete and cleanup", func(t *testing.T) {
+		err = ct.deleteParticipant(p2.Participant.Id)
+		tu.AssertNoErr(t, err)
+
+		assertExist := func(id pr.IdPersonne) {
+			_, err := pr.SelectPersonne(db, id)
+			tu.AssertNoErr(t, err)
+		}
+
+		pe1, err := pr.Personne{}.Insert(db)
+		tu.AssertNoErr(t, err)
+		pe2, err := pr.Personne{}.Insert(db)
+		tu.AssertNoErr(t, err)
+
+		dossier, err := ds.Dossier{IdResponsable: pe2.Id, IdTaux: camp2.IdTaux, IsValidated: true}.Insert(db)
+		tu.AssertNoErr(t, err)
+		part, err := ct.createParticipant(ParticipantsCreateIn{IdDossier: dossier.Id, IdCamp: camp2.Id, IdPersonne: pe1.Id})
+		tu.AssertNoErr(t, err)
+
+		err = ct.deleteParticipant(part.Participant.Id)
+		tu.AssertNoErr(t, err)
+		assertExist(pe2.Id) // dossier validé
+
+		dossier.IsValidated = false
+		_, err = dossier.Update(ct.db)
+		tu.AssertNoErr(t, err)
+
+		part, err = ct.createParticipant(ParticipantsCreateIn{IdDossier: dossier.Id, IdCamp: camp2.Id, IdPersonne: pe1.Id})
+		tu.AssertNoErr(t, err)
+		part2, err := ct.createParticipant(ParticipantsCreateIn{IdDossier: dossier.Id, IdCamp: camp3.Id, IdPersonne: pe1.Id})
+		tu.AssertNoErr(t, err)
+		err = ct.deleteParticipant(part.Participant.Id)
+		tu.AssertNoErr(t, err)
+		assertExist(pe2.Id) // personne utilisée ailleurs
+
+		err = ct.deleteParticipant(part2.Participant.Id)
+		tu.AssertNoErr(t, err)
+		_, err = pr.SelectPersonne(db, pe1.Id)
+		tu.AssertErr(t, err) // deleted
+	})
 }
