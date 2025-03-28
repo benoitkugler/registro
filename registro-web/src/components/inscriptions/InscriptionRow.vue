@@ -63,6 +63,12 @@
             <v-col align-self="center" cols="3" class="text-center">
               {{ Camps.label(part.Camp) }}
             </v-col>
+            <v-spacer></v-spacer>
+            <v-col align-self="center" cols="auto" v-if="!props.hideDelete">
+              <v-btn icon size="x-small" @click="toDelete = part">
+                <v-icon color="red">mdi-delete</v-icon>
+              </v-btn>
+            </v-col>
           </v-row>
         </v-col>
         <v-col cols="5">
@@ -85,17 +91,47 @@
         </v-col>
       </v-row>
     </v-card-text>
+
+    <!-- confirme delete -->
+    <v-dialog
+      :model-value="toDelete != null"
+      @update:model-value="toDelete = null"
+      max-width="600px"
+    >
+      <v-card title="Confirmation" v-if="toDelete">
+        <v-card-text>
+          Confirmez-vous la suppression du participant
+          <b>{{ Personnes.label(toDelete.Personne) }}</b> ?
+
+          <br /><br />
+          Attention, cette opération est irréversible.
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            color="red"
+            @click="
+              emit('deleteParticipant', toDelete.Participant.Id);
+              toDelete = null;
+            "
+            >Supprimer</v-btn
+          >
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-card>
 </template>
 
 <script setup lang="ts">
-import { Camps, Formatters } from "@/utils";
+import { Camps, Formatters, Personnes } from "@/utils";
 import {
   type IdentTarget,
+  type IdParticipant,
   type Inscription,
+  type ParticipantCamp,
 } from "../../clients/backoffice/logic/api";
 import InscriptionEtatcivilCols from "./InscriptionEtatcivilCols.vue";
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import type { SimilairesAPI } from "./types";
 const props = defineProps<{
   inscription: Inscription;
@@ -108,6 +144,7 @@ const emit = defineEmits<{
   (e: "identifie", params: IdentTarget): void;
   (e: "valide"): void;
   (e: "delete"): void;
+  (e: "deleteParticipant", id: IdParticipant): void;
 }>();
 
 const allIdentified = computed(
@@ -115,4 +152,6 @@ const allIdentified = computed(
     !props.inscription.Responsable.IsTemp &&
     !!props.inscription.Participants?.every((pr) => !pr.Personne.IsTemp)
 );
+
+const toDelete = ref<ParticipantCamp | null>(null);
 </script>

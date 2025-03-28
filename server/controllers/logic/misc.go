@@ -56,11 +56,16 @@ func SelectPersonne(db pr.DB, pattern string, removeTemp bool) ([]search.Personn
 
 func SearchSimilaires(db pr.DB, id pr.IdPersonne) ([]search.ScoredPersonne, error) {
 	const maxCount = 5
+	// can't use [SelectAllFieldsForSimilaires] since it does
+	// not returns Temp profiles
+	input, err := pr.SelectPersonne(db, id)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
 	personnes, err := search.SelectAllFieldsForSimilaires(db)
 	if err != nil {
 		return nil, err
 	}
-	input := personnes[id]
 
 	_, filtered := search.ChercheSimilaires(personnes, search.NewPatternsSimilarite(input.Etatcivil))
 	if len(filtered) > maxCount {

@@ -613,7 +613,7 @@ func ConfirmeInscription(db *sql.DB, id in.IdInscription) (ds.Dossier, error) {
 			Ville:         insc.Responsable.Ville,
 			Pays:          insc.Responsable.Pays,
 		}
-		responsablePersonne, err := rapprochePersonne(tx, &index, responsable, insc.ResponsablePreIdent, cps.OptIdCamp{})
+		responsablePersonne, err := rapprochePersonne(tx, index, responsable, insc.ResponsablePreIdent, cps.OptIdCamp{})
 		if err != nil {
 			return err
 		}
@@ -654,7 +654,7 @@ func ConfirmeInscription(db *sql.DB, id in.IdInscription) (ds.Dossier, error) {
 				DateNaissance: part.DateNaissance,
 				Nationnalite:  part.Nationnalite,
 			}
-			personne, err := rapprochePersonne(tx, &index, pers, part.PreIdent, part.IdCamp.Opt())
+			personne, err := rapprochePersonne(tx, index, pers, part.PreIdent, part.IdCamp.Opt())
 			if err != nil {
 				return err
 			}
@@ -722,11 +722,11 @@ func ConfirmeInscription(db *sql.DB, id in.IdInscription) (ds.Dossier, error) {
 // le statut temporaire, pour indiquer une situation anormale
 //
 // Si un nouveau profil (non temporaire) est créé, il est aussi ajouté à l'index
-func rapprochePersonne(tx *sql.Tx, index *[]pr.Personne, incomming pr.Etatcivil, target pr.OptIdPersonne,
+func rapprochePersonne(tx *sql.Tx, index pr.Personnes, incomming pr.Etatcivil, target pr.OptIdPersonne,
 	idCampToCheck cps.OptIdCamp,
 ) (pr.Personne, error) {
 	if !target.Valid { // trust the pre-identification if valid
-		match, hasMatch := search.Match(*index, search.NewPatternsSimilarite(incomming))
+		match, hasMatch := search.Match(index, search.NewPatternsSimilarite(incomming))
 		if hasMatch {
 			target = match.Opt()
 		}
@@ -773,7 +773,7 @@ func rapprochePersonne(tx *sql.Tx, index *[]pr.Personne, incomming pr.Etatcivil,
 	}
 
 	if !out.IsTemp {
-		*index = append(*index, out)
+		index[out.Id] = out
 	}
 
 	return out, nil

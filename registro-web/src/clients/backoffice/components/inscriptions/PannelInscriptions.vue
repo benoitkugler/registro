@@ -23,6 +23,9 @@
           @identifie="(v) => identifie(insc.Dossier.Id, v)"
           @valide="valideInsc(insc)"
           @delete="deleteInsc(insc)"
+          @delete-participant="
+            (idParticipant) => deleteParticipant(insc.Dossier.Id, idParticipant)
+          "
           :api="{
             searchSimilaires:
               controller.InscriptionsSearchSimilaires.bind(controller),
@@ -37,7 +40,12 @@
 <script setup lang="ts">
 import { onMounted, computed, ref } from "vue";
 import { controller } from "../../logic/logic";
-import type { IdDossier, IdentTarget, Inscription } from "../../logic/api";
+import type {
+  IdDossier,
+  IdentTarget,
+  IdParticipant,
+  Inscription,
+} from "../../logic/api";
 import InscriptionRow from "../../../../components/inscriptions/InscriptionRow.vue";
 import { normalize, Personnes, Camps } from "@/utils";
 
@@ -110,5 +118,18 @@ async function deleteInsc(insc: Inscription) {
 
   // delete from this view
   data.value = data.value.filter((val) => val.Dossier.Id != insc.Dossier.Id);
+}
+
+async function deleteParticipant(idDossier: IdDossier, id: IdParticipant) {
+  const res = await controller.ParticipantsDelete({ id });
+  if (res === undefined) return;
+
+  controller.showMessage("Participant supprimé avec succès.");
+
+  // delete from this view
+  const dossier = data.value.find((val) => val.Dossier.Id == idDossier)!;
+  dossier.Participants = (dossier.Participants || []).filter(
+    (p) => p.Participant.Id != id
+  );
 }
 </script>

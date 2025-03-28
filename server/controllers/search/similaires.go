@@ -136,7 +136,7 @@ func newPersonneHeader(p pr.Personne) PersonneHeader {
 // et renvoie le premier profil correspondant.
 //
 // Voir aussi [SelectAllFieldsForSimilaires]
-func Match(personnes []pr.Personne, in PatternsSimilarite) (pr.IdPersonne, bool) {
+func Match(personnes pr.Personnes, in PatternsSimilarite) (pr.IdPersonne, bool) {
 	in.normalize()
 	for _, personne := range personnes {
 		if in.match(personne.Etatcivil) {
@@ -156,7 +156,7 @@ type ScoredPersonne struct {
 // triés par pertinence (meilleur en premier).
 //
 // Voir aussi [SelectAllFieldsForSimilaires]
-func ChercheSimilaires(personnes []pr.Personne, in PatternsSimilarite) (scoreMax int, out []ScoredPersonne) {
+func ChercheSimilaires(personnes pr.Personnes, in PatternsSimilarite) (scoreMax int, out []ScoredPersonne) {
 	const seuilRechercheSimilaire = 2
 
 	scoreMax = in.scoreMax()
@@ -186,7 +186,7 @@ func ChercheSimilaires(personnes []pr.Personne, in PatternsSimilarite) (scoreMax
 // veut pas fusionner un profil entrant à un profil temporaire.
 //
 // Errors are wrapped with [utils.SQLError]
-func SelectAllFieldsForSimilaires(db pr.DB) ([]pr.Personne, error) {
+func SelectAllFieldsForSimilaires(db pr.DB) (pr.Personnes, error) {
 	// Champs utilisés par la recherche de profil : on évite de charger tous les champs
 	const query = "SELECT Id, Nom, Prenom, Sexe, DateNaissance FROM personnes WHERE IsTemp IS False;"
 
@@ -196,7 +196,7 @@ func SelectAllFieldsForSimilaires(db pr.DB) ([]pr.Personne, error) {
 	}
 	defer rows.Close()
 
-	var personnes []pr.Personne
+	personnes := make(pr.Personnes)
 	for rows.Next() {
 		var item pr.Personne
 		err := rows.Scan(
@@ -209,7 +209,7 @@ func SelectAllFieldsForSimilaires(db pr.DB) ([]pr.Personne, error) {
 		if err != nil {
 			return nil, utils.SQLError(err)
 		}
-		personnes = append(personnes, item)
+		personnes[item.Id] = item
 	}
 	if err := rows.Err(); err != nil {
 		return nil, utils.SQLError(err)

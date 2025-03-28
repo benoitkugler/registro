@@ -311,7 +311,7 @@ func TestController_confirmeInscription(t *testing.T) {
 		identified, err := cps.SelectParticipantsByIdDossiers(ct.db, dossier.Id)
 		tu.AssertNoErr(t, err)
 		tu.Assert(t, len(identified) == 2)
-		ids := identified.IDs()
+		ids := utils.MapKeysSorted(identified)
 		pa1, pa2 := identified[ids[0]], identified[ids[1]]
 		tu.Assert(t, pa1.IdPersonne != pa2.IdPersonne)
 		pe2, err := pr.SelectPersonne(ct.db, pa2.IdPersonne)

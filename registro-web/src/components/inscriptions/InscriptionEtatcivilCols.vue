@@ -1,41 +1,38 @@
 <template>
   <v-col align-self="center" cols="4">
-    <v-menu :disabled="!props.personne.IsTemp" :close-on-content-click="false">
-      <template #activator="{ props: menuProps }">
-        <v-tooltip>
-          <template #activator="{ props: tooltipProps }">
-            <v-chip
-              class="mx-1"
-              label
-              v-bind="mergeProps(menuProps, tooltipProps)"
-            >
+    <v-tooltip>
+      <template #activator="{ props: tooltipProps }">
+        <!-- Personne temporaire : à gérer -->
+        <v-menu v-if="props.personne.IsTemp" :close-on-content-click="false">
+          <template #activator="{ props: menuProps }">
+            <v-chip label v-bind="mergeProps(menuProps, tooltipProps)">
               <template #prepend>
-                <v-icon
-                  class="mr-2"
-                  :icon="
-                    props.personne.IsTemp ? 'mdi-account' : 'mdi-account-check'
-                  "
-                  :color="props.personne.IsTemp ? 'orange' : 'green'"
-                ></v-icon>
+                <v-icon class="mr-2" icon="mdi-alert" color="orange"></v-icon>
               </template>
               {{ Personnes.label(props.personne) }}
             </v-chip>
           </template>
-          <!-- tooltip content -->
-          <template v-if="props.personne.IsTemp">
-            Ce profil est temporaire et doit être identifié.
-          </template>
-          <template v-else>
-            Ce profil est identifié (ID: {{ props.personne.Id }}).
-          </template>
-        </v-tooltip>
+
+          <CardSimilaires
+            :api="props.api"
+            :personne="props.personne"
+            @identifie="(v) => emit('identifie', v)"
+          ></CardSimilaires>
+        </v-menu>
+
+        <div v-else v-bind="tooltipProps">
+          {{ Personnes.label(props.personne) }}
+        </div>
       </template>
-      <CardSimilaires
-        :api="props.api"
-        :personne="props.personne"
-        @identifie="(v) => emit('identifie', v)"
-      ></CardSimilaires>
-    </v-menu>
+
+      <!-- tooltip content -->
+      <template v-if="props.personne.IsTemp">
+        Ce profil est temporaire et doit être identifié.
+      </template>
+      <template v-else>
+        Ce profil est identifié (ID: {{ props.personne.Id }}).
+      </template>
+    </v-tooltip>
   </v-col>
   <v-col align-self="center" cols="auto">
     <v-icon

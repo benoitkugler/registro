@@ -6,30 +6,20 @@ import (
 	"testing"
 	"time"
 
-	cps "registro/sql/camps"
 	pr "registro/sql/personnes"
 	"registro/sql/shared"
 	tu "registro/utils/testutils"
 )
 
-func loadPersonnes(t *testing.T) []pr.Personne {
+func loadPersonnes(t *testing.T) pr.Personnes {
 	b, err := os.ReadFile("test/samples.json")
 	tu.AssertNoErr(t, err)
 	var personnes []pr.Personne
 	err = json.Unmarshal(b, &personnes)
 	tu.AssertNoErr(t, err)
-	return personnes
-}
-
-func loadCamps(t *testing.T) cps.Camps {
-	b, err := os.ReadFile("test/camps.json")
-	tu.AssertNoErr(t, err)
-	var camps []cps.Camp
-	err = json.Unmarshal(b, &camps)
-	tu.AssertNoErr(t, err)
-	out := make(cps.Camps)
-	for _, camp := range camps {
-		out[camp.Id] = camp
+	out := make(pr.Personnes)
+	for _, personne := range personnes {
+		out[personne.Id] = personne
 	}
 	return out
 }
