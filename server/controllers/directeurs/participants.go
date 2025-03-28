@@ -29,7 +29,7 @@ func (ct *Controller) getParticipants(id cps.IdCamp) ([]logic.ParticipantExt, er
 
 // ParticipantsUpdate modifie les champs d'un participant.
 //
-// Seuls les champs Statut, Details et Navette sont pris en compte.
+// Seuls les champs Details et Navette sont pris en compte.
 //
 // Le statut est modifié sans aucune notification.
 func (ct *Controller) ParticipantsUpdate(c echo.Context) error {
@@ -49,7 +49,6 @@ func (ct *Controller) updateParticipant(args cps.Participant) error {
 	if err != nil {
 		return utils.SQLError(err)
 	}
-	current.Statut = args.Statut
 	current.Details = args.Details
 	current.Navette = args.Navette
 	_, err = current.Update(ct.db)

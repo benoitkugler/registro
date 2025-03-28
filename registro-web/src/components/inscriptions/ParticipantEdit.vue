@@ -19,6 +19,7 @@
             <ListeAttenteField
               v-model="inner.Statut"
               hide-details
+              :readonly="props.readonlyStatut"
             ></ListeAttenteField>
           </v-col>
         </v-row>
@@ -57,6 +58,7 @@ const props = defineProps<{
   participant: Participant;
   personne: Personne;
   hidePersonneDossier?: boolean;
+  readonlyStatut?: boolean;
 }>();
 const emit = defineEmits<{
   (e: "save", camp: Participant): void;

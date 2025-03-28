@@ -18,6 +18,16 @@
         </template>
       </v-list-item>
     </template>
+
+    <template #selection="{ item }">
+      <v-list-item :title="item.title" density="compact">
+        <template #prepend>
+          <v-icon :color="item.raw.format.color">{{
+            item.raw.format.icon
+          }}</v-icon>
+        </template>
+      </v-list-item>
+    </template>
   </v-select>
 </template>
 

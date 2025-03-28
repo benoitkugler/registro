@@ -52,6 +52,7 @@
         :participant="toEdit.Participant"
         :personne="toEdit.Personne"
         hide-personne-dossier
+        readonly-statut
         @save="updateParticipant"
       ></ParticipantEdit>
     </v-dialog>
