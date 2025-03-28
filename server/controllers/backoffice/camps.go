@@ -313,6 +313,41 @@ func (ct *Controller) deleteCamp(id cps.IdCamp) error {
 	return nil
 }
 
+type OuvreInscriptionsIn struct {
+	Camps []cps.IdCamp
+}
+
+// CampsOuvreInscriptions est un raccourci permettant d'ouvrir
+// d'un coup plusieurs séjours.
+func (ct *Controller) CampsOuvreInscriptions(c echo.Context) error {
+	var args OuvreInscriptionsIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+	err := ct.ouvreInscriptions(args)
+	if err != nil {
+		return err
+	}
+	return c.NoContent(200)
+}
+
+func (ct *Controller) ouvreInscriptions(args OuvreInscriptionsIn) error {
+	camps, err := cps.SelectCamps(ct.db, args.Camps...)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	return utils.InTx(ct.db, func(tx *sql.Tx) error {
+		for _, camp := range camps {
+			camp.Ouvert = true
+			_, err = camp.Update(tx)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
 type CreateEquipierIn struct {
 	IdPersonne pr.IdPersonne
 	IdCamp     cps.IdCamp

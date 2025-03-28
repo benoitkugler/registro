@@ -79,6 +79,10 @@ export interface LogginOut {
   IsValid: boolean;
   Token: string;
 }
+// registro/controllers/backoffice.OuvreInscriptionsIn
+export interface OuvreInscriptionsIn {
+  Camps: IdCamp[] | null;
+}
 // registro/controllers/backoffice.ParticipantsCreateIn
 export interface ParticipantsCreateIn {
   IdDossier: IdDossier;
@@ -899,6 +903,18 @@ export abstract class AbstractAPI {
         headers: this.getHeaders(),
       });
       return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** CampsOuvreInscriptions performs the request and handles the error */
+  async CampsOuvreInscriptions(params: OuvreInscriptionsIn) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/camps/open";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
     } catch (error) {
       this.handleError(error);
     }

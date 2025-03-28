@@ -75,9 +75,9 @@ export type FormStatusEquipier =
 
 export const FormStatusEquipierLabels: { [key in FormStatusEquipier]: string } =
   {
-    [FormStatusEquipier.NotSend]: "",
-    [FormStatusEquipier.Pending]: "",
-    [FormStatusEquipier.Answered]: "",
+    [FormStatusEquipier.NotSend]: "Non envoyé",
+    [FormStatusEquipier.Pending]: "En attente",
+    [FormStatusEquipier.Answered]: "Répondu",
   };
 
 export type IdCamp = number & { __opaque__: "IdCamp" };

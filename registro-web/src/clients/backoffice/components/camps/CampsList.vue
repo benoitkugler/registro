@@ -3,15 +3,6 @@
     <template #append>
       <v-row>
         <v-col align-self="center" style="width: 240px">
-          <BoolField
-            hide-details
-            label="Inscriptions ouvertes seulement"
-            v-model="filter.openOnly"
-            @update:model-value="ensurePageValid"
-          >
-          </BoolField>
-        </v-col>
-        <v-col align-self="center" style="width: 240px">
           <v-text-field
             label="Rechercher"
             variant="filled"
@@ -29,7 +20,7 @@
           </v-text-field>
         </v-col>
         <v-divider vertical thickness="1"></v-divider>
-        <v-col align-self="center">
+        <v-col align-self="center" cols="auto">
           <v-menu>
             <template #activator="{ props: innerProps }">
               <v-btn v-bind="innerProps" color="success" :disabled="isLoading">
@@ -50,6 +41,41 @@
                 @click="showCreateMany = true"
               >
               </v-list-item>
+            </v-list>
+          </v-menu>
+        </v-col>
+        <v-col align-self="center" cols="auto">
+          <v-menu>
+            <template #activator="{ props: innerProps }">
+              <v-btn
+                v-bind="innerProps"
+                flat
+                icon="mdi-dots-vertical"
+                size="small"
+              >
+              </v-btn>
+            </template>
+            <v-list density="compact">
+              <v-list-item
+                title="Masquer les camps fermés"
+                subtitle="N'afficher que les camps ouverts aux inscriptions"
+                @click="filter.openOnly = !filter.openOnly"
+              >
+                <template #prepend>
+                  <v-checkbox
+                    class="mr-2"
+                    v-model="filter.openOnly"
+                    density="compact"
+                    hide-details
+                  ></v-checkbox>
+                </template>
+              </v-list-item>
+              <v-divider thickness="1"></v-divider>
+              <v-list-item
+                @click="startOpenInsc"
+                title="Ouvrir les inscriptions"
+                prepend-icon="mdi-lock-open"
+              ></v-list-item>
             </v-list>
           </v-menu>
         </v-col>
@@ -140,6 +166,27 @@
       </v-card-actions>
     </v-card>
   </v-dialog>
+
+  <!-- Assitant open inscription -->
+  <v-dialog v-model="showOpenInsc" max-width="600">
+    <v-card
+      title="Ouvrir les inscriptions"
+      subtitle="Ouvre les inscriptions sur les séjours ci-dessous"
+    >
+      <v-card-text>
+        <CampsSelector
+          :all-camps="
+            Array.from(campsData.values()).map((c) => Camps.toItem(c.Camp))
+          "
+          v-model="campToOpen"
+        ></CampsSelector>
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn @click="openInsc" :disabled="!campToOpen.length">Ouvrir</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script lang="ts" setup>
@@ -157,6 +204,7 @@ import CampEdit from "./CampEdit.vue";
 import TauxSelect from "./TauxSelect.vue";
 import CampHeaderRow from "./CampHeaderRow.vue";
 import { Camps, normalize } from "@/utils";
+import CampsSelector from "./CampsSelector.vue";
 
 const emit = defineEmits<{
   (e: "click", camp: CampHeader): void;
@@ -297,5 +345,25 @@ async function deleteCamp(camp: CampHeader) {
   controller.showMessage("Séjour supprimé avec succès.");
   campsData.delete(camp.Camp.Camp.Id);
   ensurePageValid();
+}
+
+const showOpenInsc = ref(false);
+function startOpenInsc() {
+  // hint : all camps not open yet
+  campToOpen.value = Array.from(campsData.values())
+    .filter((c) => !c.Camp.Camp.Ouvert)
+    .map((c) => c.Camp.Camp.Id);
+  showOpenInsc.value = true;
+}
+const campToOpen = ref<IdCamp[]>([]);
+async function openInsc() {
+  showOpenInsc.value = false;
+  if (!campToOpen.value.length) return;
+  const res = await controller.CampsOuvreInscriptions({
+    Camps: campToOpen.value,
+  });
+  if (res === undefined) return;
+  controller.showMessage("Séjours ouverts aux inscriptions avec succès.");
+  fetchCamps();
 }
 </script>

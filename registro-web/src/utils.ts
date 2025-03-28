@@ -1,6 +1,9 @@
 import {
   CurrencyLabels,
   Sexe,
+  type CampExt,
+  type CampHeader,
+  type CampItem,
   type ParticipantExt,
 } from "./clients/backoffice/logic/api";
 import {
@@ -229,6 +232,14 @@ export namespace Camps {
 
   export function isQuotientFamilialActive(opt: PrixQuotientFamilial) {
     return opt[3] != 0;
+  }
+
+  export function toItem(c: CampExt): CampItem {
+    return {
+      Id: c.Camp.Id,
+      IsOld: c.IsTerminated,
+      Label: label(c.Camp),
+    };
   }
 }
 
