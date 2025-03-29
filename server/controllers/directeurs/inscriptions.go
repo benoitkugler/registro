@@ -1,6 +1,7 @@
 package directeurs
 
 import (
+	"database/sql"
 	"errors"
 	"slices"
 
@@ -166,38 +167,43 @@ func (ct *Controller) valideInscription(args InscriptionsValideIn, idCamp cps.Id
 		}
 	}
 
-	// TODO:
-	// tmp, err := loader.PrepareValideInscription(ct.db)
-	// if err != nil {
-	// 	return err
-	// }
+	// only update the participant for the given camp
+	participants := loader.Participants.ByIdCamp()[idCamp]
 
-	// // only update the participant for the given camp
-	// participants := tmp.ByIdCamp()[idCamp]
+	// validate the dossier if the other camp are already validated
+	otherValidated := true
+	for _, part := range loader.Participants {
+		if part.IdCamp != idCamp && part.Statut == cps.AStatuer {
+			otherValidated = false
+			break
+		}
+	}
 
-	// // validate the dossier if the other camp are already validated
-	// otherValidated := true
-	// for _, part := range loader.Participants {
-	// 	if part.IdCamp != idCamp && part.Statut == cps.AStatuer {
-	// 		otherValidated = false
-	// 		break
-	// 	}
-	// }
+	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
+		for _, participant := range participants {
+			// côté directeurs : par simplicité, tous les participants
+			// du camp doivent être validés
+			newStatut, ok := args.Statuts[participant.Id]
+			if !ok {
+				return errors.New("internal error: missing participant in InscriptionsValideIn.Statuts")
+			}
 
-	// err = utils.InTx(ct.db, func(tx *sql.Tx) error {
-	// 	for _, part := range participants {
-	// 		_, err = part.Update(tx)
-	// 		if err != nil {
-	// 			return err
-	// 		}
-	// 	}
-	// 	if otherValidated {
-	// 		loader.Dossier.IsValidated = true
-	// 		_, err = loader.Dossier.Update(tx)
-	// 	}
+			participant.Statut = newStatut
+			_, err = participant.Update(tx)
+			if err != nil {
+				return err
+			}
+		}
+		if otherValidated {
+			loader.Dossier.IsValidated = true
+			_, err = loader.Dossier.Update(tx)
+		}
 
-	// 	return err
-	// })
+		return err
+	})
+
+	// TODO: envoie d'un mail de notification
+	// https://github.com/benoitkugler/registro/issues/34
 
 	return err
 }

@@ -59,8 +59,17 @@ func Test_inscriptions(t *testing.T) {
 	})
 
 	t.Run("valide", func(t *testing.T) {
-		// TODO:
-		err = ct.valideInscription(InscriptionsValideIn{}, camp1.Id)
+		hints, err := ct.hintValideInscription(dossier1.Id)
+		tu.AssertNoErr(t, err)
+
+		values := make(map[cps.IdParticipant]cps.ListeAttente)
+		for k, v := range hints {
+			values[k] = v.Statut
+		}
+		err = ct.valideInscription(InscriptionsValideIn{
+			IdDossier: dossier1.Id,
+			Statuts:   values,
+		}, camp1.Id)
 		tu.AssertNoErr(t, err)
 		data, err := logic.LoadDossier(db, dossier1.Id)
 		tu.AssertNoErr(t, err)
@@ -70,7 +79,10 @@ func Test_inscriptions(t *testing.T) {
 		tu.AssertNoErr(t, err)
 		tu.Assert(t, len(insc) == 1 && reflect.DeepEqual(insc[0].ValidatedBy, []cps.IdCamp{camp1.Id}))
 
-		err = ct.valideInscription(InscriptionsValideIn{}, camp2.Id)
+		err = ct.valideInscription(InscriptionsValideIn{
+			IdDossier: dossier1.Id,
+			Statuts:   values,
+		}, camp2.Id)
 		tu.AssertNoErr(t, err)
 		data, err = logic.LoadDossier(db, dossier1.Id)
 		tu.AssertNoErr(t, err)

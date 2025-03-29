@@ -23,6 +23,11 @@ export interface InscriptionIdentifieIn {
   IdDossier: IdDossier;
   Target: IdentTarget;
 }
+// registro/controllers/backoffice.InscriptionsValideIn
+export interface InscriptionsValideIn {
+  IdDossier: IdDossier;
+  Statuts: Record<IdParticipant, ListeAttente> | null;
+}
 // registro/controllers/directeurs.DemandeKey
 export interface DemandeKey {
   IdEquipier: IdEquipier;
@@ -311,6 +316,14 @@ export const RoleLabels: Record<Role, string> = {
 
 // registro/sql/camps.Roles
 export type Roles = Role[] | null;
+// registro/sql/camps.StatutCauses
+export interface StatutCauses {
+  AgeMin: boolean;
+  AgeMax: boolean;
+  EquilibreGF: boolean;
+  Place: boolean;
+  Statut: ListeAttente;
+}
 // registro/sql/dossiers.Currency
 export const Currency = {
   Euros: 0,
@@ -664,15 +677,33 @@ export abstract class AbstractAPI {
     }
   }
 
+  /** InscriptionsHintValide performs the request and handles the error */
+  async InscriptionsHintValide(params: { idDossier: IdDossier }) {
+    const fullUrl =
+      this.baseUrl + "/api/v1/directeurs/inscriptions/valide/hint";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<Record<IdParticipant, StatutCauses> | null> =
+        await Axios.post(fullUrl, null, {
+          headers: this.getHeaders(),
+          params: { idDossier: String(params["idDossier"]) },
+        });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
   /** InscriptionsValide performs the request and handles the error */
-  async InscriptionsValide(params: { idDossier: IdDossier }) {
+  async InscriptionsValide(params: InscriptionsValideIn) {
     const fullUrl = this.baseUrl + "/api/v1/directeurs/inscriptions/valide";
     this.startRequest();
     try {
-      const rep: AxiosResponse<Inscription> = await Axios.post(fullUrl, null, {
-        headers: this.getHeaders(),
-        params: { idDossier: String(params["idDossier"]) },
-      });
+      const rep: AxiosResponse<Inscription> = await Axios.post(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
       return rep.data;
     } catch (error) {
       this.handleError(error);

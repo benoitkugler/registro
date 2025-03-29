@@ -133,22 +133,22 @@ func (ct *Controller) valideInscription(args InscriptionsValideIn) error {
 		}
 	}
 
-	// côté backoffice : par simplicité, tous les participants
-	// doivent être validés
-	if len(args.Statuts) != len(loader.Participants) {
-		return errors.New("internal error: missing Participants")
-	}
-
 	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
-		for idParticipant, newStatut := range args.Statuts {
-			part := loader.Participants[idParticipant]
+		for _, participant := range loader.Participants {
+			// côté backoffice : par simplicité, tous les participants
+			// doivent être validés
+			newStatut, ok := args.Statuts[participant.Id]
+			if !ok {
+				return errors.New("internal error: missing participant in InscriptionsValideIn.Statuts")
+			}
 
-			part.Statut = newStatut
-			_, err = part.Update(tx)
+			participant.Statut = newStatut
+			_, err = participant.Update(tx)
 			if err != nil {
 				return err
 			}
 		}
+
 		loader.Dossier.IsValidated = true
 		_, err = loader.Dossier.Update(tx)
 

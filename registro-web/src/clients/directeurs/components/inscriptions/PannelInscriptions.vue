@@ -23,7 +23,7 @@
           hide-delete
           :already-validated="insc.ValidatedBy?.includes(controller.camp!.Id)"
           @identifie="(v) => identifie(insc.Dossier.Id, v)"
-          @valide="valideInsc(insc)"
+          @valide="startValideInsc(insc)"
           :api="{
             searchSimilaires:
               controller.InscriptionsSearchSimilaires.bind(controller),
@@ -43,7 +43,8 @@
         v-if="inscToValid"
         :inscription="inscToValid.inscription"
         :statuts="inscToValid.statuts"
-        :rights="{ ageInvalide: true, campComplet: true }"
+        :rights="{ ageInvalide: false, campComplet: true }"
+        :id-camp="controller.camp!.Id"
         @valide="valideInsc"
       ></CardValide>
     </v-dialog>
@@ -58,6 +59,8 @@ import type {
   IdentTarget,
   IdParticipant,
   Inscription,
+  ListeAttente,
+  StatutCauses,
 } from "../../logic/api";
 import InscriptionRow from "@/components/inscriptions/InscriptionRow.vue";
 import { normalize, Personnes, Camps } from "@/utils";
@@ -108,6 +111,8 @@ async function identifie(id: IdDossier, target: IdentTarget) {
   data.value[index] = res;
 }
 
+// copied from backoffice : keep in sync
+
 const inscToValid = ref<{
   inscription: Inscription;
   statuts: Record<IdParticipant, StatutCauses>;
@@ -131,29 +136,15 @@ async function valideInsc(statuts: Record<IdParticipant, ListeAttente>) {
   if (res === undefined) return;
 
   controller.showMessage("Inscription validée avec succès.", "", {
-    title: "Aller au dossier",
-    action: () => emit("goTo", id),
-  });
-
-  // delete from this view
-  data.value = data.value.filter((val) => val.Dossier.Id != id);
-}
-
-async function valideInsc(insc: Inscription) {
-  const idDossier = insc.Dossier.Id;
-  const res = await controller.InscriptionsValide({ idDossier });
-  if (res === undefined) return;
-
-  controller.showMessage("Inscription validée avec succès.", "", {
     title: "Aller aux participants",
     action: () => emit("goTo"),
   });
 
   // delete from this view if validated, only update otherwise
   if (res.Dossier.IsValidated) {
-    data.value = data.value.filter((val) => val.Dossier.Id != idDossier);
+    data.value = data.value.filter((val) => val.Dossier.Id != id);
   } else {
-    const index = data.value.findIndex((val) => val.Dossier.Id == idDossier);
+    const index = data.value.findIndex((val) => val.Dossier.Id == id);
     data.value[index] = res;
   }
 }
