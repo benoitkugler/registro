@@ -24,6 +24,7 @@ func setupRoutesDirecteurs(e *echo.Echo, ct *directeurs.Controller) {
 	gr.GET("/api/v1/directeurs/inscriptions", ct.InscriptionsGet)
 	gr.GET("/api/v1/directeurs/inscriptions/search-similaires", ct.InscriptionsSearchSimilaires)
 	gr.POST("/api/v1/directeurs/inscriptions/identifie", ct.InscriptionsIdentifiePersonne)
+	gr.POST("/api/v1/directeurs/inscriptions/valide/hint", ct.InscriptionsHintValide)
 	gr.POST("/api/v1/directeurs/inscriptions/valide", ct.InscriptionsValide)
 
 	// Participants

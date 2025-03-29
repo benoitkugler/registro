@@ -1,7 +1,7 @@
 package directeurs
 
 import (
-	"database/sql"
+	"errors"
 	"slices"
 
 	"registro/controllers/backoffice"
@@ -23,6 +23,7 @@ func (ct *Controller) InscriptionsGet(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
+// sortParticipants affiche les participants du camp en premier
 func sortParticipants(insc logic.Inscription, user cps.IdCamp) {
 	slices.SortFunc(insc.Participants, func(a, b cps.ParticipantCamp) int {
 		if a.Camp.Id == user {
@@ -98,22 +99,51 @@ func (ct *Controller) InscriptionsIdentifiePersonne(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-// InscriptionsValide met mis à jour le statut des participants
-// du camp (de manière automatique).
-// Si tous les participants ont été validés (statut non zéro),
-// l'inscription est marquée comme validée.
-func (ct *Controller) InscriptionsValide(c echo.Context) error {
-	user := JWTUser(c)
+// InscriptionsHintValide renvoie la suggestion automatique
+// de statut pour chaque participant du dossier donné.
+//
+// Voir aussi [InscriptionsValide] pour l'action effective.
+func (ct *Controller) InscriptionsHintValide(c echo.Context) error {
 	id, err := utils.QueryParamInt[ds.IdDossier](c, "idDossier")
 	if err != nil {
 		return err
 	}
-	err = ct.valideInscription(id, user)
+	out, err := ct.hintValideInscription(id)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) hintValideInscription(id ds.IdDossier) (logic.StatutHints, error) {
+	loader, err := logic.LoadDossier(ct.db, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return loader.PrepareValideInscription(ct.db)
+}
+
+type InscriptionsValideIn = backoffice.InscriptionsValideIn
+
+// InscriptionsValide marque l'inscription comme validée, après s'être assuré
+// qu'aucune personne impliquée n'est temporaire.
+//
+// Le statut des participants est aussi mis à jour (de manière automatique),
+// et un mail d'accusé de réception est envoyé.
+func (ct *Controller) InscriptionsValide(c echo.Context) error {
+	user := JWTUser(c)
+
+	var args InscriptionsValideIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+	err := ct.valideInscription(args, user)
 	if err != nil {
 		return err
 	}
 
-	l, err := logic.LoadInscriptions(ct.db, id)
+	l, err := logic.LoadInscriptions(ct.db, args.IdDossier)
 	if err != nil {
 		return err
 	}
@@ -123,43 +153,51 @@ func (ct *Controller) InscriptionsValide(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) valideInscription(id ds.IdDossier, idCamp cps.IdCamp) error {
-	loader, err := logic.LoadDossier(ct.db, id)
+func (ct *Controller) valideInscription(args InscriptionsValideIn, idCamp cps.IdCamp) error {
+	loader, err := logic.LoadDossier(ct.db, args.IdDossier)
 	if err != nil {
 		return err
 	}
 
-	tmp, err := loader.PrepareValideInscription(ct.db)
-	if err != nil {
-		return err
-	}
-
-	// only update the participant for the given camp
-	participants := tmp.ByIdCamp()[idCamp]
-
-	// validate the dossier if the other camp are already validated
-	otherValidated := true
-	for _, part := range loader.Participants {
-		if part.IdCamp != idCamp && part.Statut == cps.AStatuer {
-			otherValidated = false
-			break
+	// on s'assure qu'aucune personne n'est temporaire
+	for _, pe := range loader.Personnes() {
+		if pe.IsTemp {
+			return errors.New("internal error: Personne should not be temporary")
 		}
 	}
 
-	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
-		for _, part := range participants {
-			_, err = part.Update(tx)
-			if err != nil {
-				return err
-			}
-		}
-		if otherValidated {
-			loader.Dossier.IsValidated = true
-			_, err = loader.Dossier.Update(tx)
-		}
+	// TODO:
+	// tmp, err := loader.PrepareValideInscription(ct.db)
+	// if err != nil {
+	// 	return err
+	// }
 
-		return err
-	})
+	// // only update the participant for the given camp
+	// participants := tmp.ByIdCamp()[idCamp]
+
+	// // validate the dossier if the other camp are already validated
+	// otherValidated := true
+	// for _, part := range loader.Participants {
+	// 	if part.IdCamp != idCamp && part.Statut == cps.AStatuer {
+	// 		otherValidated = false
+	// 		break
+	// 	}
+	// }
+
+	// err = utils.InTx(ct.db, func(tx *sql.Tx) error {
+	// 	for _, part := range participants {
+	// 		_, err = part.Update(tx)
+	// 		if err != nil {
+	// 			return err
+	// 		}
+	// 	}
+	// 	if otherValidated {
+	// 		loader.Dossier.IsValidated = true
+	// 		_, err = loader.Dossier.Update(tx)
+	// 	}
+
+	// 	return err
+	// })
 
 	return err
 }

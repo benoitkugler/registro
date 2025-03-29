@@ -150,45 +150,48 @@ func (cd *Camp) keepEquilibreGF(stats StatistiquesInscrits, participants []pr.Pe
 	}
 	currentG, currentF := stats.Valides-stats.ValidesFilles, stats.ValidesFilles
 	// on utilise l'heuristique suivante :
-	// dépasser 2/3 des places prévues détruit l'équilibre
-	seuil := cd.Places * 2 / 3
+	// dépasser 60% des places prévues détruit l'équilibre
+	seuil := cd.Places * 6 / 10
 	return currentG+newG <= seuil && currentF+newF <= seuil
 }
 
-// Statut expose une série de critère
-// de validité pour l'inscription d'un participant à un camp
-type Statut struct {
+// StatutCauses expose une série de critère
+// de validité pour l'inscription d'un participant à un camp,
+// ainsi que le statut conseillé
+type StatutCauses struct {
 	AgeMin, AgeMax, EquilibreGF, Place bool
+
+	Statut ListeAttente // comment placer le participant, calculé à partir des raisons ci-dessus
 }
 
-// Hint renvoie comment placer le participant
-func (s Statut) Hint() ListeAttente {
+func (s *StatutCauses) setHint() {
 	if !(s.AgeMin && s.AgeMax) {
-		return AttenteProfilInvalide
+		s.Statut = AttenteProfilInvalide
+	} else if !(s.Place && s.EquilibreGF) {
+		s.Statut = AttenteCampComplet
+	} else {
+		s.Statut = Inscrit
 	}
-	if !(s.Place && s.EquilibreGF) {
-		return AttenteCampComplet
-	}
-	return Inscrit
 }
 
 // Status détermine la validité de l'inscription des personnes
 // données par [participants], renvoyant une liste de la même longueur
-func (cd CampLoader) Status(participants []pr.Personne) []Statut {
+func (cd CampLoader) Status(participants []pr.Personne) []StatutCauses {
 	stats := cd.Stats()
 
 	restePlace := cd.Camp.restePlace(stats, participants)
 	equilibreGF := cd.Camp.keepEquilibreGF(stats, participants)
 
-	out := make([]Statut, len(participants))
+	out := make([]StatutCauses, len(participants))
 	for i, part := range participants {
 		isMinValid, isMaxValid := cd.Camp.IsAgeValide(part.DateNaissance)
-		out[i] = Statut{
+		out[i] = StatutCauses{
 			AgeMin:      isMinValid,
 			AgeMax:      isMaxValid,
 			Place:       restePlace,
 			EquilibreGF: equilibreGF,
 		}
+		out[i].setHint()
 	}
 	return out
 }

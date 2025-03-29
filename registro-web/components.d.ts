@@ -10,6 +10,7 @@ declare module 'vue' {
     ApprofondissementField: typeof import('./src/components/ApprofondissementField.vue')['default']
     BoolField: typeof import('./src/components/BoolField.vue')['default']
     CardSimilaires: typeof import('./src/components/inscriptions/CardSimilaires.vue')['default']
+    CardValide: typeof import('./src/components/inscriptions/CardValide.vue')['default']
     DateField: typeof import('./src/components/DateField.vue')['default']
     DateNaissanceField: typeof import('./src/components/DateNaissanceField.vue')['default']
     DayOffsetField: typeof import('./src/components/DayOffsetField.vue')['default']

@@ -74,6 +74,11 @@ export interface InscriptionIdentifieIn {
   IdDossier: IdDossier;
   Target: IdentTarget;
 }
+// registro/controllers/backoffice.InscriptionsValideIn
+export interface InscriptionsValideIn {
+  IdDossier: IdDossier;
+  Statuts: Record<IdParticipant, ListeAttente> | null;
+}
 // registro/controllers/backoffice.LogginOut
 export interface LogginOut {
   IsValid: boolean;
@@ -103,7 +108,7 @@ export const QueryAttente = {
 } as const;
 export type QueryAttente = (typeof QueryAttente)[keyof typeof QueryAttente];
 
-export const QueryAttenteLabels: { [key in QueryAttente]: string } = {
+export const QueryAttenteLabels: Record<QueryAttente, string> = {
   [QueryAttente.EmptyQA]: "Indifférent",
   [QueryAttente.AvecAttente]: "Avec liste d'attente",
   [QueryAttente.AvecInscrits]: "Avec inscrits",
@@ -120,7 +125,7 @@ export const QueryReglement = {
 export type QueryReglement =
   (typeof QueryReglement)[keyof typeof QueryReglement];
 
-export const QueryReglementLabels: { [key in QueryReglement]: string } = {
+export const QueryReglementLabels: Record<QueryReglement, string> = {
   [QueryReglement.EmptyQR]: "Indifférent",
   [QueryReglement.Zero]: "Non commencé",
   [QueryReglement.Partiel]: "En cours",
@@ -153,7 +158,7 @@ export interface Attestation {
 }
 // registro/controllers/logic.BilanFinancesPub
 export interface BilanFinancesPub {
-  Inscrits: { [key in IdParticipant]: BilanParticipantPub } | null;
+  Inscrits: Record<IdParticipant, BilanParticipantPub> | null;
   Demande: string;
   Recu: string;
   Restant: string;
@@ -184,7 +189,7 @@ export interface DossierExt {
   Dossier: Dossier;
   Responsable: string;
   Participants: ParticipantCamp[] | null;
-  Aides: { [key in IdParticipant]: Aides } | null;
+  Aides: Record<IdParticipant, Aides> | null;
   Events: Events;
   Paiements: Paiements;
   Bilan: BilanFinancesPub;
@@ -273,7 +278,7 @@ export const StatutPaiement = {
 export type StatutPaiement =
   (typeof StatutPaiement)[keyof typeof StatutPaiement];
 
-export const StatutPaiementLabels: { [key in StatutPaiement]: string } = {
+export const StatutPaiementLabels: Record<StatutPaiement, string> = {
   [StatutPaiement.Complet]: "",
   [StatutPaiement.EnCours]: "",
   [StatutPaiement.NonCommence]: "",
@@ -304,7 +309,7 @@ export interface Aide {
   NbJoursMax: Int;
 }
 // registro/sql/camps.Aides
-export type Aides = { [key in IdAide]: Aide } | null;
+export type Aides = Record<IdAide, Aide> | null;
 // registro/sql/camps.Camp
 export interface Camp {
   Id: IdCamp;
@@ -348,7 +353,7 @@ export const ListeAttente = {
 } as const;
 export type ListeAttente = (typeof ListeAttente)[keyof typeof ListeAttente];
 
-export const ListeAttenteLabels: { [key in ListeAttente]: string } = {
+export const ListeAttenteLabels: Record<ListeAttente, string> = {
   [ListeAttente.AStatuer]: "A statuer",
   [ListeAttente.Refuse]: "Refusé définitivement",
   [ListeAttente.AttenteProfilInvalide]: "Profil limite",
@@ -366,7 +371,7 @@ export const Navette = {
 } as const;
 export type Navette = (typeof Navette)[keyof typeof Navette];
 
-export const NavetteLabels: { [key in Navette]: string } = {
+export const NavetteLabels: Record<Navette, string> = {
   [Navette.NoBus]: "Aucun trajet",
   [Navette.Aller]: "Aller",
   [Navette.Retour]: "Retour",
@@ -398,7 +403,7 @@ export const OptionPrixKind = {
 export type OptionPrixKind =
   (typeof OptionPrixKind)[keyof typeof OptionPrixKind];
 
-export const OptionPrixKindLabels: { [key in OptionPrixKind]: string } = {
+export const OptionPrixKindLabels: Record<OptionPrixKind, string> = {
   [OptionPrixKind.NoOption]: "Aucune",
   [OptionPrixKind.PrixStatut]: "Prix par statut",
   [OptionPrixKind.PrixJour]: "Prix à la journée",
@@ -457,6 +462,14 @@ export interface StatistiquesInscrits {
   Exceptions: Int;
   Attente: Int;
 }
+// registro/sql/camps.StatutCauses
+export interface StatutCauses {
+  AgeMin: boolean;
+  AgeMax: boolean;
+  EquilibreGF: boolean;
+  Place: boolean;
+  Statut: ListeAttente;
+}
 // registro/sql/camps.Structureaide
 export interface Structureaide {
   Id: IdStructureaide;
@@ -469,7 +482,7 @@ export interface Structureaide {
   Info: string;
 }
 // registro/sql/camps.Structureaides
-export type Structureaides = { [key in IdStructureaide]: Structureaide } | null;
+export type Structureaides = Record<IdStructureaide, Structureaide> | null;
 // registro/sql/dossiers.Currency
 export const Currency = {
   Euros: 0,
@@ -477,7 +490,7 @@ export const Currency = {
 } as const;
 export type Currency = (typeof Currency)[keyof typeof Currency];
 
-export const CurrencyLabels: { [key in Currency]: string } = {
+export const CurrencyLabels: Record<Currency, string> = {
   [Currency.Euros]: "€",
   [Currency.FrancsSuisse]: "CHF",
 };
@@ -509,7 +522,7 @@ export const ModePaiement = {
 } as const;
 export type ModePaiement = (typeof ModePaiement)[keyof typeof ModePaiement];
 
-export const ModePaiementLabels: { [key in ModePaiement]: string } = {
+export const ModePaiementLabels: Record<ModePaiement, string> = {
   [ModePaiement.Cheque]: "Chèque",
   [ModePaiement.EnLigne]: "Carte bancaire (en ligne)",
   [ModePaiement.Virement]: "Virement",
@@ -536,7 +549,7 @@ export interface Paiement {
   Details: string;
 }
 // registro/sql/dossiers.Paiements
-export type Paiements = { [key in IdPaiement]: Paiement } | null;
+export type Paiements = Record<IdPaiement, Paiement> | null;
 // registro/sql/dossiers.Taux
 export interface Taux {
   Id: IdTaux;
@@ -545,7 +558,7 @@ export interface Taux {
   FrancsSuisse: Int;
 }
 // registro/sql/dossiers.Tauxs
-export type Tauxs = { [key in IdTaux]: Taux } | null;
+export type Tauxs = Record<IdTaux, Taux> | null;
 // registro/sql/events.Distribution
 export const Distribution = {
   DEspacePerso: 0,
@@ -554,7 +567,7 @@ export const Distribution = {
 } as const;
 export type Distribution = (typeof Distribution)[keyof typeof Distribution];
 
-export const DistributionLabels: { [key in Distribution]: string } = {
+export const DistributionLabels: Record<Distribution, string> = {
   [Distribution.DEspacePerso]: "Téléchargée depuis l'espace de suivi",
   [Distribution.DMail]: "Notifiée par courriel",
   [Distribution.DMailAndDownloaded]: "Téléchargée après notification",
@@ -579,7 +592,7 @@ export const MessageOrigine = {
 export type MessageOrigine =
   (typeof MessageOrigine)[keyof typeof MessageOrigine];
 
-export const MessageOrigineLabels: { [key in MessageOrigine]: string } = {
+export const MessageOrigineLabels: Record<MessageOrigine, string> = {
   [MessageOrigine.FromEspaceperso]: "",
   [MessageOrigine.FromBackoffice]: "",
   [MessageOrigine.FromDirecteur]: "",
@@ -597,7 +610,7 @@ export const Approfondissement = {
 export type Approfondissement =
   (typeof Approfondissement)[keyof typeof Approfondissement];
 
-export const ApprofondissementLabels: { [key in Approfondissement]: string } = {
+export const ApprofondissementLabels: Record<Approfondissement, string> = {
   [Approfondissement.AAucun]: "Non effectué",
   [Approfondissement.AAutre]: "Approfondissement",
   [Approfondissement.ASb]: "Surveillant de baignade",
@@ -633,7 +646,7 @@ export const Diplome = {
 } as const;
 export type Diplome = (typeof Diplome)[keyof typeof Diplome];
 
-export const DiplomeLabels: { [key in Diplome]: string } = {
+export const DiplomeLabels: Record<Diplome, string> = {
   [Diplome.DAucun]: "Aucun",
   [Diplome.DBafa]: "BAFA Titulaire",
   [Diplome.DBafaStag]: "BAFA Stagiaire",
@@ -667,7 +680,7 @@ export const Nationnalite = {
 } as const;
 export type Nationnalite = (typeof Nationnalite)[keyof typeof Nationnalite];
 
-export const NationnaliteLabels: { [key in Nationnalite]: string } = {
+export const NationnaliteLabels: Record<Nationnalite, string> = {
   [Nationnalite.Autre]: "Autre",
   [Nationnalite.Francaise]: "Française",
   [Nationnalite.Suisse]: "Suisse",
@@ -717,7 +730,7 @@ export const Sexe = {
 } as const;
 export type Sexe = (typeof Sexe)[keyof typeof Sexe];
 
-export const SexeLabels: { [key in Sexe]: string } = {
+export const SexeLabels: Record<Sexe, string> = {
   [Sexe.Empty]: "",
   [Sexe.Woman]: "Femme",
   [Sexe.Man]: "Homme",
@@ -1056,15 +1069,29 @@ export abstract class AbstractAPI {
     }
   }
 
+  /** InscriptionsHintValide performs the request and handles the error */
+  async InscriptionsHintValide(params: { idDossier: IdDossier }) {
+    const fullUrl =
+      this.baseUrl + "/api/v1/backoffice/inscriptions/valide/hint";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<Record<IdParticipant, StatutCauses> | null> =
+        await Axios.post(fullUrl, null, {
+          headers: this.getHeaders(),
+          params: { idDossier: String(params["idDossier"]) },
+        });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
   /** InscriptionsValide performs the request and handles the error */
-  async InscriptionsValide(params: { idDossier: IdDossier }) {
+  async InscriptionsValide(params: InscriptionsValideIn) {
     const fullUrl = this.baseUrl + "/api/v1/backoffice/inscriptions/valide";
     this.startRequest();
     try {
-      await Axios.post(fullUrl, null, {
-        headers: this.getHeaders(),
-        params: { idDossier: String(params["idDossier"]) },
-      });
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
       return true;
     } catch (error) {
       this.handleError(error);

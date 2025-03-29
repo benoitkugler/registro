@@ -72,7 +72,14 @@ func TestValideInscription(t *testing.T) {
 
 	ct := Controller{db: db.DB}
 
-	err = ct.valideInscription(dossier1.Id)
+	hints, err := ct.hintValideInscription(dossier1.Id)
+	tu.AssertNoErr(t, err)
+
+	values := make(map[cps.IdParticipant]cps.ListeAttente)
+	for k, v := range hints {
+		values[k] = v.Statut
+	}
+	err = ct.valideInscription(InscriptionsValideIn{IdDossier: dossier1.Id, Statuts: values})
 	tu.AssertNoErr(t, err)
 
 	data, err := logic.LoadDossier(db, dossier1.Id)

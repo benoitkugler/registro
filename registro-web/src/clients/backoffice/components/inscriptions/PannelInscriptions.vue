@@ -21,7 +21,7 @@
           :key="i"
           :inscription="insc"
           @identifie="(v) => identifie(insc.Dossier.Id, v)"
-          @valide="valideInsc(insc)"
+          @valide="startValideInsc(insc)"
           @delete="deleteInsc(insc)"
           @delete-participant="
             (idParticipant) => deleteParticipant(insc.Dossier.Id, idParticipant)
@@ -34,17 +34,34 @@
         ></InscriptionRow>
       </div>
     </v-card-text>
+
+    <!-- preview valid -->
+    <v-dialog
+      :model-value="inscToValid != null"
+      @update:model-value="inscToValid = null"
+      max-width="800px"
+    >
+      <CardValide
+        v-if="inscToValid"
+        :inscription="inscToValid.inscription"
+        :statuts="inscToValid.statuts"
+        :rights="{ ageInvalide: true, campComplet: true }"
+        @valide="valideInsc"
+      ></CardValide>
+    </v-dialog>
   </v-card>
 </template>
 
 <script setup lang="ts">
 import { onMounted, computed, ref } from "vue";
 import { controller } from "../../logic/logic";
-import type {
-  IdDossier,
-  IdentTarget,
-  IdParticipant,
-  Inscription,
+import {
+  ListeAttente,
+  type IdDossier,
+  type IdentTarget,
+  type IdParticipant,
+  type Inscription,
+  type StatutCauses,
 } from "../../logic/api";
 import InscriptionRow from "../../../../components/inscriptions/InscriptionRow.vue";
 import { normalize, Personnes, Camps } from "@/utils";
@@ -95,19 +112,35 @@ async function identifie(id: IdDossier, target: IdentTarget) {
   data.value[index] = res;
 }
 
-async function valideInsc(insc: Inscription) {
-  const res = await controller.InscriptionsValide({
+const inscToValid = ref<{
+  inscription: Inscription;
+  statuts: Record<IdParticipant, StatutCauses>;
+} | null>(null);
+async function startValideInsc(insc: Inscription) {
+  const res = await controller.InscriptionsHintValide({
     idDossier: insc.Dossier.Id,
+  });
+  if (res === undefined) return;
+  inscToValid.value = { inscription: insc, statuts: res || {} };
+}
+
+async function valideInsc(statuts: Record<IdParticipant, ListeAttente>) {
+  if (!inscToValid.value) return;
+  const id = inscToValid.value.inscription.Dossier.Id;
+  inscToValid.value = null;
+  const res = await controller.InscriptionsValide({
+    IdDossier: id,
+    Statuts: statuts,
   });
   if (res === undefined) return;
 
   controller.showMessage("Inscription validée avec succès.", "", {
     title: "Aller au dossier",
-    action: () => emit("goTo", insc.Dossier.Id),
+    action: () => emit("goTo", id),
   });
 
   // delete from this view
-  data.value = data.value.filter((val) => val.Dossier.Id != insc.Dossier.Id);
+  data.value = data.value.filter((val) => val.Dossier.Id != id);
 }
 
 async function deleteInsc(insc: Inscription) {

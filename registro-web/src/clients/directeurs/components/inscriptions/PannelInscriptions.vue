@@ -32,13 +32,33 @@
         ></InscriptionRow>
       </div>
     </v-card-text>
+
+    <!-- preview valid -->
+    <v-dialog
+      :model-value="inscToValid != null"
+      @update:model-value="inscToValid = null"
+      max-width="800px"
+    >
+      <CardValide
+        v-if="inscToValid"
+        :inscription="inscToValid.inscription"
+        :statuts="inscToValid.statuts"
+        :rights="{ ageInvalide: true, campComplet: true }"
+        @valide="valideInsc"
+      ></CardValide>
+    </v-dialog>
   </v-card>
 </template>
 
 <script setup lang="ts">
 import { onMounted, computed, ref } from "vue";
 import { controller } from "../../logic/logic";
-import type { IdDossier, IdentTarget, Inscription } from "../../logic/api";
+import type {
+  IdDossier,
+  IdentTarget,
+  IdParticipant,
+  Inscription,
+} from "../../logic/api";
 import InscriptionRow from "@/components/inscriptions/InscriptionRow.vue";
 import { normalize, Personnes, Camps } from "@/utils";
 
@@ -86,6 +106,37 @@ async function identifie(id: IdDossier, target: IdentTarget) {
   controller.showMessage("Profil identifié avec succès.");
   const index = data.value.findIndex((insc) => insc.Dossier.Id == id);
   data.value[index] = res;
+}
+
+const inscToValid = ref<{
+  inscription: Inscription;
+  statuts: Record<IdParticipant, StatutCauses>;
+} | null>(null);
+async function startValideInsc(insc: Inscription) {
+  const res = await controller.InscriptionsHintValide({
+    idDossier: insc.Dossier.Id,
+  });
+  if (res === undefined) return;
+  inscToValid.value = { inscription: insc, statuts: res || {} };
+}
+
+async function valideInsc(statuts: Record<IdParticipant, ListeAttente>) {
+  if (!inscToValid.value) return;
+  const id = inscToValid.value.inscription.Dossier.Id;
+  inscToValid.value = null;
+  const res = await controller.InscriptionsValide({
+    IdDossier: id,
+    Statuts: statuts,
+  });
+  if (res === undefined) return;
+
+  controller.showMessage("Inscription validée avec succès.", "", {
+    title: "Aller au dossier",
+    action: () => emit("goTo", id),
+  });
+
+  // delete from this view
+  data.value = data.value.filter((val) => val.Dossier.Id != id);
 }
 
 async function valideInsc(insc: Inscription) {

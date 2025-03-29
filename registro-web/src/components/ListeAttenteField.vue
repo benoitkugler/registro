@@ -22,7 +22,7 @@
     <template #selection="{ item }">
       <v-list-item :title="item.title" density="compact">
         <template #prepend>
-          <v-icon :color="item.raw.format.color">{{
+          <v-icon :color="item.raw.format.color" size="small">{{
             item.raw.format.icon
           }}</v-icon>
         </template>

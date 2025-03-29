@@ -1,6 +1,7 @@
 package camps
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 	"time"
@@ -99,53 +100,53 @@ func TestCampLoader_Status(t *testing.T) {
 	tests := []struct {
 		camp         Camp
 		participants []pr.Personne
-		want         []Statut
+		want         []StatutCauses
 	}{
-		{campNoGF, nil, []Statut{}},
+		{campNoGF, nil, []StatutCauses{}},
 		{
 			campNoGF,
 			[]pr.Personne{pers2(pr.Man, 10)},
-			[]Statut{{true, true, true, true}},
+			[]StatutCauses{{true, true, true, true, Inscrit}},
 		},
 		{
 			campNoGF,
 			[]pr.Personne{pers2(pr.Man, 18)},
-			[]Statut{{true, false, true, true}},
+			[]StatutCauses{{true, false, true, true, AttenteProfilInvalide}},
 		},
 		{
 			campNoGF,
 			[]pr.Personne{pers2(pr.Man, 4)},
-			[]Statut{{false, true, true, true}},
+			[]StatutCauses{{false, true, true, true, AttenteProfilInvalide}},
 		},
 		{
 			campNoGF,
 			[]pr.Personne{pers2(pr.Man, 10), pers2(pr.Man, 10)},
-			[]Statut{{true, true, true, true}, {true, true, true, true}},
+			[]StatutCauses{{true, true, true, true, Inscrit}, {true, true, true, true, Inscrit}},
 		},
 		{ // places manquantes
 			campNoGF,
 			[]pr.Personne{pers2(pr.Man, 10), pers2(pr.Man, 10), pers2(pr.Man, 10)},
-			[]Statut{{true, true, true, false}, {true, true, true, false}, {true, true, true, false}},
+			[]StatutCauses{{true, true, true, false, AttenteCampComplet}, {true, true, true, false, AttenteCampComplet}, {true, true, true, false, AttenteCampComplet}},
 		},
 		{
 			campGF,
 			[]pr.Personne{pers2(pr.Man, 10)},
-			[]Statut{{true, true, true, true}},
+			[]StatutCauses{{true, true, true, true, Inscrit}},
 		},
 		{ // equlibre actuel : 1G / 2F
 			campGF,
 			[]pr.Personne{pers2(pr.Woman, 10), pers2(pr.Woman, 10), pers2(pr.Woman, 10)},
-			[]Statut{{true, true, false, false}, {true, true, false, false}, {true, true, false, false}},
+			[]StatutCauses{{true, true, false, false, AttenteCampComplet}, {true, true, false, false, AttenteCampComplet}, {true, true, false, false, AttenteCampComplet}},
 		},
 		{ // equlibre actuel : 1G / 2F
 			campGF,
 			[]pr.Personne{pers2(pr.Man, 10), pers2(pr.Woman, 10), pers2(pr.Woman, 10)},
-			[]Statut{{true, true, false, false}, {true, true, false, false}, {true, true, false, false}},
+			[]StatutCauses{{true, true, false, false, AttenteCampComplet}, {true, true, false, false, AttenteCampComplet}, {true, true, false, false, AttenteCampComplet}},
 		},
 		{ // equlibre actuel : 1G / 2F
 			campGF,
 			[]pr.Personne{pers2(pr.Man, 10), pers2(pr.Man, 10), pers2(pr.Woman, 10)},
-			[]Statut{{true, true, true, false}, {true, true, true, false}, {true, true, true, false}},
+			[]StatutCauses{{true, true, true, false, AttenteCampComplet}, {true, true, true, false, AttenteCampComplet}, {true, true, true, false, AttenteCampComplet}},
 		},
 	}
 	for _, tt := range tests {
@@ -154,6 +155,7 @@ func TestCampLoader_Status(t *testing.T) {
 			participants: participants,
 			personnes:    personnes,
 		}
+		fmt.Println(tt.want)
 		tu.Assert(t, reflect.DeepEqual(cd.Status(tt.participants), tt.want))
 	}
 }

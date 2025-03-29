@@ -73,12 +73,11 @@ export const FormStatusEquipier = {
 export type FormStatusEquipier =
   (typeof FormStatusEquipier)[keyof typeof FormStatusEquipier];
 
-export const FormStatusEquipierLabels: { [key in FormStatusEquipier]: string } =
-  {
-    [FormStatusEquipier.NotSend]: "Non envoyé",
-    [FormStatusEquipier.Pending]: "En attente",
-    [FormStatusEquipier.Answered]: "Répondu",
-  };
+export const FormStatusEquipierLabels: Record<FormStatusEquipier, string> = {
+  [FormStatusEquipier.NotSend]: "Non envoyé",
+  [FormStatusEquipier.Pending]: "En attente",
+  [FormStatusEquipier.Answered]: "Répondu",
+};
 
 export type IdCamp = number & { __opaque__: "IdCamp" };
 export type IdEquipier = number & { __opaque__: "IdEquipier" };
@@ -105,7 +104,7 @@ export const Role = {
 } as const;
 export type Role = (typeof Role)[keyof typeof Role];
 
-export const RoleLabels: { [key in Role]: string } = {
+export const RoleLabels: Record<Role, string> = {
   [Role.AutreRole]: "Autre",
   [Role.Direction]: "Direction",
   [Role.Adjoint]: "Adjoint",
@@ -144,7 +143,7 @@ export const Categorie = {
 } as const;
 export type Categorie = (typeof Categorie)[keyof typeof Categorie];
 
-export const CategorieLabels: { [key in Categorie]: string } = {
+export const CategorieLabels: Record<Categorie, string> = {
   [Categorie.NoBuiltin]: "-",
   [Categorie.CarteId]: "Carte d'identité/Passeport",
   [Categorie.Permis]: "Permis de conduire",
@@ -192,7 +191,7 @@ export const Approfondissement = {
 export type Approfondissement =
   (typeof Approfondissement)[keyof typeof Approfondissement];
 
-export const ApprofondissementLabels: { [key in Approfondissement]: string } = {
+export const ApprofondissementLabels: Record<Approfondissement, string> = {
   [Approfondissement.AAucun]: "Non effectué",
   [Approfondissement.AAutre]: "Approfondissement",
   [Approfondissement.ASb]: "Surveillant de baignade",
@@ -228,7 +227,7 @@ export const Diplome = {
 } as const;
 export type Diplome = (typeof Diplome)[keyof typeof Diplome];
 
-export const DiplomeLabels: { [key in Diplome]: string } = {
+export const DiplomeLabels: Record<Diplome, string> = {
   [Diplome.DAucun]: "Aucun",
   [Diplome.DBafa]: "BAFA Titulaire",
   [Diplome.DBafaStag]: "BAFA Stagiaire",
@@ -283,7 +282,7 @@ export const Nationnalite = {
 } as const;
 export type Nationnalite = (typeof Nationnalite)[keyof typeof Nationnalite];
 
-export const NationnaliteLabels: { [key in Nationnalite]: string } = {
+export const NationnaliteLabels: Record<Nationnalite, string> = {
   [Nationnalite.Autre]: "Autre",
   [Nationnalite.Francaise]: "Française",
   [Nationnalite.Suisse]: "Suisse",
@@ -304,7 +303,7 @@ export const Sexe = {
 } as const;
 export type Sexe = (typeof Sexe)[keyof typeof Sexe];
 
-export const SexeLabels: { [key in Sexe]: string } = {
+export const SexeLabels: Record<Sexe, string> = {
   [Sexe.Empty]: "",
   [Sexe.Woman]: "Femme",
   [Sexe.Man]: "Homme",

@@ -20,6 +20,7 @@ type Inscription struct {
 	Message      string // le message (optionnel) du formulaire d'inscription
 	Responsable  pr.Personne
 	Participants []cps.ParticipantCamp
+
 	// ValidatedBy stores the camp which have validated
 	// this inscription, computed using the participants status.
 	// This field is ignored in backoffice, but used in directeurs
@@ -39,9 +40,9 @@ func newInscription(de Dossier) Inscription {
 	message := strings.Join(chunks, "\n\n")
 
 	var validatedBy []cps.IdCamp
-	for idCamp, l := range de.Participants.ByIdCamp() {
+	for idCamp, campParts := range de.Participants.ByIdCamp() {
 		validated := true
-		for _, p := range l {
+		for _, p := range campParts {
 			if p.Statut == cps.AStatuer {
 				validated = false
 				break
@@ -159,36 +160,28 @@ func IdentifiePersonne(db *sql.DB, args IdentTarget) error {
 	return err
 }
 
-// PrepareValideInscription renvoie les participants modifiés,
-// à persister via une requête SQL.
-func (loader Dossier) PrepareValideInscription(db ds.DB) (cps.Participants, error) {
-	// on s'assure qu'aucune personne n'est temporaire
-	for _, pe := range loader.Personnes() {
-		if pe.IsTemp {
-			return nil, errors.New("internal error: personne should not be temporary")
-		}
-	}
+type StatutHints = map[cps.IdParticipant]cps.StatutCauses
 
+// PrepareValideInscription renvoie le statut qu'il faudrait appliquer
+// au participant du dossier.
+func (dossier Dossier) PrepareValideInscription(db ds.DB) (StatutHints, error) {
 	// le status est calculé camp par camp
-	dossierByCamp := loader.Participants.ByIdCamp()
+	partsByCamp := dossier.Participants.ByIdCamp()
 
 	// on calcule le statut des participants (requiert les participants et personnes déjà inscrites)
-	camps, err := cps.LoadCamps(db, loader.Camps().IDs()...)
+	camps, err := cps.LoadCamps(db, dossier.Camps().IDs()...)
 	if err != nil {
 		return nil, err
 	}
 
-	out := make(cps.Participants)
+	out := make(StatutHints)
 	for _, camp := range camps {
-		incommingPa := utils.MapValues(dossierByCamp[camp.Camp.Id])
-		incommingPe := loader.PersonnesFor(incommingPa)
+		incommingPa := utils.MapValues(partsByCamp[camp.Camp.Id])
+		incommingPe := dossier.PersonnesFor(incommingPa)
 
 		for index, status := range camp.Status(incommingPe) {
-			listeAttente := status.Hint()
-			// update the participant
 			pa := incommingPa[index]
-			pa.Statut = listeAttente
-			out[pa.Id] = pa
+			out[pa.Id] = status
 		}
 	}
 

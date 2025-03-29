@@ -90,7 +90,7 @@ export const Nationnalite = {
 } as const;
 export type Nationnalite = (typeof Nationnalite)[keyof typeof Nationnalite];
 
-export const NationnaliteLabels: { [key in Nationnalite]: string } = {
+export const NationnaliteLabels: Record<Nationnalite, string> = {
   [Nationnalite.Autre]: "Autre",
   [Nationnalite.Francaise]: "Française",
   [Nationnalite.Suisse]: "Suisse",
@@ -106,7 +106,7 @@ export const Sexe = {
 } as const;
 export type Sexe = (typeof Sexe)[keyof typeof Sexe];
 
-export const SexeLabels: { [key in Sexe]: string } = {
+export const SexeLabels: Record<Sexe, string> = {
   [Sexe.Empty]: "",
   [Sexe.Woman]: "Femme",
   [Sexe.Man]: "Homme",
