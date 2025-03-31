@@ -66,10 +66,12 @@
               <v-divider></v-divider>
               <v-list-item
                 title="Aller à la personne"
+                :subtitle="`(ID : ${p.Personne.Id})`"
                 @click="goToPersonne(p.Personne.Id)"
               ></v-list-item>
               <v-list-item
                 title="Aller au dossier"
+                :subtitle="`(ID : ${p.Participant.IdDossier})`"
                 @click="goToDossier(p.Participant.IdDossier)"
               ></v-list-item>
               <v-divider></v-divider>

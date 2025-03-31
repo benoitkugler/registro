@@ -23,6 +23,7 @@
         <v-card-text>
           <DossierList
             :camps="allCamps"
+            :selected="dossierDetails?.Dossier.Dossier.Id"
             v-model:query="query"
             @click="onSelectDossier"
             @update="onListChange"
@@ -88,6 +89,7 @@ import { controller, emptyQuery, idQuery } from "../../logic/logic";
 import DossierDetailsPannel from "./dossiers/DossierDetailsPannel.vue";
 import CreateDossierCard from "./dossiers/CreateDossierCard.vue";
 import DossierList from "./dossiers/DossierList.vue";
+import { watch } from "vue";
 
 const props = defineProps<{
   initialDossier?: IdDossier;
@@ -101,11 +103,14 @@ onMounted(() => {
   }
 });
 
-watch(() => props.initialDossier, () => {
-  if (props.initialDossier !== undefined) {
-    showDossier(props.initialDossier);
+watch(
+  () => props.initialDossier,
+  () => {
+    if (props.initialDossier !== undefined) {
+      showDossier(props.initialDossier);
+    }
   }
-})
+);
 
 const detailsPannel = useTemplateRef("detailsPannel");
 
@@ -129,10 +134,6 @@ async function loadStructureaides() {
 
 function onListChange(v: SearchDossierOut) {
   dossiersCount.value = { length: v.Dossiers?.length || 0, total: v.Total };
-  // if no dossier is yet selected, auto select the first
-  if (dossierDetails.value == null && v.Dossiers?.length) {
-    loadDossier(v.Dossiers[0].Id);
-  }
 }
 
 const dossierList = useTemplateRef("dossierList");
@@ -143,15 +144,15 @@ function refreshDossierList() {
 // showDossier may be called by the parent when switching to this pannel;
 //  it loads the dossier details
 async function showDossier(id: IdDossier) {
+  await loadDossier(id);
   // reset the query so that the given Dossier is found
   query.value = idQuery(id);
-  await loadDossier(id);
 }
 
 const dossierDetails = ref<DossierDetails | null>(null);
 // fetch the complete information and displays it in the right pannel
 async function loadDossier(id: IdDossier) {
-  const res = await controller.DossiersLoad({ id: id });
+  const res = await controller.DossiersLoad({ id });
   if (res === undefined) return;
   dossierDetails.value = res;
   detailsPannel.value?.scrollToLastEvent();

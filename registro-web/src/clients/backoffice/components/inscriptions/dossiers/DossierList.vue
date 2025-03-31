@@ -81,7 +81,11 @@
         </v-col>
       </v-row>
     </v-expand-transition>
-    <v-list v-if="dossierHeaders != null" class="mt-2">
+    <v-list
+      v-if="dossierHeaders != null"
+      class="mt-2"
+      :selected="props.selected ? [props.selected] : undefined"
+    >
       <v-list-item v-if="!dossierHeaders.Dossiers?.length" class="text-center">
         <i>Aucun dossier ne correspond à votre recherche.</i>
       </v-list-item>
@@ -112,6 +116,7 @@ import {
   QueryReglementLabels,
   type CampItem,
   type DossierHeader,
+  type IdDossier,
   type SearchDossierIn,
   type SearchDossierOut,
 } from "@/clients/backoffice/logic/api";
@@ -127,6 +132,7 @@ import { ref, watch } from "vue";
 
 const props = defineProps<{
   camps: CampItem[];
+  selected?: IdDossier;
 }>();
 
 const emit = defineEmits<{
