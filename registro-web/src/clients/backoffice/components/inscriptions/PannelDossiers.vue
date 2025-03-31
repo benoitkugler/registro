@@ -101,6 +101,12 @@ onMounted(() => {
   }
 });
 
+watch(() => props.initialDossier, () => {
+  if (props.initialDossier !== undefined) {
+    showDossier(props.initialDossier);
+  }
+})
+
 const detailsPannel = useTemplateRef("detailsPannel");
 
 const dossiersCount = ref<{ length: number; total: number } | null>(null);
