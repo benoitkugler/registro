@@ -77,7 +77,7 @@
           {{ Formatters.date(paiement.Time) }}
         </v-col>
         <v-col cols="2" class="text-right">
-          {{ Formatters.montant(paiement.Montant) }}
+          {{ paiement.IsRemboursement ? '+' : '-' }}{{ Formatters.montant(paiement.Montant) }}
         </v-col>
       </v-row>
       <!-- Solde -->
