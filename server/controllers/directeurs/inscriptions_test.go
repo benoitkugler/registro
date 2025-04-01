@@ -1,7 +1,6 @@
 package directeurs
 
 import (
-	"reflect"
 	"testing"
 	"time"
 
@@ -19,14 +18,16 @@ func Test_inscriptions(t *testing.T) {
 		"../../migrations/init.sql")
 	defer db.Remove()
 
-	pe1, err := pr.Personne{IsTemp: false, Etatcivil: pr.Etatcivil{DateNaissance: shared.Date(time.Now())}}.Insert(db)
+	forAge7 := shared.NewDateFrom(time.Now().Add(-time.Hour * 24 * 365 * 7))
+
+	pe1, err := pr.Personne{IsTemp: false, Etatcivil: pr.Etatcivil{DateNaissance: forAge7}}.Insert(db)
 	tu.AssertNoErr(t, err)
-	pe2, err := pr.Personne{IsTemp: false, Etatcivil: pr.Etatcivil{DateNaissance: shared.Date(time.Now())}}.Insert(db)
+	pe2, err := pr.Personne{IsTemp: false, Etatcivil: pr.Etatcivil{DateNaissance: forAge7}}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	camp1, err := cps.Camp{IdTaux: 1, Places: 20, AgeMin: 6, AgeMax: 12}.Insert(db)
+	camp1, err := cps.Camp{IdTaux: 1, Places: 20, AgeMin: 6, AgeMax: 12, DateDebut: shared.Date(time.Now())}.Insert(db)
 	tu.AssertNoErr(t, err)
-	camp2, err := cps.Camp{IdTaux: 1, Places: 20, AgeMin: 6, AgeMax: 12}.Insert(db)
+	camp2, err := cps.Camp{IdTaux: 1, Places: 20, AgeMin: 6, AgeMax: 12, DateDebut: shared.Date(time.Now())}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	dossier1, err := ds.Dossier{IdResponsable: pe1.Id, IdTaux: 1, MomentInscription: time.Now()}.Insert(db)
@@ -62,7 +63,7 @@ func Test_inscriptions(t *testing.T) {
 		hints, err := ct.hintValideInscription(dossier1.Id)
 		tu.AssertNoErr(t, err)
 
-		values := make(map[cps.IdParticipant]cps.ListeAttente)
+		values := make(map[cps.IdParticipant]cps.StatutParticipant)
 		for k, v := range hints {
 			values[k] = v.Statut
 		}
@@ -77,7 +78,7 @@ func Test_inscriptions(t *testing.T) {
 
 		insc, err := ct.getInscriptions(camp1.Id)
 		tu.AssertNoErr(t, err)
-		tu.Assert(t, len(insc) == 1 && reflect.DeepEqual(insc[0].ValidatedBy, []cps.IdCamp{camp1.Id}))
+		tu.Assert(t, len(insc) == 1)
 
 		err = ct.valideInscription(InscriptionsValideIn{
 			IdDossier: dossier1.Id,

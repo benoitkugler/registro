@@ -1,6 +1,7 @@
 package logic
 
 import (
+	"reflect"
 	"testing"
 	"time"
 
@@ -47,4 +48,34 @@ func TestIdentifieProfil(t *testing.T) {
 	links, err := files.SelectFilePersonnesByIdPersonnes(db, pe2.Id)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(links) == 1)
+}
+
+func TestStatutBypassRights_resolve(t *testing.T) {
+	directorRights := StatutBypassRights{false, true, false}
+	backofficeRights := StatutBypassRights{true, true, true}
+	tests := []struct {
+		fields StatutBypassRights
+		args   cps.StatutCauses
+		want   StatutExt
+	}{
+		// problème d'age
+		{directorRights, cps.StatutCauses{AgeMin: false}, StatutExt{AllowedChanges: nil, Validable: false}},
+		// problème de place -> OK
+		{directorRights, cps.StatutCauses{AgeMin: true, AgeMax: true}, StatutExt{AllowedChanges: []cps.StatutParticipant{cps.Inscrit}, Validable: true}},
+		// valide
+		{directorRights, cps.StatutCauses{AgeMin: true, AgeMax: true, EquilibreGF: true, Place: true}, StatutExt{AllowedChanges: nil, Validable: true}},
+
+		// problème d'age
+		{backofficeRights, cps.StatutCauses{AgeMin: false}, StatutExt{AllowedChanges: []cps.StatutParticipant{cps.Inscrit}, Validable: true}},
+		// problème de place -> OK
+		{backofficeRights, cps.StatutCauses{AgeMin: true, AgeMax: true}, StatutExt{AllowedChanges: []cps.StatutParticipant{cps.Inscrit}, Validable: true}},
+		// valide
+		{backofficeRights, cps.StatutCauses{AgeMin: true, AgeMax: true, EquilibreGF: true, Place: true}, StatutExt{AllowedChanges: []cps.StatutParticipant{cps.AttenteProfilInvalide, cps.AttenteCampComplet}, Validable: true}},
+	}
+	for _, tt := range tests {
+		got := tt.fields.resolve(tt.args)
+		tu.Assert(t, reflect.DeepEqual(got.AllowedChanges, tt.want.AllowedChanges))
+		tu.Assert(t, got.Validable == tt.want.Validable)
+		tu.Assert(t, got.IsAllowed(got.Statut))
+	}
 }

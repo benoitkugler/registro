@@ -20,12 +20,6 @@ type Inscription struct {
 	Message      string // le message (optionnel) du formulaire d'inscription
 	Responsable  pr.Personne
 	Participants []cps.ParticipantCamp
-
-	// ValidatedBy stores the camp which have validated
-	// this inscription, computed using the participants status.
-	// This field is ignored in backoffice, but used in directeurs
-	// to handle inscriptions with mixed camps.
-	ValidatedBy []cps.IdCamp
 }
 
 func newInscription(de Dossier) Inscription {
@@ -39,26 +33,11 @@ func newInscription(de Dossier) Inscription {
 	}
 	message := strings.Join(chunks, "\n\n")
 
-	var validatedBy []cps.IdCamp
-	for idCamp, campParts := range de.Participants.ByIdCamp() {
-		validated := true
-		for _, p := range campParts {
-			if p.Statut == cps.AStatuer {
-				validated = false
-				break
-			}
-		}
-		if validated {
-			validatedBy = append(validatedBy, idCamp)
-		}
-	}
-
 	return Inscription{
 		Dossier:      de.Dossier,
 		Responsable:  de.Responsable(),
 		Participants: de.ParticipantsExt(),
 		Message:      message,
-		ValidatedBy:  validatedBy,
 	}
 }
 
@@ -160,11 +139,11 @@ func IdentifiePersonne(db *sql.DB, args IdentTarget) error {
 	return err
 }
 
-type StatutHints = map[cps.IdParticipant]cps.StatutCauses
+type StatutHints = map[cps.IdParticipant]StatutExt
 
-// PrepareValideInscription renvoie le statut qu'il faudrait appliquer
+// StatutHints renvoie le statut qu'il faudrait appliquer
 // au participant du dossier.
-func (dossier Dossier) PrepareValideInscription(db ds.DB) (StatutHints, error) {
+func (dossier Dossier) StatutHints(db ds.DB, bypass StatutBypassRights) (StatutHints, error) {
 	// le status est calculé camp par camp
 	partsByCamp := dossier.Participants.ByIdCamp()
 
@@ -181,9 +160,54 @@ func (dossier Dossier) PrepareValideInscription(db ds.DB) (StatutHints, error) {
 
 		for index, status := range camp.Status(incommingPe) {
 			pa := incommingPa[index]
-			out[pa.Id] = status
+			out[pa.Id] = bypass.resolve(status)
 		}
 	}
 
 	return out, err
+}
+
+// StatutBypassRights grants the rights to validate a participant,
+// and override the default (computed) hint.
+type StatutBypassRights struct {
+	ProfilInvalide bool
+	CampComplet    bool
+	Inscrit        bool
+}
+
+type StatutExt struct {
+	Causes cps.StatutCauses
+	Statut cps.StatutParticipant
+
+	AllowedChanges []cps.StatutParticipant // empty for readonly
+	Validable      bool                    // if false, no update will be done
+}
+
+// IsAllowed returns 'true' if the bypass rights allow the given statut to be
+// applied.
+func (st StatutExt) IsAllowed(statut cps.StatutParticipant) bool {
+	return statut == st.Statut || slices.Contains(st.AllowedChanges, statut)
+}
+
+func (bp StatutBypassRights) resolve(st cps.StatutCauses) StatutExt {
+	out := StatutExt{Causes: st, Statut: st.Hint()}
+	switch out.Statut {
+	case cps.AttenteProfilInvalide:
+		if bp.ProfilInvalide {
+			out.AllowedChanges = []cps.StatutParticipant{cps.Inscrit}
+			out.Validable = true
+		}
+	case cps.AttenteCampComplet:
+		if bp.CampComplet {
+			out.AllowedChanges = []cps.StatutParticipant{cps.Inscrit}
+			out.Validable = true
+		}
+	case cps.Inscrit:
+		out.Validable = true
+		if bp.Inscrit {
+			out.AllowedChanges = []cps.StatutParticipant{cps.AttenteProfilInvalide, cps.AttenteCampComplet}
+		}
+	default: // should not happen
+	}
+	return out
 }

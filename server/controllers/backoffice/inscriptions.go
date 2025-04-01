@@ -87,26 +87,28 @@ func (ct *Controller) InscriptionsHintValide(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
+var backofficeRights = logic.StatutBypassRights{ProfilInvalide: true, CampComplet: true, Inscrit: true}
+
 func (ct *Controller) hintValideInscription(id ds.IdDossier) (logic.StatutHints, error) {
 	loader, err := logic.LoadDossier(ct.db, id)
 	if err != nil {
 		return nil, err
 	}
 
-	return loader.PrepareValideInscription(ct.db)
+	return loader.StatutHints(ct.db, backofficeRights)
 }
 
 // InscriptionsValideIn indique le statut des participants
 // à appliquer.
 type InscriptionsValideIn struct {
 	IdDossier ds.IdDossier
-	Statuts   map[cps.IdParticipant]cps.ListeAttente // only Hint field is used
+	Statuts   map[cps.IdParticipant]cps.StatutParticipant
 }
 
 // InscriptionsValide marque l'inscription comme validée, après s'être assuré
 // qu'aucune personne impliquée n'est temporaire.
 //
-// Le statut des participants est aussi mis à jour (de manière automatique),
+// Le statut des participants est mis à jour
 // et un mail d'accusé de réception est envoyé.
 func (ct *Controller) InscriptionsValide(c echo.Context) error {
 	var args InscriptionsValideIn
@@ -137,8 +139,8 @@ func (ct *Controller) valideInscription(args InscriptionsValideIn) error {
 		for _, participant := range loader.Participants {
 			// côté backoffice : par simplicité, tous les participants
 			// doivent être validés
-			newStatut, ok := args.Statuts[participant.Id]
-			if !ok {
+			newStatut, _ := args.Statuts[participant.Id]
+			if newStatut == 0 {
 				return errors.New("internal error: missing participant in InscriptionsValideIn.Statuts")
 			}
 

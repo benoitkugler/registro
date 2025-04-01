@@ -75,7 +75,7 @@ func TestValideInscription(t *testing.T) {
 	hints, err := ct.hintValideInscription(dossier1.Id)
 	tu.AssertNoErr(t, err)
 
-	values := make(map[cps.IdParticipant]cps.ListeAttente)
+	values := make(map[cps.IdParticipant]cps.StatutParticipant)
 	for k, v := range hints {
 		values[k] = v.Statut
 	}

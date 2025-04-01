@@ -116,13 +116,16 @@ func (ct *Controller) InscriptionsHintValide(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
+// for now, this is hard-coded
+var directeursBypass = logic.StatutBypassRights{ProfilInvalide: false, CampComplet: true, Inscrit: false}
+
 func (ct *Controller) hintValideInscription(id ds.IdDossier) (logic.StatutHints, error) {
 	loader, err := logic.LoadDossier(ct.db, id)
 	if err != nil {
 		return nil, err
 	}
 
-	return loader.PrepareValideInscription(ct.db)
+	return loader.StatutHints(ct.db, directeursBypass)
 }
 
 type InscriptionsValideIn = backoffice.InscriptionsValideIn
@@ -160,6 +163,11 @@ func (ct *Controller) valideInscription(args InscriptionsValideIn, idCamp cps.Id
 		return err
 	}
 
+	hints, err := loader.StatutHints(ct.db, directeursBypass)
+	if err != nil {
+		return err
+	}
+
 	// on s'assure qu'aucune personne n'est temporaire
 	for _, pe := range loader.Personnes() {
 		if pe.IsTemp {
@@ -170,7 +178,7 @@ func (ct *Controller) valideInscription(args InscriptionsValideIn, idCamp cps.Id
 	// only update the participant for the given camp
 	participants := loader.Participants.ByIdCamp()[idCamp]
 
-	// validate the dossier if the other camp are already validated
+	// validate the dossier only if all the participants are validated
 	otherValidated := true
 	for _, part := range loader.Participants {
 		if part.IdCamp != idCamp && part.Statut == cps.AStatuer {
@@ -180,12 +188,22 @@ func (ct *Controller) valideInscription(args InscriptionsValideIn, idCamp cps.Id
 	}
 
 	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
+		thisValidated := true
 		for _, participant := range participants {
-			// côté directeurs : par simplicité, tous les participants
-			// du camp doivent être validés
+			hint := hints[participant.Id]
+			// côté directeurs :
+			// seul les statuts valide (ou avec bypass) peuvent être validé
+			if !hint.Validable {
+				thisValidated = false
+				continue
+			}
+
 			newStatut, ok := args.Statuts[participant.Id]
 			if !ok {
 				return errors.New("internal error: missing participant in InscriptionsValideIn.Statuts")
+			}
+			if !hint.IsAllowed(newStatut) {
+				return errors.New("internal error! statut not allowed")
 			}
 
 			participant.Statut = newStatut
@@ -194,7 +212,8 @@ func (ct *Controller) valideInscription(args InscriptionsValideIn, idCamp cps.Id
 				return err
 			}
 		}
-		if otherValidated {
+
+		if otherValidated && thisValidated {
 			loader.Dossier.IsValidated = true
 			_, err = loader.Dossier.Update(tx)
 		}

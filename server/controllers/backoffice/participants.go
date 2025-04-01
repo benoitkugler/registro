@@ -109,7 +109,7 @@ func (ct *Controller) createParticipant(args ParticipantsCreateIn) (logic.Partic
 		IdPersonne: args.IdPersonne,
 
 		IdTaux: dossier.IdTaux,
-		Statut: statut.Statut,
+		Statut: statut.Hint(),
 	}
 
 	// if the dossier is empty (for instance if manually created), we want to allow
@@ -306,7 +306,7 @@ func (ct *Controller) moveParticipant(args ParticipantsMoveIn) error {
 	if err != nil {
 		return err
 	}
-	statut := camp.Status([]pr.Personne{personne})[0].Statut
+	statut := camp.Status([]pr.Personne{personne})[0].Hint()
 
 	// also reset options which wont match the new camp
 
