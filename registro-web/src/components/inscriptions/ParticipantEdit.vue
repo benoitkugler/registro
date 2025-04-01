@@ -16,11 +16,11 @@
         </v-row>
         <v-row>
           <v-col>
-            <ListeAttenteField
+            <StatutParticipantField
               v-model="inner.Statut"
               hide-details
               :readonly="props.readonlyStatut"
-            ></ListeAttenteField>
+            ></StatutParticipantField>
           </v-col>
         </v-row>
         <v-row>
@@ -54,6 +54,7 @@ import {
   type Personne,
 } from "@/clients/backoffice/logic/api";
 import { copy, Personnes } from "@/utils";
+import StatutParticipantField from "../StatutParticipantField.vue";
 const props = defineProps<{
   participant: Participant;
   personne: Personne;

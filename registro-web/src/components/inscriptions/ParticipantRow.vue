@@ -7,20 +7,26 @@
       >
         <template #prepend>
           <v-tooltip
-            v-if="props.participant.Participant.Statut != ListeAttente.Inscrit"
-            :text="ListeAttenteLabels[props.participant.Participant.Statut]"
+            v-if="
+              props.participant.Participant.Statut != StatutParticipant.Inscrit
+            "
+            :text="
+              StatutParticipantLabels[props.participant.Participant.Statut]
+            "
           >
             <template #activator="{ props: tooltipProps }">
               <v-icon
                 :color="
-                  Formatters.listeAttente(props.participant.Participant.Statut)
-                    .color
+                  Formatters.statutParticipant(
+                    props.participant.Participant.Statut
+                  ).color
                 "
                 v-bind="tooltipProps"
               >
                 {{
-                  Formatters.listeAttente(props.participant.Participant.Statut)
-                    .icon
+                  Formatters.statutParticipant(
+                    props.participant.Participant.Statut
+                  ).icon
                 }}
               </v-icon>
             </template>
@@ -89,8 +95,8 @@
 <script setup lang="ts">
 import { Formatters, Personnes } from "@/utils";
 import {
-  ListeAttente,
-  ListeAttenteLabels,
+  StatutParticipant,
+  StatutParticipantLabels,
   Navette,
   NavetteLabels,
   type ParticipantExt,

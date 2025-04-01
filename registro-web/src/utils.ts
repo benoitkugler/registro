@@ -1,8 +1,8 @@
 import {
   CurrencyLabels,
   Sexe,
+  StatutParticipant,
   type CampExt,
-  type CampHeader,
   type CampItem,
   type ParticipantExt,
 } from "./clients/backoffice/logic/api";
@@ -13,7 +13,6 @@ import {
   type Event,
   type Montant,
   type PrixQuotientFamilial,
-  ListeAttente,
 } from "./clients/backoffice/logic/api";
 import type { Date_, Int } from "./clients/inscription/logic/api";
 import { addDays, isDateZero, newDate_ } from "./components/date";
@@ -337,15 +336,15 @@ export namespace Formatters {
     }
   }
 
-  export function listeAttente(s: ListeAttente) {
+  export function statutParticipant(s: StatutParticipant) {
     switch (s) {
-      case ListeAttente.EnAttenteReponse:
+      case StatutParticipant.EnAttenteReponse:
         return { icon: "mdi-clock", color: "yellow-darken-2" };
-      case ListeAttente.Refuse:
+      case StatutParticipant.Refuse:
         return { icon: "mdi-close-thick", color: "deep-orange" };
-      case ListeAttente.AStatuer:
+      case StatutParticipant.AStatuer:
         return { icon: "mdi-help" };
-      case ListeAttente.Inscrit:
+      case StatutParticipant.Inscrit:
         return { icon: "mdi-check", color: "green" };
       default:
         return { icon: "mdi-clock" };

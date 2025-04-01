@@ -77,7 +77,7 @@ export interface InscriptionIdentifieIn {
 // registro/controllers/backoffice.InscriptionsValideIn
 export interface InscriptionsValideIn {
   IdDossier: IdDossier;
-  Statuts: Record<IdParticipant, ListeAttente> | null;
+  Statuts: Record<IdParticipant, StatutParticipant> | null;
 }
 // registro/controllers/backoffice.LogginOut
 export interface LogginOut {
@@ -241,7 +241,6 @@ export interface Inscription {
   Message: string;
   Responsable: Personne;
   Participants: ParticipantCamp[] | null;
-  ValidatedBy: IdCamp[] | null;
 }
 // registro/controllers/logic.Message
 export interface Message {
@@ -268,6 +267,13 @@ export interface PlaceLiberee {
 export interface Sondage {
   IdCamp: IdCamp;
   CampLabel: string;
+}
+// registro/controllers/logic.StatutExt
+export interface StatutExt {
+  Causes: StatutCauses;
+  Statut: StatutParticipant;
+  AllowedChanges: StatutParticipant[] | null;
+  Validable: boolean;
 }
 // registro/controllers/logic.StatutPaiement
 export const StatutPaiement = {
@@ -342,26 +348,6 @@ export type IdParticipant = number & { __opaque__: "IdParticipant" };
 export type IdStructureaide = number & { __opaque__: "IdStructureaide" };
 // registro/sql/camps.Jours
 export type Jours = Int[] | null;
-// registro/sql/camps.ListeAttente
-export const ListeAttente = {
-  AStatuer: 0,
-  Refuse: 1,
-  AttenteProfilInvalide: 2,
-  AttenteCampComplet: 3,
-  EnAttenteReponse: 4,
-  Inscrit: 5,
-} as const;
-export type ListeAttente = (typeof ListeAttente)[keyof typeof ListeAttente];
-
-export const ListeAttenteLabels: Record<ListeAttente, string> = {
-  [ListeAttente.AStatuer]: "A statuer",
-  [ListeAttente.Refuse]: "Refusé définitivement",
-  [ListeAttente.AttenteProfilInvalide]: "Profil limite",
-  [ListeAttente.AttenteCampComplet]: "Camp complet",
-  [ListeAttente.EnAttenteReponse]: "En attente de réponse",
-  [ListeAttente.Inscrit]: "Inscrit",
-};
-
 // registro/sql/camps.Navette
 export const Navette = {
   NoBus: 0,
@@ -421,7 +407,7 @@ export interface Participant {
   IdPersonne: IdPersonne;
   IdDossier: IdDossier;
   IdTaux: IdTaux;
-  Statut: ListeAttente;
+  Statut: StatutParticipant;
   Remises: Remises;
   QuotientFamilial: Int;
   OptionPrix: OptionPrixParticipant;
@@ -468,8 +454,28 @@ export interface StatutCauses {
   AgeMax: boolean;
   EquilibreGF: boolean;
   Place: boolean;
-  Statut: ListeAttente;
 }
+// registro/sql/camps.StatutParticipant
+export const StatutParticipant = {
+  AStatuer: 0,
+  Refuse: 1,
+  AttenteProfilInvalide: 2,
+  AttenteCampComplet: 3,
+  EnAttenteReponse: 4,
+  Inscrit: 5,
+} as const;
+export type StatutParticipant =
+  (typeof StatutParticipant)[keyof typeof StatutParticipant];
+
+export const StatutParticipantLabels: Record<StatutParticipant, string> = {
+  [StatutParticipant.AStatuer]: "A statuer",
+  [StatutParticipant.Refuse]: "Refusé définitivement",
+  [StatutParticipant.AttenteProfilInvalide]: "Profil limite",
+  [StatutParticipant.AttenteCampComplet]: "Camp complet",
+  [StatutParticipant.EnAttenteReponse]: "En attente de réponse",
+  [StatutParticipant.Inscrit]: "Inscrit",
+};
+
 // registro/sql/camps.Structureaide
 export interface Structureaide {
   Id: IdStructureaide;
@@ -1075,7 +1081,7 @@ export abstract class AbstractAPI {
       this.baseUrl + "/api/v1/backoffice/inscriptions/valide/hint";
     this.startRequest();
     try {
-      const rep: AxiosResponse<Record<IdParticipant, StatutCauses> | null> =
+      const rep: AxiosResponse<Record<IdParticipant, StatutExt> | null> =
         await Axios.post(fullUrl, null, {
           headers: this.getHeaders(),
           params: { idDossier: String(params["idDossier"]) },

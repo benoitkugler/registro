@@ -41,6 +41,21 @@ const (
 	Inscrit // Inscrit
 )
 
+var (
+	_ json.Marshaler   = (StatutParticipant)(0)
+	_ json.Unmarshaler = (*StatutParticipant)(nil)
+)
+
+// MarshalText makes sure [StatutParticipants] is not encoded as a []byte slice
+func (d StatutParticipant) MarshalJSON() ([]byte, error) {
+	// By default a slice of StatutParticipant is marshalled as string by Go
+	return json.Marshal(uint8(d))
+}
+
+func (d *StatutParticipant) UnmarshalJSON(src []byte) error {
+	return json.Unmarshal(src, (*uint8)(d))
+}
+
 type Navette uint8
 
 const (

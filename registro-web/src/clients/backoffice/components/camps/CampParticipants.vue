@@ -58,8 +58,8 @@
                 subtitle="Envoi un email"
                 prepend-icon="mdi-email-alert"
                 :disabled="
-                  p.Participant.Statut == ListeAttente.Inscrit ||
-                  p.Participant.Statut == ListeAttente.EnAttenteReponse
+                  p.Participant.Statut == StatutParticipant.Inscrit ||
+                  p.Participant.Statut == StatutParticipant.EnAttenteReponse
                 "
                 @click="confirmeSetPlaceLiberee = p"
               ></v-list-item>
@@ -197,7 +197,9 @@
 
           Le nouveau statut de
           {{ confirmeSetPlaceLiberee.Personne.Prenom }} sera :
-          <i>{{ ListeAttenteLabels[ListeAttente.EnAttenteReponse] }}</i
+          <i>{{
+            StatutParticipantLabels[StatutParticipant.EnAttenteReponse]
+          }}</i
           >.
         </v-card-text>
         <v-card-actions>
@@ -214,8 +216,8 @@
 import { ref, onMounted, computed, watch } from "vue";
 import { controller } from "@/clients/backoffice/logic/logic";
 import {
-  ListeAttente,
-  ListeAttenteLabels,
+  StatutParticipant,
+  StatutParticipantLabels,
   type CampItem,
   type CampsLoadOut,
   type IdCamp,

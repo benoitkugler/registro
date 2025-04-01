@@ -45,7 +45,7 @@
         v-if="inscToValid"
         :inscription="inscToValid.inscription"
         :statuts="inscToValid.statuts"
-        :rights="{ ageInvalide: true, campComplet: true }"
+        :rights="{ AgeInvalide: true, CampComplet: true }"
         @valide="valideInsc"
       ></CardValide>
     </v-dialog>
@@ -56,12 +56,12 @@
 import { onMounted, computed, ref } from "vue";
 import { controller } from "../../logic/logic";
 import {
-  ListeAttente,
+  StatutParticipant,
   type IdDossier,
   type IdentTarget,
   type IdParticipant,
   type Inscription,
-  type StatutCauses,
+  type StatutExt,
 } from "../../logic/api";
 import InscriptionRow from "../../../../components/inscriptions/InscriptionRow.vue";
 import { normalize, Personnes, Camps } from "@/utils";
@@ -114,7 +114,7 @@ async function identifie(id: IdDossier, target: IdentTarget) {
 
 const inscToValid = ref<{
   inscription: Inscription;
-  statuts: Record<IdParticipant, StatutCauses>;
+  statuts: Record<IdParticipant, StatutExt>;
 } | null>(null);
 async function startValideInsc(insc: Inscription) {
   const res = await controller.InscriptionsHintValide({
@@ -124,7 +124,7 @@ async function startValideInsc(insc: Inscription) {
   inscToValid.value = { inscription: insc, statuts: res || {} };
 }
 
-async function valideInsc(statuts: Record<IdParticipant, ListeAttente>) {
+async function valideInsc(statuts: Record<IdParticipant, StatutParticipant>) {
   if (!inscToValid.value) return;
   const id = inscToValid.value.inscription.Dossier.Id;
   inscToValid.value = null;

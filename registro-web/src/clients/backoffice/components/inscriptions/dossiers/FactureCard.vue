@@ -77,7 +77,8 @@
           {{ Formatters.date(paiement.Time) }}
         </v-col>
         <v-col cols="2" class="text-right">
-          {{ paiement.IsRemboursement ? '+' : '-' }}{{ Formatters.montant(paiement.Montant) }}
+          {{ paiement.IsRemboursement ? "+" : "-"
+          }}{{ Formatters.montant(paiement.Montant) }}
         </v-col>
       </v-row>
       <!-- Solde -->
@@ -95,7 +96,7 @@
 
 <script setup lang="ts">
 import {
-  ListeAttente,
+  StatutParticipant,
   type BilanParticipantPub,
   type DossierExt,
   type Remises,
@@ -110,13 +111,13 @@ const props = defineProps<{
 
 const listeAttente = computed(() =>
   (props.dossier.Participants || [])
-    .filter((p) => p.Participant.Statut != ListeAttente.Inscrit)
+    .filter((p) => p.Participant.Statut != StatutParticipant.Inscrit)
     .map((p) => Personnes.label(p.Personne))
 );
 
 const participants = computed(() =>
   (props.dossier.Participants || [])
-    .filter((p) => p.Participant.Statut == ListeAttente.Inscrit)
+    .filter((p) => p.Participant.Statut == StatutParticipant.Inscrit)
     .map((p) => ({
       Label: Personnes.label(p.Personne),
       Camp: Camps.label(p.Camp),

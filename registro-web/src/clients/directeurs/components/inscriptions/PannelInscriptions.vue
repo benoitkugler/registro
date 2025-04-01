@@ -21,7 +21,7 @@
           :key="i"
           :inscription="insc"
           hide-delete
-          :already-validated="insc.ValidatedBy?.includes(controller.camp!.Id)"
+          :already-validated="isValidatedByUs(insc)"
           @identifie="(v) => identifie(insc.Dossier.Id, v)"
           @valide="startValideInsc(insc)"
           :api="{
@@ -43,7 +43,7 @@
         v-if="inscToValid"
         :inscription="inscToValid.inscription"
         :statuts="inscToValid.statuts"
-        :rights="{ ageInvalide: false, campComplet: true }"
+        :rights="{ AgeInvalide: false, CampComplet: true }"
         :id-camp="controller.camp!.Id"
         @valide="valideInsc"
       ></CardValide>
@@ -54,13 +54,13 @@
 <script setup lang="ts">
 import { onMounted, computed, ref } from "vue";
 import { controller } from "../../logic/logic";
-import type {
-  IdDossier,
-  IdentTarget,
-  IdParticipant,
-  Inscription,
-  ListeAttente,
-  StatutCauses,
+import {
+  StatutParticipant,
+  type IdDossier,
+  type IdentTarget,
+  type IdParticipant,
+  type Inscription,
+  type StatutExt,
 } from "../../logic/api";
 import InscriptionRow from "@/components/inscriptions/InscriptionRow.vue";
 import { normalize, Personnes, Camps } from "@/utils";
@@ -99,6 +99,13 @@ const displayed = computed(() => {
   });
 });
 
+function isValidatedByUs(insc: Inscription) {
+  const us = controller.camp!.Id;
+  return (insc.Participants || [])
+    .filter((p) => p.Camp.Id == us)
+    .every((p) => p.Participant.Statut != StatutParticipant.AStatuer);
+}
+
 async function identifie(id: IdDossier, target: IdentTarget) {
   const res = await controller.InscriptionsIdentifiePersonne({
     IdDossier: id,
@@ -115,7 +122,7 @@ async function identifie(id: IdDossier, target: IdentTarget) {
 
 const inscToValid = ref<{
   inscription: Inscription;
-  statuts: Record<IdParticipant, StatutCauses>;
+  statuts: Record<IdParticipant, StatutExt>;
 } | null>(null);
 async function startValideInsc(insc: Inscription) {
   const res = await controller.InscriptionsHintValide({
@@ -125,7 +132,7 @@ async function startValideInsc(insc: Inscription) {
   inscToValid.value = { inscription: insc, statuts: res || {} };
 }
 
-async function valideInsc(statuts: Record<IdParticipant, ListeAttente>) {
+async function valideInsc(statuts: Record<IdParticipant, StatutParticipant>) {
   if (!inscToValid.value) return;
   const id = inscToValid.value.inscription.Dossier.Id;
   inscToValid.value = null;

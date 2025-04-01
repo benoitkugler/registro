@@ -33,23 +33,33 @@
 
 <script setup lang="ts">
 import {
-  ListeAttente,
-  ListeAttenteLabels,
+  StatutParticipant,
+  StatutParticipantLabels,
 } from "@/clients/backoffice/logic/api";
 import { Formatters, selectItems } from "@/utils";
+import { computed } from "vue";
 const props = defineProps<{
   hideDetails?: boolean;
   readonly?: boolean;
   rules?: any[];
+  restrictItems?: StatutParticipant[];
 }>();
 
-const modelValue = defineModel<ListeAttente>({ required: true });
+const modelValue = defineModel<StatutParticipant>({ required: true });
 
-const items = selectItems(ListeAttenteLabels).map((statut) => ({
-  value: statut.value,
-  title: statut.title,
-  format: Formatters.listeAttente(statut.value),
-}));
+const items = computed(() =>
+  selectItems(StatutParticipantLabels)
+    .filter(
+      (s) =>
+        props.restrictItems === undefined ||
+        props.restrictItems.includes(s.value)
+    )
+    .map((statut) => ({
+      value: statut.value,
+      title: statut.title,
+      format: Formatters.statutParticipant(statut.value),
+    }))
+);
 </script>
 
 <style scoped></style>

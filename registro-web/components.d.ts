@@ -11,6 +11,7 @@ declare module 'vue' {
     BoolField: typeof import('./src/components/BoolField.vue')['default']
     CardSimilaires: typeof import('./src/components/inscriptions/CardSimilaires.vue')['default']
     CardValide: typeof import('./src/components/inscriptions/CardValide.vue')['default']
+    CardValideParticipantRow: typeof import('./src/components/inscriptions/CardValideParticipantRow.vue')['default']
     DateField: typeof import('./src/components/DateField.vue')['default']
     DateNaissanceField: typeof import('./src/components/DateNaissanceField.vue')['default']
     DayOffsetField: typeof import('./src/components/DayOffsetField.vue')['default']
@@ -34,7 +35,6 @@ declare module 'vue' {
     InscriptionEtatcivilCols: typeof import('./src/components/inscriptions/InscriptionEtatcivilCols.vue')['default']
     InscriptionRow: typeof import('./src/components/inscriptions/InscriptionRow.vue')['default']
     IntField: typeof import('./src/components/IntField.vue')['default']
-    ListeAttenteField: typeof import('./src/components/ListeAttenteField.vue')['default']
     ModePaiementField: typeof import('./src/components/ModePaiementField.vue')['default']
     MontantField: typeof import('./src/components/MontantField.vue')['default']
     NationaliteField: typeof import('./src/components/NationaliteField.vue')['default']
@@ -49,6 +49,7 @@ declare module 'vue' {
     SelectDossier: typeof import('./src/components/SelectDossier.vue')['default']
     SelectPersonne: typeof import('./src/components/SelectPersonne.vue')['default']
     SexeField: typeof import('./src/components/SexeField.vue')['default']
+    StatutParticipantField: typeof import('./src/components/StatutParticipantField.vue')['default']
     StringList: typeof import('./src/components/StringList.vue')['default']
     TimeField: typeof import('./src/components/TimeField.vue')['default']
   }
