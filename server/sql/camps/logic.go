@@ -160,18 +160,16 @@ func (cd *Camp) keepEquilibreGF(stats StatistiquesInscrits, participants []pr.Pe
 // ainsi que le statut conseillé
 type StatutCauses struct {
 	AgeMin, AgeMax, EquilibreGF, Place bool
-
-	Statut ListeAttente // comment placer le participant, calculé à partir des raisons ci-dessus
 }
 
-func (s *StatutCauses) setHint() {
+// Hint indique comment placer le participant
+func (s StatutCauses) Hint() StatutParticipant {
 	if !(s.AgeMin && s.AgeMax) {
-		s.Statut = AttenteProfilInvalide
+		return AttenteProfilInvalide
 	} else if !(s.Place && s.EquilibreGF) {
-		s.Statut = AttenteCampComplet
-	} else {
-		s.Statut = Inscrit
+		return AttenteCampComplet
 	}
+	return Inscrit
 }
 
 // Status détermine la validité de l'inscription des personnes
@@ -191,7 +189,6 @@ func (cd CampLoader) Status(participants []pr.Personne) []StatutCauses {
 			Place:       restePlace,
 			EquilibreGF: equilibreGF,
 		}
-		out[i].setHint()
 	}
 	return out
 }

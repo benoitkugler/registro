@@ -12,7 +12,7 @@ import (
 	tu "registro/utils/testutils"
 )
 
-func part(p pr.IdPersonne, statut ListeAttente) Participant {
+func part(p pr.IdPersonne, statut StatutParticipant) Participant {
 	return Participant{IdPersonne: p, Statut: statut}
 }
 
@@ -106,47 +106,47 @@ func TestCampLoader_Status(t *testing.T) {
 		{
 			campNoGF,
 			[]pr.Personne{pers2(pr.Man, 10)},
-			[]StatutCauses{{true, true, true, true, Inscrit}},
+			[]StatutCauses{{true, true, true, true}},
 		},
 		{
 			campNoGF,
 			[]pr.Personne{pers2(pr.Man, 18)},
-			[]StatutCauses{{true, false, true, true, AttenteProfilInvalide}},
+			[]StatutCauses{{true, false, true, true}},
 		},
 		{
 			campNoGF,
 			[]pr.Personne{pers2(pr.Man, 4)},
-			[]StatutCauses{{false, true, true, true, AttenteProfilInvalide}},
+			[]StatutCauses{{false, true, true, true}},
 		},
 		{
 			campNoGF,
 			[]pr.Personne{pers2(pr.Man, 10), pers2(pr.Man, 10)},
-			[]StatutCauses{{true, true, true, true, Inscrit}, {true, true, true, true, Inscrit}},
+			[]StatutCauses{{true, true, true, true}, {true, true, true, true}},
 		},
 		{ // places manquantes
 			campNoGF,
 			[]pr.Personne{pers2(pr.Man, 10), pers2(pr.Man, 10), pers2(pr.Man, 10)},
-			[]StatutCauses{{true, true, true, false, AttenteCampComplet}, {true, true, true, false, AttenteCampComplet}, {true, true, true, false, AttenteCampComplet}},
+			[]StatutCauses{{true, true, true, false}, {true, true, true, false}, {true, true, true, false}},
 		},
 		{
 			campGF,
 			[]pr.Personne{pers2(pr.Man, 10)},
-			[]StatutCauses{{true, true, true, true, Inscrit}},
+			[]StatutCauses{{true, true, true, true}},
 		},
 		{ // equlibre actuel : 1G / 2F
 			campGF,
 			[]pr.Personne{pers2(pr.Woman, 10), pers2(pr.Woman, 10), pers2(pr.Woman, 10)},
-			[]StatutCauses{{true, true, false, false, AttenteCampComplet}, {true, true, false, false, AttenteCampComplet}, {true, true, false, false, AttenteCampComplet}},
+			[]StatutCauses{{true, true, false, false}, {true, true, false, false}, {true, true, false, false}},
 		},
 		{ // equlibre actuel : 1G / 2F
 			campGF,
 			[]pr.Personne{pers2(pr.Man, 10), pers2(pr.Woman, 10), pers2(pr.Woman, 10)},
-			[]StatutCauses{{true, true, false, false, AttenteCampComplet}, {true, true, false, false, AttenteCampComplet}, {true, true, false, false, AttenteCampComplet}},
+			[]StatutCauses{{true, true, false, false}, {true, true, false, false}, {true, true, false, false}},
 		},
 		{ // equlibre actuel : 1G / 2F
 			campGF,
 			[]pr.Personne{pers2(pr.Man, 10), pers2(pr.Man, 10), pers2(pr.Woman, 10)},
-			[]StatutCauses{{true, true, true, false, AttenteCampComplet}, {true, true, true, false, AttenteCampComplet}, {true, true, true, false, AttenteCampComplet}},
+			[]StatutCauses{{true, true, true, false}, {true, true, true, false}, {true, true, true, false}},
 		},
 	}
 	for _, tt := range tests {

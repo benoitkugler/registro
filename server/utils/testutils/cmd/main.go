@@ -88,8 +88,8 @@ func addInscriptions(db *sql.DB, smtp config.SMTP, asso config.Asso, count int) 
 	c1, c2 := campIds[0], campIds[1]
 	parts := []api.Participant{
 		{IdCamp: c1, DateNaissance: shared.NewDate(2015, 1, 1), Nom: "Muler", Prenom: "Pierre", Sexe: pr.Man},
-		{IdCamp: c1, DateNaissance: shared.NewDate(2015, 1, 1), Nom: "Martin", Prenom: "Julie", Sexe: pr.Woman},
-		{IdCamp: c2, DateNaissance: shared.NewDate(2015, 1, 1), Nom: "Martin", Prenom: "Julie", Sexe: pr.Woman},
+		{IdCamp: c1, DateNaissance: shared.NewDate(2000, 1, 1), Nom: "Martin", Prenom: "Julie", Sexe: pr.Woman},
+		{IdCamp: c2, DateNaissance: shared.NewDate(2000, 1, 1), Nom: "Martin", Prenom: "Julie", Sexe: pr.Woman},
 	}
 	if count < len(parts) {
 		parts = parts[:count]

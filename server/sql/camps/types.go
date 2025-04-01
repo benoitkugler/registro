@@ -22,13 +22,13 @@ func (s *OptIdCamp) Scan(src any) error { return (*shared.OptID[IdCamp])(s).Scan
 
 func (s OptIdCamp) Value() (driver.Value, error) { return (shared.OptID[IdCamp])(s).Value() }
 
-// ListeAttente définit le statut d'un participant
+// StatutParticipant définit le statut d'un participant
 // par rapport à la liste d'attente
-type ListeAttente uint8
+type StatutParticipant uint8
 
 const (
 	// personne n'a encore décidé ou placer le participant
-	AStatuer ListeAttente = iota // A statuer
+	AStatuer StatutParticipant = iota // A statuer
 	// définitivment refusé (non concerné par une place libérée)
 	Refuse // Refusé définitivement
 	// le profil ne suit pas les conditions du camp

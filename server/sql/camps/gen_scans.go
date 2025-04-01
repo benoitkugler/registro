@@ -17,15 +17,15 @@ import (
 )
 
 type scanner interface {
-	Scan(...interface{}) error
+	Scan(...any) error
 }
 
 // DB groups transaction like objects, and
 // is implemented by *sql.DB and *sql.Tx
 type DB interface {
-	Exec(query string, args ...interface{}) (sql.Result, error)
-	Query(query string, args ...interface{}) (*sql.Rows, error)
-	QueryRow(query string, args ...interface{}) *sql.Row
+	Exec(query string, args ...any) (sql.Result, error)
+	Query(query string, args ...any) (*sql.Rows, error)
+	QueryRow(query string, args ...any) *sql.Row
 	Prepare(query string) (*sql.Stmt, error)
 }
 
@@ -1885,7 +1885,7 @@ func DeleteStructureaidesByIDs(tx DB, ids ...IdStructureaide) ([]IdStructureaide
 	return ScanIdStructureaideArray(rows)
 }
 
-func loadJSON(out interface{}, src interface{}) error {
+func loadJSON(out any, src any) error {
 	if src == nil {
 		return nil //zero value out
 	}
@@ -1896,7 +1896,7 @@ func loadJSON(out interface{}, src interface{}) error {
 	return json.Unmarshal(bs, out)
 }
 
-func dumpJSON(s interface{}) (driver.Value, error) {
+func dumpJSON(s any) (driver.Value, error) {
 	b, err := json.Marshal(s)
 	if err != nil {
 		return nil, err
@@ -1904,7 +1904,7 @@ func dumpJSON(s interface{}) (driver.Value, error) {
 	return driver.Value(string(b)), nil
 }
 
-func (s *PrixQuotientFamilial) Scan(src interface{}) error {
+func (s *PrixQuotientFamilial) Scan(src any) error {
 	var tmp pq.Int32Array
 	err := tmp.Scan(src)
 	if err != nil {
@@ -1921,7 +1921,7 @@ func (s PrixQuotientFamilial) Value() (driver.Value, error) {
 	return pq.Int32Array(s[:]).Value()
 }
 
-func (s *Roles) Scan(src interface{}) error {
+func (s *Roles) Scan(src any) error {
 	var tmp pq.Int32Array
 	err := tmp.Scan(src)
 	if err != nil {
@@ -1941,7 +1941,7 @@ func (s Roles) Value() (driver.Value, error) {
 	return tmp.Value()
 }
 
-func (s *PresenceOffsets) Scan(src interface{}) error {
+func (s *PresenceOffsets) Scan(src any) error {
 	bs, ok := src.([]byte)
 	if !ok {
 		return fmt.Errorf("unsupported type %T", src)
@@ -2159,16 +2159,16 @@ func ScanIdStructureaideArray(rs *sql.Rows) ([]IdStructureaide, error) {
 	return ints, nil
 }
 
-func (s *OptionNavette) Scan(src interface{}) error  { return loadJSON(s, src) }
+func (s *OptionNavette) Scan(src any) error          { return loadJSON(s, src) }
 func (s OptionNavette) Value() (driver.Value, error) { return dumpJSON(s) }
 
-func (s *OptionPrixCamp) Scan(src interface{}) error  { return loadJSON(s, src) }
+func (s *OptionPrixCamp) Scan(src any) error          { return loadJSON(s, src) }
 func (s OptionPrixCamp) Value() (driver.Value, error) { return dumpJSON(s) }
 
-func (s *OptionPrixParticipant) Scan(src interface{}) error  { return loadJSON(s, src) }
+func (s *OptionPrixParticipant) Scan(src any) error          { return loadJSON(s, src) }
 func (s OptionPrixParticipant) Value() (driver.Value, error) { return dumpJSON(s) }
 
-func (s *Remises) Scan(src interface{}) error  { return loadJSON(s, src) }
+func (s *Remises) Scan(src any) error          { return loadJSON(s, src) }
 func (s Remises) Value() (driver.Value, error) { return dumpJSON(s) }
 
 func SwitchEquipierPersonne(db DB, target personnes.IdPersonne, temporaire personnes.IdPersonne) error {

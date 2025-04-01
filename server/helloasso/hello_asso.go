@@ -245,9 +245,6 @@ func getJSON(url, accesToken string, out interface{}) error {
 }
 
 type pagination struct {
-	TotalCount        int    `json:"totalCount"` // Total number of results available
-	PageIndex         int    `json:"pageIndex"`  // Current page index
-	TotalPages        int    `json:"totalPages"` // Total number of pages of results with current page size
 	ContinuationToken string `json:"continuationToken"`
 }
 
@@ -302,7 +299,7 @@ func fetchAllFormPaiements(accesToken string, formType, formSlug string) ([]paie
 
 		all = append(all, out.Data...)
 
-		if out.Pagination.PageIndex == out.Pagination.TotalPages { // done
+		if len(out.Data) == 0 || out.Pagination.ContinuationToken == continuationToken { // done
 			break
 		} else {
 			continuationToken = out.Pagination.ContinuationToken

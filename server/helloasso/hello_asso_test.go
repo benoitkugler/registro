@@ -68,7 +68,7 @@ func TestAPIV5(t *testing.T) {
 
 	forms, err := fetchForms(accesToken)
 	tu.AssertNoErr(t, err)
-	tu.Assert(t, forms.Pagination.PageIndex == forms.Pagination.TotalPages)
+	tu.Assert(t, len(forms.Data) > 0)
 
 	var allPaiements []paiementHelloAsso
 	for _, form := range formsHelloAsso {

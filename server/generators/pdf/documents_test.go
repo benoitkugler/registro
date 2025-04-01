@@ -25,7 +25,7 @@ func init() {
 	}
 
 	os.Setenv("ASSO", "acve")
-	os.Setenv("ASSO_BANK_IBAN", ".")
+	os.Setenv("ASSO_BANK_IBAN", "iban1,iban2")
 	cfg, err = config.NewAsso()
 	if err != nil {
 		panic(err)

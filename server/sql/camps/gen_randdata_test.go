@@ -153,12 +153,6 @@ func randLettredirecteur() Lettredirecteur {
 	return s
 }
 
-func randListeAttente() ListeAttente {
-	choix := [...]ListeAttente{AStatuer, Refuse, AttenteProfilInvalide, AttenteCampComplet, EnAttenteReponse, Inscrit}
-	i := rand.Intn(len(choix))
-	return choix[i]
-}
-
 func randNavette() Navette {
 	choix := [...]Navette{NoBus, Aller, Retour, AllerRetour}
 	i := rand.Intn(len(choix))
@@ -203,7 +197,7 @@ func randParticipant() Participant {
 	s.IdPersonne = randper_IdPersonne()
 	s.IdDossier = randdos_IdDossier()
 	s.IdTaux = randdos_IdTaux()
-	s.Statut = randListeAttente()
+	s.Statut = randStatutParticipant()
 	s.Remises = randRemises()
 	s.QuotientFamilial = randint()
 	s.OptionPrix = randOptionPrixParticipant()
@@ -324,6 +318,12 @@ func randSondage() Sondage {
 	s.MessageResponsable = randstring()
 
 	return s
+}
+
+func randStatutParticipant() StatutParticipant {
+	choix := [...]StatutParticipant{AStatuer, Refuse, AttenteProfilInvalide, AttenteCampComplet, EnAttenteReponse, Inscrit}
+	i := rand.Intn(len(choix))
+	return choix[i]
 }
 
 func randStructureaide() Structureaide {
