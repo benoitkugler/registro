@@ -16,13 +16,14 @@ import (
 var templates embed.FS
 
 var (
-	inviteEquipierT       *template.Template
-	notifieDonT           *template.Template
-	confirmeInscriptionT  *template.Template
-	preinscriptionT       *template.Template
-	notifieFusionDossierT *template.Template
-	notifieMessageT       *template.Template
-	notifiePlaceLibereeT  *template.Template
+	inviteEquipierT               *template.Template
+	notifieDonT                   *template.Template
+	confirmeInscriptionT          *template.Template
+	preinscriptionT               *template.Template
+	notifieFusionDossierT         *template.Template
+	notifieMessageT               *template.Template
+	notifiePlaceLibereeT          *template.Template
+	notifieValidationInscriptionT *template.Template
 )
 
 func init() {
@@ -33,6 +34,7 @@ func init() {
 	notifieFusionDossierT = parseTemplate("templates/notifieFusionDossier.html")
 	notifieMessageT = parseTemplate("templates/notifieMessage.html")
 	notifiePlaceLibereeT = parseTemplate("templates/notifiePlaceLiberee.html")
+	notifieValidationInscriptionT = parseTemplate("templates/notifieValidationInscription.html")
 }
 
 func parseTemplate(templateFile string) *template.Template {
@@ -79,12 +81,10 @@ func (c Contact) Salutations() string {
 
 const mailAutoSignature = template.HTML("<i>Ps : Ceci est un mail automatique, merci de ne pas y répondre.</i>")
 
-// type Participant struct {
-// 	NomPrenom, Sexe string
-// 	Prenom          string
-// 	DateNaissance   rd.Date
-// 	LabelCamp       string
-// }
+type Participant struct {
+	Personne string
+	Camp     string
+}
 
 // type DetailsParticipant struct {
 // 	Participant
@@ -261,6 +261,29 @@ func ConfirmeInscription(asso config.Asso, contact Contact, urlConfirmeInscripti
 	return render(confirmeInscriptionT, args)
 }
 
+func NotifieValidationInscription(asso config.Asso, contact Contact, lienEspacePerso string, inscrits, attente, astatuer []Participant) (string, error) {
+	args := struct {
+		champsCommuns
+		Inscrits        []Participant
+		Attente         []Participant
+		AStatuer        []Participant
+		LienEspacePerso string
+	}{
+		champsCommuns: champsCommuns{
+			Title:       "Inscription reçue",
+			Salutations: contact.Salutations(),
+			Signature:   mailAutoSignature,
+			Asso:        asso,
+		},
+		Inscrits:        inscrits,
+		Attente:         attente,
+		AStatuer:        astatuer,
+		LienEspacePerso: lienEspacePerso,
+	}
+
+	return render(notifieValidationInscriptionT, args)
+}
+
 // func NewDebloqueFicheSanitaire(urlDebloqueFicheSanitaire, newMail, nomPrenom string) (string, error) {
 // 	commun := newChampCommuns(Contact{}, "Accès à la fiche sanitaire")
 // 	commun.SignatureMail = "<i>Ps : Ceci est un mail automatique, merci de ne pas y répondre.</i>"
@@ -296,7 +319,7 @@ func ConfirmeInscription(asso config.Asso, contact Contact, urlConfirmeInscripti
 // 	return render(templates.NotifEnvoisDocs, "notif_envois_docs.html", p)
 // }
 
-func InviteEquipier(cfg config.Asso, labelCamp string, directeur string, equipier pr.Etatcivil, lienForumaire string) (string, error) {
+func InviteEquipier(cfg config.Asso, labelCamp string, directeur string, equipier pr.Etatcivil, lienFormulaire string) (string, error) {
 	s := "Cher"
 	if equipier.Sexe == pr.Woman {
 		s = "Chère"
@@ -314,7 +337,7 @@ func InviteEquipier(cfg config.Asso, labelCamp string, directeur string, equipie
 			Signature:   template.HTML(directeur) + "<br/>" + mailAutoSignature,
 		},
 		labelCamp,
-		lienForumaire,
+		lienFormulaire,
 	}
 	return render(inviteEquipierT, args)
 }

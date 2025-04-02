@@ -318,6 +318,12 @@ CREATE TABLE event_sondages (
     guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7)) NOT NULL
 );
 
+CREATE TABLE event_validations (
+    IdEvent integer NOT NULL,
+    IdCamp integer,
+    guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7)) NOT NULL
+);
+
 CREATE TABLE dons (
     Id serial PRIMARY KEY,
     Valeur Montant NOT NULL,

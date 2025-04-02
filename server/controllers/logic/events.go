@@ -57,19 +57,31 @@ type EventContent interface {
 	kind() evs.EventKind
 }
 
-func (Supprime) kind() evs.EventKind        { return evs.Supprime }
-func (AccuseReception) kind() evs.EventKind { return evs.AccuseReception }
-func (Message) kind() evs.EventKind         { return evs.Message }
-func (Facture) kind() evs.EventKind         { return evs.Facture }
-func (CampDocs) kind() evs.EventKind        { return evs.CampDocs }
-func (PlaceLiberee) kind() evs.EventKind    { return evs.PlaceLiberee }
-func (Attestation) kind() evs.EventKind     { return evs.Attestation }
-func (Sondage) kind() evs.EventKind         { return evs.Sondage }
+func (Supprime) kind() evs.EventKind     { return evs.Supprime }
+func (Validation) kind() evs.EventKind   { return evs.Validation }
+func (Message) kind() evs.EventKind      { return evs.Message }
+func (Facture) kind() evs.EventKind      { return evs.Facture }
+func (CampDocs) kind() evs.EventKind     { return evs.CampDocs }
+func (PlaceLiberee) kind() evs.EventKind { return evs.PlaceLiberee }
+func (Attestation) kind() evs.EventKind  { return evs.Attestation }
+func (Sondage) kind() evs.EventKind      { return evs.Sondage }
 
-type (
-	Supprime        struct{}
-	AccuseReception struct{}
-)
+type Supprime struct{}
+
+type Validation struct {
+	ByCamp string // optionnel
+}
+
+// m must have kind [Validation]
+func (ld *eventsContent) newValidation(ev evs.Event) Validation {
+	m := ld.validations[ev.Id]
+	label := ""
+	if m.IdCamp.Valid {
+		camp := ld.camps[m.IdCamp.Id]
+		label = camp.Label()
+	}
+	return Validation{label}
+}
 
 type Message struct {
 	Message          evs.EventMessage
@@ -153,6 +165,7 @@ type eventsContent struct {
 	participants cps.Participants
 	personnes    pr.Personnes
 
+	validations   map[evs.IdEvent]evs.EventValidation
 	messages      map[evs.IdEvent]evs.EventMessage
 	vupars        map[evs.IdEvent]evs.EventMessageVus
 	campDocs      map[evs.IdEvent]evs.EventCampDocs
@@ -176,6 +189,12 @@ func loadEventsContent(db evs.DB, ids ...evs.IdEvent) (out eventsContent, _ erro
 		return eventsContent{}, utils.SQLError(err)
 	}
 	out.vupars = tmp1bis.ByIdEvent()
+
+	tmp20, err := evs.SelectEventValidationsByIdEvents(db, ids...)
+	if err != nil {
+		return eventsContent{}, utils.SQLError(err)
+	}
+	out.validations = tmp20.ByIdEvent()
 
 	tmp2, err := evs.SelectEventCampDocssByIdEvents(db, ids...)
 	if err != nil {
@@ -212,6 +231,11 @@ func loadEventsContent(db evs.DB, ids ...evs.IdEvent) (out eventsContent, _ erro
 			idCamps = append(idCamps, m.OrigineCamp.Id)
 		}
 	}
+	for _, m := range tmp20 {
+		if m.IdCamp.Valid {
+			idCamps = append(idCamps, m.IdCamp.Id)
+		}
+	}
 	idCamps = slices.Concat(idCamps, tmp1bis.IdCamps(), tmp5.IdCamps(), out.participants.IdCamps())
 	out.camps, err = cps.SelectCamps(db, idCamps...)
 	if err != nil {
@@ -230,8 +254,8 @@ func (ec *eventsContent) build(event evs.Event) Event {
 	switch event.Kind {
 	case evs.Supprime:
 		out.Content = Supprime{}
-	case evs.AccuseReception:
-		out.Content = AccuseReception{}
+	case evs.Validation:
+		out.Content = ec.newValidation(event)
 	case evs.Message:
 		out.Content = ec.newMessage(event)
 	case evs.PlaceLiberee:

@@ -11,15 +11,15 @@ import (
 )
 
 type scanner interface {
-	Scan(...interface{}) error
+	Scan(...any) error
 }
 
 // DB groups transaction like objects, and
 // is implemented by *sql.DB and *sql.Tx
 type DB interface {
-	Exec(query string, args ...interface{}) (sql.Result, error)
-	Query(query string, args ...interface{}) (*sql.Rows, error)
-	QueryRow(query string, args ...interface{}) *sql.Row
+	Exec(query string, args ...any) (sql.Result, error)
+	Query(query string, args ...any) (*sql.Rows, error)
+	QueryRow(query string, args ...any) *sql.Row
 	Prepare(query string) (*sql.Stmt, error)
 }
 
@@ -1215,6 +1215,151 @@ func DeleteEventSondagesByIdCamps(tx DB, idCamps_ ...camps.IdCamp) (EventSondage
 		return nil, err
 	}
 	return ScanEventSondages(rows)
+}
+
+func scanOneEventValidation(row scanner) (EventValidation, error) {
+	var item EventValidation
+	err := row.Scan(
+		&item.IdEvent,
+		&item.IdCamp,
+	)
+	return item, err
+}
+
+func ScanEventValidation(row *sql.Row) (EventValidation, error) { return scanOneEventValidation(row) }
+
+// SelectAll returns all the items in the event_validations table.
+func SelectAllEventValidations(db DB) (EventValidations, error) {
+	rows, err := db.Query("SELECT idevent, idcamp FROM event_validations")
+	if err != nil {
+		return nil, err
+	}
+	return ScanEventValidations(rows)
+}
+
+type EventValidations []EventValidation
+
+func ScanEventValidations(rs *sql.Rows) (EventValidations, error) {
+	var (
+		item EventValidation
+		err  error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(EventValidations, 0, 16)
+	for rs.Next() {
+		item, err = scanOneEventValidation(rs)
+		if err != nil {
+			return nil, err
+		}
+		structs = append(structs, item)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+func (item EventValidation) Insert(db DB) error {
+	_, err := db.Exec(`INSERT INTO event_validations (
+			idevent, idcamp
+			) VALUES (
+			$1, $2
+			);
+			`, item.IdEvent, item.IdCamp)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Insert the links EventValidation in the database.
+// It is a no-op if 'items' is empty.
+func InsertManyEventValidations(tx *sql.Tx, items ...EventValidation) error {
+	if len(items) == 0 {
+		return nil
+	}
+
+	stmt, err := tx.Prepare(pq.CopyIn("event_validations",
+		"idevent",
+		"idcamp",
+	))
+	if err != nil {
+		return err
+	}
+
+	for _, item := range items {
+		_, err = stmt.Exec(item.IdEvent, item.IdCamp)
+		if err != nil {
+			return err
+		}
+	}
+
+	if _, err = stmt.Exec(); err != nil {
+		return err
+	}
+
+	if err = stmt.Close(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Delete the link EventValidation from the database.
+// Only the foreign keys IdEvent fields are used in 'item'.
+func (item EventValidation) Delete(tx DB) error {
+	_, err := tx.Exec(`DELETE FROM event_validations WHERE IdEvent = $1;`, item.IdEvent)
+	return err
+}
+
+// ByIdEvent returns a map with 'IdEvent' as keys.
+func (items EventValidations) ByIdEvent() map[IdEvent]EventValidation {
+	out := make(map[IdEvent]EventValidation, len(items))
+	for _, target := range items {
+		out[target.IdEvent] = target
+	}
+	return out
+}
+
+// IdEvents returns the list of ids of IdEvent
+// contained in this link table.
+// They are not garanteed to be distinct.
+func (items EventValidations) IdEvents() []IdEvent {
+	out := make([]IdEvent, len(items))
+	for index, target := range items {
+		out[index] = target.IdEvent
+	}
+	return out
+}
+
+// SelectEventValidationByIdEvent return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectEventValidationByIdEvent(tx DB, idEvent IdEvent) (item EventValidation, found bool, err error) {
+	row := tx.QueryRow("SELECT idevent, idcamp FROM event_validations WHERE idevent = $1", idEvent)
+	item, err = ScanEventValidation(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
+}
+
+func SelectEventValidationsByIdEvents(tx DB, idEvents_ ...IdEvent) (EventValidations, error) {
+	rows, err := tx.Query("SELECT idevent, idcamp FROM event_validations WHERE idevent = ANY($1)", IdEventArrayToPQ(idEvents_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanEventValidations(rows)
+}
+
+func DeleteEventValidationsByIdEvents(tx DB, idEvents_ ...IdEvent) (EventValidations, error) {
+	rows, err := tx.Query("DELETE FROM event_validations WHERE idevent = ANY($1) RETURNING idevent, idcamp", IdEventArrayToPQ(idEvents_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanEventValidations(rows)
 }
 
 // SelectEventByIdAndKind return zero or one item, thanks to a UNIQUE SQL constraint.

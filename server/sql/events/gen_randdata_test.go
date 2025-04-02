@@ -43,7 +43,7 @@ func randEventCampDocs() EventCampDocs {
 }
 
 func randEventKind() EventKind {
-	choix := [...]EventKind{Supprime, AccuseReception, Message, PlaceLiberee, Facture, CampDocs, Attestation, Sondage}
+	choix := [...]EventKind{Supprime, Validation, Message, PlaceLiberee, Facture, CampDocs, Attestation, Sondage}
 	i := rand.Intn(len(choix))
 	return choix[i]
 }
@@ -80,6 +80,14 @@ func randEventSondage() EventSondage {
 	var s EventSondage
 	s.IdEvent = randIdEvent()
 	s.IdCamp = randcam_IdCamp()
+
+	return s
+}
+
+func randEventValidation() EventValidation {
+	var s EventValidation
+	s.IdEvent = randIdEvent()
+	s.IdCamp = randcam_OptIdCamp()
 
 	return s
 }

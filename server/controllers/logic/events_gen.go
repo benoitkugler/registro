@@ -2,6 +2,7 @@ package logic
 
 import (
 	"encoding/json"
+	"registro/sql/dossiers"
 	"registro/sql/events"
 	"time"
 )
@@ -24,10 +25,6 @@ func (out *EventContentWrapper) UnmarshalJSON(src []byte) error {
 		return err
 	}
 	switch wr.Kind {
-	case "AccuseReception":
-		var data AccuseReception
-		err = json.Unmarshal(wr.Data, &data)
-		out.Data = data
 	case "Attestation":
 		var data Attestation
 		err = json.Unmarshal(wr.Data, &data)
@@ -56,6 +53,10 @@ func (out *EventContentWrapper) UnmarshalJSON(src []byte) error {
 		var data Supprime
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
+	case "Validation":
+		var data Validation
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
 
 	default:
 		panic("exhaustive switch")
@@ -65,13 +66,11 @@ func (out *EventContentWrapper) UnmarshalJSON(src []byte) error {
 
 func (item EventContentWrapper) MarshalJSON() ([]byte, error) {
 	type wrapper struct {
-		Data interface{}
+		Data any
 		Kind string
 	}
 	var wr wrapper
 	switch data := item.Data.(type) {
-	case AccuseReception:
-		wr = wrapper{Kind: "AccuseReception", Data: data}
 	case Attestation:
 		wr = wrapper{Kind: "Attestation", Data: data}
 	case CampDocs:
@@ -86,6 +85,8 @@ func (item EventContentWrapper) MarshalJSON() ([]byte, error) {
 		wr = wrapper{Kind: "Sondage", Data: data}
 	case Supprime:
 		wr = wrapper{Kind: "Supprime", Data: data}
+	case Validation:
+		wr = wrapper{Kind: "Validation", Data: data}
 
 	default:
 		panic("exhaustive switch")
@@ -94,35 +95,38 @@ func (item EventContentWrapper) MarshalJSON() ([]byte, error) {
 }
 
 const (
-	AccuseReceptionEvKind = "AccuseReception"
-	AttestationEvKind     = "Attestation"
-	CampDocsEvKind        = "CampDocs"
-	FactureEvKind         = "Facture"
-	MessageEvKind         = "Message"
-	PlaceLibereeEvKind    = "PlaceLiberee"
-	SondageEvKind         = "Sondage"
-	SupprimeEvKind        = "Supprime"
+	AttestationEvKind  = "Attestation"
+	CampDocsEvKind     = "CampDocs"
+	FactureEvKind      = "Facture"
+	MessageEvKind      = "Message"
+	PlaceLibereeEvKind = "PlaceLiberee"
+	SondageEvKind      = "Sondage"
+	SupprimeEvKind     = "Supprime"
+	ValidationEvKind   = "Validation"
 )
 
 func (item Event) MarshalJSON() ([]byte, error) {
 	type wrapper struct {
-		Id      events.IdEvent
-		Created time.Time
-		Content EventContentWrapper
+		Id        events.IdEvent
+		idDossier dossiers.IdDossier
+		Created   time.Time
+		Content   EventContentWrapper
 	}
 	wr := wrapper{
-		Id:      item.Id,
-		Created: item.Created,
-		Content: EventContentWrapper{item.Content},
+		Id:        item.Id,
+		idDossier: item.idDossier,
+		Created:   item.Created,
+		Content:   EventContentWrapper{item.Content},
 	}
 	return json.Marshal(wr)
 }
 
 func (item *Event) UnmarshalJSON(src []byte) error {
 	type wrapper struct {
-		Id      events.IdEvent
-		Created time.Time
-		Content EventContentWrapper
+		Id        events.IdEvent
+		idDossier dossiers.IdDossier
+		Created   time.Time
+		Content   EventContentWrapper
 	}
 	var wr wrapper
 	err := json.Unmarshal(src, &wr)
@@ -130,6 +134,7 @@ func (item *Event) UnmarshalJSON(src []byte) error {
 		return err
 	}
 	item.Id = wr.Id
+	item.idDossier = wr.idDossier
 	item.Created = wr.Created
 	item.Content = wr.Content.Data
 	return nil

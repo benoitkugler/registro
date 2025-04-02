@@ -1,0 +1,107 @@
+{{ define "content" }}
+<table cellpadding="0">
+  <tr>
+    <td>
+      Nous avons bien reçu votre demande d'inscription, et nous vous en
+      remercions.
+    </td>
+  </tr>
+
+  <tr>
+    <td>
+      <!-- un seul inscrit -->
+      {{ if eq (len .Inscrits) 1 }} Nous sommes ravis de vous confirmer la
+      participation de {{ (index .Inscrits 0).Personne }} au séjour {{ (index
+      .Inscrits 0).Camp }} !
+      <!-- pluieurs inscrits -->
+      {{ else if ne (len .Inscrits) 0 }} Nous sommes ravis de vous confirmer les
+      participations de :
+      <ul>
+        {{ range .Inscrits }}
+        <li>{{ .Personne }} au séjour {{ .Camp }}</li>
+        {{ end }}
+      </ul>
+      {{ end }}
+      <!-- aucun inscrits -->
+    </td>
+  </tr>
+
+  <!-- liste d'attente -->
+  {{ if ne (len .Attente) 0 }}
+  <tr>
+    <td>
+      <!-- transition -->
+      {{ if ne (len .Inscrits) 0 }}<br />En revanche, nous{{ else }}Nous{{ end
+      }}
+
+      <!-- un -->
+      {{ if eq (len .Attente) 1 }} avons pour l'instant placé {{ (index .Attente
+      0).Personne }} sur la liste d'attente du séjour {{ (index .Attente 0).Camp
+      }}.
+      <!-- plusieurs -->
+      {{ else }} avons pour l'instant placé sur liste d'attente :
+      <ul>
+        {{ range .Attente }}
+        <li>{{ .Personne }} au séjour {{ .Camp }}</li>
+        {{ end }}
+      </ul>
+      Nous reviendrons vers vous si une place se libère. {{ end }}
+    </td>
+  </tr>
+  {{ end }}
+
+  <!-- a statuer -->
+  {{ if ne (len .AStatuer) 0 }}
+  <tr>
+    <td>
+      <br />
+      <!-- un -->
+      {{ if eq (len .AStatuer ) 1 }} Par ailleurs, nous vous donnerons
+      prochainement une réponse pour la demande de {{ (index .AStatuer
+      0).Personne }} sur le séjour {{ (index .AStatuer 0).Camp }}
+      <!-- plusieurs -->
+      {{ else }} Par ailleurs, nous vous donnerons prochainement une réponse
+      pour les demandes :
+      <ul>
+        {{ range .AStatuer }}
+        <li>{{ .Personne }} sur le séjour {{ .Camp }}</li>
+        {{ end }}
+      </ul>
+      {{ end }}
+      <br />
+    </td>
+  </tr>
+  {{ end }}
+
+  <tr>
+    <td>
+      <br />
+      Vous pouvez retrouver ces informations, nous contacter ou procéder au
+      réglement en cliquant sur le bouton ci-dessous.
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <table width="100%" style="text-align: center" cellpadding="10">
+        <tr>
+          <td></td>
+          <td width="35%" bgcolor="#feee00" align="center">
+            <a
+              style="
+                text-decoration: none;
+                color: #000000;
+                display: inline-block;
+                width: 100%;
+              "
+              href="{{ .LienEspacePerso }}"
+            >
+              <b>MON ESPACE</b>
+            </a>
+          </td>
+          <td></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+{{ end }}

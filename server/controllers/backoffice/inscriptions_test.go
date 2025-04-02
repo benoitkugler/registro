@@ -55,12 +55,14 @@ func TestValideInscription(t *testing.T) {
 		"../../migrations/init.sql")
 	defer db.Remove()
 
-	pe1, err := pr.Personne{IsTemp: false, Etatcivil: pr.Etatcivil{DateNaissance: shared.Date(time.Now())}}.Insert(db)
+	asso, smtp := loadEnv(t)
+
+	pe1, err := pr.Personne{IsTemp: false, Etatcivil: pr.Etatcivil{Nom: "melzmel", Prenom: "szlùs", DateNaissance: shared.Date(time.Now())}}.Insert(db)
 	tu.AssertNoErr(t, err)
-	pe2, err := pr.Personne{IsTemp: false, Etatcivil: pr.Etatcivil{DateNaissance: shared.Date(time.Now())}}.Insert(db)
+	pe2, err := pr.Personne{IsTemp: false, Etatcivil: pr.Etatcivil{Nom: "melzmel", Prenom: "szlsdsmldlmsùs", DateNaissance: shared.Date(time.Now())}}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	camp1, err := cps.Camp{IdTaux: 1, Places: 20, AgeMin: 6, AgeMax: 12}.Insert(db)
+	camp1, err := cps.Camp{IdTaux: 1, Places: 20, AgeMin: 6, AgeMax: 12, Nom: "Séjour Test"}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	dossier1, err := ds.Dossier{IdResponsable: pe1.Id, IdTaux: 1, MomentInscription: time.Now()}.Insert(db)
@@ -70,7 +72,7 @@ func TestValideInscription(t *testing.T) {
 	_, err = cps.Participant{IdCamp: camp1.Id, IdPersonne: pe2.Id, IdDossier: dossier1.Id, IdTaux: 1}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	ct := Controller{db: db.DB}
+	ct := Controller{db: db.DB, asso: asso, smtp: smtp}
 
 	hints, err := ct.hintValideInscription(dossier1.Id)
 	tu.AssertNoErr(t, err)
@@ -79,7 +81,7 @@ func TestValideInscription(t *testing.T) {
 	for k, v := range hints {
 		values[k] = v.Statut
 	}
-	err = ct.valideInscription(InscriptionsValideIn{IdDossier: dossier1.Id, Statuts: values})
+	err = ct.valideInscription("localhost:1323", InscriptionsValideIn{IdDossier: dossier1.Id, Statuts: values, SendMail: true})
 	tu.AssertNoErr(t, err)
 
 	data, err := logic.LoadDossier(db, dossier1.Id)

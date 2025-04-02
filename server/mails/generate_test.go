@@ -203,6 +203,51 @@ func TestConfirmeInscription(t *testing.T) {
 	tu.AssertNoErr(t, err)
 }
 
+func TestNotifieValidationInscription(t *testing.T) {
+	cfg, _ := loadEnv(t)
+	contact, url := Contact{Prenom: "Benoit", Sexe: pr.Woman}, "https://acve.fr/confirme?id='ee'"
+
+	html, err := NotifieValidationInscription(cfg, contact, url,
+		[]Participant{{"Benoit Kugler", "C2 2025"}},
+		[]Participant{},
+		[]Participant{},
+	)
+	tu.AssertNoErr(t, err)
+	tu.Write(t, "NotifieValidationInscription_1.html", []byte(html))
+
+	html, err = NotifieValidationInscription(cfg, contact, url,
+		[]Participant{{"Benoit Kugler", "C2 2025"}, {"Benoit Kugler", "C3 2025"}},
+		[]Participant{},
+		[]Participant{},
+	)
+	tu.AssertNoErr(t, err)
+	tu.Write(t, "NotifieValidationInscription_2.html", []byte(html))
+
+	html, err = NotifieValidationInscription(cfg, contact, url,
+		[]Participant{},
+		[]Participant{{"Benoit Kugler", "C2 2025"}},
+		[]Participant{},
+	)
+	tu.AssertNoErr(t, err)
+	tu.Write(t, "NotifieValidationInscription_3.html", []byte(html))
+
+	html, err = NotifieValidationInscription(cfg, contact, url,
+		[]Participant{},
+		[]Participant{{"Benoit Kugler", "C2 2025"}, {"Benoit Kugler", "C3 2025"}},
+		[]Participant{},
+	)
+	tu.AssertNoErr(t, err)
+	tu.Write(t, "NotifieValidationInscription_4.html", []byte(html))
+
+	html, err = NotifieValidationInscription(cfg, contact, url,
+		[]Participant{{"Benoit Kugler", "C2 2025"}, {"Benoit Kugler", "C3 2025"}},
+		[]Participant{{"Benoit Kugler", "C2 2025"}, {"Benoit Kugler", "C3 2025"}},
+		[]Participant{{"Benoit Kugler", "C2 2025"}, {"Benoit Kugler", "C3 2025"}},
+	)
+	tu.AssertNoErr(t, err)
+	tu.Write(t, "NotifieValidationInscription_5.html", []byte(html))
+}
+
 func TestNotifieFusionDossier(t *testing.T) {
 	cfg, _ := loadEnv(t)
 

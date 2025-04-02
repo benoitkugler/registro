@@ -47,12 +47,36 @@ CREATE TABLE event_sondages (
     guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7)) NOT NULL
 );
 
+CREATE TABLE event_validations (
+    IdEvent integer NOT NULL,
+    IdCamp integer,
+    guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7)) NOT NULL
+);
+
 -- constraints
 ALTER TABLE events
     ADD UNIQUE (Id, Kind);
 
 ALTER TABLE events
     ADD FOREIGN KEY (IdDossier) REFERENCES dossiers ON DELETE CASCADE;
+
+ALTER TABLE event_validations
+    ADD UNIQUE (IdEvent);
+
+ALTER TABLE event_validations
+    ADD FOREIGN KEY (IdEvent, guard) REFERENCES events (Id, Kind) ON DELETE CASCADE;
+
+ALTER TABLE event_validations
+    ADD FOREIGN KEY (IdEvent) REFERENCES events;
+
+ALTER TABLE event_validations
+    ALTER COLUMN guard SET DEFAULT 1
+    /* EventKind.Validation */
+;
+
+ALTER TABLE event_validations
+    ADD CHECK (guard = 1
+    /* EventKind.Validation */);
 
 ALTER TABLE event_messages
     ADD UNIQUE (IdEvent);
