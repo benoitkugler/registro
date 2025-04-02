@@ -15,9 +15,8 @@
           </v-col>
           <v-col>
             <v-text-field
-              autofocus
               hide-details
-              label="Nom"
+              label="Prénom"
               density="compact"
               variant="outlined"
               v-model="inner.Prenom"
@@ -51,7 +50,7 @@ const props = defineProps<{
   personne: Personne;
 }>();
 const emit = defineEmits<{
-  (e: "save", camp: Personne): void;
+  (e: "save", personne: Personne): void;
 }>();
 const inner = ref(copy(props.personne));
 

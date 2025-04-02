@@ -298,6 +298,7 @@ export interface PersonneHeader {
   Label: string;
   Sexe: Sexe;
   DateNaissance: Date;
+  IsTemp: boolean;
 }
 // registro/controllers/search.ScoredPersonne
 export interface ScoredPersonne {
@@ -1345,6 +1346,68 @@ export abstract class AbstractAPI {
         params: { idDossier: String(params["idDossier"]) },
       });
       return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** PersonnesGet performs the request and handles the error */
+  async PersonnesGet(params: { search: string }) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/personnes/search";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<PersonneHeader[] | null> = await Axios.get(
+        fullUrl,
+        { headers: this.getHeaders(), params: { search: params["search"] } },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** PersonnesLoad performs the request and handles the error */
+  async PersonnesLoad(params: { id: IdPersonne }) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/personnes";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<Personne> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { id: String(params["id"]) },
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** PersonnesCreate performs the request and handles the error */
+  async PersonnesCreate() {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/personnes";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<PersonneHeader> = await Axios.put(
+        fullUrl,
+        null,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** PersonnesUpdate performs the request and handles the error */
+  async PersonnesUpdate(params: Personne) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/personnes";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<PersonneHeader> = await Axios.post(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }

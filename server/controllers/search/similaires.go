@@ -121,14 +121,16 @@ type PersonneHeader struct {
 	Label         string
 	Sexe          pr.Sexe
 	DateNaissance shared.Date
+	IsTemp        bool
 }
 
-func newPersonneHeader(p pr.Personne) PersonneHeader {
+func NewPersonneHeader(p pr.Personne) PersonneHeader {
 	return PersonneHeader{
 		p.Id,
 		p.PrenomNOM(),
 		p.Sexe,
 		p.DateNaissance,
+		p.IsTemp,
 	}
 }
 
@@ -170,7 +172,7 @@ func ChercheSimilaires(personnes pr.Personnes, in PatternsSimilarite) (scoreMax 
 		if score := comparaison(p, in); score >= seuilRechercheSimilaire {
 			out = append(out, ScoredPersonne{
 				100 * score / scoreMax,
-				newPersonneHeader(p),
+				NewPersonneHeader(p),
 			})
 		}
 	}

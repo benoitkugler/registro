@@ -70,4 +70,11 @@ func setupRoutesBackoffice(e *echo.Echo, ct *backoffice.Controller) {
 	gr.POST("/api/v1/backoffice/events/message", ct.EventsSendMessage)
 	gr.DELETE("/api/v1/backoffice/events", ct.EventsDelete)
 	gr.POST("/api/v1/backoffice/events/message/seen", ct.EventsMarkMessagesSeen)
+
+	// Onglet Annuaire
+
+	gr.GET("/api/v1/backoffice/personnes/search", ct.PersonnesGet)
+	gr.GET("/api/v1/backoffice/personnes", ct.PersonnesLoad)
+	gr.PUT("/api/v1/backoffice/personnes", ct.PersonnesCreate)
+	gr.POST("/api/v1/backoffice/personnes", ct.PersonnesUpdate)
 }

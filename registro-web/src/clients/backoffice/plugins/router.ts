@@ -109,7 +109,7 @@ export function parseQueryURLPersonnes(
   };
 }
 
-export function goToPersonne(idPersonne: IdPersonne) {
+export function goToPersonne(idPersonne?: IdPersonne) {
   router.push({
     path: "/annuaire",
     query: { idPersonne } satisfies QueryURLPersonnes,

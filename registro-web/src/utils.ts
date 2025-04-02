@@ -336,6 +336,10 @@ export namespace Formatters {
     }
   }
 
+  export function accord(sexe: Sexe) {
+    return sexe == Sexe.Woman ? "e" : "";
+  }
+
   export function statutParticipant(s: StatutParticipant) {
     switch (s) {
       case StatutParticipant.EnAttenteReponse:

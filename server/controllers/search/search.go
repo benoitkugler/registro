@@ -48,11 +48,12 @@ func FilterPersonnes(list pr.Personnes, pattern string) (out []PersonneHeader) {
 
 	for _, v := range list {
 		if rs.Match(v) {
-			out = append(out, newPersonneHeader(v))
+			out = append(out, NewPersonneHeader(v))
 		}
 	}
 
-	slices.SortFunc(out, func(a, b PersonneHeader) int { return cmp.Compare(a.Label, b.Label) })
+	slices.SortFunc(out, func(a, b PersonneHeader) int { return int(a.Id - b.Id) })
+	slices.SortStableFunc(out, func(a, b PersonneHeader) int { return cmp.Compare(a.Label, b.Label) })
 
 	return out
 }
