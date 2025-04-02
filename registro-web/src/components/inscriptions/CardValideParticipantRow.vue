@@ -33,7 +33,7 @@
 </template>
 
 <script setup lang="ts">
-import { Camps, Personnes } from "@/utils";
+import { Camps, Formatters, Personnes } from "@/utils";
 import {
   StatutParticipant,
   type ParticipantCamp,
@@ -51,7 +51,7 @@ function formatStatutCauses(c: StatutCauses) {
   if (!c.AgeMin) {
     return "Trop jeune";
   } else if (!c.AgeMax) {
-    return "Trop âgé";
+    return `Trop âgé${Formatters.accord(props.participant.Personne.Sexe)}`;
   } else if (!c.EquilibreGF) {
     return "Equilibre G./F.";
   } else if (!c.Place) {

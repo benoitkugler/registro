@@ -147,6 +147,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { Sexe } from "../logic/api";
+import { Formatters } from "@/utils";
 
 const props = defineProps<{
   sexe: Sexe;
@@ -156,7 +157,7 @@ const emit = defineEmits<{
   (e: "update", accept: boolean): void;
 }>();
 
-const accord = computed(() => (props.sexe == Sexe.Woman ? "e" : ""));
+const accord = computed(() => Formatters.accord(props.sexe));
 </script>
 
 <style></style>
