@@ -8,7 +8,7 @@ import (
 	"registro/utils"
 )
 
-type OptIdFile shared.OptID[IdFile]
+type OptIdFile = shared.OptID[IdFile]
 
 type Categorie uint8
 

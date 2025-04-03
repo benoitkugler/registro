@@ -29,12 +29,13 @@ type Controller struct {
 	db *sql.DB
 
 	key       crypto.Encrypter
-	password  string
 	files     fs.FileSystem
 	smtp      config.SMTP
 	asso      config.Asso
 	joomeo    config.Joomeo
 	helloasso config.Helloasso
+
+	password string // backoffice client key
 
 	builtins fs.Builtins
 }
@@ -47,12 +48,12 @@ func NewController(db *sql.DB, key crypto.Encrypter, password string, files fs.F
 	return &Controller{
 		db,
 		key,
-		password,
 		files,
 		smtp,
 		asso,
 		joomeo,
 		helloasso,
+		password,
 		builtins,
 	}, nil
 }

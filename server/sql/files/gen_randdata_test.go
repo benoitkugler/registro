@@ -4,6 +4,7 @@ import (
 	"math/rand"
 	"registro/sql/camps"
 	"registro/sql/personnes"
+	"registro/sql/shared"
 	"time"
 )
 
@@ -18,8 +19,8 @@ func randCategorie() Categorie {
 func randDemande() Demande {
 	var s Demande
 	s.Id = randIdDemande()
-	s.IdFile = randOptIdFile()
-	s.IdDirecteur = randper_OptIdPersonne()
+	s.IdFile = randsha_OptID_IdFile()
+	s.IdDirecteur = randsha_OptID_per_IdPersonne()
 	s.Categorie = randCategorie()
 	s.Description = randstring()
 	s.MaxDocs = randint()
@@ -89,14 +90,6 @@ func randIdFile() IdFile {
 	return IdFile(randint64())
 }
 
-func randOptIdFile() OptIdFile {
-	var s OptIdFile
-	s.Id = randIdFile()
-	s.Valid = randbool()
-
-	return s
-}
-
 func randbool() bool {
 	i := rand.Int31n(2)
 	return i == 1
@@ -126,8 +119,16 @@ func randper_IdPersonne() personnes.IdPersonne {
 	return personnes.IdPersonne(randint64())
 }
 
-func randper_OptIdPersonne() personnes.OptIdPersonne {
-	var s personnes.OptIdPersonne
+func randsha_OptID_IdFile() shared.OptID[IdFile] {
+	var s shared.OptID[IdFile]
+	s.Id = randIdFile()
+	s.Valid = randbool()
+
+	return s
+}
+
+func randsha_OptID_per_IdPersonne() shared.OptID[personnes.IdPersonne] {
+	var s shared.OptID[personnes.IdPersonne]
 	s.Id = randper_IdPersonne()
 	s.Valid = randbool()
 

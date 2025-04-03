@@ -1,7 +1,6 @@
 package personnes
 
 import (
-	"database/sql/driver"
 	"fmt"
 	"strings"
 	"time"
@@ -10,13 +9,9 @@ import (
 	"registro/sql/shared"
 )
 
-type OptIdPersonne shared.OptID[IdPersonne]
+type OptIdPersonne = shared.OptID[IdPersonne]
 
 func (id IdPersonne) Opt() OptIdPersonne { return OptIdPersonne{Id: id, Valid: true} }
-
-func (s *OptIdPersonne) Scan(src any) error { return (*shared.OptID[IdPersonne])(s).Scan(src) }
-
-func (s OptIdPersonne) Value() (driver.Value, error) { return (shared.OptID[IdPersonne])(s).Value() }
 
 // Time is date and time
 type Time time.Time

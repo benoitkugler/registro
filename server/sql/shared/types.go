@@ -199,6 +199,8 @@ type OptID[T ~int64] struct {
 	Valid bool
 }
 
+func (s OptID[T]) Is(v T) bool { return s.Valid && s.Id == v }
+
 func (s *OptID[T]) Scan(src any) error {
 	var tmp sql.NullInt64
 	err := tmp.Scan(src)

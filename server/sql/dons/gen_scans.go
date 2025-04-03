@@ -9,15 +9,15 @@ import (
 )
 
 type scanner interface {
-	Scan(...interface{}) error
+	Scan(...any) error
 }
 
 // DB groups transaction like objects, and
 // is implemented by *sql.DB and *sql.Tx
 type DB interface {
-	Exec(query string, args ...interface{}) (sql.Result, error)
-	Query(query string, args ...interface{}) (*sql.Rows, error)
-	QueryRow(query string, args ...interface{}) *sql.Row
+	Exec(query string, args ...any) (sql.Result, error)
+	Query(query string, args ...any) (*sql.Rows, error)
+	QueryRow(query string, args ...any) *sql.Row
 	Prepare(query string) (*sql.Stmt, error)
 }
 

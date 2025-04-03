@@ -1,8 +1,6 @@
 package directeurs
 
 import (
-	"database/sql"
-	"errors"
 	"slices"
 
 	"registro/controllers/backoffice"
@@ -128,13 +126,8 @@ func (ct *Controller) hintValideInscription(id ds.IdDossier) (logic.StatutHints,
 	return loader.StatutHints(ct.db, directeursBypass)
 }
 
-type InscriptionsValideIn = backoffice.InscriptionsValideIn
+type InscriptionsValideIn = logic.InscriptionsValideIn
 
-// InscriptionsValide marque l'inscription comme validée, après s'être assuré
-// qu'aucune personne impliquée n'est temporaire.
-//
-// Le statut des participants est aussi mis à jour (de manière automatique),
-// et un mail d'accusé de réception est envoyé.
 func (ct *Controller) InscriptionsValide(c echo.Context) error {
 	user := JWTUser(c)
 
@@ -142,7 +135,7 @@ func (ct *Controller) InscriptionsValide(c echo.Context) error {
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
-	err := ct.valideInscription(args, user)
+	err := ct.valideInscription(c.Request().Host, args, user)
 	if err != nil {
 		return err
 	}
@@ -157,72 +150,7 @@ func (ct *Controller) InscriptionsValide(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) valideInscription(args InscriptionsValideIn, idCamp cps.IdCamp) error {
-	loader, err := logic.LoadDossier(ct.db, args.IdDossier)
-	if err != nil {
-		return err
-	}
-
-	hints, err := loader.StatutHints(ct.db, directeursBypass)
-	if err != nil {
-		return err
-	}
-
-	// on s'assure qu'aucune personne n'est temporaire
-	for _, pe := range loader.Personnes() {
-		if pe.IsTemp {
-			return errors.New("internal error: Personne should not be temporary")
-		}
-	}
-
-	// only update the participant for the given camp
-	participants := loader.Participants.ByIdCamp()[idCamp]
-
-	// validate the dossier only if all the participants are validated
-	otherValidated := true
-	for _, part := range loader.Participants {
-		if part.IdCamp != idCamp && part.Statut == cps.AStatuer {
-			otherValidated = false
-			break
-		}
-	}
-
-	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
-		thisValidated := true
-		for _, participant := range participants {
-			hint := hints[participant.Id]
-			// côté directeurs :
-			// seul les statuts valide (ou avec bypass) peuvent être validé
-			if !hint.Validable {
-				thisValidated = false
-				continue
-			}
-
-			newStatut, ok := args.Statuts[participant.Id]
-			if !ok {
-				return errors.New("internal error: missing participant in InscriptionsValideIn.Statuts")
-			}
-			if !hint.IsAllowed(newStatut) {
-				return errors.New("internal error! statut not allowed")
-			}
-
-			participant.Statut = newStatut
-			_, err = participant.Update(tx)
-			if err != nil {
-				return err
-			}
-		}
-
-		if otherValidated && thisValidated {
-			loader.Dossier.IsValidated = true
-			_, err = loader.Dossier.Update(tx)
-		}
-
-		return err
-	})
-
-	// TODO: envoie d'un mail de notification
-	// https://github.com/benoitkugler/registro/issues/34
-
-	return err
+func (ct *Controller) valideInscription(host string, args InscriptionsValideIn, idCamp cps.IdCamp) error {
+	return logic.ValideInscription(ct.db, ct.key, ct.smtp, ct.asso,
+		host, args, directeursBypass, idCamp.Opt())
 }

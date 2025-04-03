@@ -15,15 +15,15 @@ import (
 )
 
 type scanner interface {
-	Scan(...interface{}) error
+	Scan(...any) error
 }
 
 // DB groups transaction like objects, and
 // is implemented by *sql.DB and *sql.Tx
 type DB interface {
-	Exec(query string, args ...interface{}) (sql.Result, error)
-	Query(query string, args ...interface{}) (*sql.Rows, error)
-	QueryRow(query string, args ...interface{}) *sql.Row
+	Exec(query string, args ...any) (sql.Result, error)
+	Query(query string, args ...any) (*sql.Rows, error)
+	QueryRow(query string, args ...any) *sql.Row
 	Prepare(query string) (*sql.Stmt, error)
 }
 
@@ -448,7 +448,7 @@ func SelectInscriptionByIdAndIdTaux(tx DB, id IdInscription, idTaux dossiers.IdT
 	return item, true, err
 }
 
-func loadJSON(out interface{}, src interface{}) error {
+func loadJSON(out any, src any) error {
 	if src == nil {
 		return nil //zero value out
 	}
@@ -459,7 +459,7 @@ func loadJSON(out interface{}, src interface{}) error {
 	return json.Unmarshal(bs, out)
 }
 
-func dumpJSON(s interface{}) (driver.Value, error) {
+func dumpJSON(s any) (driver.Value, error) {
 	b, err := json.Marshal(s)
 	if err != nil {
 		return nil, err
@@ -494,5 +494,5 @@ func ScanIdInscriptionArray(rs *sql.Rows) ([]IdInscription, error) {
 	return ints, nil
 }
 
-func (s *ResponsableLegal) Scan(src interface{}) error  { return loadJSON(s, src) }
+func (s *ResponsableLegal) Scan(src any) error          { return loadJSON(s, src) }
 func (s ResponsableLegal) Value() (driver.Value, error) { return dumpJSON(s) }

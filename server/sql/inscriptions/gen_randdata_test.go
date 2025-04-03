@@ -20,7 +20,7 @@ func randInscription() Inscription {
 	s.Id = randIdInscription()
 	s.IdTaux = randdos_IdTaux()
 	s.Responsable = randResponsableLegal()
-	s.ResponsablePreIdent = randper_OptIdPersonne()
+	s.ResponsablePreIdent = randsha_OptID_per_IdPersonne()
 	s.Message = randstring()
 	s.CopiesMails = randper_Mails()
 	s.PartageAdressesOK = randbool()
@@ -36,7 +36,7 @@ func randInscriptionParticipant() InscriptionParticipant {
 	s.IdInscription = randIdInscription()
 	s.IdCamp = randcam_IdCamp()
 	s.IdTaux = randdos_IdTaux()
-	s.PreIdent = randper_OptIdPersonne()
+	s.PreIdent = randsha_OptID_per_IdPersonne()
 	s.Nom = randstring()
 	s.Prenom = randstring()
 	s.DateNaissance = randsha_Date()
@@ -102,14 +102,6 @@ func randper_Nationnalite() personnes.Nationnalite {
 	return choix[i]
 }
 
-func randper_OptIdPersonne() personnes.OptIdPersonne {
-	var s personnes.OptIdPersonne
-	s.Id = randper_IdPersonne()
-	s.Valid = randbool()
-
-	return s
-}
-
 func randper_Pays() personnes.Pays {
 	return personnes.Pays(randstring())
 }
@@ -126,6 +118,14 @@ func randper_Tels() personnes.Tels {
 
 func randsha_Date() shared.Date {
 	return shared.Date(randtDate())
+}
+
+func randsha_OptID_per_IdPersonne() shared.OptID[personnes.IdPersonne] {
+	var s shared.OptID[personnes.IdPersonne]
+	s.Id = randper_IdPersonne()
+	s.Valid = randbool()
+
+	return s
 }
 
 var letterRunes2 = []rune("azertyuiopqsdfghjklmwxcvbn123456789é@!?&èïab ")

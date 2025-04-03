@@ -4,7 +4,6 @@ package files
 
 import (
 	"database/sql"
-	"database/sql/driver"
 	"registro/sql/camps"
 	"registro/sql/personnes"
 
@@ -12,15 +11,15 @@ import (
 )
 
 type scanner interface {
-	Scan(...interface{}) error
+	Scan(...any) error
 }
 
 // DB groups transaction like objects, and
 // is implemented by *sql.DB and *sql.Tx
 type DB interface {
-	Exec(query string, args ...interface{}) (sql.Result, error)
-	Query(query string, args ...interface{}) (*sql.Rows, error)
-	QueryRow(query string, args ...interface{}) *sql.Row
+	Exec(query string, args ...any) (sql.Result, error)
+	Query(query string, args ...any) (*sql.Rows, error)
+	QueryRow(query string, args ...any) *sql.Row
 	Prepare(query string) (*sql.Stmt, error)
 }
 
@@ -1305,25 +1304,6 @@ func ScanIdFileArray(rs *sql.Rows) ([]IdFile, error) {
 		return nil, err
 	}
 	return ints, nil
-}
-
-func (s *OptIdFile) Scan(src interface{}) error {
-	var tmp sql.NullInt64
-	err := tmp.Scan(src)
-	if err != nil {
-		return err
-	}
-	*s = OptIdFile{
-		Valid: tmp.Valid,
-		Id:    IdFile(tmp.Int64),
-	}
-	return nil
-}
-
-func (s OptIdFile) Value() (driver.Value, error) {
-	return sql.NullInt64{
-		Int64: int64(s.Id),
-		Valid: s.Valid}.Value()
 }
 
 func SwitchDemandePersonne(db DB, target personnes.OptIdPersonne, temporaire personnes.OptIdPersonne) error {

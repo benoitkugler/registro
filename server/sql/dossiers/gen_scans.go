@@ -16,15 +16,15 @@ import (
 )
 
 type scanner interface {
-	Scan(...interface{}) error
+	Scan(...any) error
 }
 
 // DB groups transaction like objects, and
 // is implemented by *sql.DB and *sql.Tx
 type DB interface {
-	Exec(query string, args ...interface{}) (sql.Result, error)
-	Query(query string, args ...interface{}) (*sql.Rows, error)
-	QueryRow(query string, args ...interface{}) *sql.Row
+	Exec(query string, args ...any) (sql.Result, error)
+	Query(query string, args ...any) (*sql.Rows, error)
+	QueryRow(query string, args ...any) *sql.Row
 	Prepare(query string) (*sql.Stmt, error)
 }
 
@@ -509,7 +509,7 @@ func SelectTauxByLabel(tx DB, label string) (item Taux, found bool, err error) {
 	return item, true, err
 }
 
-func loadJSON(out interface{}, src interface{}) error {
+func loadJSON(out any, src any) error {
 	if src == nil {
 		return nil //zero value out
 	}
@@ -520,7 +520,7 @@ func loadJSON(out interface{}, src interface{}) error {
 	return json.Unmarshal(bs, out)
 }
 
-func dumpJSON(s interface{}) (driver.Value, error) {
+func dumpJSON(s any) (driver.Value, error) {
 	b, err := json.Marshal(s)
 	if err != nil {
 		return nil, err
@@ -528,7 +528,7 @@ func dumpJSON(s interface{}) (driver.Value, error) {
 	return driver.Value(string(b)), nil
 }
 
-func (s *Montant) Scan(src interface{}) error {
+func (s *Montant) Scan(src any) error {
 	bs, ok := src.([]byte)
 	if !ok {
 		return fmt.Errorf("unsupported type %T", src)

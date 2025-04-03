@@ -5,8 +5,13 @@ import (
 	"errors"
 	"slices"
 	"strings"
+	"time"
 
+	"registro/config"
+	"registro/controllers/espaceperso"
 	"registro/controllers/search"
+	"registro/crypto"
+	"registro/mails"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
 	evs "registro/sql/events"
@@ -210,4 +215,122 @@ func (bp StatutBypassRights) resolve(st cps.StatutCauses) StatutExt {
 	default: // should not happen
 	}
 	return out
+}
+
+func allValidated(ps cps.Participants) bool {
+	for _, part := range ps {
+		if part.Statut == cps.AStatuer {
+			return false
+		}
+	}
+	return true
+}
+
+// InscriptionsValideIn indique le statut des participants
+// à appliquer.
+type InscriptionsValideIn struct {
+	IdDossier ds.IdDossier
+	// choosen by the clients
+	Statuts  map[cps.IdParticipant]cps.StatutParticipant
+	SendMail bool
+}
+
+// ValideInscription met à jour le statut des participants et
+// envoie un mail d'accusé de réception.
+//
+// Le dossier est validé si aucun participant n'est encore [AStatuer]
+func ValideInscription(db *sql.DB, key crypto.Encrypter, smtp config.SMTP, asso config.Asso,
+	host string, args InscriptionsValideIn, bypass StatutBypassRights, idCamp cps.OptIdCamp,
+) error {
+	loader, err := LoadDossier(db, args.IdDossier)
+	if err != nil {
+		return err
+	}
+	dossier := loader.Dossier
+
+	hints, err := loader.StatutHints(db, bypass)
+	if err != nil {
+		return err
+	}
+
+	// on s'assure qu'aucune personne n'est temporaire
+	for _, pe := range loader.Personnes() {
+		if pe.IsTemp {
+			return errors.New("internal error: Personne should not be temporary")
+		}
+	}
+
+	err = utils.InTx(db, func(tx *sql.Tx) error {
+		var inscrits, attente, astatuer []mails.Participant
+		for _, pExt := range loader.ParticipantsExt() {
+			participant := pExt.Participant
+			mPart := mails.Participant{Personne: pExt.Personne.PrenomNOM(), Camp: pExt.Camp.Label()}
+			hint := hints[participant.Id]
+			if !hint.Validable || idCamp.Is(participant.IdCamp) {
+				if participant.Statut == cps.AStatuer {
+					astatuer = append(astatuer, mPart)
+				}
+				continue
+			}
+
+			// check the new status is present and allowed
+			newStatut, _ := args.Statuts[participant.Id]
+			if newStatut == 0 {
+				return errors.New("internal error: missing participant in InscriptionsValideIn.Statuts")
+			}
+			if !hint.IsAllowed(newStatut) {
+				return errors.New("internal error: statut not allowed")
+			}
+
+			participant.Statut = newStatut
+			_, err = participant.Update(tx)
+			if err != nil {
+				return err
+			}
+			// update loader, used below
+			loader.Participants[participant.Id] = participant
+
+			if newStatut == cps.Inscrit {
+				inscrits = append(inscrits, mPart)
+			} else {
+				attente = append(attente, mPart)
+			}
+		}
+
+		if allValidated(loader.Participants) {
+			dossier.IsValidated = true
+			_, err = dossier.Update(tx)
+			if err != nil {
+				return err
+			}
+		}
+
+		// mark the validation ...
+		ev, err := evs.Event{IdDossier: dossier.Id, Kind: evs.Validation, Created: time.Now()}.Insert(tx)
+		if err != nil {
+			return err
+		}
+		err = evs.EventValidation{IdEvent: ev.Id, IdCamp: idCamp}.Insert(tx)
+		if err != nil {
+			return err
+		}
+
+		// ... and notify if required
+		if args.SendMail {
+			resp := loader.Responsable()
+			url := espaceperso.URLEspacePerso(key, host, dossier.Id, utils.QP("origin", "validation"))
+			html, err := mails.NotifieValidationInscription(asso, mails.NewContact(&resp), url, inscrits, attente, astatuer)
+			if err != nil {
+				return err
+			}
+			err = mails.NewMailer(smtp, asso.MailsSettings).SendMail(resp.Mail, "Inscription reçue", html, dossier.CopiesMails, nil)
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+
+	return err
 }

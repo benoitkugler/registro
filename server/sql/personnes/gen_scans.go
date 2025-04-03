@@ -13,15 +13,15 @@ import (
 )
 
 type scanner interface {
-	Scan(...interface{}) error
+	Scan(...any) error
 }
 
 // DB groups transaction like objects, and
 // is implemented by *sql.DB and *sql.Tx
 type DB interface {
-	Exec(query string, args ...interface{}) (sql.Result, error)
-	Query(query string, args ...interface{}) (*sql.Rows, error)
-	QueryRow(query string, args ...interface{}) *sql.Row
+	Exec(query string, args ...any) (sql.Result, error)
+	Query(query string, args ...any) (*sql.Rows, error)
+	QueryRow(query string, args ...any) *sql.Row
 	Prepare(query string) (*sql.Stmt, error)
 }
 
@@ -326,7 +326,7 @@ func SelectPersonneByIdAndIsTemp(tx DB, id IdPersonne, isTemp bool) (item Person
 	return item, true, err
 }
 
-func loadJSON(out interface{}, src interface{}) error {
+func loadJSON(out any, src any) error {
 	if src == nil {
 		return nil //zero value out
 	}
@@ -337,7 +337,7 @@ func loadJSON(out interface{}, src interface{}) error {
 	return json.Unmarshal(bs, out)
 }
 
-func dumpJSON(s interface{}) (driver.Value, error) {
+func dumpJSON(s any) (driver.Value, error) {
 	b, err := json.Marshal(s)
 	if err != nil {
 		return nil, err
@@ -345,21 +345,21 @@ func dumpJSON(s interface{}) (driver.Value, error) {
 	return driver.Value(string(b)), nil
 }
 
-func (s *Mails) Scan(src interface{}) error {
+func (s *Mails) Scan(src any) error {
 	return (*pq.StringArray)(s).Scan(src)
 }
 func (s Mails) Value() (driver.Value, error) {
 	return pq.StringArray(s).Value()
 }
 
-func (s *Tels) Scan(src interface{}) error {
+func (s *Tels) Scan(src any) error {
 	return (*pq.StringArray)(s).Scan(src)
 }
 func (s Tels) Value() (driver.Value, error) {
 	return pq.StringArray(s).Value()
 }
 
-func (s *Time) Scan(src interface{}) error {
+func (s *Time) Scan(src any) error {
 	var tmp pq.NullTime
 	err := tmp.Scan(src)
 	if err != nil {
@@ -400,14 +400,14 @@ func ScanIdPersonneArray(rs *sql.Rows) ([]IdPersonne, error) {
 	return ints, nil
 }
 
-func (s *Allergies) Scan(src interface{}) error  { return loadJSON(s, src) }
+func (s *Allergies) Scan(src any) error          { return loadJSON(s, src) }
 func (s Allergies) Value() (driver.Value, error) { return dumpJSON(s) }
 
-func (s *Maladies) Scan(src interface{}) error  { return loadJSON(s, src) }
+func (s *Maladies) Scan(src any) error          { return loadJSON(s, src) }
 func (s Maladies) Value() (driver.Value, error) { return dumpJSON(s) }
 
-func (s *Medecin) Scan(src interface{}) error  { return loadJSON(s, src) }
+func (s *Medecin) Scan(src any) error          { return loadJSON(s, src) }
 func (s Medecin) Value() (driver.Value, error) { return dumpJSON(s) }
 
-func (s *Publicite) Scan(src interface{}) error  { return loadJSON(s, src) }
+func (s *Publicite) Scan(src any) error          { return loadJSON(s, src) }
 func (s Publicite) Value() (driver.Value, error) { return dumpJSON(s) }

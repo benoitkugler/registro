@@ -81,7 +81,7 @@ func TestValideInscription(t *testing.T) {
 	for k, v := range hints {
 		values[k] = v.Statut
 	}
-	err = ct.valideInscription("localhost:1323", InscriptionsValideIn{IdDossier: dossier1.Id, Statuts: values, SendMail: true})
+	err = ct.valideInscription("localhost:1323", logic.InscriptionsValideIn{IdDossier: dossier1.Id, Statuts: values, SendMail: true})
 	tu.AssertNoErr(t, err)
 
 	data, err := logic.LoadDossier(db, dossier1.Id)

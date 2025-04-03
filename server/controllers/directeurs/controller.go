@@ -28,11 +28,12 @@ type Controller struct {
 	key      crypto.Encrypter
 	shortKey crypto.ShortEncrypter
 
+	files  fs.FileSystem
+	smtp   config.SMTP
+	asso   config.Asso
+	joomeo config.Joomeo
+
 	password string // global password
-	files    fs.FileSystem
-	smtp     config.SMTP
-	asso     config.Asso
-	joomeo   config.Joomeo
 
 	builtins fs.Builtins
 }
@@ -46,11 +47,11 @@ func NewController(db *sql.DB, encryptKey, password string, files fs.FileSystem,
 		db,
 		crypto.NewEncrypter(encryptKey),
 		crypto.NewShortEncrypter(encryptKey),
-		password,
 		files,
 		smtp,
 		asso,
 		joomeo,
+		password,
 		builtins,
 	}, nil
 }

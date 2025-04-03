@@ -4,6 +4,7 @@ import (
 	"math/rand"
 	"registro/sql/camps"
 	"registro/sql/dossiers"
+	"registro/sql/shared"
 	"time"
 )
 
@@ -53,7 +54,7 @@ func randEventMessage() EventMessage {
 	s.IdEvent = randIdEvent()
 	s.Contenu = randstring()
 	s.Origine = randMessageOrigine()
-	s.OrigineCamp = randcam_OptIdCamp()
+	s.OrigineCamp = randsha_OptID_cam_IdCamp()
 	s.VuBackoffice = randbool()
 	s.VuEspaceperso = randbool()
 
@@ -87,7 +88,7 @@ func randEventSondage() EventSondage {
 func randEventValidation() EventValidation {
 	var s EventValidation
 	s.IdEvent = randIdEvent()
-	s.IdCamp = randcam_OptIdCamp()
+	s.IdCamp = randsha_OptID_cam_IdCamp()
 
 	return s
 }
@@ -115,20 +116,20 @@ func randcam_IdParticipant() camps.IdParticipant {
 	return camps.IdParticipant(randint64())
 }
 
-func randcam_OptIdCamp() camps.OptIdCamp {
-	var s camps.OptIdCamp
-	s.Id = randcam_IdCamp()
-	s.Valid = randbool()
-
-	return s
-}
-
 func randdos_IdDossier() dossiers.IdDossier {
 	return dossiers.IdDossier(randint64())
 }
 
 func randint64() int64 {
 	return int64(rand.Intn(1000000))
+}
+
+func randsha_OptID_cam_IdCamp() shared.OptID[camps.IdCamp] {
+	var s shared.OptID[camps.IdCamp]
+	s.Id = randcam_IdCamp()
+	s.Valid = randbool()
+
+	return s
 }
 
 var letterRunes2 = []rune("azertyuiopqsdfghjklmwxcvbn123456789é@!?&èïab ")

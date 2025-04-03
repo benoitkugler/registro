@@ -3,11 +3,22 @@ package directeurs
 import (
 	"testing"
 
+	"registro/config"
 	"registro/crypto"
 	cps "registro/sql/camps"
 	pr "registro/sql/personnes"
 	tu "registro/utils/testutils"
 )
+
+func loadEnv(t *testing.T) (config.Asso, config.SMTP) {
+	tu.LoadEnv(t, "../../env.sh")
+
+	asso, err := config.NewAsso()
+	tu.AssertNoErr(t, err)
+	smtp, err := config.NewSMTP(false)
+	tu.AssertNoErr(t, err)
+	return asso, smtp
+}
 
 func TestToken(t *testing.T) {
 	ct := Controller{key: crypto.Encrypter{}}
