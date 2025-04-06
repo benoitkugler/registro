@@ -12,8 +12,17 @@
       ></CardValideParticipantRow>
     </v-card-text>
     <v-card-actions>
+      <!-- only for backoffice -->
+      <v-btn
+        @click="emit('valide', inner, false)"
+        :disabled="!isValid"
+        v-if="props.idCamp === undefined"
+        >Valider sans notification</v-btn
+      >
       <v-spacer></v-spacer>
-      <v-btn @click="emit('valide', inner)" :disabled="!isValid">Valider</v-btn>
+      <v-btn @click="emit('valide', inner, true)" :disabled="!isValid"
+        >Valider</v-btn
+      >
     </v-card-actions>
   </v-card>
 </template>
@@ -23,13 +32,10 @@ import { computed, ref } from "vue";
 import {
   type IdParticipant,
   type Inscription,
-  type StatutCauses,
   type IdCamp,
   type StatutExt,
   StatutParticipant,
 } from "../../clients/backoffice/logic/api";
-import { Camps, Personnes } from "@/utils";
-import StatutParticipantField from "../StatutParticipantField.vue";
 import CardValideParticipantRow from "./CardValideParticipantRow.vue";
 
 const props = defineProps<{
@@ -39,7 +45,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: "valide", params: Statuts): void;
+  (e: "valide", params: Statuts, sendMail: boolean): void;
 }>();
 
 const participants = computed(() =>

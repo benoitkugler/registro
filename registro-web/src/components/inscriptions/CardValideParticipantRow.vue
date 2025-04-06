@@ -25,6 +25,14 @@
           (props.statut.AllowedChanges || []).concat(props.statut.Statut)
         "
       ></StatutParticipantField>
+      <v-chip
+        v-else-if="
+          props.participant.Participant.Statut != StatutParticipant.AStatuer
+        "
+        size="small"
+      >
+        Inscription déjà validée.
+      </v-chip>
       <v-chip v-else size="small">
         Seul le centre peut accepter cette inscription.
       </v-chip>

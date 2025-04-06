@@ -17,14 +17,14 @@
     :event="props.event.event"
     :content="props.event.event.Content.Data"
   ></EventSupprimeV>
-  <EventAccuseReceptionV
+  <EventValidationV
     v-else-if="
       props.event.Kind == 'event' &&
-      props.event.event.Content.Kind == EventContentKind.AccuseReception
+      props.event.event.Content.Kind == EventContentKind.Validation
     "
     :event="props.event.event"
     :content="props.event.event.Content.Data"
-  ></EventAccuseReceptionV>
+  ></EventValidationV>
   <EventMessageV
     v-else-if="
       props.event.Kind == 'event' &&
@@ -85,7 +85,7 @@ import {
 import EventMessageV from "./events/EventMessageV.vue";
 import EventPlaceLibereeV from "./events/EventPlaceLibereeV.vue";
 import EventSupprimeV from "./events/EventSupprimeV.vue";
-import EventAccuseReceptionV from "./events/EventAccuseReceptionV.vue";
+import EventValidationV from "./events/EventValidationV.vue";
 import EventFactureV from "./events/EventFactureV.vue";
 import EventCampDocsV from "./events/EventCampDocsV.vue";
 import EventAttestationV from "./events/EventAttestationV.vue";

@@ -31,6 +31,12 @@
         </template>
         <v-list density="compact">
           <v-list-item
+            prepend-icon="mdi-file-move"
+            @click="emit('merge')"
+            title="Fusionner vers ..."
+          ></v-list-item>
+          <v-divider></v-divider>
+          <v-list-item
             title="Supprimer"
             prepend-icon="mdi-delete"
             @click="emit('delete')"
@@ -62,6 +68,21 @@
             ></InscriptionEtatcivilCols>
             <v-col align-self="center" cols="3" class="text-center">
               {{ Camps.label(part.Camp) }}
+            </v-col>
+            <v-col
+              align-self="center"
+              cols="auto"
+              v-if="part.Participant.Statut != StatutParticipant.AStatuer"
+            >
+              <v-icon
+                :color="
+                  Formatters.statutParticipant(part.Participant.Statut).color
+                "
+                :icon="
+                  Formatters.statutParticipant(part.Participant.Statut).icon
+                "
+              >
+              </v-icon>
             </v-col>
             <v-spacer></v-spacer>
             <v-col align-self="center" cols="auto" v-if="!props.hideDelete">
@@ -133,6 +154,7 @@ import {
 import InscriptionEtatcivilCols from "./InscriptionEtatcivilCols.vue";
 import { computed, ref } from "vue";
 import type { SimilairesAPI } from "./types";
+import { StatutParticipant } from "@/clients/directeurs/logic/api";
 const props = defineProps<{
   inscription: Inscription;
   api: SimilairesAPI;
@@ -143,6 +165,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: "identifie", params: IdentTarget): void;
   (e: "valide"): void;
+  (e: "merge"): void;
   (e: "delete"): void;
   (e: "deleteParticipant", id: IdParticipant): void;
 }>();

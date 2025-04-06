@@ -22,6 +22,7 @@
           :inscription="insc"
           @identifie="(v) => identifie(insc.Dossier.Id, v)"
           @valide="startValideInsc(insc)"
+          @merge="inscToMerge = insc.Dossier.Id"
           @delete="deleteInsc(insc)"
           @delete-participant="
             (idParticipant) => deleteParticipant(insc.Dossier.Id, idParticipant)
@@ -34,6 +35,19 @@
         ></InscriptionRow>
       </div>
     </v-card-text>
+
+    <!-- merge dialog -->
+    <v-dialog
+      :model-value="inscToMerge != null"
+      @update:model-value="inscToMerge = null"
+      max-width="600px"
+    >
+      <MergeCard
+        v-if="inscToMerge != null"
+        :from="inscToMerge"
+        @merge="mergeDossier"
+      ></MergeCard>
+    </v-dialog>
 
     <!-- preview valid -->
     <v-dialog
@@ -57,6 +71,7 @@ import { onMounted, computed, ref } from "vue";
 import { controller } from "../../logic/logic";
 import {
   StatutParticipant,
+  type DossiersMergeIn,
   type IdDossier,
   type IdentTarget,
   type IdParticipant,
@@ -65,6 +80,7 @@ import {
 } from "../../logic/api";
 import InscriptionRow from "../../../../components/inscriptions/InscriptionRow.vue";
 import { normalize, Personnes, Camps } from "@/utils";
+import MergeCard from "./MergeCard.vue";
 
 const props = defineProps<{}>();
 
@@ -124,13 +140,17 @@ async function startValideInsc(insc: Inscription) {
   inscToValid.value = { inscription: insc, statuts: res || {} };
 }
 
-async function valideInsc(statuts: Record<IdParticipant, StatutParticipant>) {
+async function valideInsc(
+  statuts: Record<IdParticipant, StatutParticipant>,
+  sendMail: boolean
+) {
   if (!inscToValid.value) return;
   const id = inscToValid.value.inscription.Dossier.Id;
   inscToValid.value = null;
   const res = await controller.InscriptionsValide({
     IdDossier: id,
     Statuts: statuts,
+    SendMail: sendMail,
   });
   if (res === undefined) return;
 
@@ -164,5 +184,16 @@ async function deleteParticipant(idDossier: IdDossier, id: IdParticipant) {
   dossier.Participants = (dossier.Participants || []).filter(
     (p) => p.Participant.Id != id
   );
+}
+
+const inscToMerge = ref<IdDossier | null>(null);
+async function mergeDossier(args: DossiersMergeIn) {
+  inscToMerge.value = null;
+  const res = await controller.DossiersMerge(args);
+  if (res === undefined) return;
+
+  controller.showMessage("Inscriptions fusionnées avec succès.");
+  // reset the view
+  fetchInscriptions();
 }
 </script>

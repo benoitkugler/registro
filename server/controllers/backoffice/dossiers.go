@@ -167,7 +167,7 @@ func (ct *Controller) searchDossiers(query SearchDossierIn) (SearchDossierOut, e
 		if err != nil {
 			return SearchDossierOut{}, utils.SQLError(err)
 		}
-		dossiers.RestrictByValidated(true)
+		// dossiers.RestrictByValidated(true)
 	}
 	ids := dossiers.IDs()
 

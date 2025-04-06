@@ -139,6 +139,8 @@ async function valideInsc(statuts: Record<IdParticipant, StatutParticipant>) {
   const res = await controller.InscriptionsValide({
     IdDossier: id,
     Statuts: statuts,
+    // we always send a mail
+    SendMail: true,
   });
   if (res === undefined) return;
 

@@ -29,6 +29,7 @@ declare module 'vue' {
     EventSondageV: typeof import('./src/components/events/EventSondageV.vue')['default']
     EventSupprimeV: typeof import('./src/components/events/EventSupprimeV.vue')['default']
     EventSwitch: typeof import('./src/components/EventSwitch.vue')['default']
+    EventValidationV: typeof import('./src/components/events/EventValidationV.vue')['default']
     FileCard: typeof import('./src/components/files/FileCard.vue')['default']
     FilesDemande: typeof import('./src/components/files/FilesDemande.vue')['default']
     FileUpload: typeof import('./src/components/files/FileUpload.vue')['default']

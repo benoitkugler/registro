@@ -11,7 +11,7 @@
         :subtitle="
           dossiersCount == null
             ? '-'
-            : `${dossiersCount.length} / ${dossiersCount.total}`
+            : `${dossiersCount.length} affiché(s) / ${dossiersCount.total}`
         "
       >
         <template #append>

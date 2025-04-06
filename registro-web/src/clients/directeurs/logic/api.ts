@@ -23,11 +23,6 @@ export interface InscriptionIdentifieIn {
   IdDossier: IdDossier;
   Target: IdentTarget;
 }
-// registro/controllers/backoffice.InscriptionsValideIn
-export interface InscriptionsValideIn {
-  IdDossier: IdDossier;
-  Statuts: Record<IdParticipant, StatutParticipant> | null;
-}
 // registro/controllers/directeurs.DemandeKey
 export interface DemandeKey {
   IdEquipier: IdEquipier;
@@ -101,6 +96,12 @@ export interface Inscription {
   Responsable: Personne;
   Participants: ParticipantCamp[] | null;
 }
+// registro/controllers/logic.InscriptionsValideIn
+export interface InscriptionsValideIn {
+  IdDossier: IdDossier;
+  Statuts: Record<IdParticipant, StatutParticipant> | null;
+  SendMail: boolean;
+}
 // registro/controllers/logic.ParticipantExt
 export interface ParticipantExt {
   Participant: Participant;
@@ -122,6 +123,7 @@ export interface PersonneHeader {
   Label: string;
   Sexe: Sexe;
   DateNaissance: Date;
+  IsTemp: boolean;
 }
 // registro/controllers/search.ScoredPersonne
 export interface ScoredPersonne {
@@ -405,8 +407,8 @@ export const CategorieLabels: Record<Categorie, string> = {
 // registro/sql/files.Demande
 export interface Demande {
   Id: IdDemande;
-  IdFile: OptIdFile;
-  IdDirecteur: OptIdPersonne;
+  IdFile: OptID_IdFile;
+  IdDirecteur: OptID_IdPersonne;
   Categorie: Categorie;
   Description: string;
   MaxDocs: Int;
@@ -414,11 +416,6 @@ export interface Demande {
 }
 export type IdDemande = number & { __opaque__: "IdDemande" };
 export type IdFile = number & { __opaque__: "IdFile" };
-// registro/sql/files.OptIdFile
-export interface OptIdFile {
-  Id: IdFile;
-  Valid: boolean;
-}
 // registro/sql/personnes.Approfondissement
 export const Approfondissement = {
   AAucun: 0,
@@ -507,11 +504,6 @@ export const NationnaliteLabels: Record<Nationnalite, string> = {
   [Nationnalite.Suisse]: "Suisse",
 };
 
-// registro/sql/personnes.OptIdPersonne
-export interface OptIdPersonne {
-  Id: IdPersonne;
-  Valid: boolean;
-}
 // registro/sql/personnes.Pays
 export type Pays = string;
 // registro/sql/personnes.Personne
@@ -566,6 +558,16 @@ export const SexeLabels: Record<Sexe, string> = {
 export type Tels = string[] | null;
 // registro/sql/shared.Date
 export type Date = Date_;
+// registro/sql/shared.OptID[registro/sql/files.IdFile]
+export interface OptID_IdFile {
+  Id: IdFile;
+  Valid: boolean;
+}
+// registro/sql/shared.OptID[registro/sql/personnes.IdPersonne]
+export interface OptID_IdPersonne {
+  Id: IdPersonne;
+  Valid: boolean;
+}
 
 /** AbstractAPI provides auto-generated API calls and should be used 
 		as base class for an app controller.

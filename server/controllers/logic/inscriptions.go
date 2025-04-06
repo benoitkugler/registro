@@ -165,7 +165,7 @@ func (dossier Dossier) StatutHints(db ds.DB, bypass StatutBypassRights) (StatutH
 
 		for index, status := range camp.Status(incommingPe) {
 			pa := incommingPa[index]
-			out[pa.Id] = bypass.resolve(status)
+			out[pa.Id] = bypass.resolve(status, pa.Statut)
 		}
 	}
 
@@ -185,7 +185,10 @@ type StatutExt struct {
 	Statut cps.StatutParticipant
 
 	AllowedChanges []cps.StatutParticipant // empty for readonly
-	Validable      bool                    // if false, no update will be done
+	// if false, no update will be done
+	// it is always false for participnt already
+	// validated
+	Validable bool
 }
 
 // IsAllowed returns 'true' if the bypass rights allow the given statut to be
@@ -194,7 +197,7 @@ func (st StatutExt) IsAllowed(statut cps.StatutParticipant) bool {
 	return statut == st.Statut || slices.Contains(st.AllowedChanges, statut)
 }
 
-func (bp StatutBypassRights) resolve(st cps.StatutCauses) StatutExt {
+func (bp StatutBypassRights) resolve(st cps.StatutCauses, currentStatut cps.StatutParticipant) StatutExt {
 	out := StatutExt{Causes: st, Statut: st.Hint()}
 	switch out.Statut {
 	case cps.AttenteProfilInvalide:
@@ -213,6 +216,9 @@ func (bp StatutBypassRights) resolve(st cps.StatutCauses) StatutExt {
 			out.AllowedChanges = []cps.StatutParticipant{cps.AttenteProfilInvalide, cps.AttenteCampComplet}
 		}
 	default: // should not happen
+	}
+	if currentStatut != cps.AStatuer {
+		out.Validable = false
 	}
 	return out
 }
@@ -266,7 +272,9 @@ func ValideInscription(db *sql.DB, key crypto.Encrypter, smtp config.SMTP, asso 
 			participant := pExt.Participant
 			mPart := mails.Participant{Personne: pExt.Personne.PrenomNOM(), Camp: pExt.Camp.Label()}
 			hint := hints[participant.Id]
-			if !hint.Validable || idCamp.Is(participant.IdCamp) {
+			// ignore participant not validable (already validated or restricte for directors)
+			// or for other camps
+			if !hint.Validable || (idCamp.Valid && !idCamp.Is(participant.IdCamp)) {
 				if participant.Statut == cps.AStatuer {
 					astatuer = append(astatuer, mPart)
 				}

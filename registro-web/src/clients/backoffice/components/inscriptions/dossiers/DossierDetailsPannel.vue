@@ -66,13 +66,7 @@
           <v-divider></v-divider>
           <v-list-item
             prepend-icon="mdi-file-move"
-            @click="
-              mergeParams = {
-                From: props.dossier.Dossier.Dossier.Id,
-                To: 0 as IdDossier,
-                Notifie: true,
-              }
-            "
+            @click="showMergeCard = true"
             title="Fusionner vers ..."
           ></v-list-item>
           <v-divider></v-divider>
@@ -315,46 +309,16 @@
     </v-dialog>
 
     <!-- merge dialog -->
-    <v-dialog
-      v-if="mergeParams != null"
-      :model-value="mergeParams != null"
-      @update:model-value="mergeParams = null"
-      max-width="600px"
-    >
-      <v-card
-        title="Fusionner le dossier vers"
-        subtitle="Les participants, paiements et messages seront copiés vers le dossier cible."
-      >
-        <v-card-text>
-          <v-row>
-            <v-col cols="12">
-              <SelectDossier v-model="mergeParams.To"></SelectDossier>
-            </v-col>
-            <v-col cols="12">
-              <v-checkbox
-                density="compact"
-                label="Notifier par email"
-                hint="Le reponsable du dossier absorbé sera averti du changement d'espace personnel."
-                persistent-hint
-                v-model="mergeParams.Notifie"
-              ></v-checkbox>
-            </v-col>
-          </v-row>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn
-            :disabled="
-              mergeParams.To == 0 || mergeParams.To == mergeParams.From
-            "
-            @click="
-              emit('mergeDossier', mergeParams);
-              mergeParams = null;
-            "
-            >Fusionner</v-btn
-          >
-        </v-card-actions>
-      </v-card>
+    <v-dialog v-model="showMergeCard" max-width="600px">
+      <MergeCard
+        :from="props.dossier.Dossier.Dossier.Id"
+        @merge="
+          (args) => {
+            emit('mergeDossier', args);
+            showMergeCard = false;
+          }
+        "
+      ></MergeCard>
     </v-dialog>
 
     <!-- message dialog -->
@@ -426,6 +390,7 @@ import DossierParticipantRow from "./editor/DossierParticipantRow.vue";
 import PaiementEditCard from "./PaiementEditCard.vue";
 import { controller, emptyQuery } from "@/clients/backoffice/logic/logic";
 import { goToParticipant } from "@/clients/backoffice/plugins/router";
+import MergeCard from "../MergeCard.vue";
 
 const props = defineProps<{
   dossier: DossierDetails;
@@ -526,7 +491,7 @@ async function copyBankIBAN(iban: string) {
   controller.showMessage("IBAN copié.");
 }
 
-const mergeParams = ref<DossiersMergeIn | null>(null);
+const showMergeCard = ref(false);
 
 const showMessage = ref(false);
 const messageContenu = ref("");

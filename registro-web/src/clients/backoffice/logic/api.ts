@@ -74,11 +74,6 @@ export interface InscriptionIdentifieIn {
   IdDossier: IdDossier;
   Target: IdentTarget;
 }
-// registro/controllers/backoffice.InscriptionsValideIn
-export interface InscriptionsValideIn {
-  IdDossier: IdDossier;
-  Statuts: Record<IdParticipant, StatutParticipant> | null;
-}
 // registro/controllers/backoffice.LogginOut
 export interface LogginOut {
   IsValid: boolean;
@@ -135,7 +130,7 @@ export const QueryReglementLabels: Record<QueryReglement, string> = {
 // registro/controllers/backoffice.SearchDossierIn
 export interface SearchDossierIn {
   Pattern: string;
-  IdCamp: OptIdCamp;
+  IdCamp: OptID_IdCamp;
   Attente: QueryAttente;
   Reglement: QueryReglement;
 }
@@ -144,8 +139,6 @@ export interface SearchDossierOut {
   Dossiers: DossierHeader[] | null;
   Total: Int;
 }
-// registro/controllers/logic.AccuseReception
-export type AccuseReception = Record<string, never>;
 // registro/controllers/logic.AideResolved
 export interface AideResolved {
   Structure: string;
@@ -202,7 +195,6 @@ export interface Event {
 }
 
 export const EventContentKind = {
-  AccuseReception: "AccuseReception",
   Attestation: "Attestation",
   CampDocs: "CampDocs",
   Facture: "Facture",
@@ -210,20 +202,21 @@ export const EventContentKind = {
   PlaceLiberee: "PlaceLiberee",
   Sondage: "Sondage",
   Supprime: "Supprime",
+  Validation: "Validation",
 } as const;
 export type EventContentKind =
   (typeof EventContentKind)[keyof typeof EventContentKind];
 
 // registro/controllers/logic.EventContent
 export type EventContent =
-  | { Kind: "AccuseReception"; Data: AccuseReception }
   | { Kind: "Attestation"; Data: Attestation }
   | { Kind: "CampDocs"; Data: CampDocs }
   | { Kind: "Facture"; Data: Facture }
   | { Kind: "Message"; Data: Message }
   | { Kind: "PlaceLiberee"; Data: PlaceLiberee }
   | { Kind: "Sondage"; Data: Sondage }
-  | { Kind: "Supprime"; Data: Supprime };
+  | { Kind: "Supprime"; Data: Supprime }
+  | { Kind: "Validation"; Data: Validation };
 
 // registro/controllers/logic.Events
 export type Events = Event[] | null;
@@ -241,6 +234,12 @@ export interface Inscription {
   Message: string;
   Responsable: Personne;
   Participants: ParticipantCamp[] | null;
+}
+// registro/controllers/logic.InscriptionsValideIn
+export interface InscriptionsValideIn {
+  IdDossier: IdDossier;
+  Statuts: Record<IdParticipant, StatutParticipant> | null;
+  SendMail: boolean;
 }
 // registro/controllers/logic.Message
 export interface Message {
@@ -292,6 +291,10 @@ export const StatutPaiementLabels: Record<StatutPaiement, string> = {
 
 // registro/controllers/logic.Supprime
 export type Supprime = Record<string, never>;
+// registro/controllers/logic.Validation
+export interface Validation {
+  ByCamp: string;
+}
 // registro/controllers/search.PersonneHeader
 export interface PersonneHeader {
   Id: IdPersonne;
@@ -365,11 +368,6 @@ export const NavetteLabels: Record<Navette, string> = {
   [Navette.AllerRetour]: "Aller-Retour",
 };
 
-// registro/sql/camps.OptIdCamp
-export interface OptIdCamp {
-  Id: IdCamp;
-  Valid: boolean;
-}
 // registro/sql/camps.OptionNavette
 export interface OptionNavette {
   Actif: boolean;
@@ -585,7 +583,7 @@ export interface EventMessage {
   IdEvent: IdEvent;
   Contenu: string;
   Origine: MessageOrigine;
-  OrigineCamp: OptIdCamp;
+  OrigineCamp: OptID_IdCamp;
   VuBackoffice: boolean;
   VuEspaceperso: boolean;
 }
@@ -749,6 +747,11 @@ export type Tel = string;
 export type Tels = string[] | null;
 // registro/sql/shared.Date
 export type Date = Date_;
+// registro/sql/shared.OptID[registro/sql/camps.IdCamp]
+export interface OptID_IdCamp {
+  Id: IdCamp;
+  Valid: boolean;
+}
 
 /** AbstractAPI provides auto-generated API calls and should be used 
 		as base class for an app controller.
