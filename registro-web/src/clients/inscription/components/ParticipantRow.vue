@@ -2,7 +2,7 @@
   <v-card border="sm" rounded="md" variant="text" class="my-1">
     <v-card-text>
       <v-row>
-        <v-col cols="4" align-self="center">
+        <v-col sm="4" cols="12" align-self="center">
           <v-row>
             <v-col cols="12">
               <v-text-field
@@ -25,7 +25,7 @@
             </v-col>
           </v-row>
           <v-row>
-            <v-col cols="5">
+            <v-col sm="5" cols="12">
               <SexeField
                 v-model="participant.Sexe"
                 :rules="[
@@ -35,7 +35,7 @@
                 ]"
               ></SexeField>
             </v-col>
-            <v-col cols="7">
+            <v-col sm="7" cols="12">
               <DateNaissanceField
                 v-model="participant.DateNaissance"
                 :rule="checkDateNaissance"
@@ -51,7 +51,7 @@
           </v-row>
         </v-col>
         <v-divider vertical thickness="1"></v-divider>
-        <v-col cols="8" align-self="center">
+        <v-col sm="8" cols="12" align-self="center">
           <v-row>
             <v-col cols="12">
               <v-select

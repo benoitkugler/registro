@@ -2,23 +2,23 @@
   <v-card class="my-0">
     <v-card-text>
       <v-row no-gutters class="mb-1">
-        <v-col cols="8">
+        <v-col cols="12" sm="8">
           <v-chip prepend-icon="mdi-calendar-blank">
             {{ Camps.formatPlage(props.camp) }}
           </v-chip>
         </v-col>
 
-        <v-col cols="4" class="text-right">
+        <v-col cols="12" sm="4" class="text-right">
           <v-chip prepend-icon="mdi-currency-eur">
             {{ props.camp.Prix }}
           </v-chip>
         </v-col>
       </v-row>
       <v-row no-gutters class="my-1">
-        <v-col cols="8">
+        <v-col cols="12" sm="8">
           <v-chip prepend-icon="mdi-map-marker"> {{ props.camp.Lieu }}</v-chip>
         </v-col>
-        <v-col cols="4" class="text-right">
+        <v-col cols="12" sm="4" class="text-right">
           <v-chip prepend-icon="mdi-human-child">
             de {{ props.camp.AgeMin }} à {{ props.camp.AgeMax }} ans
           </v-chip>

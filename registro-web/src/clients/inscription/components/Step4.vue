@@ -102,7 +102,11 @@
   <v-card
     class="mt-1 mb-3 border-secondary border-lg"
     title="Contacts additionnels"
-    subtitle="Adresses mails mises en copies des courriels concernant votre inscription."
+    :subtitle="
+      smAndUp
+        ? `Adresses mails mises en copies des courriels concernant votre inscription.`
+        : `Adresses en copies des courriels.`
+    "
   >
     <v-card-text>
       <StringList
@@ -118,10 +122,13 @@
 import { computed } from "vue";
 import type { Settings } from "../logic/api";
 import { FormRules } from "@/utils";
+import { useDisplay } from "vuetify";
 
 const props = defineProps<{
   settings: Settings;
 }>();
+
+const { smAndUp } = useDisplay();
 
 const partageAdresse = defineModel<boolean>("partageAdresse", {
   required: true,

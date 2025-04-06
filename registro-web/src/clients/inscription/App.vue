@@ -8,7 +8,10 @@
               <v-img width="60" :src="logo" />
             </v-col>
             <v-col align-self="center">
-              Bienvenue sur le Portail des inscriptions !
+              <template v-if="smAndUp">
+                Bienvenue sur le Portail des inscriptions
+              </template>
+              <template v-else> Portail des inscriptions </template>
             </v-col>
           </v-row>
         </v-app-bar-title>
@@ -123,6 +126,7 @@ import { onMounted, ref } from "vue";
 import { controller } from "./logic/logic";
 import InscriptionPannel from "./components/InscriptionPannel.vue";
 import type { Data, IdCamp } from "./logic/api";
+import { useDisplay } from "vuetify";
 
 const message = ref("");
 const messageColor = ref("secondary");
@@ -147,6 +151,8 @@ const version = `v${VITE_APP_VERSION}`;
 const data = ref<Data | null>(null);
 
 onMounted(fetchData);
+
+const { smAndUp } = useDisplay();
 
 async function fetchData() {
   // forward url params

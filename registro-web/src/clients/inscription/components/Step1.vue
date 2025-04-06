@@ -1,12 +1,16 @@
 <template>
   <v-card
     title="Profil du responsable légal"
-    subtitle="Personne majeure qui sera le contact pour le suivi de l'inscription."
+    :subtitle="
+      smAndUp
+        ? `Personne majeure qui sera le contact pour le suivi de l'inscription.`
+        : `Contact pour le suivi de l'inscription.`
+    "
   >
     <v-card-text>
       <v-form class="mt-2">
         <v-row>
-          <v-col md="3" sm="6">
+          <v-col md="3" sm="6" cols="12">
             <v-text-field
               variant="outlined"
               density="compact"
@@ -15,7 +19,7 @@
               :rules="[FormRules.required('Merci de remplir votre nom.')]"
             ></v-text-field>
           </v-col>
-          <v-col md="3" sm="6">
+          <v-col md="3" sm="6" cols="12">
             <v-text-field
               variant="outlined"
               density="compact"
@@ -24,7 +28,7 @@
               :rules="[FormRules.required('Merci de remplir votre prénom.')]"
             ></v-text-field>
           </v-col>
-          <v-col md="3" sm="4">
+          <v-col md="3" sm="4" cols="12">
             <SexeField
               v-model="respo.Sexe"
               :rules="[
@@ -34,7 +38,7 @@
               ]"
             ></SexeField>
           </v-col>
-          <v-col md="3" sm="8">
+          <v-col md="3" sm="8" cols="12">
             <DateNaissanceField
               v-model="respo.DateNaissance"
               :rule="checkDateNaissance"
@@ -43,7 +47,7 @@
         </v-row>
 
         <v-row>
-          <v-col md="6" sm="12">
+          <v-col md="6" cols="12">
             <v-text-field
               variant="outlined"
               density="compact"
@@ -57,7 +61,7 @@
               ]"
             ></v-text-field>
           </v-col>
-          <v-col md="6" sm="12">
+          <v-col md="6" cols="12">
             <StringList
               v-model="respo.Tels"
               :formatter="Formatters.tel"
@@ -72,7 +76,7 @@
         </v-row>
 
         <v-row>
-          <v-col md="4" sm="8">
+          <v-col md="4" sm="8" cols="12">
             <v-textarea
               variant="outlined"
               density="compact"
@@ -87,7 +91,7 @@
             >
             </v-textarea>
           </v-col>
-          <v-col md="2" sm="4">
+          <v-col md="2" sm="4" cols="12">
             <v-text-field
               variant="outlined"
               density="compact"
@@ -100,7 +104,7 @@
               ]"
             ></v-text-field>
           </v-col>
-          <v-col md="3" sm="6">
+          <v-col md="3" sm="6" cols="12">
             <v-text-field
               variant="outlined"
               density="compact"
@@ -113,7 +117,7 @@
               ]"
             ></v-text-field>
           </v-col>
-          <v-col md="3" sm="6">
+          <v-col md="3" sm="6" cols="12">
             <PaysField v-model="respo.Pays"></PaysField>
           </v-col>
         </v-row>
@@ -126,6 +130,7 @@
 import type { Date_, ResponsableLegal } from "../logic/api";
 import { ageFrom, isDateZero } from "@/components/date";
 import { FormRules, Formatters } from "@/utils";
+import { useDisplay } from "vuetify";
 
 const respo = defineModel<ResponsableLegal>({ required: true });
 
@@ -139,4 +144,6 @@ function checkDateNaissance(d: Date_) {
   }
   return true;
 }
+
+const { smAndUp } = useDisplay();
 </script>

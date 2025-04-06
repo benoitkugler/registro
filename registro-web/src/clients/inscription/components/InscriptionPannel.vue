@@ -1,23 +1,5 @@
 <template>
-  <!-- confirmation après API call -->
-  <v-dialog v-model="showInscriptionSaved" max-width="600px">
-    <v-card title="Confirmation">
-      <v-card-text>
-        Merci pour votre demande d'inscription ! <br />
-        <br />
-        Par mesure de sécurité, nous devons vérifier votre adresse mail. Un mail
-        de confirmation a été envoyé à <b>{{ inner.Responsable.Mail }}</b> :
-        veuillez valider votre demande en suivant le lien que vous y trouverez.
-        <br />
-        <br />
-        <div class="text-grey font-italic">
-          Vous pouvez désormais quitter cette page.
-        </div>
-      </v-card-text>
-    </v-card>
-  </v-dialog>
-
-  <v-stepper v-model="tab" editable>
+  <v-stepper v-model="tab" editable :mobile="!smAndUp">
     <template #default="{ prev, next }">
       <v-stepper-header>
         <v-stepper-item
@@ -94,12 +76,31 @@
             <template #prepend>
               <v-icon>mdi-check</v-icon>
             </template>
-            Valider mon inscription
+            <template v-if="smAndUp"> Valider mon inscription </template>
+            <template v-else> Valider </template>
           </v-btn>
         </template>
       </v-stepper-actions>
     </template>
   </v-stepper>
+
+  <!-- confirmation après API call -->
+  <v-dialog v-model="showInscriptionSaved" max-width="600px">
+    <v-card title="Confirmation">
+      <v-card-text>
+        Merci pour votre demande d'inscription ! <br />
+        <br />
+        Par mesure de sécurité, nous devons vérifier votre adresse mail. Un mail
+        de confirmation a été envoyé à <b>{{ inner.Responsable.Mail }}</b> :
+        veuillez valider votre demande en suivant le lien que vous y trouverez.
+        <br />
+        <br />
+        <div class="text-grey font-italic">
+          Vous pouvez désormais quitter cette page.
+        </div>
+      </v-card-text>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script lang="ts" setup>
@@ -112,10 +113,13 @@ import { Sexe, type Data } from "../logic/api";
 import { ageFrom, isDateZero } from "@/components/date";
 import { copy } from "@/utils";
 import { controller } from "../logic/logic";
+import { useDisplay } from "vuetify";
 
 const props = defineProps<{
   data: Data;
 }>();
+
+const { smAndUp } = useDisplay();
 
 const inner = reactive(copy(props.data.InitialInscription));
 
