@@ -69,7 +69,8 @@ const currentId = computed(() => queryURL.value.idPersonne);
 
 watch(
   () => currentId.value,
-  () => (currentId.value !== undefined ? loadAndEdit(currentId.value) : null)
+  () => (currentId.value !== undefined ? loadAndEdit(currentId.value) : null),
+  { immediate: true }
 );
 
 const list = ref<PersonneHeader[]>([]);
