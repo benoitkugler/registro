@@ -7,8 +7,8 @@
         <br />
         Par mesure de sécurité, nous devons vérifier votre adresse mail. Un mail
         de confirmation a été envoyé à <b>{{ inner.Responsable.Mail }}</b> :
-        veuillez valider définitivement votre inscription en suivant le lien que
-        vous y trouverez. <br />
+        veuillez valider votre demande en suivant le lien que vous y trouverez.
+        <br />
         <br />
         <div class="text-grey font-italic">
           Vous pouvez désormais quitter cette page.
