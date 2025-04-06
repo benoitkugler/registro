@@ -89,7 +89,7 @@ export function parseQueryURLInscriptions(
   return { tab: q.tab, idDossier: enforceNumber(q.idDossier) };
 }
 
-export function goToDossier(idDossier: IdDossier) {
+export function goToDossier(idDossier?: IdDossier) {
   router.push({
     path: "/inscriptions",
     query: { tab: "doss", idDossier } satisfies QueryURLInscriptions,

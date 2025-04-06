@@ -86,11 +86,17 @@ const props = defineProps<{}>();
 
 const emit = defineEmits<{
   (e: "goTo", id: IdDossier): void;
+  (e: "empty"): void;
 }>();
 
 const isLoading = ref(false);
 
-onMounted(fetchInscriptions);
+onMounted(async () => {
+  await fetchInscriptions();
+  if (!data.value.length) {
+    emit("empty");
+  }
+});
 
 const data = ref<Inscription[]>([]);
 

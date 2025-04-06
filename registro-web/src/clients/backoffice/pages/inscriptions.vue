@@ -11,7 +11,10 @@
 
   <v-tabs-window :model-value="currentTab">
     <v-tabs-window-item value="insc">
-      <PannelInscriptions @go-to="goToDossier"></PannelInscriptions>
+      <PannelInscriptions
+        @go-to="goToDossier"
+        @empty="goToDossier()"
+      ></PannelInscriptions>
     </v-tabs-window-item>
     <v-tabs-window-item value="doss">
       <PannelDossiers :initial-dossier="dossierToShow"></PannelDossiers>
