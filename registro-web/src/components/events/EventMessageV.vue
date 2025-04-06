@@ -1,6 +1,6 @@
 <template>
   <EventItem
-    icon="mdi-email"
+    :icon="isSent ? 'mdi-email-arrow-right' : 'mdi-email-arrow-left'"
     color="light-blue-darken-3"
     :time="props.event.Created"
     size="x-large"
@@ -83,6 +83,11 @@ function origineToColor(or: MessageOrigine) {
 }
 
 const showConfirme = ref(false);
+
+/** true is sent by us */
+const isSent = computed(
+  () => props.content.Message.Origine != MessageOrigine.FromEspaceperso
+);
 </script>
 
 <style scoped></style>
