@@ -72,7 +72,7 @@ type Demande struct {
 // gomacro:SQL _SELECT KEY(IdEquipier, IdDemande)
 type DemandeEquipier struct {
 	IdEquipier  cps.IdEquipier `gomacro-sql-on-delete:"CASCADE"`
-	IdDemande   IdDemande
+	IdDemande   IdDemande      `gomacro-sql-on-delete:"CASCADE"`
 	Optionnelle bool
 }
 

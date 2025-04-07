@@ -71,10 +71,15 @@ func TestEquipiers(t *testing.T) {
 		}, camp.Id)
 		tu.AssertErr(t, err) // already a direction
 
-		_, err = ct.createEquipier("", EquipiersCreateIn{
+		eq, err := ct.createEquipier("", EquipiersCreateIn{
 			CreatePersonne: true,
 			Roles:          cps.Roles{cps.Animation},
 		}, camp.Id)
+		tu.AssertNoErr(t, err)
+
+		err = ct.deleteEquipier(eq.Equipier.Id, camp.Id+1) // wrong camp
+		tu.AssertErr(t, err)
+		err = ct.deleteEquipier(eq.Equipier.Id, camp.Id)
 		tu.AssertNoErr(t, err)
 	})
 

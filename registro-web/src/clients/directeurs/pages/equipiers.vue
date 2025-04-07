@@ -89,6 +89,12 @@
                       :href="equipier.FormURL"
                       target="_blank"
                     ></v-list-item>
+                    <v-divider></v-divider>
+                    <v-list-item
+                      title="Supprimer"
+                      prepend-icon="mdi-delete"
+                      @click="equipierToDelete = equipier"
+                    ></v-list-item>
                   </v-list>
                 </v-menu>
               </v-col>
@@ -105,6 +111,25 @@
 
   <v-dialog v-model="showCreateEquipier" max-width="600px">
     <AddEquipierCard @create="createEquipier"></AddEquipierCard>
+  </v-dialog>
+
+  <!-- confirme delete -->
+  <v-dialog
+    :model-value="equipierToDelete != null"
+    @update:model-value="equipierToDelete = null"
+    max-width="400px"
+  >
+    <v-card title="Confirmation" v-if="equipierToDelete">
+      <v-card-text>
+        Confirmez-vous la suppression de l'équipier
+        {{ equipierToDelete.Personne }} ? <br /><br />
+        Attention, cette opération est irréversible.
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn color="red" @click="deleteEquipier"> Supprimer </v-btn>
+      </v-card-actions>
+    </v-card>
   </v-dialog>
 </template>
 
@@ -126,7 +151,7 @@ import DocumentsTable from "../components/equipiers/DocumentsTable.vue";
 import { ar } from "vuetify/locale";
 import AddEquipierCard from "../components/equipiers/AddEquipierCard.vue";
 import { create } from "node_modules/axios/index.cjs";
-import { nullableToOpt, zeroableToNullable } from "@/utils";
+import { nullableToOpt, Personnes, zeroableToNullable } from "@/utils";
 
 const router = useRouter();
 
@@ -181,5 +206,17 @@ async function inviteAll() {
   controller.showMessage("Equipiers invités avec succès.");
   res?.sort((a, b) => a.Equipier.Id - b.Equipier.Id);
   equipiers.value = res || [];
+}
+
+const equipierToDelete = ref<EquipierExt | null>(null);
+async function deleteEquipier() {
+  if (equipierToDelete.value == null) return;
+  const id = equipierToDelete.value.Equipier.Id;
+  equipierToDelete.value = null;
+  const res = await controller.EquipiersDelete({ id });
+  if (res === undefined) return;
+  controller.showMessage("Equipier supprimé avec succès.");
+  // remove from view
+  equipiers.value = equipiers.value.filter((eq) => eq.Equipier.Id != id);
 }
 </script>

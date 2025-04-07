@@ -237,6 +237,39 @@ func (ct *Controller) inviteEquipiers(host string, args EquipiersInviteIn, user 
 	})
 }
 
+func (ct *Controller) EquipiersDelete(c echo.Context) error {
+	user := JWTUser(c)
+
+	id, err := utils.QueryParamInt[cps.IdEquipier](c, "id")
+	if err != nil {
+		return err
+	}
+
+	err = ct.deleteEquipier(id, user)
+	if err != nil {
+		return err
+	}
+
+	return c.NoContent(200)
+}
+
+func (ct *Controller) deleteEquipier(id cps.IdEquipier, user cps.IdCamp) error {
+	equipier, err := cps.SelectEquipier(ct.db, id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	if equipier.IdCamp != user {
+		return errors.New("access forbidden")
+	}
+
+	// Demandes will cascade
+	_, err = cps.DeleteEquipierById(ct.db, id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	return nil
+}
+
 type DemandeState uint8
 
 const (

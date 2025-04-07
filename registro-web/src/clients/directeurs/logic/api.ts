@@ -792,6 +792,21 @@ export abstract class AbstractAPI {
     }
   }
 
+  /** EquipiersDelete performs the request and handles the error */
+  async EquipiersDelete(params: { id: IdEquipier }) {
+    const fullUrl = this.baseUrl + "/api/v1/directeurs/equipiers";
+    this.startRequest();
+    try {
+      await Axios.delete(fullUrl, {
+        headers: this.getHeaders(),
+        params: { id: String(params["id"]) },
+      });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
   /** EquipiersInvite performs the request and handles the error */
   async EquipiersInvite(params: EquipiersInviteIn) {
     const fullUrl = this.baseUrl + "/api/v1/directeurs/equipiers/invite";
