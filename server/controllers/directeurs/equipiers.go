@@ -127,6 +127,13 @@ func (ct *Controller) createEquipier(host string, args EquipiersCreateIn, user c
 		if err != nil {
 			return err
 		}
+
+		demandes := ct.builtins.Defaut(equipier)
+		err = fs.InsertManyDemandeEquipiers(tx, demandes...)
+		if err != nil {
+			return err
+		}
+
 		return nil
 	})
 	if err != nil {

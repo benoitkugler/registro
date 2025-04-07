@@ -254,22 +254,22 @@ type ListeVetements struct {
 type Role uint8
 
 const (
-	AutreRole     Role = iota // Autre
-	Direction                 // Direction
+	Direction     Role = iota // Direction
 	Adjoint                   // Adjoint
 	Animation                 // Animation
-	AideAnimation             // Aide-animateur
-	Chauffeur                 // Chauffeur
-	Intendance                // Intendance
-	Babysiter                 // Baby-sitter
 	Menage                    // Ménage
-	Factotum                  // Factotum
-	Infirmerie                // Assistant sanitaire
 	Cuisine                   // Cuisine
+	Intendance                // Intendance
+	Infirmerie                // Assistant sanitaire
+	AideAnimation             // Aide-animateur
 	Lingerie                  // Lingerie
+	Chauffeur                 // Chauffeur
+	Factotum                  // Factotum
+	Babysiter                 // Baby-sitter
+	AutreRole                 // Autre
 )
 
-const NbRoles = Lingerie + 1 // gomacro:no-enum
+const NbRoles = AutreRole + 1 // gomacro:no-enum
 
 func (r Role) String() string {
 	switch r {

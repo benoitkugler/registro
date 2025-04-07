@@ -75,20 +75,23 @@ var demandesDefaut = [cp.NbRoles][]Categorie{
 	cp.Direction:     {CarteId, Permis, SB, Bafa, Bafd, CarteVitale, Vaccins, BafdEquiv},
 	cp.Adjoint:       {CarteId, Permis, SB, CarteVitale, Vaccins},
 	cp.Animation:     {CarteId, Permis, SB, Bafa, BafaEquiv, CarteVitale, Vaccins, Scolarite},
-	cp.AideAnimation: {CarteId, CarteVitale, Vaccins, Scolarite},
-	cp.Chauffeur:     {CarteId, CarteVitale, Vaccins},
-	cp.Intendance:    {CarteId, CarteVitale, Vaccins, Haccp},
-	cp.Babysiter:     {CarteId, CarteVitale, Vaccins, Scolarite},
 	cp.Menage:        {CarteId, CarteVitale, Vaccins, Scolarite},
-	cp.Factotum:      {CarteId, CarteVitale, Vaccins},
-	cp.Infirmerie:    {CarteId, Secourisme, CarteVitale, Vaccins},
 	cp.Cuisine:       {CarteId, CarteVitale, Vaccins, Haccp, CertMedicalCuisine, Scolarite},
+	cp.Intendance:    {CarteId, CarteVitale, Vaccins, Haccp},
+	cp.Infirmerie:    {CarteId, Secourisme, CarteVitale, Vaccins},
+	cp.AideAnimation: {CarteId, CarteVitale, Vaccins, Scolarite},
 	cp.Lingerie:      {CarteId, CarteVitale, Vaccins},
+	cp.Chauffeur:     {CarteId, CarteVitale, Vaccins},
+	cp.Factotum:      {CarteId, CarteVitale, Vaccins},
+	cp.Babysiter:     {CarteId, CarteVitale, Vaccins, Scolarite},
 }
 
 func isDemandeOpt(cat Categorie, roles cp.Roles) bool {
 	// un certificat de secourisme est obligatoire pour l'infirmerie
 	if roles.Is(cp.Infirmerie) && cat == Secourisme {
+		return false
+	}
+	if roles.Is(cp.Cuisine) && cat == CertMedicalCuisine {
 		return false
 	}
 	return true
