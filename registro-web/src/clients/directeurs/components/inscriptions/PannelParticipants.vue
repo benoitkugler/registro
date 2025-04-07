@@ -51,6 +51,9 @@
       <ParticipantEdit
         :participant="toEdit.Participant"
         :personne="toEdit.Personne"
+        :api="{
+          SelectPersonne: controller.SelectPersonne.bind(controller),
+        }"
         hide-personne-dossier
         readonly-statut
         @save="updateParticipant"

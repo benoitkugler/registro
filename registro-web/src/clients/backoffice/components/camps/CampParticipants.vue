@@ -101,6 +101,9 @@
                 label="Participant"
                 v-model="toCreate.IdPersonne"
                 initial-personne=""
+                :api="{
+                  SelectPersonne: controller.SelectPersonne.bind(controller),
+                }"
               ></SelectPersonne>
             </v-col>
             <v-col cols="12">
@@ -130,6 +133,9 @@
       <ParticipantEdit
         :participant="toEdit.Participant"
         :personne="toEdit.Personne"
+        :api="{
+          SelectPersonne: controller.SelectPersonne.bind(controller),
+        }"
         @save="updateParticipant"
       ></ParticipantEdit>
     </v-dialog>

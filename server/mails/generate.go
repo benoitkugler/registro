@@ -334,7 +334,7 @@ func InviteEquipier(cfg config.Asso, labelCamp string, directeur string, equipie
 			Title:       "Bienvenue dans l'équipe !",
 			Salutations: fmt.Sprintf("%s %s,", s, equipier.FPrenom()),
 			Asso:        cfg,
-			Signature:   template.HTML(directeur) + "<br/>" + mailAutoSignature,
+			Signature:   template.HTML(directeur),
 		},
 		labelCamp,
 		lienFormulaire,

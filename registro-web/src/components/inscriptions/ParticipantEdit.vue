@@ -8,6 +8,7 @@
               label="Personne"
               v-model="inner.IdPersonne"
               :initial-personne="Personnes.label(props.personne)"
+              :api="props.api"
             ></SelectPersonne>
           </v-col>
           <v-col>
@@ -55,9 +56,11 @@ import {
 } from "@/clients/backoffice/logic/api";
 import { copy, Personnes } from "@/utils";
 import StatutParticipantField from "../StatutParticipantField.vue";
+import type { SelectPersonneAPI } from "../types";
 const props = defineProps<{
   participant: Participant;
   personne: Personne;
+  api: SelectPersonneAPI;
   hidePersonneDossier?: boolean;
   readonlyStatut?: boolean;
 }>();

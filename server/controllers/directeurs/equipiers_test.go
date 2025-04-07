@@ -35,6 +35,69 @@ import (
 // 	fmt.Println(len(out))
 // }
 
+func TestEquipiers(t *testing.T) {
+	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
+		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",
+		"../../migrations/init.sql")
+	defer db.Remove()
+
+	asso, smtp := loadEnv(t)
+	ct := Controller{db: db.DB, asso: asso, smtp: smtp}
+
+	camp, err := cps.Camp{IdTaux: 1}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	pe1, err := pr.Personne{}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	t.Run("create", func(t *testing.T) {
+		_, err = ct.createEquipier("", EquipiersCreateIn{
+			CreatePersonne: false,
+			IdPersonne:     pe1.Id,
+			Roles:          cps.Roles{cps.Direction},
+		}, camp.Id)
+		tu.AssertNoErr(t, err)
+
+		_, err = ct.createEquipier("", EquipiersCreateIn{
+			CreatePersonne: false,
+			IdPersonne:     pe1.Id,
+			Roles:          cps.Roles{cps.Adjoint},
+		}, camp.Id)
+		tu.AssertErr(t, err) // already in
+
+		_, err = ct.createEquipier("", EquipiersCreateIn{
+			CreatePersonne: true,
+			Roles:          cps.Roles{cps.Direction},
+		}, camp.Id)
+		tu.AssertErr(t, err) // already a direction
+
+		_, err = ct.createEquipier("", EquipiersCreateIn{
+			CreatePersonne: true,
+			Roles:          cps.Roles{cps.Animation},
+		}, camp.Id)
+		tu.AssertNoErr(t, err)
+	})
+
+	t.Run("invite", func(t *testing.T) {
+		_, err = ct.createEquipier("", EquipiersCreateIn{
+			CreatePersonne: true,
+			Nom:            "Kugler", Prenom: "Benoit", Mail: "epondrea@free.fr",
+			Roles: cps.Roles{cps.Direction},
+		}, camp.Id)
+		tu.AssertNoErr(t, err)
+
+		eq1, err := ct.createEquipier("", EquipiersCreateIn{CreatePersonne: true, Roles: cps.Roles{cps.Animation}}, camp.Id)
+		tu.AssertNoErr(t, err)
+		_, err = ct.createEquipier("", EquipiersCreateIn{CreatePersonne: true, Roles: cps.Roles{cps.Animation}}, camp.Id)
+		tu.AssertNoErr(t, err)
+
+		err = ct.inviteEquipiers("", EquipiersInviteIn{OnlyOne: eq1.Equipier.Id.Opt()}, eq1.Equipier.IdCamp)
+		tu.AssertNoErr(t, err)
+		err = ct.inviteEquipiers("", EquipiersInviteIn{}, camp.Id)
+		tu.AssertNoErr(t, err)
+	})
+}
+
 func TestDemandes(t *testing.T) {
 	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
 		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",

@@ -25,9 +25,9 @@
           @identifie="(v) => identifie(insc.Dossier.Id, v)"
           @valide="startValideInsc(insc)"
           :api="{
-            searchSimilaires:
+            SearchSimilaires:
               controller.InscriptionsSearchSimilaires.bind(controller),
-            selectPersonne: controller.SelectPersonne.bind(controller),
+            SelectPersonne: controller.SelectPersonne.bind(controller),
           }"
         ></InscriptionRow>
       </div>

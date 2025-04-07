@@ -59,11 +59,24 @@ export interface EquipierExt {
   Personne: string;
   FormURL: string;
 }
+// registro/controllers/directeurs.EquipiersCreateIn
+export interface EquipiersCreateIn {
+  CreatePersonne: boolean;
+  Nom: string;
+  Prenom: string;
+  Mail: string;
+  IdPersonne: IdPersonne;
+  Roles: Roles;
+}
 // registro/controllers/directeurs.EquipiersDemandeSetIn
 export interface EquipiersDemandeSetIn {
   IdEquipier: IdEquipier;
   IdDemande: IdDemande;
   State: DemandeState;
+}
+// registro/controllers/directeurs.EquipiersInviteIn
+export interface EquipiersInviteIn {
+  OnlyOne: OptID_IdEquipier;
 }
 // registro/controllers/directeurs.LogginOut
 export interface LogginOut {
@@ -558,6 +571,11 @@ export const SexeLabels: Record<Sexe, string> = {
 export type Tels = string[] | null;
 // registro/sql/shared.Date
 export type Date = Date_;
+// registro/sql/shared.OptID[registro/sql/camps.IdEquipier]
+export interface OptID_IdEquipier {
+  Id: IdEquipier;
+  Valid: boolean;
+}
 // registro/sql/shared.OptID[registro/sql/files.IdFile]
 export interface OptID_IdFile {
   Id: IdFile;
@@ -752,6 +770,36 @@ export abstract class AbstractAPI {
     try {
       const rep: AxiosResponse<EquipierExt[] | null> = await Axios.get(
         fullUrl,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EquipiersCreate performs the request and handles the error */
+  async EquipiersCreate(params: EquipiersCreateIn) {
+    const fullUrl = this.baseUrl + "/api/v1/directeurs/equipiers";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<EquipierExt> = await Axios.put(fullUrl, params, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EquipiersInvite performs the request and handles the error */
+  async EquipiersInvite(params: EquipiersInviteIn) {
+    const fullUrl = this.baseUrl + "/api/v1/directeurs/equipiers/invite";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<EquipierExt[] | null> = await Axios.post(
+        fullUrl,
+        params,
         { headers: this.getHeaders() },
       );
       return rep.data;

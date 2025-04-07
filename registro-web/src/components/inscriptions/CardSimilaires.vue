@@ -94,7 +94,7 @@ import type {
   ScoredPersonne,
 } from "../../clients/backoffice/logic/api";
 import { Formatters } from "@/utils";
-import type { SimilairesAPI } from "./types";
+import type { SimilairesAPI } from "../types";
 
 const props = defineProps<{
   personne: Personne;
@@ -109,7 +109,7 @@ onMounted(fetchSimilaires);
 
 const suggestedCandidats = ref<ScoredPersonne[]>([]);
 async function fetchSimilaires() {
-  const res = await props.api.searchSimilaires({
+  const res = await props.api.SearchSimilaires({
     idPersonne: props.personne.Id,
   });
   if (res === undefined) return;
@@ -122,7 +122,7 @@ const manualPattern = ref("");
 const manualSearchCandidates = ref<PersonneHeader[]>([]);
 async function manualSearch() {
   if ((manualPattern.value || "").length < 3) return;
-  const res = await props.api.selectPersonne({ search: manualPattern.value });
+  const res = await props.api.SelectPersonne({ search: manualPattern.value });
   if (res === undefined) return;
   manualSearchCandidates.value = res || [];
 }

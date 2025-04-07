@@ -17,6 +17,10 @@ type OptIdCamp = shared.OptID[IdCamp]
 
 func (id IdCamp) Opt() OptIdCamp { return OptIdCamp{Id: id, Valid: true} }
 
+func (id IdEquipier) Opt() shared.OptID[IdEquipier] {
+	return shared.OptID[IdEquipier]{Id: id, Valid: true}
+}
+
 // StatutParticipant définit le statut d'un participant
 // par rapport à la liste d'attente
 type StatutParticipant uint8

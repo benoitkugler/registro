@@ -3,13 +3,15 @@ package directeurs
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 
 	"registro/controllers/files"
-	"registro/controllers/search"
 	"registro/crypto"
+	"registro/mails"
 	cps "registro/sql/camps"
 	fs "registro/sql/files"
 	pr "registro/sql/personnes"
+	"registro/sql/shared"
 	"registro/utils"
 
 	"github.com/labstack/echo/v4"
@@ -28,6 +30,11 @@ func (ct *Controller) EquipiersGet(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
+func equipierURL(key crypto.Encrypter, host string, id cps.IdEquipier) string {
+	token := crypto.EncryptID(key, id)
+	return utils.BuildUrl(host, EndpointEquipier, utils.QP("token", token))
+}
+
 type EquipierExt struct {
 	Equipier cps.Equipier
 	Personne string
@@ -36,9 +43,7 @@ type EquipierExt struct {
 }
 
 func newEquipierExt(key crypto.Encrypter, host string, equipier cps.Equipier, personne pr.Personne) EquipierExt {
-	token := crypto.EncryptID(key, equipier.Id)
-	url := utils.BuildUrl(host, EndpointEquipier, utils.QP("token", token))
-	return EquipierExt{equipier, personne.NOMPrenom(), url}
+	return EquipierExt{equipier, personne.NOMPrenom(), equipierURL(key, host, equipier.Id)}
 }
 
 func (ct *Controller) getEquipiers(host string, user cps.IdCamp) ([]EquipierExt, error) {
@@ -60,8 +65,9 @@ func (ct *Controller) getEquipiers(host string, user cps.IdCamp) ([]EquipierExt,
 
 type EquipiersCreateIn struct {
 	CreatePersonne bool
-	Personne       search.PatternsSimilarite // valid if CreatePersonne is true
-	IdPersonne     pr.IdPersonne             // valid if CreatePersonne if false
+
+	Nom, Prenom, Mail string        // valid if CreatePersonne is true
+	IdPersonne        pr.IdPersonne // valid if CreatePersonne if false
 
 	Roles cps.Roles
 }
@@ -91,6 +97,10 @@ func (ct *Controller) createEquipier(host string, args EquipiersCreateIn, user c
 	if _, hasDirecteur := equipiers.Directeur(); args.Roles.Is(cps.Direction) && hasDirecteur {
 		return EquipierExt{}, errors.New("Le séjour a déjà un directeur.")
 	}
+	// also check the personne is not already in this camp
+	if _, is := equipiers.ByIdPersonne()[args.IdPersonne]; !args.CreatePersonne && is {
+		return EquipierExt{}, errors.New("Ce profil est déjà dans la liste des équipiers du séjour.")
+	}
 
 	var (
 		equipier cps.Equipier
@@ -100,7 +110,9 @@ func (ct *Controller) createEquipier(host string, args EquipiersCreateIn, user c
 		// two modes : create or link Personne
 		if args.CreatePersonne {
 			// we do not mark as tmp since it would prevent document uploading
-			pe, err := pr.Personne{Etatcivil: args.Personne.Personne()}.Insert(tx)
+			pe, err := pr.Personne{Etatcivil: pr.Etatcivil{
+				Nom: args.Nom, Prenom: args.Prenom, Mail: args.Mail,
+			}}.Insert(tx)
 			if err != nil {
 				return err
 			}
@@ -121,6 +133,108 @@ func (ct *Controller) createEquipier(host string, args EquipiersCreateIn, user c
 		return EquipierExt{}, err
 	}
 	return newEquipierExt(ct.key, host, equipier, personne), nil
+}
+
+// EquipiersInviteIn encodes 2 alternatives:
+//   - only one equipier
+//   - everyone, except the ones having already answered
+type EquipiersInviteIn struct {
+	OnlyOne shared.OptID[cps.IdEquipier]
+}
+
+// EquipiersInvite invite un ou plusieurs équipiers
+// à remplir le formulaire, par email.
+func (ct *Controller) EquipiersInvite(c echo.Context) error {
+	user := JWTUser(c)
+
+	var args EquipiersInviteIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	err := ct.inviteEquipiers(c.Request().Host, args, user)
+	if err != nil {
+		return err
+	}
+
+	out, err := ct.getEquipiers(c.Request().Host, user)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) inviteEquipiers(host string, args EquipiersInviteIn, user cps.IdCamp) error {
+	camp, err := cps.SelectCamp(ct.db, user)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	equipiers, err := cps.SelectEquipiersByIdCamps(ct.db, user)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	personnes, err := pr.SelectPersonnes(ct.db, equipiers.IdPersonnes()...)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	var (
+		replyTo   mails.ReplyTo
+		directeur string
+	)
+	if eq, ok := equipiers.Directeur(); ok {
+		per := personnes[eq.IdPersonne]
+		replyTo = mails.CustomReplyTo(per.Mail)
+		directeur = per.FPrenom()
+	}
+
+	// select equipiers
+	var ids []cps.IdEquipier
+	if args.OnlyOne.Valid {
+		ids = []cps.IdEquipier{args.OnlyOne.Id}
+	} else {
+		for _, equipier := range equipiers {
+			if equipier.FormStatus != cps.Answered {
+				ids = append(ids, equipier.Id)
+			}
+		}
+	}
+
+	pool, err := mails.NewPool(ct.smtp, ct.asso.MailsSettings, nil)
+	if err != nil {
+		return err
+	}
+	defer pool.Close()
+
+	return utils.InTx(ct.db, func(tx *sql.Tx) error {
+		// update DB ...
+		for _, id := range ids {
+			equipier := equipiers[id]
+			equipier.FormStatus = cps.Pending
+			_, err = equipier.Update(tx)
+			if err != nil {
+				return err
+			}
+		}
+		// ... and notify
+		for _, id := range ids {
+			equipier := equipiers[id]
+			personne := personnes[equipier.IdPersonne]
+			url := equipierURL(ct.key, host, id)
+
+			html, err := mails.InviteEquipier(ct.asso, camp.Label(), directeur, personne.Etatcivil, url)
+			if err != nil {
+				return err
+			}
+			err = pool.SendMail(personne.Mail, fmt.Sprintf("Equipier %s", camp.Label()),
+				html, nil, replyTo)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }
 
 type DemandeState uint8

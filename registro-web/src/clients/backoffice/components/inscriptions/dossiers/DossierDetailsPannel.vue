@@ -159,6 +159,9 @@
                 label="Personne"
                 initial-personne=""
                 v-model="participantToCreate.IdPersonne"
+                :api="{
+                  SelectPersonne: controller.SelectPersonne.bind(controller),
+                }"
               ></SelectPersonne>
             </v-col>
           </v-row>

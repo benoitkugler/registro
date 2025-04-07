@@ -54,7 +54,7 @@ import {
 import CardSimilaires from "./CardSimilaires.vue";
 import { mergeProps } from "vue";
 import { Formatters, Personnes } from "@/utils";
-import type { SimilairesAPI } from "./types";
+import type { SimilairesAPI } from "../types";
 const props = defineProps<{
   personne: Personne;
   api: SimilairesAPI;

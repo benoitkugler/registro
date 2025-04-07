@@ -28,9 +28,9 @@
             (idParticipant) => deleteParticipant(insc.Dossier.Id, idParticipant)
           "
           :api="{
-            searchSimilaires:
+            SearchSimilaires:
               controller.InscriptionsSearchSimilaires.bind(controller),
-            selectPersonne: controller.SelectPersonne.bind(controller),
+            SelectPersonne: controller.SelectPersonne.bind(controller),
           }"
         ></InscriptionRow>
       </div>

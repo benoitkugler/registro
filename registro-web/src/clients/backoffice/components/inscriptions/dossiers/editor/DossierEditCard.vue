@@ -10,6 +10,9 @@
             @update:model-value="
               (v) => (v ? (innerDossier.IdResponsable = v) : undefined)
             "
+            :api="{
+              SelectPersonne: controller.SelectPersonne.bind(controller),
+            }"
           ></SelectPersonne>
         </v-col>
       </v-row>
@@ -52,6 +55,7 @@
 
 <script setup lang="ts">
 import { type Dossier } from "@/clients/backoffice/logic/api";
+import { controller } from "@/clients/backoffice/logic/logic";
 import { copy, FormRules } from "@/utils";
 import { ref } from "vue";
 

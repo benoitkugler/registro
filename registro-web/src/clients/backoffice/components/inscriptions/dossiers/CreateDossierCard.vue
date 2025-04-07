@@ -5,8 +5,11 @@
         <v-col>
           <SelectPersonne
             label="Responsable légal"
-            initial-personne=""
             v-model="resp"
+            initial-personne=""
+            :api="{
+              SelectPersonne: controller.SelectPersonne.bind(controller),
+            }"
           ></SelectPersonne>
         </v-col>
       </v-row>
@@ -21,7 +24,8 @@
 </template>
 
 <script setup lang="ts">
-import { type IdPersonne, type Int } from "@/clients/backoffice/logic/api";
+import { type IdPersonne } from "@/clients/backoffice/logic/api";
+import { controller } from "@/clients/backoffice/logic/logic";
 import { ref } from "vue";
 
 const props = defineProps<{

@@ -153,7 +153,7 @@ import {
 } from "../../clients/backoffice/logic/api";
 import InscriptionEtatcivilCols from "./InscriptionEtatcivilCols.vue";
 import { computed, ref } from "vue";
-import type { SimilairesAPI } from "./types";
+import type { SimilairesAPI } from "../types";
 import { StatutParticipant } from "@/clients/directeurs/logic/api";
 const props = defineProps<{
   inscription: Inscription;

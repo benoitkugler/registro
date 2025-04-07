@@ -33,6 +33,8 @@ func setupRoutesDirecteurs(e *echo.Echo, ct *directeurs.Controller) {
 
 	// Equipiers
 	gr.GET("/api/v1/directeurs/equipiers", ct.EquipiersGet)
+	gr.PUT("/api/v1/directeurs/equipiers", ct.EquipiersCreate)
+	gr.POST("/api/v1/directeurs/equipiers/invite", ct.EquipiersInvite)
 	gr.GET("/api/v1/directeurs/equipiers/demandes", ct.EquipiersDemandesGet)
 	gr.POST("/api/v1/directeurs/equipiers/demandes", ct.EquipiersDemandeSet)
 }
