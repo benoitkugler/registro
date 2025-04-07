@@ -8,6 +8,7 @@
     <v-card title="Documents">
       <v-card-text>
         <v-btn-toggle
+          mandatory
           :model-value="props.demande.State"
           @update:model-value="(v) => emit('updateState', v)"
         >
@@ -20,9 +21,9 @@
           }}</v-btn>
         </v-btn-toggle>
         <template v-if="props.demande.Files?.length">
-          <v-divider thickness="1"></v-divider>
+          <v-divider thickness="2" class="mt-2"></v-divider>
           <v-row>
-            <v-col v-for="file in props.demande.Files">
+            <v-col v-for="file in props.demande.Files" cols="4">
               <FileCard :file="file"></FileCard>
             </v-col>
           </v-row>
