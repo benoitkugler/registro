@@ -1,40 +1,4 @@
 <template>
-  <v-dialog v-model="showUpload" max-width="600px">
-    <FileUpload
-      @upload="
-        (file) => {
-          emit('upload', file);
-          showUpload = false;
-        }
-      "
-    ></FileUpload>
-  </v-dialog>
-
-  <v-dialog
-    v-if="toDelete != null"
-    :model-value="toDelete != null"
-    @update:model-value="toDelete = null"
-    max-width="600px"
-  >
-    <v-card title="Confirmation">
-      <v-card-text>
-        Le document va être supprimé. <br /><br />
-        Attention, cette opération est irréversible.
-      </v-card-text>
-      <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn
-          color="red"
-          @click="
-            emit('delete', toDelete);
-            toDelete = null;
-          "
-          >Supprimer</v-btn
-        >
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
-
   <v-list-item
     :title="title"
     :subtitle="props.demande.Description"
@@ -68,16 +32,60 @@
             size="x-small"
             @click="showUpload = true"
             :disabled="
-              props.demande.MaxDocs != 0 &&
-              props.files.length >= props.demande.MaxDocs
+              props.inUpload ||
+              (props.demande.MaxDocs != 0 &&
+                props.files.length >= props.demande.MaxDocs)
             "
           >
-            <v-icon color="green">mdi-upload</v-icon>
+            <v-icon
+              color="green"
+              :icon="props.inUpload ? 'mdi-loading' : 'mdi-upload'"
+              :class="props.inUpload ? 'mdi-spin' : undefined"
+            >
+            </v-icon>
           </v-btn>
         </v-col>
       </v-row>
     </template>
   </v-list-item>
+
+  <!-- upload -->
+  <v-dialog v-model="showUpload" max-width="600px">
+    <FileUpload
+      @upload="
+        (file) => {
+          emit('upload', file);
+          showUpload = false;
+        }
+      "
+    ></FileUpload>
+  </v-dialog>
+
+  <!-- confirme delete -->
+  <v-dialog
+    v-if="toDelete != null"
+    :model-value="toDelete != null"
+    @update:model-value="toDelete = null"
+    max-width="600px"
+  >
+    <v-card title="Confirmation">
+      <v-card-text>
+        Le document va être supprimé. <br /><br />
+        Attention, cette opération est irréversible.
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn
+          color="red"
+          @click="
+            emit('delete', toDelete);
+            toDelete = null;
+          "
+          >Supprimer</v-btn
+        >
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script setup lang="ts">
@@ -92,6 +100,7 @@ import { computed, ref } from "vue";
 const props = defineProps<{
   demande: Demande;
   files: PublicFile[];
+  inUpload: boolean;
   optionnelle?: boolean;
 }>();
 

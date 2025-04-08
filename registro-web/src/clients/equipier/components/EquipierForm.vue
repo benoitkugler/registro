@@ -274,10 +274,11 @@
     </template>
     <v-card-text>
       <FilesDemande
+        v-for="demande in demandes"
         :demande="demande.Demande"
         :files="demande.Files || []"
+        :in-upload="isUploading.has(demande.Demande.Id)"
         :optionnelle="demande.Optionnelle"
-        v-for="demande in demandes"
         @upload="(f) => uploadFile(f, demande.Demande.Id)"
         @delete="(f) => deleteFile(f, demande.Demande.Id)"
       ></FilesDemande>
@@ -327,7 +328,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref } from "vue";
+import { computed, reactive, ref } from "vue";
 import {
   Categorie,
   CategorieLabels,
@@ -341,6 +342,7 @@ import { Camps, copy, Departements, Formatters, FormRules } from "@/utils";
 import { controller } from "../logic/logic";
 import { isDateZero } from "@/components/date";
 import CharteEquipier from "./CharteEquipier.vue";
+import { fa } from "vuetify/locale";
 
 const props = defineProps<{
   token: string;
@@ -365,11 +367,14 @@ const demandes = computed(() => {
   return out;
 });
 
+const isUploading = reactive(new Set<IdDemande>());
 async function uploadFile(file: File, idDemande: IdDemande) {
+  isUploading.add(idDemande);
   const res = await controller.UploadDocument(file, {
     token: props.token,
     idDemande,
   });
+  isUploading.delete(idDemande);
   if (res === undefined) return;
   controller.showMessage("Document téléversé avec succès.");
   const item = demandesL.value.find((d) => d.Demande.Id == idDemande)!;
