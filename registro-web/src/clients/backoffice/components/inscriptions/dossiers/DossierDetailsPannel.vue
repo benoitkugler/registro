@@ -110,7 +110,6 @@
           >
           </EventSwitch>
         </v-timeline>
-        <div ref="timelineBottom"></div>
       </div>
     </v-card-text>
 
@@ -370,28 +369,19 @@ import {
   type Event,
   type IdAide,
   type IdCamp,
-  type IdDossier,
   type IdParticipant,
   type IdPersonne,
-  type Int,
   type Paiement,
   type Participant,
   type ParticipantsCreateIn,
   type Structureaides,
 } from "../../../logic/api";
-import {
-  copyToClipboard,
-  nullableToZeroable,
-  Personnes,
-  pseudoEventTime,
-  zeroableToNullable,
-  type PseudoEvent,
-} from "@/utils";
+import { buildPseudoEvents, copyToClipboard, Personnes } from "@/utils";
 import FactureCard from "./FactureCard.vue";
 import DossierEditCard from "./editor/DossierEditCard.vue";
 import DossierParticipantRow from "./editor/DossierParticipantRow.vue";
 import PaiementEditCard from "./PaiementEditCard.vue";
-import { controller, emptyQuery } from "@/clients/backoffice/logic/logic";
+import { controller } from "@/clients/backoffice/logic/logic";
 import { goToParticipant } from "@/clients/backoffice/plugins/router";
 import MergeCard from "../MergeCard.vue";
 
@@ -423,7 +413,7 @@ const emit = defineEmits<{
   (e: "deleteMessage", event: Event): void;
 }>();
 
-defineExpose({ showEditPaiement, showEditDossier, scrollToLastEvent });
+defineExpose({ showEditPaiement, showEditDossier });
 
 function statutColor(s: StatutPaiement) {
   switch (s) {
@@ -436,35 +426,9 @@ function statutColor(s: StatutPaiement) {
   }
 }
 
-// add the inscription time and paiements
-// and sort by time
-const events = computed(() => {
-  const evList: PseudoEvent[] = (props.dossier.Dossier.Events || []).map(
-    (ev) => ({
-      Kind: "event",
-      event: ev,
-    })
-  );
-  const paiements: PseudoEvent[] = Object.values(
-    props.dossier.Dossier.Paiements || {}
-  ).map((p) => ({
-    Kind: "paiement",
-    Paiement: p,
-  }));
-  const out: PseudoEvent[] = [
-    {
-      Kind: "inscription-time",
-      Time: props.dossier.Dossier.Dossier.MomentInscription,
-    },
-    ...evList,
-    ...paiements,
-  ];
-  // last event last
-  out.sort(
-    (a, b) => pseudoEventTime(a).valueOf() - pseudoEventTime(b).valueOf()
-  );
-  return out;
-});
+const events = computed(() =>
+  buildPseudoEvents(props.dossier.Dossier, "backoffice")
+);
 
 const showDeleteDialog = ref(false);
 
@@ -498,9 +462,4 @@ const showMergeCard = ref(false);
 
 const showMessage = ref(false);
 const messageContenu = ref("");
-
-const timelineBottom = useTemplateRef("timelineBottom");
-function scrollToLastEvent() {
-  nextTick(() => timelineBottom.value?.scrollIntoView());
-}
 </script>

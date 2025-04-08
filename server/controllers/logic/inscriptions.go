@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"registro/config"
-	"registro/controllers/espaceperso"
 	"registro/controllers/search"
 	"registro/crypto"
 	"registro/mails"
@@ -326,7 +325,7 @@ func ValideInscription(db *sql.DB, key crypto.Encrypter, smtp config.SMTP, asso 
 		// ... and notify if required
 		if args.SendMail {
 			resp := loader.Responsable()
-			url := espaceperso.URLEspacePerso(key, host, dossier.Id, utils.QP("origin", "validation"))
+			url := URLEspacePerso(key, host, dossier.Id, utils.QP("origin", "validation"))
 			html, err := mails.NotifieValidationInscription(asso, mails.NewContact(&resp), url, inscrits, attente, astatuer)
 			if err != nil {
 				return err

@@ -15,7 +15,12 @@
         </v-list-item-subtitle>
       </v-col>
       <v-col align-self="center" cols="auto">
-        <v-btn icon="mdi-pencil" size="x-small" @click="emit('edit')"></v-btn>
+        <v-btn
+          v-if="props.user == 'backoffice'"
+          icon="mdi-pencil"
+          size="x-small"
+          @click="emit('edit')"
+        ></v-btn>
       </v-col>
     </v-row>
   </EventItem>
@@ -23,10 +28,11 @@
 
 <script setup lang="ts">
 import { type Paiement } from "@/clients/backoffice/logic/api";
-import { Formatters } from "@/utils";
+import { Formatters, type User } from "@/utils";
 
 const props = defineProps<{
   paiement: Paiement;
+  user: User;
 }>();
 
 const emit = defineEmits<{

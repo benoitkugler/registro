@@ -6,73 +6,75 @@
   <EventPaiementV
     v-else-if="props.event.Kind == 'paiement'"
     :paiement="props.event.Paiement"
+    :user="props.event.User"
     @edit="emit('editPaiement', props.event.Paiement)"
   >
   </EventPaiementV>
   <EventSupprimeV
     v-else-if="
       props.event.Kind == 'event' &&
-      props.event.event.Content.Kind == EventContentKind.Supprime
+      props.event.Event.Content.Kind == EventContentKind.Supprime
     "
-    :event="props.event.event"
-    :content="props.event.event.Content.Data"
+    :event="props.event.Event"
+    :content="props.event.Event.Content.Data"
   ></EventSupprimeV>
   <EventValidationV
     v-else-if="
       props.event.Kind == 'event' &&
-      props.event.event.Content.Kind == EventContentKind.Validation
+      props.event.Event.Content.Kind == EventContentKind.Validation
     "
-    :event="props.event.event"
-    :content="props.event.event.Content.Data"
+    :event="props.event.Event"
+    :content="props.event.Event.Content.Data"
   ></EventValidationV>
   <EventMessageV
     v-else-if="
       props.event.Kind == 'event' &&
-      props.event.event.Content.Kind == EventContentKind.Message
+      props.event.Event.Content.Kind == EventContentKind.Message
     "
-    :event="props.event.event"
-    :content="props.event.event.Content.Data"
-    @delete="emit('deleteMessage', props.event.event)"
+    :event="props.event.Event"
+    :content="props.event.Event.Content.Data"
+    :user="props.event.User"
+    @delete="emit('deleteMessage', props.event.Event)"
   ></EventMessageV>
   <EventPlaceLibereeV
     v-else-if="
       props.event.Kind == 'event' &&
-      props.event.event.Content.Kind == EventContentKind.PlaceLiberee
+      props.event.Event.Content.Kind == EventContentKind.PlaceLiberee
     "
-    :event="props.event.event"
-    :content="props.event.event.Content.Data"
+    :event="props.event.Event"
+    :content="props.event.Event.Content.Data"
   ></EventPlaceLibereeV>
   <EventFactureV
     v-else-if="
       props.event.Kind == 'event' &&
-      props.event.event.Content.Kind == EventContentKind.Facture
+      props.event.Event.Content.Kind == EventContentKind.Facture
     "
-    :event="props.event.event"
-    :content="props.event.event.Content.Data"
+    :event="props.event.Event"
+    :content="props.event.Event.Content.Data"
   ></EventFactureV>
   <EventCampDocsV
     v-else-if="
       props.event.Kind == 'event' &&
-      props.event.event.Content.Kind == EventContentKind.CampDocs
+      props.event.Event.Content.Kind == EventContentKind.CampDocs
     "
-    :event="props.event.event"
-    :content="props.event.event.Content.Data"
+    :event="props.event.Event"
+    :content="props.event.Event.Content.Data"
   ></EventCampDocsV>
   <EventAttestationV
     v-else-if="
       props.event.Kind == 'event' &&
-      props.event.event.Content.Kind == EventContentKind.Attestation
+      props.event.Event.Content.Kind == EventContentKind.Attestation
     "
-    :event="props.event.event"
-    :content="props.event.event.Content.Data"
+    :event="props.event.Event"
+    :content="props.event.Event.Content.Data"
   ></EventAttestationV>
   <EventSondageV
     v-else-if="
       props.event.Kind == 'event' &&
-      props.event.event.Content.Kind == EventContentKind.Sondage
+      props.event.Event.Content.Kind == EventContentKind.Sondage
     "
-    :event="props.event.event"
-    :content="props.event.event.Content.Data"
+    :event="props.event.Event"
+    :content="props.event.Event.Content.Data"
   ></EventSondageV>
 </template>
 

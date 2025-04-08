@@ -174,6 +174,14 @@ func noCache(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
+// désactive le référencement
+func noIndex(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		c.Response().Header().Set("X-Robots-Tag", "noindex")
+		return next(c)
+	}
+}
+
 // cacheStatic adopt a very aggressive caching policy, suitable
 // for immutable content
 func cacheStatic(next echo.HandlerFunc) echo.HandlerFunc {
@@ -190,12 +198,18 @@ func setupClientApps(e *echo.Echo) {
 
 	e.GET("/backoffice", serve("static/backoffice/index.html"), middleware.Gzip(), noCache)
 	e.GET("/backoffice/*", serve("static/backoffice/index.html"), middleware.Gzip(), noCache)
-	e.GET(inscriptions.EndpointInscription, serve("static/inscription/index.html"), middleware.Gzip(), noCache)
-	e.GET(inscriptions.EndpointInscription+"/*", serve("static/inscription/index.html"), middleware.Gzip(), noCache)
-	e.GET(directeurs.EndpointEquipier, serve("static/equipier/index.html"), middleware.Gzip(), noCache)
-	e.GET(directeurs.EndpointEquipier+"/*", serve("static/equipier/index.html"), middleware.Gzip(), noCache)
+
 	e.GET("/directeurs", serve("static/directeurs/index.html"), middleware.Gzip(), noCache)
 	e.GET("/directeurs/*", serve("static/directeurs/index.html"), middleware.Gzip(), noCache)
+
+	e.GET(directeurs.EndpointEquipier, serve("static/equipier/index.html"), middleware.Gzip(), noCache, noIndex)
+	e.GET(directeurs.EndpointEquipier+"/*", serve("static/equipier/index.html"), middleware.Gzip(), noCache, noIndex)
+
+	e.GET(logic.EndpointEspacePerso, serve("static/espaceperso/index.html"), middleware.Gzip(), noCache, noIndex)
+	e.GET(logic.EndpointEspacePerso+"/*", serve("static/espaceperso/index.html"), middleware.Gzip(), noCache, noIndex)
+
+	e.GET(inscriptions.EndpointInscription, serve("static/inscription/index.html"), middleware.Gzip(), noCache)
+	e.GET(inscriptions.EndpointInscription+"/*", serve("static/inscription/index.html"), middleware.Gzip(), noCache)
 
 	// global static files used by frontend apps
 	e.Group("/static", middleware.Gzip(), cacheStatic).Static("/*", "static")

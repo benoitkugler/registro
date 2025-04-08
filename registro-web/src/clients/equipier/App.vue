@@ -76,8 +76,6 @@ controller.showMessage = (s, color) => {
 };
 
 const logo = `${import.meta.env.BASE_URL}${import.meta.env.VITE_ASSO}/logo.png`;
-const asso = import.meta.env.VITE_ASSO_TITLE;
-const version = `v${VITE_APP_VERSION}`;
 
 const data = ref<EquipierExt | null>(null);
 

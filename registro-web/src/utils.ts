@@ -4,6 +4,7 @@ import {
   StatutParticipant,
   type CampExt,
   type CampItem,
+  type DossierExt,
   type ParticipantExt,
 } from "./clients/backoffice/logic/api";
 import {
@@ -362,26 +363,58 @@ export namespace Formatters {
   }
 }
 
+export type User = "espaceperso" | "backoffice";
+
 export type PseudoEvent =
-  | { Kind: "event"; event: Event }
+  | { Kind: "event"; Event: Event; User: User }
   | {
       Kind: "paiement";
       Paiement: Paiement;
+      User: User;
     }
   | {
       Kind: "inscription-time";
       Time: Time;
     };
 
-export function pseudoEventTime(event: PseudoEvent): Date {
+function pseudoEventTime(event: PseudoEvent): Date {
   switch (event.Kind) {
     case "event":
-      return new Date(event.event.Created);
+      return new Date(event.Event.Created);
     case "paiement":
       return new Date(event.Paiement.Time);
     case "inscription-time":
       return new Date(event.Time);
   }
+}
+
+/** add the inscription time and paiements and sort by time */
+export function buildPseudoEvents(dossier: DossierExt, user: User) {
+  const evList: PseudoEvent[] = (dossier.Events || []).map((ev) => ({
+    Kind: "event",
+    Event: ev,
+    User: user,
+  }));
+  const paiements: PseudoEvent[] = Object.values(dossier.Paiements || {}).map(
+    (p) => ({
+      Kind: "paiement",
+      Paiement: p,
+      User: user,
+    })
+  );
+  const out: PseudoEvent[] = [
+    {
+      Kind: "inscription-time",
+      Time: dossier.Dossier.MomentInscription,
+    },
+    ...evList,
+    ...paiements,
+  ];
+  // last event first
+  out.sort(
+    (a, b) => pseudoEventTime(b).valueOf() - pseudoEventTime(a).valueOf()
+  );
+  return out;
 }
 
 export async function copyToClipboard(text: string) {

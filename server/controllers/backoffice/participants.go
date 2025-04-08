@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"time"
 
-	"registro/controllers/espaceperso"
 	"registro/controllers/logic"
 	"registro/mails"
 	cps "registro/sql/camps"
@@ -377,7 +376,7 @@ func (ct *Controller) setPlaceLiberee(host string, id cps.IdParticipant) (cps.Pa
 			return err
 		}
 		// notifie par mail
-		url := espaceperso.URLEspacePerso(ct.key, host, participant.IdDossier,
+		url := logic.URLEspacePerso(ct.key, host, participant.IdDossier,
 			utils.QP("idEvent", strconv.Itoa(int(ev.Id))))
 		html, err := mails.NotifiePlaceLiberee(ct.asso, mails.NewContact(&responsable), camp.Camp.Label(), url)
 		if err != nil {

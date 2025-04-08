@@ -60,18 +60,19 @@ type EventMessage struct {
 func CreateMessage(db DB, idDossier dossiers.IdDossier, created time.Time,
 	contenu string,
 	origine MessageOrigine, origineCamp OptIdCamp,
-) error {
+) (Event, EventMessage, error) {
 	event, err := Event{IdDossier: idDossier, Kind: Message, Created: created}.Insert(db)
 	if err != nil {
-		return err
+		return Event{}, EventMessage{}, err
 	}
-	err = EventMessage{
+	message := EventMessage{
 		IdEvent:     event.Id,
 		Contenu:     contenu,
 		Origine:     origine,
 		OrigineCamp: origineCamp,
-	}.Insert(db)
-	return err
+	}
+	err = message.Insert(db)
+	return event, message, err
 }
 
 // EventMessageView indique qu'un message a été lu par le directeur.

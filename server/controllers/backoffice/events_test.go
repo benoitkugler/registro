@@ -14,7 +14,8 @@ import (
 )
 
 func createMessage(db events.DB, idDossier ds.IdDossier, origine events.MessageOrigine, origineCamp events.OptIdCamp) error {
-	return events.CreateMessage(db, idDossier, time.Now(), utils.RandString(30, true), origine, origineCamp)
+	_, _, err := events.CreateMessage(db, idDossier, time.Now(), utils.RandString(30, true), origine, origineCamp)
+	return err
 }
 
 func Test_messages(t *testing.T) {

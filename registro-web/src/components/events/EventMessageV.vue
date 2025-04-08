@@ -1,6 +1,6 @@
 <template>
   <EventItem
-    :icon="isSent ? 'mdi-email-arrow-right' : 'mdi-email-arrow-left'"
+    :icon="fromUs ? 'mdi-email-arrow-right' : 'mdi-email-arrow-left'"
     color="light-blue-darken-3"
     :time="props.event.Created"
     size="x-large"
@@ -53,10 +53,12 @@ import {
 } from "@/clients/backoffice/logic/api";
 import EventItem from "./EventItem.vue";
 import { computed, ref } from "vue";
+import type { User } from "@/utils";
 
 const props = defineProps<{
   event: Event;
   content: Message;
+  user: User;
 }>();
 
 const emit = defineEmits<{
@@ -67,9 +69,7 @@ const colorClass = computed(() =>
   origineToColor(props.content.Message.Origine)
 );
 
-const allowDelete = computed(
-  () => props.content.Message.Origine == MessageOrigine.FromBackoffice
-);
+const allowDelete = computed(() => props.user == "backoffice" && fromUs);
 
 function origineToColor(or: MessageOrigine) {
   switch (or) {
@@ -85,8 +85,12 @@ function origineToColor(or: MessageOrigine) {
 const showConfirme = ref(false);
 
 /** true is sent by us */
-const isSent = computed(
-  () => props.content.Message.Origine != MessageOrigine.FromEspaceperso
+const fromUs = computed(
+  () =>
+    props.content.Message.Origine ==
+    (props.user == "backoffice"
+      ? MessageOrigine.FromBackoffice
+      : MessageOrigine.FromEspaceperso)
 );
 </script>
 

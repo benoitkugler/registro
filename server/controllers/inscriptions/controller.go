@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"registro/config"
-	"registro/controllers/espaceperso"
+	"registro/controllers/logic"
 	"registro/controllers/search"
 	"registro/crypto"
 	"registro/mails"
@@ -562,7 +562,7 @@ func (ct *Controller) ConfirmeInscription(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	url := espaceperso.URLEspacePerso(ct.key, c.Request().Host, dossier.Id, utils.QP("from-inscription", "true"))
+	url := logic.URLEspacePerso(ct.key, c.Request().Host, dossier.Id, utils.QP("from-inscription", "true"))
 	return c.Redirect(307, url)
 }
 
@@ -686,19 +686,8 @@ func ConfirmeInscription(db *sql.DB, id in.IdInscription) (ds.Dossier, error) {
 
 		// on insert le message du formulaire
 		if content := strings.TrimSpace(insc.Message); content != "" {
-			event := events.Event{
-				IdDossier: dossier.Id,
-				Kind:      events.Message,
-				Created:   insc.DateHeure.Add(time.Second), // on s'assure que le message vient après le moment d'inscription
-			}
-			event, err = event.Insert(tx)
-			if err != nil {
-				return err
-			}
-			err = events.EventMessage{
-				IdEvent: event.Id,
-				Contenu: content, Origine: events.FromEspaceperso,
-			}.Insert(tx)
+			created := insc.DateHeure.Add(time.Second) // on s'assure que le message vient après le moment d'inscription
+			_, _, err = events.CreateMessage(tx, dossier.Id, created, content, events.FromEspaceperso, cps.OptIdCamp{})
 			if err != nil {
 				return err
 			}

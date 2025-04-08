@@ -5,7 +5,6 @@ import (
 	"errors"
 	"time"
 
-	"registro/controllers/espaceperso"
 	"registro/controllers/logic"
 	"registro/mails"
 	ds "registro/sql/dossiers"
@@ -40,7 +39,7 @@ func (ct *Controller) sendMessage(host string, args EventsSendMessageIn) (event 
 	if err != nil {
 		return evs.Event{}, utils.SQLError(err)
 	}
-	url := espaceperso.URLEspacePerso(ct.key, host, args.IdDossier)
+	url := logic.URLEspacePerso(ct.key, host, args.IdDossier)
 
 	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
 		event, err = evs.Event{Kind: evs.Message, Created: time.Now(), IdDossier: args.IdDossier}.Insert(tx)

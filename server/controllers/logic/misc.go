@@ -4,6 +4,7 @@ import (
 	"slices"
 
 	"registro/controllers/search"
+	"registro/crypto"
 	cps "registro/sql/camps"
 	"registro/sql/dons"
 	ds "registro/sql/dossiers"
@@ -125,4 +126,12 @@ func CheckPersonneReferences(db pr.DB, id pr.IdPersonne) (out PersonneReferences
 	// out.Dons = links2
 
 	return out, nil
+}
+
+const EndpointEspacePerso = "espace-perso"
+
+func URLEspacePerso(key crypto.Encrypter, host string, dossier ds.IdDossier, queryParams ...utils.QParam) string {
+	crypted := crypto.EncryptID(key, dossier)
+	queryParams = append(queryParams, utils.QP("token", crypted))
+	return utils.BuildUrl(host, EndpointEspacePerso, queryParams...)
 }

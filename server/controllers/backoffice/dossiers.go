@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"registro/controllers/espaceperso"
 	filesAPI "registro/controllers/files"
 	"registro/controllers/logic"
 	"registro/controllers/search"
@@ -301,7 +300,7 @@ func (ct *Controller) loadDossier(host string, id ds.IdDossier) (DossierDetails,
 	if err != nil {
 		return DossierDetails{}, err
 	}
-	url := espaceperso.URLEspacePerso(ct.key, host, id)
+	url := logic.URLEspacePerso(ct.key, host, id)
 	virement := OffuscateurVirements.Mask(id)
 	accounts := ct.asso.BankAccounts()
 	return DossierDetails{dossier.Publish(), url, virement, accounts}, nil
@@ -759,7 +758,7 @@ func (ct *Controller) mergeDossier(host string, args DossiersMergeIn) error {
 		}
 
 		if args.Notifie {
-			url := espaceperso.URLEspacePerso(ct.key, host, args.To)
+			url := logic.URLEspacePerso(ct.key, host, args.To)
 			html, err := mails.NotifieFusionDossier(ct.asso, mails.NewContact(&fromResp), url)
 			if err != nil {
 				return err
