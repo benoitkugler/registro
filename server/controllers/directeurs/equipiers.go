@@ -1,9 +1,14 @@
 package directeurs
 
 import (
+	"bytes"
 	"database/sql"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
+	"slices"
+	"strings"
 
 	"registro/controllers/files"
 	"registro/crypto"
@@ -412,4 +417,115 @@ func (ct *Controller) setDemandeEquipier(args EquipiersDemandeSetIn, user cps.Id
 		}
 		return nil
 	})
+}
+
+// EquipiersDownloadFiles renvoie une archive contenant
+// tous les documents demandés aux equipiers, en "stremant" la réponse.
+func (ct *Controller) EquipiersDownloadFiles(c echo.Context) error {
+	user := JWTUser(c)
+	return ct.streamFilesEquipiers(user, c.Response())
+}
+
+type fileAndPrefix struct {
+	id       fs.IdFile
+	fullName string // including metadata from demande and equipier
+}
+
+func (ct *Controller) compileFilesEquipiers(user cps.IdCamp) ([]fileAndPrefix, error) {
+	equipiers, err := cps.SelectEquipiersByIdCamps(ct.db, user)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	personnes, err := pr.SelectPersonnes(ct.db, equipiers.IdPersonnes()...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	tmp1, err := fs.SelectDemandeEquipiersByIdEquipiers(ct.db, equipiers.IDs()...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	demandesByEquipier := tmp1.ByIdEquipier()
+	demandes, err := fs.SelectDemandes(ct.db, tmp1.IdDemandes()...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	tmp2, err := fs.SelectFilePersonnesByIdPersonnes(ct.db, personnes.IDs()...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	filesByPersonne := tmp2.ByIdPersonne()
+	files, err := fs.SelectFiles(ct.db, tmp2.IdFiles()...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+
+	var out []fileAndPrefix
+	for _, equipier := range equipiers {
+		personne := personnes[equipier.IdPersonne]
+		fileLinks := filesByPersonne[equipier.IdPersonne]
+		demandeLinks := demandesByEquipier[equipier.Id].ByIdDemande()
+		// restrict to [Demande]s
+		for _, fileLink := range fileLinks {
+			if _, has := demandeLinks[fileLink.IdDemande]; !has {
+				continue // ignore this file
+			}
+			file := files[fileLink.IdFile]
+			demande := demandes[fileLink.IdDemande]
+			out = append(out, fileAndPrefix{
+				id:       fileLink.IdFile,
+				fullName: fmt.Sprintf("%s %s %s", demande.Categorie, personne.NOMPrenom(), file.NomClient),
+			})
+		}
+	}
+
+	slices.SortFunc(out, func(a, b fileAndPrefix) int { return strings.Compare(a.fullName, b.fullName) })
+
+	return out, nil
+}
+
+func (ct *Controller) zipFiles(toZip []fileAndPrefix, resp io.Writer) error {
+	archive := utils.NewZip(resp)
+
+	for _, file := range toZip {
+		content, err := ct.files.Load(file.id, false)
+		if err != nil {
+			return err
+		}
+		err = archive.AddFile(file.fullName, bytes.NewReader(content))
+		if err != nil {
+			return err
+		}
+		if flusher, ok := resp.(http.Flusher); ok {
+			flusher.Flush()
+		}
+
+	}
+
+	err := archive.Close()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (ct *Controller) streamFilesEquipiers(user cps.IdCamp, resp http.ResponseWriter) error {
+	camp, err := cps.SelectCamp(ct.db, user)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	toZip, err := ct.compileFilesEquipiers(user)
+	if err != nil {
+		return err
+	}
+
+	resp.Header().Set(echo.HeaderContentType, "application/x-zip")
+	resp.Header().Set(echo.HeaderContentDisposition, utils.AttachementHeader(fmt.Sprintf("Documents Equipe %s.zip", camp.Label())))
+	if flusher, ok := resp.(http.Flusher); ok {
+		// this is needed so that browsers display a progress bar
+		flusher.Flush()
+	}
+	// write directly into resp (go is awesome !)
+	return ct.zipFiles(toZip, resp)
 }

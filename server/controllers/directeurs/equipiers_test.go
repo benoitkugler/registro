@@ -1,10 +1,15 @@
 package directeurs
 
 import (
+	"bytes"
+	"database/sql"
+	"os"
 	"testing"
 
 	cps "registro/sql/camps"
+	fs "registro/sql/files"
 	pr "registro/sql/personnes"
+	"registro/utils"
 	tu "registro/utils/testutils"
 )
 
@@ -103,6 +108,36 @@ func TestEquipiers(t *testing.T) {
 	})
 }
 
+func uploadFile(db *sql.DB, fileSys fs.FileSystem,
+	personne pr.IdPersonne, demande fs.IdDemande,
+	filename string,
+) error {
+	const pngData = "\x89\x50\x4E\x47\x0D\x0A\x1A\x0A\x00\x00\x00\x0D\x49\x48\x44\x52" +
+		"\x00\x00\x01\x00\x00\x00\x01\x00\x01\x03\x00\x00\x00\x66\xBC\x3A" +
+		"\x25\x00\x00\x00\x03\x50\x4C\x54\x45\xB5\xD0\xD0\x63\x04\x16\xEA" +
+		"\x00\x00\x00\x1F\x49\x44\x41\x54\x68\x81\xED\xC1\x01\x0D\x00\x00" +
+		"\x00\xC2\xA0\xF7\x4F\x6D\x0E\x37\xA0\x00\x00\x00\x00\x00\x00\x00" +
+		"\x00\xBE\x0D\x21\x00\x00\x01\x9A\x60\xE1\xD5\x00\x00\x00\x00\x49" +
+		"\x45\x4E\x44\xAE\x42\x60\x82"
+
+	return utils.InTx(db, func(tx *sql.Tx) error {
+		// create a new file, and the associated metadata
+		file, err := fs.File{}.Insert(tx)
+		if err != nil {
+			return err
+		}
+		err = fs.FilePersonne{IdFile: file.Id, IdPersonne: personne, IdDemande: demande}.Insert(tx)
+		if err != nil {
+			return err
+		}
+		file, err = fs.UploadFile(fileSys, tx, file.Id, []byte(pngData), filename)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
 func TestDemandes(t *testing.T) {
 	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
 		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",
@@ -112,13 +147,13 @@ func TestDemandes(t *testing.T) {
 	camp, err := cps.Camp{IdTaux: 1}.Insert(db)
 	tu.AssertNoErr(t, err)
 	for range [10]int{} {
-		pe, err := pr.Personne{}.Insert(db)
+		pe, err := pr.Personne{Etatcivil: pr.Etatcivil{Nom: utils.RandString(8, true)}}.Insert(db)
 		tu.AssertNoErr(t, err)
 		_, err = cps.Equipier{IdCamp: camp.Id, IdPersonne: pe.Id}.Insert(db)
 		tu.AssertNoErr(t, err)
 	}
 
-	ct := Controller{db: db.DB}
+	ct := Controller{db: db.DB, files: fs.NewFileSystem(os.TempDir())}
 
 	l, err := ct.getDemandesEquipiers(camp.Id)
 	tu.AssertNoErr(t, err)
@@ -128,9 +163,24 @@ func TestDemandes(t *testing.T) {
 	tu.AssertErr(t, err)
 	err = ct.setDemandeEquipier(EquipiersDemandeSetIn{DemandeKey{IdEquipier: 2, IdDemande: 3}, Obligatoire}, camp.Id)
 	tu.AssertNoErr(t, err)
+	err = ct.setDemandeEquipier(EquipiersDemandeSetIn{DemandeKey{IdEquipier: 3, IdDemande: 3}, Obligatoire}, camp.Id)
+	tu.AssertNoErr(t, err)
 
 	l, err = ct.getDemandesEquipiers(camp.Id)
 	tu.AssertNoErr(t, err)
+
+	err = uploadFile(ct.db, ct.files, 2, 3, "file1.png")
+	tu.AssertNoErr(t, err)
+	err = uploadFile(ct.db, ct.files, 3, 3, "file2.png")
+	tu.AssertNoErr(t, err)
+
+	files, err := ct.compileFilesEquipiers(camp.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(files) == 2)
+	var buf bytes.Buffer
+	err = ct.zipFiles(files, &buf)
+	tu.AssertNoErr(t, err)
+	tu.Write(t, "files.zip", buf.Bytes())
 }
 
 // func TestEquipe(t *testing.T) {

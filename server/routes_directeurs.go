@@ -13,6 +13,8 @@ func setupRoutesDirecteurs(e *echo.Echo, ct *directeurs.Controller) {
 	e.POST("/api/v1/directeurs/shared/camps", ct.GetCamps)
 	e.GET("/api/v1/directeurs/loggin", ct.Loggin)
 
+	e.GET("/api/v1/directeurs/equipiers/files", ct.EquipiersDownloadFiles, ct.JWTMiddlewareForQuery())
+
 	gr := e.Group("", ct.JWTMiddleware())
 
 	// Shared

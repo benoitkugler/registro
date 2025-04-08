@@ -33,6 +33,41 @@ const (
 	nbCategorieEquipier
 )
 
+func (c Categorie) String() string {
+	switch c {
+	case CarteId:
+		return "Carte d'identité/Passeport"
+	case Permis:
+		return "Permis de conduire"
+	case SB:
+		return "Surveillant de baignade"
+	case Secourisme:
+		return "Secourisme (PSC1 - AFPS)"
+	case Bafa:
+		return "BAFA"
+	case Bafd:
+		return "BAFD"
+	case CarteVitale:
+		return "Carte Vitale"
+	case Vaccins:
+		return "Vaccins"
+	case Haccp:
+		return "Cuisine (HACCP)"
+	case BafdEquiv:
+		return "Equivalent BAFD"
+	case BafaEquiv:
+		return "Equivalent BAFA"
+	case CertMedicalCuisine:
+		return "Certificat médical cuisine"
+	case Scolarite:
+		return "Certificat de scolarité"
+	case Autre:
+		return "Autre"
+	default:
+		return ""
+	}
+}
+
 // Builtins indique les demandes connues à l'avance
 type Builtins [nbCategorieEquipier]Demande
 

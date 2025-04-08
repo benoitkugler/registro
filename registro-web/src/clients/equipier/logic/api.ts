@@ -88,36 +88,36 @@ export interface PresenceOffsets {
 }
 // registro/sql/camps.Role
 export const Role = {
-  AutreRole: 0,
-  Direction: 1,
-  Adjoint: 2,
-  Animation: 3,
-  AideAnimation: 4,
-  Chauffeur: 5,
-  Intendance: 6,
-  Babysiter: 7,
-  Menage: 8,
-  Factotum: 9,
-  Infirmerie: 10,
-  Cuisine: 11,
-  Lingerie: 12,
+  Direction: 0,
+  Adjoint: 1,
+  Animation: 2,
+  Menage: 3,
+  Cuisine: 4,
+  Intendance: 5,
+  Infirmerie: 6,
+  AideAnimation: 7,
+  Lingerie: 8,
+  Chauffeur: 9,
+  Factotum: 10,
+  Babysiter: 11,
+  AutreRole: 12,
 } as const;
 export type Role = (typeof Role)[keyof typeof Role];
 
 export const RoleLabels: Record<Role, string> = {
-  [Role.AutreRole]: "Autre",
   [Role.Direction]: "Direction",
   [Role.Adjoint]: "Adjoint",
   [Role.Animation]: "Animation",
-  [Role.AideAnimation]: "Aide-animateur",
-  [Role.Chauffeur]: "Chauffeur",
-  [Role.Intendance]: "Intendance",
-  [Role.Babysiter]: "Baby-sitter",
   [Role.Menage]: "Ménage",
-  [Role.Factotum]: "Factotum",
-  [Role.Infirmerie]: "Assistant sanitaire",
   [Role.Cuisine]: "Cuisine",
+  [Role.Intendance]: "Intendance",
+  [Role.Infirmerie]: "Assistant sanitaire",
+  [Role.AideAnimation]: "Aide-animateur",
   [Role.Lingerie]: "Lingerie",
+  [Role.Chauffeur]: "Chauffeur",
+  [Role.Factotum]: "Factotum",
+  [Role.Babysiter]: "Baby-sitter",
+  [Role.AutreRole]: "Autre",
 };
 
 // registro/sql/camps.Roles

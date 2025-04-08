@@ -106,6 +106,13 @@ func BuildUrl(host, path string, params ...QParam) string {
 	return u.String()
 }
 
+// AttachementHeader returns a Content-Disposition
+// header, properly escaping the given [filemane].
+func AttachementHeader(filename string) string {
+	escapedFilename := url.QueryEscape(strings.ReplaceAll(filename, " ", "_"))
+	return fmt.Sprintf(`attachment; filename=%s`, escapedFilename)
+}
+
 type Set[T comparable] map[T]struct{}
 
 func NewSet[T comparable](values ...T) Set[T] {

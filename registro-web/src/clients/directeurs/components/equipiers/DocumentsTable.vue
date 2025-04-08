@@ -3,7 +3,14 @@
     title="Documents de l'équipe"
     subtitle="Demandes et fichiers déposés par l'équipe"
   >
-    <template #append> </template>
+    <template #append>
+      <v-btn :href="downloadURL">
+        <template #prepend>
+          <v-icon>mdi-download</v-icon>
+        </template>
+        Télécharger</v-btn
+      >
+    </template>
     <v-card-text class="mt-4">
       <v-skeleton-loader type="table" v-if="!demandes"></v-skeleton-loader>
       <div v-else>
@@ -36,7 +43,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { controller } from "../../logic/logic";
 import {
   CategorieLabels,
@@ -84,4 +91,6 @@ async function updateState(
   controller.showMessage("Demande modifiée avec succès.");
   itemAt(idEquipier, idDemande).State = state;
 }
+
+const downloadURL = computed(() => controller.equipiersFilesStreamURL());
 </script>

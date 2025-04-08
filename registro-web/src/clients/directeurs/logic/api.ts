@@ -638,6 +638,18 @@ export abstract class AbstractAPI {
     }
   }
 
+  /** EquipiersDownloadFiles performs the request and handles the error */
+  async EquipiersDownloadFiles() {
+    const fullUrl = this.baseUrl + "/api/v1/directeurs/equipiers/files";
+    this.startRequest();
+    try {
+      await Axios.get(fullUrl, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
   /** SelectPersonne performs the request and handles the error */
   async SelectPersonne(params: { search: string }) {
     const fullUrl = this.baseUrl + "/api/v1/directeurs/shared/personne";
