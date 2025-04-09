@@ -1,14 +1,37 @@
 <template>
-  <NavBar title="Bienvenue sur votre espace de suivi"> </NavBar>
+  <NavBar title="Bienvenue sur votre espace de suivi">
+    <v-menu>
+      <template #activator="{ props: menuProps }">
+        <v-btn v-bind="menuProps">
+          <template #prepend>
+            <v-icon>mdi-download</v-icon>
+          </template>
+          Justificatifs
+        </v-btn>
+      </template>
+      <v-list>
+        <v-list-item
+          title="Attestation de présence"
+          subtitle="Télécharger au format .pdf"
+          prepend-icon="mdi-file-document-check"
+        ></v-list-item>
+        <v-list-item
+          title="Facture"
+          subtitle="Télécharger au format .pdf"
+          prepend-icon="mdi-invoice-list"
+        ></v-list-item>
+      </v-list>
+    </v-menu>
+  </NavBar>
 
   <v-skeleton-loader type="card" v-if="data == null"></v-skeleton-loader>
   <v-container class="fill-height" fluid v-else>
     <v-row>
-      <!-- participants  -->
+      <!-- participants  et finances -->
       <v-col cols="4">
         <v-card subtitle="Participants">
           <template #append>
-            <v-btn @click="showEditOptions = true">
+            <v-btn @click="showEditOptions = true" size="small">
               <template #prepend>
                 <v-icon>mdi-cog</v-icon>
               </template>
@@ -49,6 +72,8 @@
             </v-list>
           </v-card-text>
         </v-card>
+
+        <FinancesCard :dossier="data.Dossier"></FinancesCard>
       </v-col>
 
       <!-- fil des messages -->
@@ -121,6 +146,7 @@ import {
 } from "../logic/api";
 import { buildPseudoEvents, Camps, Formatters, Personnes } from "@/utils";
 import ParticipantsEditCard from "../components/ParticipantsEditCard.vue";
+import FinancesCard from "../components/FinancesCard.vue";
 const router = useRouter();
 
 // id token

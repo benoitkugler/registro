@@ -41,6 +41,7 @@ export interface Attestation {
 export interface BilanFinancesPub {
   Inscrits: Record<IdParticipant, BilanParticipantPub> | null;
   Demande: string;
+  Aides: string;
   Recu: string;
   Restant: string;
   Statut: StatutPaiement;

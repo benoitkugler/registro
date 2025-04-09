@@ -168,8 +168,11 @@ func (bp BilanParticipant) publish(taux ds.Taux) BilanParticipantPub {
 type BilanFinancesPub struct {
 	Inscrits map[cps.IdParticipant]BilanParticipantPub
 
-	Demande, Recu, Restant string
-	Statut                 StatutPaiement
+	Demande string // total des participants, aides déjà déduises
+	Aides   string // total des aides extérieures
+	Recu    string // total des paiements
+	Restant string // Demande - Recu
+	Statut  StatutPaiement
 }
 
 func (d DossierFinance) Publish() DossierExt {
@@ -183,6 +186,7 @@ func (d DossierFinance) Publish() DossierExt {
 	bilan := BilanFinancesPub{
 		inscrits,
 		taux.Convertible(ds.Montant{Cent: b.demande, Currency: b.currency}).String(),
+		taux.Convertible(ds.Montant{Cent: b.aides, Currency: b.currency}).String(),
 		taux.Convertible(ds.Montant{Cent: b.recu, Currency: b.currency}).String(),
 		taux.Convertible(b.ApresPaiement()).String(),
 		b.StatutPaiement(),

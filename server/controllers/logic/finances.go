@@ -84,7 +84,7 @@ type DossierFinance struct {
 // Les aides en cours de validation sont ignorées.
 func (df DossierFinance) Bilan() BilanFinances {
 	inscrits := map[cps.IdParticipant]BilanParticipant{}
-	demande, recu := df.taux.Zero(), df.taux.Zero()
+	demande, recu, aides := df.taux.Zero(), df.taux.Zero(), df.taux.Zero()
 
 	for _, participant := range df.Participants {
 		if participant.Statut != cps.Inscrit {
@@ -94,6 +94,7 @@ func (df DossierFinance) Bilan() BilanFinances {
 		bilan := data.bilan()
 		inscrits[participant.Id] = bilan
 		demande.Add(bilan.net(df.taux))
+		aides.Add(bilan.totalAides(df.taux))
 	}
 
 	for _, paiement := range df.paiements {
@@ -104,8 +105,8 @@ func (df DossierFinance) Bilan() BilanFinances {
 		}
 	}
 
-	// [demande] and [recu] have the same currency
-	return BilanFinances{inscrits, demande.Cent, recu.Cent, demande.Currency}
+	// [demande], [recu] and [aides] have the same currency
+	return BilanFinances{inscrits, demande.Cent, recu.Cent, aides.Cent, demande.Currency}
 }
 
 // BilanFinances résume l'état financier d'un dossier
@@ -114,8 +115,11 @@ type BilanFinances struct {
 
 	// totaux, en centimes
 
-	demande  int // montant demandé final (avant déduction des paiements déjà effectués)
-	recu     int // somme des paiements reçus
+	demande int // montant demandé final (avant déduction des paiements déjà effectués)
+	recu    int // somme des paiements reçus
+
+	aides int // total des aides
+
 	currency ds.Currency
 }
 
@@ -169,17 +173,23 @@ type BilanParticipant struct {
 	Aides []AideResolved
 }
 
+func (bp BilanParticipant) totalAides(taux ds.Taux) cps.Montant {
+	totalAide := taux.Zero()
+	for _, aide := range bp.Aides {
+		totalAide.Add(aide.Montant)
+	}
+	return totalAide.Montant
+}
+
 // prixSansRemises renvoie le prix du séjour si on applique les aides (extérieures)
 // mais pas les remises.
 func (bp BilanParticipant) prixSansRemises(taux ds.Taux) cps.Montant {
 	out := taux.Convertible(bp.AvecOption)
 
 	// totalAides ignore les aides non validées
-	totalAide := taux.Zero()
-	for _, aide := range bp.Aides {
-		totalAide.Add(aide.Montant)
-	}
-	out.Sub(totalAide.Montant)
+	totalAide := bp.totalAides(taux)
+
+	out.Sub(totalAide)
 
 	p := out.Montant
 	if p.Cent < 0 {
