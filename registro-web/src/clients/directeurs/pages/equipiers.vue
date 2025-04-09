@@ -148,10 +148,8 @@ import {
   type Roles,
 } from "../logic/api";
 import DocumentsTable from "../components/equipiers/DocumentsTable.vue";
-import { ar } from "vuetify/locale";
 import AddEquipierCard from "../components/equipiers/AddEquipierCard.vue";
-import { create } from "node_modules/axios/index.cjs";
-import { nullableToOpt, Personnes, zeroableToNullable } from "@/utils";
+import { nullableToOpt } from "@/utils";
 
 const router = useRouter();
 

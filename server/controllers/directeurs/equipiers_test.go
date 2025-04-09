@@ -6,7 +6,9 @@ import (
 	"os"
 	"testing"
 
+	"registro/config"
 	cps "registro/sql/camps"
+	"registro/sql/files"
 	fs "registro/sql/files"
 	pr "registro/sql/personnes"
 	"registro/utils"
@@ -47,12 +49,15 @@ func TestEquipiers(t *testing.T) {
 	defer db.Remove()
 
 	asso, smtp := loadEnv(t)
-	ct := Controller{db: db.DB, asso: asso, smtp: smtp}
+	ct, err := NewController(db.DB, "", "", files.FileSystem{}, smtp, asso, config.Joomeo{})
+	tu.AssertNoErr(t, err)
 
 	camp, err := cps.Camp{IdTaux: 1}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	pe1, err := pr.Personne{}.Insert(db)
+	pe1, err := pr.Personne{Etatcivil: pr.Etatcivil{
+		Mail: "epondrea@free.fr",
+	}}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	t.Run("create", func(t *testing.T) {
@@ -91,13 +96,14 @@ func TestEquipiers(t *testing.T) {
 	t.Run("invite", func(t *testing.T) {
 		_, err = ct.createEquipier("", EquipiersCreateIn{
 			CreatePersonne: true,
-			Nom:            "Kugler", Prenom: "Benoit", Mail: "epondrea@free.fr",
-			Roles: cps.Roles{cps.Direction},
+			Nom:            "Kugler", Prenom: "Benoit",
+			Roles: cps.Roles{cps.Adjoint},
 		}, camp.Id)
 		tu.AssertNoErr(t, err)
 
 		eq1, err := ct.createEquipier("", EquipiersCreateIn{CreatePersonne: true, Roles: cps.Roles{cps.Animation}}, camp.Id)
 		tu.AssertNoErr(t, err)
+
 		_, err = ct.createEquipier("", EquipiersCreateIn{CreatePersonne: true, Roles: cps.Roles{cps.Animation}}, camp.Id)
 		tu.AssertNoErr(t, err)
 
