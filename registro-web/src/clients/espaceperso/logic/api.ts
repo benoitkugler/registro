@@ -22,6 +22,11 @@ export interface SendMessageIn {
   Token: string;
   Message: string;
 }
+// registro/controllers/espaceperso.UpdateParticipantsIn
+export interface UpdateParticipantsIn {
+  Token: string;
+  Participants: Participant[] | null;
+}
 // registro/controllers/logic.AideResolved
 export interface AideResolved {
   Structure: string;
@@ -575,6 +580,18 @@ export abstract class AbstractAPI {
         headers: this.getHeaders(),
       });
       return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** UpdateParticipants performs the request and handles the error */
+  async UpdateParticipants(params: UpdateParticipantsIn) {
+    const fullUrl = this.baseUrl + "/api/v1/espaceperso/participants";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
     } catch (error) {
       this.handleError(error);
     }

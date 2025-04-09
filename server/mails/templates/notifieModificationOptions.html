@@ -1,0 +1,12 @@
+{{ define "content" }} Les options
+<!--  -->
+{{ if eq (len .Participants) 1 }} du participant
+<b>{{ index .Participants 0 }}</b>
+<!--  -->
+{{ else }} des participants {{ range $index, $item := .Participants }}{{ if
+$index }}, {{end}}<b>{{ $item }}</b>{{ end }}
+<!--  -->
+{{ end }} (séjour {{ .Camp }}) ont été modifiées. <br /><br />
+
+Tu peux consulter ces informations sur
+<a href="{{ .URL }}">ton espace Directeur</a>. {{ end }}

@@ -4,8 +4,55 @@
   <v-skeleton-loader type="card" v-if="data == null"></v-skeleton-loader>
   <v-container class="fill-height" fluid v-else>
     <v-row>
-      <v-col> </v-col>
-      <v-col cols="7">
+      <!-- participants  -->
+      <v-col cols="4">
+        <v-card subtitle="Participants">
+          <template #append>
+            <v-btn @click="showEditOptions = true">
+              <template #prepend>
+                <v-icon>mdi-cog</v-icon>
+              </template>
+              éditer les options
+            </v-btn>
+          </template>
+          <v-card-text>
+            <v-list class="pa-0">
+              <v-list-item
+                v-for="participant in data.Dossier.Participants"
+                :title="Personnes.label(participant.Personne)"
+                :subtitle="Camps.label(participant.Camp)"
+                rounded
+                :class="{
+                  'my-2': true,
+                  [participantColorClass(participant)]: true,
+                }"
+              >
+                <template #append>
+                  <v-tooltip
+                    :text="
+                      StatutParticipantLabels[participant.Participant.Statut]
+                    "
+                  >
+                    <template #activator="{ props: tooltipProps }">
+                      <v-icon
+                        v-bind="tooltipProps"
+                        :icon="
+                          Formatters.statutParticipant(
+                            participant.Participant.Statut
+                          ).icon
+                        "
+                      ></v-icon>
+                    </template>
+                  </v-tooltip>
+                </template>
+              </v-list-item>
+            </v-list>
+          </v-card-text>
+        </v-card>
+      </v-col>
+
+      <!-- fil des messages -->
+      <v-col>
         <v-card subtitle="Suivi de votre inscription">
           <template #append>
             <v-btn @click="showCreateMessage = true">
@@ -26,6 +73,14 @@
         </v-card>
       </v-col>
     </v-row>
+
+    <!-- option edit -->
+    <v-dialog v-model="showEditOptions">
+      <ParticipantsEditCard
+        :participants="data.Dossier.Participants || []"
+        @save="updateParticipants"
+      ></ParticipantsEditCard>
+    </v-dialog>
   </v-container>
 
   <!-- new message -->
@@ -57,9 +112,15 @@ import { useRouter } from "vue-router";
 import { computed, onMounted, ref } from "vue";
 import NavBar from "../components/NavBar.vue";
 import { controller } from "../logic/logic";
-import type { Data } from "../logic/api";
-import { buildPseudoEvents } from "@/utils";
-
+import {
+  StatutParticipant,
+  StatutParticipantLabels,
+  type Data,
+  type Participant,
+  type ParticipantCamp,
+} from "../logic/api";
+import { buildPseudoEvents, Camps, Formatters, Personnes } from "@/utils";
+import ParticipantsEditCard from "../components/ParticipantsEditCard.vue";
 const router = useRouter();
 
 // id token
@@ -95,5 +156,25 @@ async function sendMessage() {
   if (res === undefined) return;
   controller.showMessage("Message envoyé avec succès.");
   data.value.Dossier.Events = (data.value.Dossier.Events || []).concat(res);
+}
+
+function participantColorClass(p: ParticipantCamp) {
+  if (p.Participant.Statut == StatutParticipant.Inscrit) {
+    return "bg-lime-lighten-2";
+  } else if (p.Participant.Statut == StatutParticipant.AStatuer) {
+    return "bg-grey-lighten-1";
+  }
+  return "bg-orange-lighten-3";
+}
+
+const showEditOptions = ref(false);
+async function updateParticipants(params: Participant[]) {
+  showEditOptions.value = false;
+  const res = await controller.UpdateParticipants({
+    Token: token.value,
+    Participants: params,
+  });
+  if (res === undefined) return;
+  controller.showMessage("Modifications enregistrées avec succès. Merci !");
 }
 </script>

@@ -1,6 +1,6 @@
 <template>
   <EventItem color="grey" icon="mdi-map-marker" :time="props.time">
-    Inscription effectuée.
+    Demande d'inscription effectuée.
   </EventItem>
 </template>
 

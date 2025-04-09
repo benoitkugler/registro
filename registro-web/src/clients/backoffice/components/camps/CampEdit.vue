@@ -157,7 +157,7 @@
               variant="outlined"
               density="compact"
               label="Navette"
-              hint="Ce texte est affiché sur le formulaire d'inscription."
+              hint="Ce texte est affiché sur l'espace personnel de suivi."
               persistent-hint
               rows="3"
               :disabled="!inner.Navette.Actif"

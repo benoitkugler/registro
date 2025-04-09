@@ -5,7 +5,9 @@
     density="compact"
     :items="items"
     :readonly="props.readonly"
-    :hide-details="props.hideDetails"
+    :hide-details="!props.hint"
+    persistent-hint
+    :hint="props.hint"
     v-model="modelValue"
     :rules="props.rules"
   ></v-select>
@@ -15,7 +17,7 @@
 import { NavetteLabels, type Navette } from "@/clients/backoffice/logic/api";
 import { selectItems } from "@/utils";
 const props = defineProps<{
-  hideDetails?: boolean;
+  hint?: string;
   readonly?: boolean;
   rules?: any[];
 }>();

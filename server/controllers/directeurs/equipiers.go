@@ -22,7 +22,10 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-const EndpointEquipier = "/equipier"
+const (
+	EndpointDirecteur = "/directeurs"
+	EndpointEquipier  = "/equipier"
+)
 
 func (ct *Controller) EquipiersGet(c echo.Context) error {
 	user := JWTUser(c)

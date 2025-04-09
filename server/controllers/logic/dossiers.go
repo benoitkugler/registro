@@ -79,7 +79,7 @@ type Dossier struct {
 
 func (de *Dossier) Responsable() pr.Personne { return de.personnesM[de.Dossier.IdResponsable] }
 
-// ParticipantsExt is sorted by Id
+// ParticipantsExt is sorted by Camp then by Id
 func (de *Dossier) ParticipantsExt() []cps.ParticipantCamp {
 	ps := make([]cps.ParticipantCamp, 0, len(de.Participants))
 	for _, part := range de.Participants {
@@ -93,6 +93,7 @@ func (de *Dossier) ParticipantsExt() []cps.ParticipantCamp {
 	}
 
 	slices.SortFunc(ps, func(a, b cps.ParticipantCamp) int { return int(a.Participant.Id - b.Participant.Id) })
+	slices.SortStableFunc(ps, func(a, b cps.ParticipantCamp) int { return int(a.Camp.Id - b.Camp.Id) })
 	return ps
 }
 

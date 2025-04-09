@@ -24,6 +24,7 @@ var (
 	notifieMessageT               *template.Template
 	notifiePlaceLibereeT          *template.Template
 	notifieValidationInscriptionT *template.Template
+	notifieModificationOptionsT   *template.Template
 )
 
 func init() {
@@ -35,6 +36,7 @@ func init() {
 	notifieMessageT = parseTemplate("templates/notifieMessage.html")
 	notifiePlaceLibereeT = parseTemplate("templates/notifiePlaceLiberee.html")
 	notifieValidationInscriptionT = parseTemplate("templates/notifieValidationInscription.html")
+	notifieModificationOptionsT = parseTemplate("templates/notifieModificationOptions.html")
 }
 
 func parseTemplate(templateFile string) *template.Template {
@@ -340,6 +342,31 @@ func InviteEquipier(cfg config.Asso, labelCamp string, directeur string, equipie
 		lienFormulaire,
 	}
 	return render(inviteEquipierT, args)
+}
+
+func NotifieModificationOptions(cfg config.Asso, directeur pr.Etatcivil, camp string, participants []string, urlDirecteur string) (string, error) {
+	s := "Cher"
+	if directeur.Sexe == pr.Woman {
+		s = "Chère"
+	}
+
+	args := struct {
+		champsCommuns
+		Camp         string
+		Participants []string
+		URL          string
+	}{
+		champsCommuns{
+			Title:       "Modification des options",
+			Salutations: fmt.Sprintf("%s %s,", s, directeur.FPrenom()),
+			Asso:        cfg,
+			Signature:   mailAutoSignature,
+		},
+		camp,
+		participants,
+		urlDirecteur,
+	}
+	return render(notifieModificationOptionsT, args)
 }
 
 // organisme est vide pour les dons particulier

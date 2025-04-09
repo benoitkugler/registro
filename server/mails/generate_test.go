@@ -169,6 +169,27 @@ func TestInviteEquipier(t *testing.T) {
 	tu.AssertNoErr(t, err)
 }
 
+func TestNotifieModificationOptions(t *testing.T) {
+	cfg, _ := loadEnv(t)
+
+	html, err := NotifieModificationOptions(cfg,
+		pr.Etatcivil{Prenom: "Cl audie", Sexe: pr.Woman}, fmt.Sprintf("C3 - %d", time.Now().Year()), []string{
+			"Vincent",
+		}, "http://test.fr")
+	tu.AssertNoErr(t, err)
+
+	tu.Write(t, "NotifieModificationOptions_1.html", []byte(html))
+
+	html, err = NotifieModificationOptions(cfg,
+		pr.Etatcivil{Prenom: "Cl audie", Sexe: pr.Woman}, fmt.Sprintf("C3 - %d", time.Now().Year()), []string{
+			"Vincent",
+			"Beoit Kugler",
+		}, "http://test.fr")
+	tu.AssertNoErr(t, err)
+
+	tu.Write(t, "NotifieModificationOptions_2.html", []byte(html))
+}
+
 func TestNotificationDon(t *testing.T) {
 	cfg, _ := loadEnv(t)
 
