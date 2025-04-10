@@ -10,37 +10,47 @@
     </template>
 
     <v-card-text>
-      <v-row>
+      <v-row class="mt-2">
         <v-col>Prix des séjours</v-col>
         <v-col cols="4" class="text-right">
           {{ dossier.Bilan.Demande }}
         </v-col>
       </v-row>
-      <v-row>
-        <v-col>Dont aides extérieures</v-col>
-        <v-col cols="4" class="text-right">
-          {{ dossier.Bilan.Aides }}
-        </v-col>
+      <v-row class="my-0">
+        <v-col>Dont aides extérieures déduites</v-col>
+        <v-col cols="4" class="text-right"> {{ dossier.Bilan.Aides }} </v-col>
       </v-row>
-      <v-row>
+      <v-divider thickness="1"></v-divider>
+      <v-row class="my-0">
         <v-col>Paiements</v-col>
         <v-col cols="4" class="text-right">
           {{ dossier.Bilan.Recu }}
         </v-col>
       </v-row>
-      <v-row>
+      <v-divider thickness="1"></v-divider>
+      <v-row class="my-0">
         <v-col>Montant restant à régler</v-col>
         <v-col cols="4" class="text-right">
-          {{ dossier.Bilan.Restant }}
+          <b
+            :class="
+              dossier.Bilan.Statut == StatutPaiement.Complet
+                ? 'text-green'
+                : 'text-orange'
+            "
+          >
+            {{ dossier.Bilan.Restant }}
+          </b>
         </v-col>
       </v-row>
     </v-card-text>
+
+    <v-dialog></v-dialog>
   </v-card>
 </template>
 
 <script setup lang="ts">
 import { type Participant } from "@/clients/backoffice/logic/api";
-import type { DossierExt } from "../logic/api";
+import { StatutPaiement, type DossierExt } from "../logic/api";
 const props = defineProps<{
   dossier: DossierExt;
 }>();

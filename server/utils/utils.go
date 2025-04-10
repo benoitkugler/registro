@@ -3,6 +3,7 @@ package utils
 import (
 	"cmp"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"net/url"
@@ -53,6 +54,12 @@ func QueryParamInt[T interface{ ~int64 | int }](c echo.Context, name string) (T,
 func QueryParamBool(c echo.Context, name string) bool {
 	value := c.QueryParam(name)
 	return value != ""
+}
+
+// FormValueJSON calls c.FormValue(name) and parse its JSON
+func FormValueJSON(c echo.Context, name string, out any) error {
+	content := c.FormValue(name)
+	return json.Unmarshal([]byte(content), out)
 }
 
 // SQLError wraps [*pq.Error] errors only

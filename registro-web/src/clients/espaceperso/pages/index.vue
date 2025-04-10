@@ -28,7 +28,7 @@
   <v-container class="fill-height" fluid v-else>
     <v-row>
       <!-- participants  et finances -->
-      <v-col cols="4">
+      <v-col align-self="center" cols="4">
         <v-card subtitle="Participants">
           <template #append>
             <v-btn @click="showEditOptions = true" size="small">
@@ -77,7 +77,7 @@
       </v-col>
 
       <!-- fil des messages -->
-      <v-col>
+      <v-col align-self="center">
         <v-card subtitle="Suivi de votre inscription">
           <template #append>
             <v-btn @click="showCreateMessage = true">
@@ -88,7 +88,7 @@
             >
           </template>
           <v-card-text>
-            <div class="overflow-y-auto" style="height: 75vh">
+            <div class="overflow-y-auto" style="max-height: 75vh">
               <v-timeline side="end" class="mt-4" density="compact">
                 <EventSwitch v-for="event in events" :event="event">
                 </EventSwitch>

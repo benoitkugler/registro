@@ -597,4 +597,19 @@ export abstract class AbstractAPI {
       this.handleError(error);
     }
   }
+
+  /** CreateAide performs the request and handles the error */
+  async CreateAide(file: File, formValue: Aide) {
+    const fullUrl = this.baseUrl + "/api/v1/espaceperso/aide";
+    this.startRequest();
+    try {
+      const formData = new FormData();
+      formData.append("document", file, file.name);
+      formData.append("aide", JSON.stringify(formValue));
+      await Axios.post(fullUrl, formData, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
 }

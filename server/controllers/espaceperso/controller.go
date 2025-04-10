@@ -187,3 +187,19 @@ func (ct *Controller) updateParticipants(host string, args UpdateParticipantsIn)
 		return nil
 	})
 }
+
+// CreateAide déclare une aide (non validée).
+func (ct *Controller) CreateAide(c echo.Context) error {
+	var args cps.Aide
+	err := utils.FormValueJSON(c, "aide", &args)
+	if err != nil {
+		return err
+	}
+
+	_, err = c.FormFile("document")
+	if err != nil {
+		return err
+	}
+
+	return c.NoContent(200)
+}
