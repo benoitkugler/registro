@@ -2,18 +2,8 @@
   <!-- Two modes : SELECT an existing one or CREATE a new one-->
   <v-row>
     <v-col>
-      <v-switch
-        color="primary"
-        label="Utiliser un taux existant"
-        :model-value="modelValue.Id > 0"
-        @update:model-value="onSwitch"
-        hide-details
-      ></v-switch>
-    </v-col>
-  </v-row>
-  <v-row>
-    <v-col>
       <v-select
+        v-if="modelValue.Id > 0"
         variant="outlined"
         density="compact"
         hide-details
@@ -21,43 +11,52 @@
         :items="items"
         v-model="selected"
         @update:model-value="onSelect"
-        :disabled="modelValue.Id <= 0"
       ></v-select>
-    </v-col>
-  </v-row>
-  <v-row>
-    <v-col>
-      <v-text-field
-        variant="outlined"
-        density="compact"
-        label="Label"
-        v-model="modelValue.Label"
-        :disabled="modelValue.Id > 0"
-        :error-messages="labelError"
-      ></v-text-field>
-    </v-col>
-    <!-- <v-col>
+
+      <v-row v-else>
+        <v-col cols="12">
+          <v-text-field
+            variant="outlined"
+            density="compact"
+            label="Label"
+            v-model="modelValue.Label"
+            :disabled="modelValue.Id > 0"
+            :error-messages="labelError"
+          ></v-text-field>
+        </v-col>
+        <!-- <v-col>
       <IntField
         :label="CurrencyLabels[Currency.Euros]"
         v-model="modelValue.Euros"
         :disabled="modelValue.Id > 0"
       ></IntField>
     </v-col> -->
-    <v-col>
-      <v-text-field
-        :label="`Valeur d'un ${CurrencyLabels[Currency.FrancsSuisse]}`"
-        density="compact"
-        variant="outlined"
-        type="number"
-        min="0.001"
-        suffix="€"
-        hint="Valeur en € d'une unité de la monnaie."
-        :model-value="modelValue.FrancsSuisse / 1000"
-        @update:model-value="
-          (v) => (modelValue.FrancsSuisse = round(Number(v) * 1000))
-        "
-        :disabled="modelValue.Id > 0"
-      ></v-text-field>
+        <v-col>
+          <v-text-field
+            :label="`Valeur d'un ${CurrencyLabels[Currency.FrancsSuisse]}`"
+            density="compact"
+            variant="outlined"
+            type="number"
+            min="0.001"
+            suffix="€"
+            hint="Valeur en € d'une unité de la monnaie."
+            persistent-hint
+            :model-value="modelValue.FrancsSuisse / 1000"
+            @update:model-value="
+              (v) => (modelValue.FrancsSuisse = round(Number(v) * 1000))
+            "
+            :disabled="modelValue.Id > 0"
+          ></v-text-field>
+        </v-col>
+      </v-row>
+    </v-col>
+    <v-col align-self="center" cols="auto">
+      <v-btn @click="onSwitch">
+        <template #prepend>
+          <v-icon>mdi-toggle-switch</v-icon>
+        </template>
+        {{ modelValue.Id > 0 ? "Créer un taux" : "Utiliser un taux" }}
+      </v-btn>
     </v-col>
   </v-row>
 </template>
@@ -68,7 +67,6 @@ import {
   Currency,
   CurrencyLabels,
   type IdTaux,
-  type Int,
   type Taux,
 } from "@/clients/backoffice/logic/api";
 import { controller } from "@/clients/backoffice/logic/logic";
@@ -100,7 +98,8 @@ async function fetch() {
   }
 }
 
-function onSwitch(useExistant: boolean | null) {
+function onSwitch() {
+  const useExistant = modelValue.value.Id <= 0; // create -> use
   if (useExistant) {
     if (selected.value == null) {
       selected.value = 1 as IdTaux; // defaut
