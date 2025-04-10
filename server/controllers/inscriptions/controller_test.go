@@ -53,7 +53,7 @@ func TestController_load(t *testing.T) {
 	})
 
 	t.Run("decodePreinscription", func(t *testing.T) {
-		resp, err := pr.Personne{}.Insert(ct.db)
+		resp, err := pr.Personne{Etatcivil: pr.Etatcivil{Nom: "nom_resp"}}.Insert(ct.db)
 		tu.AssertNoErr(t, err)
 		part, err := pr.Personne{}.Insert(ct.db)
 		tu.AssertNoErr(t, err)
@@ -63,13 +63,11 @@ func TestController_load(t *testing.T) {
 		tu.AssertNoErr(t, err)
 		out, err := ct.decodePreinscription(preinsc)
 		tu.AssertNoErr(t, err)
-		id, err := crypto.DecryptID[pr.IdPersonne](ct.key, out.ResponsablePreIdent)
-		tu.AssertNoErr(t, err)
-		tu.Assert(t, id == pre.IdResponsable)
+		tu.Assert(t, out.Responsable.Nom == "nom_resp")
 
 		data, err := ct.loadData(0, preinsc)
 		tu.AssertNoErr(t, err)
-		tu.Assert(t, data.InitialInscription.ResponsablePreIdent != "")
+		tu.Assert(t, data.InitialInscription.Responsable.Nom == "nom_resp")
 	})
 }
 
@@ -117,7 +115,7 @@ func TestController_chercheMail(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	insc, err := ct.decodePreinscription(u.Query().Get(preinscriptionKey))
 	tu.AssertNoErr(t, err)
-	tu.Assert(t, insc.ResponsablePreIdent != "")
+	tu.Assert(t, insc.Responsable.DateNaissance == shared.NewDate(2000, 1, 1))
 }
 
 func loadEnv(t *testing.T) (config.Asso, config.SMTP) {
@@ -169,18 +167,6 @@ func TestController_saveInscription(t *testing.T) {
 	})
 	tu.AssertErr(t, err)
 
-	// insc with pre-ident to someone already in the camp
-	err = ct.saveInscription("", Inscription{
-		Responsable: in.ResponsableLegal{
-			Nom: "Kug", Prenom: "Ben",
-			DateNaissance: shared.NewDate(2000, 1, 1),
-		},
-		Participants: []Participant{
-			{PreIdent: crypto.EncryptID(ct.key, pers.Id), IdCamp: camp.Id, DateNaissance: shared.Date(time.Now())},
-		},
-	})
-	tu.AssertErr(t, err)
-
 	err = ct.saveInscription("localhost", Inscription{
 		Responsable: in.ResponsableLegal{
 			Nom: "Kug", Prenom: "Ben",
@@ -228,8 +214,6 @@ func TestController_confirmeInscription(t *testing.T) {
 		Duree: 100,
 	}}.Insert(db)
 	tu.AssertNoErr(t, err)
-	pers, err := pr.Personne{}.Insert(db)
-	tu.AssertNoErr(t, err)
 
 	ct := NewController(db.DB, crypto.Encrypter{}, creds, cfg)
 
@@ -239,9 +223,8 @@ func TestController_confirmeInscription(t *testing.T) {
 				Nom: "Kug", Prenom: "Ben",
 				DateNaissance: shared.NewDate(2000, 1, 1),
 			},
-			ResponsablePreIdent: crypto.EncryptID(ct.key, pers.Id),
 			Participants: []Participant{
-				{IdCamp: camp.Id, DateNaissance: shared.Date(time.Now()), PreIdent: crypto.EncryptID(ct.key, pers.Id)},
+				{IdCamp: camp.Id, DateNaissance: shared.Date(time.Now())},
 				{IdCamp: camp.Id, DateNaissance: shared.Date(time.Now())},
 			},
 			Message: "Haha joli !",

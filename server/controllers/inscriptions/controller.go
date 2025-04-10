@@ -210,8 +210,7 @@ func (ct *Controller) LoadCamps() (cps.Camps, ds.Tauxs, map[cps.IdCamp]cps.Equip
 // à une inscription. En particulier, les liens
 // de pré-identification sont cryptés.
 type Inscription struct {
-	Responsable         in.ResponsableLegal
-	ResponsablePreIdent string // crypted
+	Responsable in.ResponsableLegal
 
 	Message            string
 	CopiesMails        pr.Mails
@@ -264,8 +263,7 @@ func newResponsableLegal(r pr.Etatcivil) in.ResponsableLegal {
 }
 
 type Participant struct {
-	PreIdent string // crypted
-	IdCamp   cps.IdCamp
+	IdCamp cps.IdCamp
 
 	Nom           string
 	Prenom        string
@@ -406,12 +404,9 @@ func (ct *Controller) decodePreinscription(crypted string) (insc Inscription, _ 
 	}
 
 	insc.Responsable = newResponsableLegal(respo.Etatcivil)
-	insc.ResponsablePreIdent = crypto.EncryptID(ct.key, respo.Id)
 
 	for _, part := range parts {
 		partInsc := newParticipant(part.Etatcivil)
-		partInsc.PreIdent = crypto.EncryptID(ct.key, part.Id)
-
 		insc.Participants = append(insc.Participants, partInsc)
 	}
 	return insc, nil
@@ -447,7 +442,7 @@ func (ct *Controller) BuildInscription(publicInsc Inscription) (insc in.Inscript
 	for _, publicPart := range publicInsc.Participants {
 		camp, isCampValid := camps[publicPart.IdCamp]
 		if !isCampValid {
-			return insc, ps, errors.New("invalid IdCamp")
+			return insc, ps, errors.New("invalid IdCamp (not existing or open)")
 		}
 		allTaux.Add(camp.IdTaux)
 
@@ -460,35 +455,12 @@ func (ct *Controller) BuildInscription(publicInsc Inscription) (insc in.Inscript
 			Sexe:          publicPart.Sexe,
 			Nationnalite:  publicPart.Nationnalite,
 		}
-		part.PreIdent, err = ct.decodePreIdent(publicPart.PreIdent)
-		if err != nil {
-			return insc, ps, err
-		}
 		ps = append(ps, part)
 	}
 	if len(allTaux) != 1 {
 		return insc, ps, errors.New("internal error: inconsistent taux")
 	}
 	sharedTaux := allTaux.Keys()[0] // valid thanks to the check above
-
-	// check that, if the participant is pre-identified,
-	// the personne is not already present in the camp,
-	// so that the error does not trigger in [confirmeInscription]
-	tmp, err := cps.SelectParticipantsByIdCamps(ct.db, ps.IdCamps()...)
-	if err != nil {
-		return insc, ps, utils.SQLError(err)
-	}
-	currentParticipants := tmp.ByIdCamp()
-	for _, part := range ps {
-		if !part.PreIdent.Valid {
-			continue // nothing to check: a new profil will be created
-		}
-		idPersonne := part.PreIdent.Id
-		campParts := currentParticipants[part.IdCamp]
-		if len(campParts.ByIdPersonne()[idPersonne]) != 0 {
-			return insc, ps, fmt.Errorf("%s est déjà inscrit sur le camp %s", part.Prenom, camps[part.IdCamp].Label())
-		}
-	}
 
 	insc = in.Inscription{
 		IdTaux:             sharedTaux,
@@ -500,10 +472,6 @@ func (ct *Controller) BuildInscription(publicInsc Inscription) (insc in.Inscript
 
 		DateHeure:   time.Now().Truncate(time.Second),
 		IsConfirmed: false,
-	}
-	insc.ResponsablePreIdent, err = ct.decodePreIdent(publicInsc.ResponsablePreIdent)
-	if err != nil {
-		return insc, ps, err
 	}
 
 	return insc, ps, nil
@@ -613,7 +581,7 @@ func ConfirmeInscription(db *sql.DB, id in.IdInscription) (ds.Dossier, error) {
 			Ville:         insc.Responsable.Ville,
 			Pays:          insc.Responsable.Pays,
 		}
-		responsablePersonne, err := rapprochePersonne(tx, index, responsable, insc.ResponsablePreIdent, cps.OptIdCamp{})
+		responsablePersonne, err := rapprochePersonne(tx, index, responsable, cps.OptIdCamp{})
 		if err != nil {
 			return err
 		}
@@ -654,7 +622,7 @@ func ConfirmeInscription(db *sql.DB, id in.IdInscription) (ds.Dossier, error) {
 				DateNaissance: part.DateNaissance,
 				Nationnalite:  part.Nationnalite,
 			}
-			personne, err := rapprochePersonne(tx, index, pers, part.PreIdent, part.IdCamp.Opt())
+			personne, err := rapprochePersonne(tx, index, pers, part.IdCamp.Opt())
 			if err != nil {
 				return err
 			}
@@ -703,22 +671,20 @@ func ConfirmeInscription(db *sql.DB, id in.IdInscription) (ds.Dossier, error) {
 }
 
 // rapprochePersonne effectue un rattachement automatique avec les profils connus :
-//   - si une préidentification existe, on l'utilise
-//   - sinon, on cherche un profil correspondant "exactement"
-//   - enfin, on crée un nouveau profil
+//   - on cherche un profil correspondant "exactement"
+//   - sinon, on crée un nouveau profil
 //
 // Si le profil existant est déjà présent sur le séjour, on crée un nouveau profil avec
 // le statut temporaire, pour indiquer une situation anormale
 //
 // Si un nouveau profil (non temporaire) est créé, il est aussi ajouté à l'index
-func rapprochePersonne(tx *sql.Tx, index pr.Personnes, incomming pr.Etatcivil, target pr.OptIdPersonne,
+func rapprochePersonne(tx *sql.Tx, index pr.Personnes, incomming pr.Etatcivil,
 	idCampToCheck cps.OptIdCamp,
 ) (pr.Personne, error) {
-	if !target.Valid { // trust the pre-identification if valid
-		match, hasMatch := search.Match(index, search.NewPatternsSimilarite(incomming))
-		if hasMatch {
-			target = match.Opt()
-		}
+	var target pr.OptIdPersonne
+	match, hasMatch := search.Match(index, search.NewPatternsSimilarite(incomming))
+	if hasMatch {
+		target = match.Opt()
 	}
 
 	// on vérifie que la personne n'est pas déjà présente sur le séjour

@@ -31,7 +31,6 @@ export interface Data {
 // registro/controllers/inscriptions.Inscription
 export interface Inscription {
   Responsable: ResponsableLegal;
-  ResponsablePreIdent: string;
   Message: string;
   CopiesMails: Mails;
   PartageAdressesOK: boolean;
@@ -40,7 +39,6 @@ export interface Inscription {
 }
 // registro/controllers/inscriptions.Participant
 export interface Participant {
-  PreIdent: string;
   IdCamp: IdCamp;
   Nom: string;
   Prenom: string;

@@ -64,7 +64,6 @@ function nationnaliteFromPays(s: Pays): Nationnalite {
 // copie les données du responsable pour le premier participant
 function emptyParticipant() {
   const out: Participant = {
-    PreIdent: "",
     Nom: props.responsable.Nom,
     Prenom: "",
     DateNaissance: "0001-01-01" as Date_,

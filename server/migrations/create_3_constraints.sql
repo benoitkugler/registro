@@ -243,28 +243,13 @@ ALTER TABLE inscriptions
     ADD UNIQUE (Id, IdTaux);
 
 ALTER TABLE inscriptions
-    ADD FOREIGN KEY (ResponsablePreIdent, guard) REFERENCES personnes (Id, IsTemp);
-
-ALTER TABLE inscriptions
     ADD FOREIGN KEY (IdTaux) REFERENCES tauxs;
-
-ALTER TABLE inscriptions
-    ADD FOREIGN KEY (ResponsablePreIdent) REFERENCES personnes ON DELETE SET NULL;
-
-ALTER TABLE inscriptions
-    ALTER COLUMN guard SET DEFAULT FALSE;
-
-ALTER TABLE inscriptions
-    ADD CHECK (guard = FALSE);
 
 ALTER TABLE inscription_participants
     ADD FOREIGN KEY (IdCamp, IdTaux) REFERENCES camps (Id, IdTaux) ON DELETE CASCADE;
 
 ALTER TABLE inscription_participants
     ADD FOREIGN KEY (IdInscription, IdTaux) REFERENCES inscriptions (Id, IdTaux) ON DELETE CASCADE;
-
-ALTER TABLE inscription_participants
-    ADD FOREIGN KEY (PreIdent, guard) REFERENCES personnes (Id, IsTemp);
 
 ALTER TABLE inscription_participants
     ADD FOREIGN KEY (IdInscription) REFERENCES inscriptions ON DELETE CASCADE;
@@ -274,15 +259,6 @@ ALTER TABLE inscription_participants
 
 ALTER TABLE inscription_participants
     ADD FOREIGN KEY (IdTaux) REFERENCES tauxs;
-
-ALTER TABLE inscription_participants
-    ADD FOREIGN KEY (PreIdent) REFERENCES personnes ON DELETE SET NULL;
-
-ALTER TABLE inscription_participants
-    ALTER COLUMN guard SET DEFAULT FALSE;
-
-ALTER TABLE inscription_participants
-    ADD CHECK (guard = FALSE);
 
 ALTER TABLE inscriptions
     ADD CONSTRAINT Responsable_gomacro CHECK (gomacro_validate_json_insc_ResponsableLegal (Responsable));
