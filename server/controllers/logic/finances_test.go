@@ -56,6 +56,7 @@ func TestDossierFinance_Bilan(t *testing.T) {
 		1: {
 			1: cps.Aide{Valide: true, Valeur: eur(20)},
 			2: cps.Aide{Valide: true, Valeur: chf(2), ParJour: true},
+			3: cps.Aide{Valide: false, Valeur: chf(5)},
 		},
 	}
 	tu.Assert(t, reflect.DeepEqual(df.Bilan(), BilanFinances{

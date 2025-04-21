@@ -73,7 +73,11 @@
           </v-card-text>
         </v-card>
 
-        <FinancesCard :dossier="data.Dossier"></FinancesCard>
+        <FinancesCard
+          :dossier="data.Dossier"
+          :token="token"
+          @refresh="fetchData"
+        ></FinancesCard>
       </v-col>
 
       <!-- fil des messages -->

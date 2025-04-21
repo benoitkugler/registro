@@ -50,7 +50,7 @@ func TestController_participants(t *testing.T) {
 
 	aide, err := ct.createAide(AidesCreateIn{IdParticipant: part.Participant.Id, IdStructure: structure.Id})
 	tu.AssertNoErr(t, err)
-	err = ct.uploadAideJustificatif(aide.Id, []byte(pngData), "test.png")
+	err = ct.uploadAideJustificatif(aide.Id, tu.PngData, "test.png")
 	tu.AssertNoErr(t, err)
 
 	files, err := fs.SelectAllFiles(ct.db)

@@ -70,9 +70,18 @@ func main() {
 		addMessages(db)
 	case "add_equipier":
 		createEquipier(db, enc)
+	case "add_structureaide":
+		createStructureaide(db)
 	default:
 		panic("invalid action")
 	}
+}
+
+func createStructureaide(db *sql.DB) {
+	_, err := cps.Structureaide{Nom: "CAF Drôme"}.Insert(db)
+	check(err)
+	_, err = cps.Structureaide{Nom: "CAF Ardèche"}.Insert(db)
+	check(err)
 }
 
 func addInscriptions(db *sql.DB, smtp config.SMTP, asso config.Asso, count int) {

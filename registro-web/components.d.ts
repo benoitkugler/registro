@@ -30,6 +30,7 @@ declare module 'vue' {
     EventSwitch: typeof import('./src/components/EventSwitch.vue')['default']
     EventValidationV: typeof import('./src/components/events/EventValidationV.vue')['default']
     FileCard: typeof import('./src/components/files/FileCard.vue')['default']
+    FileInput: typeof import('./src/components/files/FileInput.vue')['default']
     FilesDemande: typeof import('./src/components/files/FilesDemande.vue')['default']
     FileUpload: typeof import('./src/components/files/FileUpload.vue')['default']
     InscriptionEtatcivilCols: typeof import('./src/components/inscriptions/InscriptionEtatcivilCols.vue')['default']

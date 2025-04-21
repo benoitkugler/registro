@@ -57,7 +57,7 @@ func main() {
 	directeursCt, err := directeurs.NewController(db, keys.EncryptKey, keys.Directeurs, fs, smtp, asso, joomeo)
 	check(err)
 
-	espacepersoCt := espaceperso.NewController(db, encrypter, smtp, asso)
+	espacepersoCt := espaceperso.NewController(db, encrypter, smtp, asso, fs)
 
 	inscriptionsCt := inscriptions.NewController(db, encrypter, smtp, asso)
 

@@ -78,14 +78,6 @@ func TestController_searchDossiers(t *testing.T) {
 	tu.Assert(t, out.Dossiers[0].Id == dossier1.Id) // 2 messages
 }
 
-const pngData = "\x89\x50\x4E\x47\x0D\x0A\x1A\x0A\x00\x00\x00\x0D\x49\x48\x44\x52" +
-	"\x00\x00\x01\x00\x00\x00\x01\x00\x01\x03\x00\x00\x00\x66\xBC\x3A" +
-	"\x25\x00\x00\x00\x03\x50\x4C\x54\x45\xB5\xD0\xD0\x63\x04\x16\xEA" +
-	"\x00\x00\x00\x1F\x49\x44\x41\x54\x68\x81\xED\xC1\x01\x0D\x00\x00" +
-	"\x00\xC2\xA0\xF7\x4F\x6D\x0E\x37\xA0\x00\x00\x00\x00\x00\x00\x00" +
-	"\x00\xBE\x0D\x21\x00\x00\x01\x9A\x60\xE1\xD5\x00\x00\x00\x00\x49" +
-	"\x45\x4E\x44\xAE\x42\x60\x82"
-
 func TestController_aides(t *testing.T) {
 	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
 		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",
@@ -116,16 +108,16 @@ func TestController_aides(t *testing.T) {
 	err = ct.updateAide(aide)
 	tu.AssertNoErr(t, err)
 
-	err = ct.uploadAideJustificatif(aide.Id, []byte(pngData), "test1.png")
+	err = ct.uploadAideJustificatif(aide.Id, tu.PngData, "test1.png")
 	tu.AssertNoErr(t, err)
 
-	err = ct.uploadAideJustificatif(aide.Id, []byte(pngData), "test2.png")
+	err = ct.uploadAideJustificatif(aide.Id, tu.PngData, "test2.png")
 	tu.AssertNoErr(t, err)
 
 	err = ct.deleteAideJustificatif(aide.Id)
 	tu.AssertNoErr(t, err)
 
-	err = ct.uploadAideJustificatif(aide.Id, []byte(pngData), "test3.png")
+	err = ct.uploadAideJustificatif(aide.Id, tu.PngData, "test3.png")
 	tu.AssertNoErr(t, err)
 
 	err = ct.deleteAide(aide.Id)
@@ -134,7 +126,7 @@ func TestController_aides(t *testing.T) {
 	aide, err = ct.createAide(AidesCreateIn{IdParticipant: part.Id, IdStructure: structure.Id})
 	tu.AssertNoErr(t, err)
 
-	err = ct.uploadAideJustificatif(aide.Id, []byte(pngData), "test3.png")
+	err = ct.uploadAideJustificatif(aide.Id, tu.PngData, "test3.png")
 	tu.AssertNoErr(t, err)
 
 	err = ct.deleteDossier(dossier1.Id)

@@ -9,6 +9,7 @@
     v-model.number="model"
     :hide-details="!hint"
     :hint="props.hint"
+    :persistent-hint="props.persistentHint"
     :disabled="props.disabled"
     :suffix="props.suffix"
   ></v-text-field>
@@ -23,6 +24,7 @@ const props = defineProps<{
   max?: Int;
   disabled?: boolean;
   suffix?: string;
+  persistentHint?: boolean;
 }>();
 
 const model = defineModel<Int>({ required: true });

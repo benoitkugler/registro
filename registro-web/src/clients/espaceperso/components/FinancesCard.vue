@@ -1,7 +1,11 @@
 <template>
   <v-card subtitle="Réglement" class="mt-2">
     <template #append>
-      <v-btn size="small">
+      <v-btn
+        size="small"
+        :disabled="!props.dossier.Participants?.length"
+        @click="showCreateAide = true"
+      >
         <template #prepend>
           <v-icon color="green">mdi-plus</v-icon>
         </template>
@@ -17,12 +21,52 @@
         </v-col>
       </v-row>
       <v-row class="my-0">
-        <v-col>Dont aides extérieures déduites</v-col>
+        <v-col cols="auto">
+          <v-menu>
+            <template #activator="{ props: menuProps }">
+              <v-icon v-bind="menuProps"> mdi-view-list </v-icon>
+            </template>
+            <v-card title="Aides extérieures" v-if="structures">
+              <v-card-text>
+                <v-chip
+                  v-for="aide in aides"
+                  :color="aide.Valide ? undefined : 'orange'"
+                  class="mx-1"
+                >
+                  {{ structures[aide.IdStructureaide].Nom }} :
+                  {{ Formatters.montant(aide.Valeur) }}
+                </v-chip>
+              </v-card-text>
+            </v-card>
+          </v-menu>
+        </v-col>
+        <v-col>
+          Dont aides extérieures
+          <v-icon v-if="pendingAides" color="orange">mdi-clock</v-icon>
+        </v-col>
         <v-col cols="4" class="text-right"> {{ dossier.Bilan.Aides }} </v-col>
       </v-row>
       <v-divider thickness="1"></v-divider>
       <v-row class="my-0">
-        <v-col>Paiements</v-col>
+        <v-col cols="auto">
+          <v-menu>
+            <template #activator="{ props: menuProps }">
+              <v-icon v-bind="menuProps"> mdi-view-list </v-icon>
+            </template>
+            <v-card title="Paiements">
+              <v-card-text>
+                <v-chip
+                  v-for="paiement in props.dossier.Paiements"
+                  class="mx-1"
+                >
+                  {{ paiement.Payeur }} :
+                  {{ Formatters.montant(paiement.Montant) }}
+                </v-chip>
+              </v-card-text>
+            </v-card>
+          </v-menu>
+        </v-col>
+        <v-col> Paiements </v-col>
         <v-col cols="4" class="text-right">
           {{ dossier.Bilan.Recu }}
         </v-col>
@@ -44,18 +88,64 @@
       </v-row>
     </v-card-text>
 
-    <v-dialog></v-dialog>
+    <v-dialog v-model="showCreateAide" max-width="800px">
+      <AideCard
+        :dossier="props.dossier"
+        :structureaides="structures"
+        @save="createAide"
+      ></AideCard>
+    </v-dialog>
   </v-card>
 </template>
 
 <script setup lang="ts">
-import { type Participant } from "@/clients/backoffice/logic/api";
-import { StatutPaiement, type DossierExt } from "../logic/api";
+import {
+  StatutPaiement,
+  type Aide,
+  type DossierExt,
+  type Structureaides,
+} from "../logic/api";
+import { computed, onMounted, ref } from "vue";
+import AideCard from "./AideCard.vue";
+import { controller } from "../logic/logic";
+import { Formatters } from "@/utils";
 const props = defineProps<{
+  token: string;
   dossier: DossierExt;
 }>();
 
 const emit = defineEmits<{
-  (e: "save", participants: Participant[]): void;
+  (e: "refresh"): void;
 }>();
+
+onMounted(fetchStructures);
+
+const showCreateAide = ref(false);
+async function createAide(aide: Aide, file: File) {
+  showCreateAide.value = false;
+  const res = await controller.CreateAide(file, aide, { token: props.token });
+  if (res === undefined) return;
+  controller.showMessage(
+    "Aide ajoutée avec succès (validation à venir). Merci !"
+  );
+  emit("refresh");
+}
+
+const aides = computed(() => {
+  const out: Aide[] = [];
+  Object.values(props.dossier.Aides || {}).forEach((aides) =>
+    out.push(...Object.values(aides || {}))
+  );
+  return out;
+});
+const pendingAides = computed(
+  () => aides.value.filter((aide) => !aide.Valide).length
+);
+
+const structures = ref<Structureaides>({});
+async function fetchStructures() {
+  const res = await controller.GetStructureaides();
+  if (res === undefined) return;
+  structures.value = res || {};
+}
 </script>

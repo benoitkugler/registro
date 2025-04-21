@@ -7,12 +7,14 @@ import (
 
 	"registro/config"
 	"registro/controllers/directeurs"
+	fsAPI "registro/controllers/files"
 	"registro/controllers/logic"
 	"registro/crypto"
 	"registro/mails"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
 	"registro/sql/events"
+	"registro/sql/files"
 	pr "registro/sql/personnes"
 	"registro/utils"
 
@@ -29,10 +31,11 @@ type Controller struct {
 	key  crypto.Encrypter
 	smtp config.SMTP
 	asso config.Asso
+	fs   files.FileSystem
 }
 
-func NewController(db *sql.DB, key crypto.Encrypter, smtp config.SMTP, asso config.Asso) *Controller {
-	return &Controller{db, key, smtp, asso}
+func NewController(db *sql.DB, key crypto.Encrypter, smtp config.SMTP, asso config.Asso, fs files.FileSystem) *Controller {
+	return &Controller{db, key, smtp, asso, fs}
 }
 
 func (ct *Controller) Load(c echo.Context) error {
@@ -188,18 +191,82 @@ func (ct *Controller) updateParticipants(host string, args UpdateParticipantsIn)
 	})
 }
 
+func (ct *Controller) GetStructureaides(c echo.Context) error {
+	out, err := cps.SelectAllStructureaides(ct.db)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
 // CreateAide déclare une aide (non validée).
 func (ct *Controller) CreateAide(c echo.Context) error {
-	var args cps.Aide
-	err := utils.FormValueJSON(c, "aide", &args)
+	token := c.QueryParam("token")
+	id, err := crypto.DecryptID[ds.IdDossier](ct.key, token)
 	if err != nil {
 		return err
 	}
 
-	_, err = c.FormFile("document")
+	var args cps.Aide
+	err = utils.FormValueJSON(c, "aide", &args)
+	if err != nil {
+		return err
+	}
+
+	header, err := c.FormFile("document")
+	if err != nil {
+		return err
+	}
+
+	content, name, err := fsAPI.ReadUpload(header)
+	if err != nil {
+		return err
+	}
+
+	err = ct.createAide(id, args, content, name)
 	if err != nil {
 		return err
 	}
 
 	return c.NoContent(200)
+}
+
+func (ct *Controller) createAide(id ds.IdDossier, args cps.Aide, fileContent []byte, fileName string) error {
+	participant, err := cps.SelectParticipant(ct.db, args.IdParticipant)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	if participant.IdDossier != id {
+		return errors.New("access forbidden")
+	}
+
+	return utils.InTx(ct.db, func(tx *sql.Tx) error {
+		aide, err := cps.Aide{
+			IdStructureaide: args.IdStructureaide,
+			IdParticipant:   args.IdParticipant,
+			Valide:          false,
+			Valeur:          args.Valeur,
+			ParJour:         args.ParJour,
+			NbJoursMax:      args.NbJoursMax,
+		}.Insert(tx)
+		if err != nil {
+			return err
+		}
+
+		file, err := files.File{}.Insert(tx)
+		if err != nil {
+			return err
+		}
+		err = files.FileAide{IdFile: file.Id, IdAide: aide.Id}.Insert(tx)
+		if err != nil {
+			return err
+		}
+
+		_, err = files.UploadFile(ct.fs, tx, file.Id, fileContent, fileName)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
 }

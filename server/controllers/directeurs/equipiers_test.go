@@ -118,14 +118,6 @@ func uploadFile(db *sql.DB, fileSys fs.FileSystem,
 	personne pr.IdPersonne, demande fs.IdDemande,
 	filename string,
 ) error {
-	const pngData = "\x89\x50\x4E\x47\x0D\x0A\x1A\x0A\x00\x00\x00\x0D\x49\x48\x44\x52" +
-		"\x00\x00\x01\x00\x00\x00\x01\x00\x01\x03\x00\x00\x00\x66\xBC\x3A" +
-		"\x25\x00\x00\x00\x03\x50\x4C\x54\x45\xB5\xD0\xD0\x63\x04\x16\xEA" +
-		"\x00\x00\x00\x1F\x49\x44\x41\x54\x68\x81\xED\xC1\x01\x0D\x00\x00" +
-		"\x00\xC2\xA0\xF7\x4F\x6D\x0E\x37\xA0\x00\x00\x00\x00\x00\x00\x00" +
-		"\x00\xBE\x0D\x21\x00\x00\x01\x9A\x60\xE1\xD5\x00\x00\x00\x00\x49" +
-		"\x45\x4E\x44\xAE\x42\x60\x82"
-
 	return utils.InTx(db, func(tx *sql.Tx) error {
 		// create a new file, and the associated metadata
 		file, err := fs.File{}.Insert(tx)
@@ -136,7 +128,7 @@ func uploadFile(db *sql.DB, fileSys fs.FileSystem,
 		if err != nil {
 			return err
 		}
-		file, err = fs.UploadFile(fileSys, tx, file.Id, []byte(pngData), filename)
+		file, err = fs.UploadFile(fileSys, tx, file.Id, tu.PngData, filename)
 		if err != nil {
 			return err
 		}

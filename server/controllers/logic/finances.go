@@ -69,8 +69,8 @@ type DossierFinance struct {
 
 	taux ds.Taux
 
-	aides      map[cps.IdParticipant]cps.Aides
-	structures cps.Structureaides // enough for [aides]
+	aides      map[cps.IdParticipant]cps.Aides // including not validated
+	structures cps.Structureaides              // enough for [aides]
 
 	paiements ds.Paiements // liste exacte
 }
@@ -169,7 +169,7 @@ type BilanParticipant struct {
 
 	Remises cps.Remises
 
-	// Aides validées
+	// Aides validées seulement
 	Aides []AideResolved
 }
 
@@ -223,6 +223,9 @@ func (p pc) bilan() (out BilanParticipant) {
 
 	for _, id := range utils.MapKeysSorted(p.aides) {
 		aide := p.aides[id]
+		if !aide.Valide {
+			continue
+		}
 		out.Aides = append(out.Aides, AideResolved{p.structures[aide.IdStructureaide].Nom, aide.Resolve(duree)})
 	}
 	return out

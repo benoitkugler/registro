@@ -286,6 +286,19 @@ export const StatutParticipantLabels: Record<StatutParticipant, string> = {
   [StatutParticipant.Inscrit]: "Inscrit",
 };
 
+// registro/sql/camps.Structureaide
+export interface Structureaide {
+  Id: IdStructureaide;
+  Nom: string;
+  Immatriculation: string;
+  Adresse: string;
+  CodePostal: string;
+  Ville: string;
+  Telephone: Tel;
+  Info: string;
+}
+// registro/sql/camps.Structureaides
+export type Structureaides = Record<IdStructureaide, Structureaide> | null;
 // registro/sql/dossiers.Currency
 export const Currency = {
   Euros: 0,
@@ -530,6 +543,8 @@ export const SexeLabels: Record<Sexe, string> = {
   [Sexe.Man]: "Homme",
 };
 
+// registro/sql/personnes.Tel
+export type Tel = string;
 // registro/sql/personnes.Tels
 export type Tels = string[] | null;
 // registro/sql/shared.Date
@@ -599,15 +614,32 @@ export abstract class AbstractAPI {
   }
 
   /** CreateAide performs the request and handles the error */
-  async CreateAide(file: File, formValue: Aide) {
+  async CreateAide(file: File, formValue: Aide, params: { token: string }) {
     const fullUrl = this.baseUrl + "/api/v1/espaceperso/aide";
     this.startRequest();
     try {
       const formData = new FormData();
       formData.append("document", file, file.name);
       formData.append("aide", JSON.stringify(formValue));
-      await Axios.post(fullUrl, formData, { headers: this.getHeaders() });
+      await Axios.post(fullUrl, formData, {
+        headers: this.getHeaders(),
+        params: { token: params["token"] },
+      });
       return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** GetStructureaides performs the request and handles the error */
+  async GetStructureaides() {
+    const fullUrl = this.baseUrl + "/api/v1/espaceperso/structureaides";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<Structureaides> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
