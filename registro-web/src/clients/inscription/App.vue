@@ -10,6 +10,10 @@
             <v-col align-self="center"> Portail des inscriptions </v-col>
           </v-row>
         </v-app-bar-title>
+
+        <template #append v-if="smAndUp">
+          <v-btn :href="vitrineURL" class="mr-2">Site de l'association</v-btn>
+        </template>
       </v-app-bar>
 
       <v-alert
@@ -20,11 +24,11 @@
       >
         <div v-if="mailFound === null">
           <v-row>
-            <v-col>
+            <v-col cols="12" sm="6">
               Vous avez déjà participé à un de nos séjours ? Pré-remplissez ce
               formulaire en fournissant votre adresse e-mail !
             </v-col>
-            <v-col align-self="center" cols="3">
+            <v-col align-self="center" cols="6" sm="3">
               <v-text-field
                 variant="outlined"
                 density="compact"
@@ -34,13 +38,13 @@
               >
               </v-text-field>
             </v-col>
-            <v-col align-self="center" cols="auto">
+            <v-col align-self="center" cols="6" sm="autp">
               <v-btn
                 variant="outlined"
                 :disabled="search.length < 3"
                 @click="searchHistory"
               >
-                <template #prepend>
+                <template #prepend v-if="smAndUp">
                   <v-icon>mdi-magnify</v-icon>
                 </template>
                 Rechercher</v-btn
@@ -85,7 +89,7 @@
           :data="data"
         ></InscriptionPannel>
       </v-container>
-      <v-container class="fill-height" v-else>
+      <v-container class="fill-height" fluid v-else>
         <CampsList :camps="camps" @clicked="initWithCamp"></CampsList>
       </v-container>
 
@@ -153,6 +157,7 @@ controller.showMessage = (s, color) => {
 
 const logo = `${import.meta.env.BASE_URL}${import.meta.env.VITE_ASSO}/logo.png`;
 const asso = import.meta.env.VITE_ASSO_TITLE;
+const vitrineURL = import.meta.env.VITE_ASSO_URL;
 const version = `v${VITE_APP_VERSION}`;
 
 onMounted(onLoad);
