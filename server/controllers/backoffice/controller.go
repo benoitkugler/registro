@@ -15,7 +15,6 @@ import (
 	"registro/crypto"
 	"registro/utils"
 
-	"registro/sql/camps"
 	ds "registro/sql/dossiers"
 	fs "registro/sql/files"
 	pr "registro/sql/personnes"
@@ -136,14 +135,6 @@ func (ct *Controller) Loggin(c echo.Context) error {
 
 func (ct *Controller) GetCamps(c echo.Context) error {
 	out, err := logic.LoadCamps(ct.db)
-	if err != nil {
-		return err
-	}
-	return c.JSON(200, out)
-}
-
-func (ct *Controller) GetStructureaides(c echo.Context) error {
-	out, err := camps.SelectAllStructureaides(ct.db)
 	if err != nil {
 		return err
 	}

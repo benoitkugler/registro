@@ -1,9 +1,12 @@
 <template>
-  <v-list-item
+  <FilesRow
     :title="title"
     :subtitle="props.demande.Description"
-    rounded
-    class="bg-grey-lighten-4 my-1"
+    :max-docs="props.demande.MaxDocs"
+    :files="props.files"
+    :in-upload="props.inUpload"
+    @upload="(v) => emit('upload', v)"
+    @delete="(v) => emit('delete', v)"
   >
     <template #prepend v-if="props.optionnelle !== undefined">
       <div style="width: 200" class="my-2 mr-2">
@@ -21,71 +24,7 @@
         </v-tooltip>
       </div>
     </template>
-    <template #append>
-      <v-row>
-        <v-col align-self="center" v-for="file in props.files">
-          <FileCard :file="file" @delete="toDelete = file"></FileCard>
-        </v-col>
-        <v-col align-self="center" cols="auto">
-          <v-btn
-            icon
-            size="x-small"
-            @click="showUpload = true"
-            :disabled="
-              props.inUpload ||
-              (props.demande.MaxDocs != 0 &&
-                props.files.length >= props.demande.MaxDocs)
-            "
-          >
-            <v-icon
-              color="green"
-              :icon="props.inUpload ? 'mdi-loading' : 'mdi-upload'"
-              :class="props.inUpload ? 'mdi-spin' : undefined"
-            >
-            </v-icon>
-          </v-btn>
-        </v-col>
-      </v-row>
-    </template>
-  </v-list-item>
-
-  <!-- upload -->
-  <v-dialog v-model="showUpload" max-width="600px">
-    <FileUpload
-      @upload="
-        (file) => {
-          emit('upload', file);
-          showUpload = false;
-        }
-      "
-    ></FileUpload>
-  </v-dialog>
-
-  <!-- confirme delete -->
-  <v-dialog
-    v-if="toDelete != null"
-    :model-value="toDelete != null"
-    @update:model-value="toDelete = null"
-    max-width="600px"
-  >
-    <v-card title="Confirmation">
-      <v-card-text>
-        Le document va être supprimé. <br /><br />
-        Attention, cette opération est irréversible.
-      </v-card-text>
-      <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn
-          color="red"
-          @click="
-            emit('delete', toDelete);
-            toDelete = null;
-          "
-          >Supprimer</v-btn
-        >
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+  </FilesRow>
 </template>
 
 <script setup lang="ts">
@@ -95,7 +34,7 @@ import {
   type Demande,
   type PublicFile,
 } from "@/clients/equipier/logic/api";
-import { computed, ref } from "vue";
+import { computed } from "vue";
 
 const props = defineProps<{
   demande: Demande;
@@ -114,10 +53,6 @@ const title = computed(() =>
     ? "Document à fournir"
     : CategorieLabels[props.demande.Categorie]
 );
-
-const showUpload = ref(false);
-
-const toDelete = ref<PublicFile | null>(null);
 </script>
 
 <style scoped></style>

@@ -185,59 +185,21 @@
 
     <!-- dossier editor -->
     <v-dialog v-model="showEditDialog">
-      <v-card title="Modifier le dossier">
-        <template v-slot:append>
-          <v-btn
-            @click="
-              participantToCreate = {
-                IdCamp: 0 as IdCamp,
-                IdPersonne: 0 as IdPersonne,
-                IdDossier: props.dossier.Dossier.Dossier.Id,
-              }
-            "
-          >
-            <template v-slot:prepend>
-              <v-icon color="green">mdi-plus</v-icon>
-            </template>
-            Ajouter un participant</v-btn
-          >
-        </template>
-        <v-card-text>
-          <v-row>
-            <v-col cols="3">
-              <DossierEditCard
-                :responsable="props.dossier.Dossier.Responsable"
-                :dossier="props.dossier.Dossier.Dossier"
-                @save="(v) => emit('updateDossier', v)"
-              >
-              </DossierEditCard>
-            </v-col>
-            <v-divider thickness="4" vertical></v-divider>
-            <v-col>
-              <div class="my-1"></div>
-              <DossierParticipantRow
-                v-for="participant in props.dossier.Dossier.Participants"
-                :participant="participant"
-                :aides="
-                  (props.dossier.Dossier.Aides || {})[
-                    participant.Participant.Id
-                  ]
-                "
-                :structures="props.structures"
-                :has-many-participants="
-                  (props.dossier.Dossier.Participants?.length || 0) > 1
-                "
-                @create-aide="(v) => emit('createAide', v)"
-                @delete-aide="(v) => emit('deleteAide', v)"
-                @update-aide="(v) => emit('updateAide', v)"
-                @update="(p) => emit('updateParticipant', p)"
-                @delete="emit('deleteParticipant', participant.Participant.Id)"
-                @expand="emit('expandParticipant', participant.Participant)"
-              ></DossierParticipantRow>
-            </v-col>
-          </v-row>
-        </v-card-text>
-      </v-card>
+      <DossierEditor
+        :dossier="props.dossier"
+        :camps="props.camps"
+        @updateDossier="(v) => emit('updateDossier', v)"
+        @createParticipant="(v) => emit('createParticipant', v)"
+        @updateParticipant="(v) => emit('updateParticipant', v)"
+        @deleteParticipant="(v) => emit('deleteParticipant', v)"
+        @expandParticipant="(v) => emit('expandParticipant', v)"
+        @createAide="(v) => emit('createAide', v)"
+        @updateAide="(v) => emit('updateAide', v)"
+        @deleteAide="(v) => emit('deleteAide', v)"
+        @deleteFileAide="(v) => emit('deleteFileAide', v)"
+        @uploadFileAide="(f, v) => emit('uploadFileAide', f, v)"
+      >
+      </DossierEditor>
     </v-dialog>
 
     <!-- paiement editor -->
@@ -357,7 +319,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, ref, useTemplateRef } from "vue";
+import { computed, ref } from "vue";
 import {
   StatutPaiement,
   type Aide,
@@ -368,26 +330,21 @@ import {
   type DossiersMergeIn,
   type Event,
   type IdAide,
-  type IdCamp,
   type IdParticipant,
-  type IdPersonne,
   type Paiement,
   type Participant,
   type ParticipantsCreateIn,
-  type Structureaides,
 } from "../../../logic/api";
 import { buildPseudoEvents, copyToClipboard, Personnes } from "@/utils";
 import FactureCard from "./FactureCard.vue";
-import DossierEditCard from "./editor/DossierEditCard.vue";
-import DossierParticipantRow from "./editor/DossierParticipantRow.vue";
 import PaiementEditCard from "./PaiementEditCard.vue";
 import { controller } from "@/clients/backoffice/logic/logic";
 import { goToParticipant } from "@/clients/backoffice/plugins/router";
 import MergeCard from "../MergeCard.vue";
+import DossierEditor from "./editor/DossierEditor.vue";
 
 const props = defineProps<{
   dossier: DossierDetails;
-  structures: NonNullable<Structureaides>;
   camps: CampItem[];
 }>();
 
@@ -404,6 +361,8 @@ const emit = defineEmits<{
   (e: "createAide", args: AidesCreateIn): void;
   (e: "updateAide", aide: Aide): void;
   (e: "deleteAide", id: IdAide): void;
+  (e: "deleteFileAide", id: IdAide): void;
+  (e: "uploadFileAide", f: File, id: IdAide): void;
   // paiements
   (e: "createPaiement"): void;
   (e: "updatePaiement", paiement: Paiement): void;

@@ -32,6 +32,7 @@ declare module 'vue' {
     FileCard: typeof import('./src/components/files/FileCard.vue')['default']
     FileInput: typeof import('./src/components/files/FileInput.vue')['default']
     FilesDemande: typeof import('./src/components/files/FilesDemande.vue')['default']
+    FilesRow: typeof import('./src/components/files/FilesRow.vue')['default']
     FileUpload: typeof import('./src/components/files/FileUpload.vue')['default']
     InscriptionEtatcivilCols: typeof import('./src/components/inscriptions/InscriptionEtatcivilCols.vue')['default']
     InscriptionRow: typeof import('./src/components/inscriptions/InscriptionRow.vue')['default']

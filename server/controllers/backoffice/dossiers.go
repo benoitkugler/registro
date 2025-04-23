@@ -303,7 +303,7 @@ func (ct *Controller) loadDossier(host string, id ds.IdDossier) (DossierDetails,
 	url := logic.URLEspacePerso(ct.key, host, id)
 	virement := OffuscateurVirements.Mask(id)
 	accounts := ct.asso.BankAccounts()
-	return DossierDetails{dossier.Publish(), url, virement, accounts}, nil
+	return DossierDetails{dossier.Publish(ct.key), url, virement, accounts}, nil
 }
 
 func (ct *Controller) DossiersCreate(c echo.Context) error {
@@ -429,6 +429,64 @@ func (ct *Controller) deleteDossier(id ds.IdDossier) error {
 	})
 }
 
+// gestion des aides
+
+func (ct *Controller) StructureaidesGet(c echo.Context) error {
+	out, err := cps.SelectAllStructureaides(ct.db)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) StructureaideCreate(c echo.Context) error {
+	out, err := cps.Structureaide{}.Insert(ct.db)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) StructureaideUpdate(c echo.Context) error {
+	var args cps.Structureaide
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+	_, err := args.Update(ct.db)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	return c.NoContent(200)
+}
+
+// return an error if aide are already declared
+func (ct *Controller) StructureaideDelete(c echo.Context) error {
+	id, err := utils.QueryParamInt[cps.IdStructureaide](c, "id")
+	if err != nil {
+		return err
+	}
+	err = ct.deleteStructureaide(id)
+	if err != nil {
+		return err
+	}
+	return c.NoContent(200)
+}
+
+func (ct *Controller) deleteStructureaide(id cps.IdStructureaide) error {
+	aides, err := cps.SelectAidesByIdStructureaides(ct.db, id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	if len(aides) != 0 {
+		return errors.New("Des aides sont encore rattachées à cette structure.")
+	}
+	_, err = cps.DeleteStructureaideById(ct.db, id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	return nil
+}
+
 type AidesCreateIn struct {
 	IdParticipant cps.IdParticipant
 	IdStructure   cps.IdStructureaide
@@ -506,21 +564,22 @@ func (ct *Controller) AidesJustificatifUpload(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	err = ct.uploadAideJustificatif(id, content, name)
+	out, err := ct.uploadAideJustificatif(id, content, name)
 	if err != nil {
 		return err
 	}
-	return c.NoContent(200)
+	return c.JSON(200, out)
 }
 
 // uploadJustificatif create or update the link table
-func (ct *Controller) uploadAideJustificatif(idAide cps.IdAide, content []byte, filename string) error {
+func (ct *Controller) uploadAideJustificatif(idAide cps.IdAide, content []byte, filename string) (filesAPI.PublicFile, error) {
 	item, found, err := fs.SelectFileAideByIdAide(ct.db, idAide)
 	if err != nil {
-		return utils.SQLError(err)
+		return filesAPI.PublicFile{}, utils.SQLError(err)
 	}
 	idFile := item.IdFile
 
+	var out filesAPI.PublicFile
 	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
 		if !found { // create one file and a link
 			file, err := fs.File{}.Insert(tx)
@@ -533,14 +592,15 @@ func (ct *Controller) uploadAideJustificatif(idAide cps.IdAide, content []byte, 
 			}
 			idFile = file.Id
 		}
-		_, err = fs.UploadFile(ct.files, tx, idFile, content, filename)
+		file, err := fs.UploadFile(ct.files, tx, idFile, content, filename)
 		if err != nil {
 			return err
 		}
+		out = filesAPI.NewPublicFile(ct.key, file)
 		return nil
 	})
 
-	return err
+	return out, err
 }
 
 func (ct *Controller) AidesJustificatifDelete(c echo.Context) error {

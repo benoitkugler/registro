@@ -1779,10 +1779,6 @@ func scanOneStructureaide(row scanner) (Structureaide, error) {
 		&item.Id,
 		&item.Nom,
 		&item.Immatriculation,
-		&item.Adresse,
-		&item.CodePostal,
-		&item.Ville,
-		&item.Telephone,
 		&item.Info,
 	)
 	return item, err
@@ -1792,7 +1788,7 @@ func ScanStructureaide(row *sql.Row) (Structureaide, error) { return scanOneStru
 
 // SelectAll returns all the items in the structureaides table.
 func SelectAllStructureaides(db DB) (Structureaides, error) {
-	rows, err := db.Query("SELECT id, nom, immatriculation, adresse, codepostal, ville, telephone, info FROM structureaides")
+	rows, err := db.Query("SELECT id, nom, immatriculation, info FROM structureaides")
 	if err != nil {
 		return nil, err
 	}
@@ -1801,13 +1797,13 @@ func SelectAllStructureaides(db DB) (Structureaides, error) {
 
 // SelectStructureaide returns the entry matching 'id'.
 func SelectStructureaide(tx DB, id IdStructureaide) (Structureaide, error) {
-	row := tx.QueryRow("SELECT id, nom, immatriculation, adresse, codepostal, ville, telephone, info FROM structureaides WHERE id = $1", id)
+	row := tx.QueryRow("SELECT id, nom, immatriculation, info FROM structureaides WHERE id = $1", id)
 	return ScanStructureaide(row)
 }
 
 // SelectStructureaides returns the entry matching the given 'ids'.
 func SelectStructureaides(tx DB, ids ...IdStructureaide) (Structureaides, error) {
-	rows, err := tx.Query("SELECT id, nom, immatriculation, adresse, codepostal, ville, telephone, info FROM structureaides WHERE id = ANY($1)", IdStructureaideArrayToPQ(ids))
+	rows, err := tx.Query("SELECT id, nom, immatriculation, info FROM structureaides WHERE id = ANY($1)", IdStructureaideArrayToPQ(ids))
 	if err != nil {
 		return nil, err
 	}
@@ -1852,28 +1848,28 @@ func ScanStructureaides(rs *sql.Rows) (Structureaides, error) {
 // Insert one Structureaide in the database and returns the item with id filled.
 func (item Structureaide) Insert(tx DB) (out Structureaide, err error) {
 	row := tx.QueryRow(`INSERT INTO structureaides (
-		nom, immatriculation, adresse, codepostal, ville, telephone, info
+		nom, immatriculation, info
 		) VALUES (
-		$1, $2, $3, $4, $5, $6, $7
-		) RETURNING id, nom, immatriculation, adresse, codepostal, ville, telephone, info;
-		`, item.Nom, item.Immatriculation, item.Adresse, item.CodePostal, item.Ville, item.Telephone, item.Info)
+		$1, $2, $3
+		) RETURNING id, nom, immatriculation, info;
+		`, item.Nom, item.Immatriculation, item.Info)
 	return ScanStructureaide(row)
 }
 
 // Update Structureaide in the database and returns the new version.
 func (item Structureaide) Update(tx DB) (out Structureaide, err error) {
 	row := tx.QueryRow(`UPDATE structureaides SET (
-		nom, immatriculation, adresse, codepostal, ville, telephone, info
+		nom, immatriculation, info
 		) = (
-		$1, $2, $3, $4, $5, $6, $7
-		) WHERE id = $8 RETURNING id, nom, immatriculation, adresse, codepostal, ville, telephone, info;
-		`, item.Nom, item.Immatriculation, item.Adresse, item.CodePostal, item.Ville, item.Telephone, item.Info, item.Id)
+		$1, $2, $3
+		) WHERE id = $4 RETURNING id, nom, immatriculation, info;
+		`, item.Nom, item.Immatriculation, item.Info, item.Id)
 	return ScanStructureaide(row)
 }
 
 // Deletes the Structureaide and returns the item
 func DeleteStructureaideById(tx DB, id IdStructureaide) (Structureaide, error) {
-	row := tx.QueryRow("DELETE FROM structureaides WHERE id = $1 RETURNING id, nom, immatriculation, adresse, codepostal, ville, telephone, info;", id)
+	row := tx.QueryRow("DELETE FROM structureaides WHERE id = $1 RETURNING id, nom, immatriculation, info;", id)
 	return ScanStructureaide(row)
 }
 

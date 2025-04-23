@@ -165,6 +165,7 @@ export interface Camp {
   Duree: Int;
   Lieu: string;
   Agrement: string;
+  ImageURL: string;
   Description: string;
   Navette: OptionNavette;
   Places: Int;
@@ -291,10 +292,6 @@ export interface Structureaide {
   Id: IdStructureaide;
   Nom: string;
   Immatriculation: string;
-  Adresse: string;
-  CodePostal: string;
-  Ville: string;
-  Telephone: Tel;
   Info: string;
 }
 // registro/sql/camps.Structureaides
@@ -543,8 +540,6 @@ export const SexeLabels: Record<Sexe, string> = {
   [Sexe.Man]: "Homme",
 };
 
-// registro/sql/personnes.Tel
-export type Tel = string;
 // registro/sql/personnes.Tels
 export type Tels = string[] | null;
 // registro/sql/shared.Date

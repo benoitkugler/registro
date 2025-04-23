@@ -102,22 +102,27 @@ func TestController_aides(t *testing.T) {
 	aide, err := ct.createAide(AidesCreateIn{IdParticipant: part.Id, IdStructure: structure.Id})
 	tu.AssertNoErr(t, err)
 
+	// check structure is not removable now
+	err = ct.deleteStructureaide(structure.Id)
+	tu.AssertErr(t, err)
+
 	aide.Valide = true
 	aide.Valeur = ds.NewEuros(26)
 	aide.ParJour = true
 	err = ct.updateAide(aide)
 	tu.AssertNoErr(t, err)
 
-	err = ct.uploadAideJustificatif(aide.Id, tu.PngData, "test1.png")
+	file, err := ct.uploadAideJustificatif(aide.Id, tu.PngData, "test1.png")
 	tu.AssertNoErr(t, err)
+	tu.Assert(t, file.Id != "")
 
-	err = ct.uploadAideJustificatif(aide.Id, tu.PngData, "test2.png")
+	_, err = ct.uploadAideJustificatif(aide.Id, tu.PngData, "test2.png")
 	tu.AssertNoErr(t, err)
 
 	err = ct.deleteAideJustificatif(aide.Id)
 	tu.AssertNoErr(t, err)
 
-	err = ct.uploadAideJustificatif(aide.Id, tu.PngData, "test3.png")
+	_, err = ct.uploadAideJustificatif(aide.Id, tu.PngData, "test3.png")
 	tu.AssertNoErr(t, err)
 
 	err = ct.deleteAide(aide.Id)
@@ -126,10 +131,14 @@ func TestController_aides(t *testing.T) {
 	aide, err = ct.createAide(AidesCreateIn{IdParticipant: part.Id, IdStructure: structure.Id})
 	tu.AssertNoErr(t, err)
 
-	err = ct.uploadAideJustificatif(aide.Id, tu.PngData, "test3.png")
+	_, err = ct.uploadAideJustificatif(aide.Id, tu.PngData, "test3.png")
 	tu.AssertNoErr(t, err)
 
 	err = ct.deleteDossier(dossier1.Id)
+	tu.AssertNoErr(t, err)
+
+	// check structure is removable now
+	err = ct.deleteStructureaide(structure.Id)
 	tu.AssertNoErr(t, err)
 }
 

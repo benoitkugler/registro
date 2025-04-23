@@ -332,10 +332,6 @@ func randStructureaide() Structureaide {
 	s.Id = randIdStructureaide()
 	s.Nom = randstring()
 	s.Immatriculation = randstring()
-	s.Adresse = randstring()
-	s.CodePostal = randstring()
-	s.Ville = randstring()
-	s.Telephone = randper_Tel()
 	s.Info = randstring()
 
 	return s
@@ -386,10 +382,6 @@ func randint64() int64 {
 
 func randper_IdPersonne() personnes.IdPersonne {
 	return personnes.IdPersonne(randint64())
-}
-
-func randper_Tel() personnes.Tel {
-	return personnes.Tel(randstring())
 }
 
 func randsha_Date() shared.Date {

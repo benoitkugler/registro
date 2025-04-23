@@ -139,6 +139,13 @@ export interface SearchDossierOut {
   Dossiers: DossierHeader[] | null;
   Total: Int;
 }
+// registro/controllers/files.PublicFile
+export interface PublicFile {
+  Id: string;
+  Taille: Int;
+  NomClient: string;
+  Uploaded: Time;
+}
 // registro/controllers/logic.AideResolved
 export interface AideResolved {
   Structure: string;
@@ -184,6 +191,7 @@ export interface DossierExt {
   Responsable: string;
   Participants: ParticipantCamp[] | null;
   Aides: Record<IdParticipant, Aides> | null;
+  AidesFiles: Record<IdAide, PublicFile> | null;
   Events: Events;
   Paiements: Paiements;
   Bilan: BilanFinancesPub;
@@ -482,10 +490,6 @@ export interface Structureaide {
   Id: IdStructureaide;
   Nom: string;
   Immatriculation: string;
-  Adresse: string;
-  CodePostal: string;
-  Ville: string;
-  Telephone: Tel;
   Info: string;
 }
 // registro/sql/camps.Structureaides
@@ -743,8 +747,6 @@ export const SexeLabels: Record<Sexe, string> = {
   [Sexe.Man]: "Homme",
 };
 
-// registro/sql/personnes.Tel
-export type Tel = string;
 // registro/sql/personnes.Tels
 export type Tels = string[] | null;
 // registro/sql/shared.Date
@@ -812,20 +814,6 @@ export abstract class AbstractAPI {
         fullUrl,
         { headers: this.getHeaders(), params: { search: params["search"] } },
       );
-      return rep.data;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  /** GetStructureaides performs the request and handles the error */
-  async GetStructureaides() {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/shared/structureaides";
-    this.startRequest();
-    try {
-      const rep: AxiosResponse<Structureaides> = await Axios.get(fullUrl, {
-        headers: this.getHeaders(),
-      });
       return rep.data;
     } catch (error) {
       this.handleError(error);
@@ -1199,6 +1187,61 @@ export abstract class AbstractAPI {
     }
   }
 
+  /** StructureaidesGet performs the request and handles the error */
+  async StructureaidesGet() {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/structureaides";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<Structureaides> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** StructureaideCreate performs the request and handles the error */
+  async StructureaideCreate() {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/structureaides";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<Structureaide> = await Axios.put(fullUrl, null, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** StructureaideUpdate performs the request and handles the error */
+  async StructureaideUpdate(params: Structureaide) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/structureaides";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** StructureaideDelete performs the request and handles the error */
+  async StructureaideDelete(params: { id: IdStructureaide }) {
+    const fullUrl = this.baseUrl + "/api/v1/backoffice/structureaides";
+    this.startRequest();
+    try {
+      await Axios.delete(fullUrl, {
+        headers: this.getHeaders(),
+        params: { id: String(params["id"]) },
+      });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
   /** AidesCreate performs the request and handles the error */
   async AidesCreate(params: AidesCreateIn) {
     const fullUrl = this.baseUrl + "/api/v1/backoffice/aides";
@@ -1247,11 +1290,15 @@ export abstract class AbstractAPI {
     try {
       const formData = new FormData();
       formData.append("file", file, file.name);
-      await Axios.post(fullUrl, formData, {
-        headers: this.getHeaders(),
-        params: { idAide: String(params["idAide"]) },
-      });
-      return true;
+      const rep: AxiosResponse<PublicFile> = await Axios.post(
+        fullUrl,
+        formData,
+        {
+          headers: this.getHeaders(),
+          params: { idAide: String(params["idAide"]) },
+        },
+      );
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }

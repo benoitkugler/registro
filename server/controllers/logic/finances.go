@@ -5,6 +5,7 @@ import (
 
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
+	fs "registro/sql/files"
 	"registro/utils"
 )
 
@@ -14,6 +15,7 @@ type DossiersFinances struct {
 
 	taux       ds.Tauxs
 	aides      map[cps.IdParticipant]cps.Aides
+	aidesFiles map[cps.IdAide]fs.File // enough for [aides]
 	structures cps.Structureaides
 	paiements  map[ds.IdDossier]ds.Paiements
 }
@@ -43,6 +45,20 @@ func LoadDossiersFinances(db ds.DB, ids ...ds.IdDossier) (DossiersFinances, erro
 	if err != nil {
 		return DossiersFinances{}, utils.SQLError(err)
 	}
+	// justificatifs
+	links, err := fs.SelectFileAidesByIdAides(db, aides.IDs()...)
+	if err != nil {
+		return DossiersFinances{}, utils.SQLError(err)
+	}
+	files, err := fs.SelectFiles(db, links.IdFiles()...)
+	if err != nil {
+		return DossiersFinances{}, utils.SQLError(err)
+	}
+	aidesFiles := make(map[cps.IdAide]fs.File)
+	for _, link := range links {
+		aidesFiles[link.IdAide] = files[link.IdFile]
+	}
+
 	structures, err := cps.SelectStructureaides(db, aides.IdStructureaides()...)
 	if err != nil {
 		return DossiersFinances{}, utils.SQLError(err)
@@ -52,7 +68,7 @@ func LoadDossiersFinances(db ds.DB, ids ...ds.IdDossier) (DossiersFinances, erro
 		return DossiersFinances{}, utils.SQLError(err)
 	}
 
-	return DossiersFinances{dossiers, tauxs, aides.ByIdParticipant(), structures, paiements.ByIdDossier()}, nil
+	return DossiersFinances{dossiers, tauxs, aides.ByIdParticipant(), aidesFiles, structures, paiements.ByIdDossier()}, nil
 }
 
 func (df DossiersFinances) For(id ds.IdDossier) DossierFinance {
@@ -61,7 +77,7 @@ func (df DossiersFinances) For(id ds.IdDossier) DossierFinance {
 	for _, part := range out.Participants {
 		aides[part.Id] = df.aides[part.Id]
 	}
-	return DossierFinance{out, df.taux[out.Dossier.IdTaux], aides, df.structures, df.paiements[id]}
+	return DossierFinance{out, df.taux[out.Dossier.IdTaux], aides, df.aidesFiles, df.structures, df.paiements[id]}
 }
 
 type DossierFinance struct {
@@ -70,6 +86,7 @@ type DossierFinance struct {
 	taux ds.Taux
 
 	aides      map[cps.IdParticipant]cps.Aides // including not validated
+	aidesFiles map[cps.IdAide]fs.File          // enough for [aides]
 	structures cps.Structureaides              // enough for [aides]
 
 	paiements ds.Paiements // liste exacte

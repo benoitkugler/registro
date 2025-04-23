@@ -63,7 +63,7 @@ func (ct *Controller) load(id ds.IdDossier) (Data, error) {
 	}
 
 	return Data{
-		dossier.Publish(),
+		dossier.Publish(ct.key),
 	}, nil
 }
 

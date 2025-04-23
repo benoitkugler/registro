@@ -191,10 +191,6 @@ CREATE TABLE structureaides (
     Id serial PRIMARY KEY,
     Nom text NOT NULL,
     Immatriculation text NOT NULL,
-    Adresse text NOT NULL,
-    CodePostal text NOT NULL,
-    Ville text NOT NULL,
-    Telephone text NOT NULL,
     Info text NOT NULL
 );
 

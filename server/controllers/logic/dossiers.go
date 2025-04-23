@@ -4,6 +4,8 @@ import (
 	"slices"
 	"time"
 
+	filesAPI "registro/controllers/files"
+	"registro/crypto"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
 	pr "registro/sql/personnes"
@@ -143,6 +145,7 @@ type DossierExt struct {
 	Responsable  string
 	Participants []cps.ParticipantCamp
 	Aides        map[cps.IdParticipant]cps.Aides
+	AidesFiles   map[cps.IdAide]filesAPI.PublicFile // optionnel
 
 	Events    Events
 	Paiements ds.Paiements
@@ -175,7 +178,7 @@ type BilanFinancesPub struct {
 	Statut  StatutPaiement
 }
 
-func (d DossierFinance) Publish() DossierExt {
+func (d DossierFinance) Publish(key crypto.Encrypter) DossierExt {
 	taux := d.taux
 	b := d.Bilan()
 	inscrits := make(map[cps.IdParticipant]BilanParticipantPub, len(b.inscrits))
@@ -191,5 +194,14 @@ func (d DossierFinance) Publish() DossierExt {
 		taux.Convertible(b.ApresPaiement()).String(),
 		b.StatutPaiement(),
 	}
-	return DossierExt{d.Dossier.Dossier, d.Responsable().PrenomNOM(), d.ParticipantsExt(), d.aides, d.Events, d.paiements, bilan}
+
+	aideFiles := make(map[cps.IdAide]filesAPI.PublicFile)
+	for _, l := range d.aides {
+		for _, aide := range l {
+			if file, ok := d.aidesFiles[aide.Id]; ok {
+				aideFiles[aide.Id] = filesAPI.NewPublicFile(key, file)
+			}
+		}
+	}
+	return DossierExt{d.Dossier.Dossier, d.Responsable().PrenomNOM(), d.ParticipantsExt(), d.aides, aideFiles, d.Events, d.paiements, bilan}
 }

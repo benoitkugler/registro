@@ -37,7 +37,6 @@
       <DossierDetailsPannel
         v-if="dossierDetails != null"
         :dossier="dossierDetails"
-        :structures="structures"
         :camps="allCamps"
         @update-dossier="updateDossier"
         @delete-dossier="deleteDossier"
@@ -49,6 +48,8 @@
         @create-aide="createAide"
         @delete-aide="deleteAide"
         @update-aide="updateAide"
+        @delete-file-aide="deleteFileAide"
+        @upload-file-aide="uploadFileAide"
         @create-paiement="createPaiement"
         @update-paiement="updatePaiement"
         @delete-paiement="deletePaiement"
@@ -97,7 +98,6 @@ const props = defineProps<{
 
 onMounted(() => {
   loadCamps();
-  loadStructureaides();
   if (props.initialDossier !== undefined) {
     showDossier(props.initialDossier);
   }
@@ -123,13 +123,6 @@ async function loadCamps() {
   const res = await controller.GetCamps();
   if (res === undefined) return;
   allCamps.value = res || [];
-}
-
-const structures = ref<NonNullable<Structureaides>>({});
-async function loadStructureaides() {
-  const res = await controller.GetStructureaides();
-  if (res === undefined) return;
-  structures.value = res || {};
 }
 
 function onListChange(v: SearchDossierOut) {
@@ -292,6 +285,26 @@ async function updateAide(aide: Aide) {
   if (res === undefined) return;
   controller.showMessage("Aide modifiée avec succès.");
   ensureDossier();
+}
+
+async function deleteFileAide(id: IdAide) {
+  const res = await controller.AidesJustificatifDelete({ idAide: id });
+  if (res === undefined) return;
+  controller.showMessage("Justificatif supprimé avec succès.");
+  if (dossierDetails.value != null && dossierDetails.value.Dossier.AidesFiles) {
+    delete dossierDetails.value.Dossier.AidesFiles[id];
+  }
+}
+
+async function uploadFileAide(f: File, id: IdAide) {
+  const res = await controller.AidesJustificatifUpload(f, { idAide: id });
+  if (res === undefined) return;
+  controller.showMessage("Justificatif téléversé avec succès.");
+  if (dossierDetails.value != null) {
+    const m = dossierDetails.value.Dossier.AidesFiles || {};
+    m[id] = res;
+    dossierDetails.value.Dossier.AidesFiles = m;
+  }
 }
 
 async function deleteAide(id: IdAide) {

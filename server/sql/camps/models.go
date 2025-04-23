@@ -167,10 +167,6 @@ type Structureaide struct {
 	Id              IdStructureaide
 	Nom             string
 	Immatriculation string
-	Adresse         string
-	CodePostal      string
-	Ville           string
-	Telephone       pr.Tel
 	Info            string
 }
 

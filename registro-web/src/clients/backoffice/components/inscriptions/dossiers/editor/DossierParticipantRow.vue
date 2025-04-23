@@ -72,7 +72,7 @@
         <template #close>
           <v-icon icon="mdi-close-circle" @click.stop="aideToRemove = aide" />
         </template>
-        {{ props.structures[aide.IdStructureaide].Nom }} :
+        {{ structures[aide.IdStructureaide].Nom }} :
         {{ Formatters.montant(aide.Valeur) }}
       </v-chip>
     </v-col>
@@ -149,14 +149,25 @@
       </v-card>
     </v-dialog>
 
+    <!-- liste des structures  -->
+    <v-dialog v-model="showStructureaides" max-width="650px">
+      <StructuresPannel v-model="structures"> </StructuresPannel>
+    </v-dialog>
+
     <!-- création aide -->
     <v-dialog
       v-if="aideToCreate != null"
       :model-value="aideToCreate != null"
       @update:model-value="aideToCreate = null"
-      max-width="400px"
+      width="600px"
     >
       <v-card title="Ajouter une aide extérieure">
+        <template #append>
+          <v-btn @click="showStructureaides = true">
+            <v-icon>mdi-view-list</v-icon>
+            Structures</v-btn
+          >
+        </template>
         <v-card-text>
           <v-select
             variant="outlined"
@@ -182,6 +193,30 @@
           >
         </v-card-actions>
       </v-card>
+    </v-dialog>
+
+    <!-- edition aide -->
+    <v-dialog
+      v-if="aideToUpdate != null"
+      :model-value="aideToUpdate != null"
+      @update:model-value="aideToUpdate = null"
+      max-width="800px"
+    >
+      <AideEditCard
+        :aide="aideToUpdate"
+        :file="aidesFiles[aideToUpdate.Id]"
+        :structures="structures"
+        :participant="props.participant"
+        @show-structureaides="showStructureaides = true"
+        @save="
+          (aide) => {
+            emit('updateAide', aide);
+            aideToUpdate = null;
+          }
+        "
+        @deleteFile="emit('deleteFileAide', aideToUpdate.Id)"
+        @uploadFile="(f) => emit('uploadFileAide', f, aideToUpdate!.Id)"
+      ></AideEditCard>
     </v-dialog>
 
     <!-- suppression aide -->
@@ -210,26 +245,6 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-
-    <!-- edition aide -->
-    <v-dialog
-      v-if="aideToUpdate != null"
-      :model-value="aideToUpdate != null"
-      @update:model-value="aideToUpdate = null"
-      max-width="800px"
-    >
-      <AideEditCard
-        :aide="aideToUpdate"
-        :structures="props.structures"
-        :participant="props.participant"
-        @save="
-          (aide) => {
-            emit('updateAide', aide);
-            aideToUpdate = null;
-          }
-        "
-      ></AideEditCard>
-    </v-dialog>
   </v-row>
 </template>
 
@@ -244,6 +259,7 @@ import {
   type OptionPrixParticipant,
   type Participant,
   type ParticipantCamp,
+  type PublicFile,
   type Structureaides,
 } from "@/clients/backoffice/logic/api";
 import { Camps, Formatters, Personnes } from "@/utils";
@@ -252,13 +268,18 @@ import ParticipantOptionPrix from "./ParticipantOptionPrix.vue";
 import RemisesChip from "./RemisesChip.vue";
 import AideEditCard from "./AideEditCard.vue";
 import { goToParticipant } from "@/clients/backoffice/plugins/router";
+import StructuresPannel from "../StructuresPannel.vue";
 
 const props = defineProps<{
   participant: ParticipantCamp;
   aides: Aides;
-  structures: NonNullable<Structureaides>;
+  aidesFiles: Record<IdAide, PublicFile>;
   hasManyParticipants: boolean;
 }>();
+
+const structures = defineModel<NonNullable<Structureaides>>("structures", {
+  required: true,
+});
 
 const emit = defineEmits<{
   (e: "update", participant: Participant): void;
@@ -266,6 +287,8 @@ const emit = defineEmits<{
   (e: "createAide", args: AidesCreateIn): void;
   (e: "updateAide", aide: Aide): void;
   (e: "deleteAide", id: IdAide): void;
+  (e: "deleteFileAide", id: IdAide): void;
+  (e: "uploadFileAide", f: File, id: IdAide): void;
   (e: "expand"): void;
 }>();
 
@@ -303,9 +326,13 @@ const showMenuOption = ref(false);
 const showConfirmeDelete = ref(false);
 
 const structureItems = computed(() =>
-  Object.values(props.structures).map((s) => ({ value: s.Id, title: s.Nom }))
+  Object.values(structures.value)
+    .map((s) => ({ value: s.Id, title: s.Nom }))
+    .sort((a, b) => a.title.localeCompare(b.title))
 );
 const aideToCreate = ref<AidesCreateIn | null>(null);
 const aideToUpdate = ref<Aide | null>(null);
 const aideToRemove = ref<Aide | null>(null);
+
+const showStructureaides = ref(false);
 </script>

@@ -5,6 +5,12 @@
       props.participant.Personne
     )} - ${Camps.label(props.participant.Camp)}`"
   >
+    <template #append>
+      <v-btn @click="emit('showStructureaides')">
+        <v-icon>mdi-view-list</v-icon>
+        Structures</v-btn
+      >
+    </template>
     <v-card-text>
       <v-row>
         <v-col>
@@ -48,9 +54,15 @@
           ></IntField>
         </v-col>
       </v-row>
-      <v-row>
-        <v-col> TODO: justificatif </v-col>
-      </v-row>
+      <FilesRow
+        class="mt-4"
+        :files="props.file ? [props.file] : []"
+        title="Document justificatif"
+        :max-docs="1"
+        :in-upload="false"
+        @delete="emit('deleteFile')"
+        @upload="(f) => emit('uploadFile', f)"
+      ></FilesRow>
     </v-card-text>
     <v-card-actions>
       <v-spacer></v-spacer>
@@ -64,6 +76,7 @@ import {
   type Aide,
   type Int,
   type ParticipantCamp,
+  type PublicFile,
   type Structureaides,
 } from "@/clients/backoffice/logic/api";
 import { Camps, copy, Personnes } from "@/utils";
@@ -71,12 +84,16 @@ import { computed, ref } from "vue";
 
 const props = defineProps<{
   aide: Aide;
+  file: PublicFile | undefined;
   structures: NonNullable<Structureaides>;
   participant: ParticipantCamp;
 }>();
 
 const emit = defineEmits<{
   (e: "save", aide: Aide): void;
+  (e: "deleteFile"): void;
+  (e: "uploadFile", f: File): void;
+  (e: "showStructureaides"): void;
 }>();
 
 const inner = ref(copy(props.aide));
