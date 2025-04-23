@@ -105,6 +105,12 @@ export function mapFromObject<S extends number, T extends { Id: S }>(
   );
 }
 
+export function isInt<T extends number>(s: string | null): T | null {
+  if (!s) return null;
+  const asNumber = Number(s);
+  return isNaN(asNumber) ? null : (asNumber as T);
+}
+
 const isZero = <T extends string | number>(a: T) => a == "" || a == 0;
 
 function ensureNumber<T extends number | string>(s: T) {
@@ -218,7 +224,7 @@ export namespace Camps {
   export function formatPlage(camp: Camp) {
     const debut = camp.DateDebut;
     const fin = Camps.dateFin(camp);
-    return `${Formatters.date(debut)} au ${Formatters.date(fin)}`;
+    return `du ${Formatters.date(debut)} au ${Formatters.date(fin)}`;
   }
 
   export function match(

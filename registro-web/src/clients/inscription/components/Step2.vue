@@ -44,8 +44,6 @@ const props = defineProps<{
 const participants = defineModel<Participant[]>({ required: true });
 
 onMounted(() => {
-  console.log(participants.value);
-
   // make sure at least one participant is defined
   if (!participants.length) {
     addParticipant();

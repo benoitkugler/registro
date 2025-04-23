@@ -34,8 +34,8 @@
     >
       <v-col>
         <v-list-item
-          :title="props.camp.Camp.Camp.Nom"
-          :subtitle="Camps.year(props.camp.Camp.Camp)"
+          :title="Camps.label(props.camp.Camp.Camp)"
+          :subtitle="`ID : ${props.camp.Camp.Camp.Id}`"
         >
         </v-list-item>
       </v-col>

@@ -12,7 +12,8 @@ func setupRoutesInscription(e *echo.Echo, ct *inscriptions.Controller) {
 	e.GET(inscriptions.EndpointConfirmeInscription, ct.ConfirmeInscription)
 
 	// JSON API
-	e.GET("/api/v1/inscription/load", ct.LoadData)
-	e.PUT("/api/v1/inscription/save", ct.SaveInscription)
+	e.GET("/api/v1/inscription/camps", ct.GetCamps)
+	e.GET("/api/v1/inscription", ct.InitInscription)
+	e.PUT("/api/v1/inscription", ct.SaveInscription)
 	e.GET("/api/v1/inscription/search", ct.SearchHistory)
 }

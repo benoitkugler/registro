@@ -51,7 +51,7 @@
 
 <script lang="ts" setup>
 import type { CampExt } from "../logic/api";
-import { Camps, Formatters } from "@/utils";
+import { Camps } from "@/utils";
 
 const props = defineProps<{
   camp: CampExt;

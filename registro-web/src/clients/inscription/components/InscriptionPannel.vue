@@ -43,9 +43,9 @@
           <Step2
             :model-value="inner.Participants || []"
             @update:model-value="(l) => (inner.Participants = l)"
-            :camps="props.data.Camps || []"
+            :camps="props.camps"
             :responsable="inner.Responsable"
-            :preselected="props.data.Settings.PreselectedCamp"
+            :preselected="props.preselected"
           ></Step2>
         </v-stepper-window-item>
         <v-stepper-window-item :value="3">
@@ -109,13 +109,15 @@ import Step1 from "./Step1.vue";
 import Step2 from "./Step2.vue";
 import Step3 from "./Step3.vue";
 import Step4 from "./Step4.vue";
-import { Sexe, type Data } from "../logic/api";
+import { Sexe, type CampExt, type Data, type IdCamp } from "../logic/api";
 import { ageFrom, isDateZero } from "@/components/date";
 import { copy } from "@/utils";
 import { controller } from "../logic/logic";
 import { useDisplay } from "vuetify";
 
 const props = defineProps<{
+  camps: CampExt[];
+  preselected: IdCamp;
   data: Data;
 }>();
 

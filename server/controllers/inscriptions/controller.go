@@ -25,8 +25,9 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// La procédure d'inscription se déroule en 3 temps :
-//	- [LoadData] : les camps ouvertss sont retournées au client,
+// La procédure d'inscription se déroule en 4 temps :
+//	- [LoadCamps] : les camps ouverts sont retournées au client
+//	- [InitInscription] : les camps ouverts sont retournées au client,
 //	  avec (en option) les données de pré-inscription
 //	- [SaveInscription] : le client envoie une demande d'inscription : le serveur l'enregistre et en
 //	  envoie une demande de confirmation par email
@@ -54,13 +55,12 @@ func NewController(db *sql.DB, key crypto.Encrypter, smtp config.SMTP, asso conf
 
 const preinscriptionKey = "preinscription"
 
-// LoadData décode la (potentielle) préinscription et renvoie les
-// données des séjours.
-func (ct *Controller) LoadData(c echo.Context) error {
-	preselected, _ := utils.QueryParamInt[cps.IdCamp](c, "preselected") // optionnel
-	preinscription := c.QueryParam(preinscriptionKey)                   // optionnel
+// InitInscription renvoie les paramètres de l'association et
+// la valeur initiale de l'inscription, possiblement déterminée par la préinscription
+func (ct *Controller) InitInscription(c echo.Context) error {
+	preinscription := c.QueryParam(preinscriptionKey) // optionnel
 
-	out, err := ct.loadData(preselected, preinscription)
+	out, err := ct.initInscription(preinscription)
 	if err != nil {
 		return err
 	}
@@ -120,10 +120,6 @@ func newCampExt(camp cps.Camp, taux ds.Taux, direction []pr.Personne) CampExt {
 }
 
 type Settings struct {
-	// PreselectedCamp is deduced from 'preselected' query param,
-	// and is 0 if empty or invalid
-	PreselectedCamp cps.IdCamp
-
 	SupportBonsCAF     bool
 	SupportANCV        bool
 	EmailRetraitMedia  string
@@ -131,29 +127,24 @@ type Settings struct {
 	ShowCharteConduite bool
 }
 
+func (ct *Controller) GetCamps(c echo.Context) error {
+	_, out, err := ct.LoadCamps()
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
 type Data struct {
-	Camps              []CampExt
 	InitialInscription Inscription
 	Settings           Settings
 }
 
-func (ct *Controller) loadData(preselected cps.IdCamp, preinscription string) (Data, error) {
-	camps, tauxs, equipiers, personnes, err := ct.LoadCamps()
-	if err != nil {
-		return Data{}, err
-	}
-
-	list := make([]CampExt, 0, len(camps))
-	for _, camp := range camps {
-		eqs := equipiers[camp.Id].Direction()
-		direction := make([]pr.Personne, len(eqs))
-		for i, eq := range eqs {
-			direction[i] = personnes[eq.IdPersonne]
-		}
-		list = append(list, newCampExt(camp, tauxs[camp.IdTaux], direction))
-	}
-
-	var initialInscription Inscription
+func (ct *Controller) initInscription(preinscription string) (Data, error) {
+	var (
+		initialInscription Inscription
+		err                error
+	)
 	if preinscription != "" {
 		initialInscription, err = ct.decodePreinscription(preinscription)
 		if err != nil {
@@ -166,10 +157,8 @@ func (ct *Controller) loadData(preselected cps.IdCamp, preinscription string) (D
 	}
 
 	return Data{
-		Camps:              list,
 		InitialInscription: initialInscription,
 		Settings: Settings{
-			PreselectedCamp:    preselected,
 			SupportBonsCAF:     ct.asso.SupportBonsCAF,
 			SupportANCV:        ct.asso.SupportANCV,
 			EmailRetraitMedia:  ct.asso.EmailRetraitMedia,
@@ -180,10 +169,10 @@ func (ct *Controller) loadData(preselected cps.IdCamp, preinscription string) (D
 }
 
 // LoadCamps renvoie les camps ouverts aux inscriptions et non terminés
-func (ct *Controller) LoadCamps() (cps.Camps, ds.Tauxs, map[cps.IdCamp]cps.Equipiers, pr.Personnes, error) {
+func (ct *Controller) LoadCamps() (cps.Camps, []CampExt, error) {
 	camps, err := cps.SelectAllCamps(ct.db)
 	if err != nil {
-		return nil, nil, nil, nil, utils.SQLError(err)
+		return nil, nil, utils.SQLError(err)
 	}
 	for id, camp := range camps {
 		if camp.Ext().IsTerminated || !camp.Ouvert {
@@ -192,23 +181,33 @@ func (ct *Controller) LoadCamps() (cps.Camps, ds.Tauxs, map[cps.IdCamp]cps.Equip
 	}
 	tauxs, err := ds.SelectTauxs(ct.db, camps.IdTauxs()...)
 	if err != nil {
-		return nil, nil, nil, nil, utils.SQLError(err)
+		return nil, nil, utils.SQLError(err)
 	}
 	link, err := cps.SelectEquipiersByIdCamps(ct.db, camps.IDs()...)
 	if err != nil {
-		return nil, nil, nil, nil, utils.SQLError(err)
+		return nil, nil, utils.SQLError(err)
 	}
+	equipiers := link.ByIdCamp()
 	personnes, err := pr.SelectPersonnes(ct.db, link.IdPersonnes()...)
 	if err != nil {
-		return nil, nil, nil, nil, utils.SQLError(err)
+		return nil, nil, utils.SQLError(err)
 	}
 
-	return camps, tauxs, link.ByIdCamp(), personnes, nil
+	list := make([]CampExt, 0, len(camps))
+	for _, camp := range camps {
+		eqs := equipiers[camp.Id].Direction()
+		direction := make([]pr.Personne, len(eqs))
+		for i, eq := range eqs {
+			direction[i] = personnes[eq.IdPersonne]
+		}
+		list = append(list, newCampExt(camp, tauxs[camp.IdTaux], direction))
+	}
+
+	return camps, list, nil
 }
 
 // Inscription est la donnée publique correspondant
-// à une inscription. En particulier, les liens
-// de pré-identification sont cryptés.
+// à une inscription.
 type Inscription struct {
 	Responsable in.ResponsableLegal
 
@@ -428,7 +427,7 @@ func (ct *Controller) SaveInscription(c echo.Context) error {
 }
 
 func (ct *Controller) BuildInscription(publicInsc Inscription) (insc in.Inscription, ps in.InscriptionParticipants, _ error) {
-	camps, _, _, _, err := ct.LoadCamps()
+	camps, _, err := ct.LoadCamps()
 	if err != nil {
 		return insc, ps, err
 	}

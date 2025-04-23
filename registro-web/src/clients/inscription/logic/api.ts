@@ -24,7 +24,6 @@ export interface CampExt {
 }
 // registro/controllers/inscriptions.Data
 export interface Data {
-  Camps: CampExt[] | null;
   InitialInscription: Inscription;
   Settings: Settings;
 }
@@ -52,7 +51,6 @@ export interface SearchHistoryOut {
 }
 // registro/controllers/inscriptions.Settings
 export interface Settings {
-  PreselectedCamp: IdCamp;
   SupportBonsCAF: boolean;
   SupportANCV: boolean;
   EmailRetraitMedia: string;
@@ -132,17 +130,28 @@ export abstract class AbstractAPI {
     return { Authorization: "Bearer " + this.authToken };
   }
 
-  /** LoadData performs the request and handles the error */
-  async LoadData(params: { preselected: IdCamp; preinscription: string }) {
-    const fullUrl = this.baseUrl + "/api/v1/inscription/load";
+  /** GetCamps performs the request and handles the error */
+  async GetCamps() {
+    const fullUrl = this.baseUrl + "/api/v1/inscription/camps";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<CampExt[] | null> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** InitInscription performs the request and handles the error */
+  async InitInscription(params: { preinscription: string }) {
+    const fullUrl = this.baseUrl + "/api/v1/inscription";
     this.startRequest();
     try {
       const rep: AxiosResponse<Data> = await Axios.get(fullUrl, {
         headers: this.getHeaders(),
-        params: {
-          preselected: String(params["preselected"]),
-          preinscription: params["preinscription"],
-        },
+        params: { preinscription: params["preinscription"] },
       });
       return rep.data;
     } catch (error) {
@@ -152,7 +161,7 @@ export abstract class AbstractAPI {
 
   /** SaveInscription performs the request and handles the error */
   async SaveInscription(params: Inscription) {
-    const fullUrl = this.baseUrl + "/api/v1/inscription/save";
+    const fullUrl = this.baseUrl + "/api/v1/inscription";
     this.startRequest();
     try {
       await Axios.put(fullUrl, params, { headers: this.getHeaders() });

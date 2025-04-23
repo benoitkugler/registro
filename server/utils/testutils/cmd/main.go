@@ -88,7 +88,7 @@ func addInscriptions(db *sql.DB, smtp config.SMTP, asso config.Asso, count int) 
 	ct := api.NewController(db, crypto.Encrypter{}, smtp, asso)
 
 	// assume we already have two open camps
-	camps, _, _, _, err := ct.LoadCamps()
+	camps, _, err := ct.LoadCamps()
 	check(err)
 	campIds := camps.IDs()
 	if len(campIds) < 2 {
