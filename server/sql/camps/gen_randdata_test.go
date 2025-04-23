@@ -41,6 +41,7 @@ func randCamp() Camp {
 	s.Duree = randint()
 	s.Lieu = randstring()
 	s.Agrement = randstring()
+	s.ImageURL = randstring()
 	s.Description = randstring()
 	s.Navette = randOptionNavette()
 	s.Places = randint()
@@ -239,7 +240,7 @@ func randRemises() Remises {
 }
 
 func randRole() Role {
-	choix := [...]Role{AutreRole, Direction, Adjoint, Animation, AideAnimation, Chauffeur, Intendance, Babysiter, Menage, Factotum, Infirmerie, Cuisine, Lingerie}
+	choix := [...]Role{Direction, Adjoint, Animation, Menage, Cuisine, Intendance, Infirmerie, AideAnimation, Lingerie, Chauffeur, Factotum, Babysiter, AutreRole}
 	i := rand.Intn(len(choix))
 	return choix[i]
 }

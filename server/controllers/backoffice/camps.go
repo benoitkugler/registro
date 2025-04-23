@@ -190,6 +190,7 @@ func (ct *Controller) updateCamp(args cps.Camp) (cps.CampExt, error) {
 	camp.Duree = args.Duree
 	camp.Lieu = args.Lieu
 	camp.Agrement = args.Agrement
+	camp.ImageURL = args.ImageURL
 	camp.Description = args.Description
 	camp.Navette = args.Navette
 	camp.Places = args.Places

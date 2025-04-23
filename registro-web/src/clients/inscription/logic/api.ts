@@ -14,6 +14,7 @@ export interface CampExt {
   DateDebut: Date;
   Duree: Int;
   Lieu: string;
+  ImageURL: string;
   Description: string;
   Navette: OptionNavette;
   Places: Int;

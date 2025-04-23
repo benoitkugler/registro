@@ -134,7 +134,7 @@ ALTER TABLE equipiers
 
 CREATE UNIQUE INDEX ON equipiers (IdCamp)
 WHERE
-    1
+    0
     /* Role.Direction */
     = ANY (Roles);
 

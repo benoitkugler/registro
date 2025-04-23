@@ -168,6 +168,16 @@
         <v-row>
           <v-col>
             <v-text-field
+              label="Image"
+              density="compact"
+              variant="outlined"
+              hint="Lien vers une image affichée sur le formulaire d'inscription"
+              persistent-hint
+              v-model="inner.ImageURL"
+            ></v-text-field>
+          </v-col>
+          <v-col>
+            <v-text-field
               label="Mot de passe"
               density="compact"
               variant="outlined"
@@ -176,7 +186,6 @@
               v-model="inner.Password"
             ></v-text-field>
           </v-col>
-          <v-col></v-col>
         </v-row>
       </v-form>
     </v-card-text>

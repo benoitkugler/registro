@@ -31,11 +31,13 @@ type Camp struct {
 
 	IdTaux dossiers.IdTaux
 
-	Nom         string
-	DateDebut   sh.Date
-	Duree       int // nombre de jours date et fin inclus
-	Lieu        string
-	Agrement    string
+	Nom       string
+	DateDebut sh.Date
+	Duree     int // nombre de jours date et fin inclus
+	Lieu      string
+	Agrement  string
+
+	ImageURL    string // Url d'une image affichée sur le formulaire d'inscription (optionnel)
 	Description string // Description est affichée sur le formulaire d'inscription
 	Navette     OptionNavette
 

@@ -330,6 +330,7 @@ export interface Camp {
   Duree: Int;
   Lieu: string;
   Agrement: string;
+  ImageURL: string;
   Description: string;
   Navette: OptionNavette;
   Places: Int;

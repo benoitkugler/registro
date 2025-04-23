@@ -75,7 +75,8 @@ type CampExt struct {
 	DateDebut   shared.Date
 	Duree       int // nombre de jours date et fin inclus
 	Lieu        string
-	Description string // Description est affichée sur le formulaire d'inscription
+	ImageURL    string // affichée sur le formulaire d'inscription
+	Description string // affichée sur le formulaire d'inscription
 	Navette     cps.OptionNavette
 	Places      int // nombre de places prévues pour le séjour
 	AgeMin      int // inclusif
@@ -107,6 +108,7 @@ func newCampExt(camp cps.Camp, taux ds.Taux, direction []pr.Personne) CampExt {
 		DateDebut:   camp.DateDebut,
 		Duree:       camp.Duree,
 		Lieu:        camp.Lieu,
+		ImageURL:    camp.ImageURL,
 		Description: camp.Description,
 		Navette:     camp.Navette,
 		Places:      camp.Places,

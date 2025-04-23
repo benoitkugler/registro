@@ -101,6 +101,7 @@ CREATE TABLE camps (
     Duree integer NOT NULL,
     Lieu text NOT NULL,
     Agrement text NOT NULL,
+    ImageURL text NOT NULL,
     Description text NOT NULL,
     Navette jsonb NOT NULL,
     Places integer NOT NULL,
