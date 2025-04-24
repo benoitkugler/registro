@@ -1,5 +1,10 @@
 // Composables
-import { createRouter, createWebHistory, type LocationQuery } from "vue-router";
+import {
+  createRouter,
+  createWebHistory,
+  type LocationQuery,
+  type RouteLocation,
+} from "vue-router";
 import Index from "../pages/index.vue";
 
 const routes = [{ path: "/", component: Index }];
@@ -31,6 +36,18 @@ router.onError((err, to) => {
 
 router.isReady().then(() => {
   localStorage.removeItem("vuetify:dynamic-reload");
+});
+
+function hasQueryParams(route: RouteLocation) {
+  return !!Object.keys(route.query).length;
+}
+
+router.beforeEach((to, from, next) => {
+  if (!hasQueryParams(to) && hasQueryParams(from)) {
+    next({ name: to.name, query: from.query });
+  } else {
+    next();
+  }
 });
 
 function enforceNumber<T extends number>(id: T | undefined) {

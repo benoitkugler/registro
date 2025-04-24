@@ -10,17 +10,17 @@
       :to="{ path: '/' }"
       color="primary"
     >
-      Accueil
+      Tableau de bord
     </v-list-item>
     <!-- <v-list-item
-      prepend-icon="mdi-calendar-multiple-check"
+      prepend-icon="mdi-image-album"
       link
-      :to="{ path: '/inscriptions' }"
+      :to="{ name: 'photos' }"
       color="primary"
     >
-      Inscriptions
-    </v-list-item>
-    <v-list-item
+      Albums photos
+    </v-list-item> -->
+    <!-- <v-list-item
       prepend-icon="mdi-account"
       link
       :to="{ path: '/equipiers' }"

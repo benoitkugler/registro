@@ -649,7 +649,8 @@ func (api *ApiJoomeo) RemoveContact(albumid, contactid string) error {
 }
 
 // Renvoi le contact et la liste des albums authorisés du contact associé à l'adresse mail fournie.
-// Le contact peut être zéro.
+// Le contact renvoyé peut être vide si [mail] n'est pas utilisé.
+// Attention, le champ [NbFiles] n'est pas résolu.
 func (api *ApiJoomeo) GetLoginFromMail(mail string) (Contact, []Album, error) {
 	url := fmt.Sprintf("%s/users/%s/contacts", baseUrl, api.spaceName)
 	resp, err := sendRequest(http.MethodGet, url, nil, map[string]string{

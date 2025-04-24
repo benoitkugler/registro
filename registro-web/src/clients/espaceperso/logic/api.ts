@@ -17,6 +17,13 @@ export type Time = string & { __opaque__: "Time" };
 export interface Data {
   Dossier: DossierExt;
 }
+// registro/controllers/espaceperso.Joomeo
+export interface Joomeo {
+  SpaceURL: string;
+  Loggin: string;
+  Password: string;
+  Albums: string[] | null;
+}
 // registro/controllers/espaceperso.SendMessageIn
 export interface SendMessageIn {
   Token: string;
@@ -26,6 +33,13 @@ export interface SendMessageIn {
 export interface UpdateParticipantsIn {
   Token: string;
   Participants: Participant[] | null;
+}
+// registro/controllers/files.PublicFile
+export interface PublicFile {
+  Id: string;
+  Taille: Int;
+  NomClient: string;
+  Uploaded: Time;
 }
 // registro/controllers/logic.AideResolved
 export interface AideResolved {
@@ -66,6 +80,7 @@ export interface DossierExt {
   Responsable: string;
   Participants: ParticipantCamp[] | null;
   Aides: Record<IdParticipant, Aides> | null;
+  AidesFiles: Record<IdAide, PublicFile> | null;
   Events: Events;
   Paiements: Paiements;
   Bilan: BilanFinancesPub;
@@ -633,6 +648,21 @@ export abstract class AbstractAPI {
     try {
       const rep: AxiosResponse<Structureaides> = await Axios.get(fullUrl, {
         headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** LoadJoomeo performs the request and handles the error */
+  async LoadJoomeo(params: { token: string }) {
+    const fullUrl = this.baseUrl + "/api/v1/espaceperso/joomeo";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<Joomeo> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { token: params["token"] },
       });
       return rep.data;
     } catch (error) {

@@ -10,6 +10,7 @@ import (
 	fsAPI "registro/controllers/files"
 	"registro/controllers/logic"
 	"registro/crypto"
+	"registro/joomeo"
 	"registro/mails"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
@@ -28,14 +29,17 @@ const updateLimitation = 7 * 24 * time.Hour
 type Controller struct {
 	db *sql.DB
 
-	key  crypto.Encrypter
-	smtp config.SMTP
-	asso config.Asso
-	fs   files.FileSystem
+	key    crypto.Encrypter
+	smtp   config.SMTP
+	asso   config.Asso
+	fs     files.FileSystem
+	joomeo config.Joomeo
 }
 
-func NewController(db *sql.DB, key crypto.Encrypter, smtp config.SMTP, asso config.Asso, fs files.FileSystem) *Controller {
-	return &Controller{db, key, smtp, asso, fs}
+func NewController(db *sql.DB, key crypto.Encrypter, smtp config.SMTP, asso config.Asso, fs files.FileSystem,
+	joomeo config.Joomeo,
+) *Controller {
+	return &Controller{db, key, smtp, asso, fs, joomeo}
 }
 
 func (ct *Controller) Load(c echo.Context) error {
@@ -269,4 +273,58 @@ func (ct *Controller) createAide(id ds.IdDossier, args cps.Aide, fileContent []b
 
 		return nil
 	})
+}
+
+type Joomeo struct {
+	SpaceURL string
+	Loggin   string   // may be empty
+	Password string   // may be empty
+	Albums   []string // may be empty
+}
+
+func (ct *Controller) LoadJoomeo(c echo.Context) error {
+	token := c.QueryParam("token")
+	id, err := crypto.DecryptID[ds.IdDossier](ct.key, token)
+	if err != nil {
+		return err
+	}
+	out, err := ct.loadJoomeo(id)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) loadJoomeo(id ds.IdDossier) (Joomeo, error) {
+	dossier, err := ds.SelectDossier(ct.db, id)
+	if err != nil {
+		return Joomeo{}, utils.SQLError(err)
+	}
+	responsable, err := pr.SelectPersonne(ct.db, dossier.IdResponsable)
+	if err != nil {
+		return Joomeo{}, utils.SQLError(err)
+	}
+
+	api, err := joomeo.InitApi(ct.joomeo)
+	if err != nil {
+		return Joomeo{}, err
+	}
+	defer api.Close()
+
+	contact, albums, err := api.GetLoginFromMail(responsable.Mail)
+	if err != nil {
+		return Joomeo{}, err
+	}
+
+	albumsLabels := make([]string, len(albums))
+	for i, album := range albums {
+		albumsLabels[i] = album.Label
+	}
+
+	return Joomeo{
+		SpaceURL: api.SpaceURL(),
+		Loggin:   contact.Login,
+		Password: contact.Password,
+		Albums:   albumsLabels,
+	}, nil
 }

@@ -1,5 +1,11 @@
 <template>
   <NavBar title="Bienvenue sur votre espace de suivi">
+    <v-btn @click="showPhotos = true">
+      <template #prepend>
+        <v-icon>mdi-image-album</v-icon>
+      </template>
+      Album photos
+    </v-btn>
     <v-menu>
       <template #activator="{ props: menuProps }">
         <v-btn v-bind="menuProps">
@@ -33,9 +39,9 @@
           <template #append>
             <v-btn @click="showEditOptions = true" size="small">
               <template #prepend>
-                <v-icon>mdi-cog</v-icon>
+                <v-icon>mdi-pencil</v-icon>
               </template>
-              éditer les options
+              éditer
             </v-btn>
           </template>
           <v-card-text>
@@ -134,6 +140,10 @@
       </v-card-actions>
     </v-card>
   </v-dialog>
+
+  <v-dialog v-model="showPhotos">
+    <JoomeoCard :token="token"></JoomeoCard>
+  </v-dialog>
 </template>
 
 <script lang="ts" setup>
@@ -151,6 +161,7 @@ import {
 import { buildPseudoEvents, Camps, Formatters, Personnes } from "@/utils";
 import ParticipantsEditCard from "../components/ParticipantsEditCard.vue";
 import FinancesCard from "../components/FinancesCard.vue";
+import JoomeoCard from "../components/JoomeoCard.vue";
 const router = useRouter();
 
 // id token
@@ -207,4 +218,6 @@ async function updateParticipants(params: Participant[]) {
   if (res === undefined) return;
   controller.showMessage("Modifications enregistrées avec succès. Merci !");
 }
+
+const showPhotos = ref(false);
 </script>

@@ -31,12 +31,12 @@ func main() {
 	flag.Parse()
 	isDev := *devPtr
 
-	asso, keys, dbCreds, fs, smtp := loadEnvs(isDev)
+	asso, keys, dbCreds, fs, smtp, joomeo := loadEnvs(isDev)
 	encrypter := crypto.NewEncrypter(keys.EncryptKey)
 	fmt.Println("Loading env. -> OK.")
 
 	// TODO: setup APIS
-	joomeo, helloasso := config.Joomeo{}, config.Helloasso{}
+	helloasso := config.Helloasso{}
 
 	fmt.Println("Connecting to DB", dbCreds.Name, "at", dbCreds.Host, "...")
 	db, err := dbCreds.ConnectPostgres()
@@ -57,7 +57,7 @@ func main() {
 	directeursCt, err := directeurs.NewController(db, keys.EncryptKey, keys.Directeurs, fs, smtp, asso, joomeo)
 	check(err)
 
-	espacepersoCt := espaceperso.NewController(db, encrypter, smtp, asso, fs)
+	espacepersoCt := espaceperso.NewController(db, encrypter, smtp, asso, fs, joomeo)
 
 	inscriptionsCt := inscriptions.NewController(db, encrypter, smtp, asso)
 
@@ -108,7 +108,7 @@ func main() {
 	e.Logger.Fatal(e.Start(adress))
 }
 
-func loadEnvs(devMode bool) (config.Asso, config.Keys, config.DB, fs.FileSystem, config.SMTP) {
+func loadEnvs(devMode bool) (config.Asso, config.Keys, config.DB, fs.FileSystem, config.SMTP, config.Joomeo) {
 	asso, err := config.NewAsso()
 	check(err)
 
@@ -134,7 +134,10 @@ func loadEnvs(devMode bool) (config.Asso, config.Keys, config.DB, fs.FileSystem,
 	smtp, err := config.NewSMTP(!devMode)
 	check(err)
 
-	return asso, keys, db, fileSystem, smtp
+	joomeo, err := config.NewJoomeo()
+	check(err)
+
+	return asso, keys, db, fileSystem, smtp, joomeo
 }
 
 func getAdress(devMode bool) string {
