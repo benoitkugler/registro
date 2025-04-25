@@ -8,11 +8,13 @@
     @update:model-value="onUpdate"
     :rules="[rule]"
     show-size
+    ref="input"
   ></v-file-input>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { nextTick } from "vue";
+import { onMounted, ref, useTemplateRef } from "vue";
 
 const props = defineProps<{
   label?: string;
@@ -39,6 +41,13 @@ function onUpdate() {
     return;
   }
   emit("update", inner.value);
+}
+
+defineExpose({ openDialog });
+
+const input = useTemplateRef("input");
+function openDialog() {
+  nextTick(() => input.value?.click());
 }
 </script>
 

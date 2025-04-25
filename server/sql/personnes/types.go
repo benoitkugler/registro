@@ -155,15 +155,15 @@ type Publicite struct {
 //--------------------------------------------------------------------
 
 type Maladies struct {
-	Rubeole    bool `json:"rubeole"`
-	Varicelle  bool `json:"varicelle"`
-	Angine     bool `json:"angine"`
-	Oreillons  bool `json:"oreillons"`
-	Scarlatine bool `json:"scarlatine"`
-	Coqueluche bool `json:"coqueluche"`
-	Otite      bool `json:"otite"`
-	Rougeole   bool `json:"rougeole"`
-	Rhumatisme bool `json:"rhumatisme"`
+	Rubeole    bool
+	Varicelle  bool
+	Angine     bool
+	Oreillons  bool
+	Scarlatine bool
+	Coqueluche bool
+	Otite      bool
+	Rougeole   bool
+	Rhumatisme bool
 }
 
 // List returns the checked diseases, as a list.
@@ -200,11 +200,11 @@ func (m Maladies) List() []string {
 }
 
 type Allergies struct {
-	Asthme          bool   `json:"asthme"`
-	Alimentaires    bool   `json:"alimentaires"`
-	Medicamenteuses bool   `json:"medicamenteuses"`
-	Autres          string `json:"autres"`
-	ConduiteATenir  string `json:"conduite_a_tenir"`
+	Asthme          bool
+	Alimentaires    bool
+	Medicamenteuses bool
+	Autres          string
+	ConduiteATenir  string
 }
 
 func (a Allergies) List() []string {
@@ -225,6 +225,6 @@ func (a Allergies) List() []string {
 }
 
 type Medecin struct {
-	Nom string `json:"nom"`
-	Tel Tel    `json:"tel"`
+	Nom string
+	Tel Tel
 }

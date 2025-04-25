@@ -3,13 +3,15 @@ package espaceperso
 import (
 	"os"
 	"testing"
+	"time"
 
 	"registro/config"
 	"registro/crypto"
-	"registro/sql/camps"
+	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
-	"registro/sql/files"
+	fs "registro/sql/files"
 	pr "registro/sql/personnes"
+	"registro/sql/shared"
 	tu "registro/utils/testutils"
 )
 
@@ -25,18 +27,18 @@ func Test_createAide(t *testing.T) {
 	dossier, err := ds.Dossier{IdTaux: 1, IdResponsable: pe.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	camp, err := camps.Camp{IdTaux: 1}.Insert(db)
+	camp, err := cps.Camp{IdTaux: 1}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	pa, err := camps.Participant{IdTaux: 1, IdCamp: camp.Id, IdPersonne: pe.Id, IdDossier: dossier.Id}.Insert(db)
+	pa, err := cps.Participant{IdTaux: 1, IdCamp: camp.Id, IdPersonne: pe.Id, IdDossier: dossier.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	st, err := camps.Structureaide{}.Insert(db)
+	st, err := cps.Structureaide{}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	ct := NewController(db.DB, crypto.Encrypter{}, config.SMTP{}, config.Asso{}, files.NewFileSystem(os.TempDir()), config.Joomeo{})
+	ct := NewController(db.DB, crypto.Encrypter{}, config.SMTP{}, config.Asso{}, fs.NewFileSystem(os.TempDir()), config.Joomeo{})
 
-	err = ct.createAide(dossier.Id, camps.Aide{IdStructureaide: st.Id, IdParticipant: pa.Id, Valeur: ds.NewEuros(456.4)}, tu.PngData, "test.png")
+	err = ct.createAide(dossier.Id, cps.Aide{IdStructureaide: st.Id, IdParticipant: pa.Id, Valeur: ds.NewEuros(456.4)}, tu.PngData, "test.png")
 	tu.AssertNoErr(t, err)
 }
 
@@ -61,7 +63,7 @@ func TestJoomeo(t *testing.T) {
 	tu.LoadEnv(t, "../../env.sh")
 	joomeo, err := config.NewJoomeo()
 	tu.AssertNoErr(t, err)
-	ct := NewController(db.DB, crypto.Encrypter{}, config.SMTP{}, config.Asso{}, files.NewFileSystem(os.TempDir()), joomeo)
+	ct := NewController(db.DB, crypto.Encrypter{}, config.SMTP{}, config.Asso{}, fs.NewFileSystem(os.TempDir()), joomeo)
 
 	data, err := ct.loadJoomeo(dossier.Id)
 	tu.AssertNoErr(t, err)
@@ -70,4 +72,57 @@ func TestJoomeo(t *testing.T) {
 	data, err = ct.loadJoomeo(dossier2.Id)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, data.Loggin == "" && data.Password == "")
+}
+
+func Test_loadFichesanitaires(t *testing.T) {
+	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
+		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",
+		"../../migrations/init.sql")
+	defer db.Remove()
+
+	fsys := fs.NewFileSystem(os.TempDir())
+
+	now := time.Now()
+
+	camp1, err := cps.Camp{IdTaux: 1, DateDebut: shared.Date(now), Duree: 1}.Insert(db)
+	tu.AssertNoErr(t, err)
+	camp2, err := cps.Camp{IdTaux: 1, DateDebut: shared.Date(now), Duree: 1}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	mineur, err := pr.Personne{Etatcivil: pr.Etatcivil{DateNaissance: shared.Date(now.Add(-15 * 365 * 24 * time.Hour))}}.Insert(db)
+	tu.AssertNoErr(t, err)
+	mineur2, err := pr.Personne{Etatcivil: pr.Etatcivil{DateNaissance: shared.Date(now.Add(-15 * 365 * 24 * time.Hour))}}.Insert(db)
+	tu.AssertNoErr(t, err)
+	majeur, err := pr.Personne{Etatcivil: pr.Etatcivil{DateNaissance: shared.Date(now.Add(-30 * 365 * 24 * time.Hour))}}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	// vaccins
+	file1, err := fs.File{}.Insert(db)
+	tu.AssertNoErr(t, err)
+	err = fs.FilePersonne{IdFile: file1.Id, IdPersonne: mineur.Id, IdDemande: fs.IdDemande(fs.Vaccins)}.Insert(db)
+	tu.AssertNoErr(t, err)
+	_, err = fs.UploadFile(fsys, db, file1.Id, tu.PngData, "test.png")
+	tu.AssertNoErr(t, err)
+
+	dossier, err := ds.Dossier{IdTaux: 1, IdResponsable: mineur.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	_, err = cps.Participant{Statut: cps.Inscrit, IdCamp: camp1.Id, IdPersonne: mineur.Id, IdTaux: 1, IdDossier: dossier.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+	_, err = cps.Participant{Statut: cps.Inscrit, IdCamp: camp1.Id, IdPersonne: majeur.Id, IdTaux: 1, IdDossier: dossier.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+	_, err = cps.Participant{Statut: cps.Inscrit, IdCamp: camp2.Id, IdPersonne: mineur.Id, IdTaux: 1, IdDossier: dossier.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+	_, err = cps.Participant{Statut: cps.Inscrit, IdCamp: camp2.Id, IdPersonne: majeur.Id, IdTaux: 1, IdDossier: dossier.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+	_, err = cps.Participant{Statut: cps.AttenteCampComplet, IdCamp: camp2.Id, IdPersonne: mineur2.Id, IdTaux: 1, IdDossier: dossier.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	ct := Controller{db: db.DB}
+	fs, err := ct.loadFichesanitaires(dossier.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(fs) == 1)
+	tu.Assert(t, fs[0].Fichesanitaire.IdPersonne == mineur.Id)
+	tu.Assert(t, !fs[0].IsLocked && fs[0].State == Empty)
+	tu.Assert(t, len(fs[0].VaccinsFiles) == 1)
 }

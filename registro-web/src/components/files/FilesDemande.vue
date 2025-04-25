@@ -5,6 +5,7 @@
     :max-docs="props.demande.MaxDocs"
     :files="props.files"
     :in-upload="props.inUpload"
+    :show-upload-text="props.showUploadText"
     @upload="(v) => emit('upload', v)"
     @delete="(v) => emit('delete', v)"
   >
@@ -41,6 +42,7 @@ const props = defineProps<{
   files: PublicFile[];
   inUpload: boolean;
   optionnelle?: boolean;
+  showUploadText?: boolean;
 }>();
 
 const emit = defineEmits<{

@@ -85,14 +85,14 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('asthme', 'alimentaires', 'medicamenteuses', 'autres', 'conduite_a_tenir'))
+            bool_and(key IN ('Asthme', 'Alimentaires', 'Medicamenteuses', 'Autres', 'ConduiteATenir'))
         FROM
             jsonb_each(data))
-        AND gomacro_validate_json_boolean (data -> 'asthme')
-        AND gomacro_validate_json_boolean (data -> 'alimentaires')
-        AND gomacro_validate_json_boolean (data -> 'medicamenteuses')
-        AND gomacro_validate_json_string (data -> 'autres')
-        AND gomacro_validate_json_string (data -> 'conduite_a_tenir');
+        AND gomacro_validate_json_boolean (data -> 'Asthme')
+        AND gomacro_validate_json_boolean (data -> 'Alimentaires')
+        AND gomacro_validate_json_boolean (data -> 'Medicamenteuses')
+        AND gomacro_validate_json_string (data -> 'Autres')
+        AND gomacro_validate_json_string (data -> 'ConduiteATenir');
     RETURN is_valid;
 END;
 $$
@@ -110,18 +110,18 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('rubeole', 'varicelle', 'angine', 'oreillons', 'scarlatine', 'coqueluche', 'otite', 'rougeole', 'rhumatisme'))
+            bool_and(key IN ('Rubeole', 'Varicelle', 'Angine', 'Oreillons', 'Scarlatine', 'Coqueluche', 'Otite', 'Rougeole', 'Rhumatisme'))
         FROM
             jsonb_each(data))
-        AND gomacro_validate_json_boolean (data -> 'rubeole')
-        AND gomacro_validate_json_boolean (data -> 'varicelle')
-        AND gomacro_validate_json_boolean (data -> 'angine')
-        AND gomacro_validate_json_boolean (data -> 'oreillons')
-        AND gomacro_validate_json_boolean (data -> 'scarlatine')
-        AND gomacro_validate_json_boolean (data -> 'coqueluche')
-        AND gomacro_validate_json_boolean (data -> 'otite')
-        AND gomacro_validate_json_boolean (data -> 'rougeole')
-        AND gomacro_validate_json_boolean (data -> 'rhumatisme');
+        AND gomacro_validate_json_boolean (data -> 'Rubeole')
+        AND gomacro_validate_json_boolean (data -> 'Varicelle')
+        AND gomacro_validate_json_boolean (data -> 'Angine')
+        AND gomacro_validate_json_boolean (data -> 'Oreillons')
+        AND gomacro_validate_json_boolean (data -> 'Scarlatine')
+        AND gomacro_validate_json_boolean (data -> 'Coqueluche')
+        AND gomacro_validate_json_boolean (data -> 'Otite')
+        AND gomacro_validate_json_boolean (data -> 'Rougeole')
+        AND gomacro_validate_json_boolean (data -> 'Rhumatisme');
     RETURN is_valid;
 END;
 $$
@@ -139,11 +139,11 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('nom', 'tel'))
+            bool_and(key IN ('Nom', 'Tel'))
         FROM
             jsonb_each(data))
-        AND gomacro_validate_json_string (data -> 'nom')
-        AND gomacro_validate_json_string (data -> 'tel');
+        AND gomacro_validate_json_string (data -> 'Nom')
+        AND gomacro_validate_json_string (data -> 'Tel');
     RETURN is_valid;
 END;
 $$

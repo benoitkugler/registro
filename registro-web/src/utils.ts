@@ -268,7 +268,7 @@ export namespace Personnes {
 export namespace Formatters {
   const reSepTel = /[ -/;\t]/g;
 
-  function splitBySize(a: string) {
+  function splitBySize2(a: string) {
     const b = [];
     for (var i = 2; i < a.length; i += 2) {
       // length 2, for example
@@ -281,6 +281,7 @@ export namespace Formatters {
   const _weekdays = ["Dim.", "Lun.", "Mar.", "Mer.", "Jeu.", "Ven.", "Sam."];
 
   export function time(t: Time, showYear = false, showSeconds = false) {
+    if (isDateZero(t)) return "";
     const da = new Date(t);
     const s = da.toLocaleString(undefined, {
       year: showYear ? "numeric" : undefined,
@@ -302,10 +303,10 @@ export namespace Formatters {
     showYear = false,
     showWeekday = true
   ) {
-    const da = new Date(date);
-    if (isNaN(da.valueOf()) || da.getFullYear() <= 1) {
+    if (isDateZero(date)) {
       return "";
     }
+    const da = new Date(date);
     const s = da.toLocaleString(undefined, {
       year: showYear ? "numeric" : undefined,
       day: "numeric",
@@ -321,8 +322,8 @@ export namespace Formatters {
 
   export function tel(tel: string) {
     tel = tel.replace(reSepTel, "");
-    if (tel.length < 8) {
-      return splitBySize(tel).join(" ");
+    if (tel.length < 10) {
+      return splitBySize2(tel).join(" ");
     } // numéro incomplet, on insert des espaces
     const start = tel.length - 8; // 8 derniers chiffres
     const chunks = [tel.substring(0, start)];

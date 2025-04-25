@@ -37,6 +37,12 @@
       <v-col align-self="center" cols="4">
         <v-card subtitle="Participants">
           <template #append>
+            <v-btn @click="showFichesantaires = true" size="small" class="mr-1">
+              <template #prepend>
+                <v-icon>mdi-pill</v-icon>
+              </template>
+              Fiches sanitaires
+            </v-btn>
             <v-btn @click="showEditOptions = true" size="small">
               <template #prepend>
                 <v-icon>mdi-pencil</v-icon>
@@ -144,6 +150,10 @@
   <v-dialog v-model="showPhotos">
     <JoomeoCard :token="token"></JoomeoCard>
   </v-dialog>
+
+  <v-dialog v-model="showFichesantaires">
+    <FichessanitairesCard :token="token"></FichessanitairesCard>
+  </v-dialog>
 </template>
 
 <script lang="ts" setup>
@@ -162,6 +172,7 @@ import { buildPseudoEvents, Camps, Formatters, Personnes } from "@/utils";
 import ParticipantsEditCard from "../components/ParticipantsEditCard.vue";
 import FinancesCard from "../components/FinancesCard.vue";
 import JoomeoCard from "../components/JoomeoCard.vue";
+import FichessanitairesCard from "../components/FichessanitairesCard.vue";
 const router = useRouter();
 
 // id token
@@ -220,4 +231,6 @@ async function updateParticipants(params: Participant[]) {
 }
 
 const showPhotos = ref(false);
+
+const showFichesantaires = ref(false);
 </script>

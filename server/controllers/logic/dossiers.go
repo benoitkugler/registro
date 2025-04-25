@@ -99,13 +99,14 @@ func (de *Dossier) ParticipantsExt() []cps.ParticipantCamp {
 	return ps
 }
 
-// Personnes returns the responsable first, then sort by ID
+// Personnes returns the responsable first, then sort by ID.
+// Among participants, repetition are removed
 func (de *Dossier) Personnes() (out []pr.Personne) {
 	out = append(out, de.Responsable())
-	for _, part := range de.Participants {
-		out = append(out, de.personnesM[part.IdPersonne])
+	uniquesParticipants := utils.NewSet(de.Participants.IdPersonnes()...)
+	for _, id := range utils.MapKeysSorted(uniquesParticipants) {
+		out = append(out, de.personnesM[id])
 	}
-	slices.SortFunc(out[1:], func(a, b pr.Personne) int { return int(a.Id - b.Id) })
 	return out
 }
 
@@ -127,8 +128,25 @@ func (de *Dossier) Camps() cps.Camps {
 	return out
 }
 
-// Time returns the last interaction in the message track
-func (de *Dossier) Time() time.Time {
+// FirstCampFor returns the first camp (by [DateDebut]) [personne]
+// will attend.
+// It return false if [personne] is in waiting list.
+func (de *Dossier) FirstCampFor(personne pr.IdPersonne) (cps.Camp, bool) {
+	var camps []cps.Camp
+	for _, participant := range de.Participants {
+		if participant.IdPersonne == personne && participant.Statut == cps.Inscrit {
+			camps = append(camps, de.camps[participant.IdCamp])
+		}
+	}
+	if len(camps) == 0 {
+		return cps.Camp{}, false
+	}
+	slices.SortFunc(camps, func(a, b cps.Camp) int { return a.DateDebut.Time().Compare(b.DateDebut.Time()) })
+	return camps[0], true
+}
+
+// LastEventTime returns the last interaction in the events track
+func (de *Dossier) LastEventTime() time.Time {
 	last := de.Dossier.MomentInscription // start with the inscription
 	for _, event := range de.Events {
 		if eventT := event.Created; eventT.After(last) {

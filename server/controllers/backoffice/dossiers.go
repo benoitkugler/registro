@@ -191,7 +191,7 @@ func (ct *Controller) searchDossiers(query SearchDossierIn) (SearchDossierOut, e
 	}
 
 	// sort by messages time
-	slices.SortFunc(filtered, func(a, b logic.DossierFinance) int { return a.Time().Compare(b.Time()) })
+	slices.SortFunc(filtered, func(a, b logic.DossierFinance) int { return a.LastEventTime().Compare(b.LastEventTime()) })
 
 	if sortByMessages {
 		slices.SortStableFunc(filtered, func(a, b logic.DossierFinance) int {

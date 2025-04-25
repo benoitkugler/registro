@@ -16,20 +16,25 @@
         <v-col align-self="center" cols="auto">
           <v-btn
             class="my-2"
-            icon
-            size="x-small"
-            @click="showUpload = true"
+            :icon="!props.showUploadText"
+            :size="props.showUploadText ? undefined : 'x-small'"
+            @click="onClick"
             :disabled="
               props.inUpload ||
               (props.maxDocs != 0 && props.files.length >= props.maxDocs)
             "
           >
-            <v-icon
-              color="green"
-              :icon="props.inUpload ? 'mdi-loading' : 'mdi-upload'"
-              :class="props.inUpload ? 'mdi-spin' : undefined"
+            <template #prepend>
+              <v-icon
+                color="green"
+                :icon="props.inUpload ? 'mdi-loading' : 'mdi-upload'"
+                :class="props.inUpload ? 'mdi-spin' : undefined"
+              >
+              </v-icon>
+            </template>
+            <template v-if="props.showUploadText"
+              >Téléverser un document</template
             >
-            </v-icon>
           </v-btn>
         </v-col>
       </v-row>
@@ -37,14 +42,22 @@
 
     <!-- upload -->
     <v-dialog v-model="showUpload" max-width="600px">
-      <FileUpload
-        @upload="
-          (file) => {
-            emit('upload', file);
-            showUpload = false;
-          }
-        "
-      ></FileUpload>
+      <v-card title="Téléverser un document">
+        <v-card-text>
+          <FileInput @update="(f) => (toUpload = f)" ref="input"></FileInput>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            :disabled="toUpload == null"
+            @click="
+              emit('upload', toUpload!);
+              showUpload = false;
+            "
+            >Téléverser</v-btn
+          >
+        </v-card-actions>
+      </v-card>
     </v-dialog>
 
     <!-- confirme delete -->
@@ -77,7 +90,7 @@
 
 <script setup lang="ts">
 import { type PublicFile } from "@/clients/equipier/logic/api";
-import { ref } from "vue";
+import { nextTick, ref, useTemplateRef } from "vue";
 
 const props = defineProps<{
   title: string;
@@ -85,6 +98,7 @@ const props = defineProps<{
   maxDocs: number;
   files: PublicFile[];
   inUpload: boolean;
+  showUploadText?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -93,8 +107,15 @@ const emit = defineEmits<{
 }>();
 
 const showUpload = ref(false);
+const toUpload = ref<File | null>(null);
 
 const toDelete = ref<PublicFile | null>(null);
+
+const input = useTemplateRef("input");
+function onClick() {
+  showUpload.value = true;
+  nextTick(() => input.value?.openDialog());
+}
 </script>
 
 <style scoped></style>

@@ -109,6 +109,7 @@ func addInscriptions(db *sql.DB, smtp config.SMTP, asso config.Asso, count int) 
 			Nom: "Yamina", Prenom: utils.RandString(10, false),
 			DateNaissance: shared.NewDate(2000, 1, 1),
 			Sexe:          pr.Woman,
+			Tels:          pr.Tels{"0684084101", "+33689755468"},
 		},
 		Participants: parts,
 		Message:      utils.RandString(30, true) + "\n" + utils.RandString(10, true),

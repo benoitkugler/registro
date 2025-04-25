@@ -46,7 +46,7 @@ func randFichesanitaire() Fichesanitaire {
 	s.Handicap = randbool()
 	s.Tel = randTel()
 	s.Medecin = randMedecin()
-	s.LastModif = randTime()
+	s.LastModif = randtTime()
 	s.Mails = randMails()
 
 	return s
@@ -154,10 +154,6 @@ func randTel() Tel {
 
 func randTels() Tels {
 	return Tels(randSlicestring())
-}
-
-func randTime() Time {
-	return Time(randtTime())
 }
 
 func randbool() bool {

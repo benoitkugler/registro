@@ -1,4 +1,4 @@
-import type { Int } from "@/clients/backoffice/logic/api";
+import type { Int, Time } from "@/clients/backoffice/logic/api";
 import type { Date_ } from "@/clients/inscription/logic/api";
 
 const isFull = /^(\d{1,2})[\/|-](\d{1,2})[\/|-](\d{4})$/;
@@ -25,10 +25,12 @@ export function autocomplete(s: string) {
   return s;
 }
 
-export function isDateZero(d: Date_) {
-  if (d.length != 10) return true;
-  if (d == "0001-01-01" || d == "1901-01-01") return true;
-  return isNaN(new Date(d).valueOf());
+export function isDateZero(d: Date_ | Time) {
+  if (d.length < 10) return true;
+  d = d.substring(0, 10) as typeof d;
+  if (d == "1901-01-01") return true;
+  const d_ = new Date(d);
+  return isNaN(d_.valueOf()) || d_.getFullYear() <= 1;
 }
 
 export function ageFrom(d: Date_, now?: Date) {

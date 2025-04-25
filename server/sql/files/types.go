@@ -105,7 +105,7 @@ func (ds Demandes) builtins() (out [nbCategorieEquipier]Demande, err error) {
 	return out, nil
 }
 
-// un nouvel équipier est crée avec ces demandes par défaut
+// un nouvel équipier est créé avec ces demandes par défaut
 var demandesDefaut = [cp.NbRoles][]Categorie{
 	cp.Direction:     {CarteId, Permis, SB, Bafa, Bafd, CarteVitale, Vaccins, BafdEquiv},
 	cp.Adjoint:       {CarteId, Permis, SB, CarteVitale, Vaccins},

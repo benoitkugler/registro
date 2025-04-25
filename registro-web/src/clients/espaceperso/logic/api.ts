@@ -17,6 +17,32 @@ export type Time = string & { __opaque__: "Time" };
 export interface Data {
   Dossier: DossierExt;
 }
+// registro/controllers/espaceperso.FichesanitaireExt
+export interface FichesanitaireExt {
+  Personne: string;
+  IsLocked: boolean;
+  State: FichesanitaireState;
+  Fichesanitaire: Fichesanitaire;
+  RespoTels: Tels;
+  RespoSecuriteSociale: string;
+  VaccinsDemande: Demande;
+  VaccinsFiles: PublicFile[] | null;
+}
+// registro/controllers/espaceperso.FichesanitaireState
+export const FichesanitaireState = {
+  Empty: 0,
+  Outdated: 1,
+  UpToDate: 2,
+} as const;
+export type FichesanitaireState =
+  (typeof FichesanitaireState)[keyof typeof FichesanitaireState];
+
+export const FichesanitaireStateLabels: Record<FichesanitaireState, string> = {
+  [FichesanitaireState.Empty]: "",
+  [FichesanitaireState.Outdated]: "",
+  [FichesanitaireState.UpToDate]: "",
+};
+
 // registro/controllers/espaceperso.Joomeo
 export interface Joomeo {
   SpaceURL: string;
@@ -28,6 +54,12 @@ export interface Joomeo {
 export interface SendMessageIn {
   Token: string;
   Message: string;
+}
+// registro/controllers/espaceperso.UpdateFichesanitaireIn
+export interface UpdateFichesanitaireIn {
+  Token: string;
+  Fichesanitaire: Fichesanitaire;
+  SecuriteSocialeResponsable: string;
 }
 // registro/controllers/espaceperso.UpdateParticipantsIn
 export interface UpdateParticipantsIn {
@@ -417,6 +449,66 @@ export const MessageOrigineLabels: Record<MessageOrigine, string> = {
   [MessageOrigine.FromDirecteur]: "",
 };
 
+// registro/sql/files.Categorie
+export const Categorie = {
+  NoBuiltin: 0,
+  CarteId: 1,
+  Permis: 2,
+  SB: 3,
+  Secourisme: 4,
+  Bafa: 5,
+  Bafd: 6,
+  CarteVitale: 7,
+  Vaccins: 8,
+  Haccp: 9,
+  BafdEquiv: 10,
+  BafaEquiv: 11,
+  CertMedicalCuisine: 12,
+  Scolarite: 13,
+  Autre: 14,
+  nbCategorieEquipier: 15,
+} as const;
+export type Categorie = (typeof Categorie)[keyof typeof Categorie];
+
+export const CategorieLabels: Record<Categorie, string> = {
+  [Categorie.NoBuiltin]: "-",
+  [Categorie.CarteId]: "Carte d'identité/Passeport",
+  [Categorie.Permis]: "Permis de conduire",
+  [Categorie.SB]: "Surveillant de baignade",
+  [Categorie.Secourisme]: "Secourisme (PSC1 - AFPS)",
+  [Categorie.Bafa]: "BAFA",
+  [Categorie.Bafd]: "BAFD",
+  [Categorie.CarteVitale]: "Carte Vitale",
+  [Categorie.Vaccins]: "Vaccins",
+  [Categorie.Haccp]: "Cuisine (HACCP)",
+  [Categorie.BafdEquiv]: "Equivalent BAFD",
+  [Categorie.BafaEquiv]: "Equivalent BAFA",
+  [Categorie.CertMedicalCuisine]: "Certificat médical cuisine",
+  [Categorie.Scolarite]: "Certificat de scolarité",
+  [Categorie.Autre]: "Autre",
+  [Categorie.nbCategorieEquipier]: "",
+};
+
+// registro/sql/files.Demande
+export interface Demande {
+  Id: IdDemande;
+  IdFile: OptID_IdFile;
+  IdDirecteur: OptID_IdPersonne;
+  Categorie: Categorie;
+  Description: string;
+  MaxDocs: Int;
+  JoursValide: Int;
+}
+export type IdDemande = number & { __opaque__: "IdDemande" };
+export type IdFile = number & { __opaque__: "IdFile" };
+// registro/sql/personnes.Allergies
+export interface Allergies {
+  Asthme: boolean;
+  Alimentaires: boolean;
+  Medicamenteuses: boolean;
+  Autres: string;
+  ConduiteATenir: string;
+}
 // registro/sql/personnes.Approfondissement
 export const Approfondissement = {
   AAucun: 0,
@@ -488,9 +580,40 @@ export const DiplomeLabels: Record<Diplome, string> = {
   [Diplome.DZzautre]: "AUTRE",
 };
 
+// registro/sql/personnes.Fichesanitaire
+export interface Fichesanitaire {
+  IdPersonne: IdPersonne;
+  TraitementMedical: boolean;
+  Maladies: Maladies;
+  Allergies: Allergies;
+  DifficultesSante: string;
+  Recommandations: string;
+  Handicap: boolean;
+  Tel: Tel;
+  Medecin: Medecin;
+  LastModif: Time;
+  Mails: Mails;
+}
 export type IdPersonne = number & { __opaque__: "IdPersonne" };
 // registro/sql/personnes.Mails
 export type Mails = string[] | null;
+// registro/sql/personnes.Maladies
+export interface Maladies {
+  Rubeole: boolean;
+  Varicelle: boolean;
+  Angine: boolean;
+  Oreillons: boolean;
+  Scarlatine: boolean;
+  Coqueluche: boolean;
+  Otite: boolean;
+  Rougeole: boolean;
+  Rhumatisme: boolean;
+}
+// registro/sql/personnes.Medecin
+export interface Medecin {
+  Nom: string;
+  Tel: Tel;
+}
 // registro/sql/personnes.Nationnalite
 export const Nationnalite = {
   Autre: 0,
@@ -555,6 +678,8 @@ export const SexeLabels: Record<Sexe, string> = {
   [Sexe.Man]: "Homme",
 };
 
+// registro/sql/personnes.Tel
+export type Tel = string;
 // registro/sql/personnes.Tels
 export type Tels = string[] | null;
 // registro/sql/shared.Date
@@ -562,6 +687,16 @@ export type Date = Date_;
 // registro/sql/shared.OptID[registro/sql/camps.IdCamp]
 export interface OptID_IdCamp {
   Id: IdCamp;
+  Valid: boolean;
+}
+// registro/sql/shared.OptID[registro/sql/files.IdFile]
+export interface OptID_IdFile {
+  Id: IdFile;
+  Valid: boolean;
+}
+// registro/sql/shared.OptID[registro/sql/personnes.IdPersonne]
+export interface OptID_IdPersonne {
+  Id: IdPersonne;
   Valid: boolean;
 }
 
@@ -665,6 +800,75 @@ export abstract class AbstractAPI {
         params: { token: params["token"] },
       });
       return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** LoadFichesanitaires performs the request and handles the error */
+  async LoadFichesanitaires(params: { token: string }) {
+    const fullUrl = this.baseUrl + "/api/v1/espaceperso/fichesanitaires";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<FichesanitaireExt[] | null> = await Axios.get(
+        fullUrl,
+        { headers: this.getHeaders(), params: { token: params["token"] } },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** UpdateFichesanitaire performs the request and handles the error */
+  async UpdateFichesanitaire(params: UpdateFichesanitaireIn) {
+    const fullUrl = this.baseUrl + "/api/v1/espaceperso/fichesanitaires";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** UploadVaccin performs the request and handles the error */
+  async UploadVaccin(
+    file: File,
+    params: { token: string; idPersonne: IdPersonne },
+  ) {
+    const fullUrl = this.baseUrl + "/api/v1/espaceperso/fichesanitaires";
+    this.startRequest();
+    try {
+      const formData = new FormData();
+      formData.append("file", file, file.name);
+      const rep: AxiosResponse<PublicFile> = await Axios.put(
+        fullUrl,
+        formData,
+        {
+          headers: this.getHeaders(),
+          params: {
+            token: params["token"],
+            idPersonne: String(params["idPersonne"]),
+          },
+        },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** DeleteVaccin performs the request and handles the error */
+  async DeleteVaccin(params: { key: string }) {
+    const fullUrl = this.baseUrl + "/api/v1/espaceperso/fichesanitaires";
+    this.startRequest();
+    try {
+      await Axios.delete(fullUrl, {
+        headers: this.getHeaders(),
+        params: { key: params["key"] },
+      });
+      return true;
     } catch (error) {
       this.handleError(error);
     }

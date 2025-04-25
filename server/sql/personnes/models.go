@@ -1,5 +1,7 @@
 package personnes
 
+import "time"
+
 //go:generate ../../../../../go/src/github.com/benoitkugler/gomacro/cmd/gomacro models.go go/sqlcrud:gen_scans.go sql:gen_create.sql go/randdata:gen_randdata_test.go
 
 type IdPersonne int64
@@ -61,8 +63,8 @@ type Fichesanitaire struct {
 	Tel               Tel // added to the one of the responsable
 	Medecin           Medecin
 
-	LastModif Time  // dernière modification
-	Mails     Mails // owners
+	LastModif time.Time // dernière modification
+	Mails     Mails     // owners
 
 	guard bool `gomacro-sql-guard:"false"`
 }

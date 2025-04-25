@@ -15,5 +15,11 @@ func setupRoutesEspaceperso(e *echo.Echo, ct *espaceperso.Controller) {
 	e.POST("/api/v1/espaceperso/participants", ct.UpdateParticipants)
 	e.POST("/api/v1/espaceperso/aide", ct.CreateAide)
 	e.GET("/api/v1/espaceperso/structureaides", ct.GetStructureaides)
+
 	e.GET("/api/v1/espaceperso/joomeo", ct.LoadJoomeo)
+
+	e.GET("/api/v1/espaceperso/fichesanitaires", ct.LoadFichesanitaires)
+	e.POST("/api/v1/espaceperso/fichesanitaires", ct.UpdateFichesanitaire)
+	e.PUT("/api/v1/espaceperso/fichesanitaires", ct.UploadVaccin)
+	e.DELETE("/api/v1/espaceperso/fichesanitaires", ct.DeleteVaccin)
 }
