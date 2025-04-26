@@ -47,7 +47,7 @@
               <template #prepend>
                 <v-icon>mdi-pencil</v-icon>
               </template>
-              éditer
+              Options
             </v-btn>
           </template>
           <v-card-text>

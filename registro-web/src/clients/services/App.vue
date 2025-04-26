@@ -1,7 +1,7 @@
 <template>
   <v-app>
     <v-main>
-      <v-app-bar rounded elevation="4" color="primary">
+      <v-app-bar rounded elevation="4" color="secondary">
         <v-app-bar-title>
           <v-row>
             <v-col align-self="center" cols="auto">

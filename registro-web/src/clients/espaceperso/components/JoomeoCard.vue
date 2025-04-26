@@ -42,7 +42,9 @@
       </v-btn>
     </v-card-actions>
   </v-card>
-  <v-alert v-else> Il n'y a encore rien à voir... </v-alert>
+  <v-alert v-else class="mx-auto" type="info">
+    Il n'y a encore rien à voir...
+  </v-alert>
 </template>
 
 <script lang="ts" setup>
