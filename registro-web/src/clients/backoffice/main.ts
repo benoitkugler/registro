@@ -5,7 +5,8 @@
  */
 
 // Plugins
-import { registerPlugins } from "./plugins/index";
+import vuetify from "@/vuetify";
+import router from "./plugins/router";
 
 // Components
 import App from "./App.vue";
@@ -15,6 +16,6 @@ import { createApp } from "vue";
 
 const app = createApp(App);
 
-registerPlugins(app);
+app.use(vuetify).use(router);
 
 app.mount("#app");

@@ -18,7 +18,7 @@
 
           <v-btn
             variant="outlined"
-            @click="transfertFicheSanitaire"
+            @click="emit('transfert')"
             block
             class="mt-4"
           >
@@ -41,14 +41,19 @@
           v-else-if="props.fiche.State == FichesanitaireState.UpToDate"
           type="warning"
         >
-          La fiche sanitaire est à jour, mais vous n'avez déposé aucun
-          vaccins...
+          La fiche sanitaire est à jour, mais vous n'avez déposé aucun vaccin.
         </v-alert>
-        <v-alert v-else-if="props.fiche.VaccinsFiles?.length" type="warning">
+        <v-alert
+          v-else-if="props.fiche.State == FichesanitaireState.Outdated"
+          type="warning"
+        >
           Merci de bien vouloir vérifier que les données ci-dessous sont à jour
           et les valider.
           <br />Nous avons besoin de votre consentement, décrit dans l'encart
           <b>Validation</b> (en bas de page).
+        </v-alert>
+        <v-alert v-else type="info">
+          Merci de compléter la fiche sanitaire ci-dessous.
         </v-alert>
       </v-card-text>
     </v-card>
@@ -397,6 +402,7 @@ const emit = defineEmits<{
   (e: "save", fs: Fichesanitaire, respoSecuriteSociale: string): void;
   (e: "uploadVaccin", file: File): void;
   (e: "deleteVaccin", file: PublicFile): void;
+  (e: "transfert"): void;
 }>();
 
 const inner = reactive(copy(props.fiche.Fichesanitaire));
@@ -412,14 +418,12 @@ const showConduiteATenir = computed(
 
 const ownerMails = computed(() => props.fiche.Fichesanitaire.Mails || []);
 
-const subtitle = computed(
-  () => `Dernière modification : ${Formatters.time(
-    props.fiche.Fichesanitaire.LastModif
-  )} / Propriétaire(s) :
+const subtitle = computed(() =>
+  props.fiche.State == FichesanitaireState.Empty
+    ? undefined
+    : `Dernière modification : ${Formatters.time(
+        props.fiche.Fichesanitaire.LastModif
+      )} / Propriétaire(s) :
          ${ownerMails.value.join(" ; ")}`
 );
-
-async function transfertFicheSanitaire() {
-  // TODO
-}
 </script>

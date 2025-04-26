@@ -3,7 +3,6 @@ package backoffice
 import (
 	"database/sql"
 	"errors"
-	"strconv"
 	"time"
 
 	"registro/controllers/logic"
@@ -377,7 +376,7 @@ func (ct *Controller) setPlaceLiberee(host string, id cps.IdParticipant) (cps.Pa
 		}
 		// notifie par mail
 		url := logic.URLEspacePerso(ct.key, host, participant.IdDossier,
-			utils.QP("idEvent", strconv.Itoa(int(ev.Id))))
+			utils.QPInt("idEvent", ev.Id))
 		html, err := mails.NotifiePlaceLiberee(ct.asso, mails.NewContact(&responsable), camp.Camp.Label(), url)
 		if err != nil {
 			return err

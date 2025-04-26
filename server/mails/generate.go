@@ -25,6 +25,7 @@ var (
 	notifiePlaceLibereeT          *template.Template
 	notifieValidationInscriptionT *template.Template
 	notifieModificationOptionsT   *template.Template
+	transfertFicheSanitaireT      *template.Template
 )
 
 func init() {
@@ -37,6 +38,7 @@ func init() {
 	notifiePlaceLibereeT = parseTemplate("templates/notifiePlaceLiberee.html")
 	notifieValidationInscriptionT = parseTemplate("templates/notifieValidationInscription.html")
 	notifieModificationOptionsT = parseTemplate("templates/notifieModificationOptions.html")
+	transfertFicheSanitaireT = parseTemplate("templates/transfertFicheSanitaire.html")
 }
 
 func parseTemplate(templateFile string) *template.Template {
@@ -286,17 +288,25 @@ func NotifieValidationInscription(asso config.Asso, contact Contact, lienEspaceP
 	return render(notifieValidationInscriptionT, args)
 }
 
-// func NewDebloqueFicheSanitaire(urlDebloqueFicheSanitaire, newMail, nomPrenom string) (string, error) {
-// 	commun := newChampCommuns(Contact{}, "Accès à la fiche sanitaire")
-// 	commun.SignatureMail = "<i>Ps : Ceci est un mail automatique, merci de ne pas y répondre.</i>"
-// 	p := paramsDebloqueFicheSanitaire{
-// 		UrlDebloqueFicheSanitaire: urlDebloqueFicheSanitaire,
-// 		NewMail:                   newMail,
-// 		NomPrenomParticipant:      nomPrenom,
-// 		champsCommuns:             commun,
-// 	}
-// 	return render(templates.DebloqueFicheSanitaire, "base.html", p)
-// }
+func TransfertFicheSanitaire(asso config.Asso, urlDebloqueFicheSanitaire, newMail, participant string) (string, error) {
+	args := struct {
+		champsCommuns
+		URL         string
+		NewMail     string
+		Participant string
+	}{
+		champsCommuns: champsCommuns{
+			Title:       "Accès à la fiche sanitaire",
+			Salutations: Contact{}.Salutations(),
+			Signature:   mailAutoSignature,
+			Asso:        asso,
+		},
+		URL:         urlDebloqueFicheSanitaire,
+		NewMail:     newMail,
+		Participant: participant,
+	}
+	return render(transfertFicheSanitaireT, args)
+}
 
 // // paramsNotifieDirecteur est à compléter
 // func NewNotifieDirecteur(directeur Contact, participants []Participant, responsable Responsable,

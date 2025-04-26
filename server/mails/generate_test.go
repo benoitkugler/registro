@@ -277,6 +277,14 @@ func TestNotifieFusionDossier(t *testing.T) {
 	tu.Write(t, "NotifieFusionDossier.html", []byte(html))
 }
 
+func TestTransfertFicheSanitaire(t *testing.T) {
+	cfg, _ := loadEnv(t)
+
+	html, err := TransfertFicheSanitaire(cfg, "http://localhost/test", "dulmmy@free.fr", "Bneoit Kugler")
+	tu.AssertNoErr(t, err)
+	tu.Write(t, "TransfertFicheSanitaire.html", []byte(html))
+}
+
 func TestNotifiePlaceLiberee(t *testing.T) {
 	cfg, _ := loadEnv(t)
 

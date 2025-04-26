@@ -22,4 +22,6 @@ func setupRoutesEspaceperso(e *echo.Echo, ct *espaceperso.Controller) {
 	e.POST("/api/v1/espaceperso/fichesanitaires", ct.UpdateFichesanitaire)
 	e.PUT("/api/v1/espaceperso/fichesanitaires", ct.UploadVaccin)
 	e.DELETE("/api/v1/espaceperso/fichesanitaires", ct.DeleteVaccin)
+
+	e.PUT("/api/v1/espaceperso/fichesanitaires/transfert", ct.TransfertFicheSanitaire)
 }

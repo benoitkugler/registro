@@ -152,7 +152,10 @@
   </v-dialog>
 
   <v-dialog v-model="showFichesantaires">
-    <FichessanitairesCard :token="token"></FichessanitairesCard>
+    <FichessanitairesCard
+      :token="token"
+      @close="showFichesantaires = false"
+    ></FichessanitairesCard>
   </v-dialog>
 </template>
 

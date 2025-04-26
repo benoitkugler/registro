@@ -8,7 +8,7 @@
 import App from "./App.vue";
 
 // Plugins
-import vuetify from "./plugins/vuetify";
+import vuetify from "@/vuetify";
 
 // Composables
 import { createApp } from "vue";

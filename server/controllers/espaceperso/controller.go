@@ -11,6 +11,7 @@ import (
 	"registro/controllers/directeurs"
 	fsAPI "registro/controllers/files"
 	"registro/controllers/logic"
+	"registro/controllers/services"
 	"registro/crypto"
 	"registro/joomeo"
 	"registro/mails"
@@ -528,7 +529,7 @@ func (ct *Controller) updateFichesanitaire(args UpdateFichesanitaireIn) error {
 		if err != nil {
 			return err
 		}
-		_, err = pr.DeleteFichesanitairesByIdPersonnes(ct.db, idPersonne)
+		_, err = pr.DeleteFichesanitairesByIdPersonnes(tx, idPersonne)
 		if err != nil {
 			return err
 		}
@@ -605,4 +606,109 @@ func (ct *Controller) DeleteVaccin(c echo.Context) error {
 		return err
 	}
 	return c.NoContent(200)
+}
+
+// TransfertFicheSanitaire envoie un mail de demande de transfert
+func (ct *Controller) TransfertFicheSanitaire(c echo.Context) error {
+	token := c.QueryParam("token")
+	idDossier, err := crypto.DecryptID[ds.IdDossier](ct.key, token)
+	if err != nil {
+		return err
+	}
+	idPersonne, err := utils.QueryParamInt[pr.IdPersonne](c, "idPersonne")
+	if err != nil {
+		return err
+	}
+	err = ct.transfertFicheSanitaire(c.Request().Host, idDossier, idPersonne)
+	if err != nil {
+		return err
+	}
+	return c.NoContent(200)
+}
+
+type transfertFicheSanitaireArgs struct {
+	IdPersonne pr.IdPersonne // le profil à modifier
+	NewMail    string        // le nouvel accès à autoriser
+}
+
+func (ct *Controller) transfertFicheSanitaire(host string, idDossier ds.IdDossier, idPersonne pr.IdPersonne) error {
+	dossier, err := logic.LoadDossier(ct.db, idDossier)
+	if err != nil {
+		return err
+	}
+	// check Id is valid
+	if !slices.Contains(dossier.Participants.IdPersonnes(), idPersonne) {
+		return errors.New("access forbidden")
+	}
+	personne, err := pr.SelectPersonne(ct.db, idPersonne)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	fiche, ok, err := pr.SelectFichesanitaireByIdPersonne(ct.db, idPersonne)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	if !ok {
+		return errors.New("internal error: missing Fichesanitaire")
+	}
+	newMail := dossier.Responsable().Mail
+	token, err := ct.key.EncryptJSON(transfertFicheSanitaireArgs{idPersonne, newMail})
+	if err != nil {
+		return err
+	}
+	url := utils.BuildUrl(host, services.EndpointServices,
+		utils.QPInt("service", services.TransfertFicheSanitaire),
+		utils.QP("token", token),
+	)
+	html, err := mails.TransfertFicheSanitaire(ct.asso, url, newMail, personne.PrenomNOM())
+	if err != nil {
+		return err
+	}
+	pool, err := mails.NewPool(ct.smtp, ct.asso.MailsSettings, nil)
+	if err != nil {
+		return err
+	}
+	defer pool.Close()
+	for _, owner := range fiche.Mails {
+		err = pool.SendMail(owner, "Partage d'une fiche sanitaire", html, nil, mails.DefaultReplyTo)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (ct *Controller) ValideTransfertFicheSanitaire(c echo.Context) error {
+	token := c.QueryParam("token")
+	var args transfertFicheSanitaireArgs
+	if err := ct.key.DecryptJSON(token, &args); err != nil {
+		return err
+	}
+	err := ct.valideTransfertFicheSanitaire(args)
+	if err != nil {
+		return err
+	}
+	return c.NoContent(200)
+}
+
+func (ct *Controller) valideTransfertFicheSanitaire(args transfertFicheSanitaireArgs) error {
+	fiche, found, err := pr.SelectFichesanitaireByIdPersonne(ct.db, args.IdPersonne)
+	if err != nil {
+		return err
+	}
+	if !found { // should not happen
+		fiche = pr.Fichesanitaire{IdPersonne: args.IdPersonne}
+	}
+	if slices.Contains(fiche.Mails, args.NewMail) {
+		return nil // nothing to do
+	}
+	fiche.Mails = append(fiche.Mails, args.NewMail)
+	return utils.InTx(ct.db, func(tx *sql.Tx) error {
+		_, err = pr.DeleteFichesanitairesByIdPersonnes(tx, args.IdPersonne)
+		if err != nil {
+			return err
+		}
+		err = fiche.Insert(tx)
+		return err
+	})
 }

@@ -2,9 +2,11 @@ package files
 
 import (
 	"database/sql"
+	_ "embed"
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"mime"
 	"mime/multipart"
 	"net/url"
@@ -12,6 +14,7 @@ import (
 	"strconv"
 	"time"
 
+	"registro/assets"
 	"registro/crypto"
 	"registro/sql/files"
 	fs "registro/sql/files"
@@ -50,15 +53,18 @@ func (ct *Controller) Get(c echo.Context) error {
 	return sendBlob(c, content, file.NomClient)
 }
 
+// GetMiniature returns a placeholder image on error
 func (ct *Controller) GetMiniature(c echo.Context) error {
 	key := c.QueryParam("key")
 	id, err := crypto.DecryptID[fs.IdFile](ct.key, key)
 	if err != nil {
-		return err
+		log.Println(err)
+		return c.Blob(200, mime.TypeByExtension(".png"), assets.DefaultMiniaturePNG)
 	}
 	content, err := ct.files.Load(id, true)
 	if err != nil {
-		return err
+		log.Println(err)
+		return c.Blob(200, mime.TypeByExtension(".png"), assets.DefaultMiniaturePNG)
 	}
 	return c.Blob(200, mime.TypeByExtension(".png"), content)
 }

@@ -12,7 +12,21 @@ import "vuetify/styles";
 import { createVuetify } from "vuetify";
 
 import { fr } from "vuetify/locale";
-import { colorScheme } from "@/utils";
+
+const asso = import.meta.env.VITE_ASSO;
+
+const colorScheme =
+  asso == "acve"
+    ? {
+        primary: "#c8db30",
+        secondary: "#b8dbf1",
+        accent: "#b8dbf1",
+      }
+    : {
+        primary: "#2b678a",
+        secondary: "#2eaadc",
+        accent: "#2eaadc",
+      };
 
 // https://vuetifyjs.com/en/introduction/why-vuetify/#feature-guides
 export default createVuetify({

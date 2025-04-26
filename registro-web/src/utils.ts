@@ -18,21 +18,6 @@ import {
 import type { Date_, Int } from "./clients/inscription/logic/api";
 import { addDays, isDateZero, newDate_ } from "./components/date";
 
-const asso = import.meta.env.VITE_ASSO;
-
-export const colorScheme =
-  asso == "acve"
-    ? {
-        primary: "#c8db30",
-        secondary: "#b8dbf1",
-        accent: "#b8dbf1",
-      }
-    : {
-        primary: "#2b678a",
-        secondary: "#2eaadc",
-        accent: "#2eaadc",
-      };
-
 export type Action = {
   title: string;
   action: () => void;

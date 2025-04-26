@@ -130,7 +130,7 @@ func CheckPersonneReferences(db pr.DB, id pr.IdPersonne) (out PersonneReferences
 
 const EndpointEspacePerso = "espace-perso"
 
-func URLEspacePerso(key crypto.Encrypter, host string, dossier ds.IdDossier, queryParams ...utils.QParam) string {
+func URLEspacePerso(key crypto.Encrypter, host string, dossier ds.IdDossier, queryParams ...utils.QueryParam) string {
 	crypted := crypto.EncryptID(key, dossier)
 	queryParams = append(queryParams, utils.QP("token", crypted))
 	return utils.BuildUrl(host, EndpointEspacePerso, queryParams...)

@@ -873,4 +873,26 @@ export abstract class AbstractAPI {
       this.handleError(error);
     }
   }
+
+  /** TransfertFicheSanitaire performs the request and handles the error */
+  async TransfertFicheSanitaire(params: {
+    token: string;
+    idPersonne: IdPersonne;
+  }) {
+    const fullUrl =
+      this.baseUrl + "/api/v1/espaceperso/fichesanitaires/transfert";
+    this.startRequest();
+    try {
+      await Axios.put(fullUrl, null, {
+        headers: this.getHeaders(),
+        params: {
+          token: params["token"],
+          idPersonne: String(params["idPersonne"]),
+        },
+      });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
 }

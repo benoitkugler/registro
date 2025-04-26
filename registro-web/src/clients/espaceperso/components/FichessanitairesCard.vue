@@ -18,6 +18,7 @@
             @save="save"
             @upload-vaccin="(f) => uploadVaccin(index, f)"
             @delete-vaccin="(f) => deleteVaccin(index, f)"
+            @transfert="transfert(fiche.Fichesanitaire)"
           ></FichesanitaireForm>
         </v-tabs-window-item>
       </v-tabs-window>
@@ -41,7 +42,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: "save", aide: Aide, file: File): void;
+  (e: "close"): void;
 }>();
 
 onMounted(fetchData);
@@ -88,5 +89,15 @@ async function deleteVaccin(index: number, file: PublicFile) {
   fiche.VaccinsFiles = (fiche.VaccinsFiles || []).filter(
     (v) => v.Id != file.Id
   );
+}
+
+async function transfert(fiche: Fichesanitaire) {
+  emit("close");
+  const res = await controller.TransfertFicheSanitaire({
+    token: props.token,
+    idPersonne: fiche.IdPersonne,
+  });
+  if (res === undefined) return;
+  controller.showMessage("Mail de transfert envoyé avec succès.");
 }
 </script>

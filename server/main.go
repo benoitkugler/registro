@@ -100,6 +100,7 @@ func main() {
 	setupRoutesInscription(e, inscriptionsCt)
 	setupRoutesEquipier(e, equipiersCt)
 	setupRoutesFiles(e, filesCt)
+	setupRoutesServices(e, espacepersoCt)
 	setupClientApps(e)
 
 	fmt.Println("Setup done. Starting...")
@@ -213,6 +214,9 @@ func setupClientApps(e *echo.Echo) {
 
 	e.GET(inscriptions.EndpointInscription, serve("static/inscription/index.html"), middleware.Gzip(), noCache)
 	e.GET(inscriptions.EndpointInscription+"/*", serve("static/inscription/index.html"), middleware.Gzip(), noCache)
+
+	e.GET("/services", serve("static/services/index.html"), middleware.Gzip(), noCache)
+	e.GET("/services/*", serve("static/services/index.html"), middleware.Gzip(), noCache)
 
 	// global static files used by frontend apps
 	e.Group("/static", middleware.Gzip(), cacheStatic).Static("/*", "static")

@@ -91,12 +91,16 @@ func InTx(db *sql.DB, fn func(tx *sql.Tx) error) error {
 	return nil
 }
 
-type QParam struct{ k, v string }
+type QueryParam struct{ k, v string }
 
-func QP(key, value string) QParam { return QParam{key, value} }
+func QP(key, value string) QueryParam { return QueryParam{key, value} }
+
+func QPInt[T ~uint8 | ~int | ~int64](key string, value T) QueryParam {
+	return QP(key, fmt.Sprintf("%d", value))
+}
 
 // BuildUrl returns http(s)://<host>/<path>?<params>
-func BuildUrl(host, path string, params ...QParam) string {
+func BuildUrl(host, path string, params ...QueryParam) string {
 	pm := url.Values{}
 	for _, v := range params {
 		pm.Add(v.k, v.v)
