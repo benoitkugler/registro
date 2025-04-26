@@ -4,6 +4,18 @@
       <v-tabs v-model="tab">
         <v-tab v-for="fiche in fiches" :value="fiche.Fichesanitaire.IdPersonne">
           {{ fiche.Personne }}
+          <v-icon
+            class="ml-2"
+            v-if="
+              fiche.State == FichesanitaireState.Empty ||
+              fiche.State == FichesanitaireState.Outdated ||
+              !fiche.VaccinsFiles?.length
+            "
+            color="warning"
+          >
+            mdi-alert
+          </v-icon>
+          <v-icon v-else class="ml-2" color="success"> mdi-check </v-icon>
         </v-tab>
       </v-tabs>
     </template>
@@ -29,6 +41,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import {
+  FichesanitaireState,
   type Aide,
   type Fichesanitaire,
   type FichesanitaireExt,
