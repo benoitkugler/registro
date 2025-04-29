@@ -1,5 +1,11 @@
 <template>
   <NavBar title="Bienvenue sur votre espace de suivi">
+    <v-btn @click="showSondages = 0 as IdCamp">
+      <template #prepend>
+        <v-icon>mdi-comment-quote</v-icon>
+      </template>
+      Avis
+    </v-btn>
     <v-btn @click="showPhotos = true">
       <template #prepend>
         <v-icon>mdi-image-album</v-icon>
@@ -106,7 +112,11 @@
           <v-card-text>
             <div class="overflow-y-auto" style="max-height: 75vh">
               <v-timeline side="end" class="mt-4" density="compact">
-                <EventSwitch v-for="event in events" :event="event">
+                <EventSwitch
+                  v-for="event in events"
+                  :event="event"
+                  @go-to-sondage="(id) => (showSondages = id)"
+                >
                 </EventSwitch>
               </v-timeline>
             </div>
@@ -147,6 +157,17 @@
     </v-card>
   </v-dialog>
 
+  <v-dialog
+    :model-value="showSondages != null"
+    @update:model-value="showSondages = null"
+  >
+    <SondagesCard
+      :token="token"
+      :initial-camp="showSondages"
+      v-if="showSondages != null"
+    ></SondagesCard>
+  </v-dialog>
+
   <v-dialog v-model="showPhotos">
     <JoomeoCard :token="token"></JoomeoCard>
   </v-dialog>
@@ -168,6 +189,7 @@ import {
   StatutParticipant,
   StatutParticipantLabels,
   type Data,
+  type IdCamp,
   type Participant,
   type ParticipantCamp,
 } from "../logic/api";
@@ -176,6 +198,7 @@ import ParticipantsEditCard from "../components/ParticipantsEditCard.vue";
 import FinancesCard from "../components/FinancesCard.vue";
 import JoomeoCard from "../components/JoomeoCard.vue";
 import FichessanitairesCard from "../components/FichessanitairesCard.vue";
+import SondagesCard from "../components/SondagesCard.vue";
 const router = useRouter();
 
 // id token
@@ -232,6 +255,8 @@ async function updateParticipants(params: Participant[]) {
   if (res === undefined) return;
   controller.showMessage("Modifications enregistrées avec succès. Merci !");
 }
+
+const showSondages = ref<IdCamp | null>(null);
 
 const showPhotos = ref(false);
 

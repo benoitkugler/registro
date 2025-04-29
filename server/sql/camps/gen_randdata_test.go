@@ -302,7 +302,7 @@ func randSliceuint8() []byte {
 
 func randSondage() Sondage {
 	var s Sondage
-	s.IdSondage = randIdSondage()
+	s.Id = randIdSondage()
 	s.IdCamp = randIdCamp()
 	s.IdDossier = randdos_IdDossier()
 	s.Modified = randtTime()

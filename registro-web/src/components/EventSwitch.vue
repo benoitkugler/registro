@@ -75,6 +75,8 @@
     "
     :event="props.event.Event"
     :content="props.event.Event.Content.Data"
+    :user="props.event.User"
+    @go-to-sondage="(id) => emit('goToSondage', id)"
   ></EventSondageV>
 </template>
 
@@ -82,6 +84,7 @@
 import {
   EventContentKind,
   type Event,
+  type IdCamp,
   type Paiement,
 } from "@/clients/backoffice/logic/api";
 import EventMessageV from "./events/EventMessageV.vue";
@@ -101,6 +104,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: "editPaiement", paiement: Paiement): void;
   (e: "deleteMessage", event: Event): void;
+  (e: "goToSondage", idCamp: IdCamp): void;
 }>();
 </script>
 

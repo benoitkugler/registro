@@ -72,8 +72,26 @@ func main() {
 		createEquipier(db, enc)
 	case "add_structureaide":
 		createStructureaide(db)
+	case "open_sondages":
+		openSondages(db)
 	default:
 		panic("invalid action")
+	}
+}
+
+func openSondages(db *sql.DB) {
+	dossiers, err := ds.SelectAllDossiers(db)
+	check(err)
+	tmp, err := cps.SelectParticipantsByIdDossiers(db, dossiers.IDs()...)
+	check(err)
+	participants := tmp.ByIdDossier()
+	for _, dossier := range dossiers {
+		for idCamp := range participants[dossier.Id].ByIdCamp() {
+			event, err := events.Event{IdDossier: dossier.Id, Kind: events.Sondage, Created: time.Now()}.Insert(db)
+			check(err)
+			err = events.EventSondage{IdEvent: event.Id, IdCamp: idCamp}.Insert(db)
+			check(err)
+		}
 	}
 }
 

@@ -1569,7 +1569,7 @@ func SelectParticipantByIdAndIdCamp(tx DB, id IdParticipant, idCamp IdCamp) (ite
 func scanOneSondage(row scanner) (Sondage, error) {
 	var item Sondage
 	err := row.Scan(
-		&item.IdSondage,
+		&item.Id,
 		&item.IdCamp,
 		&item.IdDossier,
 		&item.Modified,
@@ -1592,19 +1592,42 @@ func ScanSondage(row *sql.Row) (Sondage, error) { return scanOneSondage(row) }
 
 // SelectAll returns all the items in the sondages table.
 func SelectAllSondages(db DB) (Sondages, error) {
-	rows, err := db.Query("SELECT idsondage, idcamp, iddossier, modified, infosavantsejour, infospendantsejour, hebergement, activites, theme, nourriture, hygiene, ambiance, ressenti, messageenfant, messageresponsable FROM sondages")
+	rows, err := db.Query("SELECT id, idcamp, iddossier, modified, infosavantsejour, infospendantsejour, hebergement, activites, theme, nourriture, hygiene, ambiance, ressenti, messageenfant, messageresponsable FROM sondages")
 	if err != nil {
 		return nil, err
 	}
 	return ScanSondages(rows)
 }
 
-type Sondages []Sondage
+// SelectSondage returns the entry matching 'id'.
+func SelectSondage(tx DB, id IdSondage) (Sondage, error) {
+	row := tx.QueryRow("SELECT id, idcamp, iddossier, modified, infosavantsejour, infospendantsejour, hebergement, activites, theme, nourriture, hygiene, ambiance, ressenti, messageenfant, messageresponsable FROM sondages WHERE id = $1", id)
+	return ScanSondage(row)
+}
+
+// SelectSondages returns the entry matching the given 'ids'.
+func SelectSondages(tx DB, ids ...IdSondage) (Sondages, error) {
+	rows, err := tx.Query("SELECT id, idcamp, iddossier, modified, infosavantsejour, infospendantsejour, hebergement, activites, theme, nourriture, hygiene, ambiance, ressenti, messageenfant, messageresponsable FROM sondages WHERE id = ANY($1)", IdSondageArrayToPQ(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanSondages(rows)
+}
+
+type Sondages map[IdSondage]Sondage
+
+func (m Sondages) IDs() []IdSondage {
+	out := make([]IdSondage, 0, len(m))
+	for i := range m {
+		out = append(out, i)
+	}
+	return out
+}
 
 func ScanSondages(rs *sql.Rows) (Sondages, error) {
 	var (
-		item Sondage
-		err  error
+		s   Sondage
+		err error
 	)
 	defer func() {
 		errClose := rs.Close()
@@ -1612,13 +1635,13 @@ func ScanSondages(rs *sql.Rows) (Sondages, error) {
 			err = errClose
 		}
 	}()
-	structs := make(Sondages, 0, 16)
+	structs := make(Sondages, 16)
 	for rs.Next() {
-		item, err = scanOneSondage(rs)
+		s, err = scanOneSondage(rs)
 		if err != nil {
 			return nil, err
 		}
-		structs = append(structs, item)
+		structs[s.Id] = s
 	}
 	if err = rs.Err(); err != nil {
 		return nil, err
@@ -1626,146 +1649,128 @@ func ScanSondages(rs *sql.Rows) (Sondages, error) {
 	return structs, nil
 }
 
-func (item Sondage) Insert(db DB) error {
-	_, err := db.Exec(`INSERT INTO sondages (
-			idsondage, idcamp, iddossier, modified, infosavantsejour, infospendantsejour, hebergement, activites, theme, nourriture, hygiene, ambiance, ressenti, messageenfant, messageresponsable
-			) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15
-			);
-			`, item.IdSondage, item.IdCamp, item.IdDossier, item.Modified, item.InfosAvantSejour, item.InfosPendantSejour, item.Hebergement, item.Activites, item.Theme, item.Nourriture, item.Hygiene, item.Ambiance, item.Ressenti, item.MessageEnfant, item.MessageResponsable)
-	if err != nil {
-		return err
-	}
-	return nil
+// Insert one Sondage in the database and returns the item with id filled.
+func (item Sondage) Insert(tx DB) (out Sondage, err error) {
+	row := tx.QueryRow(`INSERT INTO sondages (
+		idcamp, iddossier, modified, infosavantsejour, infospendantsejour, hebergement, activites, theme, nourriture, hygiene, ambiance, ressenti, messageenfant, messageresponsable
+		) VALUES (
+		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
+		) RETURNING id, idcamp, iddossier, modified, infosavantsejour, infospendantsejour, hebergement, activites, theme, nourriture, hygiene, ambiance, ressenti, messageenfant, messageresponsable;
+		`, item.IdCamp, item.IdDossier, item.Modified, item.InfosAvantSejour, item.InfosPendantSejour, item.Hebergement, item.Activites, item.Theme, item.Nourriture, item.Hygiene, item.Ambiance, item.Ressenti, item.MessageEnfant, item.MessageResponsable)
+	return ScanSondage(row)
 }
 
-// Insert the links Sondage in the database.
-// It is a no-op if 'items' is empty.
-func InsertManySondages(tx *sql.Tx, items ...Sondage) error {
-	if len(items) == 0 {
-		return nil
-	}
-
-	stmt, err := tx.Prepare(pq.CopyIn("sondages",
-		"idsondage",
-		"idcamp",
-		"iddossier",
-		"modified",
-		"infosavantsejour",
-		"infospendantsejour",
-		"hebergement",
-		"activites",
-		"theme",
-		"nourriture",
-		"hygiene",
-		"ambiance",
-		"ressenti",
-		"messageenfant",
-		"messageresponsable",
-	))
-	if err != nil {
-		return err
-	}
-
-	for _, item := range items {
-		_, err = stmt.Exec(item.IdSondage, item.IdCamp, item.IdDossier, item.Modified, item.InfosAvantSejour, item.InfosPendantSejour, item.Hebergement, item.Activites, item.Theme, item.Nourriture, item.Hygiene, item.Ambiance, item.Ressenti, item.MessageEnfant, item.MessageResponsable)
-		if err != nil {
-			return err
-		}
-	}
-
-	if _, err = stmt.Exec(); err != nil {
-		return err
-	}
-
-	if err = stmt.Close(); err != nil {
-		return err
-	}
-	return nil
+// Update Sondage in the database and returns the new version.
+func (item Sondage) Update(tx DB) (out Sondage, err error) {
+	row := tx.QueryRow(`UPDATE sondages SET (
+		idcamp, iddossier, modified, infosavantsejour, infospendantsejour, hebergement, activites, theme, nourriture, hygiene, ambiance, ressenti, messageenfant, messageresponsable
+		) = (
+		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
+		) WHERE id = $15 RETURNING id, idcamp, iddossier, modified, infosavantsejour, infospendantsejour, hebergement, activites, theme, nourriture, hygiene, ambiance, ressenti, messageenfant, messageresponsable;
+		`, item.IdCamp, item.IdDossier, item.Modified, item.InfosAvantSejour, item.InfosPendantSejour, item.Hebergement, item.Activites, item.Theme, item.Nourriture, item.Hygiene, item.Ambiance, item.Ressenti, item.MessageEnfant, item.MessageResponsable, item.Id)
+	return ScanSondage(row)
 }
 
-// Delete the link Sondage from the database.
-// Only the foreign keys IdCamp, IdDossier fields are used in 'item'.
-func (item Sondage) Delete(tx DB) error {
-	_, err := tx.Exec(`DELETE FROM sondages WHERE IdCamp = $1 AND IdDossier = $2;`, item.IdCamp, item.IdDossier)
-	return err
+// Deletes the Sondage and returns the item
+func DeleteSondageById(tx DB, id IdSondage) (Sondage, error) {
+	row := tx.QueryRow("DELETE FROM sondages WHERE id = $1 RETURNING id, idcamp, iddossier, modified, infosavantsejour, infospendantsejour, hebergement, activites, theme, nourriture, hygiene, ambiance, ressenti, messageenfant, messageresponsable;", id)
+	return ScanSondage(row)
+}
+
+// Deletes the Sondage in the database and returns the ids.
+func DeleteSondagesByIDs(tx DB, ids ...IdSondage) ([]IdSondage, error) {
+	rows, err := tx.Query("DELETE FROM sondages WHERE id = ANY($1) RETURNING id", IdSondageArrayToPQ(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIdSondageArray(rows)
 }
 
 // ByIdCamp returns a map with 'IdCamp' as keys.
 func (items Sondages) ByIdCamp() map[IdCamp]Sondages {
 	out := make(map[IdCamp]Sondages)
 	for _, target := range items {
-		out[target.IdCamp] = append(out[target.IdCamp], target)
+		dict := out[target.IdCamp]
+		if dict == nil {
+			dict = make(Sondages)
+		}
+		dict[target.Id] = target
+		out[target.IdCamp] = dict
 	}
 	return out
 }
 
 // IdCamps returns the list of ids of IdCamp
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items Sondages) IdCamps() []IdCamp {
-	out := make([]IdCamp, len(items))
-	for index, target := range items {
-		out[index] = target.IdCamp
+	out := make([]IdCamp, 0, len(items))
+	for _, target := range items {
+		out = append(out, target.IdCamp)
 	}
 	return out
 }
 
 func SelectSondagesByIdCamps(tx DB, idCamps_ ...IdCamp) (Sondages, error) {
-	rows, err := tx.Query("SELECT idsondage, idcamp, iddossier, modified, infosavantsejour, infospendantsejour, hebergement, activites, theme, nourriture, hygiene, ambiance, ressenti, messageenfant, messageresponsable FROM sondages WHERE idcamp = ANY($1)", IdCampArrayToPQ(idCamps_))
+	rows, err := tx.Query("SELECT id, idcamp, iddossier, modified, infosavantsejour, infospendantsejour, hebergement, activites, theme, nourriture, hygiene, ambiance, ressenti, messageenfant, messageresponsable FROM sondages WHERE idcamp = ANY($1)", IdCampArrayToPQ(idCamps_))
 	if err != nil {
 		return nil, err
 	}
 	return ScanSondages(rows)
 }
 
-func DeleteSondagesByIdCamps(tx DB, idCamps_ ...IdCamp) (Sondages, error) {
-	rows, err := tx.Query("DELETE FROM sondages WHERE idcamp = ANY($1) RETURNING idsondage, idcamp, iddossier, modified, infosavantsejour, infospendantsejour, hebergement, activites, theme, nourriture, hygiene, ambiance, ressenti, messageenfant, messageresponsable", IdCampArrayToPQ(idCamps_))
+func DeleteSondagesByIdCamps(tx DB, idCamps_ ...IdCamp) ([]IdSondage, error) {
+	rows, err := tx.Query("DELETE FROM sondages WHERE idcamp = ANY($1) RETURNING id", IdCampArrayToPQ(idCamps_))
 	if err != nil {
 		return nil, err
 	}
-	return ScanSondages(rows)
+	return ScanIdSondageArray(rows)
 }
 
 // ByIdDossier returns a map with 'IdDossier' as keys.
 func (items Sondages) ByIdDossier() map[dossiers.IdDossier]Sondages {
 	out := make(map[dossiers.IdDossier]Sondages)
 	for _, target := range items {
-		out[target.IdDossier] = append(out[target.IdDossier], target)
+		dict := out[target.IdDossier]
+		if dict == nil {
+			dict = make(Sondages)
+		}
+		dict[target.Id] = target
+		out[target.IdDossier] = dict
 	}
 	return out
 }
 
 // IdDossiers returns the list of ids of IdDossier
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items Sondages) IdDossiers() []dossiers.IdDossier {
-	out := make([]dossiers.IdDossier, len(items))
-	for index, target := range items {
-		out[index] = target.IdDossier
+	out := make([]dossiers.IdDossier, 0, len(items))
+	for _, target := range items {
+		out = append(out, target.IdDossier)
 	}
 	return out
 }
 
 func SelectSondagesByIdDossiers(tx DB, idDossiers_ ...dossiers.IdDossier) (Sondages, error) {
-	rows, err := tx.Query("SELECT idsondage, idcamp, iddossier, modified, infosavantsejour, infospendantsejour, hebergement, activites, theme, nourriture, hygiene, ambiance, ressenti, messageenfant, messageresponsable FROM sondages WHERE iddossier = ANY($1)", dossiers.IdDossierArrayToPQ(idDossiers_))
+	rows, err := tx.Query("SELECT id, idcamp, iddossier, modified, infosavantsejour, infospendantsejour, hebergement, activites, theme, nourriture, hygiene, ambiance, ressenti, messageenfant, messageresponsable FROM sondages WHERE iddossier = ANY($1)", dossiers.IdDossierArrayToPQ(idDossiers_))
 	if err != nil {
 		return nil, err
 	}
 	return ScanSondages(rows)
 }
 
-func DeleteSondagesByIdDossiers(tx DB, idDossiers_ ...dossiers.IdDossier) (Sondages, error) {
-	rows, err := tx.Query("DELETE FROM sondages WHERE iddossier = ANY($1) RETURNING idsondage, idcamp, iddossier, modified, infosavantsejour, infospendantsejour, hebergement, activites, theme, nourriture, hygiene, ambiance, ressenti, messageenfant, messageresponsable", dossiers.IdDossierArrayToPQ(idDossiers_))
+func DeleteSondagesByIdDossiers(tx DB, idDossiers_ ...dossiers.IdDossier) ([]IdSondage, error) {
+	rows, err := tx.Query("DELETE FROM sondages WHERE iddossier = ANY($1) RETURNING id", dossiers.IdDossierArrayToPQ(idDossiers_))
 	if err != nil {
 		return nil, err
 	}
-	return ScanSondages(rows)
+	return ScanIdSondageArray(rows)
 }
 
 // SelectSondageByIdCampAndIdDossier return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectSondageByIdCampAndIdDossier(tx DB, idCamp IdCamp, idDossier dossiers.IdDossier) (item Sondage, found bool, err error) {
-	row := tx.QueryRow("SELECT idsondage, idcamp, iddossier, modified, infosavantsejour, infospendantsejour, hebergement, activites, theme, nourriture, hygiene, ambiance, ressenti, messageenfant, messageresponsable FROM sondages WHERE IdCamp = $1 AND IdDossier = $2", idCamp, idDossier)
+	row := tx.QueryRow("SELECT id, idcamp, iddossier, modified, infosavantsejour, infospendantsejour, hebergement, activites, theme, nourriture, hygiene, ambiance, ressenti, messageenfant, messageresponsable FROM sondages WHERE IdCamp = $1 AND IdDossier = $2", idCamp, idDossier)
 	item, err = ScanSondage(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
@@ -2118,6 +2123,33 @@ func ScanIdParticipantArray(rs *sql.Rows) ([]IdParticipant, error) {
 	var err error
 	for rs.Next() {
 		var s IdParticipant
+		if err = rs.Scan(&s); err != nil {
+			return nil, err
+		}
+		ints = append(ints, s)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return ints, nil
+}
+
+func IdSondageArrayToPQ(ids []IdSondage) pq.Int64Array {
+	out := make(pq.Int64Array, len(ids))
+	for i, v := range ids {
+		out[i] = int64(v)
+	}
+	return out
+}
+
+// ScanIdSondageArray scans the result of a query returning a
+// list of ID's.
+func ScanIdSondageArray(rs *sql.Rows) ([]IdSondage, error) {
+	defer rs.Close()
+	ints := make([]IdSondage, 0, 16)
+	var err error
+	for rs.Next() {
+		var s IdSondage
 		if err = rs.Scan(&s); err != nil {
 			return nil, err
 		}

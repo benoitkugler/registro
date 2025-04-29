@@ -1,6 +1,6 @@
 module registro
 
-go 1.20
+go 1.23
 
 require (
 	github.com/benoitkugler/go-weasyprint v0.0.13 // indirect

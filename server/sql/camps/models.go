@@ -155,7 +155,7 @@ type GroupeParticipant struct {
 //
 // gomacro:QUERY SwitchSondageDossier UPDATE Sondage SET IdDossier = $to$ WHERE IdDossier = $from$;
 type Sondage struct {
-	IdSondage IdSondage
+	Id        IdSondage
 	IdCamp    IdCamp             `gomacro-sql-on-delete:"CASCADE"`
 	IdDossier dossiers.IdDossier `gomacro-sql-on-delete:"CASCADE"`
 	Modified  time.Time

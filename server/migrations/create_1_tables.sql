@@ -170,7 +170,7 @@ CREATE TABLE participants (
 );
 
 CREATE TABLE sondages (
-    IdSondage integer NOT NULL,
+    Id serial PRIMARY KEY,
     IdCamp integer NOT NULL,
     IdDossier integer NOT NULL,
     Modified timestamp(0) with time zone NOT NULL,

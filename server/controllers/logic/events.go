@@ -1,6 +1,7 @@
 package logic
 
 import (
+	"iter"
 	"slices"
 	"time"
 
@@ -29,14 +30,16 @@ func (ev Event) Raw() evs.Event {
 // Events stores the [Event] for one [Dossier]
 type Events []Event
 
-func (evs Events) By(kind evs.EventKind) []Event {
-	var out []Event
-	for _, ev := range evs {
-		if ev.Content.kind() == kind {
-			out = append(out, ev)
+func IterContentBy[T EventContent](evs Events) iter.Seq[T] {
+	return func(yield func(T) bool) {
+		for _, ev := range evs {
+			if typed, ok := ev.Content.(T); ok {
+				if !yield(typed) {
+					return
+				}
+			}
 		}
 	}
-	return out
 }
 
 // UnreadMessagesForBackoffice returns the [Event]s with kind [evs.Message],
@@ -155,7 +158,7 @@ type Sondage struct {
 
 // m must have kind [Sondage]
 func (ld *eventsContent) newSondage(ev evs.Event) Sondage {
-	m := ld.campDocs[ev.Id]
+	m := ld.sondages[ev.Id]
 	camp := ld.camps[m.IdCamp]
 	return Sondage{IdCamp: m.IdCamp, CampLabel: camp.Label()}
 }

@@ -3,7 +3,7 @@
 //
 // The order of the tables must be specified.
 //
-// go run make_sql.go ../sql/personnes/ ../sql/dossiers/ ../sql/camps/
+// go run make_sql.go ../sql/personnes/ ../sql/dossiers/ ../sql/camps/ ../sql/files ../sql/inscriptions  ../sql/events ../sql/dons
 
 package main
 

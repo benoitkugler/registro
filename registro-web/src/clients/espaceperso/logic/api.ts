@@ -55,6 +55,11 @@ export interface SendMessageIn {
   Token: string;
   Message: string;
 }
+// registro/controllers/espaceperso.SondageExt
+export interface SondageExt {
+  Camp: string;
+  Sondage: Sondage;
+}
 // registro/controllers/espaceperso.UpdateFichesanitaireIn
 export interface UpdateFichesanitaireIn {
   Token: string;
@@ -65,6 +70,13 @@ export interface UpdateFichesanitaireIn {
 export interface UpdateParticipantsIn {
   Token: string;
   Participants: Participant[] | null;
+}
+// registro/controllers/espaceperso.UpdateSondageIn
+export interface UpdateSondageIn {
+  Token: string;
+  Id: IdSondage;
+  IdCamp: IdCamp;
+  Reponse: ReponseSondage;
 }
 // registro/controllers/files.PublicFile
 export interface PublicFile {
@@ -228,6 +240,7 @@ export interface Camp {
 export type IdAide = number & { __opaque__: "IdAide" };
 export type IdCamp = number & { __opaque__: "IdCamp" };
 export type IdParticipant = number & { __opaque__: "IdParticipant" };
+export type IdSondage = number & { __opaque__: "IdSondage" };
 export type IdStructureaide = number & { __opaque__: "IdStructureaide" };
 // registro/sql/camps.Jours
 export type Jours = Int[] | null;
@@ -312,6 +325,56 @@ export interface Remises {
   ReducEquipiers: Int;
   ReducEnfants: Int;
   ReducSpeciale: Montant;
+}
+// registro/sql/camps.ReponseSondage
+export interface ReponseSondage {
+  InfosAvantSejour: Satisfaction;
+  InfosPendantSejour: Satisfaction;
+  Hebergement: Satisfaction;
+  Activites: Satisfaction;
+  Theme: Satisfaction;
+  Nourriture: Satisfaction;
+  Hygiene: Satisfaction;
+  Ambiance: Satisfaction;
+  Ressenti: Satisfaction;
+  MessageEnfant: string;
+  MessageResponsable: string;
+}
+// registro/sql/camps.Satisfaction
+export const Satisfaction = {
+  NoSatisfaction: 0,
+  Decevant: 1,
+  Moyen: 2,
+  Satisfaisant: 3,
+  Tressatisfaisant: 4,
+} as const;
+export type Satisfaction = (typeof Satisfaction)[keyof typeof Satisfaction];
+
+export const SatisfactionLabels: Record<Satisfaction, string> = {
+  [Satisfaction.NoSatisfaction]: "-",
+  [Satisfaction.Decevant]: "Décevant",
+  [Satisfaction.Moyen]: "Moyen",
+  [Satisfaction.Satisfaisant]: "Satisfaisant",
+  [Satisfaction.Tressatisfaisant]: "Très satisfaisant",
+};
+
+// registro/sql/camps.Sondage
+export interface Sondage {
+  Id: IdSondage;
+  IdCamp: IdCamp;
+  IdDossier: IdDossier;
+  Modified: Time;
+  InfosAvantSejour: Satisfaction;
+  InfosPendantSejour: Satisfaction;
+  Hebergement: Satisfaction;
+  Activites: Satisfaction;
+  Theme: Satisfaction;
+  Nourriture: Satisfaction;
+  Hygiene: Satisfaction;
+  Ambiance: Satisfaction;
+  Ressenti: Satisfaction;
+  MessageEnfant: string;
+  MessageResponsable: string;
 }
 // registro/sql/camps.StatutParticipant
 export const StatutParticipant = {
@@ -890,6 +953,33 @@ export abstract class AbstractAPI {
           idPersonne: String(params["idPersonne"]),
         },
       });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** LoadSondages performs the request and handles the error */
+  async LoadSondages(params: { token: string }) {
+    const fullUrl = this.baseUrl + "/api/v1/espaceperso/sondages";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<SondageExt[] | null> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { token: params["token"] },
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** UpdateSondages performs the request and handles the error */
+  async UpdateSondages(params: UpdateSondageIn) {
+    const fullUrl = this.baseUrl + "/api/v1/espaceperso/sondages";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
       return true;
     } catch (error) {
       this.handleError(error);

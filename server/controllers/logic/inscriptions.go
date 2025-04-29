@@ -29,8 +29,8 @@ type Inscription struct {
 func newInscription(de Dossier) Inscription {
 	var chunks []string
 	// collect the messages
-	for _, event := range de.Events.By(evs.Message) {
-		content := event.Content.(Message).Message
+	for event := range IterContentBy[Message](de.Events) {
+		content := event.Message
 		if content.Origine == evs.FromEspaceperso {
 			chunks = append(chunks, content.Contenu)
 		}

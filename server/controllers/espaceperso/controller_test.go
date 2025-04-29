@@ -9,6 +9,7 @@ import (
 	"registro/crypto"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
+	"registro/sql/events"
 	fs "registro/sql/files"
 	pr "registro/sql/personnes"
 	"registro/sql/shared"
@@ -125,4 +126,42 @@ func Test_loadFichesanitaires(t *testing.T) {
 	tu.Assert(t, fs[0].Fichesanitaire.IdPersonne == mineur.Id)
 	tu.Assert(t, !fs[0].IsLocked && fs[0].State == Empty)
 	tu.Assert(t, len(fs[0].VaccinsFiles) == 1)
+}
+
+func Test_sondages(t *testing.T) {
+	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
+		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",
+		"../../migrations/init.sql")
+	defer db.Remove()
+
+	pe, err := pr.Personne{}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	dossier, err := ds.Dossier{IdTaux: 1, IdResponsable: pe.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	camp, err := cps.Camp{IdTaux: 1}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	_, err = cps.Participant{IdTaux: 1, IdCamp: camp.Id, IdPersonne: pe.Id, IdDossier: dossier.Id, Statut: cps.Inscrit}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	ct := Controller{db: db.DB}
+	l, err := ct.loadSondages(dossier.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(l) == 0)
+
+	ev, err := events.Event{IdDossier: dossier.Id, Kind: events.Sondage}.Insert(ct.db)
+	tu.AssertNoErr(t, err)
+	err = events.EventSondage{IdEvent: ev.Id, IdCamp: camp.Id}.Insert(ct.db)
+	tu.AssertNoErr(t, err)
+
+	l, err = ct.loadSondages(dossier.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(l) == 1)
+
+	sondage := l[0]
+	sondage.Sondage.Ambiance = 3
+	err = ct.updateSondage(dossier.Id, sondage.Sondage.Id, sondage.Sondage.IdCamp, sondage.Sondage.ReponseSondage)
+	tu.AssertNoErr(t, err)
 }
