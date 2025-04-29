@@ -3,6 +3,17 @@
     <template #append>
       <v-btn
         size="small"
+        class="mr-1"
+        @click="showReglement = true"
+        :disabled="!props.isPaiementOpen"
+      >
+        <template #prepend>
+          <v-icon>mdi-cash-plus</v-icon>
+        </template>
+        Régler
+      </v-btn>
+      <v-btn
+        size="small"
         :disabled="!props.dossier.Participants?.length"
         @click="showCreateAide = true"
       >
@@ -95,6 +106,13 @@
         @save="createAide"
       ></AideCard>
     </v-dialog>
+
+    <v-dialog v-model="showReglement" max-width="800px">
+      <FinancesReglementCard
+        :token="props.token"
+        :dossier="props.dossier"
+      ></FinancesReglementCard>
+    </v-dialog>
   </v-card>
 </template>
 
@@ -109,9 +127,11 @@ import { computed, onMounted, ref } from "vue";
 import AideCard from "./AideCard.vue";
 import { controller } from "../logic/logic";
 import { Formatters } from "@/utils";
+import FinancesReglementCard from "./FinancesReglementCard.vue";
 const props = defineProps<{
   token: string;
   dossier: DossierExt;
+  isPaiementOpen: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -148,4 +168,6 @@ async function fetchStructures() {
   if (res === undefined) return;
   structures.value = res || {};
 }
+
+const showReglement = ref(false);
 </script>

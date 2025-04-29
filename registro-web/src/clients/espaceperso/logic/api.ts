@@ -16,6 +16,7 @@ export type Time = string & { __opaque__: "Time" };
 // registro/controllers/espaceperso.Data
 export interface Data {
   Dossier: DossierExt;
+  IsPaiementOpen: boolean;
 }
 // registro/controllers/espaceperso.FichesanitaireExt
 export interface FichesanitaireExt {

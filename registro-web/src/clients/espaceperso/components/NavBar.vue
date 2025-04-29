@@ -1,41 +1,5 @@
 <template>
-  <v-navigation-drawer app v-model="showSideBar" temporary>
-    <v-list-item title="Registro - Espace personnel" :subtitle="version">
-    </v-list-item>
-    <v-divider></v-divider>
-
-    <v-list-item
-      prepend-icon="mdi-home-account"
-      link
-      :to="{ path: '/' }"
-      color="primary"
-    >
-      Tableau de bord
-    </v-list-item>
-    <!-- <v-list-item
-      prepend-icon="mdi-image-album"
-      link
-      :to="{ name: 'photos' }"
-      color="primary"
-    >
-      Albums photos
-    </v-list-item> -->
-    <!-- <v-list-item
-      prepend-icon="mdi-account"
-      link
-      :to="{ path: '/equipiers' }"
-      color="primary"
-    >
-      Equipiers
-    </v-list-item>
-    <v-divider></v-divider> -->
-  </v-navigation-drawer>
-
   <v-app-bar rounded elevation="4" color="secondary">
-    <v-app-bar-nav-icon
-      v-if="!props.hideMenu"
-      @click="showSideBar = !showSideBar"
-    ></v-app-bar-nav-icon>
     <v-app-bar-title>
       <v-row>
         <v-col align-self="center" cols="auto">

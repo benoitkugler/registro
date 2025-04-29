@@ -58,7 +58,8 @@ func (ct *Controller) Load(c echo.Context) error {
 }
 
 type Data struct {
-	Dossier logic.DossierExt
+	Dossier        logic.DossierExt
+	IsPaiementOpen bool
 }
 
 func (ct *Controller) load(id ds.IdDossier) (Data, error) {
@@ -69,6 +70,7 @@ func (ct *Controller) load(id ds.IdDossier) (Data, error) {
 
 	return Data{
 		dossier.Publish(ct.key),
+		false, // TODO
 	}, nil
 }
 

@@ -92,8 +92,9 @@
         </v-card>
 
         <FinancesCard
-          :dossier="data.Dossier"
           :token="token"
+          :dossier="data.Dossier"
+          :is-paiement-open="data.IsPaiementOpen"
           @refresh="fetchData"
         ></FinancesCard>
       </v-col>
