@@ -18,6 +18,7 @@ import (
 	"registro/crypto"
 	"registro/sql/files"
 	fs "registro/sql/files"
+	pr "registro/sql/personnes"
 	"registro/utils"
 
 	"github.com/labstack/echo/v4"
@@ -50,7 +51,7 @@ func (ct *Controller) Get(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	return sendBlob(c, content, file.NomClient)
+	return SendBlob(c, content, file.NomClient)
 }
 
 // GetMiniature returns a placeholder image on error
@@ -69,7 +70,7 @@ func (ct *Controller) GetMiniature(c echo.Context) error {
 	return c.Blob(200, mime.TypeByExtension(".png"), content)
 }
 
-func sendBlob(c echo.Context, content []byte, name string) error {
+func SendBlob(c echo.Context, content []byte, name string) error {
 	mimeType := mime.TypeByExtension(path.Ext(name))
 	u := url.URL{Path: name}
 	name = u.String()
@@ -144,4 +145,45 @@ func NewPublicFile(key crypto.Encrypter, file files.File) PublicFile {
 		NomClient: file.NomClient,
 		Uploaded:  file.Uploaded,
 	}
+}
+
+func DemandeVaccin(db fs.DB) (fs.Demande, error) {
+	demandes, err := fs.SelectAllDemandes(db)
+	if err != nil {
+		return fs.Demande{}, utils.SQLError(err)
+	}
+	for _, demande := range demandes {
+		if demande.Categorie == fs.Vaccins {
+			return demande, nil
+		}
+	}
+	return fs.Demande{}, errors.New("missing Demande for categorie <Vaccins>")
+}
+
+func LoadVaccins(db fs.DB, key crypto.Encrypter, personnes []pr.IdPersonne) (map[pr.IdPersonne][]PublicFile, fs.Demande, error) {
+	vaccinDemande, err := DemandeVaccin(db)
+	if err != nil {
+		return nil, fs.Demande{}, err
+	}
+
+	links, err := fs.SelectFilePersonnesByIdPersonnes(db, personnes...)
+	if err != nil {
+		return nil, fs.Demande{}, utils.SQLError(err)
+	}
+	vaccinsByPersonne := links.ByIdDemande()[vaccinDemande.Id].ByIdPersonne()
+
+	files, err := fs.SelectFiles(db, links.IdFiles()...)
+	if err != nil {
+		return nil, fs.Demande{}, utils.SQLError(err)
+	}
+
+	out := make(map[pr.IdPersonne][]PublicFile, len(personnes))
+	for _, pers := range personnes {
+		var vaccinsListe []PublicFile
+		for _, link := range vaccinsByPersonne[pers] {
+			vaccinsListe = append(vaccinsListe, NewPublicFile(key, files[link.IdFile]))
+		}
+		out[pers] = vaccinsListe
+	}
+	return out, vaccinDemande, nil
 }

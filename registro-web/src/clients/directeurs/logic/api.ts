@@ -78,6 +78,13 @@ export interface EquipiersDemandeSetIn {
 export interface EquipiersInviteIn {
   OnlyOne: OptID_IdEquipier;
 }
+// registro/controllers/directeurs.FicheSanitaireExt
+export interface FicheSanitaireExt {
+  Personne: string;
+  State: FichesanitaireState;
+  Fiche: Fichesanitaire;
+  Vaccins: PublicFile[] | null;
+}
 // registro/controllers/directeurs.LogginOut
 export interface LogginOut {
   IsValid: boolean;
@@ -430,6 +437,14 @@ export interface Demande {
 }
 export type IdDemande = number & { __opaque__: "IdDemande" };
 export type IdFile = number & { __opaque__: "IdFile" };
+// registro/sql/personnes.Allergies
+export interface Allergies {
+  Asthme: boolean;
+  Alimentaires: boolean;
+  Medicamenteuses: boolean;
+  Autres: string;
+  ConduiteATenir: string;
+}
 // registro/sql/personnes.Approfondissement
 export const Approfondissement = {
   AAucun: 0,
@@ -501,9 +516,55 @@ export const DiplomeLabels: Record<Diplome, string> = {
   [Diplome.DZzautre]: "AUTRE",
 };
 
+// registro/sql/personnes.Fichesanitaire
+export interface Fichesanitaire {
+  IdPersonne: IdPersonne;
+  TraitementMedical: boolean;
+  Maladies: Maladies;
+  Allergies: Allergies;
+  DifficultesSante: string;
+  Recommandations: string;
+  Handicap: boolean;
+  Tel: Tel;
+  Medecin: Medecin;
+  LastModif: Time;
+  Mails: Mails;
+}
+// registro/sql/personnes.FichesanitaireState
+export const FichesanitaireState = {
+  NoFiche: 0,
+  Outdated: 1,
+  UpToDate: 2,
+} as const;
+export type FichesanitaireState =
+  (typeof FichesanitaireState)[keyof typeof FichesanitaireState];
+
+export const FichesanitaireStateLabels: Record<FichesanitaireState, string> = {
+  [FichesanitaireState.NoFiche]: "",
+  [FichesanitaireState.Outdated]: "",
+  [FichesanitaireState.UpToDate]: "",
+};
+
 export type IdPersonne = number & { __opaque__: "IdPersonne" };
 // registro/sql/personnes.Mails
 export type Mails = string[] | null;
+// registro/sql/personnes.Maladies
+export interface Maladies {
+  Rubeole: boolean;
+  Varicelle: boolean;
+  Angine: boolean;
+  Oreillons: boolean;
+  Scarlatine: boolean;
+  Coqueluche: boolean;
+  Otite: boolean;
+  Rougeole: boolean;
+  Rhumatisme: boolean;
+}
+// registro/sql/personnes.Medecin
+export interface Medecin {
+  Nom: string;
+  Tel: Tel;
+}
 // registro/sql/personnes.Nationnalite
 export const Nationnalite = {
   Autre: 0,
@@ -556,18 +617,20 @@ export interface Publicite {
 }
 // registro/sql/personnes.Sexe
 export const Sexe = {
-  Empty: 0,
+  NoSexe: 0,
   Woman: 1,
   Man: 2,
 } as const;
 export type Sexe = (typeof Sexe)[keyof typeof Sexe];
 
 export const SexeLabels: Record<Sexe, string> = {
-  [Sexe.Empty]: "",
+  [Sexe.NoSexe]: "",
   [Sexe.Woman]: "Femme",
   [Sexe.Man]: "Homme",
 };
 
+// registro/sql/personnes.Tel
+export type Tel = string;
 // registro/sql/personnes.Tels
 export type Tels = string[] | null;
 // registro/sql/shared.Date
@@ -771,6 +834,22 @@ export abstract class AbstractAPI {
     try {
       await Axios.post(fullUrl, params, { headers: this.getHeaders() });
       return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** ParticipantsGetFichesSanitaires performs the request and handles the error */
+  async ParticipantsGetFichesSanitaires() {
+    const fullUrl =
+      this.baseUrl + "/api/v1/directeurs/participants/fiches-sanitaires";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<FicheSanitaireExt[] | null> = await Axios.get(
+        fullUrl,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }

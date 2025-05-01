@@ -27,9 +27,9 @@ type Departement string
 type Sexe uint8
 
 const (
-	Empty Sexe = iota //
-	Woman             // Femme
-	Man               // Homme
+	NoSexe Sexe = iota //
+	Woman              // Femme
+	Man                // Homme
 )
 
 // Tel is a phone number

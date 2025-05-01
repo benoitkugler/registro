@@ -101,7 +101,7 @@ func randper_Pays() personnes.Pays {
 }
 
 func randper_Sexe() personnes.Sexe {
-	choix := [...]personnes.Sexe{personnes.Empty, personnes.Woman, personnes.Man}
+	choix := [...]personnes.Sexe{personnes.NoSexe, personnes.Woman, personnes.Man}
 	i := rand.Intn(len(choix))
 	return choix[i]
 }

@@ -15,12 +15,13 @@ import (
 	"registro/controllers/directeurs"
 	equipiers "registro/controllers/equipier"
 	"registro/controllers/espaceperso"
-	"registro/controllers/files"
+	fsAPI "registro/controllers/files"
 	"registro/controllers/inscriptions"
 	"registro/controllers/logic"
 	"registro/crypto"
+	"registro/generators/pdfcreator"
 	cp "registro/sql/camps"
-	fs "registro/sql/files"
+	"registro/sql/files"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -31,9 +32,16 @@ func main() {
 	flag.Parse()
 	isDev := *devPtr
 
-	asso, keys, dbCreds, fs, smtp, joomeo := loadEnvs(isDev)
+	asso, keys, dbCreds, smtp, joomeo, directories := loadEnvs(isDev)
 	encrypter := crypto.NewEncrypter(keys.EncryptKey)
 	fmt.Println("Loading env. -> OK.")
+	fmt.Println("\tFILES_DIR:", directories.Files)
+	fmt.Println("\tASSETS_DIR:", directories.Assets)
+	fmt.Println("\tCACHE_DIR:", directories.Cache)
+
+	err := pdfcreator.Init(directories.Cache, directories.Assets)
+	check(err)
+	fmt.Println("Seting up pdfcreator -> OK.")
 
 	// TODO: setup APIS
 	helloasso := config.Helloasso{}
@@ -43,6 +51,8 @@ func main() {
 	check(err)
 	check(db.Ping())
 	fmt.Println("Connecting DB -> OK.")
+
+	fs := files.NewFileSystem(directories.Files)
 
 	e := echo.New()
 	e.HideBanner = true
@@ -63,7 +73,7 @@ func main() {
 
 	equipiersCt := equipiers.NewController(db, encrypter, fs, joomeo)
 
-	filesCt := files.NewController(db, encrypter, fs)
+	filesCt := fsAPI.NewController(db, encrypter, fs)
 
 	if isDev {
 		fmt.Println("Running in dev mode :")
@@ -109,7 +119,7 @@ func main() {
 	e.Logger.Fatal(e.Start(adress))
 }
 
-func loadEnvs(devMode bool) (config.Asso, config.Keys, config.DB, fs.FileSystem, config.SMTP, config.Joomeo) {
+func loadEnvs(devMode bool) (config.Asso, config.Keys, config.DB, config.SMTP, config.Joomeo, config.Directories) {
 	asso, err := config.NewAsso()
 	check(err)
 
@@ -119,26 +129,16 @@ func loadEnvs(devMode bool) (config.Asso, config.Keys, config.DB, fs.FileSystem,
 	db, err := config.NewDB()
 	check(err)
 
-	root := os.Getenv("FILES_ROOT")
-	if root == "" {
-		log.Fatal("missing env. FILES_ROOT (files directory)")
-	}
-	// check that the dir exists
-	dir, err := os.Stat(root)
-	check(err)
-	if !dir.IsDir() {
-		log.Fatal("invalid FILES_ROOT", root)
-	}
-	fmt.Println("using FILES_ROOT:", root)
-	fileSystem := fs.NewFileSystem(root)
-
 	smtp, err := config.NewSMTP(!devMode)
 	check(err)
 
 	joomeo, err := config.NewJoomeo()
 	check(err)
 
-	return asso, keys, db, fileSystem, smtp, joomeo
+	dirs, err := config.NewDirectories()
+	check(err)
+
+	return asso, keys, db, smtp, joomeo, dirs
 }
 
 func getAdress(devMode bool) string {
@@ -222,7 +222,7 @@ func setupClientApps(e *echo.Echo) {
 	e.Group("/static", middleware.Gzip(), cacheStatic).Static("/*", "static")
 }
 
-func setupRoutesFiles(e *echo.Echo, filesCt *files.Controller) {
+func setupRoutesFiles(e *echo.Echo, filesCt *fsAPI.Controller) {
 	// every endpoint expected a key=<idCrypted> query param
 	e.GET("/api/v1/documents", filesCt.Get)
 	e.GET("/api/v1/documents/miniature", filesCt.GetMiniature)

@@ -22,41 +22,10 @@ import (
 
 // fiches sanitaires
 
-type FichesanitaireState uint8
-
-const (
-	Empty FichesanitaireState = iota
-	Outdated
-	UpToDate
-)
-
-func fsState(fs pr.Fichesanitaire, inscription time.Time) FichesanitaireState {
-	if fs.LastModif.IsZero() { // never filled
-		return Empty
-	}
-	if fs.LastModif.Before(inscription) { // filled some time ago
-		return Outdated
-	}
-	return UpToDate
-}
-
-func (ct *Controller) demandeVaccins() (fs.Demande, error) {
-	demandes, err := fs.SelectAllDemandes(ct.db)
-	if err != nil {
-		return fs.Demande{}, utils.SQLError(err)
-	}
-	for _, demande := range demandes {
-		if demande.Categorie == fs.Vaccins {
-			return demande, nil
-		}
-	}
-	return fs.Demande{}, errors.New("missing Demande for categorie <Vaccins>")
-}
-
 type FichesanitaireExt struct {
 	Personne             string
 	IsLocked             bool
-	State                FichesanitaireState
+	State                pr.FichesanitaireState
 	Fichesanitaire       pr.Fichesanitaire
 	RespoTels            pr.Tels
 	RespoSecuriteSociale string
@@ -79,10 +48,6 @@ func (ct *Controller) LoadFichesanitaires(c echo.Context) error {
 }
 
 func (ct *Controller) loadFichesanitaires(id ds.IdDossier) (out []FichesanitaireExt, _ error) {
-	vaccinDemande, err := ct.demandeVaccins()
-	if err != nil {
-		return nil, err
-	}
 	dossier, err := logic.LoadDossier(ct.db, id)
 	if err != nil {
 		return nil, err
@@ -91,14 +56,9 @@ func (ct *Controller) loadFichesanitaires(id ds.IdDossier) (out []Fichesanitaire
 	idPersonnes := dossier.Participants.IdPersonnes()
 
 	// load existing vaccins
-	links, err := fs.SelectFilePersonnesByIdDemandes(ct.db, vaccinDemande.Id)
+	vaccins, vaccinDemande, err := fsAPI.LoadVaccins(ct.db, ct.key, idPersonnes)
 	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-	vaccinsByPersonne := links.ByIdPersonne()
-	vaccins, err := fs.SelectFiles(ct.db, links.IdFiles()...)
-	if err != nil {
-		return nil, utils.SQLError(err)
+		return nil, err
 	}
 
 	fiches, err := pr.SelectFichesanitairesByIdPersonnes(ct.db, idPersonnes...)
@@ -118,23 +78,19 @@ func (ct *Controller) loadFichesanitaires(id ds.IdDossier) (out []Fichesanitaire
 		if camp.AgeDebutCamp(pers.DateNaissance) >= 18 {
 			continue
 		}
-		var vaccinsListe []fsAPI.PublicFile
-		for _, link := range vaccinsByPersonne[pers.Id] {
-			vaccinsListe = append(vaccinsListe, fsAPI.NewPublicFile(ct.key, vaccins[link.IdFile]))
-		}
 
 		fiche := fichesByPersonne[pers.Id]
 		fiche.IdPersonne = pers.Id // init ID for empty fiche
 		fsExt := FichesanitaireExt{
 			pers.PrenomNOM(),
 			isFichesanitaireLocked(responsable.Mail, fiche.Mails),
-			fsState(fiche, dossier.Dossier.MomentInscription),
+			fiche.State(dossier.Dossier.MomentInscription),
 			fiche,
 			responsable.Tels,
 			responsable.SecuriteSociale,
 
 			vaccinDemande,
-			vaccinsListe,
+			vaccins[pers.Id],
 		}
 		if fsExt.IsLocked { // hide sensitive information
 			fsExt.Fichesanitaire = pr.Fichesanitaire{
@@ -252,7 +208,7 @@ func (ct *Controller) UploadVaccin(c echo.Context) error {
 }
 
 func (ct *Controller) uploadVaccin(idDossier ds.IdDossier, idPersonne pr.IdPersonne, content []byte, filename string) (fsAPI.PublicFile, error) {
-	vaccinDemande, err := ct.demandeVaccins()
+	vaccinDemande, err := fsAPI.DemandeVaccin(ct.db)
 	if err != nil {
 		return fsAPI.PublicFile{}, err
 	}

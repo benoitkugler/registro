@@ -124,7 +124,7 @@ func Test_loadFichesanitaires(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(fs) == 1)
 	tu.Assert(t, fs[0].Fichesanitaire.IdPersonne == mineur.Id)
-	tu.Assert(t, !fs[0].IsLocked && fs[0].State == Empty)
+	tu.Assert(t, !fs[0].IsLocked && fs[0].State == pr.NoFiche)
 	tu.Assert(t, len(fs[0].VaccinsFiles) == 1)
 }
 

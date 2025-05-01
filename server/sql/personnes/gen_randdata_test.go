@@ -134,7 +134,7 @@ func randPublicite() Publicite {
 }
 
 func randSexe() Sexe {
-	choix := [...]Sexe{Empty, Woman, Man}
+	choix := [...]Sexe{NoSexe, Woman, Man}
 	i := rand.Intn(len(choix))
 	return choix[i]
 }

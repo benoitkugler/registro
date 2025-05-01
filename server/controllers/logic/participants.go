@@ -5,7 +5,7 @@ import (
 
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
-	"registro/sql/personnes"
+	pr "registro/sql/personnes"
 	"registro/utils"
 )
 
@@ -17,7 +17,7 @@ type ParticipantExt struct {
 	MomentInscription time.Time
 }
 
-func NewParticipantExt(participant cps.Participant, personne personnes.Personne, camp cps.Camp, dossier ds.Dossier) ParticipantExt {
+func NewParticipantExt(participant cps.Participant, personne pr.Personne, camp cps.Camp, dossier ds.Dossier) ParticipantExt {
 	return ParticipantExt{
 		cps.ParticipantPersonne{Participant: participant, Personne: personne},
 		camp.AgeDebutCamp(personne.DateNaissance),
