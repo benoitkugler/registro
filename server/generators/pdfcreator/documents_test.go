@@ -97,6 +97,17 @@ func randFicheSanitaires() []FicheSanitaire {
 	return out
 }
 
+func TestEmptyFicheSanitair(t *testing.T) {
+	data := []FicheSanitaire{
+		{},
+	}
+	ti := time.Now()
+	content, err := CreateFicheSanitaires(cfg, data)
+	fmt.Println(time.Since(ti))
+	tu.AssertNoErr(t, err)
+	tu.Write(t, "FicheSanitairesEmpty.pdf", content)
+}
+
 func TestFicheSanitaire(t *testing.T) {
 	data := randFicheSanitaires()
 
