@@ -104,7 +104,7 @@
   <h5>Coordonnées du responsable légal :</h5>
 
   <div style="display: flex">
-    <div>
+    <div style="min-width: 40%">
       <b>Nom : </b>{{ .Responsable.NOMPrenom}} <br />
       <b>Sécurité sociale : </b> {{ .Responsable.SecuriteSociale }} <br />
       <b>Numéro d'urgence : </b> {{ .FicheSanitaire.Tel.String }}
@@ -120,8 +120,8 @@
   <hr />
 
   <h5>Médecin traitant:</h5>
-  <div style="display: flex; justify-content: space-between">
-    <div>{{ .FicheSanitaire.Medecin.Nom }}</div>
+  <div style="display: flex">
+    <div style="width: 50%"><b>Nom :</b>{{ .FicheSanitaire.Medecin.Nom }}</div>
     <div><b>Tél. :</b> {{ .FicheSanitaire.Medecin.Tel.String }}</div>
   </div>
 

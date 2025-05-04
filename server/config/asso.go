@@ -44,7 +44,7 @@ var acve = Asso{
 	ContactTel:  "04 75 22 03 95",
 	ContactMail: "inscriptions@acve.asso.fr",
 
-	Icon:           "assets/logo_acve.png",
+	Icon:           "logo_acve.png",
 	ColorPrimary:   "#b8dbf1", // rgb(184, 219, 241)
 	ColorSecondary: "#feee00",
 
@@ -72,7 +72,7 @@ var repere = Asso{
 	ContactTel:  "",
 	ContactMail: "info@lerepere.ch",
 
-	Icon:           "assets/logo_repere.png",
+	Icon:           "logo_repere.png",
 	ColorPrimary:   "#2b678a",
 	ColorSecondary: "#2eaadc",
 
