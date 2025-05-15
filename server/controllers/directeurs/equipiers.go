@@ -1,11 +1,9 @@
 package directeurs
 
 import (
-	"bytes"
 	"database/sql"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"slices"
 	"strings"
@@ -486,32 +484,6 @@ func (ct *Controller) compileFilesEquipiers(user cps.IdCamp) ([]fileAndPrefix, e
 	return out, nil
 }
 
-func (ct *Controller) zipFiles(toZip []fileAndPrefix, resp io.Writer) error {
-	archive := utils.NewZip(resp)
-
-	for _, file := range toZip {
-		content, err := ct.files.Load(file.id, false)
-		if err != nil {
-			return err
-		}
-		err = archive.AddFile(file.fullName, bytes.NewReader(content))
-		if err != nil {
-			return err
-		}
-		if flusher, ok := resp.(http.Flusher); ok {
-			flusher.Flush()
-		}
-
-	}
-
-	err := archive.Close()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (ct *Controller) streamFilesEquipiers(user cps.IdCamp, resp http.ResponseWriter) error {
 	camp, err := cps.SelectCamp(ct.db, user)
 	if err != nil {
@@ -523,12 +495,16 @@ func (ct *Controller) streamFilesEquipiers(user cps.IdCamp, resp http.ResponseWr
 		return err
 	}
 
-	resp.Header().Set(echo.HeaderContentType, "application/x-zip")
-	resp.Header().Set(echo.HeaderContentDisposition, utils.AttachementHeader(fmt.Sprintf("Documents Equipe %s.zip", camp.Label())))
-	if flusher, ok := resp.(http.Flusher); ok {
-		// this is needed so that browsers display a progress bar
-		flusher.Flush()
-	}
-	// write directly into resp (go is awesome !)
-	return ct.zipFiles(toZip, resp)
+	return files.StreamZip(resp, fmt.Sprintf("Documents Equipe %s.zip", camp.Label()), func(yield func(files.ZipItem, error) bool) {
+		for _, file := range toZip {
+			content, err := ct.files.Load(file.id, false)
+			if err != nil {
+				yield(files.ZipItem{}, err)
+				return
+			}
+			if !yield(files.ZipItem{Name: file.fullName, Content: content}, nil) {
+				return
+			}
+		}
+	})
 }

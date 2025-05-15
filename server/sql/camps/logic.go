@@ -119,6 +119,14 @@ func (cd CampLoader) IdDossiers() []ds.IdDossier {
 	return cd.participants.IdDossiers()
 }
 
+func (cd CampLoader) Personnes() pr.Personnes {
+	out := make(pr.Personnes)
+	for _, p := range cd.participants {
+		out[p.IdPersonne] = cd.personnes[p.IdPersonne]
+	}
+	return out
+}
+
 func (cd CampLoader) Stats() StatistiquesInscrits {
 	var stats StatistiquesInscrits
 	for _, p := range cd.Participants() {

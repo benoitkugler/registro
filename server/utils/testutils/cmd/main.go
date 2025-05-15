@@ -61,6 +61,10 @@ func main() {
 	check(err)
 	enc := crypto.NewEncrypter(keys.EncryptKey)
 
+	dirs, err := config.NewDirectories()
+	check(err)
+	fileSys := fs.NewFileSystem(dirs.Files)
+
 	fmt.Println("Env loaded, using DB:", sqlCreds.Name)
 
 	switch *action {
@@ -74,9 +78,23 @@ func main() {
 		createStructureaide(db)
 	case "open_sondages":
 		openSondages(db)
+	case "create_files":
+		createFilesContent(db, fileSys)
 	default:
 		panic("invalid action")
 	}
+}
+
+func createFilesContent(db *sql.DB, fileSys fs.FileSystem) {
+	files, err := fs.SelectAllFiles(db)
+	check(err)
+	for _, file := range files {
+		err = fileSys.Save(file.Id, testutils.PngData, false)
+		check(err)
+		err = fileSys.Save(file.Id, testutils.PngData, true)
+		check(err)
+	}
+	fmt.Println("Written files and miniatures:", len(files))
 }
 
 func openSondages(db *sql.DB) {

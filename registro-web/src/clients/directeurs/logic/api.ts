@@ -80,6 +80,7 @@ export interface EquipiersInviteIn {
 }
 // registro/controllers/directeurs.FicheSanitaireExt
 export interface FicheSanitaireExt {
+  IdParticipant: IdParticipant;
   Personne: string;
   State: FichesanitaireState;
   Fiche: Fichesanitaire;
@@ -92,7 +93,8 @@ export interface LogginOut {
 }
 // registro/controllers/files.PublicFile
 export interface PublicFile {
-  Id: string;
+  Key: string;
+  Id: IdFile;
   Taille: Int;
   NomClient: string;
   Uploaded: Time;
@@ -540,9 +542,9 @@ export type FichesanitaireState =
   (typeof FichesanitaireState)[keyof typeof FichesanitaireState];
 
 export const FichesanitaireStateLabels: Record<FichesanitaireState, string> = {
-  [FichesanitaireState.NoFiche]: "",
-  [FichesanitaireState.Outdated]: "",
-  [FichesanitaireState.UpToDate]: "",
+  [FichesanitaireState.NoFiche]: "Vide",
+  [FichesanitaireState.Outdated]: "Pas à jour",
+  [FichesanitaireState.UpToDate]: "Remplie",
 };
 
 export type IdPersonne = number & { __opaque__: "IdPersonne" };
@@ -714,6 +716,19 @@ export abstract class AbstractAPI {
     }
   }
 
+  /** ParticipantsStreamFichesAndVaccins performs the request and handles the error */
+  async ParticipantsStreamFichesAndVaccins() {
+    const fullUrl =
+      this.baseUrl + "/api/v1/directeurs/participants/stream-fiches-sanitaires";
+    this.startRequest();
+    try {
+      await Axios.get(fullUrl, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
   /** SelectPersonne performs the request and handles the error */
   async SelectPersonne(params: { search: string }) {
     const fullUrl = this.baseUrl + "/api/v1/directeurs/shared/personne";
@@ -850,6 +865,56 @@ export abstract class AbstractAPI {
         { headers: this.getHeaders() },
       );
       return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** ParticipantsDownloadFicheSanitaire performs the request and handles the error */
+  async ParticipantsDownloadFicheSanitaire(params: {
+    idParticipant: IdParticipant;
+  }) {
+    const fullUrl =
+      this.baseUrl + "/api/v1/directeurs/participants/download-fiche-sanitaire";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<Blob> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { idParticipant: String(params["idParticipant"]) },
+        responseType: "arraybuffer",
+      });
+
+      const header = rep.headers["content-disposition"];
+      const startIndex = header.indexOf("filename=") + 9;
+      const endIndex = header.length;
+      const filename = decodeURIComponent(
+        header.substring(startIndex, endIndex),
+      );
+      return { blob: rep.data, filename: filename };
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** ParticipantsDownloadAllFichesSanitaires performs the request and handles the error */
+  async ParticipantsDownloadAllFichesSanitaires() {
+    const fullUrl =
+      this.baseUrl +
+      "/api/v1/directeurs/participants/download-fiches-sanitaires";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<Blob> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        responseType: "arraybuffer",
+      });
+
+      const header = rep.headers["content-disposition"];
+      const startIndex = header.indexOf("filename=") + 9;
+      const endIndex = header.length;
+      const filename = decodeURIComponent(
+        header.substring(startIndex, endIndex),
+      );
+      return { blob: rep.data, filename: filename };
     } catch (error) {
       this.handleError(error);
     }

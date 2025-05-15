@@ -14,7 +14,7 @@
 
 <script setup lang="ts">
 import { nextTick } from "vue";
-import { onMounted, ref, useTemplateRef } from "vue";
+import { ref, useTemplateRef } from "vue";
 
 const props = defineProps<{
   label?: string;

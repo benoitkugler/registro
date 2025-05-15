@@ -29,21 +29,6 @@ export interface FichesanitaireExt {
   VaccinsDemande: Demande;
   VaccinsFiles: PublicFile[] | null;
 }
-// registro/controllers/espaceperso.FichesanitaireState
-export const FichesanitaireState = {
-  Empty: 0,
-  Outdated: 1,
-  UpToDate: 2,
-} as const;
-export type FichesanitaireState =
-  (typeof FichesanitaireState)[keyof typeof FichesanitaireState];
-
-export const FichesanitaireStateLabels: Record<FichesanitaireState, string> = {
-  [FichesanitaireState.Empty]: "",
-  [FichesanitaireState.Outdated]: "",
-  [FichesanitaireState.UpToDate]: "",
-};
-
 // registro/controllers/espaceperso.Joomeo
 export interface Joomeo {
   SpaceURL: string;
@@ -81,7 +66,8 @@ export interface UpdateSondageIn {
 }
 // registro/controllers/files.PublicFile
 export interface PublicFile {
-  Id: string;
+  Key: string;
+  Id: IdFile;
   Taille: Int;
   NomClient: string;
   Uploaded: Time;
@@ -658,6 +644,21 @@ export interface Fichesanitaire {
   LastModif: Time;
   Mails: Mails;
 }
+// registro/sql/personnes.FichesanitaireState
+export const FichesanitaireState = {
+  NoFiche: 0,
+  Outdated: 1,
+  UpToDate: 2,
+} as const;
+export type FichesanitaireState =
+  (typeof FichesanitaireState)[keyof typeof FichesanitaireState];
+
+export const FichesanitaireStateLabels: Record<FichesanitaireState, string> = {
+  [FichesanitaireState.NoFiche]: "Vide",
+  [FichesanitaireState.Outdated]: "Pas à jour",
+  [FichesanitaireState.UpToDate]: "Remplie",
+};
+
 export type IdPersonne = number & { __opaque__: "IdPersonne" };
 // registro/sql/personnes.Mails
 export type Mails = string[] | null;
@@ -730,14 +731,14 @@ export interface Publicite {
 }
 // registro/sql/personnes.Sexe
 export const Sexe = {
-  Empty: 0,
+  NoSexe: 0,
   Woman: 1,
   Man: 2,
 } as const;
 export type Sexe = (typeof Sexe)[keyof typeof Sexe];
 
 export const SexeLabels: Record<Sexe, string> = {
-  [Sexe.Empty]: "",
+  [Sexe.NoSexe]: "",
   [Sexe.Woman]: "Femme",
   [Sexe.Man]: "Homme",
 };

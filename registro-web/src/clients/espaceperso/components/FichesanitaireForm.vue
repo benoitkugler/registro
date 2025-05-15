@@ -419,7 +419,7 @@ const showConduiteATenir = computed(
 const ownerMails = computed(() => props.fiche.Fichesanitaire.Mails || []);
 
 const subtitle = computed(() =>
-  props.fiche.State == FichesanitaireState.Empty
+  props.fiche.State == FichesanitaireState.NoFiche
     ? undefined
     : `Dernière modification : ${Formatters.time(
         props.fiche.Fichesanitaire.LastModif

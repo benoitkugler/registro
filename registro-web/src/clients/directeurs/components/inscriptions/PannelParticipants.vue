@@ -1,6 +1,13 @@
 <template>
   <v-card v-if="data != null" title="Participants">
     <template #append>
+      <v-btn @click="showFichesSanitaires = true">
+        <template #prepend>
+          <v-icon>mdi-pill</v-icon>
+        </template>
+        Fiches sanitaires</v-btn
+      >
+      <v-divider thickness="1" vertical class="mx-2"></v-divider>
       <v-tooltip text="Trier par moment d'inscription">
         <template #activator="{ props: tooltipProps }">
           <v-btn
@@ -59,6 +66,11 @@
         @save="updateParticipant"
       ></ParticipantEdit>
     </v-dialog>
+
+    <!-- fiches sanitaires -->
+    <v-dialog v-model="showFichesSanitaires">
+      <FichesSanitairesPannel></FichesSanitairesPannel>
+    </v-dialog>
   </v-card>
   <v-skeleton-loader v-else type="card"></v-skeleton-loader>
 </template>
@@ -72,6 +84,7 @@ import {
   type ParticipantExt,
 } from "../../logic/api";
 import { Participants } from "@/utils";
+import FichesSanitairesPannel from "./FichesSanitairesPannel.vue";
 
 const props = defineProps<{}>();
 
@@ -118,4 +131,6 @@ async function updateParticipant(p: Participant) {
   // reload the list
   loadParticipants();
 }
+
+const showFichesSanitaires = ref(false);
 </script>

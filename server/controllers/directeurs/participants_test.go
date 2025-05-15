@@ -29,6 +29,11 @@ func TestFichesSanitaires(t *testing.T) {
 	pe3, err := pr.Personne{}.Insert(db)
 	tu.AssertNoErr(t, err)
 
+	err = pr.Fichesanitaire{IdPersonne: pe1.Id, TraitementMedical: true}.Insert(db)
+	tu.AssertNoErr(t, err)
+	err = pr.Fichesanitaire{IdPersonne: pe2.Id, TraitementMedical: true}.Insert(db)
+	tu.AssertNoErr(t, err)
+
 	dossier, err := ds.Dossier{IdTaux: 1, IdResponsable: pe1.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
 
@@ -46,5 +51,8 @@ func TestFichesSanitaires(t *testing.T) {
 	tu.Assert(t, len(fiches) == 3)
 
 	_, _, err = ct.downloadFicheSanitaire(camp.Id, pa1.Id)
+	tu.AssertNoErr(t, err)
+
+	_, _, err = ct.downloadFichesSanitaires(camp.Id)
 	tu.AssertNoErr(t, err)
 }

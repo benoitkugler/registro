@@ -1,8 +1,8 @@
 package directeurs
 
 import (
-	"bytes"
 	"database/sql"
+	"net/http/httptest"
 	"os"
 	"testing"
 
@@ -175,10 +175,11 @@ func TestDemandes(t *testing.T) {
 	files, err := ct.compileFilesEquipiers(camp.Id)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(files) == 2)
-	var buf bytes.Buffer
-	err = ct.zipFiles(files, &buf)
+
+	buf := httptest.NewRecorder()
+	err = ct.streamFilesEquipiers(camp.Id, buf)
 	tu.AssertNoErr(t, err)
-	tu.Write(t, "files.zip", buf.Bytes())
+	tu.Write(t, "files.zip", buf.Body.Bytes())
 }
 
 // func TestEquipe(t *testing.T) {

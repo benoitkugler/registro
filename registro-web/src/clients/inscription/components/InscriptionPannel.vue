@@ -156,7 +156,7 @@ const isStep1Valid = computed(() => {
   return !!(
     resp.Nom.length &&
     resp.Prenom.length &&
-    resp.Sexe != Sexe.Empty &&
+    resp.Sexe != Sexe.NoSexe &&
     !isDateZero(resp.DateNaissance) &&
     age >= 18 &&
     resp.Mail.length &&
@@ -176,7 +176,7 @@ const isStep2Valid = computed(() => {
         p.IdCamp > 0 &&
         p.Nom.length &&
         p.Prenom.length &&
-        p.Sexe != Sexe.Empty &&
+        p.Sexe != Sexe.NoSexe &&
         !isDateZero(p.DateNaissance)
     )
   );

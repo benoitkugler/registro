@@ -382,7 +382,7 @@ async function uploadFile(file: File, idDemande: IdDemande) {
 }
 
 async function deleteFile(file: PublicFile, idDemande: IdDemande) {
-  const res = await controller.DeleteDocument({ key: file.Id });
+  const res = await controller.DeleteDocument({ key: file.Key });
   if (res === undefined) return;
   controller.showMessage("Document supprimé avec succès.");
   const item = demandesL.value.find((d) => d.Demande.Id == idDemande)!;
@@ -422,7 +422,7 @@ const isFormValid = computed(
     !!(
       inner.value.Nom &&
       inner.value.Prenom &&
-      inner.value.Sexe != Sexe.Empty &&
+      inner.value.Sexe != Sexe.NoSexe &&
       !isDateZero(inner.value.DateNaissance) &&
       inner.value.VilleNaissance &&
       inner.value.DepartementNaissance &&

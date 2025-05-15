@@ -16,8 +16,7 @@ func NewZip(dst io.Writer) *Zip {
 	return &Zip{z: zip.NewWriter(dst)}
 }
 
-// AddFile ajoute un fichier. La gestion de l'erreur est reporté à
-// la méthode `Close`.
+// AddFile ajoute un fichier.
 func (a *Zip) AddFile(name string, content io.Reader) error {
 	w, err := a.z.Create(name)
 	if err != nil {

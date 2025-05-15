@@ -55,7 +55,7 @@ func (fs FileSystem) Load(id IdFile, miniature bool) ([]byte, error) {
 	return content, nil
 }
 
-func (fs FileSystem) save(doc IdFile, fileContent []byte, miniature bool) error {
+func (fs FileSystem) Save(doc IdFile, fileContent []byte, miniature bool) error {
 	filepath := doc.filepath(fs.root, miniature)
 	err := os.WriteFile(filepath, fileContent, os.ModePerm)
 	if err != nil {
@@ -78,11 +78,11 @@ func UploadFile(fs FileSystem, db DB, id IdFile, fileContent []byte, filename st
 	if err != nil {
 		return File{}, utils.SQLError(err)
 	}
-	err = fs.save(id, fileContent, false)
+	err = fs.Save(id, fileContent, false)
 	if err != nil {
 		return File{}, err
 	}
-	err = fs.save(id, minContent, true)
+	err = fs.Save(id, minContent, true)
 	if err != nil {
 		return File{}, err
 	}

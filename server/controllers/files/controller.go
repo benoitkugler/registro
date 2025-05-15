@@ -1,18 +1,20 @@
 package files
 
 import (
+	"bytes"
 	"database/sql"
 	_ "embed"
 	"errors"
 	"fmt"
 	"io"
+	"iter"
 	"log"
 	"mime"
 	"mime/multipart"
+	"net/http"
 	"net/url"
 	"path"
 	"strconv"
-	"time"
 
 	"registro/assets"
 	"registro/crypto"
@@ -51,7 +53,8 @@ func (ct *Controller) Get(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	return SendBlob(c, content, file.NomClient)
+	mimeType := SetBlobHeader(c, content, file.NomClient)
+	return c.Blob(200, mimeType, content)
 }
 
 // GetMiniature returns a placeholder image on error
@@ -70,13 +73,52 @@ func (ct *Controller) GetMiniature(c echo.Context) error {
 	return c.Blob(200, mime.TypeByExtension(".png"), content)
 }
 
-func SendBlob(c echo.Context, content []byte, name string) error {
-	mimeType := mime.TypeByExtension(path.Ext(name))
+// SetBlobHeader sets Content-Disposition and Content-Length headers
+// and returns the mime type
+func SetBlobHeader(c echo.Context, content []byte, name string) string {
 	u := url.URL{Path: name}
 	name = u.String()
 	c.Response().Header().Set("Content-Disposition", "attachment; filename="+name)
 	c.Response().Header().Set("Content-Length", strconv.Itoa(len(content)))
-	return c.Blob(200, mimeType, content)
+	return mime.TypeByExtension(path.Ext(name))
+}
+
+type ZipItem struct {
+	Name    string
+	Content []byte
+}
+
+// StreamZip writes [files] into a .ZIP response,
+// properly escaping [archiveName].
+func StreamZip(resp http.ResponseWriter, archiveName string, files iter.Seq2[ZipItem, error]) error {
+	resp.Header().Set(echo.HeaderContentType, "application/x-zip")
+	resp.Header().Set(echo.HeaderContentDisposition, utils.AttachementHeader(archiveName))
+	if flusher, ok := resp.(http.Flusher); ok {
+		// this is needed so that browsers display a progress bar
+		flusher.Flush()
+	}
+
+	archive := utils.NewZip(resp)
+
+	for file, err := range files {
+		if err != nil {
+			return err
+		}
+		err := archive.AddFile(file.Name, bytes.NewReader(file.Content))
+		if err != nil {
+			return err
+		}
+		if flusher, ok := resp.(http.Flusher); ok {
+			flusher.Flush()
+		}
+	}
+
+	err := archive.Close()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Delete removes the file identified by the crypted ID [key]
@@ -130,20 +172,14 @@ func ReadUpload(fileHeader *multipart.FileHeader) (content []byte, filename stri
 // PublicFile expose un accès protégé à un fichier,
 // permettant téléchargement/suppression/modification.
 type PublicFile struct {
-	Id string // crypted
-
-	// En bytes
-	Taille    int
-	NomClient string
-	Uploaded  time.Time
+	Key string // crypted
+	files.File
 }
 
 func NewPublicFile(key crypto.Encrypter, file files.File) PublicFile {
 	return PublicFile{
-		Id:        crypto.EncryptID(key, file.Id),
-		Taille:    file.Taille,
-		NomClient: file.NomClient,
-		Uploaded:  file.Uploaded,
+		Key:  crypto.EncryptID(key, file.Id),
+		File: file,
 	}
 }
 

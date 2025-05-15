@@ -114,7 +114,7 @@ func TestController_aides(t *testing.T) {
 
 	file, err := ct.uploadAideJustificatif(aide.Id, tu.PngData, "test1.png")
 	tu.AssertNoErr(t, err)
-	tu.Assert(t, file.Id != "")
+	tu.Assert(t, file.Key != "")
 
 	_, err = ct.uploadAideJustificatif(aide.Id, tu.PngData, "test2.png")
 	tu.AssertNoErr(t, err)

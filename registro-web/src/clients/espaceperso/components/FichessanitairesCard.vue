@@ -7,7 +7,7 @@
           <v-icon
             class="ml-2"
             v-if="
-              fiche.State == FichesanitaireState.Empty ||
+              fiche.State == FichesanitaireState.NoFiche ||
               fiche.State == FichesanitaireState.Outdated ||
               !fiche.VaccinsFiles?.length
             "
@@ -96,7 +96,7 @@ async function uploadVaccin(index: number, file: File) {
 
 async function deleteVaccin(index: number, file: PublicFile) {
   const fiche = fiches.value[index];
-  const res = await controller.DeleteVaccin({ key: file.Id });
+  const res = await controller.DeleteVaccin({ key: file.Key });
   if (res === undefined) return;
   controller.showMessage("Le vaccin a bien été supprimé.");
   fiche.VaccinsFiles = (fiche.VaccinsFiles || []).filter(

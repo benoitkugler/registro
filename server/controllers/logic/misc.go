@@ -30,7 +30,8 @@ func LoadCamps(db cps.DB) ([]CampItem, error) {
 		return nil, utils.SQLError(err)
 	}
 	list := utils.MapValues(camps)
-	slices.SortFunc(list, func(a, b cps.Camp) int { return -a.DateDebut.Time().Compare(b.DateDebut.Time()) })
+	slices.SortFunc(list, func(a, b cps.Camp) int { return int(a.Id - b.Id) })
+	slices.SortStableFunc(list, func(a, b cps.Camp) int { return -a.DateDebut.Time().Compare(b.DateDebut.Time()) })
 
 	out := make([]CampItem, len(list))
 	for i, camp := range list {

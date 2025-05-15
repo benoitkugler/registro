@@ -97,14 +97,14 @@ export const NationnaliteLabels: Record<Nationnalite, string> = {
 export type Pays = string;
 // registro/sql/personnes.Sexe
 export const Sexe = {
-  Empty: 0,
+  NoSexe: 0,
   Woman: 1,
   Man: 2,
 } as const;
 export type Sexe = (typeof Sexe)[keyof typeof Sexe];
 
 export const SexeLabels: Record<Sexe, string> = {
-  [Sexe.Empty]: "",
+  [Sexe.NoSexe]: "",
   [Sexe.Woman]: "Femme",
   [Sexe.Man]: "Homme",
 };

@@ -141,7 +141,8 @@ export interface SearchDossierOut {
 }
 // registro/controllers/files.PublicFile
 export interface PublicFile {
-  Id: string;
+  Key: string;
+  Id: IdFile;
   Taille: Int;
   NomClient: string;
   Uploaded: Time;
@@ -609,6 +610,7 @@ export const MessageOrigineLabels: Record<MessageOrigine, string> = {
   [MessageOrigine.FromDirecteur]: "",
 };
 
+export type IdFile = number & { __opaque__: "IdFile" };
 // registro/sql/personnes.Approfondissement
 export const Approfondissement = {
   AAucun: 0,
@@ -735,14 +737,14 @@ export interface Publicite {
 }
 // registro/sql/personnes.Sexe
 export const Sexe = {
-  Empty: 0,
+  NoSexe: 0,
   Woman: 1,
   Man: 2,
 } as const;
 export type Sexe = (typeof Sexe)[keyof typeof Sexe];
 
 export const SexeLabels: Record<Sexe, string> = {
-  [Sexe.Empty]: "",
+  [Sexe.NoSexe]: "",
   [Sexe.Woman]: "Femme",
   [Sexe.Man]: "Homme",
 };

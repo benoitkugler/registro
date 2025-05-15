@@ -71,6 +71,16 @@ export function parseError(error: any) {
   return { kind, messageHtml };
 }
 
+export function saveBlobAsFile(binaryData: Blob, filename: string) {
+  const url = window.URL.createObjectURL(new Blob([binaryData]));
+  const link = document.createElement("a");
+  link.href = url;
+  link.setAttribute("download", decodeURIComponent(filename));
+  document.body.appendChild(link);
+  link.click();
+  window.URL.revokeObjectURL(url);
+}
+
 export function copy<T>(v: T): T {
   return JSON.parse(JSON.stringify(v));
 }
@@ -320,7 +330,7 @@ export namespace Formatters {
 
   export function sexeIcon(s: Sexe) {
     switch (s) {
-      case Sexe.Empty:
+      case Sexe.NoSexe:
         return "";
       case Sexe.Man:
         return "mdi-gender-male";

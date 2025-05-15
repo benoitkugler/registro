@@ -3,6 +3,9 @@ package directeurs
 import (
 	"errors"
 	"fmt"
+	"net/http"
+	"slices"
+	"strings"
 
 	fsAPI "registro/controllers/files"
 	"registro/controllers/logic"
@@ -75,10 +78,11 @@ func (ct *Controller) ParticipantsGetFichesSanitaires(c echo.Context) error {
 }
 
 type FicheSanitaireExt struct {
-	Personne string
-	State    pr.FichesanitaireState
-	Fiche    pr.Fichesanitaire
-	Vaccins  []fsAPI.PublicFile
+	IdParticipant cps.IdParticipant
+	Personne      string
+	State         pr.FichesanitaireState
+	Fiche         pr.Fichesanitaire
+	Vaccins       []fsAPI.PublicFile
 }
 
 func (ct *Controller) loadFichesSanitaires(user cps.IdCamp) ([]FicheSanitaireExt, error) {
@@ -111,16 +115,20 @@ func (ct *Controller) loadFichesSanitaires(user cps.IdCamp) ([]FicheSanitaireExt
 		fiche := fiches[personne.Id]
 		dossier := dossiers[participant.IdDossier]
 		out = append(out, FicheSanitaireExt{
-			Personne: personne.NOMPrenom(),
-			State:    fiche.State(dossier.MomentInscription),
-			Fiche:    fiche,
-			Vaccins:  vaccins[personne.Id],
+			participant.Id,
+			personne.NOMPrenom(),
+			fiche.State(dossier.MomentInscription),
+			fiche,
+			vaccins[personne.Id],
 		})
 	}
+
+	slices.SortFunc(out, func(a, b FicheSanitaireExt) int { return strings.Compare(a.Personne, b.Personne) })
+
 	return out, nil
 }
 
-func (ct *Controller) ParticipantDownloadFicheSanitaire(c echo.Context) error {
+func (ct *Controller) ParticipantsDownloadFicheSanitaire(c echo.Context) error {
 	user := JWTUser(c)
 	id, err := utils.QueryParamInt[cps.IdParticipant](c, "idParticipant")
 	if err != nil {
@@ -130,7 +138,8 @@ func (ct *Controller) ParticipantDownloadFicheSanitaire(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	return fsAPI.SendBlob(c, content, name)
+	mimeType := fsAPI.SetBlobHeader(c, content, name)
+	return c.Blob(200, mimeType, content)
 }
 
 func (ct *Controller) downloadFicheSanitaire(user cps.IdCamp, id cps.IdParticipant) ([]byte, string, error) {
@@ -164,4 +173,130 @@ func (ct *Controller) downloadFicheSanitaire(user cps.IdCamp, id cps.IdParticipa
 	})
 	name := fmt.Sprintf("Fiche sanitaire %s.pdf", personne.NOMPrenom())
 	return content, name, nil
+}
+
+func (ct *Controller) ParticipantsDownloadAllFichesSanitaires(c echo.Context) error {
+	user := JWTUser(c)
+	content, name, err := ct.downloadFichesSanitaires(user)
+	if err != nil {
+		return err
+	}
+	mimeType := fsAPI.SetBlobHeader(c, content, name)
+	return c.Blob(200, mimeType, content)
+}
+
+// ignore les participants majeurs et les fiches vides
+func (ct *Controller) downloadFichesSanitaires(user cps.IdCamp) ([]byte, string, error) {
+	camp, err := cps.SelectCamp(ct.db, user)
+	if err != nil {
+		return nil, "", utils.SQLError(err)
+	}
+	participants, err := cps.SelectParticipantsByIdCamps(ct.db, user)
+	if err != nil {
+		return nil, "", utils.SQLError(err)
+	}
+	dossiers, err := ds.SelectDossiers(ct.db, participants.IdDossiers()...)
+	if err != nil {
+		return nil, "", utils.SQLError(err)
+	}
+	responsables, err := pr.SelectPersonnes(ct.db, dossiers.IdResponsables()...)
+	if err != nil {
+		return nil, "", utils.SQLError(err)
+	}
+	personnes, err := pr.SelectPersonnes(ct.db, participants.IdPersonnes()...)
+	if err != nil {
+		return nil, "", utils.SQLError(err)
+	}
+	tmp, err := pr.SelectFichesanitairesByIdPersonnes(ct.db, personnes.IDs()...)
+	if err != nil {
+		return nil, "", utils.SQLError(err)
+	}
+	fiches := tmp.ByIdPersonne()
+
+	var list []pdfcreator.FicheSanitaire
+	for _, part := range participants {
+		fiche, hasFiche := fiches[part.IdPersonne]
+		if !hasFiche {
+			continue
+		}
+		personne := personnes[part.IdPersonne]
+		if personne.Age() >= 18 {
+			continue
+		}
+		responsable := responsables[dossiers[part.IdDossier].IdResponsable]
+		list = append(list, pdfcreator.FicheSanitaire{Personne: personne.Etatcivil, FicheSanitaire: fiche, Responsable: responsable.Etatcivil})
+	}
+	content, err := pdfcreator.CreateFicheSanitaires(ct.asso, list)
+	if err != nil {
+		return nil, "", err
+	}
+	name := fmt.Sprintf("Fiches sanitaires %s.pdf", camp.Label())
+	return content, name, nil
+}
+
+func (ct *Controller) ParticipantsStreamFichesAndVaccins(c echo.Context) error {
+	user := JWTUser(c)
+	return ct.streamFichesAndVaccins(user, c.Response())
+}
+
+func (ct *Controller) streamFichesAndVaccins(user cps.IdCamp, response http.ResponseWriter) error {
+	camp, err := cps.LoadCamp(ct.db, user)
+	if err != nil {
+		return err
+	}
+	dossiers, err := ds.SelectDossiers(ct.db, camp.IdDossiers()...)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	responsables, err := pr.SelectPersonnes(ct.db, dossiers.IdResponsables()...)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	personnes := camp.Personnes()
+	tmp, err := pr.SelectFichesanitairesByIdPersonnes(ct.db, personnes.IDs()...)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	fiches := tmp.ByIdPersonne()
+
+	vaccins, _, err := fsAPI.LoadVaccins(ct.db, ct.key, personnes.IDs())
+	if err != nil {
+		return err
+	}
+
+	archiveName := fmt.Sprintf("Fiches sanitaires et vaccins %s.zip", camp.Camp.Label())
+
+	return fsAPI.StreamZip(response, archiveName, func(yield func(fsAPI.ZipItem, error) bool) {
+		for _, part := range camp.Participants() {
+			personne := part.Personne
+			proprio := personne.NOMPrenom()
+			fiche, hasFiche := fiches[personne.Id]
+			if personne.Age() < 18 && hasFiche {
+				responsable := responsables[dossiers[part.Participant.IdDossier].IdResponsable]
+				content, err := pdfcreator.CreateFicheSanitaires(ct.asso, []pdfcreator.FicheSanitaire{
+					{Personne: personne.Etatcivil, FicheSanitaire: fiche, Responsable: responsable.Etatcivil},
+				})
+				if err != nil {
+					yield(fsAPI.ZipItem{}, err)
+					return
+				}
+				name := fmt.Sprintf("%s fiche sanitaire.pdf", proprio)
+				if !yield(fsAPI.ZipItem{Name: name, Content: content}, nil) {
+					return
+				}
+			}
+
+			for _, file := range vaccins[personne.Id] {
+				content, err := ct.files.Load(file.Id, false)
+				if err != nil {
+					yield(fsAPI.ZipItem{}, err)
+					return
+				}
+				if !yield(fsAPI.ZipItem{Name: fmt.Sprintf("%s vaccin %s", proprio, file.NomClient), Content: content}, nil) {
+					return
+				}
+			}
+		}
+	})
 }

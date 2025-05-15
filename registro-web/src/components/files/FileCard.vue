@@ -44,10 +44,10 @@ const emit = defineEmits<{
 
 // hardcoded, global files endpoint
 const miniatureURL = computed(
-  () => `${baseUrl()}/api/v1/documents/miniature?key=${props.file.Id}`
+  () => `${baseUrl()}/api/v1/documents/miniature?key=${props.file.Key}`
 );
 const contentURL = computed(
-  () => `${baseUrl()}/api/v1/documents?key=${props.file.Id}`
+  () => `${baseUrl()}/api/v1/documents?key=${props.file.Key}`
 );
 </script>
 

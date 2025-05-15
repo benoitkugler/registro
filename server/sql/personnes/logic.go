@@ -7,9 +7,9 @@ func (r Etatcivil) Age() int { return r.DateNaissance.Age(time.Now()) }
 type FichesanitaireState uint8
 
 const (
-	NoFiche FichesanitaireState = iota
-	Outdated
-	UpToDate
+	NoFiche  FichesanitaireState = iota // Vide
+	Outdated                            // Pas à jour
+	UpToDate                            // Remplie
 )
 
 // State returns the state of the fiche sanitaire with respect to

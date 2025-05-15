@@ -14,6 +14,7 @@ func setupRoutesDirecteurs(e *echo.Echo, ct *directeurs.Controller) {
 	e.GET("/api/v1/directeurs/loggin", ct.Loggin)
 
 	e.GET("/api/v1/directeurs/equipiers/files", ct.EquipiersDownloadFiles, ct.JWTMiddlewareForQuery())
+	e.GET("/api/v1/directeurs/participants/stream-fiches-sanitaires", ct.ParticipantsStreamFichesAndVaccins, ct.JWTMiddlewareForQuery())
 
 	gr := e.Group("", ct.JWTMiddleware())
 
@@ -33,6 +34,8 @@ func setupRoutesDirecteurs(e *echo.Echo, ct *directeurs.Controller) {
 	gr.GET("/api/v1/directeurs/participants", ct.ParticipantsGet)
 	gr.POST("/api/v1/directeurs/participants", ct.ParticipantsUpdate)
 	gr.GET("/api/v1/directeurs/participants/fiches-sanitaires", ct.ParticipantsGetFichesSanitaires)
+	gr.GET("/api/v1/directeurs/participants/download-fiche-sanitaire", ct.ParticipantsDownloadFicheSanitaire)
+	gr.GET("/api/v1/directeurs/participants/download-fiches-sanitaires", ct.ParticipantsDownloadAllFichesSanitaires)
 
 	// Equipiers
 	gr.GET("/api/v1/directeurs/equipiers", ct.EquipiersGet)

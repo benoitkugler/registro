@@ -44,6 +44,16 @@ class Controller extends AbstractAPI {
       `/api/v1/directeurs/equipiers/files?token=${this.authToken}`
     );
   }
+
+  /** Special URL for direct download, with token included in query.
+   * Keep in sync with `ParticipantsDownloadFichesAndVaccins`
+   */
+  participantsFichesAndVaccinsStreamURL() {
+    return (
+      this.baseUrl +
+      `/api/v1/directeurs/participants/stream-fiches-sanitaires?token=${this.authToken}`
+    );
+  }
 }
 
 /** `isDev` is true when the client app is served in dev mode */

@@ -65,7 +65,7 @@ function emptyParticipant() {
     Nom: props.responsable.Nom,
     Prenom: "",
     DateNaissance: "0001-01-01" as Date_,
-    Sexe: Sexe.Empty,
+    Sexe: Sexe.NoSexe,
     Nationnalite: nationnaliteFromPays(props.responsable.Pays),
     IdCamp: props.preselected,
   };
