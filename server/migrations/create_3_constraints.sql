@@ -182,7 +182,7 @@ ALTER TABLE demande_equipiers
     ADD FOREIGN KEY (IdEquipier) REFERENCES equipiers ON DELETE CASCADE;
 
 ALTER TABLE demande_equipiers
-    ADD FOREIGN KEY (IdDemande) REFERENCES demandes;
+    ADD FOREIGN KEY (IdDemande) REFERENCES demandes ON DELETE CASCADE;
 
 ALTER TABLE demande_camps
     ADD UNIQUE (IdCamp, IdDemande);

@@ -19,6 +19,7 @@ var (
 	listeParticipantsTmpl   *template.Template
 	listeVetementsTmpl      *template.Template
 	attestationPresenceTmpl *template.Template
+	lettreDirecteurTmpl     *template.Template
 )
 
 func init() {
@@ -26,6 +27,7 @@ func init() {
 	listeParticipantsTmpl = parseTemplate("templates/liste_participants.html")
 	listeVetementsTmpl = parseTemplate("templates/liste_vetements.html")
 	attestationPresenceTmpl = parseTemplate("templates/attestation_presence.html")
+	lettreDirecteurTmpl = parseTemplate("templates/lettre_directeur.html")
 }
 
 func parseTemplate(templateFile string) *template.Template {
@@ -119,4 +121,48 @@ func CreateAttestationPresence(cfg config.Asso, destinataire Destinataire, parti
 		Destinataire: destinataire,
 		Participants: participants,
 	})
+}
+
+func ensureHexColor(hexa string) string {
+	if len(hexa) > 7 {
+		return hexa[0:7]
+	}
+	return hexa
+}
+
+type directeurCoords struct {
+	NomPrenom  string
+	Adresse    string
+	CodePostal string
+	Ville      string
+	Mail       string
+	Tels       template.HTML
+}
+
+// CreateLettreDirecteur returns a PDF document.
+func CreateLettreDirecteur(cfg config.Asso, lettre cps.Lettredirecteur, directeur pr.Etatcivil) ([]byte, error) {
+	args := struct {
+		Asso                config.Asso
+		ExpediteurDirecteur bool
+		ShowAdressePostale  bool
+		ColorCoord          string
+		LettreHtml          template.HTML
+		Directeur           directeurCoords
+	}{
+		Asso:                cfg,
+		ExpediteurDirecteur: !lettre.UseCoordCentre,
+		ShowAdressePostale:  lettre.ShowAdressePostale,
+		// weasyprint does not support AHex colors
+		ColorCoord: ensureHexColor(lettre.ColorCoord),
+		Directeur: directeurCoords{
+			NomPrenom:  directeur.PrenomNOM(),
+			Adresse:    directeur.Adresse,
+			CodePostal: directeur.CodePostal,
+			Ville:      directeur.Ville,
+			Mail:       directeur.Mail,
+			Tels:       template.HTML(directeur.Tels.StringHTML()),
+		},
+		LettreHtml: template.HTML(lettre.Html),
+	}
+	return templateToPDF(lettreDirecteurTmpl, args)
 }

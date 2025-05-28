@@ -142,7 +142,6 @@ CREATE TABLE groupe_participants (
 
 CREATE TABLE lettre_images (
     Id serial PRIMARY KEY,
-    IdCamp integer NOT NULL,
     Filename text NOT NULL,
     Content bytea NOT NULL
 );

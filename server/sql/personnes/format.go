@@ -80,3 +80,6 @@ func renderTels(t Tels, innerSep, outerSep string) string {
 }
 
 func (t Tels) String() string { return renderTels(t, innerTelSep, ";") }
+
+// StringLines renvoie une chaine sur plusieurs lignes, au format HTML
+func (t Tels) StringHTML() string { return renderTels(t, innerTelSep, "<br/>") }

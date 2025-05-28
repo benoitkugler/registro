@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
 	in "registro/sql/inscriptions"
 	pr "registro/sql/personnes"
@@ -24,26 +25,38 @@ func TestEncryptionID(t *testing.T) {
 		_, err = DecryptID[pr.IdPersonne](key, s)
 		tu.AssertErr(t, err)
 
-		r1 := pr.IdPersonne(v1 - 5)
-		s, err = encryptID(key, r1)
-		tu.AssertNoErr(t, err)
-		r2, err := DecryptID[pr.IdPersonne](key, s)
-		tu.AssertNoErr(t, err)
-		tu.Assert(t, r1 == r2)
-
-		i1 := in.IdInscription(v1 - 5)
-		s, err = encryptID(key, i1)
-		tu.AssertNoErr(t, err)
-		i2, err := DecryptID[in.IdInscription](key, s)
-		tu.AssertNoErr(t, err)
-		tu.Assert(t, i1 == i2)
-
-		d1 := ds.IdDossier(v1 - 5)
-		s, err = encryptID(key, d1)
-		tu.AssertNoErr(t, err)
-		d2, err := DecryptID[ds.IdDossier](key, s)
-		tu.AssertNoErr(t, err)
-		tu.Assert(t, d1 == d2)
+		{
+			id := pr.IdPersonne(v1 - 5)
+			s, err = encryptID(key, id)
+			tu.AssertNoErr(t, err)
+			id2, err := DecryptID[pr.IdPersonne](key, s)
+			tu.AssertNoErr(t, err)
+			tu.Assert(t, id == id2)
+		}
+		{
+			id := in.IdInscription(v1 - 5)
+			s, err = encryptID(key, id)
+			tu.AssertNoErr(t, err)
+			id2, err := DecryptID[in.IdInscription](key, s)
+			tu.AssertNoErr(t, err)
+			tu.Assert(t, id == id2)
+		}
+		{
+			id := ds.IdDossier(v1 - 5)
+			s, err = encryptID(key, id)
+			tu.AssertNoErr(t, err)
+			id2, err := DecryptID[ds.IdDossier](key, s)
+			tu.AssertNoErr(t, err)
+			tu.Assert(t, id == id2)
+		}
+		{
+			id := cps.IdLettreImage(v1 - 5)
+			s, err = encryptID(key, id)
+			tu.AssertNoErr(t, err)
+			id2, err := DecryptID[cps.IdLettreImage](key, s)
+			tu.AssertNoErr(t, err)
+			tu.Assert(t, id == id2)
+		}
 
 		// expected errors
 		_, err = DecryptID[int64](key, s)
@@ -54,6 +67,8 @@ func TestEncryptionID(t *testing.T) {
 		_, err = DecryptID[in.IdInscription](otherKey, s)
 		tu.AssertErr(t, err)
 		_, err = DecryptID[ds.IdDossier](otherKey, s)
+		tu.AssertErr(t, err)
+		_, err = DecryptID[cps.IdLettreImage](otherKey, s)
 		tu.AssertErr(t, err)
 	}
 

@@ -1,0 +1,42 @@
+{{ define "content"}}
+
+<header
+  style="break-before: page; display: flex; justify-content: space-between"
+>
+  <div>
+    <img src="{{ .Asso.Icon }}" height="80px" />
+  </div>
+
+  <div
+    style="text-align: right; vertical-align: middle; color: {{ .ColorCoord }};"
+  >
+    <!--  -->
+    {{ if .ExpediteurDirecteur }}
+    <b>{{ .Directeur.NomPrenom }}</b><br />
+    {{ if .ShowAdressePostale }}
+    <!--  -->
+    {{ .Directeur.Adresse }}<br />
+    {{ .Directeur.CodePostal }} {{ .Directeur.Ville }}<br />
+    {{ end }}
+    <!--  -->
+    {{ .Directeur.Tels }}<br />
+    <b>Mail : </b>
+    <a style="color: {{ .ColorCoord }}" href="mailto:{{ .Directeur.Mail }}"
+      >{{ .Directeur.Mail }}</a
+    ><br />
+    <!--  -->
+    {{ else }}
+    <b>{{ .Asso.ContactNom }}</b><br />
+    <b>Tel : </b>{{ .Asso.ContactTel }} <br />
+    <b>Mail : </b
+    ><a style="color: {{ .ColorCoord }}" href="mailto:{{ .Asso.ContactMail }}"
+      >{{ .Asso.ContactMail }}</a
+    >
+    <br />
+    {{ end }}
+  </div>
+</header>
+
+<main>{{ .LettreHtml }}</main>
+
+{{ end }}

@@ -136,7 +136,6 @@ func randJours() Jours {
 func randLettreImage() LettreImage {
 	var s LettreImage
 	s.Id = randIdLettreImage()
-	s.IdCamp = randint64()
 	s.Filename = randstring()
 	s.Content = randSliceuint8()
 

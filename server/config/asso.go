@@ -14,7 +14,8 @@ type Asso struct {
 	Icon                         string       // included as image src attribute
 	ColorPrimary, ColorSecondary template.CSS // included as background-color
 
-	// TODO: préciser l'utilisation
+	// Used as default right header.
+	// Also used in "Lettre aux parents" if UseCoordCentre is true
 	ContactNom, ContactTel, ContactMail string
 
 	MailsSettings MailsSettings

@@ -44,4 +44,10 @@ func setupRoutesDirecteurs(e *echo.Echo, ct *directeurs.Controller) {
 	gr.POST("/api/v1/directeurs/equipiers/invite", ct.EquipiersInvite)
 	gr.GET("/api/v1/directeurs/equipiers/demandes", ct.EquipiersDemandesGet)
 	gr.POST("/api/v1/directeurs/equipiers/demandes", ct.EquipiersDemandeSet)
+
+	// Lettre
+	gr.GET(directeurs.EndpointLettreImages, ct.LettreImageGet)
+	gr.POST(directeurs.EndpointLettreImages, ct.LettreImageUpload)
+	gr.GET("/api/v1/directeurs/lettre", ct.LettreGet)
+	gr.POST("/api/v1/directeurs/lettre", ct.LettreUpdate)
 }

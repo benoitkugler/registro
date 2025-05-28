@@ -1010,7 +1010,6 @@ func scanOneLettreImage(row scanner) (LettreImage, error) {
 	var item LettreImage
 	err := row.Scan(
 		&item.Id,
-		&item.IdCamp,
 		&item.Filename,
 		&item.Content,
 	)
@@ -1021,7 +1020,7 @@ func ScanLettreImage(row *sql.Row) (LettreImage, error) { return scanOneLettreIm
 
 // SelectAll returns all the items in the lettre_images table.
 func SelectAllLettreImages(db DB) (LettreImages, error) {
-	rows, err := db.Query("SELECT id, idcamp, filename, content FROM lettre_images")
+	rows, err := db.Query("SELECT id, filename, content FROM lettre_images")
 	if err != nil {
 		return nil, err
 	}
@@ -1030,13 +1029,13 @@ func SelectAllLettreImages(db DB) (LettreImages, error) {
 
 // SelectLettreImage returns the entry matching 'id'.
 func SelectLettreImage(tx DB, id IdLettreImage) (LettreImage, error) {
-	row := tx.QueryRow("SELECT id, idcamp, filename, content FROM lettre_images WHERE id = $1", id)
+	row := tx.QueryRow("SELECT id, filename, content FROM lettre_images WHERE id = $1", id)
 	return ScanLettreImage(row)
 }
 
 // SelectLettreImages returns the entry matching the given 'ids'.
 func SelectLettreImages(tx DB, ids ...IdLettreImage) (LettreImages, error) {
-	rows, err := tx.Query("SELECT id, idcamp, filename, content FROM lettre_images WHERE id = ANY($1)", IdLettreImageArrayToPQ(ids))
+	rows, err := tx.Query("SELECT id, filename, content FROM lettre_images WHERE id = ANY($1)", IdLettreImageArrayToPQ(ids))
 	if err != nil {
 		return nil, err
 	}
@@ -1081,28 +1080,28 @@ func ScanLettreImages(rs *sql.Rows) (LettreImages, error) {
 // Insert one LettreImage in the database and returns the item with id filled.
 func (item LettreImage) Insert(tx DB) (out LettreImage, err error) {
 	row := tx.QueryRow(`INSERT INTO lettre_images (
-		idcamp, filename, content
+		filename, content
 		) VALUES (
-		$1, $2, $3
-		) RETURNING id, idcamp, filename, content;
-		`, item.IdCamp, item.Filename, item.Content)
+		$1, $2
+		) RETURNING id, filename, content;
+		`, item.Filename, item.Content)
 	return ScanLettreImage(row)
 }
 
 // Update LettreImage in the database and returns the new version.
 func (item LettreImage) Update(tx DB) (out LettreImage, err error) {
 	row := tx.QueryRow(`UPDATE lettre_images SET (
-		idcamp, filename, content
+		filename, content
 		) = (
-		$1, $2, $3
-		) WHERE id = $4 RETURNING id, idcamp, filename, content;
-		`, item.IdCamp, item.Filename, item.Content, item.Id)
+		$1, $2
+		) WHERE id = $3 RETURNING id, filename, content;
+		`, item.Filename, item.Content, item.Id)
 	return ScanLettreImage(row)
 }
 
 // Deletes the LettreImage and returns the item
 func DeleteLettreImageById(tx DB, id IdLettreImage) (LettreImage, error) {
-	row := tx.QueryRow("DELETE FROM lettre_images WHERE id = $1 RETURNING id, idcamp, filename, content;", id)
+	row := tx.QueryRow("DELETE FROM lettre_images WHERE id = $1 RETURNING id, filename, content;", id)
 	return ScanLettreImage(row)
 }
 
@@ -2202,6 +2201,11 @@ func (s Remises) Value() (driver.Value, error) { return dumpJSON(s) }
 
 func SwitchEquipierPersonne(db DB, target personnes.IdPersonne, temporaire personnes.IdPersonne) error {
 	_, err := db.Exec("UPDATE equipiers SET IdPersonne = $1 WHERE IdPersonne = $2;", target, temporaire)
+	return err
+}
+
+func DeleteLettreImagesOthers(db DB, others []IdLettreImage) error {
+	_, err := db.Exec("DELETE FROM lettre_images WHERE NOT (Id = ANY($1));", IdLettreImageArrayToPQ(others))
 	return err
 }
 

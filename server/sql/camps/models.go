@@ -73,9 +73,10 @@ type Lettredirecteur struct {
 
 // LettreImage stockes les images contenues dans les lettres aux parents,
 // accessibles via un lien crypté
+//
+// gomacro:QUERY DeleteLettreImagesOthers DELETE FROM LettreImage WHERE NOT (Id = ANY($others$));
 type LettreImage struct {
 	Id       IdLettreImage
-	IdCamp   int64  `gomacro-sql-on-delete:"CASCADE"`
 	Filename string // as uploaded
 	Content  []byte
 }
