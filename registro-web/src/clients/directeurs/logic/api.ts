@@ -86,6 +86,11 @@ export interface FicheSanitaireExt {
   Fiche: Fichesanitaire;
   Vaccins: PublicFile[] | null;
 }
+// registro/controllers/directeurs.LettreOut
+export interface LettreOut {
+  Lettre: Lettredirecteur;
+  File: PublicFile;
+}
 // registro/controllers/directeurs.LogginOut
 export interface LogginOut {
   IsValid: boolean;
@@ -204,6 +209,14 @@ export type IdEquipier = number & { __opaque__: "IdEquipier" };
 export type IdParticipant = number & { __opaque__: "IdParticipant" };
 // registro/sql/camps.Jours
 export type Jours = Int[] | null;
+// registro/sql/camps.Lettredirecteur
+export interface Lettredirecteur {
+  IdCamp: IdCamp;
+  Html: string;
+  UseCoordCentre: boolean;
+  ShowAdressePostale: boolean;
+  ColorCoord: string;
+}
 // registro/sql/camps.Navette
 export const Navette = {
   NoBus: 0,
@@ -1001,6 +1014,34 @@ export abstract class AbstractAPI {
     try {
       await Axios.post(fullUrl, params, { headers: this.getHeaders() });
       return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** LettreGet performs the request and handles the error */
+  async LettreGet() {
+    const fullUrl = this.baseUrl + "/api/v1/directeurs/lettre";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<LettreOut> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** LettreUpdate performs the request and handles the error */
+  async LettreUpdate(params: Lettredirecteur) {
+    const fullUrl = this.baseUrl + "/api/v1/directeurs/lettre";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<LettreOut> = await Axios.post(fullUrl, params, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }

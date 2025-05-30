@@ -1,7 +1,12 @@
 import { baseUrl, parseError, type Action } from "@/utils";
 
 import { devCamp, devToken } from "../env";
-import { AbstractAPI, type CampItem, type IdCamp } from "./api";
+import {
+  AbstractAPI,
+  type CampItem,
+  type IdCamp,
+  type Lettredirecteur,
+} from "./api";
 
 class Controller extends AbstractAPI {
   /**  camp is setup at login */
@@ -54,6 +59,12 @@ class Controller extends AbstractAPI {
       `/api/v1/directeurs/participants/stream-fiches-sanitaires?token=${this.authToken}`
     );
   }
+
+  lettreImageUploadURL() {
+    return (
+      this.baseUrl + `/api/v1/directeurs/lettre-image?token=${this.authToken}`
+    );
+  }
 }
 
 /** `isDev` is true when the client app is served in dev mode */
@@ -66,3 +77,8 @@ export const controller = new Controller(
 );
 
 if (isDev) controller.setCamp(devCamp as CampItem, devToken);
+
+export type LettreOptions = Pick<
+  Lettredirecteur,
+  "UseCoordCentre" | "ShowAdressePostale" | "ColorCoord"
+>;

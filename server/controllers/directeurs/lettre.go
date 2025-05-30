@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	EndpointLettreImages = "/api/v1/lettre-images"
+	EndpointLettreImages = "/service/lettre-images"
 	queryParamName       = "key"
 )
 
@@ -33,7 +33,7 @@ var (
 	htmlPolicy *bluemonday.Policy
 
 	tags = []string{
-		"sub", "sup", "b", "i", "u", "h1", "h2", "h3", "h4", "h5", "h6",
+		"sub", "sup", "b", "i", "u", "s", "h1", "h2", "h3", "h4", "h5", "h6",
 		"strike", "a", "strong", "ul", "ol", "li", "br",
 		"span", "em", "p", "blockquote", "hr", "img",
 	}

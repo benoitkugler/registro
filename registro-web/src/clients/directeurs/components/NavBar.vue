@@ -20,6 +20,14 @@
     >
       Equipiers
     </v-list-item>
+    <v-list-item
+      prepend-icon="mdi-mail"
+      link
+      :to="{ path: '/lettre' }"
+      color="primary"
+    >
+      Lettre aux familles
+    </v-list-item>
     <v-divider></v-divider>
     <v-list-item
       prepend-icon="mdi-logout"

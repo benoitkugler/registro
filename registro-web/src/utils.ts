@@ -363,6 +363,13 @@ export namespace Formatters {
     const val = m.Cent / 100;
     return `${isInt ? val : val.toFixed(2)}${CurrencyLabels[m.Currency]}`;
   }
+
+  export function size(size: Int) {
+    if (size > 1_000_000) {
+      return `${(size / 1_000_000).toFixed(1)} MB`;
+    }
+    return `${(size / 1000).toFixed(1)} KB`;
+  }
 }
 
 export type User = "espaceperso" | "backoffice";
@@ -544,3 +551,11 @@ export const Departements = [
   "974 - La Réunion",
   "976 - Mayotte",
 ];
+
+// hardcoded, global files endpoint
+export function miniatureURL(key: string) {
+  return `${baseUrl()}/api/v1/documents/miniature?key=${key}`;
+}
+export function contentURL(key: string) {
+  return `${baseUrl()}/api/v1/documents?key=${key}`;
+}

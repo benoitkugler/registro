@@ -3,11 +3,13 @@ import { createRouter, createWebHistory, type LocationQuery } from "vue-router";
 import Index from "../pages/index.vue";
 import Inscriptions from "../pages/inscriptions.vue";
 import Equipiers from "../pages/equipiers.vue";
+import Lettre from "../pages/lettre.vue";
 
 const routes = [
   { path: "/", component: Index },
   { path: "/inscriptions", component: Inscriptions },
   { path: "/equipiers", component: Equipiers },
+  { path: "/lettre", component: Lettre },
 ];
 
 // TODO: check that

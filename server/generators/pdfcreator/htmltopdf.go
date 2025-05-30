@@ -45,7 +45,9 @@ func Init(fontCacheDir, root string) error {
 // root is the folder containing 'assets/'
 func htmlToPDF(html, root string) ([]byte, error) {
 	var dst bytes.Buffer
-	err := goweasyprint.HtmlToPdfOptions(&dst, utils.InputString(html), root, nil, "", nil, false, fc, 1, nil)
+	// required for image with width and height attributes
+	const presentationalHints = true
+	err := goweasyprint.HtmlToPdfOptions(&dst, utils.InputString(html), root, nil, "", nil, presentationalHints, fc, 1, nil)
 	return dst.Bytes(), err
 }
 

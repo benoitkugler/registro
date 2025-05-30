@@ -6,7 +6,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-//go:generate ../../../go/src/github.com/benoitkugler/gomacro/cmd/gomacro routes_directeurs.go typescript/api:../registro-web/src/clients/directeurs/logic/api.ts
+//go:generate ../../../go/src/github.com/benoitkugler/gomacro/cmd/gomacro -http-api=/api routes_directeurs.go typescript/api:../registro-web/src/clients/directeurs/logic/api.ts
 
 func setupRoutesDirecteurs(e *echo.Echo, ct *directeurs.Controller) {
 	// no token yet for the loggin route
@@ -15,6 +15,10 @@ func setupRoutesDirecteurs(e *echo.Echo, ct *directeurs.Controller) {
 
 	e.GET("/api/v1/directeurs/equipiers/files", ct.EquipiersDownloadFiles, ct.JWTMiddlewareForQuery())
 	e.GET("/api/v1/directeurs/participants/stream-fiches-sanitaires", ct.ParticipantsStreamFichesAndVaccins, ct.JWTMiddlewareForQuery())
+
+	// public image service, secured by key
+	e.GET(directeurs.EndpointLettreImages, ct.LettreImageGet)
+	e.POST("/api/v1/directeurs/lettre-image", ct.LettreImageUpload, ct.JWTMiddlewareForQuery())
 
 	gr := e.Group("", ct.JWTMiddleware())
 
@@ -46,8 +50,6 @@ func setupRoutesDirecteurs(e *echo.Echo, ct *directeurs.Controller) {
 	gr.POST("/api/v1/directeurs/equipiers/demandes", ct.EquipiersDemandeSet)
 
 	// Lettre
-	gr.GET(directeurs.EndpointLettreImages, ct.LettreImageGet)
-	gr.POST(directeurs.EndpointLettreImages, ct.LettreImageUpload)
 	gr.GET("/api/v1/directeurs/lettre", ct.LettreGet)
 	gr.POST("/api/v1/directeurs/lettre", ct.LettreUpdate)
 }

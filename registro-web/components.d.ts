@@ -12,6 +12,7 @@ declare module 'vue' {
     CardSimilaires: typeof import('./src/components/inscriptions/CardSimilaires.vue')['default']
     CardValide: typeof import('./src/components/inscriptions/CardValide.vue')['default']
     CardValideParticipantRow: typeof import('./src/components/inscriptions/CardValideParticipantRow.vue')['default']
+    ColorField: typeof import('./src/components/ColorField.vue')['default']
     DateField: typeof import('./src/components/DateField.vue')['default']
     DateNaissanceField: typeof import('./src/components/DateNaissanceField.vue')['default']
     DayOffsetField: typeof import('./src/components/DayOffsetField.vue')['default']
