@@ -407,3 +407,11 @@ type ReponseSondage struct {
 	MessageEnfant      string
 	MessageResponsable string
 }
+
+// DocumentsToShow which register which auto-generated documents
+// to show on the Espace perso
+type DocumentsToShow struct {
+	LettreDirecteur   bool
+	ListeVetements    bool
+	ListeParticipants bool
+}

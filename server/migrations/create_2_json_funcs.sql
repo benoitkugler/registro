@@ -192,6 +192,29 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION gomacro_validate_json_camp_DocumentsToShow (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('LettreDirecteur', 'ListeVetements', 'ListeParticipants'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_boolean (data -> 'LettreDirecteur')
+        AND gomacro_validate_json_boolean (data -> 'ListeVetements')
+        AND gomacro_validate_json_boolean (data -> 'ListeParticipants');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
 CREATE OR REPLACE FUNCTION gomacro_validate_json_camp_OptionNavette (data jsonb)
     RETURNS boolean
     AS $$

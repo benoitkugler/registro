@@ -52,4 +52,17 @@ func setupRoutesDirecteurs(e *echo.Echo, ct *directeurs.Controller) {
 	// Lettre
 	gr.GET("/api/v1/directeurs/lettre", ct.LettreGet)
 	gr.POST("/api/v1/directeurs/lettre", ct.LettreUpdate)
+
+	// Documents
+	gr.GET("/api/v1/directeurs/documents", ct.DocumentsGet)
+	gr.POST("/api/v1/directeurs/documents", ct.DocumentsUpdateToShow)
+	gr.POST("/api/v1/directeurs/documents/to-download", ct.DocumentsUploadToDownload)
+	gr.DELETE("/api/v1/directeurs/documents/to-download", ct.DocumentsDeleteToDownload)
+	gr.PUT("/api/v1/directeurs/documents/demande", ct.DocumentsCreateDemande)
+	gr.POST("/api/v1/directeurs/documents/demande", ct.DocumentsUpdateDemande)
+	gr.DELETE("/api/v1/directeurs/documents/demande", ct.DocumentsDeleteDemande)
+	gr.POST("/api/v1/directeurs/documents/demande/file", ct.DocumentsUploadDemandeFile)
+	gr.DELETE("/api/v1/directeurs/documents/demande/file", ct.DocumentsDeleteDemandeFile)
+	gr.POST("/api/v1/directeurs/documents/demande/apply", ct.DocumentsApplyDemande)
+	gr.DELETE("/api/v1/directeurs/documents/demande/apply", ct.DocumentsUnapplyDemande)
 }

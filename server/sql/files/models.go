@@ -29,6 +29,8 @@ type File struct {
 	Uploaded  time.Time
 }
 
+func (id IdFile) Opt() OptIdFile { return OptIdFile{Id: id, Valid: true} }
+
 // Demande encode la catégorie d'un fichier à fournir.
 // On différencie deux types de catégories :
 //   - les documents connus en avances (doc. équipiers, vaccins)
@@ -46,7 +48,7 @@ type Demande struct {
 	Id IdDemande
 
 	// Document à télécharger et remplir, optionnel
-	IdFile OptIdFile `gomacro-sql-foreign:"File"`
+	IdFile OptIdFile `gomacro-sql-on-delete:"SET NULL" gomacro-sql-foreign:"File"`
 
 	// Pour les demandes 'custom', le directeur proprietaire de la contrainte
 	// ou vide pour indiquer une contrainte commune à tous les séjours
@@ -82,7 +84,7 @@ type DemandeEquipier struct {
 // gomacro:SQL ADD UNIQUE(IdCamp, IdDemande)
 type DemandeCamp struct {
 	IdCamp    cps.IdCamp `gomacro-sql-on-delete:"CASCADE"`
-	IdDemande IdDemande
+	IdDemande IdDemande  `gomacro-sql-on-delete:"CASCADE"`
 }
 
 // FileCamp est une table de lien pour les lettres des séjours et les documents additionnels

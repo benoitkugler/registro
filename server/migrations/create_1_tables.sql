@@ -112,7 +112,9 @@ CREATE TABLE camps (
     Prix Montant NOT NULL,
     OptionPrix jsonb NOT NULL,
     OptionQuotientFamilial integer[] CHECK (array_length(OptionQuotientFamilial, 1) = 4) NOT NULL,
-    Password text NOT NULL
+    Password text NOT NULL,
+    DocumentsReady boolean NOT NULL,
+    DocumentsToShow jsonb NOT NULL
 );
 
 CREATE TABLE equipiers (

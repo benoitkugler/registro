@@ -145,6 +145,9 @@ ALTER TABLE equipiers
     ADD FOREIGN KEY (IdPersonne) REFERENCES personnes ON DELETE CASCADE;
 
 ALTER TABLE camps
+    ADD CONSTRAINT DocumentsToShow_gomacro CHECK (gomacro_validate_json_camp_DocumentsToShow (DocumentsToShow));
+
+ALTER TABLE camps
     ADD CONSTRAINT Navette_gomacro CHECK (gomacro_validate_json_camp_OptionNavette (Navette));
 
 ALTER TABLE camps
@@ -170,7 +173,7 @@ WHERE
     Categorie <> 0;
 
 ALTER TABLE demandes
-    ADD FOREIGN KEY (IdFile) REFERENCES files;
+    ADD FOREIGN KEY (IdFile) REFERENCES files ON DELETE SET NULL;
 
 ALTER TABLE demandes
     ADD FOREIGN KEY (IdDirecteur) REFERENCES personnes ON DELETE CASCADE;
@@ -191,7 +194,7 @@ ALTER TABLE demande_camps
     ADD FOREIGN KEY (IdCamp) REFERENCES camps ON DELETE CASCADE;
 
 ALTER TABLE demande_camps
-    ADD FOREIGN KEY (IdDemande) REFERENCES demandes;
+    ADD FOREIGN KEY (IdDemande) REFERENCES demandes ON DELETE CASCADE;
 
 ALTER TABLE file_camps
     ADD UNIQUE (IdFile);

@@ -53,6 +53,17 @@ func randCamp() Camp {
 	s.OptionPrix = randOptionPrixCamp()
 	s.OptionQuotientFamilial = randPrixQuotientFamilial()
 	s.Password = randstring()
+	s.DocumentsReady = randbool()
+	s.DocumentsToShow = randDocumentsToShow()
+
+	return s
+}
+
+func randDocumentsToShow() DocumentsToShow {
+	var s DocumentsToShow
+	s.LettreDirecteur = randbool()
+	s.ListeVetements = randbool()
+	s.ListeParticipants = randbool()
 
 	return s
 }

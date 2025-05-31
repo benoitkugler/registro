@@ -56,6 +56,9 @@ type Camp struct {
 	OptionQuotientFamilial PrixQuotientFamilial
 
 	Password string
+
+	DocumentsReady  bool
+	DocumentsToShow DocumentsToShow
 }
 
 // Lettredirecteur conserve le html utilisé pour générer la lettre.
