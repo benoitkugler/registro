@@ -2,7 +2,6 @@ package directeurs
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"log"
 	"mime"
@@ -195,17 +194,13 @@ func (ct *Controller) updateLettreDirecteur(idCamp cps.IdCamp, lettre cps.Lettre
 
 	var directeur pr.Personne
 	if !lettre.UseCoordCentre { // select Directeur
-		eqs, err := cps.SelectEquipiersByIdCamps(ct.db, idCamp)
+		var hasDirecteur bool
+		directeur, hasDirecteur, err = ct.findDirecteur(idCamp)
 		if err != nil {
-			return LettreOut{}, utils.SQLError(err)
+			return LettreOut{}, err
 		}
-		dir, has := eqs.Directeur()
-		if !has {
-			return LettreOut{}, errors.New("Aucun directeur n'est déclaré pour ce camp !")
-		}
-		directeur, err = pr.SelectPersonne(ct.db, dir.IdPersonne)
-		if err != nil {
-			return LettreOut{}, utils.SQLError(err)
+		if !hasDirecteur {
+			return LettreOut{}, errNoDir
 		}
 	}
 

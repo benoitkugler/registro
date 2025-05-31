@@ -16,6 +16,7 @@ import (
 
 	cps "registro/sql/camps"
 	fs "registro/sql/files"
+	pr "registro/sql/personnes"
 
 	"github.com/golang-jwt/jwt/v5"
 	echojwt "github.com/labstack/echo-jwt/v4"
@@ -161,6 +162,25 @@ func (ct *Controller) loggin(id cps.IdCamp, password string) (LogginOut, error) 
 		return LogginOut{IsValid: true, Token: token}, nil
 	}
 	return LogginOut{IsValid: false}, nil
+}
+
+// helpers
+
+// wraps error
+func (ct *Controller) findDirecteur(id cps.IdCamp) (pr.Personne, bool, error) {
+	eqs, err := cps.SelectEquipiersByIdCamps(ct.db, id)
+	if err != nil {
+		return pr.Personne{}, false, utils.SQLError(err)
+	}
+	dir, has := eqs.Directeur()
+	if !has {
+		return pr.Personne{}, false, nil
+	}
+	directeur, err := pr.SelectPersonne(ct.db, dir.IdPersonne)
+	if err != nil {
+		return pr.Personne{}, false, utils.SQLError(err)
+	}
+	return directeur, true, nil
 }
 
 // ---------------------------- shared API ----------------------------
