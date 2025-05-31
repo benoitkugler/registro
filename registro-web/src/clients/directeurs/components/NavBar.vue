@@ -23,10 +23,10 @@
     <v-list-item
       prepend-icon="mdi-mail"
       link
-      :to="{ path: '/lettre' }"
+      :to="{ path: '/documents' }"
       color="primary"
     >
-      Lettre aux familles
+      Communication
     </v-list-item>
     <v-divider></v-divider>
     <v-list-item

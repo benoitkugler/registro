@@ -351,11 +351,19 @@ export interface Camp {
   OptionPrix: OptionPrixCamp;
   OptionQuotientFamilial: PrixQuotientFamilial;
   Password: string;
+  DocumentsReady: boolean;
+  DocumentsToShow: DocumentsToShow;
 }
 // registro/sql/camps.CampExt
 export interface CampExt {
   Camp: Camp;
   IsTerminated: boolean;
+}
+// registro/sql/camps.DocumentsToShow
+export interface DocumentsToShow {
+  LettreDirecteur: boolean;
+  ListeVetements: boolean;
+  ListeParticipants: boolean;
 }
 export type IdAide = number & { __opaque__: "IdAide" };
 export type IdCamp = number & { __opaque__: "IdCamp" };

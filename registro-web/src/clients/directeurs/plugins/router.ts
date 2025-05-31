@@ -3,13 +3,13 @@ import { createRouter, createWebHistory, type LocationQuery } from "vue-router";
 import Index from "../pages/index.vue";
 import Inscriptions from "../pages/inscriptions.vue";
 import Equipiers from "../pages/equipiers.vue";
-import Lettre from "../pages/lettre.vue";
+import Documents from "../pages/documents.vue";
 
 const routes = [
   { path: "/", component: Index },
   { path: "/inscriptions", component: Inscriptions },
   { path: "/equipiers", component: Equipiers },
-  { path: "/lettre", component: Lettre },
+  { path: "/documents", component: Documents },
 ];
 
 // TODO: check that
@@ -54,6 +54,19 @@ export function parseQueryURLInscriptions(
   query: LocationQuery
 ): QueryURLInscriptions {
   const q = query as QueryURLInscriptions;
+  return { tab: q.tab };
+}
+
+export type DocumentsTab = "documents" | "lettre";
+
+export type QueryURLDocuments = {
+  tab?: DocumentsTab;
+};
+
+export function parseQueryURLDocuments(
+  query: LocationQuery
+): QueryURLDocuments {
+  const q = query as QueryURLDocuments;
   return { tab: q.tab };
 }
 

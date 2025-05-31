@@ -23,6 +23,11 @@ export interface InscriptionIdentifieIn {
   IdDossier: IdDossier;
   Target: IdentTarget;
 }
+// registro/controllers/directeurs.DemandeDirecteur
+export interface DemandeDirecteur {
+  Demande: Demande;
+  File: PublicFile;
+}
 // registro/controllers/directeurs.DemandeKey
 export interface DemandeKey {
   IdEquipier: IdEquipier;
@@ -46,6 +51,15 @@ export const DemandeStateLabels: Record<DemandeState, string> = {
 export interface DemandesOut {
   Demandes: Demande[] | null;
   Equipiers: EquipierDemande[] | null;
+}
+// registro/controllers/directeurs.DocumentsOut
+export interface DocumentsOut {
+  Ready: boolean;
+  ToShow: DocumentsToShow;
+  FilesToDownload: PublicFile[] | null;
+  CampDemandes: DemandeDirecteur[] | null;
+  HasLettre: boolean;
+  AvailableDemandes: DemandeDirecteur[] | null;
 }
 // registro/controllers/directeurs.EquipierDemande
 export interface EquipierDemande {
@@ -85,6 +99,10 @@ export interface FicheSanitaireExt {
   State: FichesanitaireState;
   Fiche: Fichesanitaire;
   Vaccins: PublicFile[] | null;
+}
+// registro/controllers/directeurs.LettreImageUploadOut
+export interface LettreImageUploadOut {
+  location: string;
 }
 // registro/controllers/directeurs.LettreOut
 export interface LettreOut {
@@ -178,6 +196,14 @@ export interface Camp {
   OptionPrix: OptionPrixCamp;
   OptionQuotientFamilial: PrixQuotientFamilial;
   Password: string;
+  DocumentsReady: boolean;
+  DocumentsToShow: DocumentsToShow;
+}
+// registro/sql/camps.DocumentsToShow
+export interface DocumentsToShow {
+  LettreDirecteur: boolean;
+  ListeVetements: boolean;
+  ListeParticipants: boolean;
 }
 // registro/sql/camps.Equipier
 export interface Equipier {
@@ -742,6 +768,24 @@ export abstract class AbstractAPI {
     }
   }
 
+  /** LettreImageUpload performs the request and handles the error */
+  async LettreImageUpload(file: File) {
+    const fullUrl = this.baseUrl + "/api/v1/directeurs/lettre-image";
+    this.startRequest();
+    try {
+      const formData = new FormData();
+      formData.append("file", file, file.name);
+      const rep: AxiosResponse<LettreImageUploadOut> = await Axios.post(
+        fullUrl,
+        formData,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
   /** SelectPersonne performs the request and handles the error */
   async SelectPersonne(params: { search: string }) {
     const fullUrl = this.baseUrl + "/api/v1/directeurs/shared/personne";
@@ -1042,6 +1086,175 @@ export abstract class AbstractAPI {
         headers: this.getHeaders(),
       });
       return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** DocumentsGet performs the request and handles the error */
+  async DocumentsGet() {
+    const fullUrl = this.baseUrl + "/api/v1/directeurs/documents";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<DocumentsOut> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** DocumentsUpdateToShow performs the request and handles the error */
+  async DocumentsUpdateToShow(params: DocumentsToShow) {
+    const fullUrl = this.baseUrl + "/api/v1/directeurs/documents";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** DocumentsUploadToDownload performs the request and handles the error */
+  async DocumentsUploadToDownload(file: File) {
+    const fullUrl = this.baseUrl + "/api/v1/directeurs/documents/to-download";
+    this.startRequest();
+    try {
+      const formData = new FormData();
+      formData.append("document", file, file.name);
+      const rep: AxiosResponse<PublicFile> = await Axios.post(
+        fullUrl,
+        formData,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** DocumentsDeleteToDownload performs the request and handles the error */
+  async DocumentsDeleteToDownload(params: { key: string }) {
+    const fullUrl = this.baseUrl + "/api/v1/directeurs/documents/to-download";
+    this.startRequest();
+    try {
+      await Axios.delete(fullUrl, {
+        headers: this.getHeaders(),
+        params: { key: params["key"] },
+      });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** DocumentsCreateDemande performs the request and handles the error */
+  async DocumentsCreateDemande() {
+    const fullUrl = this.baseUrl + "/api/v1/directeurs/documents/demande";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<DemandeDirecteur> = await Axios.put(
+        fullUrl,
+        null,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** DocumentsUpdateDemande performs the request and handles the error */
+  async DocumentsUpdateDemande(params: Demande) {
+    const fullUrl = this.baseUrl + "/api/v1/directeurs/documents/demande";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** DocumentsDeleteDemande performs the request and handles the error */
+  async DocumentsDeleteDemande(params: { idDemande: IdDemande }) {
+    const fullUrl = this.baseUrl + "/api/v1/directeurs/documents/demande";
+    this.startRequest();
+    try {
+      await Axios.delete(fullUrl, {
+        headers: this.getHeaders(),
+        params: { idDemande: String(params["idDemande"]) },
+      });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** DocumentsUploadDemandeFile performs the request and handles the error */
+  async DocumentsUploadDemandeFile(file: File) {
+    const fullUrl = this.baseUrl + "/api/v1/directeurs/documents/demande/file";
+    this.startRequest();
+    try {
+      const formData = new FormData();
+      formData.append("document", file, file.name);
+      const rep: AxiosResponse<PublicFile> = await Axios.post(
+        fullUrl,
+        formData,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** DocumentsDeleteDemandeFile performs the request and handles the error */
+  async DocumentsDeleteDemandeFile(params: { key: string }) {
+    const fullUrl = this.baseUrl + "/api/v1/directeurs/documents/demande/file";
+    this.startRequest();
+    try {
+      await Axios.delete(fullUrl, {
+        headers: this.getHeaders(),
+        params: { key: params["key"] },
+      });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** DocumentsApplyDemande performs the request and handles the error */
+  async DocumentsApplyDemande(params: { idDemande: IdDemande }) {
+    const fullUrl = this.baseUrl + "/api/v1/directeurs/documents/demande/apply";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<DemandeDirecteur> = await Axios.post(
+        fullUrl,
+        null,
+        {
+          headers: this.getHeaders(),
+          params: { idDemande: String(params["idDemande"]) },
+        },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** DocumentsUnapplyDemande performs the request and handles the error */
+  async DocumentsUnapplyDemande(params: { idDemande: IdDemande }) {
+    const fullUrl = this.baseUrl + "/api/v1/directeurs/documents/demande/apply";
+    this.startRequest();
+    try {
+      await Axios.delete(fullUrl, {
+        headers: this.getHeaders(),
+        params: { idDemande: String(params["idDemande"]) },
+      });
+      return true;
     } catch (error) {
       this.handleError(error);
     }

@@ -1,6 +1,4 @@
 <template>
-  <NavBar :title="`${controller.camp?.Label} - Lettre aux familles`"> </NavBar>
-
   <v-skeleton-loader type="card" v-if="data == null"></v-skeleton-loader>
 
   <v-card
@@ -70,10 +68,13 @@
 </template>
 
 <script lang="ts" setup>
-import NavBar from "../components/NavBar.vue";
+import NavBar from "@/clients/directeurs/components/NavBar.vue";
 import { computed, onMounted, ref } from "vue";
-import { controller, type LettreOptions } from "../logic/logic";
-import type { LettreOut } from "../logic/api";
+import {
+  controller,
+  type LettreOptions,
+} from "@/clients/directeurs/logic/logic";
+import type { LettreOut } from "@/clients/directeurs/logic/api";
 import { contentURL, Formatters } from "@/utils";
 
 /* Import TinyMCE */
@@ -107,7 +108,7 @@ import "@/clients/directeurs/plugins/tinymce_fr_FR";
 
 import Editor from "@tinymce/tinymce-vue";
 import type { EditorOptions } from "tinymce";
-import LettreOptionsCard from "../components/lettre/LettreOptionsCard.vue";
+import LettreOptionsCard from "./LettreOptionsCard.vue";
 
 onMounted(fetchLettre);
 
