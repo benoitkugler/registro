@@ -14,10 +14,10 @@
           <FileCard :file="file" @delete="toDelete = file"></FileCard>
         </v-col>
         <v-col align-self="center" cols="auto">
+          <!-- text mode -->
           <v-btn
+            v-if="props.showUploadText"
             class="my-2"
-            :icon="!props.showUploadText"
-            :size="props.showUploadText ? undefined : 'x-small'"
             @click="onClick"
             :disabled="
               props.inUpload ||
@@ -32,9 +32,26 @@
               >
               </v-icon>
             </template>
-            <template v-if="props.showUploadText"
-              >Téléverser un document</template
+            Téléverser un document
+          </v-btn>
+          <!-- icon mode -->
+          <v-btn
+            v-else
+            class="my-2"
+            icon
+            size="x-small"
+            @click="onClick"
+            :disabled="
+              props.inUpload ||
+              (props.maxDocs != 0 && props.files.length >= props.maxDocs)
+            "
+          >
+            <v-icon
+              color="green"
+              :icon="props.inUpload ? 'mdi-loading' : 'mdi-upload'"
+              :class="props.inUpload ? 'mdi-spin' : undefined"
             >
+            </v-icon>
           </v-btn>
         </v-col>
       </v-row>

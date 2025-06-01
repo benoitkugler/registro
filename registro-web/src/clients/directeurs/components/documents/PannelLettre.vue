@@ -5,7 +5,7 @@
     class="mt-2 mx-auto"
     title="Editer la lettre"
     :subtitle="subtitle"
-    width="800px"
+    max-width="800px"
   >
     <template #append>
       <v-btn class="mx-2" @click="showOptions = true">

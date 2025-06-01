@@ -27,12 +27,9 @@ const emit = defineEmits<{
 const inner = ref<File | null>(null);
 
 const maxSize = 5_000_000; // in bytes
-function rule(list: File[] | null) {
-  if (!list || !list.length) return true;
-  return (
-    list.every((file) => file.size <= maxSize) ||
-    `Taille maximale : ${maxSize / 1_000_000}MB`
-  );
+function rule(file: File | null) {
+  if (!file) return true;
+  return file.size <= maxSize || `Taille maximale : ${maxSize / 1_000_000}MB`;
 }
 
 function onUpdate() {

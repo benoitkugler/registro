@@ -1194,7 +1194,10 @@ export abstract class AbstractAPI {
   }
 
   /** DocumentsUploadDemandeFile performs the request and handles the error */
-  async DocumentsUploadDemandeFile(file: File) {
+  async DocumentsUploadDemandeFile(
+    file: File,
+    params: { idDemande: IdDemande },
+  ) {
     const fullUrl = this.baseUrl + "/api/v1/directeurs/documents/demande/file";
     this.startRequest();
     try {
@@ -1203,7 +1206,10 @@ export abstract class AbstractAPI {
       const rep: AxiosResponse<PublicFile> = await Axios.post(
         fullUrl,
         formData,
-        { headers: this.getHeaders() },
+        {
+          headers: this.getHeaders(),
+          params: { idDemande: String(params["idDemande"]) },
+        },
       );
       return rep.data;
     } catch (error) {

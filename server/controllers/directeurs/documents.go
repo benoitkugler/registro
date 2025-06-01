@@ -385,7 +385,7 @@ func (ct *Controller) deleteDemande(user cps.IdCamp, id fs.IdDemande) error {
 func (ct *Controller) DocumentsUploadDemandeFile(c echo.Context) error {
 	user := JWTUser(c)
 
-	idDemande, err := utils.ParseInt[fs.IdDemande](c.FormValue("idDemande"))
+	idDemande, err := utils.QueryParamInt[fs.IdDemande](c, "idDemande")
 	if err != nil {
 		return err
 	}

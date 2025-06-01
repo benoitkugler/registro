@@ -5,18 +5,30 @@
       @update:model-value="v => setTab(v as DocumentsTab)"
     >
       <v-tab :value="('documents' satisfies DocumentsTab)">Documents</v-tab>
-      <v-tab :value="('lettre' satisfies DocumentsTab)"
-        >Lettre aux familles</v-tab
+      <v-tab :value="('lettre' satisfies DocumentsTab)">
+        <template #prepend>
+          <v-icon>mdi-mail</v-icon>
+        </template>
+        Lettre aux familles</v-tab
+      >
+      <v-tab :value="('vetements' satisfies DocumentsTab)">
+        <template #prepend>
+          <v-icon>mdi-washing-machine</v-icon>
+        </template>
+        Liste de vêtements</v-tab
       >
     </v-tabs>
   </NavBar>
 
   <v-tabs-window :model-value="currentTab">
     <v-tabs-window-item :value="('documents' satisfies DocumentsTab)">
-      TODO
+      <PannelDocuments @go-to="setTab"></PannelDocuments>
     </v-tabs-window-item>
     <v-tabs-window-item :value="('lettre' satisfies DocumentsTab)">
-      <LettreEditor></LettreEditor>
+      <PannelLettre></PannelLettre>
+    </v-tabs-window-item>
+    <v-tabs-window-item :value="('vetements' satisfies DocumentsTab)">
+      <PannelVetements></PannelVetements>
     </v-tabs-window-item>
   </v-tabs-window>
 </template>
@@ -24,14 +36,16 @@
 <script lang="ts" setup>
 import { useRouter } from "vue-router";
 import NavBar from "../components/NavBar.vue";
-import { computed, onMounted } from "vue";
+import { computed } from "vue";
 import {
   parseQueryURLDocuments,
   type DocumentsTab,
   type QueryURLDocuments,
 } from "../plugins/router";
 import { controller } from "../logic/logic";
-import LettreEditor from "../components/documents/LettreEditor.vue";
+import PannelLettre from "../components/documents/PannelLettre.vue";
+import PannelDocuments from "../components/documents/PannelDocuments.vue";
+import PannelVetements from "../components/documents/PannelVetements.vue";
 
 const router = useRouter();
 
