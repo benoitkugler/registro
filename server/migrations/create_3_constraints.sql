@@ -148,6 +148,9 @@ ALTER TABLE camps
     ADD CONSTRAINT DocumentsToShow_gomacro CHECK (gomacro_validate_json_camp_DocumentsToShow (DocumentsToShow));
 
 ALTER TABLE camps
+    ADD CONSTRAINT Vetements_gomacro CHECK (gomacro_validate_json_camp_ListeVetements (Vetements));
+
+ALTER TABLE camps
     ADD CONSTRAINT Navette_gomacro CHECK (gomacro_validate_json_camp_OptionNavette (Navette));
 
 ALTER TABLE camps

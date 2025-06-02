@@ -55,6 +55,7 @@ func randCamp() Camp {
 	s.Password = randstring()
 	s.DocumentsReady = randbool()
 	s.DocumentsToShow = randDocumentsToShow()
+	s.Vetements = randListeVetements()
 
 	return s
 }
@@ -160,6 +161,14 @@ func randLettredirecteur() Lettredirecteur {
 	s.UseCoordCentre = randbool()
 	s.ShowAdressePostale = randbool()
 	s.ColorCoord = randstring()
+
+	return s
+}
+
+func randListeVetements() ListeVetements {
+	var s ListeVetements
+	s.Vetements = randSliceVetement()
+	s.Complement = randstring()
 
 	return s
 }
@@ -283,6 +292,15 @@ func randSliceRole() []Role {
 	return out
 }
 
+func randSliceVetement() []Vetement {
+	l := 3 + rand.Intn(5)
+	out := make([]Vetement, l)
+	for i := range out {
+		out[i] = randVetement()
+	}
+	return out
+}
+
 func randSliceint() []int {
 	l := 3 + rand.Intn(5)
 	out := make([]int, l)
@@ -343,6 +361,15 @@ func randStructureaide() Structureaide {
 	s.Nom = randstring()
 	s.Immatriculation = randstring()
 	s.Info = randstring()
+
+	return s
+}
+
+func randVetement() Vetement {
+	var s Vetement
+	s.Quantite = randint()
+	s.Description = randstring()
+	s.Important = randbool()
 
 	return s
 }

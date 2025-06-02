@@ -154,6 +154,29 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION gomacro_validate_json_array_camp_Vetement (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) = 'null' THEN
+        RETURN TRUE;
+    END IF;
+    IF jsonb_typeof(data) != 'array' THEN
+        RETURN FALSE;
+    END IF;
+    IF jsonb_array_length(data) = 0 THEN
+        RETURN TRUE;
+    END IF;
+    RETURN (
+        SELECT
+            bool_and(gomacro_validate_json_camp_Vetement (value))
+        FROM
+            jsonb_array_elements(data));
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
 CREATE OR REPLACE FUNCTION gomacro_validate_json_array_number (data jsonb)
     RETURNS boolean
     AS $$
@@ -209,6 +232,28 @@ BEGIN
         AND gomacro_validate_json_boolean (data -> 'LettreDirecteur')
         AND gomacro_validate_json_boolean (data -> 'ListeVetements')
         AND gomacro_validate_json_boolean (data -> 'ListeParticipants');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_camp_ListeVetements (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('Vetements', 'Complement'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_array_camp_Vetement (data -> 'Vetements')
+        AND gomacro_validate_json_string (data -> 'Complement');
     RETURN is_valid;
 END;
 $$
@@ -339,6 +384,29 @@ BEGIN
         AND gomacro_validate_json_number (data -> 'ReducEquipiers')
         AND gomacro_validate_json_number (data -> 'ReducEnfants')
         AND gomacro_validate_json_doss_Montant (data -> 'ReducSpeciale');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_camp_Vetement (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('Quantite', 'Description', 'Important'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_number (data -> 'Quantite')
+        AND gomacro_validate_json_string (data -> 'Description')
+        AND gomacro_validate_json_boolean (data -> 'Important');
     RETURN is_valid;
 END;
 $$

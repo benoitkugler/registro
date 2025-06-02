@@ -65,6 +65,12 @@ class Controller extends AbstractAPI {
       this.baseUrl + `/api/v1/directeurs/lettre-image?token=${this.authToken}`
     );
   }
+
+  listeVetementsURL() {
+    return (
+      this.baseUrl + `/service/directeurs/vetements?token=${this.authToken}`
+    );
+  }
 }
 
 /** `isDev` is true when the client app is served in dev mode */

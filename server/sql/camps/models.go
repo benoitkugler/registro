@@ -59,6 +59,8 @@ type Camp struct {
 
 	DocumentsReady  bool
 	DocumentsToShow DocumentsToShow
+
+	Vetements ListeVetements
 }
 
 // Lettredirecteur conserve le html utilisé pour générer la lettre.

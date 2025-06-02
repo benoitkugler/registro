@@ -36,7 +36,6 @@
     </template>
     <v-card-text v-if="data">
       <Editor
-        id="myEditor"
         licenseKey="gpl"
         v-model="data.Lettre.Html"
         :init="tinyMceOptions"
@@ -68,7 +67,6 @@
 </template>
 
 <script lang="ts" setup>
-import NavBar from "@/clients/directeurs/components/NavBar.vue";
 import { computed, onMounted, ref } from "vue";
 import {
   controller,

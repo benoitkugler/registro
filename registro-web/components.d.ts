@@ -19,6 +19,7 @@ declare module 'vue' {
     DayOffsetField: typeof import('./src/components/DayOffsetField.vue')['default']
     DebounceField: typeof import('./src/components/DebounceField.vue')['default']
     DiplomeField: typeof import('./src/components/DiplomeField.vue')['default']
+    DropZone: typeof import('./src/components/DropZone.vue')['default']
     EventAttestationV: typeof import('./src/components/events/EventAttestationV.vue')['default']
     EventCampDocsV: typeof import('./src/components/events/EventCampDocsV.vue')['default']
     EventFactureV: typeof import('./src/components/events/EventFactureV.vue')['default']

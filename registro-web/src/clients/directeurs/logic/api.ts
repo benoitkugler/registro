@@ -198,6 +198,7 @@ export interface Camp {
   Password: string;
   DocumentsReady: boolean;
   DocumentsToShow: DocumentsToShow;
+  Vetements: ListeVetements;
 }
 // registro/sql/camps.DocumentsToShow
 export interface DocumentsToShow {
@@ -242,6 +243,11 @@ export interface Lettredirecteur {
   UseCoordCentre: boolean;
   ShowAdressePostale: boolean;
   ColorCoord: string;
+}
+// registro/sql/camps.ListeVetements
+export interface ListeVetements {
+  Vetements: Vetement[] | null;
+  Complement: string;
 }
 // registro/sql/camps.Navette
 export const Navette = {
@@ -394,6 +400,12 @@ export const StatutParticipantLabels: Record<StatutParticipant, string> = {
   [StatutParticipant.Inscrit]: "Inscrit",
 };
 
+// registro/sql/camps.Vetement
+export interface Vetement {
+  Quantite: Int;
+  Description: string;
+  Important: boolean;
+}
 // registro/sql/dossiers.Currency
 export const Currency = {
   Euros: 0,
@@ -1086,6 +1098,32 @@ export abstract class AbstractAPI {
         headers: this.getHeaders(),
       });
       return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** VetementsGet performs the request and handles the error */
+  async VetementsGet() {
+    const fullUrl = this.baseUrl + "/api/v1/directeurs/vetements";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<ListeVetements> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** VetementsUpdate performs the request and handles the error */
+  async VetementsUpdate(params: ListeVetements) {
+    const fullUrl = this.baseUrl + "/api/v1/directeurs/vetements";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
     } catch (error) {
       this.handleError(error);
     }

@@ -20,6 +20,8 @@ func setupRoutesDirecteurs(e *echo.Echo, ct *directeurs.Controller) {
 	e.GET(directeurs.EndpointLettreImages, ct.LettreImageGet)
 	e.POST("/api/v1/directeurs/lettre-image", ct.LettreImageUpload, ct.JWTMiddlewareForQuery())
 
+	e.GET("/service/directeurs/vetements", ct.VetementsRender, ct.JWTMiddlewareForQuery())
+
 	gr := e.Group("", ct.JWTMiddleware())
 
 	// Shared
@@ -52,6 +54,10 @@ func setupRoutesDirecteurs(e *echo.Echo, ct *directeurs.Controller) {
 	// Lettre
 	gr.GET("/api/v1/directeurs/lettre", ct.LettreGet)
 	gr.POST("/api/v1/directeurs/lettre", ct.LettreUpdate)
+
+	// Vetements
+	gr.GET("/api/v1/directeurs/vetements", ct.VetementsGet)
+	gr.POST("/api/v1/directeurs/vetements", ct.VetementsUpdate)
 
 	// Documents
 	gr.GET("/api/v1/directeurs/documents", ct.DocumentsGet)

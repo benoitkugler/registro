@@ -26,7 +26,7 @@
       <div v-else>
         <ParticipantRowHeader></ParticipantRowHeader>
 
-        <div class="text-center font-italic" v-if="!participants.length">
+        <div class="text-center font-italic mt-4" v-if="!participants.length">
           Aucun participant n'est encore inscrit sur ce séjour.
         </div>
 
