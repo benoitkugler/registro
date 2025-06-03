@@ -1,6 +1,12 @@
 <template>
   <v-card v-if="data != null" title="Participants">
     <template #append>
+      <v-btn @click="showDocuments = true" class="mx-2">
+        <template #prepend>
+          <v-icon>mdi-folder</v-icon>
+        </template>
+        Documents</v-btn
+      >
       <v-btn @click="showFichesSanitaires = true">
         <template #prepend>
           <v-icon>mdi-pill</v-icon>
@@ -71,6 +77,11 @@
     <v-dialog v-model="showFichesSanitaires">
       <FichesSanitairesPannel></FichesSanitairesPannel>
     </v-dialog>
+
+    <!-- documents demandés -->
+    <v-dialog v-model="showDocuments" max-width="800px">
+      <DocumentsPannel></DocumentsPannel>
+    </v-dialog>
   </v-card>
   <v-skeleton-loader v-else type="card"></v-skeleton-loader>
 </template>
@@ -85,6 +96,7 @@ import {
 } from "../../logic/api";
 import { Participants } from "@/utils";
 import FichesSanitairesPannel from "./FichesSanitairesPannel.vue";
+import DocumentsPannel from "./DocumentsPannel.vue";
 
 const props = defineProps<{}>();
 
@@ -133,4 +145,6 @@ async function updateParticipant(p: Participant) {
 }
 
 const showFichesSanitaires = ref(false);
+
+const showDocuments = ref(false);
 </script>

@@ -240,7 +240,7 @@ func (ct *Controller) ParticipantsStreamFichesAndVaccins(c echo.Context) error {
 }
 
 func (ct *Controller) streamFichesAndVaccins(user cps.IdCamp, response http.ResponseWriter) error {
-	camp, err := cps.LoadCamp(ct.db, user)
+	camp, err := cps.LoadCampPersonnes(ct.db, user)
 	if err != nil {
 		return err
 	}
@@ -253,7 +253,7 @@ func (ct *Controller) streamFichesAndVaccins(user cps.IdCamp, response http.Resp
 		return utils.SQLError(err)
 	}
 
-	personnes := camp.Personnes()
+	personnes := camp.Personnes(true)
 	tmp, err := pr.SelectFichesanitairesByIdPersonnes(ct.db, personnes.IDs()...)
 	if err != nil {
 		return utils.SQLError(err)

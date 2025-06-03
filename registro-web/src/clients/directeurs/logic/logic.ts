@@ -5,6 +5,7 @@ import {
   AbstractAPI,
   type CampItem,
   type IdCamp,
+  type IdDemande,
   type Lettredirecteur,
 } from "./api";
 
@@ -57,6 +58,16 @@ class Controller extends AbstractAPI {
     return (
       this.baseUrl +
       `/api/v1/directeurs/participants/stream-fiches-sanitaires?token=${this.authToken}`
+    );
+  }
+
+  /** Special URL for direct download, with token included in query.
+   * Keep in sync with `DocumentsStreamUploaded`
+   */
+  documentsStreamUploadedURL(idDemande: IdDemande) {
+    return (
+      this.baseUrl +
+      `/api/v1/directeurs/documents/stream-documents?token=${this.authToken}&idDemande=${idDemande}`
     );
   }
 

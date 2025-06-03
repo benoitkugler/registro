@@ -225,6 +225,7 @@ export interface Camp {
   Password: string;
   DocumentsReady: boolean;
   DocumentsToShow: DocumentsToShow;
+  Vetements: ListeVetements;
 }
 // registro/sql/camps.DocumentsToShow
 export interface DocumentsToShow {
@@ -239,6 +240,11 @@ export type IdSondage = number & { __opaque__: "IdSondage" };
 export type IdStructureaide = number & { __opaque__: "IdStructureaide" };
 // registro/sql/camps.Jours
 export type Jours = Int[] | null;
+// registro/sql/camps.ListeVetements
+export interface ListeVetements {
+  Vetements: Vetement[] | null;
+  Complement: string;
+}
 // registro/sql/camps.Navette
 export const Navette = {
   NoBus: 0,
@@ -401,6 +407,12 @@ export interface Structureaide {
 }
 // registro/sql/camps.Structureaides
 export type Structureaides = Record<IdStructureaide, Structureaide> | null;
+// registro/sql/camps.Vetement
+export interface Vetement {
+  Quantite: Int;
+  Description: string;
+  Important: boolean;
+}
 // registro/sql/dossiers.Currency
 export const Currency = {
   Euros: 0,

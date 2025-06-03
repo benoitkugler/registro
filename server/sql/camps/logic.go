@@ -74,18 +74,18 @@ type CampLoader struct {
 	personnes pr.Personnes
 }
 
-// LoadCamp is a convenient wrapper around [LoadCamps] for
+// LoadCampPersonnes is a convenient wrapper around [LoadCampsPersonnes] for
 // a single camp.
-func LoadCamp(db DB, id IdCamp) (CampLoader, error) {
-	out, err := LoadCamps(db, id)
+func LoadCampPersonnes(db DB, id IdCamp) (CampLoader, error) {
+	out, err := LoadCampsPersonnes(db, id)
 	if err != nil {
 		return CampLoader{}, err
 	}
 	return out[0], nil
 }
 
-// LoadCamps wraps the error
-func LoadCamps(db DB, ids ...IdCamp) ([]CampLoader, error) {
+// LoadCampsPersonnes wraps the error
+func LoadCampsPersonnes(db DB, ids ...IdCamp) ([]CampLoader, error) {
 	camps, err := SelectCamps(db, ids...)
 	if err != nil {
 		return nil, utils.SQLError(err)
@@ -119,9 +119,13 @@ func (cd CampLoader) IdDossiers() []ds.IdDossier {
 	return cd.participants.IdDossiers()
 }
 
-func (cd CampLoader) Personnes() pr.Personnes {
+// Personnes returns the [Personne]s for all [Participant]s
+func (cd CampLoader) Personnes(onlyInscrits bool) pr.Personnes {
 	out := make(pr.Personnes)
 	for _, p := range cd.participants {
+		if onlyInscrits && p.Statut != Inscrit {
+			continue
+		}
 		out[p.IdPersonne] = cd.personnes[p.IdPersonne]
 	}
 	return out

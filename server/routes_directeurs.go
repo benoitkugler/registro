@@ -15,6 +15,7 @@ func setupRoutesDirecteurs(e *echo.Echo, ct *directeurs.Controller) {
 
 	e.GET("/api/v1/directeurs/equipiers/files", ct.EquipiersDownloadFiles, ct.JWTMiddlewareForQuery())
 	e.GET("/api/v1/directeurs/participants/stream-fiches-sanitaires", ct.ParticipantsStreamFichesAndVaccins, ct.JWTMiddlewareForQuery())
+	e.GET("/api/v1/directeurs/documents/stream-documents", ct.DocumentsStreamUploaded, ct.JWTMiddlewareForQuery())
 
 	// public image service, secured by key
 	e.GET(directeurs.EndpointLettreImages, ct.LettreImageGet)
@@ -71,4 +72,6 @@ func setupRoutesDirecteurs(e *echo.Echo, ct *directeurs.Controller) {
 	gr.DELETE("/api/v1/directeurs/documents/demande/file", ct.DocumentsDeleteDemandeFile)
 	gr.POST("/api/v1/directeurs/documents/demande/apply", ct.DocumentsApplyDemande)
 	gr.DELETE("/api/v1/directeurs/documents/demande/apply", ct.DocumentsUnapplyDemande)
+
+	gr.GET("/api/v1/directeurs/documents/uploaded", ct.DocumentsGetUploaded)
 }

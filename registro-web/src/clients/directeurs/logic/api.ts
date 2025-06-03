@@ -28,6 +28,11 @@ export interface DemandeDirecteur {
   Demande: Demande;
   File: PublicFile;
 }
+// registro/controllers/directeurs.DemandeDocuments
+export interface DemandeDocuments {
+  Demande: Demande;
+  UploadedBy: IdPersonne[] | null;
+}
 // registro/controllers/directeurs.DemandeKey
 export interface DemandeKey {
   IdEquipier: IdEquipier;
@@ -60,6 +65,11 @@ export interface DocumentsOut {
   CampDemandes: DemandeDirecteur[] | null;
   HasLettre: boolean;
   AvailableDemandes: DemandeDirecteur[] | null;
+}
+// registro/controllers/directeurs.DocumentsUploadedOut
+export interface DocumentsUploadedOut {
+  Personnes: Personnes;
+  DemandesDocuments: DemandeDocuments[] | null;
 }
 // registro/controllers/directeurs.EquipierDemande
 export interface EquipierDemande {
@@ -660,6 +670,8 @@ export interface Personne {
   Publicite: Publicite;
   IsTemp: boolean;
 }
+// registro/sql/personnes.Personnes
+export type Personnes = Record<IdPersonne, Personne> | null;
 // registro/sql/personnes.Publicite
 export interface Publicite {
   VersionPapier: boolean;
@@ -774,6 +786,22 @@ export abstract class AbstractAPI {
     this.startRequest();
     try {
       await Axios.get(fullUrl, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** DocumentsStreamUploaded performs the request and handles the error */
+  async DocumentsStreamUploaded(params: { idDemande: IdDemande }) {
+    const fullUrl =
+      this.baseUrl + "/api/v1/directeurs/documents/stream-documents";
+    this.startRequest();
+    try {
+      await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { idDemande: String(params["idDemande"]) },
+      });
       return true;
     } catch (error) {
       this.handleError(error);
@@ -1299,6 +1327,21 @@ export abstract class AbstractAPI {
         params: { idDemande: String(params["idDemande"]) },
       });
       return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** DocumentsGetUploaded performs the request and handles the error */
+  async DocumentsGetUploaded() {
+    const fullUrl = this.baseUrl + "/api/v1/directeurs/documents/uploaded";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<DocumentsUploadedOut> = await Axios.get(
+        fullUrl,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }

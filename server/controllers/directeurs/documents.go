@@ -3,11 +3,14 @@ package directeurs
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"slices"
 
 	filesAPI "registro/controllers/files"
+	fsAPI "registro/controllers/files"
 	cps "registro/sql/camps"
 	fs "registro/sql/files"
+	pr "registro/sql/personnes"
 	"registro/utils"
 
 	"github.com/labstack/echo/v4"
@@ -441,4 +444,108 @@ func (ct *Controller) DocumentsDeleteDemandeFile(c echo.Context) error {
 		return err
 	}
 	return c.NoContent(200)
+}
+
+// download API
+
+type DocumentsUploadedOut struct {
+	Personnes         pr.Personnes
+	DemandesDocuments []DemandeDocuments
+}
+
+type DemandeDocuments struct {
+	Demande    fs.Demande
+	UploadedBy []pr.IdPersonne // the ones with a file
+}
+
+// DocumentsGetUploaded renvoie les demandes et fichiers ajoutés par
+// les participants.
+func (ct *Controller) DocumentsGetUploaded(c echo.Context) error {
+	user := JWTUser(c)
+	out, err := ct.getUploaded(user)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) getUploaded(id cps.IdCamp) (DocumentsUploadedOut, error) {
+	// demandes
+	links1, err := fs.SelectDemandeCampsByIdCamps(ct.db, id)
+	if err != nil {
+		return DocumentsUploadedOut{}, utils.SQLError(err)
+	}
+	demandes, err := fs.SelectDemandes(ct.db, links1.IdDemandes()...)
+	if err != nil {
+		return DocumentsUploadedOut{}, utils.SQLError(err)
+	}
+	// personnes et fichiers
+	camp, err := cps.LoadCampPersonnes(ct.db, id)
+	if err != nil {
+		return DocumentsUploadedOut{}, err
+	}
+	personnes := camp.Personnes(true)
+	links2, err := fs.SelectFilePersonnesByIdPersonnes(ct.db, personnes.IDs()...)
+	if err != nil {
+		return DocumentsUploadedOut{}, utils.SQLError(err)
+	}
+	filesByDemande := links2.ByIdDemande()
+
+	out := DocumentsUploadedOut{Personnes: personnes}
+	for _, demande := range demandes {
+		out.DemandesDocuments = append(out.DemandesDocuments, DemandeDocuments{
+			Demande:    demande,
+			UploadedBy: filesByDemande[demande.Id].IdPersonnes(),
+		})
+	}
+
+	slices.SortFunc(out.DemandesDocuments, func(a, b DemandeDocuments) int { return int(a.Demande.Id - b.Demande.Id) })
+
+	return out, nil
+}
+
+// DocumentsStreamUploaded télécharge tous les fichiers pour une [Demande],
+// dans une archive .ZIP
+func (ct *Controller) DocumentsStreamUploaded(c echo.Context) error {
+	user := JWTUser(c)
+	idDemande, err := utils.QueryParamInt[fs.IdDemande](c, "idDemande")
+	if err != nil {
+		return err
+	}
+	files, archiveName, err := ct.selectDocumentsForDemande(user, idDemande)
+	if err != nil {
+		return err
+	}
+	return fsAPI.StreamZip(c.Response(), archiveName, func(yield func(fsAPI.ZipItem, error) bool) {
+		for _, file := range files {
+			content, err := ct.files.Load(file.Id, false)
+			if err != nil {
+				yield(fsAPI.ZipItem{}, err)
+				return
+			}
+			if !yield(fsAPI.ZipItem{Name: file.NomClient, Content: content}, nil) {
+				return
+			}
+		}
+	})
+}
+
+func (ct *Controller) selectDocumentsForDemande(idCamp cps.IdCamp, idDemande fs.IdDemande) (fs.Files, string, error) {
+	// personnes et fichiers
+	camp, err := cps.LoadCampPersonnes(ct.db, idCamp)
+	if err != nil {
+		return nil, "", err
+	}
+	personnes := camp.Personnes(true)
+	links, err := fs.SelectFilePersonnesByIdPersonnes(ct.db, personnes.IDs()...)
+	if err != nil {
+		return nil, "", utils.SQLError(err)
+	}
+	files, err := fs.SelectFiles(ct.db, links.ByIdDemande()[idDemande].IdFiles()...)
+	if err != nil {
+		return nil, "", utils.SQLError(err)
+	}
+
+	archiveName := fmt.Sprintf("Fichiers %s.zip", camp.Camp.Label())
+	return files, archiveName, nil
 }

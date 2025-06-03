@@ -51,7 +51,7 @@ func (ct *Controller) getCamps() ([]CampHeader, error) {
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
-	loaders, err := cps.LoadCamps(ct.db, camps.IDs()...)
+	loaders, err := cps.LoadCampsPersonnes(ct.db, camps.IDs()...)
 	if err != nil {
 		return nil, err
 	}

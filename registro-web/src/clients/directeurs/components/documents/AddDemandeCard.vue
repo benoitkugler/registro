@@ -22,7 +22,7 @@
           :title="demande.Demande.Description"
           :subtitle="
             demande.Demande.IdDirecteur.Valid
-              ? 'Demande personnelle'
+              ? 'Demande vous appartenant'
               : 'Demande globale'
           "
           rounded

@@ -96,7 +96,7 @@ func (ct *Controller) createParticipant(args ParticipantsCreateIn) (logic.Partic
 	groupe, hasGroupe := groupes.TrouveGroupe(personne.DateNaissance)
 
 	// ... and Statut
-	camp, err := cps.LoadCamp(ct.db, args.IdCamp)
+	camp, err := cps.LoadCampPersonnes(ct.db, args.IdCamp)
 	if err != nil {
 		return logic.ParticipantExt{}, err
 	}
@@ -300,7 +300,7 @@ func (ct *Controller) moveParticipant(args ParticipantsMoveIn) error {
 	groupe, hasGroupe := groupes.TrouveGroupe(personne.DateNaissance)
 
 	// ... and Statut
-	camp, err := cps.LoadCamp(ct.db, args.Target)
+	camp, err := cps.LoadCampPersonnes(ct.db, args.Target)
 	if err != nil {
 		return err
 	}
@@ -350,7 +350,7 @@ func (ct *Controller) setPlaceLiberee(host string, id cps.IdParticipant) (cps.Pa
 	if err != nil {
 		return cps.Participant{}, err
 	}
-	camp, err := cps.LoadCamp(ct.db, participant.IdCamp)
+	camp, err := cps.LoadCampPersonnes(ct.db, participant.IdCamp)
 	if err != nil {
 		return cps.Participant{}, err
 	}

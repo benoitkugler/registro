@@ -152,7 +152,7 @@ func (dossier Dossier) StatutHints(db ds.DB, bypass StatutBypassRights) (StatutH
 	partsByCamp := dossier.Participants.ByIdCamp()
 
 	// on calcule le statut des participants (requiert les participants et personnes déjà inscrites)
-	camps, err := cps.LoadCamps(db, dossier.Camps().IDs()...)
+	camps, err := cps.LoadCampsPersonnes(db, dossier.Camps().IDs()...)
 	if err != nil {
 		return nil, err
 	}
