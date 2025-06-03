@@ -5,31 +5,12 @@
     class="ma-2 mx-auto"
     max-width="800px"
   >
-    <template #append>
-      <v-menu>
-        <template #activator="{ props: menuProps }">
-          <v-btn v-bind="menuProps">
-            <template #prepend>
-              <v-icon color="green">mdi-plus</v-icon>
-            </template>
-            Ajouter un document...</v-btn
-          >
-        </template>
-        <v-list>
-          <v-list-item
-            title="Document à lire"
-            @click="showUploadToDownload = true"
-          ></v-list-item>
-          <v-list-item
-            title="Document à fournir"
-            subtitle="Collecté via l'espace personnel"
-            @click="showAddDemandeDialog = true"
-          ></v-list-item>
-        </v-list>
-      </v-menu>
-    </template>
     <v-skeleton-loader v-if="data == null"></v-skeleton-loader>
     <v-card-text v-else>
+      <v-alert type="info">
+        La fiche sanitaire et les vaccins sont automatiquement demandés pour les
+        participants mineurs.
+      </v-alert>
       <v-list>
         <!-- generated documents -->
         <v-list-subheader>Documents générés</v-list-subheader>
@@ -81,8 +62,22 @@
             ></v-switch> </template
         ></v-list-item>
 
+        <v-divider thickness="1" class="my-2"></v-divider>
+
         <!-- documents to download -->
-        <v-list-subheader>Documents à lire </v-list-subheader>
+        <v-row no-gutters>
+          <v-col align-self="center">
+            <v-list-subheader>Documents à lire </v-list-subheader>
+          </v-col>
+          <v-col align-self="center" cols="auto" class="mx-2">
+            <v-btn size="small" @click="showUploadToDownload = true">
+              <template #prepend>
+                <v-icon color="green">mdi-plus</v-icon>
+              </template>
+              Ajouter
+            </v-btn>
+          </v-col>
+        </v-row>
         <v-list-item v-if="!data.FilesToDownload?.length">
           <i>Aucun document.</i>
         </v-list-item>
@@ -95,8 +90,25 @@
           </template>
         </v-list-item>
 
+        <v-divider thickness="1" class="my-2"></v-divider>
+
         <!-- documents to upload -->
-        <v-list-subheader>Documents à fournir </v-list-subheader>
+        <v-row no-gutters>
+          <v-col align-self="center">
+            <v-list-subheader
+              >Documents à fournir (collectés sur l'espace de suivi)
+            </v-list-subheader>
+          </v-col>
+          <v-col align-self="center" cols="auto" class="mx-2">
+            <v-btn size="small" @click="showAddDemandeDialog = true">
+              <template #prepend>
+                <v-icon color="green">mdi-plus</v-icon>
+              </template>
+              Ajouter
+            </v-btn>
+          </v-col>
+        </v-row>
+
         <v-list-item v-if="!data.CampDemandes?.length">
           <i>Aucun document.</i>
         </v-list-item>

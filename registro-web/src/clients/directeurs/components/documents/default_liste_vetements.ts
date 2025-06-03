@@ -172,7 +172,7 @@ export const DefaultListe: { Ete: Vetement[]; Hiver: Vetement[] } = {
     },
     {
       Quantite: 1 as Int,
-      Description: "Paire de boots ou ch. de marche",
+      Description: "Paire de boots ou chaussures de marche",
       Important: false,
     },
     {
