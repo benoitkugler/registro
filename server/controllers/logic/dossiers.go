@@ -120,9 +120,18 @@ func (de *Dossier) PersonnesFor(participants []cps.Participant) []pr.Personne {
 }
 
 // Camps returns the map of [Camp]s concerned by this dossier.
-func (de *Dossier) Camps() cps.Camps {
+func (de *Dossier) Camps() cps.Camps { return de.campsInscrits(false) }
+
+// Camps returns the map of [Camp]s concerned by this dossier,
+// with at least one 'inscrit'.
+func (de *Dossier) CampsInscrits() cps.Camps { return de.campsInscrits(true) }
+
+func (de *Dossier) campsInscrits(onlyInscrits bool) cps.Camps {
 	out := make(cps.Camps)
 	for _, part := range de.Participants {
+		if onlyInscrits && part.Statut != cps.Inscrit {
+			continue
+		}
 		out[part.IdCamp] = de.camps[part.IdCamp]
 	}
 	return out
