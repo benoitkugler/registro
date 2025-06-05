@@ -119,7 +119,7 @@ export type Date = Date_;
 	*/
 export abstract class AbstractAPI {
   constructor(
-    protected baseUrl: string,
+    protected baseURL: string,
     protected authToken: string,
   ) {}
 
@@ -133,7 +133,7 @@ export abstract class AbstractAPI {
 
   /** GetCamps performs the request and handles the error */
   async GetCamps() {
-    const fullUrl = this.baseUrl + "/api/v1/inscription/camps";
+    const fullUrl = this.baseURL + "/api/v1/inscription/camps";
     this.startRequest();
     try {
       const rep: AxiosResponse<CampExt[] | null> = await Axios.get(fullUrl, {
@@ -147,7 +147,7 @@ export abstract class AbstractAPI {
 
   /** InitInscription performs the request and handles the error */
   async InitInscription(params: { preinscription: string }) {
-    const fullUrl = this.baseUrl + "/api/v1/inscription";
+    const fullUrl = this.baseURL + "/api/v1/inscription";
     this.startRequest();
     try {
       const rep: AxiosResponse<Data> = await Axios.get(fullUrl, {
@@ -162,7 +162,7 @@ export abstract class AbstractAPI {
 
   /** SaveInscription performs the request and handles the error */
   async SaveInscription(params: Inscription) {
-    const fullUrl = this.baseUrl + "/api/v1/inscription";
+    const fullUrl = this.baseURL + "/api/v1/inscription";
     this.startRequest();
     try {
       await Axios.put(fullUrl, params, { headers: this.getHeaders() });
@@ -174,7 +174,7 @@ export abstract class AbstractAPI {
 
   /** SearchHistory performs the request and handles the error */
   async SearchHistory(params: { mail: string }) {
-    const fullUrl = this.baseUrl + "/api/v1/inscription/search";
+    const fullUrl = this.baseURL + "/api/v1/inscription/search";
     this.startRequest();
     try {
       const rep: AxiosResponse<SearchHistoryOut> = await Axios.get(fullUrl, {

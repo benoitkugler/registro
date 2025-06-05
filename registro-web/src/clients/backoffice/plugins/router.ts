@@ -19,10 +19,10 @@ const routes = [
 ];
 
 // TODO: check that
-const baseUrl = import.meta.env.DEV ? "/src/clients/backoffice" : "/backoffice";
+const baseURL = import.meta.env.DEV ? "/src/clients/backoffice" : "/backoffice";
 
 const router = createRouter({
-  history: createWebHistory(baseUrl),
+  history: createWebHistory(baseURL),
   routes,
 });
 

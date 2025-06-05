@@ -70,6 +70,7 @@
 import { computed, onMounted, ref } from "vue";
 import {
   controller,
+  endpoints,
   type LettreOptions,
 } from "@/clients/directeurs/logic/logic";
 import type { LettreOut } from "@/clients/directeurs/logic/api";
@@ -156,7 +157,7 @@ const tinyMceOptions = computed<Partial<EditorOptions>>(() => {
     relative_urls: false,
     remove_script_host: false,
     image_description: false,
-    images_upload_url: controller.lettreImageUploadURL(),
+    images_upload_url: endpoints.LettreImageUpload(controller.authToken),
     automatic_uploads: true,
     formats: {
       imageMargin: { selector: "img", styles: { marginRight: "20px" } },

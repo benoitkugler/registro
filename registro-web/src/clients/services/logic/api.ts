@@ -7,10 +7,7 @@ import Axios from "axios";
 		as base class for an app controller.
 	*/
 export abstract class AbstractAPI {
-  constructor(
-    protected baseUrl: string,
-    protected authToken: string,
-  ) {}
+  constructor(protected baseURL: string, protected authToken: string) {}
 
   protected abstract handleError(error: any): void;
 
@@ -23,7 +20,7 @@ export abstract class AbstractAPI {
   /** ValideTransfertFicheSanitaire performs the request and handles the error */
   async ValideTransfertFicheSanitaire(params: { token: string }) {
     const fullUrl =
-      this.baseUrl + "/api/v1/espaceperso/fichesanitaires/transfert";
+      this.baseURL + "/api/v1/espaceperso/fichesanitaires/transfert";
     this.startRequest();
     try {
       await Axios.post(fullUrl, null, {

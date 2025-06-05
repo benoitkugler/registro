@@ -109,7 +109,8 @@ func (ct Controller) LettreImageGet(c echo.Context) error {
 	if err != nil {
 		return utils.SQLError(err)
 	}
-	return c.Blob(200, mime.TypeByExtension(filepath.Ext(image.Filename)), image.Content)
+	contentType := mime.TypeByExtension(filepath.Ext(image.Filename))
+	return c.Blob(200, contentType, image.Content)
 }
 
 type LettreOut struct {

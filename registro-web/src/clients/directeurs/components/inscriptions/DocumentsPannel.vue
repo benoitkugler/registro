@@ -33,7 +33,12 @@
             <v-btn
               icon="mdi-download"
               size="small"
-              :href="controller.documentsStreamUploadedURL(demande.Demande.Id)"
+              :href="
+                endpoints.DocumentsStreamUploaded(
+                  demande.Demande.Id,
+                  controller.authToken
+                )
+              "
             ></v-btn>
           </template>
         </v-list-item>
@@ -45,7 +50,7 @@
 
 <script lang="ts" setup>
 import { ref, onMounted } from "vue";
-import { controller } from "../../logic/logic";
+import { controller, endpoints } from "../../logic/logic";
 import { type DocumentsUploadedOut, type IdPersonne } from "../../logic/api";
 import DocumentsUploadedBy from "./DocumentsUploadedBy.vue";
 

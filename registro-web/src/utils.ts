@@ -29,7 +29,7 @@ const localhost = "http://localhost:1323";
 /** `isDev` is true when the client app is served in dev mode */
 const isDev = import.meta.env.DEV;
 
-export const baseUrl = () => (isDev ? localhost : window.location.origin);
+export const baseURL = () => (isDev ? localhost : window.location.origin);
 
 function arrayBufferToString(buffer: ArrayBuffer) {
   const uintArray = new Uint8Array(buffer);
@@ -555,10 +555,10 @@ export const Departements = [
 
 // hardcoded, global files endpoint
 export function miniatureURL(key: string) {
-  return `${baseUrl()}/api/v1/documents/miniature?key=${key}`;
+  return `${baseURL()}/api/v1/documents/miniature?key=${key}`;
 }
 export function contentURL(key: string) {
-  return `${baseUrl()}/api/v1/documents?key=${key}`;
+  return `${baseURL()}/api/v1/documents?key=${key}`;
 }
 
 /** swapItems take the block at the index `origin` and insert it right before

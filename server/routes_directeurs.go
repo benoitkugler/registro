@@ -13,15 +13,10 @@ func setupRoutesDirecteurs(e *echo.Echo, ct *directeurs.Controller) {
 	e.POST("/api/v1/directeurs/shared/camps", ct.GetCamps)
 	e.GET("/api/v1/directeurs/loggin", ct.Loggin)
 
-	e.GET("/api/v1/directeurs/equipiers/files", ct.EquipiersDownloadFiles, ct.JWTMiddlewareForQuery())
-	e.GET("/api/v1/directeurs/participants/stream-fiches-sanitaires", ct.ParticipantsStreamFichesAndVaccins, ct.JWTMiddlewareForQuery())
-	e.GET("/api/v1/directeurs/documents/stream-documents", ct.DocumentsStreamUploaded, ct.JWTMiddlewareForQuery())
-
 	// public image service, secured by key
 	e.GET(directeurs.EndpointLettreImages, ct.LettreImageGet)
-	e.POST("/api/v1/directeurs/lettre-image", ct.LettreImageUpload, ct.JWTMiddlewareForQuery())
 
-	e.GET("/service/directeurs/vetements", ct.VetementsRender, ct.JWTMiddlewareForQuery())
+	// see also routes_misc.go
 
 	gr := e.Group("", ct.JWTMiddleware())
 

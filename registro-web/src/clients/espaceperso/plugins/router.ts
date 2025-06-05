@@ -10,12 +10,12 @@ import Index from "../pages/index.vue";
 const routes = [{ path: "/", component: Index }];
 
 // TODO: check that
-const baseUrl = import.meta.env.DEV
+const baseURL = import.meta.env.DEV
   ? "/src/clients/espaceperso"
   : "/espaceperso";
 
 const router = createRouter({
-  history: createWebHistory(baseUrl),
+  history: createWebHistory(baseURL),
   routes,
 });
 

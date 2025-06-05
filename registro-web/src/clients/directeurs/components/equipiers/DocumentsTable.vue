@@ -44,7 +44,7 @@
 
 <script lang="ts" setup>
 import { ref, onMounted, computed } from "vue";
-import { controller } from "../../logic/logic";
+import { controller, endpoints } from "../../logic/logic";
 import {
   CategorieLabels,
   DemandeState,
@@ -92,5 +92,7 @@ async function updateState(
   itemAt(idEquipier, idDemande).State = state;
 }
 
-const downloadURL = computed(() => controller.equipiersFilesStreamURL());
+const downloadURL = computed(() =>
+  endpoints.EquipiersDownloadFiles(controller.authToken)
+);
 </script>

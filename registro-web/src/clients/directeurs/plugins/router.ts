@@ -13,10 +13,10 @@ const routes = [
 ];
 
 // TODO: check that
-const baseUrl = import.meta.env.DEV ? "/src/clients/directeurs" : "/directeurs";
+const baseURL = import.meta.env.DEV ? "/src/clients/directeurs" : "/directeurs";
 
 const router = createRouter({
-  history: createWebHistory(baseUrl),
+  history: createWebHistory(baseURL),
   routes,
 });
 

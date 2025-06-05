@@ -1,4 +1,4 @@
-import { baseUrl, parseError, type Action } from "@/utils";
+import { baseURL, parseError, type Action } from "@/utils";
 
 import { AbstractAPI } from "./api";
 
@@ -10,9 +10,9 @@ class Controller extends AbstractAPI {
       color?: string,
       action?: Action
     ) => void,
-    baseUrl: string
+    baseURL: string
   ) {
-    super(baseUrl, "");
+    super(baseURL, "");
   }
 
   protected handleError(error: any): void {
@@ -29,5 +29,5 @@ const isDev = import.meta.env.DEV;
 export const controller = new Controller(
   (_, __) => {},
   (_, __) => {},
-  baseUrl()
+  baseURL()
 );

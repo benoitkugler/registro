@@ -320,7 +320,7 @@ export interface OptID_IdPersonne {
 	*/
 export abstract class AbstractAPI {
   constructor(
-    protected baseUrl: string,
+    protected baseURL: string,
     protected authToken: string,
   ) {}
 
@@ -334,7 +334,7 @@ export abstract class AbstractAPI {
 
   /** Load performs the request and handles the error */
   async Load(params: { token: string }) {
-    const fullUrl = this.baseUrl + "/api/v1/equipier";
+    const fullUrl = this.baseURL + "/api/v1/equipier";
     this.startRequest();
     try {
       const rep: AxiosResponse<EquipierExt> = await Axios.get(fullUrl, {
@@ -349,7 +349,7 @@ export abstract class AbstractAPI {
 
   /** LoadJoomeo performs the request and handles the error */
   async LoadJoomeo(params: { token: string }) {
-    const fullUrl = this.baseUrl + "/api/v1/equipier/joomeo";
+    const fullUrl = this.baseURL + "/api/v1/equipier/joomeo";
     this.startRequest();
     try {
       const rep: AxiosResponse<Joomeo> = await Axios.get(fullUrl, {
@@ -364,7 +364,7 @@ export abstract class AbstractAPI {
 
   /** Update performs the request and handles the error */
   async Update(params: UpdateIn) {
-    const fullUrl = this.baseUrl + "/api/v1/equipier";
+    const fullUrl = this.baseURL + "/api/v1/equipier";
     this.startRequest();
     try {
       await Axios.post(fullUrl, params, { headers: this.getHeaders() });
@@ -376,7 +376,7 @@ export abstract class AbstractAPI {
 
   /** UpdateCharte performs the request and handles the error */
   async UpdateCharte(params: { token: string; accept: boolean }) {
-    const fullUrl = this.baseUrl + "/api/v1/equipier/charte";
+    const fullUrl = this.baseURL + "/api/v1/equipier/charte";
     this.startRequest();
     try {
       await Axios.post(fullUrl, null, {
@@ -397,7 +397,7 @@ export abstract class AbstractAPI {
     file: File,
     params: { token: string; idDemande: IdDemande },
   ) {
-    const fullUrl = this.baseUrl + "/api/v1/equipier/upload";
+    const fullUrl = this.baseURL + "/api/v1/equipier/upload";
     this.startRequest();
     try {
       const formData = new FormData();
@@ -421,7 +421,7 @@ export abstract class AbstractAPI {
 
   /** DeleteDocument performs the request and handles the error */
   async DeleteDocument(params: { key: string }) {
-    const fullUrl = this.baseUrl + "/api/v1/equipier/upload";
+    const fullUrl = this.baseURL + "/api/v1/equipier/upload";
     this.startRequest();
     try {
       await Axios.delete(fullUrl, {

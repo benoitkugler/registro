@@ -161,7 +161,7 @@
 
 <script lang="ts" setup>
 import { computed, nextTick, onMounted, ref, useTemplateRef } from "vue";
-import { controller } from "../../logic/logic";
+import { controller, endpoints } from "../../logic/logic";
 import type { Int, ListeVetements, Vetement } from "../../logic/api";
 import { DefaultListe } from "./default_liste_vetements";
 import { copy, swapItems } from "@/utils";
@@ -216,7 +216,9 @@ function deleteVetement(index: number) {
 const isDragging = ref(false);
 
 const showPreview = ref(false);
-const urlPreviewPDF = computed(() => controller.listeVetementsURL());
+const urlPreviewPDF = computed(() =>
+  endpoints.VetementsRender(controller.authToken)
+);
 async function saveAndPreview() {
   if (!data.value) return;
   const res = await controller.VetementsUpdate(data.value);

@@ -1,13 +1,13 @@
-import { baseUrl, parseError } from "@/utils";
+import { baseURL, parseError } from "@/utils";
 import { AbstractAPI } from "./api";
 
 class Controller extends AbstractAPI {
   constructor(
     public onError: (kind: string, htmlError: string) => void,
     public showMessage: (message: string, color?: string) => void,
-    baseUrl: string
+    baseURL: string
   ) {
-    super(baseUrl, "");
+    super(baseURL, "");
   }
 
   protected handleError(error: any): void {
@@ -21,5 +21,5 @@ class Controller extends AbstractAPI {
 export const controller = new Controller(
   (_, __) => {},
   (_, __) => {},
-  baseUrl()
+  baseURL()
 );

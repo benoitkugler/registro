@@ -19,7 +19,9 @@
           <v-list-item
             title="Fiches et vaccins"
             subtitle="Archive au format .zip"
-            :href="controller.participantsFichesAndVaccinsStreamURL()"
+            :href="
+              endpoints.ParticipantsStreamFichesAndVaccins(controller.authToken)
+            "
           >
           </v-list-item>
         </v-list>
@@ -107,7 +109,7 @@
 
 <script lang="ts" setup>
 import { ref, onMounted } from "vue";
-import { controller } from "../../logic/logic";
+import { controller, endpoints } from "../../logic/logic";
 import {
   FichesanitaireState,
   FichesanitaireStateLabels,

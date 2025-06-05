@@ -790,7 +790,7 @@ export interface OptID_IdPersonne {
 	*/
 export abstract class AbstractAPI {
   constructor(
-    protected baseUrl: string,
+    protected baseURL: string,
     protected authToken: string,
   ) {}
 
@@ -804,7 +804,7 @@ export abstract class AbstractAPI {
 
   /** Load performs the request and handles the error */
   async Load(params: { token: string }) {
-    const fullUrl = this.baseUrl + "/api/v1/espaceperso";
+    const fullUrl = this.baseURL + "/api/v1/espaceperso";
     this.startRequest();
     try {
       const rep: AxiosResponse<Data> = await Axios.get(fullUrl, {
@@ -819,7 +819,7 @@ export abstract class AbstractAPI {
 
   /** SendMessage performs the request and handles the error */
   async SendMessage(params: SendMessageIn) {
-    const fullUrl = this.baseUrl + "/api/v1/espaceperso/message";
+    const fullUrl = this.baseURL + "/api/v1/espaceperso/message";
     this.startRequest();
     try {
       const rep: AxiosResponse<Event> = await Axios.post(fullUrl, params, {
@@ -833,7 +833,7 @@ export abstract class AbstractAPI {
 
   /** UpdateParticipants performs the request and handles the error */
   async UpdateParticipants(params: UpdateParticipantsIn) {
-    const fullUrl = this.baseUrl + "/api/v1/espaceperso/participants";
+    const fullUrl = this.baseURL + "/api/v1/espaceperso/participants";
     this.startRequest();
     try {
       await Axios.post(fullUrl, params, { headers: this.getHeaders() });
@@ -845,7 +845,7 @@ export abstract class AbstractAPI {
 
   /** CreateAide performs the request and handles the error */
   async CreateAide(file: File, formValue: Aide, params: { token: string }) {
-    const fullUrl = this.baseUrl + "/api/v1/espaceperso/aide";
+    const fullUrl = this.baseURL + "/api/v1/espaceperso/aide";
     this.startRequest();
     try {
       const formData = new FormData();
@@ -863,7 +863,7 @@ export abstract class AbstractAPI {
 
   /** GetStructureaides performs the request and handles the error */
   async GetStructureaides() {
-    const fullUrl = this.baseUrl + "/api/v1/espaceperso/structureaides";
+    const fullUrl = this.baseURL + "/api/v1/espaceperso/structureaides";
     this.startRequest();
     try {
       const rep: AxiosResponse<Structureaides> = await Axios.get(fullUrl, {
@@ -877,7 +877,7 @@ export abstract class AbstractAPI {
 
   /** LoadJoomeo performs the request and handles the error */
   async LoadJoomeo(params: { token: string }) {
-    const fullUrl = this.baseUrl + "/api/v1/espaceperso/joomeo";
+    const fullUrl = this.baseURL + "/api/v1/espaceperso/joomeo";
     this.startRequest();
     try {
       const rep: AxiosResponse<Joomeo> = await Axios.get(fullUrl, {
@@ -892,7 +892,7 @@ export abstract class AbstractAPI {
 
   /** LoadFichesanitaires performs the request and handles the error */
   async LoadFichesanitaires(params: { token: string }) {
-    const fullUrl = this.baseUrl + "/api/v1/espaceperso/fichesanitaires";
+    const fullUrl = this.baseURL + "/api/v1/espaceperso/fichesanitaires";
     this.startRequest();
     try {
       const rep: AxiosResponse<FichesanitaireExt[] | null> = await Axios.get(
@@ -907,7 +907,7 @@ export abstract class AbstractAPI {
 
   /** UpdateFichesanitaire performs the request and handles the error */
   async UpdateFichesanitaire(params: UpdateFichesanitaireIn) {
-    const fullUrl = this.baseUrl + "/api/v1/espaceperso/fichesanitaires";
+    const fullUrl = this.baseURL + "/api/v1/espaceperso/fichesanitaires";
     this.startRequest();
     try {
       await Axios.post(fullUrl, params, { headers: this.getHeaders() });
@@ -922,7 +922,7 @@ export abstract class AbstractAPI {
     file: File,
     params: { token: string; idPersonne: IdPersonne },
   ) {
-    const fullUrl = this.baseUrl + "/api/v1/espaceperso/fichesanitaires";
+    const fullUrl = this.baseURL + "/api/v1/espaceperso/fichesanitaires";
     this.startRequest();
     try {
       const formData = new FormData();
@@ -946,7 +946,7 @@ export abstract class AbstractAPI {
 
   /** DeleteVaccin performs the request and handles the error */
   async DeleteVaccin(params: { key: string }) {
-    const fullUrl = this.baseUrl + "/api/v1/espaceperso/fichesanitaires";
+    const fullUrl = this.baseURL + "/api/v1/espaceperso/fichesanitaires";
     this.startRequest();
     try {
       await Axios.delete(fullUrl, {
@@ -965,7 +965,7 @@ export abstract class AbstractAPI {
     idPersonne: IdPersonne;
   }) {
     const fullUrl =
-      this.baseUrl + "/api/v1/espaceperso/fichesanitaires/transfert";
+      this.baseURL + "/api/v1/espaceperso/fichesanitaires/transfert";
     this.startRequest();
     try {
       await Axios.put(fullUrl, null, {
@@ -983,7 +983,7 @@ export abstract class AbstractAPI {
 
   /** LoadSondages performs the request and handles the error */
   async LoadSondages(params: { token: string }) {
-    const fullUrl = this.baseUrl + "/api/v1/espaceperso/sondages";
+    const fullUrl = this.baseURL + "/api/v1/espaceperso/sondages";
     this.startRequest();
     try {
       const rep: AxiosResponse<SondageExt[] | null> = await Axios.get(fullUrl, {
@@ -998,7 +998,7 @@ export abstract class AbstractAPI {
 
   /** UpdateSondages performs the request and handles the error */
   async UpdateSondages(params: UpdateSondageIn) {
-    const fullUrl = this.baseUrl + "/api/v1/espaceperso/sondages";
+    const fullUrl = this.baseURL + "/api/v1/espaceperso/sondages";
     this.startRequest();
     try {
       await Axios.post(fullUrl, params, { headers: this.getHeaders() });

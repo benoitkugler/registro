@@ -1,4 +1,4 @@
-import { baseUrl, parseError, type Action } from "@/utils";
+import { baseURL, parseError, type Action } from "@/utils";
 import {
   AbstractAPI,
   QueryAttente,
@@ -19,10 +19,10 @@ class Controller extends AbstractAPI {
       color?: string,
       action?: Action
     ) => void,
-    baseUrl: string,
+    baseURL: string,
     authToken: string
   ) {
-    super(baseUrl, authToken);
+    super(baseURL, authToken);
   }
 
   hasToken() {
@@ -47,7 +47,7 @@ const isDev = import.meta.env.DEV;
 export const controller = new Controller(
   (_, __) => {},
   (_, __) => {},
-  baseUrl(),
+  baseURL(),
   isDev ? devToken : ""
 );
 

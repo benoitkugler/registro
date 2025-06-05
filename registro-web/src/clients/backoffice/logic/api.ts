@@ -784,7 +784,7 @@ export interface OptID_IdCamp {
 	*/
 export abstract class AbstractAPI {
   constructor(
-    protected baseUrl: string,
+    protected baseURL: string,
     protected authToken: string,
   ) {}
 
@@ -798,7 +798,7 @@ export abstract class AbstractAPI {
 
   /** Loggin performs the request and handles the error */
   async Loggin(params: { password: string }) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/loggin";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/loggin";
     this.startRequest();
     try {
       const rep: AxiosResponse<LogginOut> = await Axios.get(fullUrl, {
@@ -813,7 +813,7 @@ export abstract class AbstractAPI {
 
   /** GetCamps performs the request and handles the error */
   async GetCamps() {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/shared/camps";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/shared/camps";
     this.startRequest();
     try {
       const rep: AxiosResponse<CampItem[] | null> = await Axios.post(
@@ -829,7 +829,7 @@ export abstract class AbstractAPI {
 
   /** SelectPersonne performs the request and handles the error */
   async SelectPersonne(params: { search: string }) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/shared/personne";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/shared/personne";
     this.startRequest();
     try {
       const rep: AxiosResponse<PersonneHeader[] | null> = await Axios.get(
@@ -844,7 +844,7 @@ export abstract class AbstractAPI {
 
   /** CampsGet performs the request and handles the error */
   async CampsGet() {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/camps";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/camps";
     this.startRequest();
     try {
       const rep: AxiosResponse<CampHeader[] | null> = await Axios.get(fullUrl, {
@@ -858,7 +858,7 @@ export abstract class AbstractAPI {
 
   /** CampsCreate performs the request and handles the error */
   async CampsCreate() {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/camps";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/camps";
     this.startRequest();
     try {
       const rep: AxiosResponse<CampHeader> = await Axios.put(fullUrl, null, {
@@ -872,7 +872,7 @@ export abstract class AbstractAPI {
 
   /** CampsCreateMany performs the request and handles the error */
   async CampsCreateMany(params: CampsCreateManyIn) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/camps-many";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/camps-many";
     this.startRequest();
     try {
       const rep: AxiosResponse<CampHeader[] | null> = await Axios.put(
@@ -888,7 +888,7 @@ export abstract class AbstractAPI {
 
   /** CampsUpdate performs the request and handles the error */
   async CampsUpdate(params: Camp) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/camps";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/camps";
     this.startRequest();
     try {
       const rep: AxiosResponse<CampExt> = await Axios.post(fullUrl, params, {
@@ -902,7 +902,7 @@ export abstract class AbstractAPI {
 
   /** CampsDelete performs the request and handles the error */
   async CampsDelete(params: { id: IdCamp }) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/camps";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/camps";
     this.startRequest();
     try {
       await Axios.delete(fullUrl, {
@@ -917,7 +917,7 @@ export abstract class AbstractAPI {
 
   /** CampsGetTaux performs the request and handles the error */
   async CampsGetTaux() {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/camps-taux";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/camps-taux";
     this.startRequest();
     try {
       const rep: AxiosResponse<Tauxs> = await Axios.get(fullUrl, {
@@ -931,7 +931,7 @@ export abstract class AbstractAPI {
 
   /** CampsSetTaux performs the request and handles the error */
   async CampsSetTaux(params: CampsSetTauxIn) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/camps-taux";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/camps-taux";
     this.startRequest();
     try {
       const rep: AxiosResponse<CampHeader> = await Axios.post(fullUrl, params, {
@@ -945,7 +945,7 @@ export abstract class AbstractAPI {
 
   /** CampsOuvreInscriptions performs the request and handles the error */
   async CampsOuvreInscriptions(params: OuvreInscriptionsIn) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/camps/open";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/camps/open";
     this.startRequest();
     try {
       await Axios.post(fullUrl, params, { headers: this.getHeaders() });
@@ -957,7 +957,7 @@ export abstract class AbstractAPI {
 
   /** CampsLoad performs the request and handles the error */
   async CampsLoad(params: { idCamp: IdCamp }) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/camps/load";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/camps/load";
     this.startRequest();
     try {
       const rep: AxiosResponse<CampsLoadOut> = await Axios.get(fullUrl, {
@@ -972,7 +972,7 @@ export abstract class AbstractAPI {
 
   /** ParticipantsCreate performs the request and handles the error */
   async ParticipantsCreate(params: ParticipantsCreateIn) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/participants";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/participants";
     this.startRequest();
     try {
       const rep: AxiosResponse<ParticipantExt> = await Axios.put(
@@ -988,7 +988,7 @@ export abstract class AbstractAPI {
 
   /** ParticipantsUpdate performs the request and handles the error */
   async ParticipantsUpdate(params: Participant) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/participants";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/participants";
     this.startRequest();
     try {
       await Axios.post(fullUrl, params, { headers: this.getHeaders() });
@@ -1000,7 +1000,7 @@ export abstract class AbstractAPI {
 
   /** ParticipantsDelete performs the request and handles the error */
   async ParticipantsDelete(params: { id: IdParticipant }) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/participants";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/participants";
     this.startRequest();
     try {
       await Axios.delete(fullUrl, {
@@ -1015,7 +1015,7 @@ export abstract class AbstractAPI {
 
   /** ParticipantsMove performs the request and handles the error */
   async ParticipantsMove(params: ParticipantsMoveIn) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/participants/move";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/participants/move";
     this.startRequest();
     try {
       await Axios.post(fullUrl, params, { headers: this.getHeaders() });
@@ -1028,7 +1028,7 @@ export abstract class AbstractAPI {
   /** ParticipantsSetPlaceLiberee performs the request and handles the error */
   async ParticipantsSetPlaceLiberee(params: { id: IdParticipant }) {
     const fullUrl =
-      this.baseUrl + "/api/v1/backoffice/participants/place-liberee";
+      this.baseURL + "/api/v1/backoffice/participants/place-liberee";
     this.startRequest();
     try {
       const rep: AxiosResponse<Participant> = await Axios.post(fullUrl, null, {
@@ -1043,7 +1043,7 @@ export abstract class AbstractAPI {
 
   /** InscriptionsGet performs the request and handles the error */
   async InscriptionsGet() {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/inscriptions";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/inscriptions";
     this.startRequest();
     try {
       const rep: AxiosResponse<Inscription[] | null> = await Axios.get(
@@ -1059,7 +1059,7 @@ export abstract class AbstractAPI {
   /** InscriptionsSearchSimilaires performs the request and handles the error */
   async InscriptionsSearchSimilaires(params: { idPersonne: IdPersonne }) {
     const fullUrl =
-      this.baseUrl + "/api/v1/backoffice/inscriptions/search-similaires";
+      this.baseURL + "/api/v1/backoffice/inscriptions/search-similaires";
     this.startRequest();
     try {
       const rep: AxiosResponse<ScoredPersonne[] | null> = await Axios.get(
@@ -1077,7 +1077,7 @@ export abstract class AbstractAPI {
 
   /** InscriptionsIdentifiePersonne performs the request and handles the error */
   async InscriptionsIdentifiePersonne(params: InscriptionIdentifieIn) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/inscriptions/identifie";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/inscriptions/identifie";
     this.startRequest();
     try {
       const rep: AxiosResponse<Inscription> = await Axios.post(
@@ -1094,7 +1094,7 @@ export abstract class AbstractAPI {
   /** InscriptionsHintValide performs the request and handles the error */
   async InscriptionsHintValide(params: { idDossier: IdDossier }) {
     const fullUrl =
-      this.baseUrl + "/api/v1/backoffice/inscriptions/valide/hint";
+      this.baseURL + "/api/v1/backoffice/inscriptions/valide/hint";
     this.startRequest();
     try {
       const rep: AxiosResponse<Record<IdParticipant, StatutExt> | null> =
@@ -1110,7 +1110,7 @@ export abstract class AbstractAPI {
 
   /** InscriptionsValide performs the request and handles the error */
   async InscriptionsValide(params: InscriptionsValideIn) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/inscriptions/valide";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/inscriptions/valide";
     this.startRequest();
     try {
       await Axios.post(fullUrl, params, { headers: this.getHeaders() });
@@ -1122,7 +1122,7 @@ export abstract class AbstractAPI {
 
   /** DossiersSearch performs the request and handles the error */
   async DossiersSearch(params: SearchDossierIn) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/dossiers/search";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/dossiers/search";
     this.startRequest();
     try {
       const rep: AxiosResponse<SearchDossierOut> = await Axios.post(
@@ -1138,7 +1138,7 @@ export abstract class AbstractAPI {
 
   /** DossiersLoad performs the request and handles the error */
   async DossiersLoad(params: { id: IdDossier }) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/dossiers";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/dossiers";
     this.startRequest();
     try {
       const rep: AxiosResponse<DossierDetails> = await Axios.get(fullUrl, {
@@ -1153,7 +1153,7 @@ export abstract class AbstractAPI {
 
   /** DossiersCreate performs the request and handles the error */
   async DossiersCreate(params: { idResponsable: IdPersonne }) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/dossiers";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/dossiers";
     this.startRequest();
     try {
       const rep: AxiosResponse<DossierHeader> = await Axios.put(fullUrl, null, {
@@ -1168,7 +1168,7 @@ export abstract class AbstractAPI {
 
   /** DossiersUpdate performs the request and handles the error */
   async DossiersUpdate(params: Dossier) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/dossiers";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/dossiers";
     this.startRequest();
     try {
       const rep: AxiosResponse<DossiersUpdateOut> = await Axios.post(
@@ -1184,7 +1184,7 @@ export abstract class AbstractAPI {
 
   /** DossiersDelete performs the request and handles the error */
   async DossiersDelete(params: { id: IdDossier }) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/dossiers";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/dossiers";
     this.startRequest();
     try {
       await Axios.delete(fullUrl, {
@@ -1199,7 +1199,7 @@ export abstract class AbstractAPI {
 
   /** DossiersMerge performs the request and handles the error */
   async DossiersMerge(params: DossiersMergeIn) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/dossiers/merge";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/dossiers/merge";
     this.startRequest();
     try {
       await Axios.post(fullUrl, params, { headers: this.getHeaders() });
@@ -1211,7 +1211,7 @@ export abstract class AbstractAPI {
 
   /** StructureaidesGet performs the request and handles the error */
   async StructureaidesGet() {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/structureaides";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/structureaides";
     this.startRequest();
     try {
       const rep: AxiosResponse<Structureaides> = await Axios.get(fullUrl, {
@@ -1225,7 +1225,7 @@ export abstract class AbstractAPI {
 
   /** StructureaideCreate performs the request and handles the error */
   async StructureaideCreate() {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/structureaides";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/structureaides";
     this.startRequest();
     try {
       const rep: AxiosResponse<Structureaide> = await Axios.put(fullUrl, null, {
@@ -1239,7 +1239,7 @@ export abstract class AbstractAPI {
 
   /** StructureaideUpdate performs the request and handles the error */
   async StructureaideUpdate(params: Structureaide) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/structureaides";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/structureaides";
     this.startRequest();
     try {
       await Axios.post(fullUrl, params, { headers: this.getHeaders() });
@@ -1251,7 +1251,7 @@ export abstract class AbstractAPI {
 
   /** StructureaideDelete performs the request and handles the error */
   async StructureaideDelete(params: { id: IdStructureaide }) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/structureaides";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/structureaides";
     this.startRequest();
     try {
       await Axios.delete(fullUrl, {
@@ -1266,7 +1266,7 @@ export abstract class AbstractAPI {
 
   /** AidesCreate performs the request and handles the error */
   async AidesCreate(params: AidesCreateIn) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/aides";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/aides";
     this.startRequest();
     try {
       const rep: AxiosResponse<Aide> = await Axios.put(fullUrl, params, {
@@ -1280,7 +1280,7 @@ export abstract class AbstractAPI {
 
   /** AidesUpdate performs the request and handles the error */
   async AidesUpdate(params: Aide) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/aides";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/aides";
     this.startRequest();
     try {
       await Axios.post(fullUrl, params, { headers: this.getHeaders() });
@@ -1292,7 +1292,7 @@ export abstract class AbstractAPI {
 
   /** AidesDelete performs the request and handles the error */
   async AidesDelete(params: { id: IdAide }) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/aides";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/aides";
     this.startRequest();
     try {
       await Axios.delete(fullUrl, {
@@ -1307,7 +1307,7 @@ export abstract class AbstractAPI {
 
   /** AidesJustificatifUpload performs the request and handles the error */
   async AidesJustificatifUpload(file: File, params: { idAide: IdAide }) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/aides/justificatif";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/aides/justificatif";
     this.startRequest();
     try {
       const formData = new FormData();
@@ -1328,7 +1328,7 @@ export abstract class AbstractAPI {
 
   /** AidesJustificatifDelete performs the request and handles the error */
   async AidesJustificatifDelete(params: { idAide: IdAide }) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/aides/justificatif";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/aides/justificatif";
     this.startRequest();
     try {
       await Axios.delete(fullUrl, {
@@ -1343,7 +1343,7 @@ export abstract class AbstractAPI {
 
   /** PaiementsCreate performs the request and handles the error */
   async PaiementsCreate(params: { idDossier: IdDossier }) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/paiements";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/paiements";
     this.startRequest();
     try {
       const rep: AxiosResponse<Paiement> = await Axios.get(fullUrl, {
@@ -1358,7 +1358,7 @@ export abstract class AbstractAPI {
 
   /** PaiementsUpdate performs the request and handles the error */
   async PaiementsUpdate(params: Paiement) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/paiements";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/paiements";
     this.startRequest();
     try {
       await Axios.post(fullUrl, params, { headers: this.getHeaders() });
@@ -1370,7 +1370,7 @@ export abstract class AbstractAPI {
 
   /** PaiementsDelete performs the request and handles the error */
   async PaiementsDelete(params: { id: IdPaiement }) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/paiements";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/paiements";
     this.startRequest();
     try {
       await Axios.delete(fullUrl, {
@@ -1385,7 +1385,7 @@ export abstract class AbstractAPI {
 
   /** EventsSendMessage performs the request and handles the error */
   async EventsSendMessage(params: EventsSendMessageIn) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/events/message";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/events/message";
     this.startRequest();
     try {
       await Axios.post(fullUrl, params, { headers: this.getHeaders() });
@@ -1397,7 +1397,7 @@ export abstract class AbstractAPI {
 
   /** EventsDelete performs the request and handles the error */
   async EventsDelete(params: { id: IdEvent }) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/events";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/events";
     this.startRequest();
     try {
       await Axios.delete(fullUrl, {
@@ -1412,7 +1412,7 @@ export abstract class AbstractAPI {
 
   /** EventsMarkMessagesSeen performs the request and handles the error */
   async EventsMarkMessagesSeen(params: { idDossier: IdDossier }) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/events/message/seen";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/events/message/seen";
     this.startRequest();
     try {
       await Axios.post(fullUrl, null, {
@@ -1427,7 +1427,7 @@ export abstract class AbstractAPI {
 
   /** PersonnesGet performs the request and handles the error */
   async PersonnesGet(params: { search: string }) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/personnes/search";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/personnes/search";
     this.startRequest();
     try {
       const rep: AxiosResponse<PersonneHeader[] | null> = await Axios.get(
@@ -1442,7 +1442,7 @@ export abstract class AbstractAPI {
 
   /** PersonnesLoad performs the request and handles the error */
   async PersonnesLoad(params: { id: IdPersonne }) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/personnes";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/personnes";
     this.startRequest();
     try {
       const rep: AxiosResponse<Personne> = await Axios.get(fullUrl, {
@@ -1457,7 +1457,7 @@ export abstract class AbstractAPI {
 
   /** PersonnesCreate performs the request and handles the error */
   async PersonnesCreate() {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/personnes";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/personnes";
     this.startRequest();
     try {
       const rep: AxiosResponse<PersonneHeader> = await Axios.put(
@@ -1473,7 +1473,7 @@ export abstract class AbstractAPI {
 
   /** PersonnesUpdate performs the request and handles the error */
   async PersonnesUpdate(params: Personne) {
-    const fullUrl = this.baseUrl + "/api/v1/backoffice/personnes";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/personnes";
     this.startRequest();
     try {
       const rep: AxiosResponse<PersonneHeader> = await Axios.post(
