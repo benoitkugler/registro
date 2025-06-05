@@ -1,10 +1,8 @@
 package directeurs
 
 import (
-	"fmt"
 	"os"
 	"testing"
-	"time"
 
 	"registro/generators/pdfcreator"
 	cps "registro/sql/camps"
@@ -32,14 +30,9 @@ func TestVetements(t *testing.T) {
 	liste := make([]cps.Vetement, 30)
 	liste[0] = cps.Vetement{Quantite: 2, Description: "e", Important: true}
 	liste[1] = cps.Vetement{Quantite: 2, Description: "e", Important: false}
-	err = ct.updateVetements(camp1.Id, cps.ListeVetements{
+	_, err = ct.updateVetements(camp1.Id, cps.ListeVetements{
 		Vetements:  liste,
 		Complement: "<b>smdsd</b> <a></a>",
 	})
 	tu.AssertNoErr(t, err)
-
-	ti := time.Now()
-	_, _, err = ct.renderListeVetements(camp1.Id)
-	tu.AssertNoErr(t, err)
-	fmt.Println("rendered in", time.Since(ti))
 }

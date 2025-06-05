@@ -1,10 +1,7 @@
 package directeurs
 
 import (
-	"fmt"
-
 	filesAPI "registro/controllers/files"
-	"registro/generators/pdfcreator"
 	cps "registro/sql/camps"
 	"registro/utils"
 
@@ -35,45 +32,29 @@ func (ct *Controller) VetementsUpdate(c echo.Context) error {
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
-	err := ct.updateVetements(user, args)
+	out, err := ct.updateVetements(user, args)
 	if err != nil {
 		return err
 	}
-	return c.NoContent(200)
+	return c.JSON(200, out)
 }
 
-func (ct *Controller) updateVetements(id cps.IdCamp, args cps.ListeVetements) error {
+func (ct *Controller) updateVetements(id cps.IdCamp, args cps.ListeVetements) (string, error) {
 	camp, err := cps.SelectCamp(ct.db, id)
 	if err != nil {
-		return utils.SQLError(err)
+		return "", utils.SQLError(err)
 	}
 	// TODO: we could sanitize HTML
 	camp.Vetements = args
 	_, err = camp.Update(ct.db)
 	if err != nil {
-		return utils.SQLError(err)
+		return "", utils.SQLError(err)
 	}
-	return nil
-}
+	// return a render key
+	token, err := filesAPI.CampDocumentKey(ct.key, id, filesAPI.ListeVetements)
+	if err != nil {
+		return "", err
+	}
 
-func (ct *Controller) VetementsRender(c echo.Context) error {
-	user := JWTUser(c)
-	content, filename, err := ct.renderListeVetements(user)
-	if err != nil {
-		return err
-	}
-	mimeType := filesAPI.SetBlobHeader(c, content, filename)
-	return c.Blob(200, mimeType, content)
-}
-
-func (ct *Controller) renderListeVetements(id cps.IdCamp) ([]byte, string, error) {
-	camp, err := cps.SelectCamp(ct.db, id)
-	if err != nil {
-		return nil, "", utils.SQLError(err)
-	}
-	content, err := pdfcreator.CreateListeVetements(ct.asso, camp.Vetements, camp.Label())
-	if err != nil {
-		return nil, "", err
-	}
-	return content, fmt.Sprintf("Liste de vêtements - %s.pdf", camp.Label()), nil
+	return token, nil
 }

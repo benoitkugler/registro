@@ -133,9 +133,12 @@
   </v-card>
 
   <!-- preview PDF -->
-  <v-dialog v-model="showPreview">
+  <v-dialog
+    :model-value="!!previewToken"
+    @update:model-value="previewToken = ''"
+  >
     <object
-      v-if="showPreview"
+      v-if="previewToken"
       type="application/pdf"
       :data="urlPreviewPDF"
       style="height: 95vh"
@@ -215,16 +218,16 @@ function deleteVetement(index: number) {
 
 const isDragging = ref(false);
 
-const showPreview = ref(false);
+const previewToken = ref<string>(""); // empty to disable
 const urlPreviewPDF = computed(() =>
-  endpoints.VetementsRender(controller.authToken)
+  endpoints.RenderDocumentCamp(previewToken.value, false)
 );
 async function saveAndPreview() {
   if (!data.value) return;
   const res = await controller.VetementsUpdate(data.value);
   if (res === undefined) return;
   lastSaved.value = copy(data.value);
-  showPreview.value = true;
+  previewToken.value = res;
   controller.showMessage("Liste de vêtements enregistrée avec succès.");
 }
 

@@ -1087,8 +1087,10 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseURL + "/api/v1/directeurs/vetements";
     this.startRequest();
     try {
-      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-      return true;
+      const rep: AxiosResponse<string> = await Axios.post(fullUrl, params, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }

@@ -17,6 +17,7 @@ import (
 	"strconv"
 
 	"registro/assets"
+	"registro/config"
 	"registro/crypto"
 	"registro/sql/files"
 	fs "registro/sql/files"
@@ -33,10 +34,11 @@ type Controller struct {
 
 	key   crypto.Encrypter
 	files fs.FileSystem
+	asso  config.Asso
 }
 
-func NewController(db *sql.DB, key crypto.Encrypter, files fs.FileSystem) *Controller {
-	return &Controller{db, key, files}
+func NewController(db *sql.DB, key crypto.Encrypter, files fs.FileSystem, asso config.Asso) *Controller {
+	return &Controller{db, key, files, asso}
 }
 
 func (ct *Controller) Get(c echo.Context) error {

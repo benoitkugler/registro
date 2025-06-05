@@ -7,7 +7,7 @@
   >
     <v-skeleton-loader v-if="data == null"></v-skeleton-loader>
     <v-card-text v-else>
-      <v-alert type="info">
+      <v-alert type="info" closable>
         La fiche sanitaire et les vaccins sont automatiquement demandés pour les
         participants mineurs.
       </v-alert>

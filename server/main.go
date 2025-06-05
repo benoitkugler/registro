@@ -73,7 +73,7 @@ func main() {
 
 	equipiersCt := equipiers.NewController(db, encrypter, fs, joomeo)
 
-	filesCt := fsAPI.NewController(db, encrypter, fs)
+	filesCt := fsAPI.NewController(db, encrypter, fs, asso)
 
 	if isDev {
 		fmt.Println("Running in dev mode :")
@@ -111,7 +111,7 @@ func main() {
 	setupRoutesEquipier(e, equipiersCt)
 	setupRoutesFiles(e, filesCt)
 	setupRoutesServices(e, espacepersoCt)
-	setupRoutesMisc(e, directeursCt)
+	setupRoutesMisc(e, directeursCt, filesCt)
 	setupClientApps(e)
 
 	fmt.Println("Setup done. Starting...")

@@ -37,7 +37,11 @@ export class Endpoints {
     return this.baseURL + "/api/v1/directeurs/lettre-image" + `?token=${token}`;
   }
 
-  VetementsRender(token: string) {
-    return this.baseURL + "/service/directeurs/vetements" + `?token=${token}`;
+  RenderDocumentCamp(documentToken: string, isMiniature: boolean) {
+    return (
+      this.baseURL +
+      "/api/v1/document-camp" +
+      `?documentToken=${documentToken}&isMiniature=${isMiniature ? "YES" : ""}`
+    );
   }
 }
