@@ -204,24 +204,42 @@ func LoadVaccins(db fs.DB, key crypto.Encrypter, personnes []pr.IdPersonne) (map
 		return nil, fs.Demande{}, err
 	}
 
-	links, err := fs.SelectFilePersonnesByIdPersonnes(db, personnes...)
+	files, _, err := LoadFilesPersonnes(db, key, []fs.IdDemande{vaccinDemande.Id}, personnes...)
 	if err != nil {
-		return nil, fs.Demande{}, utils.SQLError(err)
+		return nil, fs.Demande{}, err
 	}
-	vaccinsByPersonne := links.ByIdDemande()[vaccinDemande.Id].ByIdPersonne()
+	return files[vaccinDemande.Id], vaccinDemande, nil
+}
 
-	files, err := fs.SelectFiles(db, links.IdFiles()...)
+func LoadFilesPersonnes(db fs.DB, key crypto.Encrypter, demandes []fs.IdDemande, personnes ...pr.IdPersonne) (map[fs.IdDemande]map[pr.IdPersonne][]PublicFile, fs.Demandes,
+	error,
+) {
+	demandesM, err := fs.SelectDemandes(db, demandes...)
 	if err != nil {
-		return nil, fs.Demande{}, utils.SQLError(err)
+		return nil, nil, utils.SQLError(err)
 	}
+	tmp, err := fs.SelectFilePersonnesByIdPersonnes(db, personnes...)
+	if err != nil {
+		return nil, nil, utils.SQLError(err)
+	}
+	allFiles, err := fs.SelectFiles(db, tmp.IdFiles()...)
+	if err != nil {
+		return nil, nil, utils.SQLError(err)
+	}
+	byDemande := tmp.ByIdDemande()
 
-	out := make(map[pr.IdPersonne][]PublicFile, len(personnes))
-	for _, pers := range personnes {
-		var vaccinsListe []PublicFile
-		for _, link := range vaccinsByPersonne[pers] {
-			vaccinsListe = append(vaccinsListe, NewPublicFile(key, files[link.IdFile]))
+	out := make(map[fs.IdDemande]map[pr.IdPersonne][]PublicFile)
+	for _, idDemande := range demandes {
+		links := byDemande[idDemande].ByIdPersonne()
+		demandes := make(map[pr.IdPersonne][]PublicFile, len(links))
+		for idPersonne, innerLinks := range links {
+			files := make([]PublicFile, len(innerLinks))
+			for i, file := range innerLinks {
+				files[i] = NewPublicFile(key, allFiles[file.IdFile])
+			}
+			demandes[idPersonne] = files
 		}
-		out[pers] = vaccinsListe
+		out[idDemande] = demandes
 	}
-	return out, vaccinDemande, nil
+	return out, demandesM, nil
 }

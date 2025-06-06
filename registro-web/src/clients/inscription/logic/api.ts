@@ -120,7 +120,7 @@ export type Date = Date_;
 export abstract class AbstractAPI {
   constructor(
     protected baseURL: string,
-    protected authToken: string,
+    public authToken: string,
   ) {}
 
   protected abstract handleError(error: any): void;

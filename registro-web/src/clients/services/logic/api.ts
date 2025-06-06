@@ -7,7 +7,10 @@ import Axios from "axios";
 		as base class for an app controller.
 	*/
 export abstract class AbstractAPI {
-  constructor(protected baseURL: string, protected authToken: string) {}
+  constructor(
+    protected baseURL: string,
+    public authToken: string,
+  ) {}
 
   protected abstract handleError(error: any): void;
 

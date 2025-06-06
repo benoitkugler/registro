@@ -321,7 +321,7 @@ export interface OptID_IdPersonne {
 export abstract class AbstractAPI {
   constructor(
     protected baseURL: string,
-    protected authToken: string,
+    public authToken: string,
   ) {}
 
   protected abstract handleError(error: any): void;

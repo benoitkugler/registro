@@ -71,14 +71,7 @@ func (ct *Controller) getDocuments(id cps.IdCamp) (DocumentsOut, error) {
 	if err != nil {
 		return DocumentsOut{}, utils.SQLError(err)
 	}
-	filesIDs := toDownload.IdFiles()
-	for _, demande := range appliedDemandes {
-		if file := demande.IdFile; file.Valid {
-			filesIDs = append(filesIDs, file.Id)
-		}
-	}
-
-	files, err := fs.SelectFiles(ct.db, filesIDs...)
+	files, err := fs.SelectFiles(ct.db, appliedDemandes.IdFiles()...)
 	if err != nil {
 		return DocumentsOut{}, utils.SQLError(err)
 	}

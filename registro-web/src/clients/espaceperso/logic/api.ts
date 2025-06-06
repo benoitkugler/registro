@@ -18,6 +18,22 @@ export interface Data {
   Dossier: DossierExt;
   IsPaiementOpen: boolean;
 }
+// registro/controllers/espaceperso.DemandePersonne
+export interface DemandePersonne {
+  Demande: Demande;
+  DemandeFile: PublicFile;
+  Uploaded: PublicFile[] | null;
+}
+// registro/controllers/espaceperso.DemandesPersonne
+export interface DemandesPersonne {
+  Personne: string;
+  Demandes: DemandePersonne[] | null;
+}
+// registro/controllers/espaceperso.Documents
+export interface Documents {
+  FilesToRead: FilesCamp[] | null;
+  FilesToUpload: DemandesPersonne[] | null;
+}
 // registro/controllers/espaceperso.FichesanitaireExt
 export interface FichesanitaireExt {
   Personne: string;
@@ -28,6 +44,17 @@ export interface FichesanitaireExt {
   RespoSecuriteSociale: string;
   VaccinsDemande: Demande;
   VaccinsFiles: PublicFile[] | null;
+}
+// registro/controllers/espaceperso.FilesCamp
+export interface FilesCamp {
+  Camp: string;
+  Generated: GeneratedFile[] | null;
+  Files: PublicFile[] | null;
+}
+// registro/controllers/espaceperso.GeneratedFile
+export interface GeneratedFile {
+  NomClient: string;
+  Key: string;
 }
 // registro/controllers/espaceperso.Joomeo
 export interface Joomeo {
@@ -791,7 +818,7 @@ export interface OptID_IdPersonne {
 export abstract class AbstractAPI {
   constructor(
     protected baseURL: string,
-    protected authToken: string,
+    public authToken: string,
   ) {}
 
   protected abstract handleError(error: any): void;
@@ -1003,6 +1030,21 @@ export abstract class AbstractAPI {
     try {
       await Axios.post(fullUrl, params, { headers: this.getHeaders() });
       return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** LoadDocuments performs the request and handles the error */
+  async LoadDocuments(params: { token: string }) {
+    const fullUrl = this.baseURL + "/api/v1/espaceperso/documents";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<Documents> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { token: params["token"] },
+      });
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }

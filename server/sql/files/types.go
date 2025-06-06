@@ -155,3 +155,13 @@ func (builtinDemandes Builtins) Defaut(equipier cp.Equipier) DemandeEquipiers {
 	}
 	return demandes
 }
+
+func (ds Demandes) IdFiles() []IdFile {
+	var filesIDs []IdFile
+	for _, demande := range ds {
+		if file := demande.IdFile; file.Valid {
+			filesIDs = append(filesIDs, file.Id)
+		}
+	}
+	return filesIDs
+}

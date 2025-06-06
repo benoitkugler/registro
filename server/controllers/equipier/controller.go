@@ -81,31 +81,17 @@ func (ct *Controller) load(id cps.IdEquipier) (EquipierExt, error) {
 	if err != nil {
 		return EquipierExt{}, utils.SQLError(err)
 	}
-	demandesM, err := fs.SelectDemandes(ct.db, links.IdDemandes()...)
+	files, demandesM, err := filesAPI.LoadFilesPersonnes(ct.db, ct.key, links.IdDemandes(), equipier.IdPersonne)
 	if err != nil {
-		return EquipierExt{}, utils.SQLError(err)
+		return EquipierExt{}, err
 	}
-	tmp, err := fs.SelectFilePersonnesByIdPersonnes(ct.db, equipier.IdPersonne)
-	if err != nil {
-		return EquipierExt{}, utils.SQLError(err)
-	}
-	allFiles, err := fs.SelectFiles(ct.db, tmp.IdFiles()...)
-	if err != nil {
-		return EquipierExt{}, utils.SQLError(err)
-	}
-	byDemande := tmp.ByIdDemande()
 
 	demandes := make([]DemandeEquipier, len(links))
 	for i, link := range links {
-		innerLinks := byDemande[link.IdDemande]
-		files := make([]filesAPI.PublicFile, len(innerLinks))
-		for i, file := range innerLinks {
-			files[i] = filesAPI.NewPublicFile(ct.key, allFiles[file.IdFile])
-		}
 		demandes[i] = DemandeEquipier{
 			Demande:     demandesM[link.IdDemande],
 			Optionnelle: link.Optionnelle,
-			Files:       files,
+			Files:       files[link.IdDemande][equipier.IdPersonne],
 		}
 	}
 

@@ -9,12 +9,15 @@ import (
 	"registro/crypto"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
+	fs "registro/sql/files"
+	"registro/utils"
 
 	"github.com/labstack/echo/v4"
 )
 
 type Documents struct {
-	Files []FilesCamp
+	FilesToRead   []FilesCamp
+	FilesToUpload []DemandesPersonne
 }
 
 type FilesCamp struct {
@@ -23,12 +26,23 @@ type FilesCamp struct {
 	Files     []filesAPI.PublicFile
 }
 
+type DemandesPersonne struct {
+	Personne string
+	Demandes []DemandePersonne
+}
+
+type DemandePersonne struct {
+	Demande     fs.Demande
+	DemandeFile filesAPI.PublicFile
+	Uploaded    []filesAPI.PublicFile
+}
+
 type GeneratedFile struct {
 	NomClient string
 	Key       string // crypted camp ID and Kind
 }
 
-func (ct *Controller) GetDocuments(c echo.Context) error {
+func (ct *Controller) LoadDocuments(c echo.Context) error {
 	token := c.QueryParam("token")
 	id, err := crypto.DecryptID[ds.IdDossier](ct.key, token)
 	if err != nil {
@@ -47,11 +61,22 @@ func (ct *Controller) loadDocuments(id ds.IdDossier) (Documents, error) {
 		return Documents{}, err
 	}
 	camps := dossier.CampsInscrits()
+	links, err := fs.SelectFileCampsByIdCamps(ct.db, camps.IDs()...)
+	if err != nil {
+		return Documents{}, utils.SQLError(err)
+	}
+	byCamp := links.ByIdCamp()
+	campFiles, err := fs.SelectFiles(ct.db, links.IdFiles()...)
+	if err != nil {
+		return Documents{}, utils.SQLError(err)
+	}
+
+	var out Documents
 	for _, camp := range camps {
 		item := FilesCamp{Camp: camp.Label()}
 		// generated files
 		if camp.DocumentsToShow.ListeVetements {
-			key, err := ct.key.EncryptJSON(generatedFileKey{IdCamp: camp.Id, Kind: listeVetements})
+			key, err := filesAPI.CampDocumentKey(ct.key, camp.Id, filesAPI.ListeVetements)
 			if err != nil {
 				return Documents{}, err
 			}
@@ -61,7 +86,7 @@ func (ct *Controller) loadDocuments(id ds.IdDossier) (Documents, error) {
 			})
 		}
 		if camp.DocumentsToShow.ListeParticipants {
-			key, err := ct.key.EncryptJSON(generatedFileKey{IdCamp: camp.Id, Kind: listeParticipants})
+			key, err := filesAPI.CampDocumentKey(ct.key, camp.Id, filesAPI.ListeParticipants)
 			if err != nil {
 				return Documents{}, err
 			}
@@ -70,10 +95,58 @@ func (ct *Controller) loadDocuments(id ds.IdDossier) (Documents, error) {
 				Key:       key,
 			})
 		}
+		// other
+		for _, link := range byCamp[camp.Id] {
+			if (link.IsLettre && camp.DocumentsToShow.LettreDirecteur) ||
+				!link.IsLettre {
+				item.Files = append(item.Files, filesAPI.NewPublicFile(ct.key, campFiles[link.IdFile]))
+			}
+		}
 
+		out.FilesToRead = append(out.FilesToRead, item)
 	}
 
-	return Documents{}, nil
+	links2, err := fs.SelectDemandeCampsByIdCamps(ct.db, camps.IDs()...)
+	if err != nil {
+		return Documents{}, utils.SQLError(err)
+	}
+	demandesByCamp := links2.ByIdCamp()
+	personnesFiles, demandes, err := filesAPI.LoadFilesPersonnes(ct.db, ct.key, links2.IdDemandes(), dossier.Participants.IdPersonnes()...)
+	if err != nil {
+		return Documents{}, err
+	}
+	demandesFiles, err := fs.SelectFiles(ct.db, demandes.IdFiles()...)
+	if err != nil {
+		return Documents{}, utils.SQLError(err)
+	}
+
+	byPersonne := dossier.Participants.ByIdPersonne()
+	for _, personne := range dossier.Personnes()[1:] {
+		item := DemandesPersonne{Personne: personne.PrenomN()}
+		for _, part := range byPersonne[personne.Id] {
+			if part.Statut != cps.Inscrit {
+				continue
+			}
+			// add demandes from the camp
+			for _, link := range demandesByCamp[part.IdCamp] {
+				demande := demandes[link.IdDemande]
+				demandeF := DemandePersonne{
+					Demande:  demande,
+					Uploaded: personnesFiles[demande.Id][personne.Id],
+				}
+				if fi := demande.IdFile; fi.Valid {
+					demandeF.DemandeFile = filesAPI.NewPublicFile(ct.key, demandesFiles[fi.Id])
+				}
+				item.Demandes = append(item.Demandes, demandeF)
+			}
+		}
+		// do not include empty lists
+		if len(item.Demandes) != 0 {
+			out.FilesToUpload = append(out.FilesToUpload, item)
+		}
+	}
+
+	return out, nil
 }
 
 type generatedKind uint8
