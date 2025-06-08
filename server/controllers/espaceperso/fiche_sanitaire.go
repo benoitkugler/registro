@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	filesAPI "registro/controllers/files"
 	fsAPI "registro/controllers/files"
 	"registro/controllers/logic"
 	"registro/controllers/services"
@@ -222,23 +223,10 @@ func (ct *Controller) uploadVaccin(idDossier ds.IdDossier, idPersonne pr.IdPerso
 		return fsAPI.PublicFile{}, errors.New("access forbidden")
 	}
 
-	var file fs.File
-	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
-		// create a new file, and the associated metadata
-		file, err = fs.File{}.Insert(tx)
-		if err != nil {
-			return err
-		}
-		err = fs.FilePersonne{IdFile: file.Id, IdPersonne: idPersonne, IdDemande: vaccinDemande.Id}.Insert(tx)
-		if err != nil {
-			return err
-		}
-		file, err = fs.UploadFile(ct.files, tx, file.Id, content, filename)
-		if err != nil {
-			return err
-		}
-		return nil
-	})
+	file, err := filesAPI.SaveFileFor(ct.files, ct.db, idPersonne, vaccinDemande.Id, content, filename)
+	if err != nil {
+		return fsAPI.PublicFile{}, err
+	}
 
 	return fsAPI.NewPublicFile(ct.key, file), nil
 }

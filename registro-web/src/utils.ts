@@ -1,4 +1,3 @@
-import type { ComponentPublicInstance } from "vue";
 import {
   CurrencyLabels,
   Sexe,

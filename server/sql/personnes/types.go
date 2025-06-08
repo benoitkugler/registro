@@ -87,7 +87,7 @@ func (p Etatcivil) PrenomNOM() string {
 func (p *Etatcivil) PrenomN() string {
 	var initiale string
 	if nom := p.FNom(); nom != "" {
-		r, _ := utf8.DecodeRuneInString(initiale)
+		r, _ := utf8.DecodeRuneInString(nom)
 		initiale = string(r)
 	}
 	return fmt.Sprintf("%s %s.", p.FPrenom(), initiale)

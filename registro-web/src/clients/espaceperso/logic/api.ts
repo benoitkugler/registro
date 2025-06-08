@@ -16,6 +16,7 @@ export type Time = string & { __opaque__: "Time" };
 // registro/controllers/espaceperso.Data
 export interface Data {
   Dossier: DossierExt;
+  DocumentsToFillCount: Int;
   IsPaiementOpen: boolean;
 }
 // registro/controllers/espaceperso.DemandePersonne
@@ -26,6 +27,7 @@ export interface DemandePersonne {
 }
 // registro/controllers/espaceperso.DemandesPersonne
 export interface DemandesPersonne {
+  IdPersonne: IdPersonne;
   Personne: string;
   Demandes: DemandePersonne[] | null;
 }
@@ -33,6 +35,7 @@ export interface DemandesPersonne {
 export interface Documents {
   FilesToRead: FilesCamp[] | null;
   FilesToUpload: DemandesPersonne[] | null;
+  ToFillCount: Int;
 }
 // registro/controllers/espaceperso.FichesanitaireExt
 export interface FichesanitaireExt {
@@ -1045,6 +1048,49 @@ export abstract class AbstractAPI {
         params: { token: params["token"] },
       });
       return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** UploadDocument performs the request and handles the error */
+  async UploadDocument(
+    file: File,
+    params: { token: string; idDemande: IdDemande; idPersonne: IdPersonne },
+  ) {
+    const fullUrl = this.baseURL + "/api/v1/espaceperso/documents";
+    this.startRequest();
+    try {
+      const formData = new FormData();
+      formData.append("file", file, file.name);
+      const rep: AxiosResponse<PublicFile> = await Axios.post(
+        fullUrl,
+        formData,
+        {
+          headers: this.getHeaders(),
+          params: {
+            token: params["token"],
+            idDemande: String(params["idDemande"]),
+            idPersonne: String(params["idPersonne"]),
+          },
+        },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** DeleteDocument performs the request and handles the error */
+  async DeleteDocument(params: { key: string }) {
+    const fullUrl = this.baseURL + "/api/v1/espaceperso/documents";
+    this.startRequest();
+    try {
+      await Axios.delete(fullUrl, {
+        headers: this.getHeaders(),
+        params: { key: params["key"] },
+      });
+      return true;
     } catch (error) {
       this.handleError(error);
     }

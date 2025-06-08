@@ -175,13 +175,9 @@
       :availableDemandes="data.AvailableDemandes || []"
       :selectedDemandes="(data.CampDemandes || []).map((d) => d.Demande.Id)"
       @selected="applyDemande"
-      @created="
-        (d) =>
-          (data!.AvailableDemandes = (data!.AvailableDemandes || []).concat(d))
-      "
+      @created="onCreateDemande"
       @updated="onUpdateDemande"
-      @deleted="d =>           (data!.AvailableDemandes = (data!.AvailableDemandes || []).filter(dd => dd.Demande.Id != d.Id))
-"
+      @deleted="onDeleteDemande"
     ></AddDemandeCard>
   </v-dialog>
 </template>
@@ -252,6 +248,18 @@ async function deleteFile() {
 
 const showAddDemandeDialog = ref(false);
 
+async function onCreateDemande(d: DemandeDirecteur) {
+  if (!data.value) return;
+  data.value.AvailableDemandes = (data.value.AvailableDemandes || []).concat(d);
+  // also add it to the camp
+  const res = await controller.DocumentsApplyDemande({
+    idDemande: d.Demande.Id,
+  });
+  if (res === undefined) return;
+  controller.showMessage("Demande créée et activée pour ce séjour.");
+  data.value.CampDemandes = (data.value?.CampDemandes || []).concat(res);
+}
+
 function onUpdateDemande(demande: DemandeDirecteur) {
   if (!data.value) return;
   const index1 = (data.value!.AvailableDemandes || []).findIndex(
@@ -262,6 +270,16 @@ function onUpdateDemande(demande: DemandeDirecteur) {
     (dd) => dd.Demande.Id == demande.Demande.Id
   );
   data.value.CampDemandes![index2] = demande;
+}
+
+function onDeleteDemande(d: Demande) {
+  if (!data.value) return;
+  data.value.AvailableDemandes = (data.value.AvailableDemandes || []).filter(
+    (dd) => dd.Demande.Id != d.Id
+  );
+  data.value.CampDemandes = (data.value.CampDemandes || []).filter(
+    (dd) => dd.Demande.Id != d.Id
+  );
 }
 
 async function applyDemande(demande: Demande) {

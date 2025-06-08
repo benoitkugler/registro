@@ -75,6 +75,7 @@
             :demande="props.fiche.VaccinsDemande"
             :files="props.fiche.VaccinsFiles || []"
             :in-upload="false"
+            :optionnelle="null"
             show-upload-text
             @upload="(f) => emit('uploadVaccin', f)"
             @delete="(f) => emit('deleteVaccin', f)"

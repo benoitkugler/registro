@@ -268,23 +268,10 @@ func (ct *Controller) uploadDocument(idEquipier cps.IdEquipier, idDemande fs.IdD
 		return filesAPI.PublicFile{}, utils.SQLError(err)
 	}
 
-	var file fs.File
-	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
-		// create a new file, and the associated metadata
-		file, err = fs.File{}.Insert(tx)
-		if err != nil {
-			return err
-		}
-		err = fs.FilePersonne{IdFile: file.Id, IdPersonne: equipier.IdPersonne, IdDemande: idDemande}.Insert(tx)
-		if err != nil {
-			return err
-		}
-		file, err = fs.UploadFile(ct.files, tx, file.Id, content, filename)
-		if err != nil {
-			return err
-		}
-		return nil
-	})
+	file, err := filesAPI.SaveFileFor(ct.files, ct.db, equipier.IdPersonne, idDemande, content, filename)
+	if err != nil {
+		return filesAPI.PublicFile{}, err
+	}
 
 	return filesAPI.NewPublicFile(ct.key, file), nil
 }

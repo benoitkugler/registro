@@ -31,4 +31,6 @@ func setupRoutesEspaceperso(e *echo.Echo, ct *espaceperso.Controller) {
 
 	// Documents
 	e.GET("/api/v1/espaceperso/documents", ct.LoadDocuments)
+	e.POST("/api/v1/espaceperso/documents", ct.UploadDocument)
+	e.DELETE("/api/v1/espaceperso/documents", ct.DeleteDocument)
 }

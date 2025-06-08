@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"registro/config"
+	filesAPI "registro/controllers/files"
 	cps "registro/sql/camps"
-	"registro/sql/files"
 	fs "registro/sql/files"
 	pr "registro/sql/personnes"
 	"registro/utils"
@@ -49,7 +49,7 @@ func TestEquipiers(t *testing.T) {
 	defer db.Remove()
 
 	asso, smtp := loadEnv(t)
-	ct, err := NewController(db.DB, "", "", files.FileSystem{}, smtp, asso, config.Joomeo{})
+	ct, err := NewController(db.DB, "", "", fs.FileSystem{}, smtp, asso, config.Joomeo{})
 	tu.AssertNoErr(t, err)
 
 	camp, err := cps.Camp{IdTaux: 1}.Insert(db)
@@ -118,22 +118,8 @@ func uploadFile(db *sql.DB, fileSys fs.FileSystem,
 	personne pr.IdPersonne, demande fs.IdDemande,
 	filename string,
 ) error {
-	return utils.InTx(db, func(tx *sql.Tx) error {
-		// create a new file, and the associated metadata
-		file, err := fs.File{}.Insert(tx)
-		if err != nil {
-			return err
-		}
-		err = fs.FilePersonne{IdFile: file.Id, IdPersonne: personne, IdDemande: demande}.Insert(tx)
-		if err != nil {
-			return err
-		}
-		file, err = fs.UploadFile(fileSys, tx, file.Id, tu.PngData, filename)
-		if err != nil {
-			return err
-		}
-		return nil
-	})
+	_, err := filesAPI.SaveFileFor(fileSys, db, personne, demande, tu.PngData, filename)
+	return err
 }
 
 func TestDemandes(t *testing.T) {

@@ -64,6 +64,7 @@ func (ct *Controller) renderDocument(documentToken string, isMiniature bool) (co
 		if err != nil {
 			return nil, "", err
 		}
+		name = "miniature.png"
 	}
 
 	return

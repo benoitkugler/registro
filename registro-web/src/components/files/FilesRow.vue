@@ -18,6 +18,7 @@
           <v-btn
             v-if="props.showUploadText"
             class="my-2"
+            size="small"
             @click="onClick"
             :disabled="
               props.inUpload ||

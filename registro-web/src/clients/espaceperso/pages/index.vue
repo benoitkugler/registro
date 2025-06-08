@@ -40,21 +40,34 @@
   <v-container class="fill-height" fluid v-else>
     <v-row>
       <!-- participants  et finances -->
-      <v-col align-self="center" cols="4">
+      <v-col align-self="center" cols="5">
         <v-card subtitle="Participants">
           <template #append>
+            <v-btn @click="showDocuments = true" size="small" class="mr-1">
+              <template #prepend>
+                <v-icon>mdi-folder</v-icon>
+              </template>
+              <v-badge
+                :color="data.DocumentsToFillCount ? 'pink' : 'transparent'"
+                :content="data.DocumentsToFillCount || ''"
+                floating
+              >
+                Documents
+              </v-badge>
+            </v-btn>
             <v-btn @click="showFichesantaires = true" size="small" class="mr-1">
               <template #prepend>
                 <v-icon>mdi-pill</v-icon>
               </template>
               Fiches sanitaires
             </v-btn>
-            <v-btn @click="showEditOptions = true" size="small">
+            <!-- TODO -->
+            <!-- <v-btn @click="showEditOptions = true" size="small">
               <template #prepend>
                 <v-icon>mdi-pencil</v-icon>
               </template>
               Options
-            </v-btn>
+            </v-btn> -->
           </template>
           <v-card-text>
             <v-list class="pa-0">
@@ -179,6 +192,14 @@
       @close="showFichesantaires = false"
     ></FichessanitairesCard>
   </v-dialog>
+
+  <v-dialog v-model="showDocuments" max-width="800px">
+    <DocumentsCard
+      :token="token"
+      @close="showDocuments = false"
+      @update-notifs="v => data!.DocumentsToFillCount = v"
+    ></DocumentsCard>
+  </v-dialog>
 </template>
 
 <script lang="ts" setup>
@@ -200,6 +221,7 @@ import FinancesCard from "../components/FinancesCard.vue";
 import JoomeoCard from "../components/JoomeoCard.vue";
 import FichessanitairesCard from "../components/FichessanitairesCard.vue";
 import SondagesCard from "../components/SondagesCard.vue";
+import DocumentsCard from "../components/DocumentsCard.vue";
 const router = useRouter();
 
 // id token
@@ -262,4 +284,6 @@ const showSondages = ref<IdCamp | null>(null);
 const showPhotos = ref(false);
 
 const showFichesantaires = ref(false);
+
+const showDocuments = ref(false);
 </script>

@@ -49,7 +49,7 @@
               v-else
               size="small"
               class="mr-2"
-              @click="showFileUploadDialog(demande)"
+              @click.stop="showFileUploadDialog(demande)"
             >
               <template #prepend>
                 <v-icon color="green" icon="mdi-upload"> </v-icon>

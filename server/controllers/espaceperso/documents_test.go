@@ -25,6 +25,8 @@ func TestDocuments(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	pe3, err := pr.Personne{}.Insert(db)
 	tu.AssertNoErr(t, err)
+	pe4, err := pr.Personne{}.Insert(db)
+	tu.AssertNoErr(t, err)
 
 	dossier, err := ds.Dossier{IdTaux: 1, IdResponsable: pe1.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
@@ -51,6 +53,17 @@ func TestDocuments(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(docs.FilesToRead) == 1)
 	tu.Assert(t, len(docs.FilesToUpload) == 2)
+	tu.Assert(t, len(docs.FilesToUpload[0].Demandes[0].Uploaded) == 0)
+	tu.Assert(t, docs.ToFillCount == 2)
 
-	// TODO: test with file upload
+	_, err = ct.uploadDocument(dossier.Id, d1.Id, pe4.Id, tu.PngData, "test.png")
+	tu.AssertErr(t, err)
+
+	_, err = ct.uploadDocument(dossier.Id, d1.Id, pe1.Id, tu.PngData, "test.png")
+	tu.AssertNoErr(t, err)
+
+	docs, err = ct.loadDocuments(dossier.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(docs.FilesToUpload[0].Demandes[0].Uploaded) == 1)
+	tu.Assert(t, docs.ToFillCount == 1)
 }

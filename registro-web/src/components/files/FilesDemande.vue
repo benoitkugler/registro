@@ -1,4 +1,5 @@
 <template>
+  {{ props.optionnelle }}
   <FilesRow
     :title="title"
     :subtitle="props.demande.Description"
@@ -9,8 +10,12 @@
     @upload="(v) => emit('upload', v)"
     @delete="(v) => emit('delete', v)"
   >
-    <template #prepend v-if="props.optionnelle !== undefined">
-      <div style="width: 200" class="my-2 mr-2">
+    <template #prepend>
+      <div
+        style="width: 200"
+        class="my-2 mr-2"
+        v-if="props.optionnelle !== null"
+      >
         <v-chip label :color="props.optionnelle ? undefined : 'pink'">
           {{ props.optionnelle ? "Optionnel" : "Requis" }}
         </v-chip>
@@ -24,6 +29,9 @@
           <b>{{ props.demande.JoursValide }} jours</b> après son ajout.
         </v-tooltip>
       </div>
+      <template v-else>
+        <slot name="prepend"></slot>
+      </template>
     </template>
   </FilesRow>
 </template>
@@ -41,8 +49,9 @@ const props = defineProps<{
   demande: Demande;
   files: PublicFile[];
   inUpload: boolean;
-  optionnelle?: boolean;
+  optionnelle: boolean | null;
   showUploadText?: boolean;
+  title?: string;
 }>();
 
 const emit = defineEmits<{
@@ -51,7 +60,9 @@ const emit = defineEmits<{
 }>();
 
 const title = computed(() =>
-  props.demande.Categorie == Categorie.NoBuiltin
+  props.title
+    ? props.title
+    : props.demande.Categorie == Categorie.NoBuiltin
     ? "Document à fournir"
     : CategorieLabels[props.demande.Categorie]
 );

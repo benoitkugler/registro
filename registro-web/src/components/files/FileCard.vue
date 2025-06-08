@@ -2,7 +2,7 @@
   <v-menu>
     <template #activator="{ props: menuProps }">
       <v-card class="my-2" v-bind="menuProps">
-        <v-img cover :src="miniatureURL(props.file.Key)" width="100"> </v-img>
+        <v-img cover :src="miniatureURL(props.file.Key)" width="56px"> </v-img>
       </v-card>
     </template>
     <v-card>
@@ -13,7 +13,7 @@
           :subtitle="Formatters.size(props.file.Taille)"
         >
           <template #append>
-            <div class="text-right">
+            <div class="text-right ml-2">
               téléversé le <br />
               {{ Formatters.time(props.file.Uploaded) }}
             </div>
@@ -35,6 +35,7 @@ import type { PublicFile } from "@/clients/equipier/logic/api";
 
 const props = defineProps<{
   file: PublicFile;
+  readonly?: boolean /** remove menu; download on click */;
 }>();
 
 const emit = defineEmits<{

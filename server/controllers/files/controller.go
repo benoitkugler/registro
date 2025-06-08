@@ -243,3 +243,23 @@ func LoadFilesPersonnes(db fs.DB, key crypto.Encrypter, demandes []fs.IdDemande,
 	}
 	return out, demandesM, nil
 }
+
+func SaveFileFor(files fs.FileSystem, db *sql.DB, idPersonne pr.IdPersonne, idDemande fs.IdDemande, content []byte, filename string) (file fs.File, err error) {
+	err = utils.InTx(db, func(tx *sql.Tx) error {
+		// create a new file, and the associated metadata
+		file, err = fs.File{}.Insert(tx)
+		if err != nil {
+			return err
+		}
+		err = fs.FilePersonne{IdFile: file.Id, IdPersonne: idPersonne, IdDemande: idDemande}.Insert(tx)
+		if err != nil {
+			return err
+		}
+		file, err = fs.UploadFile(files, tx, file.Id, content, filename)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	return file, err
+}

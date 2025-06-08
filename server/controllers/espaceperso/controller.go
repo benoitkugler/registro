@@ -58,8 +58,9 @@ func (ct *Controller) Load(c echo.Context) error {
 }
 
 type Data struct {
-	Dossier        logic.DossierExt
-	IsPaiementOpen bool
+	Dossier              logic.DossierExt
+	DocumentsToFillCount int // number to fill
+	IsPaiementOpen       bool
 }
 
 func (ct *Controller) load(id ds.IdDossier) (Data, error) {
@@ -67,9 +68,13 @@ func (ct *Controller) load(id ds.IdDossier) (Data, error) {
 	if err != nil {
 		return Data{}, err
 	}
-
+	documents, err := loadDocuments(ct.db, ct.key, dossier.Dossier)
+	if err != nil {
+		return Data{}, err
+	}
 	return Data{
 		dossier.Publish(ct.key),
+		documents.ToFillCount,
 		false, // TODO
 	}, nil
 }
