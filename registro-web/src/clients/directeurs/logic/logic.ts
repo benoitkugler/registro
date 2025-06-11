@@ -3,7 +3,9 @@ import { baseURL, parseError, type Action } from "@/utils";
 import { devCamp, devToken } from "../env";
 import {
   AbstractAPI,
+  MessageOrigine,
   type CampItem,
+  type EventExt_Message,
   type IdCamp,
   type IdDemande,
   type Lettredirecteur,
@@ -60,3 +62,17 @@ export type LettreOptions = Pick<
   Lettredirecteur,
   "UseCoordCentre" | "ShowAdressePostale" | "ColorCoord"
 >;
+
+export function isMessageFromUs(message: EventExt_Message) {
+  return (
+    message.Content.Message.Origine == MessageOrigine.FromDirecteur &&
+    message.Content.Message.OrigineCamp.Id == controller.camp?.Id
+  );
+}
+
+export function isMessageNew(message: EventExt_Message) {
+  if (controller.camp == null) return false;
+  // never mark our message as new
+  if (isMessageFromUs(message)) return false;
+  return !(message.Content.VuParCampsIDs || []).includes(controller.camp.Id);
+}

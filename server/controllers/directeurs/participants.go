@@ -1,17 +1,21 @@
 package directeurs
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"net/http"
 	"slices"
 	"strings"
+	"time"
 
 	fsAPI "registro/controllers/files"
 	"registro/controllers/logic"
 	"registro/generators/pdfcreator"
+	"registro/mails"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
+	evs "registro/sql/events"
 	pr "registro/sql/personnes"
 	"registro/utils"
 
@@ -299,4 +303,170 @@ func (ct *Controller) streamFichesAndVaccins(user cps.IdCamp, response http.Resp
 			}
 		}
 	})
+}
+
+func (ct *Controller) ParticipantsMessagesLoad(c echo.Context) error {
+	user := JWTUser(c)
+	out, err := ct.loadMessages(user)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
+type Messages struct {
+	Messages         []MessageExt // sorted by time, most recent first
+	Dossiers         map[ds.IdDossier]DossierPersonnes
+	NewMessagesCount int
+}
+
+func (m *Messages) setNewMessagesCount(idCamp cps.IdCamp) {
+	count := 0
+	for _, message := range m.Messages {
+		isOwn := message.Content.Message.OrigineCamp.Is(idCamp)
+		wasSeen := slices.Contains(message.Content.VuParCampsIDs, idCamp)
+		if !isOwn && !wasSeen {
+			count++
+		}
+	}
+	m.NewMessagesCount = count
+}
+
+type MessageExt = logic.EventExt[logic.Message]
+
+type DossierPersonnes struct {
+	Responsable  string
+	Participants []string
+}
+
+func (ct *Controller) loadMessages(idCamp cps.IdCamp) (Messages, error) {
+	camp, err := cps.LoadCampPersonnes(ct.db, idCamp)
+	if err != nil {
+		return Messages{}, err
+	}
+	dossiers, err := logic.LoadDossiers(ct.db, camp.IdDossiers()...)
+	if err != nil {
+		return Messages{}, err
+	}
+	out := Messages{Dossiers: make(map[ds.IdDossier]DossierPersonnes)}
+	for idDossier := range dossiers.Dossiers {
+		dossier := dossiers.For(idDossier)
+
+		out.Messages = slices.AppendSeq(out.Messages, logic.IterContentBy[logic.Message](dossier.Events))
+
+		item := DossierPersonnes{
+			Responsable: dossier.Responsable().NOMPrenom(),
+		}
+		// only show participants of this camp
+		for _, part := range dossier.ParticipantsExt() {
+			if part.Participant.IdCamp != idCamp {
+				continue
+			}
+			item.Participants = append(item.Participants, part.Personne.PrenomN())
+		}
+		out.Dossiers[idDossier] = item
+	}
+
+	slices.SortFunc(out.Messages, func(a, b MessageExt) int { return b.Event.Created.Compare(a.Event.Created) })
+
+	out.setNewMessagesCount(idCamp)
+	return out, nil
+}
+
+func (ct *Controller) ParticipantsMessageSetSeen(c echo.Context) error {
+	user := JWTUser(c)
+	idMessage, err := utils.QueryParamInt[evs.IdEvent](c, "idEvent")
+	if err != nil {
+		return err
+	}
+	seen := utils.QueryParamBool(c, "seen")
+	// TODO: we should check that this camp has acces to the message
+	out, err := ct.setMessageSeen(user, idMessage, seen)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) setMessageSeen(user cps.IdCamp, idEvent evs.IdEvent, seen bool) (MessageExt, error) {
+	err := utils.InTx(ct.db, func(tx *sql.Tx) error {
+		// always delete to avoid unique constraint error
+		err := evs.EventMessageVu{IdEvent: idEvent, IdCamp: user}.Delete(tx)
+		if err != nil {
+			return err
+		}
+		if seen {
+			err = evs.EventMessageVu{IdEvent: idEvent, IdCamp: user}.Insert(tx)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return MessageExt{}, err
+	}
+
+	return loadMessage(ct.db, idEvent)
+}
+
+func loadMessage(db evs.DB, id evs.IdEvent) (MessageExt, error) {
+	event, err := logic.LoadEvent(db, id)
+	if err != nil {
+		return MessageExt{}, err
+	}
+	m, ok := event.Content.(logic.Message)
+	if !ok { // should never happen since the event has Kind == Message
+		return MessageExt{}, errors.New("internal error : expected Message")
+	}
+	return MessageExt{Event: event.Raw(), Content: m}, nil
+}
+
+type CreateMessageIn struct {
+	Contenu   string
+	IdDossier ds.IdDossier
+}
+
+func (ct *Controller) ParticipantsMessagesCreate(c echo.Context) error {
+	user := JWTUser(c)
+
+	var args CreateMessageIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+	out, err := ct.createMessage(c.Request().Host, user, args)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) createMessage(host string, idCamp cps.IdCamp, args CreateMessageIn) (MessageExt, error) {
+	dossier, err := logic.LoadDossier(ct.db, args.IdDossier)
+	if err != nil {
+		return MessageExt{}, utils.SQLError(err)
+	}
+	url := logic.URLEspacePerso(ct.key, host, args.IdDossier)
+	var event evs.Event
+	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
+		event, _, err = evs.CreateMessage(tx, args.IdDossier, time.Now(), args.Contenu, evs.FromDirecteur, idCamp.Opt())
+		if err != nil {
+			return err
+		}
+		// notifie le responsable
+		resp := dossier.Responsable()
+		body, err := mails.NotifieMessage(ct.asso, mails.NewContact(&resp), args.Contenu, url)
+		if err != nil {
+			return err
+		}
+		err = mails.NewMailer(ct.smtp, ct.asso.MailsSettings).SendMail(resp.Mail, "Nouveau message", body, dossier.Dossier.CopiesMails, nil)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return MessageExt{}, err
+	}
+	return loadMessage(ct.db, event.Id)
 }

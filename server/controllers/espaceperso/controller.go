@@ -382,11 +382,11 @@ func (ct *Controller) loadSondages(id ds.IdDossier) ([]SondageExt, error) {
 	}
 	// 2 : complete with "open" camps
 	for event := range logic.IterContentBy[logic.Sondage](dossier.Events) {
-		if !campsToAdd.Has(event.IdCamp) { // already included
+		if !campsToAdd.Has(event.Content.IdCamp) { // already included
 			continue
 		}
 		hasInscrit := false
-		for _, part := range participantsByCamp[event.IdCamp] {
+		for _, part := range participantsByCamp[event.Content.IdCamp] {
 			if part.Statut == cps.Inscrit {
 				hasInscrit = true
 				break
@@ -395,8 +395,8 @@ func (ct *Controller) loadSondages(id ds.IdDossier) ([]SondageExt, error) {
 		if !hasInscrit {
 			continue
 		}
-		out = append(out, SondageExt{camps[event.IdCamp].Label(), cps.Sondage{
-			IdCamp:    event.IdCamp,
+		out = append(out, SondageExt{camps[event.Content.IdCamp].Label(), cps.Sondage{
+			IdCamp:    event.Content.IdCamp,
 			IdDossier: id,
 		}})
 	}

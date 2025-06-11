@@ -39,6 +39,11 @@ func setupRoutesDirecteurs(e *echo.Echo, ct *directeurs.Controller) {
 	gr.GET("/api/v1/directeurs/participants/download-fiche-sanitaire", ct.ParticipantsDownloadFicheSanitaire)
 	gr.GET("/api/v1/directeurs/participants/download-fiches-sanitaires", ct.ParticipantsDownloadAllFichesSanitaires)
 
+	// Messages
+	gr.GET("/api/v1/directeurs/participants/messages", ct.ParticipantsMessagesLoad)
+	gr.PUT("/api/v1/directeurs/participants/messages", ct.ParticipantsMessagesCreate)
+	gr.POST("/api/v1/directeurs/participants/messages/seen", ct.ParticipantsMessageSetSeen)
+
 	// Equipiers
 	gr.GET("/api/v1/directeurs/equipiers", ct.EquipiersGet)
 	gr.PUT("/api/v1/directeurs/equipiers", ct.EquipiersCreate)

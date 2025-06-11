@@ -30,11 +30,16 @@ func (ev Event) Raw() evs.Event {
 // Events stores the [Event] for one [Dossier]
 type Events []Event
 
-func IterContentBy[T EventContent](evs Events) iter.Seq[T] {
-	return func(yield func(T) bool) {
+type EventExt[T EventContent] struct {
+	Event   evs.Event
+	Content T
+}
+
+func IterContentBy[T EventContent](evs Events) iter.Seq[EventExt[T]] {
+	return func(yield func(EventExt[T]) bool) {
 		for _, ev := range evs {
 			if typed, ok := ev.Content.(T); ok {
-				if !yield(typed) {
+				if !yield(EventExt[T]{ev.Raw(), typed}) {
 					return
 				}
 			}
@@ -88,7 +93,8 @@ func (ld *eventsContent) newValidation(ev evs.Event) Validation {
 
 type Message struct {
 	Message          evs.EventMessage
-	OrigineCampLabel string   // optionnel
+	OrigineCampLabel string // optionnel
+	VuParCampsIDs    []cps.IdCamp
 	VuParCamps       []string // labels
 }
 
@@ -100,6 +106,7 @@ func (ld *eventsContent) newMessage(ev evs.Event) Message {
 		out.OrigineCampLabel = ld.camps[m.OrigineCamp.Id].Label()
 	}
 	for _, vu := range ld.vupars[m.IdEvent] {
+		out.VuParCampsIDs = append(out.VuParCampsIDs, vu.IdCamp)
 		out.VuParCamps = append(out.VuParCamps, ld.camps[vu.IdCamp].Label())
 	}
 	return out

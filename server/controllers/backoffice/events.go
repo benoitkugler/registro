@@ -40,17 +40,12 @@ func (ct *Controller) sendMessage(host string, args EventsSendMessageIn) (event 
 		return evs.Event{}, utils.SQLError(err)
 	}
 	url := logic.URLEspacePerso(ct.key, host, args.IdDossier)
-
 	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
-		event, err = evs.Event{Kind: evs.Message, Created: time.Now(), IdDossier: args.IdDossier}.Insert(tx)
+		event, _, err = evs.CreateMessage(tx, args.IdDossier, time.Now(), args.Contenu, evs.FromBackoffice, evs.OptIdCamp{})
 		if err != nil {
 			return err
 		}
-		err = evs.EventMessage{IdEvent: event.Id, Contenu: args.Contenu, Origine: evs.FromBackoffice}.Insert(tx)
-		if err != nil {
-			return err
-		}
-		// notifie
+		// notifie le responsable
 		body, err := mails.NotifieMessage(ct.asso, mails.NewContact(&responsable), args.Contenu, url)
 		if err != nil {
 			return err

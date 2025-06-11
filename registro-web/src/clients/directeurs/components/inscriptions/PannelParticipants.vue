@@ -1,19 +1,26 @@
 <template>
   <v-card v-if="data != null" title="Participants">
     <template #append>
-      <v-btn @click="showDocuments = true" class="mx-2">
+      <v-btn @click="showMessages = true" class="mx-1">
+        <template #prepend>
+          <v-icon>mdi-email</v-icon>
+        </template>
+        Messages</v-btn
+      >
+      <v-divider thickness="1" vertical class="mx-1"></v-divider>
+      <v-btn @click="showDocuments = true" class="mx-1">
         <template #prepend>
           <v-icon>mdi-folder</v-icon>
         </template>
         Documents</v-btn
       >
-      <v-btn @click="showFichesSanitaires = true">
+      <v-btn @click="showFichesSanitaires = true" class="mx-1">
         <template #prepend>
           <v-icon>mdi-pill</v-icon>
         </template>
         Fiches sanitaires</v-btn
       >
-      <v-divider thickness="1" vertical class="mx-2"></v-divider>
+      <v-divider thickness="1" vertical class="mx-1"></v-divider>
       <v-tooltip text="Trier par moment d'inscription">
         <template #activator="{ props: tooltipProps }">
           <v-btn
@@ -82,6 +89,11 @@
     <v-dialog v-model="showDocuments" max-width="800px">
       <DocumentsPannel></DocumentsPannel>
     </v-dialog>
+
+    <!-- messages -->
+    <v-dialog v-model="showMessages" max-width="1200px">
+      <MessagesPannel></MessagesPannel>
+    </v-dialog>
   </v-card>
   <v-skeleton-loader v-else type="card"></v-skeleton-loader>
 </template>
@@ -97,6 +109,7 @@ import {
 import { Participants } from "@/utils";
 import FichesSanitairesPannel from "./FichesSanitairesPannel.vue";
 import DocumentsPannel from "./DocumentsPannel.vue";
+import MessagesPannel from "./MessagesPannel.vue";
 
 const props = defineProps<{}>();
 
@@ -147,4 +160,6 @@ async function updateParticipant(p: Participant) {
 const showFichesSanitaires = ref(false);
 
 const showDocuments = ref(false);
+
+const showMessages = ref(false);
 </script>

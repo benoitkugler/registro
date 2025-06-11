@@ -23,6 +23,11 @@ export interface InscriptionIdentifieIn {
   IdDossier: IdDossier;
   Target: IdentTarget;
 }
+// registro/controllers/directeurs.CreateMessageIn
+export interface CreateMessageIn {
+  Contenu: string;
+  IdDossier: IdDossier;
+}
 // registro/controllers/directeurs.DemandeDirecteur
 export interface DemandeDirecteur {
   Demande: Demande;
@@ -70,6 +75,11 @@ export interface DocumentsOut {
 export interface DocumentsUploadedOut {
   Personnes: Personnes;
   DemandesDocuments: DemandeDocuments[] | null;
+}
+// registro/controllers/directeurs.DossierPersonnes
+export interface DossierPersonnes {
+  Responsable: string;
+  Participants: string[] | null;
 }
 // registro/controllers/directeurs.EquipierDemande
 export interface EquipierDemande {
@@ -120,6 +130,12 @@ export interface LogginOut {
   IsValid: boolean;
   Token: string;
 }
+// registro/controllers/directeurs.Messages
+export interface Messages {
+  Messages: EventExt_Message[] | null;
+  Dossiers: Record<IdDossier, DossierPersonnes> | null;
+  NewMessagesCount: Int;
+}
 // registro/controllers/files.PublicFile
 export interface PublicFile {
   Key: string;
@@ -133,6 +149,11 @@ export interface CampItem {
   Id: IdCamp;
   Label: string;
   IsOld: boolean;
+}
+// registro/controllers/logic.EventExt[registro/controllers/logic.Message]
+export interface EventExt_Message {
+  Event: Event;
+  Content: Message;
 }
 // registro/controllers/logic.IdentTarget
 export interface IdentTarget {
@@ -152,6 +173,13 @@ export interface InscriptionsValideIn {
   IdDossier: IdDossier;
   Statuts: Record<IdParticipant, StatutParticipant> | null;
   SendMail: boolean;
+}
+// registro/controllers/logic.Message
+export interface Message {
+  Message: EventMessage;
+  OrigineCampLabel: string;
+  VuParCampsIDs: IdCamp[] | null;
+  VuParCamps: string[] | null;
 }
 // registro/controllers/logic.ParticipantExt
 export interface ParticipantExt {
@@ -444,6 +472,62 @@ export interface Montant {
   Cent: Int;
   Currency: Currency;
 }
+// registro/sql/events.Event
+export interface Event {
+  Id: IdEvent;
+  IdDossier: IdDossier;
+  Kind: EventKind;
+  Created: Time;
+}
+// registro/sql/events.EventKind
+export const EventKind = {
+  Supprime: 0,
+  Validation: 1,
+  Message: 2,
+  PlaceLiberee: 3,
+  Facture: 4,
+  CampDocs: 5,
+  Attestation: 6,
+  Sondage: 7,
+} as const;
+export type EventKind = (typeof EventKind)[keyof typeof EventKind];
+
+export const EventKindLabels: Record<EventKind, string> = {
+  [EventKind.Supprime]: "Message supprimé",
+  [EventKind.Validation]: "Inscription validée",
+  [EventKind.Message]: "Message",
+  [EventKind.PlaceLiberee]: "Place libérée",
+  [EventKind.Facture]: "Facture",
+  [EventKind.CampDocs]: "Document des camps",
+  [EventKind.Attestation]: "Facture acquittée ou attestation de présence",
+  [EventKind.Sondage]: "Avis sur le séjour",
+};
+
+// registro/sql/events.EventMessage
+export interface EventMessage {
+  IdEvent: IdEvent;
+  Contenu: string;
+  Origine: MessageOrigine;
+  OrigineCamp: OptID_IdCamp;
+  VuBackoffice: boolean;
+  VuEspaceperso: boolean;
+}
+export type IdEvent = number & { __opaque__: "IdEvent" };
+// registro/sql/events.MessageOrigine
+export const MessageOrigine = {
+  FromEspaceperso: 0,
+  FromBackoffice: 1,
+  FromDirecteur: 2,
+} as const;
+export type MessageOrigine =
+  (typeof MessageOrigine)[keyof typeof MessageOrigine];
+
+export const MessageOrigineLabels: Record<MessageOrigine, string> = {
+  [MessageOrigine.FromEspaceperso]: "",
+  [MessageOrigine.FromBackoffice]: "",
+  [MessageOrigine.FromDirecteur]: "",
+};
+
 // registro/sql/files.Categorie
 export const Categorie = {
   NoBuiltin: 0,
@@ -696,6 +780,11 @@ export type Tel = string;
 export type Tels = string[] | null;
 // registro/sql/shared.Date
 export type Date = Date_;
+// registro/sql/shared.OptID[registro/sql/camps.IdCamp]
+export interface OptID_IdCamp {
+  Id: IdCamp;
+  Valid: boolean;
+}
 // registro/sql/shared.OptID[registro/sql/camps.IdEquipier]
 export interface OptID_IdEquipier {
   Id: IdEquipier;
@@ -949,6 +1038,62 @@ export abstract class AbstractAPI {
         header.substring(startIndex, endIndex),
       );
       return { blob: rep.data, filename: filename };
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** ParticipantsMessagesLoad performs the request and handles the error */
+  async ParticipantsMessagesLoad() {
+    const fullUrl = this.baseURL + "/api/v1/directeurs/participants/messages";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<Messages> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** ParticipantsMessagesCreate performs the request and handles the error */
+  async ParticipantsMessagesCreate(params: CreateMessageIn) {
+    const fullUrl = this.baseURL + "/api/v1/directeurs/participants/messages";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<EventExt_Message> = await Axios.put(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** ParticipantsMessageSetSeen performs the request and handles the error */
+  async ParticipantsMessageSetSeen(params: {
+    idEvent: IdEvent;
+    seen: boolean;
+  }) {
+    const fullUrl =
+      this.baseURL + "/api/v1/directeurs/participants/messages/seen";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<EventExt_Message> = await Axios.post(
+        fullUrl,
+        null,
+        {
+          headers: this.getHeaders(),
+          params: {
+            idEvent: String(params["idEvent"]),
+            seen: params["seen"] ? "ok" : "",
+          },
+        },
+      );
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
