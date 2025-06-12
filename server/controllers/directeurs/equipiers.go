@@ -42,17 +42,27 @@ func equipierURL(key crypto.Encrypter, host string, id cps.IdEquipier) string {
 }
 
 type EquipierExt struct {
-	Equipier cps.Equipier
-	Personne string
-
-	FormURL string
+	Equipier              cps.Equipier
+	Personne              string
+	HasBirthday           bool
+	IsAnimateur, IsAuPair bool
+	FormURL               string
 }
 
-func newEquipierExt(key crypto.Encrypter, host string, equipier cps.Equipier, personne pr.Personne) EquipierExt {
-	return EquipierExt{equipier, personne.NOMPrenom(), equipierURL(key, host, equipier.Id)}
+func newEquipierExt(key crypto.Encrypter, host string, camp cps.Camp, equipier cps.Equipier, personne pr.Personne) EquipierExt {
+	return EquipierExt{
+		equipier, personne.NOMPrenom(), camp.Plage().HasBirthday(personne.DateNaissance),
+		equipier.Roles.Is(cps.Animation) || equipier.Roles.Is(cps.AideAnimation),
+		equipier.Roles.IsAuPair(),
+		equipierURL(key, host, equipier.Id),
+	}
 }
 
 func (ct *Controller) getEquipiers(host string, user cps.IdCamp) ([]EquipierExt, error) {
+	camp, err := cps.SelectCamp(ct.db, user)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
 	equipiers, err := cps.SelectEquipiersByIdCamps(ct.db, user)
 	if err != nil {
 		return nil, utils.SQLError(err)
@@ -63,7 +73,7 @@ func (ct *Controller) getEquipiers(host string, user cps.IdCamp) ([]EquipierExt,
 	}
 	out := make([]EquipierExt, 0, len(equipiers))
 	for _, equipier := range equipiers {
-		out = append(out, newEquipierExt(ct.key, host, equipier, personnes[equipier.IdPersonne]))
+		out = append(out, newEquipierExt(ct.key, host, camp, equipier, personnes[equipier.IdPersonne]))
 	}
 
 	return out, nil
@@ -95,6 +105,10 @@ func (ct *Controller) EquipiersCreate(c echo.Context) error {
 }
 
 func (ct *Controller) createEquipier(host string, args EquipiersCreateIn, user cps.IdCamp) (EquipierExt, error) {
+	camp, err := cps.SelectCamp(ct.db, user)
+	if err != nil {
+		return EquipierExt{}, utils.SQLError(err)
+	}
 	// check Directeur unicity : this avoid cryptic error messages
 	equipiers, err := cps.SelectEquipiersByIdCamps(ct.db, user)
 	if err != nil {
@@ -145,7 +159,7 @@ func (ct *Controller) createEquipier(host string, args EquipiersCreateIn, user c
 	if err != nil {
 		return EquipierExt{}, err
 	}
-	return newEquipierExt(ct.key, host, equipier, personne), nil
+	return newEquipierExt(ct.key, host, camp, equipier, personne), nil
 }
 
 // EquipiersInviteIn encodes 2 alternatives:

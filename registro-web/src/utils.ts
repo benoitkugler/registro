@@ -15,6 +15,7 @@ import {
   type Montant,
   type PrixQuotientFamilial,
 } from "./clients/backoffice/logic/api";
+import type { Role, Roles } from "./clients/directeurs/logic/api";
 import type { Date_, Int } from "./clients/inscription/logic/api";
 import { addDays, isDateZero, newDate_ } from "./components/date";
 

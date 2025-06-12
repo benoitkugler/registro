@@ -91,6 +91,9 @@ export interface EquipierDemande {
 export interface EquipierExt {
   Equipier: Equipier;
   Personne: string;
+  HasBirthday: boolean;
+  IsAnimateur: boolean;
+  IsAuPair: boolean;
   FormURL: string;
 }
 // registro/controllers/directeurs.EquipiersCreateIn

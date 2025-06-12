@@ -8,7 +8,17 @@
     </v-btn>
   </NavBar>
 
-  <v-card class="ma-2" title="Liste des équipiers">
+  <v-card class="mt-2 mx-auto" max-width="800px">
+    <template #title>
+      <v-btn flat icon>
+        <v-icon>mdi-information</v-icon>
+        <v-tooltip activator="parent" content-class="ma-0 pa-0">
+          <StatistiquesCard :equipiers="equipiers"></StatistiquesCard>
+        </v-tooltip>
+      </v-btn>
+      Équipiers
+    </template>
+
     <template #append>
       <v-btn color="green" @click="showCreateEquipier = true">
         <template #prepend>
@@ -46,6 +56,17 @@
         >
           <template #append>
             <v-row>
+              <v-col cols="2" align-self="center">
+                <v-tooltip
+                  :text="`${equipier.Personne} a son anniveraire pendant le camp !`"
+                >
+                  <template #activator="{ props }">
+                    <v-icon v-bind="props" color="pink"
+                      >mdi-cake-variant</v-icon
+                    >
+                  </template>
+                </v-tooltip>
+              </v-col>
               <v-col align-self="center">
                 <v-chip
                   :prepend-icon="
@@ -150,6 +171,7 @@ import {
 import DocumentsTable from "../components/equipiers/DocumentsTable.vue";
 import AddEquipierCard from "../components/equipiers/AddEquipierCard.vue";
 import { nullableToOpt } from "@/utils";
+import StatistiquesCard from "../components/equipiers/StatistiquesCard.vue";
 
 const router = useRouter();
 
