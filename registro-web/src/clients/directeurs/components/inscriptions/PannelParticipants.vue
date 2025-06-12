@@ -1,5 +1,14 @@
 <template>
-  <v-card v-if="data != null" title="Participants">
+  <v-card v-if="data != null">
+    <template #title>
+      <v-btn flat icon>
+        <v-icon>mdi-information</v-icon>
+        <v-tooltip activator="parent" content-class="ma-0 pa-0">
+          <StatistiquesCard :participants="data"></StatistiquesCard>
+        </v-tooltip>
+      </v-btn>
+      Participants
+    </template>
     <template #append>
       <v-btn @click="showMessages = true" class="mx-1">
         <template #prepend>
@@ -102,6 +111,8 @@
 import { ref, onMounted, computed } from "vue";
 import { controller } from "../../logic/logic";
 import {
+  Sexe,
+  StatutParticipant,
   type CampItem,
   type Participant,
   type ParticipantExt,
@@ -110,6 +121,7 @@ import { Participants } from "@/utils";
 import FichesSanitairesPannel from "./FichesSanitairesPannel.vue";
 import DocumentsPannel from "./DocumentsPannel.vue";
 import MessagesPannel from "./MessagesPannel.vue";
+import StatistiquesCard from "./StatistiquesCard.vue";
 
 const props = defineProps<{}>();
 
