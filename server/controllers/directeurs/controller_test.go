@@ -42,22 +42,22 @@ func TestLoggin(t *testing.T) {
 
 	ct := Controller{db: db.DB, password: "globalPass"}
 
-	_, err = ct.loggin(camp.Id+1, "")
+	_, err = ct.loggin("", camp.Id+1, "")
 	tu.AssertErr(t, err)
 
-	out, err := ct.loggin(camp.Id, "wrong")
+	out, err := ct.loggin("", camp.Id, "wrong")
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, !out.IsValid)
 
-	out, err = ct.loggin(camp.Id, "pass1")
+	out, err = ct.loggin("", camp.Id, "pass1")
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, out.IsValid)
 
-	out, err = ct.loggin(camp.Id, "globalPass")
+	out, err = ct.loggin("", camp.Id, "globalPass")
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, out.IsValid)
 
-	out, err = ct.loggin(camp.Id, ct.shortKey.ShortKey(directeur.Id))
+	out, err = ct.loggin("", camp.Id, ct.shortKey.ShortKey(directeur.Id))
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, out.IsValid)
 }

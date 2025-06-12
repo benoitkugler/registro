@@ -15,6 +15,7 @@ import { Endpoints } from "@/urls";
 class Controller extends AbstractAPI {
   /**  camp is setup at login */
   public camp: CampItem | null = null;
+  public comptaURL: string = "";
 
   constructor(
     public onError: (kind: string, htmlError: string) => void,
@@ -32,8 +33,9 @@ class Controller extends AbstractAPI {
     return this.authToken != "";
   }
 
-  setCamp(camp: CampItem, token: string) {
+  setCamp(camp: CampItem, comptaURL: string, token: string) {
     this.camp = camp;
+    this.comptaURL = comptaURL;
     this.authToken = token;
   }
 
@@ -56,7 +58,7 @@ export const controller = new Controller(
 
 export const endpoints = new Endpoints(baseURL());
 
-if (isDev) controller.setCamp(devCamp as CampItem, devToken);
+if (isDev) controller.setCamp(devCamp as CampItem, "test.fr", devToken);
 
 export type LettreOptions = Pick<
   Lettredirecteur,

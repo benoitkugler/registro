@@ -111,7 +111,9 @@ func JWTUser(c echo.Context) (idCamp cps.IdCamp) {
 
 type LogginOut struct {
 	IsValid bool
-	Token   string
+
+	ComptaURL string
+	Token     string
 }
 
 // Loggin is called to enter the web app,
@@ -123,7 +125,7 @@ func (ct *Controller) Loggin(c echo.Context) error {
 		return err
 	}
 
-	out, err := ct.loggin(id, password)
+	out, err := ct.loggin(c.Request().Host, id, password)
 	if err != nil {
 		return err
 	}
@@ -131,7 +133,7 @@ func (ct *Controller) Loggin(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) loggin(id cps.IdCamp, password string) (LogginOut, error) {
+func (ct *Controller) loggin(host string, id cps.IdCamp, password string) (LogginOut, error) {
 	camp, err := cps.SelectCamp(ct.db, id)
 	if err != nil {
 		return LogginOut{}, utils.SQLError(err)
@@ -159,9 +161,27 @@ func (ct *Controller) loggin(id cps.IdCamp, password string) (LogginOut, error) 
 		if err != nil {
 			return LogginOut{}, err
 		}
-		return LogginOut{IsValid: true, Token: token}, nil
+		comptaURL, err := comptaURL(ct.key, host, id)
+		if err != nil {
+			return LogginOut{}, err
+		}
+		return LogginOut{true, comptaURL, token}, nil
 	}
 	return LogginOut{IsValid: false}, nil
+}
+
+// comptaURL builds the crypted URL for the given camp.
+func comptaURL(key crypto.Encrypter, host string, idCamp cps.IdCamp) (string, error) {
+	type UserKey struct {
+		IsAdmin bool
+		IdCamp  cps.IdCamp
+	}
+	dirKey, err := key.EncryptJSON(UserKey{IsAdmin: false, IdCamp: idCamp})
+	if err != nil {
+		return "", err
+	}
+	url := utils.BuildUrl(host, "compta", utils.QP("key", dirKey))
+	return url, nil
 }
 
 // helpers

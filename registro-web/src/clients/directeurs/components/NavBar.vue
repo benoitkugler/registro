@@ -32,6 +32,18 @@
 
     <v-divider></v-divider>
     <v-list-item
+      prepend-icon="mdi-credit-card-outline"
+      append-icon="mdi-open-in-new"
+      link
+      target="_blank"
+      :href="controller.comptaURL"
+      color="primary"
+    >
+      Comptabilité
+    </v-list-item>
+
+    <v-divider></v-divider>
+    <v-list-item
       prepend-icon="mdi-logout"
       link
       :to="{ path: '/' }"
@@ -66,6 +78,7 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
+import { controller } from "../logic/logic";
 
 const props = defineProps<{
   title: string;

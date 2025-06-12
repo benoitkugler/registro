@@ -131,6 +131,7 @@ export interface LettreOut {
 // registro/controllers/directeurs.LogginOut
 export interface LogginOut {
   IsValid: boolean;
+  ComptaURL: string;
   Token: string;
 }
 // registro/controllers/directeurs.Messages

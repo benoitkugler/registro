@@ -76,7 +76,7 @@ async function loggin() {
   if (res === undefined) return;
 
   if (res.IsValid) {
-    controller.setCamp(item, res.Token);
+    controller.setCamp(item, res.ComptaURL, res.Token);
     controller.showMessage("Bienvenue !");
     router.push({ path: "/inscriptions" });
   } else {
