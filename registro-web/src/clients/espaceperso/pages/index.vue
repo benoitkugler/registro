@@ -59,7 +59,13 @@
               <template #prepend>
                 <v-icon>mdi-pill</v-icon>
               </template>
-              Fiches sanitaires
+              <v-badge
+                :color="data.FichesanitaireToFillCount ? 'pink' : 'transparent'"
+                :content="data.FichesanitaireToFillCount || ''"
+                floating
+              >
+                Fiches sanitaires
+              </v-badge>
             </v-btn>
             <!-- TODO -->
             <!-- <v-btn @click="showEditOptions = true" size="small">
@@ -190,6 +196,7 @@
     <FichessanitairesCard
       :token="token"
       @close="showFichesantaires = false"
+      @update-notifs="v => data!.FichesanitaireToFillCount = v"
     ></FichessanitairesCard>
   </v-dialog>
 

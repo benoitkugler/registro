@@ -1,5 +1,4 @@
 <template>
-  {{ props.optionnelle }}
   <FilesRow
     :title="title"
     :subtitle="props.demande.Description"

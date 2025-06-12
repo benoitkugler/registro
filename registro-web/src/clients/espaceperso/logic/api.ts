@@ -17,6 +17,7 @@ export type Time = string & { __opaque__: "Time" };
 export interface Data {
   Dossier: DossierExt;
   DocumentsToFillCount: Int;
+  FichesanitaireToFillCount: Int;
   IsPaiementOpen: boolean;
 }
 // registro/controllers/espaceperso.DemandePersonne
@@ -47,6 +48,11 @@ export interface FichesanitaireExt {
   RespoSecuriteSociale: string;
   VaccinsDemande: Demande;
   VaccinsFiles: PublicFile[] | null;
+}
+// registro/controllers/espaceperso.Fichesanitaires
+export interface Fichesanitaires {
+  Fiches: FichesanitaireExt[] | null;
+  ToFillCount: Int;
 }
 // registro/controllers/espaceperso.FilesCamp
 export interface FilesCamp {
@@ -185,6 +191,7 @@ export type Facture = Record<string, never>;
 export interface Message {
   Message: EventMessage;
   OrigineCampLabel: string;
+  VuParCampsIDs: IdCamp[] | null;
   VuParCamps: string[] | null;
 }
 // registro/controllers/logic.PlaceLiberee
@@ -925,10 +932,10 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseURL + "/api/v1/espaceperso/fichesanitaires";
     this.startRequest();
     try {
-      const rep: AxiosResponse<FichesanitaireExt[] | null> = await Axios.get(
-        fullUrl,
-        { headers: this.getHeaders(), params: { token: params["token"] } },
-      );
+      const rep: AxiosResponse<Fichesanitaires> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { token: params["token"] },
+      });
       return rep.data;
     } catch (error) {
       this.handleError(error);

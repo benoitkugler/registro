@@ -42,10 +42,10 @@
 import { onMounted, ref } from "vue";
 import {
   FichesanitaireState,
-  type Aide,
   type Fichesanitaire,
   type FichesanitaireExt,
   type IdPersonne,
+  type Int,
   type PublicFile,
 } from "../logic/api";
 import { controller } from "../logic/logic";
@@ -56,6 +56,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: "close"): void;
+  (e: "updateNotifs", toFill: Int): void;
 }>();
 
 onMounted(fetchData);
@@ -66,10 +67,11 @@ const fiches = ref<FichesanitaireExt[]>([]);
 async function fetchData() {
   const res = await controller.LoadFichesanitaires({ token: props.token });
   if (res === undefined) return;
-  fiches.value = res || [];
-  if (res?.length && tab.value == 0) {
-    tab.value = res[0].Fichesanitaire.IdPersonne;
+  fiches.value = res.Fiches || [];
+  if (fiches.value.length && tab.value == 0) {
+    tab.value = fiches.value[0].Fichesanitaire.IdPersonne;
   }
+  emit("updateNotifs", res.ToFillCount);
 }
 
 async function save(fiche: Fichesanitaire, respoSecuriteSociale: string) {
@@ -90,18 +92,16 @@ async function uploadVaccin(index: number, file: File) {
     idPersonne: fiche.Fichesanitaire.IdPersonne,
   });
   if (res === undefined) return;
+  fetchData();
   controller.showMessage("Le vaccin a bien été téléversé. Merci !");
-  fiche.VaccinsFiles = (fiche.VaccinsFiles || []).concat(res);
 }
 
 async function deleteVaccin(index: number, file: PublicFile) {
   const fiche = fiches.value[index];
   const res = await controller.DeleteVaccin({ key: file.Key });
   if (res === undefined) return;
+  fetchData();
   controller.showMessage("Le vaccin a bien été supprimé.");
-  fiche.VaccinsFiles = (fiche.VaccinsFiles || []).filter(
-    (v) => v.Id != file.Id
-  );
 }
 
 async function transfert(fiche: Fichesanitaire) {

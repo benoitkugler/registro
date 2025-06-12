@@ -122,10 +122,10 @@ func Test_loadFichesanitaires(t *testing.T) {
 	ct := Controller{db: db.DB}
 	fs, err := ct.loadFichesanitaires(dossier.Id)
 	tu.AssertNoErr(t, err)
-	tu.Assert(t, len(fs) == 1)
-	tu.Assert(t, fs[0].Fichesanitaire.IdPersonne == mineur.Id)
-	tu.Assert(t, !fs[0].IsLocked && fs[0].State == pr.NoFiche)
-	tu.Assert(t, len(fs[0].VaccinsFiles) == 1)
+	tu.Assert(t, len(fs.Fiches) == 1)
+	tu.Assert(t, fs.Fiches[0].Fichesanitaire.IdPersonne == mineur.Id)
+	tu.Assert(t, !fs.Fiches[0].IsLocked && fs.Fiches[0].State == pr.NoFiche)
+	tu.Assert(t, len(fs.Fiches[0].VaccinsFiles) == 1)
 }
 
 func Test_sondages(t *testing.T) {

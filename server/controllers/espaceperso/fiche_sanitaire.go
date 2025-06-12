@@ -23,6 +23,21 @@ import (
 
 // fiches sanitaires
 
+type Fichesanitaires struct {
+	Fiches      []FichesanitaireExt
+	ToFillCount int
+}
+
+func (fs *Fichesanitaires) setToFillCount() {
+	count := 0
+	for _, fiche := range fs.Fiches {
+		if fiche.IsLocked || fiche.State != pr.UpToDate || len(fiche.VaccinsFiles) == 0 {
+			count++
+		}
+	}
+	fs.ToFillCount = count
+}
+
 type FichesanitaireExt struct {
 	Personne             string
 	IsLocked             bool
@@ -48,10 +63,10 @@ func (ct *Controller) LoadFichesanitaires(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) loadFichesanitaires(id ds.IdDossier) (out []FichesanitaireExt, _ error) {
+func (ct *Controller) loadFichesanitaires(id ds.IdDossier) (out Fichesanitaires, _ error) {
 	dossier, err := logic.LoadDossier(ct.db, id)
 	if err != nil {
-		return nil, err
+		return out, err
 	}
 	responsable := dossier.Responsable()
 	idPersonnes := dossier.Participants.IdPersonnes()
@@ -59,12 +74,12 @@ func (ct *Controller) loadFichesanitaires(id ds.IdDossier) (out []Fichesanitaire
 	// load existing vaccins
 	vaccins, vaccinDemande, err := fsAPI.LoadVaccins(ct.db, ct.key, idPersonnes)
 	if err != nil {
-		return nil, err
+		return out, err
 	}
 
 	fiches, err := pr.SelectFichesanitairesByIdPersonnes(ct.db, idPersonnes...)
 	if err != nil {
-		return nil, utils.SQLError(err)
+		return out, utils.SQLError(err)
 	}
 	fichesByPersonne := fiches.ByIdPersonne()
 	// make sure the struct is initialized for every [Personne], restricting to < 18 years old
@@ -100,8 +115,9 @@ func (ct *Controller) loadFichesanitaires(id ds.IdDossier) (out []Fichesanitaire
 				LastModif:  fiche.LastModif,
 			}
 		}
-		out = append(out, fsExt)
+		out.Fiches = append(out.Fiches, fsExt)
 	}
+	out.setToFillCount()
 	return out, nil
 }
 
