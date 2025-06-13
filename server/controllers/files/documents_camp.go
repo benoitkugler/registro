@@ -29,9 +29,24 @@ type generatedFileKey struct {
 	Kind   GenDocumentKind
 }
 
-// CampDocumentKey returns a key identifying generated documents
-func CampDocumentKey(key crypto.Encrypter, id cps.IdCamp, kind GenDocumentKind) (string, error) {
-	return key.EncryptJSON(generatedFileKey{id, kind})
+type GeneratedFile struct {
+	NomClient string
+	Key       string // crypted camp ID and Kind
+}
+
+// CampDocument returns a key identifying generated documents
+func CampDocument(key crypto.Encrypter, camp cps.Camp, kind GenDocumentKind) (out GeneratedFile, err error) {
+	out.Key, err = key.EncryptJSON(generatedFileKey{camp.Id, kind})
+	if err != nil {
+		return GeneratedFile{}, err
+	}
+	switch kind {
+	case ListeVetements:
+		out.NomClient = fmt.Sprintf("Liste de vêtements %s.pdf", camp.Label())
+	case ListeParticipants:
+		out.NomClient = fmt.Sprintf("Liste des participants %s.pdf", camp.Label())
+	}
+	return out, nil
 }
 
 func (ct *Controller) RenderDocumentCamp(c echo.Context) error {

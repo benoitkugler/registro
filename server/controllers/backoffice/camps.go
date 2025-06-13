@@ -6,6 +6,7 @@ import (
 	"log"
 	"time"
 
+	filesAPI "registro/controllers/files"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
 	fs "registro/sql/files"
@@ -347,6 +348,77 @@ func (ct *Controller) ouvreInscriptions(args OuvreInscriptionsIn) error {
 		}
 		return nil
 	})
+}
+
+// Documents
+
+func (ct *Controller) CampsDocuments(c echo.Context) error {
+	id, err := utils.QueryParamInt[cps.IdCamp](c, "idCamp")
+	if err != nil {
+		return err
+	}
+	out, err := ct.getCampDocument(id)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
+type FilesCamp struct {
+	ToShow cps.DocumentsToShow
+
+	Generated       []filesAPI.GeneratedFile
+	ToRead          []filesAPI.PublicFile
+	ToUploadModeles []filesAPI.PublicFile
+}
+
+func (ct *Controller) getCampDocument(id cps.IdCamp) (FilesCamp, error) {
+	camp, err := cps.SelectCamp(ct.db, id)
+	if err != nil {
+		return FilesCamp{}, utils.SQLError(err)
+	}
+	links, err := fs.SelectFileCampsByIdCamps(ct.db, id)
+	if err != nil {
+		return FilesCamp{}, utils.SQLError(err)
+	}
+	campFiles, err := fs.SelectFiles(ct.db, links.IdFiles()...)
+	if err != nil {
+		return FilesCamp{}, utils.SQLError(err)
+	}
+
+	out := FilesCamp{ToShow: camp.DocumentsToShow}
+	// other files
+	for _, link := range links {
+		out.ToRead = append(out.ToRead, filesAPI.NewPublicFile(ct.key, campFiles[link.IdFile]))
+	}
+
+	// generated files
+	doc1, err := filesAPI.CampDocument(ct.key, camp, filesAPI.ListeVetements)
+	if err != nil {
+		return FilesCamp{}, err
+	}
+	doc2, err := filesAPI.CampDocument(ct.key, camp, filesAPI.ListeParticipants)
+	if err != nil {
+		return FilesCamp{}, err
+	}
+	out.Generated = []filesAPI.GeneratedFile{doc1, doc2}
+
+	links2, err := fs.SelectDemandeCampsByIdCamps(ct.db, id)
+	if err != nil {
+		return FilesCamp{}, utils.SQLError(err)
+	}
+	demandes, err := fs.SelectDemandes(ct.db, links2.IdDemandes()...)
+	if err != nil {
+		return FilesCamp{}, utils.SQLError(err)
+	}
+	demandesFiles, err := fs.SelectFiles(ct.db, demandes.IdFiles()...)
+	if err != nil {
+		return FilesCamp{}, utils.SQLError(err)
+	}
+	for _, file := range demandesFiles {
+		out.ToUploadModeles = append(out.ToUploadModeles, filesAPI.NewPublicFile(ct.key, file))
+	}
+	return out, nil
 }
 
 type CreateEquipierIn struct {

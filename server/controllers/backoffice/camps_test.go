@@ -55,6 +55,14 @@ func TestCRUD(t *testing.T) {
 		_, err = ct.createEquipier(CreateEquipierIn{pe.Id, camp.Camp.Camp.Id})
 		tu.AssertNoErr(t, err)
 	})
+
+	t.Run("documents", func(t *testing.T) {
+		camp, err := ct.createCamp()
+		tu.AssertNoErr(t, err)
+
+		_, err = ct.getCampDocument(camp.Camp.Camp.Id)
+		tu.AssertNoErr(t, err)
+	})
 }
 
 func Test_lastTaux(t *testing.T) {

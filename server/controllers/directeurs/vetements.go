@@ -51,10 +51,10 @@ func (ct *Controller) updateVetements(id cps.IdCamp, args cps.ListeVetements) (s
 		return "", utils.SQLError(err)
 	}
 	// return a render key
-	token, err := filesAPI.CampDocumentKey(ct.key, id, filesAPI.ListeVetements)
+	doc, err := filesAPI.CampDocument(ct.key, camp, filesAPI.ListeVetements)
 	if err != nil {
 		return "", err
 	}
 
-	return token, nil
+	return doc.Key, nil
 }

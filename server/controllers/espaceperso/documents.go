@@ -2,7 +2,6 @@ package espaceperso
 
 import (
 	"errors"
-	"fmt"
 	"slices"
 
 	filesAPI "registro/controllers/files"
@@ -37,7 +36,7 @@ func (docs *Documents) setToFillCount() {
 
 type FilesCamp struct {
 	Camp      string
-	Generated []GeneratedFile
+	Generated []filesAPI.GeneratedFile
 	Files     []filesAPI.PublicFile
 }
 
@@ -51,11 +50,6 @@ type DemandePersonne struct {
 	Demande     fs.Demande
 	DemandeFile filesAPI.PublicFile
 	Uploaded    []filesAPI.PublicFile
-}
-
-type GeneratedFile struct {
-	NomClient string
-	Key       string // crypted camp ID and Kind
 }
 
 func (ct *Controller) LoadDocuments(c echo.Context) error {
@@ -104,24 +98,18 @@ func loadDocuments(db ds.DB, key crypto.Encrypter, dossier logic.Dossier) (Docum
 
 		// generated files
 		if camp.DocumentsToShow.ListeVetements {
-			key, err := filesAPI.CampDocumentKey(key, camp.Id, filesAPI.ListeVetements)
+			doc, err := filesAPI.CampDocument(key, camp, filesAPI.ListeVetements)
 			if err != nil {
 				return Documents{}, err
 			}
-			item.Generated = append(item.Generated, GeneratedFile{
-				NomClient: fmt.Sprintf("Liste de vêtements %s.pdf", camp.Label()),
-				Key:       key,
-			})
+			item.Generated = append(item.Generated, doc)
 		}
 		if camp.DocumentsToShow.ListeParticipants {
-			key, err := filesAPI.CampDocumentKey(key, camp.Id, filesAPI.ListeParticipants)
+			doc, err := filesAPI.CampDocument(key, camp, filesAPI.ListeParticipants)
 			if err != nil {
 				return Documents{}, err
 			}
-			item.Generated = append(item.Generated, GeneratedFile{
-				NomClient: fmt.Sprintf("Liste des participants %s.pdf", camp.Label()),
-				Key:       key,
-			})
+			item.Generated = append(item.Generated, doc)
 		}
 
 		// do not include empty lists

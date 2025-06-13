@@ -69,6 +69,13 @@ export interface EventsSendMessageIn {
   IdDossier: IdDossier;
   Contenu: string;
 }
+// registro/controllers/backoffice.FilesCamp
+export interface FilesCamp {
+  ToShow: DocumentsToShow;
+  Generated: GeneratedFile[] | null;
+  ToRead: PublicFile[] | null;
+  ToUploadModeles: PublicFile[] | null;
+}
 // registro/controllers/backoffice.InscriptionIdentifieIn
 export interface InscriptionIdentifieIn {
   IdDossier: IdDossier;
@@ -138,6 +145,11 @@ export interface SearchDossierIn {
 export interface SearchDossierOut {
   Dossiers: DossierHeader[] | null;
   Total: Int;
+}
+// registro/controllers/files.GeneratedFile
+export interface GeneratedFile {
+  NomClient: string;
+  Key: string;
 }
 // registro/controllers/files.PublicFile
 export interface PublicFile {
@@ -255,6 +267,7 @@ export interface InscriptionsValideIn {
 export interface Message {
   Message: EventMessage;
   OrigineCampLabel: string;
+  VuParCampsIDs: IdCamp[] | null;
   VuParCamps: string[] | null;
 }
 // registro/controllers/logic.ParticipantExt
@@ -294,9 +307,9 @@ export type StatutPaiement =
   (typeof StatutPaiement)[keyof typeof StatutPaiement];
 
 export const StatutPaiementLabels: Record<StatutPaiement, string> = {
-  [StatutPaiement.Complet]: "",
-  [StatutPaiement.EnCours]: "",
-  [StatutPaiement.NonCommence]: "",
+  [StatutPaiement.Complet]: "Complet",
+  [StatutPaiement.EnCours]: "En cours",
+  [StatutPaiement.NonCommence]: "Non commencé",
 };
 
 // registro/controllers/logic.Supprime
@@ -961,6 +974,21 @@ export abstract class AbstractAPI {
     this.startRequest();
     try {
       const rep: AxiosResponse<CampsLoadOut> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { idCamp: String(params["idCamp"]) },
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** CampsDocuments performs the request and handles the error */
+  async CampsDocuments(params: { idCamp: IdCamp }) {
+    const fullUrl = this.baseURL + "/api/v1/backoffice/camps/documents";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<FilesCamp> = await Axios.get(fullUrl, {
         headers: this.getHeaders(),
         params: { idCamp: String(params["idCamp"]) },
       });

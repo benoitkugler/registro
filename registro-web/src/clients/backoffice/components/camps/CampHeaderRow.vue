@@ -92,6 +92,13 @@
 
             <v-divider thickness="1"></v-divider>
             <v-list-item
+              prepend-icon="mdi-mail"
+              @click="emit('show-documents')"
+              title="Documents"
+            ></v-list-item>
+
+            <v-divider thickness="1"></v-divider>
+            <v-list-item
               prepend-icon="mdi-delete"
               :disabled="props.camp.Stats.Inscriptions > 0"
               @click="showDelete = true"
@@ -118,6 +125,7 @@ const emit = defineEmits<{
   (e: "edit"): void;
   (e: "edit-taux"): void;
   (e: "delete"): void;
+  (e: "show-documents"): void;
 }>();
 
 const allAttente = computed(

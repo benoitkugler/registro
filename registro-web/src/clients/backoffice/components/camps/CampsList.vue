@@ -99,6 +99,7 @@
         @edit="toEdit = camp.Camp.Camp"
         @edit-taux="toEditTaux = camp"
         @delete="deleteCamp(camp)"
+        @show-documents="showDocumentsFor = camp"
       ></CampHeaderRow>
 
       <v-pagination :length="pagesCount" v-model="currentPage"></v-pagination>
@@ -187,6 +188,17 @@
       </v-card-actions>
     </v-card>
   </v-dialog>
+
+  <v-dialog
+    :model-value="showDocumentsFor != null"
+    @update:model-value="showDocumentsFor = null"
+    max-width="800px"
+  >
+    <DocumentsCard
+      v-if="showDocumentsFor"
+      :camp="showDocumentsFor"
+    ></DocumentsCard>
+  </v-dialog>
 </template>
 
 <script lang="ts" setup>
@@ -205,6 +217,7 @@ import TauxSelect from "./TauxSelect.vue";
 import CampHeaderRow from "./CampHeaderRow.vue";
 import { Camps, normalize } from "@/utils";
 import CampsSelector from "./CampsSelector.vue";
+import DocumentsCard from "./DocumentsCard.vue";
 
 const emit = defineEmits<{
   (e: "click", camp: CampHeader): void;
@@ -366,4 +379,6 @@ async function openInsc() {
   controller.showMessage("Séjours ouverts aux inscriptions avec succès.");
   fetchCamps();
 }
+
+const showDocumentsFor = ref<CampHeader | null>(null);
 </script>
