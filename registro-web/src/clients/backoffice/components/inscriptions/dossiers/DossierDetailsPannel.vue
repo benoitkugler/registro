@@ -57,7 +57,7 @@
           >
           </v-btn>
         </template>
-        <v-list>
+        <v-list density="compact">
           <v-list-item
             prepend-icon="mdi-link"
             @click="showLinks = true"
