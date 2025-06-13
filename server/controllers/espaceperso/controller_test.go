@@ -7,6 +7,7 @@ import (
 
 	"registro/config"
 	"registro/crypto"
+	"registro/generators/pdfcreator"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
 	"registro/sql/events"
@@ -163,5 +164,32 @@ func Test_sondages(t *testing.T) {
 	sondage := l[0]
 	sondage.Sondage.Ambiance = 3
 	err = ct.updateSondage(dossier.Id, sondage.Sondage.Id, sondage.Sondage.IdCamp, sondage.Sondage.ReponseSondage)
+	tu.AssertNoErr(t, err)
+}
+
+func TestDownloadDocuments(t *testing.T) {
+	err := pdfcreator.Init(os.TempDir(), "../../assets")
+	tu.AssertNoErr(t, err)
+
+	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
+		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",
+		"../../migrations/init.sql")
+	defer db.Remove()
+
+	pe, err := pr.Personne{}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	dossier, err := ds.Dossier{IdTaux: 1, IdResponsable: pe.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	camp, err := cps.Camp{IdTaux: 1}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	_, err = cps.Participant{IdTaux: 1, IdCamp: camp.Id, IdPersonne: pe.Id, IdDossier: dossier.Id, Statut: cps.Inscrit}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	ct := Controller{db: db.DB}
+
+	_, err = ct.renderAttestationPresence(dossier.Id)
 	tu.AssertNoErr(t, err)
 }

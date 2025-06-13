@@ -8,9 +8,11 @@ import (
 
 	"registro/config"
 	"registro/controllers/directeurs"
+	filesAPI "registro/controllers/files"
 	fsAPI "registro/controllers/files"
 	"registro/controllers/logic"
 	"registro/crypto"
+	"registro/generators/pdfcreator"
 	"registro/joomeo"
 	"registro/mails"
 	cps "registro/sql/camps"
@@ -460,4 +462,81 @@ func (ct *Controller) updateSondage(idDossier ds.IdDossier, idSondage cps.IdSond
 		}
 	}
 	return nil
+}
+
+func (ct *Controller) DownloadAttestationPresence(c echo.Context) error {
+	token := c.QueryParam("token")
+	id, err := crypto.DecryptID[ds.IdDossier](ct.key, token)
+	if err != nil {
+		return err
+	}
+	content, err := ct.renderAttestationPresence(id)
+	if err != nil {
+		return err
+	}
+	mimeType := filesAPI.SetBlobHeader(c, content, "Attestation de présence.pdf")
+	return c.Blob(200, mimeType, content)
+}
+
+func (ct *Controller) renderAttestationPresence(id ds.IdDossier) ([]byte, error) {
+	dossier, err := logic.LoadDossier(ct.db, id)
+	if err != nil {
+		return nil, err
+	}
+	// restrict to inscrits with started camp
+	var filtered []cps.ParticipantCamp
+	for _, p := range dossier.ParticipantsExt() {
+		if p.Participant.Statut != cps.Inscrit {
+			continue
+		}
+		if hasStarted := p.Camp.DateDebut.Time().Before(time.Now()); !hasStarted {
+			continue
+		}
+		filtered = append(filtered, p)
+	}
+	responsable := dossier.Responsable()
+	destinataire := pdfcreator.Destinataire{
+		NomPrenom:  responsable.NOMPrenom(),
+		Adresse:    responsable.Adresse,
+		CodePostal: responsable.CodePostal,
+		Ville:      responsable.Ville,
+	}
+	content, err := pdfcreator.CreateAttestationPresence(ct.asso, destinataire, filtered)
+	if err != nil {
+		return nil, err
+	}
+	return content, nil
+}
+
+func (ct *Controller) DownloadFacture(c echo.Context) error {
+	token := c.QueryParam("token")
+	id, err := crypto.DecryptID[ds.IdDossier](ct.key, token)
+	if err != nil {
+		return err
+	}
+	content, err := ct.renderFacture(id)
+	if err != nil {
+		return err
+	}
+	mimeType := filesAPI.SetBlobHeader(c, content, "Facture.pdf")
+	return c.Blob(200, mimeType, content)
+}
+
+func (ct *Controller) renderFacture(id ds.IdDossier) ([]byte, error) {
+	dossier, err := logic.LoadDossier(ct.db, id)
+	if err != nil {
+		return nil, err
+	}
+	responsable := dossier.Responsable()
+	destinataire := pdfcreator.Destinataire{
+		NomPrenom:  responsable.NOMPrenom(),
+		Adresse:    responsable.Adresse,
+		CodePostal: responsable.CodePostal,
+		Ville:      responsable.Ville,
+	}
+	content, err := pdfcreator.CreateFacture(ct.asso, destinataire)
+	if err != nil {
+		return nil, err
+	}
+	return content, nil
 }

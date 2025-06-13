@@ -108,19 +108,35 @@ type Destinataire struct {
 
 // CreateAttestationPresence returns a PDF document.
 func CreateAttestationPresence(cfg config.Asso, destinataire Destinataire, participants []cps.ParticipantCamp) ([]byte, error) {
-	type attestationPresenceTmplData struct {
+	args := struct {
 		Asso         config.Asso
 		Date         string // now
 		Destinataire Destinataire
 		Participants []cps.ParticipantCamp
-	}
-
-	return templateToPDF(attestationPresenceTmpl, attestationPresenceTmplData{
+	}{
 		Asso:         cfg,
 		Date:         shared.NewDateFrom(time.Now()).String(),
 		Destinataire: destinataire,
 		Participants: participants,
-	})
+	}
+
+	return templateToPDF(attestationPresenceTmpl, args)
+}
+
+// CreateFacture returns a PDF document.
+// TODO:
+func CreateFacture(cfg config.Asso, destinataire Destinataire) ([]byte, error) {
+	args := struct {
+		Asso         config.Asso
+		Date         string // now
+		Destinataire Destinataire
+	}{
+		Asso:         cfg,
+		Date:         shared.NewDateFrom(time.Now()).String(),
+		Destinataire: destinataire,
+	}
+
+	return templateToPDF(attestationPresenceTmpl, args)
 }
 
 func ensureHexColor(hexa string) string {

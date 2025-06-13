@@ -26,6 +26,8 @@
           title="Attestation de présence"
           subtitle="Télécharger au format .pdf"
           prepend-icon="mdi-file-document-check"
+          link
+          :href="endpoints.DownloadAttestationPresence(token)"
         ></v-list-item>
         <v-list-item
           title="Facture"
@@ -229,6 +231,7 @@ import JoomeoCard from "../components/JoomeoCard.vue";
 import FichessanitairesCard from "../components/FichessanitairesCard.vue";
 import SondagesCard from "../components/SondagesCard.vue";
 import DocumentsCard from "../components/DocumentsCard.vue";
+import { endpoints } from "@/clients/directeurs/logic/logic";
 const router = useRouter();
 
 // id token

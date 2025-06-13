@@ -44,4 +44,18 @@ export class Endpoints {
       `?documentToken=${documentToken}&isMiniature=${isMiniature ? "YES" : ""}`
     );
   }
+
+  DownloadAttestationPresence(token: string) {
+    return (
+      this.baseURL +
+      "/api/v1/espaceperso/download/attestation" +
+      `?token=${token}`
+    );
+  }
+
+  DownloadFacture(token: string) {
+    return (
+      this.baseURL + "/api/v1/espaceperso/download/facture" + `?token=${token}`
+    );
+  }
 }
