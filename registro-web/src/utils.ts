@@ -1,6 +1,7 @@
 import {
   CurrencyLabels,
   Sexe,
+  StatutPaiement,
   StatutParticipant,
   type CampExt,
   type CampItem,
@@ -356,6 +357,19 @@ export namespace Formatters {
         return { icon: "mdi-check", color: "green" };
       default:
         return { icon: "mdi-clock" };
+    }
+  }
+
+  export function colorStatutPaiement(s: StatutPaiement) {
+    switch (s) {
+      case StatutPaiement.NonCommence:
+        return "red";
+      case StatutPaiement.EnCours:
+        return "deep-orange";
+      case StatutPaiement.Complet:
+        return "green";
+      default:
+        return "";
     }
   }
 

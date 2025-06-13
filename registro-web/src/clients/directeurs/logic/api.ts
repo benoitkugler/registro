@@ -76,6 +76,11 @@ export interface DocumentsUploadedOut {
   Personnes: Personnes;
   DemandesDocuments: DemandeDocuments[] | null;
 }
+// registro/controllers/directeurs.DossierHeader
+export interface DossierHeader {
+  Responsable: string;
+  Reglement: StatutPaiement;
+}
 // registro/controllers/directeurs.DossierPersonnes
 export interface DossierPersonnes {
   Responsable: string;
@@ -140,6 +145,11 @@ export interface Messages {
   Dossiers: Record<IdDossier, DossierPersonnes> | null;
   NewMessagesCount: Int;
 }
+// registro/controllers/directeurs.ParticipantsOut
+export interface ParticipantsOut {
+  Participants: ParticipantExt[] | null;
+  Dossiers: Record<IdDossier, DossierHeader> | null;
+}
 // registro/controllers/files.PublicFile
 export interface PublicFile {
   Key: string;
@@ -200,6 +210,21 @@ export interface StatutExt {
   AllowedChanges: StatutParticipant[] | null;
   Validable: boolean;
 }
+// registro/controllers/logic.StatutPaiement
+export const StatutPaiement = {
+  Complet: 3,
+  EnCours: 2,
+  NonCommence: 1,
+} as const;
+export type StatutPaiement =
+  (typeof StatutPaiement)[keyof typeof StatutPaiement];
+
+export const StatutPaiementLabels: Record<StatutPaiement, string> = {
+  [StatutPaiement.Complet]: "Complet",
+  [StatutPaiement.EnCours]: "En cours",
+  [StatutPaiement.NonCommence]: "Non commencé",
+};
+
 // registro/controllers/search.PersonneHeader
 export interface PersonneHeader {
   Id: IdPersonne;
@@ -959,10 +984,9 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseURL + "/api/v1/directeurs/participants";
     this.startRequest();
     try {
-      const rep: AxiosResponse<ParticipantExt[] | null> = await Axios.get(
-        fullUrl,
-        { headers: this.getHeaders() },
-      );
+      const rep: AxiosResponse<ParticipantsOut> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+      });
       return rep.data;
     } catch (error) {
       this.handleError(error);

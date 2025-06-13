@@ -26,15 +26,15 @@ func NewParticipantExt(participant cps.Participant, personne pr.Personne, camp c
 	}
 }
 
-func LoadParticipants(db cps.DB, id cps.IdCamp) ([]ParticipantExt, cps.CampExt, error) {
+func LoadParticipants(db cps.DB, id cps.IdCamp) ([]ParticipantExt, ds.Dossiers, cps.CampExt, error) {
 	camp, err := cps.LoadCampPersonnes(db, id)
 	if err != nil {
-		return nil, cps.CampExt{}, err
+		return nil, nil, cps.CampExt{}, err
 	}
 
 	dossiers, err := ds.SelectDossiers(db, camp.IdDossiers()...)
 	if err != nil {
-		return nil, cps.CampExt{}, utils.SQLError(err)
+		return nil, nil, cps.CampExt{}, utils.SQLError(err)
 	}
 
 	pp := camp.Participants()
@@ -43,5 +43,5 @@ func LoadParticipants(db cps.DB, id cps.IdCamp) ([]ParticipantExt, cps.CampExt, 
 		l[i] = NewParticipantExt(p.Participant, p.Personne, camp.Camp, dossiers[p.Participant.IdDossier])
 	}
 
-	return l, camp.Camp.Ext(), nil
+	return l, dossiers, camp.Camp.Ext(), nil
 }

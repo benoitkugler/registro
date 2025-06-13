@@ -35,14 +35,14 @@
       </v-list-item>
     </v-col>
 
-    <v-col align-self="center" cols="1">
+    <v-col align-self="center" cols="1" class="text-center">
       <v-icon class="ma-2 mr-4">
         {{ Formatters.sexeIcon(props.participant.Personne.Sexe) }}
       </v-icon>
     </v-col>
     <v-col align-self="center" cols="1">
       <v-row no-gutters>
-        <v-col align-self="end">
+        <v-col align-self="end" class="text-center">
           {{
             Formatters.dateNaissance(props.participant.Personne.DateNaissance)
           }}

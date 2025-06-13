@@ -35,7 +35,7 @@ func (ct *Controller) CampsLoad(c echo.Context) error {
 }
 
 func (ct *Controller) getParticipants(id cps.IdCamp) (CampsLoadOut, error) {
-	participants, camp, err := logic.LoadParticipants(ct.db, id)
+	participants, _, camp, err := logic.LoadParticipants(ct.db, id)
 	if err != nil {
 		return CampsLoadOut{}, err
 	}

@@ -33,12 +33,31 @@ func (ct *Controller) ParticipantsGet(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) getParticipants(id cps.IdCamp) ([]logic.ParticipantExt, error) {
-	participants, _, err := logic.LoadParticipants(ct.db, id)
+type DossierHeader struct {
+	Responsable string
+	Reglement   logic.StatutPaiement
+}
+
+type ParticipantsOut struct {
+	Participants []logic.ParticipantExt
+	Dossiers     map[ds.IdDossier]DossierHeader
+}
+
+func (ct *Controller) getParticipants(id cps.IdCamp) (ParticipantsOut, error) {
+	participants, dossiers, _, err := logic.LoadParticipants(ct.db, id)
 	if err != nil {
-		return nil, err
+		return ParticipantsOut{}, err
 	}
-	return participants, nil
+	finances, err := logic.LoadDossiersFinances(ct.db, dossiers.IDs()...)
+	if err != nil {
+		return ParticipantsOut{}, err
+	}
+	statuts := make(map[ds.IdDossier]DossierHeader)
+	for id := range dossiers {
+		dossier := finances.For(id)
+		statuts[id] = DossierHeader{dossier.Responsable().NOMPrenom(), dossier.Bilan().StatutPaiement()}
+	}
+	return ParticipantsOut{participants, statuts}, nil
 }
 
 // ParticipantsUpdate modifie les champs d'un participant.

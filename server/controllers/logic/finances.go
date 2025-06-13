@@ -150,10 +150,10 @@ func (b BilanFinances) ApresPaiement() ds.Montant {
 type StatutPaiement uint8
 
 const (
-	_ StatutPaiement = iota
-	NonCommence
-	EnCours
-	Complet
+	_           StatutPaiement = iota //
+	NonCommence                       // Non commencé
+	EnCours                           // En cours
+	Complet                           // Complet
 )
 
 func (b BilanFinances) StatutPaiement() StatutPaiement {

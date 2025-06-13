@@ -4,7 +4,9 @@
       <v-btn flat icon>
         <v-icon>mdi-information</v-icon>
         <v-tooltip activator="parent" content-class="ma-0 pa-0">
-          <StatistiquesCard :participants="data"></StatistiquesCard>
+          <StatistiquesCard
+            :participants="data.Participants || []"
+          ></StatistiquesCard>
         </v-tooltip>
       </v-btn>
       Participants
@@ -30,18 +32,29 @@
         Fiches sanitaires</v-btn
       >
       <v-divider thickness="1" vertical class="mx-1"></v-divider>
-      <v-tooltip text="Trier par moment d'inscription">
-        <template #activator="{ props: tooltipProps }">
-          <v-btn
-            v-bind="tooltipProps"
-            icon
-            :variant="sortByTime ? 'tonal' : 'flat'"
-            @click="sortByTime = !sortByTime"
-          >
-            <v-icon>mdi-sort-calendar-ascending</v-icon>
-          </v-btn>
-        </template>
-      </v-tooltip>
+
+      <v-btn icon flat>
+        <v-icon>mdi-dots-vertical</v-icon>
+        <v-menu activator="parent">
+          <v-list density="compact">
+            <v-list-item
+              title="Trier par moment d'inscription"
+              @click="sortByTime = !sortByTime"
+              prepend-icon="mdi-sort-calendar-ascending"
+              :append-icon="sortByTime ? 'mdi-check' : ''"
+            >
+            </v-list-item>
+
+            <v-divider thickness="1"></v-divider>
+
+            <v-list-item
+              prepend-icon="mdi-currency-eur"
+              title="Suivi du réglement"
+              @click="showReglements = true"
+            ></v-list-item>
+          </v-list>
+        </v-menu>
+      </v-btn>
     </template>
     <v-card-text class="mt-4">
       <v-skeleton-loader type="table" v-if="isLoading"></v-skeleton-loader>
@@ -103,6 +116,11 @@
     <v-dialog v-model="showMessages" max-width="1200px">
       <MessagesPannel></MessagesPannel>
     </v-dialog>
+
+    <!-- réglement -->
+    <v-dialog v-model="showReglements" max-width="700px">
+      <ReglementCard :data="data"></ReglementCard>
+    </v-dialog>
   </v-card>
   <v-skeleton-loader v-else type="card"></v-skeleton-loader>
 </template>
@@ -116,12 +134,14 @@ import {
   type CampItem,
   type Participant,
   type ParticipantExt,
+  type ParticipantsOut,
 } from "../../logic/api";
 import { Participants } from "@/utils";
 import FichesSanitairesPannel from "./FichesSanitairesPannel.vue";
 import DocumentsPannel from "./DocumentsPannel.vue";
 import MessagesPannel from "./MessagesPannel.vue";
 import StatistiquesCard from "./StatistiquesCard.vue";
+import ReglementCard from "./ReglementCard.vue";
 
 const props = defineProps<{}>();
 
@@ -144,12 +164,12 @@ async function fetchCamps() {
 // with sort
 const sortByTime = ref(false);
 const participants = computed(() => {
-  const out = (data.value || []).map((p) => p);
+  const out = (data.value?.Participants || []).map((p) => p);
   out.sort((a, b) => Participants.cmp(a, b, sortByTime.value));
   return out;
 });
 
-const data = ref<ParticipantExt[] | null>(null);
+const data = ref<ParticipantsOut | null>(null);
 async function loadParticipants() {
   isLoading.value = true;
   const res = await controller.ParticipantsGet();
@@ -174,4 +194,6 @@ const showFichesSanitaires = ref(false);
 const showDocuments = ref(false);
 
 const showMessages = ref(false);
+
+const showReglements = ref(false);
 </script>
