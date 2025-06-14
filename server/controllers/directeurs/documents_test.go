@@ -47,9 +47,9 @@ func TestDocuments(t *testing.T) {
 	dossier, err := ds.Dossier{IdTaux: 1, IdResponsable: pe1.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	_, err = cps.Participant{IdPersonne: pe1.Id, IdCamp: camp.Id, IdDossier: dossier.Id, IdTaux: 1}.Insert(db)
+	_, err = cps.Participant{IdPersonne: pe1.Id, IdCamp: camp.Id, IdDossier: dossier.Id, IdTaux: 1, Statut: cps.Inscrit}.Insert(db)
 	tu.AssertNoErr(t, err)
-	_, err = cps.Participant{IdPersonne: pe2.Id, IdCamp: camp.Id, IdDossier: dossier.Id, IdTaux: 1}.Insert(db)
+	_, err = cps.Participant{IdPersonne: pe2.Id, IdCamp: camp.Id, IdDossier: dossier.Id, IdTaux: 1, Statut: cps.Inscrit}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	ct, err := NewController(db.DB, "", "", files.NewFileSystem(os.TempDir()), config.SMTP{}, config.Asso{}, config.Joomeo{})
@@ -112,12 +112,6 @@ func TestDocuments(t *testing.T) {
 	})
 
 	t.Run("retrieve files", func(t *testing.T) {
-		_, err = ct.createEquipier("", EquipiersCreateIn{
-			CreatePersonne: true,
-			Roles:          cps.Roles{cps.Direction},
-		}, camp.Id)
-		tu.AssertNoErr(t, err)
-
 		demande1, err := ct.createDemande(camp.Id)
 		tu.AssertNoErr(t, err)
 		_, err = ct.applyDemande(camp.Id, demande1.Demande.Id)

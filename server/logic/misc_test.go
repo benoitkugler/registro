@@ -13,9 +13,9 @@ import (
 )
 
 func TestController_searchSimilaires(t *testing.T) {
-	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
-		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",
-		"../../migrations/init.sql")
+	db := tu.NewTestDB(t, "../migrations/create_1_tables.sql",
+		"../migrations/create_2_json_funcs.sql", "../migrations/create_3_constraints.sql",
+		"../migrations/init.sql")
 	defer db.Remove()
 
 	err := utils.InTx(db.DB, func(tx *sql.Tx) error {
@@ -36,9 +36,9 @@ func TestController_searchSimilaires(t *testing.T) {
 }
 
 func TestCheckPersonneReferences(t *testing.T) {
-	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
-		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",
-		"../../migrations/init.sql")
+	db := tu.NewTestDB(t, "../migrations/create_1_tables.sql",
+		"../migrations/create_2_json_funcs.sql", "../migrations/create_3_constraints.sql",
+		"../migrations/init.sql")
 	defer db.Remove()
 
 	pe, err := pr.Personne{}.Insert(db)

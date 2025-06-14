@@ -13,9 +13,9 @@ import (
 )
 
 func TestIdentifieProfil(t *testing.T) {
-	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
-		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",
-		"../../migrations/init.sql")
+	db := tu.NewTestDB(t, "../migrations/create_1_tables.sql",
+		"../migrations/create_2_json_funcs.sql", "../migrations/create_3_constraints.sql",
+		"../migrations/init.sql")
 	defer db.Remove()
 
 	pe1, err := pr.Personne{IsTemp: false}.Insert(db)
