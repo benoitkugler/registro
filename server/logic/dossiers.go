@@ -1,6 +1,8 @@
 package logic
 
 import (
+	"fmt"
+	"html/template"
 	"slices"
 	"time"
 
@@ -182,8 +184,8 @@ type DossierExt struct {
 type BilanParticipantPub struct {
 	BilanParticipant
 
-	AvecAides string
-	Net       string
+	AvecAides string // mais sans remises
+	Net       string // avec aides et remises
 }
 
 func (bp BilanParticipant) publish(taux ds.Taux) BilanParticipantPub {
@@ -192,6 +194,17 @@ func (bp BilanParticipant) publish(taux ds.Taux) BilanParticipantPub {
 	out.AvecAides = taux.Convertible(bp.prixSansRemises(taux)).String()
 	out.Net = taux.Convertible(bp.net(taux)).String()
 	return out
+}
+
+// RemisesHTML returns a description of the remises,
+// or an empty string
+func (bp BilanParticipantPub) RemisesHTML() template.HTML {
+	rem := bp.Remises
+	if rem.ReducEnfants == 0 && rem.ReducEquipiers == 0 && rem.ReducSpeciale.Cent == 0 {
+		return ""
+	}
+	return template.HTML(fmt.Sprintf("<i>Remise nombre d'enfants : %d%%    Remise équipiers : %d%%    Remise spéciale : %s</i>",
+		rem.ReducEnfants, rem.ReducEquipiers, rem.ReducSpeciale))
 }
 
 type BilanFinancesPub struct {

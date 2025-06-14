@@ -8,6 +8,11 @@
     padding: 8px;
     margin-bottom: 4px;
   }
+
+  td {
+    padding: 4px;
+    border-bottom: 1px solid black;
+  }
 </style>
 
 <!-- Titre et destinataire -->
@@ -26,49 +31,73 @@
   </div>
 </div>
 
-<table style="table-layout: fixed">
+<table
+  style="
+    table-layout: fixed;
+    width: 100%;
+    margin: 20px auto;
+    border-collapse: collapse;
+    font-size: 11pt;
+  "
+>
   <tr class="color-asso">
-    <th>Participant</th>
-    <th>Camp</th>
-    <th>Dates</th>
-    <th>Prix</th>
-    <th>Aides extérieures</th>
-    <th>Sous-total</th>
+    <th style="padding: 2px">Participant</th>
+    <th style="padding: 2px">Camp</th>
+    <th style="padding: 2px">Dates</th>
+    <th style="padding: 2px">Prix</th>
+    <th style="padding: 2px">Aides extérieures</th>
+    <th style="padding: 2px">Sous-total</th>
   </tr>
   {{ range .Participants }}
   <tr>
-    <td>{{ .NomPrenom }}<br />{{ .DateNaissance }}</td>
-    <td>{{ .Camp.Label }}<br />N° JS: {{ .Camp.NumeroJS }}</td>
-    <td>du {{ .Camp.DateDebut }}<br />au {{ .Camp.DateFin }}</td>
-    <td>{{ .Prix.PrixBase}} {{ .Prix.DescriptionPrix }}</td>
-    <td>
-      {{ range .Prix.Aides }}
-      <div>{{ .Description }}</div>
+    <td>{{ .Personne.NOMPrenom }}</td>
+    <td>{{ .Camp.Label }}</td>
+    <td>du {{ .Camp.DateDebut.String }}<br />au {{ .Camp.DateFin.String }}</td>
+    <td>{{ .Finances.AvecOption}} {{ .Finances.AvecOptionDescription }}</td>
+    <td style="font-size: 10pt">
+      {{ range .Finances.Aides }}
+      <div>{{ .String }}</div>
       {{ end }}
     </td>
-    <td>{{ .Prix.PrixSansRemises }}</td>
+    <td style="text-align: right">{{ .Finances.AvecAides }}</td>
   </tr>
-  {{ if ne (len .Remises) 0 }}
+  {{ if ne .Finances.RemisesHTML "" }}
   <!-- Total remises -->
   <tr>
-    <!-- TODO -->
-    <td colspan="5">{{ .Remises }}</td>
-    <td>{{ .Prix.PrixNet }}</td>
+    <td colspan="5" style="font-size: 10pt">{{ .Finances.RemisesHTML }}</td>
+    <td style="text-align: right">{{ .Finances.Net }}</td>
   </tr>
   {{ end }} {{ end }}
   <!-- Total (demandé) -->
   <tr>
     <td colspan="5" style="font-style: italic">Total (après remises)</td>
-    <td style="font-weight: bold">{{ .Bilan.Demande.String }}</td>
+    <td style="font-weight: bold; text-align: right">
+      {{ .Finances.Demande }}
+    </td>
+  </tr>
+  <tr style="height: 20px">
+    <td colspan="6"></td>
   </tr>
 
   <!-- Paiements -->
   {{ range .Paiements }}
   <tr>
-    <td colspan="5">{{ .Description }}</td>
-    <td>{{ .Montant }}</td>
+    <td colspan="5">{{ .DescriptionHTML }}</td>
+    <td style="text-align: right">{{ .Montant.String }}</td>
   </tr>
   {{ end }}
+
+  <!-- Après paiement -->
+  <tr>
+    <td colspan="5" style="font-style: italic">Total (après paiements)</td>
+    <td style="font-weight: bold; text-align: right">
+      {{ .Finances.Restant }}
+    </td>
+  </tr>
 </table>
 
-{{ end }}
+{{ if .IsAcquitte}}
+<div style="margin-top: 10px">
+  <i> Facture acquittée par {{ .Asso.Title }}. </i>
+</div>
+{{ end }} {{ end }}

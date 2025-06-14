@@ -33,6 +33,7 @@
           title="Facture"
           subtitle="Télécharger au format .pdf"
           prepend-icon="mdi-invoice-list"
+          :href="endpoints.DownloadFacture(token)"
         ></v-list-item>
       </v-list>
     </v-menu>

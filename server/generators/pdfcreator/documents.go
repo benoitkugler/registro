@@ -6,7 +6,9 @@ import (
 	"time"
 
 	"registro/config"
+	"registro/logic"
 	cps "registro/sql/camps"
+	ds "registro/sql/dossiers"
 	pr "registro/sql/personnes"
 	"registro/sql/shared"
 )
@@ -18,16 +20,18 @@ var (
 	ficheSanitaireTmpl      *template.Template
 	listeParticipantsTmpl   *template.Template
 	listeVetementsTmpl      *template.Template
-	attestationPresenceTmpl *template.Template
 	lettreDirecteurTmpl     *template.Template
+	attestationPresenceTmpl *template.Template
+	factureTmpl             *template.Template
 )
 
 func init() {
-	ficheSanitaireTmpl = parseTemplate("templates/fiche_sanitaire.html")
-	listeParticipantsTmpl = parseTemplate("templates/liste_participants.html")
-	listeVetementsTmpl = parseTemplate("templates/liste_vetements.html")
-	attestationPresenceTmpl = parseTemplate("templates/attestation_presence.html")
-	lettreDirecteurTmpl = parseTemplate("templates/lettre_directeur.html")
+	ficheSanitaireTmpl = parseTemplate("templates/ficheSanitaire.html")
+	listeParticipantsTmpl = parseTemplate("templates/listeParticipants.html")
+	listeVetementsTmpl = parseTemplate("templates/listeVetements.html")
+	lettreDirecteurTmpl = parseTemplate("templates/lettreDirecteur.html")
+	attestationPresenceTmpl = parseTemplate("templates/attestationPresence.html")
+	factureTmpl = parseTemplate("templates/facture.html")
 }
 
 func parseTemplate(templateFile string) *template.Template {
@@ -124,22 +128,34 @@ func CreateAttestationPresence(cfg config.Asso, destinataire Destinataire, parti
 }
 
 // CreateFacture returns a PDF document.
-func CreateFacture(cfg config.Asso, destinataire Destinataire, participants []cps.ParticipantCamp, finances int) ([]byte, error) {
+func CreateFacture(cfg config.Asso, destinataire Destinataire, participants []cps.ParticipantCamp, finances logic.BilanFinancesPub, paiements []ds.Paiement) ([]byte, error) {
+	type participantFinance struct {
+		cps.ParticipantCamp
+		Finances logic.BilanParticipantPub
+	}
+	pList := make([]participantFinance, len(participants))
+	for i, p := range participants {
+		pList[i] = participantFinance{p, finances.Inscrits[p.Participant.Id]}
+	}
 	args := struct {
 		Asso         config.Asso
 		Date         string // now
 		Destinataire Destinataire
-		Participants []cps.ParticipantCamp
-		Finances     int
+		Participants []participantFinance
+		Finances     logic.BilanFinancesPub
+		Paiements    []ds.Paiement
+		IsAcquitte   bool
 	}{
 		Asso:         cfg,
 		Date:         shared.NewDateFrom(time.Now()).String(),
 		Destinataire: destinataire,
-		Participants: participants,
+		Participants: pList,
 		Finances:     finances,
+		Paiements:    paiements,
+		IsAcquitte:   finances.Statut == logic.Complet,
 	}
 
-	return templateToPDF(attestationPresenceTmpl, args)
+	return templateToPDF(factureTmpl, args)
 }
 
 func ensureHexColor(hexa string) string {

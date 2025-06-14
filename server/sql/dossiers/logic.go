@@ -2,6 +2,7 @@ package dossiers
 
 import (
 	"fmt"
+	"html/template"
 	"math"
 	"strconv"
 	"strings"
@@ -123,8 +124,8 @@ func (m MontantTaux) String() string {
 	return strings.Join(chunks, " ou ")
 }
 
-// DescriptionHTML renvoie une description et le montant, au format HTML
-func (r Paiement) DescriptionHTML(taux Taux) (string, string) {
+// DescriptionHTML renvoie une description au format HTML
+func (r Paiement) DescriptionHTML() template.HTML {
 	var payeur string
 	if r.IsRemboursement {
 		payeur = fmt.Sprintf("Remboursement au %s", shared.NewDateFrom(r.Time))
@@ -135,6 +136,5 @@ func (r Paiement) DescriptionHTML(taux Taux) (string, string) {
 	if r.IsRemboursement {
 		m.Cent *= -1
 	}
-	montant := fmt.Sprintf("<i>%s</i>", taux.Convertible(r.Montant).String())
-	return payeur, montant
+	return template.HTML(payeur)
 }

@@ -523,7 +523,7 @@ func (ct *Controller) DownloadFacture(c echo.Context) error {
 }
 
 func (ct *Controller) renderFacture(id ds.IdDossier) ([]byte, error) {
-	dossier, err := logic.LoadDossier(ct.db, id)
+	dossier, err := logic.LoadDossiersFinance(ct.db, id)
 	if err != nil {
 		return nil, err
 	}
@@ -534,7 +534,23 @@ func (ct *Controller) renderFacture(id ds.IdDossier) ([]byte, error) {
 		CodePostal: responsable.CodePostal,
 		Ville:      responsable.Ville,
 	}
-	content, err := pdfcreator.CreateFacture(ct.asso, destinataire, nil, 0) // TODO
+	// restrict to inscrits with started camp
+	var filtered []cps.ParticipantCamp
+	for _, p := range dossier.ParticipantsExt() {
+		if p.Participant.Statut != cps.Inscrit {
+			continue
+		}
+		filtered = append(filtered, p)
+	}
+	// sort by time
+	finances := dossier.Publish(ct.key)
+	var paiements []ds.Paiement
+	for _, p := range finances.Paiements {
+		paiements = append(paiements, p)
+	}
+	slices.SortFunc(paiements, func(a, b ds.Paiement) int { return a.Time.Compare(b.Time) })
+
+	content, err := pdfcreator.CreateFacture(ct.asso, destinataire, filtered, finances.Bilan, paiements)
 	if err != nil {
 		return nil, err
 	}

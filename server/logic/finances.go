@@ -232,6 +232,8 @@ type AideResolved struct {
 	Montant   cps.Montant
 }
 
+func (ar AideResolved) String() string { return fmt.Sprintf("%s : %s", ar.Structure, ar.Montant) }
+
 func (p pc) bilan() (out BilanParticipant) {
 	out.AvecOption, out.AvecOptionDescription = p.prixBase()
 	out.Remises = p.Participant.Remises

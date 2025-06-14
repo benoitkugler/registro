@@ -192,4 +192,7 @@ func TestDownloadDocuments(t *testing.T) {
 
 	_, err = ct.renderAttestationPresence(dossier.Id)
 	tu.AssertNoErr(t, err)
+
+	_, err = ct.renderFacture(dossier.Id)
+	tu.AssertNoErr(t, err)
 }

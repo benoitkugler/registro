@@ -9,7 +9,9 @@ import (
 	"time"
 
 	"registro/config"
+	"registro/logic"
 	"registro/sql/camps"
+	ds "registro/sql/dossiers"
 	pr "registro/sql/personnes"
 	"registro/sql/shared"
 	"registro/utils"
@@ -200,6 +202,52 @@ func TestAttestationPresence(t *testing.T) {
 	fmt.Println(time.Since(ti))
 	tu.AssertNoErr(t, err)
 	tu.Write(t, "AttestationPresence.pdf", content)
+}
+
+func TestFacture(t *testing.T) {
+	camp := camps.Camp{
+		Nom:       "C2",
+		DateDebut: shared.NewDate(2022, 5, 13),
+		Duree:     30,
+		Agrement:  "5465sd6s64s6d4",
+	}
+	personne := pr.Etatcivil{
+		Nom: "Kugler", Prenom: "Benoit",
+		Sexe: pr.Woman, DateNaissance: shared.NewDate(1999, 1, 3),
+	}
+
+	ti := time.Now()
+	content, err := CreateFacture(cfg, Destinataire{
+		NomPrenom:  "Kugler benoit",
+		Adresse:    "200, Route de Dieulefit",
+		CodePostal: "07568",
+		Ville:      "Montélimar",
+	}, []camps.ParticipantCamp{
+		{Camp: camp, ParticipantPersonne: camps.ParticipantPersonne{Participant: camps.Participant{Id: 1}, Personne: pr.Personne{Etatcivil: personne}}},
+		{Camp: camp, ParticipantPersonne: camps.ParticipantPersonne{Participant: camps.Participant{Id: 2}, Personne: pr.Personne{Etatcivil: personne}}},
+		{Camp: camp, ParticipantPersonne: camps.ParticipantPersonne{Participant: camps.Participant{Id: 3}, Personne: pr.Personne{Etatcivil: personne}}},
+		{Camp: camp, ParticipantPersonne: camps.ParticipantPersonne{Participant: camps.Participant{Id: 4}, Personne: pr.Personne{Etatcivil: personne}}},
+	}, logic.BilanFinancesPub{
+		Inscrits: map[camps.IdParticipant]logic.BilanParticipantPub{
+			1: {BilanParticipant: logic.BilanParticipant{Aides: []logic.AideResolved{
+				{Structure: "CAF Drme", Montant: ds.NewEuros(456.4)},
+			}}},
+			2: {
+				BilanParticipant: logic.BilanParticipant{
+					Remises: camps.Remises{ReducEquipiers: 45, ReducSpeciale: ds.NewFrancsuisses(20)},
+				},
+				Net: ds.NewEuros(54.4).String(),
+			},
+		},
+		Demande: ds.NewEuros(456.5).String(),
+		Statut:  logic.Complet,
+	}, []ds.Paiement{
+		{IsRemboursement: true, Montant: ds.NewEuros(100.4), Payeur: "B Kugler"},
+		{IsRemboursement: false, Montant: ds.NewFrancsuisses(55), Payeur: "ACVE"},
+	})
+	fmt.Println(time.Since(ti))
+	tu.AssertNoErr(t, err)
+	tu.Write(t, "Facture.pdf", content)
 }
 
 const lettre1 = `
