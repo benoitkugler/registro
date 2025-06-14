@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"registro/config"
-	"registro/controllers/search"
 	"registro/crypto"
+	"registro/logic/search"
 	"registro/mails"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"

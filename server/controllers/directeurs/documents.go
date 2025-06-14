@@ -8,6 +8,7 @@ import (
 
 	filesAPI "registro/controllers/files"
 	fsAPI "registro/controllers/files"
+	"registro/logic"
 	cps "registro/sql/camps"
 	fs "registro/sql/files"
 	pr "registro/sql/personnes"
@@ -22,7 +23,7 @@ type DocumentsOut struct {
 	Ready  bool
 	ToShow cps.DocumentsToShow
 	// à télécharger (n'inclut pas la lettre)
-	FilesToDownload []filesAPI.PublicFile
+	FilesToDownload []logic.PublicFile
 	CampDemandes    []DemandeDirecteur
 	// indique si une lettre a été généré (au format PDF)
 	HasLettre bool
@@ -32,7 +33,7 @@ type DocumentsOut struct {
 
 type DemandeDirecteur struct {
 	Demande fs.Demande
-	File    filesAPI.PublicFile // valid if Demande.IdFile is non zero
+	File    logic.PublicFile // valid if Demande.IdFile is non zero
 }
 
 func (ct *Controller) DocumentsGet(c echo.Context) error {
@@ -86,12 +87,12 @@ func (ct *Controller) getDocuments(id cps.IdCamp) (DocumentsOut, error) {
 			// special case, not included in the list
 			continue
 		}
-		out.FilesToDownload = append(out.FilesToDownload, filesAPI.NewPublicFile(ct.key, files[link.IdFile]))
+		out.FilesToDownload = append(out.FilesToDownload, logic.NewPublicFile(ct.key, files[link.IdFile]))
 	}
 	for _, demande := range appliedDemandes {
 		item := DemandeDirecteur{Demande: demande}
 		if file := demande.IdFile; file.Valid {
-			item.File = filesAPI.NewPublicFile(ct.key, files[file.Id])
+			item.File = logic.NewPublicFile(ct.key, files[file.Id])
 		}
 		out.CampDemandes = append(out.CampDemandes, item)
 	}
@@ -105,12 +106,12 @@ func (ct *Controller) getDocuments(id cps.IdCamp) (DocumentsOut, error) {
 		}
 		item := DemandeDirecteur{Demande: demande}
 		if file := demande.IdFile; file.Valid {
-			item.File = filesAPI.NewPublicFile(ct.key, files[file.Id])
+			item.File = logic.NewPublicFile(ct.key, files[file.Id])
 		}
 		out.AvailableDemandes = append(out.AvailableDemandes, item)
 	}
 
-	slices.SortFunc(out.FilesToDownload, func(a, b filesAPI.PublicFile) int { return int(a.Id - b.Id) })
+	slices.SortFunc(out.FilesToDownload, func(a, b logic.PublicFile) int { return int(a.Id - b.Id) })
 	slices.SortFunc(out.CampDemandes, func(a, b DemandeDirecteur) int { return int(a.Demande.Id - b.Demande.Id) })
 	slices.SortFunc(out.AvailableDemandes, func(a, b DemandeDirecteur) int { return int(a.Demande.Id - b.Demande.Id) })
 
@@ -162,7 +163,7 @@ func (ct *Controller) DocumentsUploadToDownload(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) uploadToDownload(idCamp cps.IdCamp, content []byte, filename string) (filesAPI.PublicFile, error) {
+func (ct *Controller) uploadToDownload(idCamp cps.IdCamp, content []byte, filename string) (logic.PublicFile, error) {
 	var (
 		file fs.File
 		err  error
@@ -184,7 +185,7 @@ func (ct *Controller) uploadToDownload(idCamp cps.IdCamp, content []byte, filena
 		return nil
 	})
 
-	return filesAPI.NewPublicFile(ct.key, file), nil
+	return logic.NewPublicFile(ct.key, file), nil
 }
 
 func (ct *Controller) DocumentsDeleteToDownload(c echo.Context) error {
@@ -223,7 +224,7 @@ func (ct *Controller) applyDemande(idCamp cps.IdCamp, idDemande fs.IdDemande) (D
 		if err != nil {
 			return DemandeDirecteur{}, utils.SQLError(err)
 		}
-		out.File = filesAPI.NewPublicFile(ct.key, file)
+		out.File = logic.NewPublicFile(ct.key, file)
 	}
 	err = fs.DemandeCamp{IdCamp: idCamp, IdDemande: idDemande}.Insert(ct.db)
 	if err != nil {
@@ -400,10 +401,10 @@ func (ct *Controller) DocumentsUploadDemandeFile(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) uploadDemandeFile(user cps.IdCamp, idDemande fs.IdDemande, content []byte, filename string) (filesAPI.PublicFile, error) {
+func (ct *Controller) uploadDemandeFile(user cps.IdCamp, idDemande fs.IdDemande, content []byte, filename string) (logic.PublicFile, error) {
 	demande, err := ct.checkDemandeOwner(user, idDemande)
 	if err != nil {
-		return filesAPI.PublicFile{}, err
+		return logic.PublicFile{}, err
 	}
 	var file fs.File
 	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
@@ -424,10 +425,10 @@ func (ct *Controller) uploadDemandeFile(user cps.IdCamp, idDemande fs.IdDemande,
 		return nil
 	})
 	if err != nil {
-		return filesAPI.PublicFile{}, err
+		return logic.PublicFile{}, err
 	}
 
-	return filesAPI.NewPublicFile(ct.key, file), nil
+	return logic.NewPublicFile(ct.key, file), nil
 }
 
 func (ct *Controller) DocumentsDeleteDemandeFile(c echo.Context) error {

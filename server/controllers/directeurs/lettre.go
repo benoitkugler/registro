@@ -12,6 +12,7 @@ import (
 	filesAPI "registro/controllers/files"
 	"registro/crypto"
 	"registro/generators/pdfcreator"
+	"registro/logic"
 	cps "registro/sql/camps"
 	fs "registro/sql/files"
 	pr "registro/sql/personnes"
@@ -115,7 +116,7 @@ func (ct Controller) LettreImageGet(c echo.Context) error {
 
 type LettreOut struct {
 	Lettre cps.Lettredirecteur
-	File   filesAPI.PublicFile
+	File   logic.PublicFile
 }
 
 func (ct *Controller) LettreGet(c echo.Context) error {
@@ -136,7 +137,7 @@ func (ct *Controller) getLettre(user cps.IdCamp) (LettreOut, error) {
 	if err != nil {
 		return LettreOut{}, utils.SQLError(err)
 	}
-	return LettreOut{lettre, filesAPI.NewPublicFile(ct.key, file)}, nil
+	return LettreOut{lettre, logic.NewPublicFile(ct.key, file)}, nil
 }
 
 // LettreUpdate save the data and generate a PDF file from it.
@@ -211,7 +212,7 @@ func (ct *Controller) updateLettreDirecteur(idCamp cps.IdCamp, lettre cps.Lettre
 		return LettreOut{}, err
 	}
 
-	var file filesAPI.PublicFile
+	var file logic.PublicFile
 	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
 		// Etape 2
 		fileLettre, hasFile, err := findLettre(tx, idCamp)
@@ -249,7 +250,7 @@ func (ct *Controller) updateLettreDirecteur(idCamp cps.IdCamp, lettre cps.Lettre
 		}
 
 		// Etape 4
-		file = filesAPI.NewPublicFile(ct.key, fileLettre)
+		file = logic.NewPublicFile(ct.key, fileLettre)
 
 		return nil
 	})

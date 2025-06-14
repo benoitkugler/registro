@@ -17,9 +17,9 @@ import (
 	"registro/controllers/espaceperso"
 	fsAPI "registro/controllers/files"
 	"registro/controllers/inscriptions"
-	"registro/controllers/logic"
 	"registro/crypto"
 	"registro/generators/pdfcreator"
+	"registro/logic"
 	cp "registro/sql/camps"
 	"registro/sql/files"
 

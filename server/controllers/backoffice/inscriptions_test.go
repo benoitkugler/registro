@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"registro/controllers/logic"
+	"registro/logic"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
 	pr "registro/sql/personnes"

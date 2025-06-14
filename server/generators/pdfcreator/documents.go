@@ -124,16 +124,19 @@ func CreateAttestationPresence(cfg config.Asso, destinataire Destinataire, parti
 }
 
 // CreateFacture returns a PDF document.
-// TODO:
-func CreateFacture(cfg config.Asso, destinataire Destinataire) ([]byte, error) {
+func CreateFacture(cfg config.Asso, destinataire Destinataire, participants []cps.ParticipantCamp, finances int) ([]byte, error) {
 	args := struct {
 		Asso         config.Asso
 		Date         string // now
 		Destinataire Destinataire
+		Participants []cps.ParticipantCamp
+		Finances     int
 	}{
 		Asso:         cfg,
 		Date:         shared.NewDateFrom(time.Now()).String(),
 		Destinataire: destinataire,
+		Participants: participants,
+		Finances:     finances,
 	}
 
 	return templateToPDF(attestationPresenceTmpl, args)

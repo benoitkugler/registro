@@ -9,9 +9,9 @@ import (
 
 	filesAPI "registro/controllers/files"
 	fsAPI "registro/controllers/files"
-	"registro/controllers/logic"
 	"registro/controllers/services"
 	"registro/crypto"
+	"registro/logic"
 	"registro/mails"
 	ds "registro/sql/dossiers"
 	fs "registro/sql/files"
@@ -47,7 +47,7 @@ type FichesanitaireExt struct {
 	RespoSecuriteSociale string
 
 	VaccinsDemande fs.Demande
-	VaccinsFiles   []fsAPI.PublicFile
+	VaccinsFiles   []logic.PublicFile
 }
 
 func (ct *Controller) LoadFichesanitaires(c echo.Context) error {
@@ -224,27 +224,27 @@ func (ct *Controller) UploadVaccin(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) uploadVaccin(idDossier ds.IdDossier, idPersonne pr.IdPersonne, content []byte, filename string) (fsAPI.PublicFile, error) {
+func (ct *Controller) uploadVaccin(idDossier ds.IdDossier, idPersonne pr.IdPersonne, content []byte, filename string) (logic.PublicFile, error) {
 	vaccinDemande, err := fsAPI.DemandeVaccin(ct.db)
 	if err != nil {
-		return fsAPI.PublicFile{}, err
+		return logic.PublicFile{}, err
 	}
 
 	dossier, err := logic.LoadDossier(ct.db, idDossier)
 	if err != nil {
-		return fsAPI.PublicFile{}, err
+		return logic.PublicFile{}, err
 	}
 	// check Id is valid
 	if !slices.Contains(dossier.Participants.IdPersonnes(), idPersonne) {
-		return fsAPI.PublicFile{}, errors.New("access forbidden")
+		return logic.PublicFile{}, errors.New("access forbidden")
 	}
 
 	file, err := filesAPI.SaveFileFor(ct.files, ct.db, idPersonne, vaccinDemande.Id, content, filename)
 	if err != nil {
-		return fsAPI.PublicFile{}, err
+		return logic.PublicFile{}, err
 	}
 
-	return fsAPI.NewPublicFile(ct.key, file), nil
+	return logic.NewPublicFile(ct.key, file), nil
 }
 
 func (ct *Controller) DeleteVaccin(c echo.Context) error {

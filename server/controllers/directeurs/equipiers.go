@@ -10,6 +10,7 @@ import (
 
 	"registro/controllers/files"
 	"registro/crypto"
+	"registro/logic"
 	"registro/mails"
 	cps "registro/sql/camps"
 	fs "registro/sql/files"
@@ -309,7 +310,7 @@ type EquipierDemande struct {
 	Key DemandeKey
 
 	State DemandeState
-	Files []files.PublicFile
+	Files []logic.PublicFile
 }
 
 type DemandeKey struct {
@@ -371,9 +372,9 @@ func (ct *Controller) getDemandesEquipiers(user cps.IdCamp) (DemandesOut, error)
 		for _, demande := range demandes {
 			// publish files
 			links := current[demande.Id]
-			publicFiles := make([]files.PublicFile, len(links))
+			publicFiles := make([]logic.PublicFile, len(links))
 			for i, link := range links {
-				publicFiles[i] = files.NewPublicFile(ct.key, allFiles[link.IdFile])
+				publicFiles[i] = logic.NewPublicFile(ct.key, allFiles[link.IdFile])
 			}
 
 			key := DemandeKey{equipier.Id, demande.Id}

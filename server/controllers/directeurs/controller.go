@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"registro/config"
-	"registro/controllers/logic"
 	"registro/crypto"
+	"registro/logic"
 	"registro/utils"
 
 	cps "registro/sql/camps"

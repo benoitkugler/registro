@@ -10,8 +10,8 @@ import (
 	"time"
 
 	fsAPI "registro/controllers/files"
-	"registro/controllers/logic"
 	"registro/generators/pdfcreator"
+	"registro/logic"
 	"registro/mails"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
@@ -105,7 +105,7 @@ type FicheSanitaireExt struct {
 	Personne      string
 	State         pr.FichesanitaireState
 	Fiche         pr.Fichesanitaire
-	Vaccins       []fsAPI.PublicFile
+	Vaccins       []logic.PublicFile
 }
 
 func (ct *Controller) loadFichesSanitaires(user cps.IdCamp) ([]FicheSanitaireExt, error) {

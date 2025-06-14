@@ -5,8 +5,8 @@ import (
 	"slices"
 
 	filesAPI "registro/controllers/files"
-	"registro/controllers/logic"
 	"registro/crypto"
+	"registro/logic"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
 	fs "registro/sql/files"
@@ -37,7 +37,7 @@ func (docs *Documents) setToFillCount() {
 type FilesCamp struct {
 	Camp      string
 	Generated []filesAPI.GeneratedFile
-	Files     []filesAPI.PublicFile
+	Files     []logic.PublicFile
 }
 
 type DemandesPersonne struct {
@@ -48,8 +48,8 @@ type DemandesPersonne struct {
 
 type DemandePersonne struct {
 	Demande     fs.Demande
-	DemandeFile filesAPI.PublicFile
-	Uploaded    []filesAPI.PublicFile
+	DemandeFile logic.PublicFile
+	Uploaded    []logic.PublicFile
 }
 
 func (ct *Controller) LoadDocuments(c echo.Context) error {
@@ -92,7 +92,7 @@ func loadDocuments(db ds.DB, key crypto.Encrypter, dossier logic.Dossier) (Docum
 		for _, link := range byCamp[camp.Id] {
 			if (link.IsLettre && camp.DocumentsToShow.LettreDirecteur) ||
 				!link.IsLettre {
-				item.Files = append(item.Files, filesAPI.NewPublicFile(key, campFiles[link.IdFile]))
+				item.Files = append(item.Files, logic.NewPublicFile(key, campFiles[link.IdFile]))
 			}
 		}
 
@@ -147,7 +147,7 @@ func loadDocuments(db ds.DB, key crypto.Encrypter, dossier logic.Dossier) (Docum
 					Uploaded: personnesFiles[demande.Id][personne.Id],
 				}
 				if fi := demande.IdFile; fi.Valid {
-					demandeF.DemandeFile = filesAPI.NewPublicFile(key, demandesFiles[fi.Id])
+					demandeF.DemandeFile = logic.NewPublicFile(key, demandesFiles[fi.Id])
 				}
 				item.Demandes = append(item.Demandes, demandeF)
 			}
@@ -193,20 +193,20 @@ func (ct *Controller) UploadDocument(c echo.Context) error {
 
 func (ct *Controller) uploadDocument(idDossier ds.IdDossier, idDemande fs.IdDemande, idPersonne pr.IdPersonne,
 	content []byte, filename string,
-) (filesAPI.PublicFile, error) {
+) (logic.PublicFile, error) {
 	dossier, err := logic.LoadDossier(ct.db, idDossier)
 	if err != nil {
-		return filesAPI.PublicFile{}, err
+		return logic.PublicFile{}, err
 	}
 	// basic security check
 	if hasPersonne := slices.Contains(dossier.Participants.IdPersonnes(), idPersonne); !hasPersonne {
-		return filesAPI.PublicFile{}, errors.New("access forbidden")
+		return logic.PublicFile{}, errors.New("access forbidden")
 	}
 	file, err := filesAPI.SaveFileFor(ct.files, ct.db, idPersonne, idDemande, content, filename)
 	if err != nil {
-		return filesAPI.PublicFile{}, err
+		return logic.PublicFile{}, err
 	}
-	return filesAPI.NewPublicFile(ct.key, file), nil
+	return logic.NewPublicFile(ct.key, file), nil
 }
 
 func (ct *Controller) DeleteDocument(c echo.Context) error {

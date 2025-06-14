@@ -10,8 +10,8 @@ import (
 	"time"
 
 	filesAPI "registro/controllers/files"
-	"registro/controllers/logic"
-	"registro/controllers/search"
+	"registro/logic"
+	"registro/logic/search"
 	"registro/mails"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
@@ -572,14 +572,14 @@ func (ct *Controller) AidesJustificatifUpload(c echo.Context) error {
 }
 
 // uploadJustificatif create or update the link table
-func (ct *Controller) uploadAideJustificatif(idAide cps.IdAide, content []byte, filename string) (filesAPI.PublicFile, error) {
+func (ct *Controller) uploadAideJustificatif(idAide cps.IdAide, content []byte, filename string) (logic.PublicFile, error) {
 	item, found, err := fs.SelectFileAideByIdAide(ct.db, idAide)
 	if err != nil {
-		return filesAPI.PublicFile{}, utils.SQLError(err)
+		return logic.PublicFile{}, utils.SQLError(err)
 	}
 	idFile := item.IdFile
 
-	var out filesAPI.PublicFile
+	var out logic.PublicFile
 	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
 		if !found { // create one file and a link
 			file, err := fs.File{}.Insert(tx)
@@ -596,7 +596,7 @@ func (ct *Controller) uploadAideJustificatif(idAide cps.IdAide, content []byte, 
 		if err != nil {
 			return err
 		}
-		out = filesAPI.NewPublicFile(ct.key, file)
+		out = logic.NewPublicFile(ct.key, file)
 		return nil
 	})
 

@@ -4,7 +4,6 @@ import (
 	"slices"
 	"time"
 
-	filesAPI "registro/controllers/files"
 	"registro/crypto"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
@@ -172,7 +171,7 @@ type DossierExt struct {
 	Responsable  string
 	Participants []cps.ParticipantCamp
 	Aides        map[cps.IdParticipant]cps.Aides
-	AidesFiles   map[cps.IdAide]filesAPI.PublicFile // optionnel
+	AidesFiles   map[cps.IdAide]PublicFile // optionnel
 
 	Events    Events
 	Paiements ds.Paiements
@@ -222,11 +221,11 @@ func (d DossierFinance) Publish(key crypto.Encrypter) DossierExt {
 		b.StatutPaiement(),
 	}
 
-	aideFiles := make(map[cps.IdAide]filesAPI.PublicFile)
+	aideFiles := make(map[cps.IdAide]PublicFile)
 	for _, l := range d.aides {
 		for _, aide := range l {
 			if file, ok := d.aidesFiles[aide.Id]; ok {
-				aideFiles[aide.Id] = filesAPI.NewPublicFile(key, file)
+				aideFiles[aide.Id] = NewPublicFile(key, file)
 			}
 		}
 	}

@@ -3,11 +3,12 @@ package logic
 import (
 	"slices"
 
-	"registro/controllers/search"
 	"registro/crypto"
+	"registro/logic/search"
 	cps "registro/sql/camps"
 	"registro/sql/dons"
 	ds "registro/sql/dossiers"
+	"registro/sql/files"
 	fs "registro/sql/files"
 	pr "registro/sql/personnes"
 	"registro/utils"
@@ -135,4 +136,18 @@ func URLEspacePerso(key crypto.Encrypter, host string, dossier ds.IdDossier, que
 	crypted := crypto.EncryptID(key, dossier)
 	queryParams = append(queryParams, utils.QP("token", crypted))
 	return utils.BuildUrl(host, EndpointEspacePerso, queryParams...)
+}
+
+// PublicFile expose un accès protégé à un fichier,
+// permettant téléchargement/suppression/modification.
+type PublicFile struct {
+	Key string // crypted
+	files.File
+}
+
+func NewPublicFile(key crypto.Encrypter, file files.File) PublicFile {
+	return PublicFile{
+		Key:  crypto.EncryptID(key, file.Id),
+		File: file,
+	}
 }

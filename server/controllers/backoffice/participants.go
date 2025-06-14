@@ -5,7 +5,7 @@ import (
 	"errors"
 	"time"
 
-	"registro/controllers/logic"
+	"registro/logic"
 	"registro/mails"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"

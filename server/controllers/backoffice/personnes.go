@@ -1,8 +1,8 @@
 package backoffice
 
 import (
-	"registro/controllers/logic"
-	"registro/controllers/search"
+	"registro/logic"
+	"registro/logic/search"
 	pr "registro/sql/personnes"
 	"registro/utils"
 

@@ -100,7 +100,7 @@ export interface UpdateSondageIn {
   IdCamp: IdCamp;
   Reponse: ReponseSondage;
 }
-// registro/controllers/files.PublicFile
+// registro/controllers/logic.PublicFile
 export interface PublicFile {
   Key: string;
   Id: IdFile;
@@ -826,10 +826,7 @@ export interface OptID_IdPersonne {
 		as base class for an app controller.
 	*/
 export abstract class AbstractAPI {
-  constructor(
-    protected baseURL: string,
-    public authToken: string,
-  ) {}
+  constructor(protected baseURL: string, public authToken: string) {}
 
   protected abstract handleError(error: any): void;
 
@@ -957,7 +954,7 @@ export abstract class AbstractAPI {
   /** UploadVaccin performs the request and handles the error */
   async UploadVaccin(
     file: File,
-    params: { token: string; idPersonne: IdPersonne },
+    params: { token: string; idPersonne: IdPersonne }
   ) {
     const fullUrl = this.baseURL + "/api/v1/espaceperso/fichesanitaires";
     this.startRequest();
@@ -973,7 +970,7 @@ export abstract class AbstractAPI {
             token: params["token"],
             idPersonne: String(params["idPersonne"]),
           },
-        },
+        }
       );
       return rep.data;
     } catch (error) {
@@ -1063,7 +1060,7 @@ export abstract class AbstractAPI {
   /** UploadDocument performs the request and handles the error */
   async UploadDocument(
     file: File,
-    params: { token: string; idDemande: IdDemande; idPersonne: IdPersonne },
+    params: { token: string; idDemande: IdDemande; idPersonne: IdPersonne }
   ) {
     const fullUrl = this.baseURL + "/api/v1/espaceperso/documents";
     this.startRequest();
@@ -1080,7 +1077,7 @@ export abstract class AbstractAPI {
             idDemande: String(params["idDemande"]),
             idPersonne: String(params["idPersonne"]),
           },
-        },
+        }
       );
       return rep.data;
     } catch (error) {

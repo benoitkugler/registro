@@ -9,6 +9,7 @@ import (
 	filesAPI "registro/controllers/files"
 	"registro/crypto"
 	"registro/joomeo"
+	"registro/logic"
 	cps "registro/sql/camps"
 	fs "registro/sql/files"
 	pr "registro/sql/personnes"
@@ -52,7 +53,7 @@ type Camp struct {
 type DemandeEquipier struct {
 	Demande     fs.Demande
 	Optionnelle bool
-	Files       []filesAPI.PublicFile // uploaded by the user
+	Files       []logic.PublicFile // uploaded by the user
 }
 
 type EquipierExt struct {
@@ -262,18 +263,18 @@ func (ct *Controller) UploadDocument(c echo.Context) error {
 	return c.JSON(200, filePub)
 }
 
-func (ct *Controller) uploadDocument(idEquipier cps.IdEquipier, idDemande fs.IdDemande, content []byte, filename string) (filesAPI.PublicFile, error) {
+func (ct *Controller) uploadDocument(idEquipier cps.IdEquipier, idDemande fs.IdDemande, content []byte, filename string) (logic.PublicFile, error) {
 	equipier, err := cps.SelectEquipier(ct.db, idEquipier)
 	if err != nil {
-		return filesAPI.PublicFile{}, utils.SQLError(err)
+		return logic.PublicFile{}, utils.SQLError(err)
 	}
 
 	file, err := filesAPI.SaveFileFor(ct.files, ct.db, equipier.IdPersonne, idDemande, content, filename)
 	if err != nil {
-		return filesAPI.PublicFile{}, err
+		return logic.PublicFile{}, err
 	}
 
-	return filesAPI.NewPublicFile(ct.key, file), nil
+	return logic.NewPublicFile(ct.key, file), nil
 }
 
 func (ct *Controller) DeleteDocument(c echo.Context) error {

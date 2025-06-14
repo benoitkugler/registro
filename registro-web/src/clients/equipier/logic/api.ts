@@ -47,7 +47,7 @@ export interface UpdateIn {
   Personne: Etatcivil;
   Presence: PresenceOffsets;
 }
-// registro/controllers/files.PublicFile
+// registro/controllers/logic.PublicFile
 export interface PublicFile {
   Key: string;
   Id: IdFile;
@@ -319,10 +319,7 @@ export interface OptID_IdPersonne {
 		as base class for an app controller.
 	*/
 export abstract class AbstractAPI {
-  constructor(
-    protected baseURL: string,
-    public authToken: string,
-  ) {}
+  constructor(protected baseURL: string, public authToken: string) {}
 
   protected abstract handleError(error: any): void;
 
@@ -395,7 +392,7 @@ export abstract class AbstractAPI {
   /** UploadDocument performs the request and handles the error */
   async UploadDocument(
     file: File,
-    params: { token: string; idDemande: IdDemande },
+    params: { token: string; idDemande: IdDemande }
   ) {
     const fullUrl = this.baseURL + "/api/v1/equipier/upload";
     this.startRequest();
@@ -411,7 +408,7 @@ export abstract class AbstractAPI {
             token: params["token"],
             idDemande: String(params["idDemande"]),
           },
-        },
+        }
       );
       return rep.data;
     } catch (error) {

@@ -19,7 +19,7 @@ import (
 	"registro/assets"
 	"registro/config"
 	"registro/crypto"
-	"registro/sql/files"
+	"registro/logic"
 	fs "registro/sql/files"
 	pr "registro/sql/personnes"
 	"registro/utils"
@@ -171,20 +171,6 @@ func ReadUpload(fileHeader *multipart.FileHeader) (content []byte, filename stri
 	return content, fileHeader.Filename, nil
 }
 
-// PublicFile expose un accès protégé à un fichier,
-// permettant téléchargement/suppression/modification.
-type PublicFile struct {
-	Key string // crypted
-	files.File
-}
-
-func NewPublicFile(key crypto.Encrypter, file files.File) PublicFile {
-	return PublicFile{
-		Key:  crypto.EncryptID(key, file.Id),
-		File: file,
-	}
-}
-
 func DemandeVaccin(db fs.DB) (fs.Demande, error) {
 	demandes, err := fs.SelectAllDemandes(db)
 	if err != nil {
@@ -198,7 +184,7 @@ func DemandeVaccin(db fs.DB) (fs.Demande, error) {
 	return fs.Demande{}, errors.New("missing Demande for categorie <Vaccins>")
 }
 
-func LoadVaccins(db fs.DB, key crypto.Encrypter, personnes []pr.IdPersonne) (map[pr.IdPersonne][]PublicFile, fs.Demande, error) {
+func LoadVaccins(db fs.DB, key crypto.Encrypter, personnes []pr.IdPersonne) (map[pr.IdPersonne][]logic.PublicFile, fs.Demande, error) {
 	vaccinDemande, err := DemandeVaccin(db)
 	if err != nil {
 		return nil, fs.Demande{}, err
@@ -211,7 +197,7 @@ func LoadVaccins(db fs.DB, key crypto.Encrypter, personnes []pr.IdPersonne) (map
 	return files[vaccinDemande.Id], vaccinDemande, nil
 }
 
-func LoadFilesPersonnes(db fs.DB, key crypto.Encrypter, demandes []fs.IdDemande, personnes ...pr.IdPersonne) (map[fs.IdDemande]map[pr.IdPersonne][]PublicFile, fs.Demandes,
+func LoadFilesPersonnes(db fs.DB, key crypto.Encrypter, demandes []fs.IdDemande, personnes ...pr.IdPersonne) (map[fs.IdDemande]map[pr.IdPersonne][]logic.PublicFile, fs.Demandes,
 	error,
 ) {
 	demandesM, err := fs.SelectDemandes(db, demandes...)
@@ -228,14 +214,14 @@ func LoadFilesPersonnes(db fs.DB, key crypto.Encrypter, demandes []fs.IdDemande,
 	}
 	byDemande := tmp.ByIdDemande()
 
-	out := make(map[fs.IdDemande]map[pr.IdPersonne][]PublicFile)
+	out := make(map[fs.IdDemande]map[pr.IdPersonne][]logic.PublicFile)
 	for _, idDemande := range demandes {
 		links := byDemande[idDemande].ByIdPersonne()
-		demandes := make(map[pr.IdPersonne][]PublicFile, len(links))
+		demandes := make(map[pr.IdPersonne][]logic.PublicFile, len(links))
 		for idPersonne, innerLinks := range links {
-			files := make([]PublicFile, len(innerLinks))
+			files := make([]logic.PublicFile, len(innerLinks))
 			for i, file := range innerLinks {
-				files[i] = NewPublicFile(key, allFiles[file.IdFile])
+				files[i] = logic.NewPublicFile(key, allFiles[file.IdFile])
 			}
 			demandes[idPersonne] = files
 		}

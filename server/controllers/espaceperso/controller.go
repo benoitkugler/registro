@@ -10,10 +10,10 @@ import (
 	"registro/controllers/directeurs"
 	filesAPI "registro/controllers/files"
 	fsAPI "registro/controllers/files"
-	"registro/controllers/logic"
 	"registro/crypto"
 	"registro/generators/pdfcreator"
 	"registro/joomeo"
+	"registro/logic"
 	"registro/mails"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
@@ -534,7 +534,7 @@ func (ct *Controller) renderFacture(id ds.IdDossier) ([]byte, error) {
 		CodePostal: responsable.CodePostal,
 		Ville:      responsable.Ville,
 	}
-	content, err := pdfcreator.CreateFacture(ct.asso, destinataire)
+	content, err := pdfcreator.CreateFacture(ct.asso, destinataire, nil, 0) // TODO
 	if err != nil {
 		return nil, err
 	}

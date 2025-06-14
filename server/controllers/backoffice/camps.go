@@ -7,6 +7,7 @@ import (
 	"time"
 
 	filesAPI "registro/controllers/files"
+	"registro/logic"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
 	fs "registro/sql/files"
@@ -368,8 +369,8 @@ type FilesCamp struct {
 	ToShow cps.DocumentsToShow
 
 	Generated       []filesAPI.GeneratedFile
-	ToRead          []filesAPI.PublicFile
-	ToUploadModeles []filesAPI.PublicFile
+	ToRead          []logic.PublicFile
+	ToUploadModeles []logic.PublicFile
 }
 
 func (ct *Controller) getCampDocument(id cps.IdCamp) (FilesCamp, error) {
@@ -389,7 +390,7 @@ func (ct *Controller) getCampDocument(id cps.IdCamp) (FilesCamp, error) {
 	out := FilesCamp{ToShow: camp.DocumentsToShow}
 	// other files
 	for _, link := range links {
-		out.ToRead = append(out.ToRead, filesAPI.NewPublicFile(ct.key, campFiles[link.IdFile]))
+		out.ToRead = append(out.ToRead, logic.NewPublicFile(ct.key, campFiles[link.IdFile]))
 	}
 
 	// generated files
@@ -416,7 +417,7 @@ func (ct *Controller) getCampDocument(id cps.IdCamp) (FilesCamp, error) {
 		return FilesCamp{}, utils.SQLError(err)
 	}
 	for _, file := range demandesFiles {
-		out.ToUploadModeles = append(out.ToUploadModeles, filesAPI.NewPublicFile(ct.key, file))
+		out.ToUploadModeles = append(out.ToUploadModeles, logic.NewPublicFile(ct.key, file))
 	}
 	return out, nil
 }
