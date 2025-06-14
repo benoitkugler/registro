@@ -49,7 +49,7 @@
 
             <v-list-item
               prepend-icon="mdi-currency-eur"
-              title="Suivi du réglement"
+              title="Suivi du règlement"
               @click="showReglements = true"
             ></v-list-item>
           </v-list>
@@ -117,7 +117,7 @@
       <MessagesPannel></MessagesPannel>
     </v-dialog>
 
-    <!-- réglement -->
+    <!-- règlement -->
     <v-dialog v-model="showReglements" max-width="700px">
       <ReglementCard :data="data"></ReglementCard>
     </v-dialog>

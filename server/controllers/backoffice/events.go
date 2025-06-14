@@ -3,10 +3,12 @@ package backoffice
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 
 	"registro/logic"
 	"registro/mails"
+	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
 	evs "registro/sql/events"
 	"registro/utils"
@@ -139,4 +141,213 @@ func (ct *Controller) markMessagesSeen(idDossier ds.IdDossier) error {
 		err = evs.InsertManyEventMessages(tx, updates...)
 		return err
 	})
+}
+
+func (ct *Controller) EventsSendFacture(c echo.Context) error {
+	id, err := utils.QueryParamInt[ds.IdDossier](c, "idDossier")
+	if err != nil {
+		return err
+	}
+	err = ct.sendFacture(c.Request().Host, id)
+	if err != nil {
+		return err
+	}
+	return c.NoContent(200)
+}
+
+func (ct *Controller) sendFacture(host string, id ds.IdDossier) error {
+	dossier, responsable, err := dossierAndResp(ct.db, id)
+	if err != nil {
+		return err
+	}
+	return utils.InTx(ct.db, func(tx *sql.Tx) error {
+		event, err := evs.Event{IdDossier: id, Kind: evs.Facture, Created: time.Now()}.Insert(tx)
+		if err != nil {
+			return err
+		}
+		url := logic.URLEspacePerso(ct.key, host, id, utils.QPInt("idEvent", event.Id))
+		// notifie le responsable
+		body, err := mails.NotifieFacture(ct.asso, mails.NewContact(&responsable), url)
+		if err != nil {
+			return err
+		}
+		err = mails.NewMailer(ct.smtp, ct.asso.MailsSettings).SendMail(responsable.Mail, "Demande de règlement", body, dossier.CopiesMails, nil)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
+func (ct *Controller) EventsSendDocumentsCampPreview(c echo.Context) error {
+	idCamp, err := utils.QueryParamInt[cps.IdCamp](c, "idCamp")
+	if err != nil {
+		return err
+	}
+	out, err := ct.previewSendDocumentsCamp(idCamp)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
+type DossierDocumentsState struct {
+	Id            ds.IdDossier
+	Responsable   string
+	Participants  string
+	DocumentsSent bool
+}
+
+type SendDocumentsCampPreview struct {
+	Dossiers []DossierDocumentsState // with at least one inscrit
+}
+
+func (ct *Controller) previewSendDocumentsCamp(idCamp cps.IdCamp) (SendDocumentsCampPreview, error) {
+	camp, err := cps.LoadCampPersonnes(ct.db, idCamp)
+	if err != nil {
+		return SendDocumentsCampPreview{}, err
+	}
+	dossiers, err := logic.LoadDossiers(ct.db, camp.IdDossiers()...)
+	if err != nil {
+		return SendDocumentsCampPreview{}, err
+	}
+	var out SendDocumentsCampPreview
+	for id := range dossiers.Dossiers {
+		dossier := dossiers.For(id)
+		if _, hasInscrit := dossier.CampsInscrits()[idCamp]; !hasInscrit {
+			continue
+		}
+		out.Dossiers = append(out.Dossiers, DossierDocumentsState{
+			Id:            id,
+			Responsable:   dossier.Responsable().PrenomNOM(),
+			Participants:  dossier.ParticipantsLabels(),
+			DocumentsSent: dossier.Events.HasSendCampDocuments(idCamp),
+		})
+	}
+	return out, nil
+}
+
+type SendDocumentsCampIn struct {
+	IdCamp     cps.IdCamp
+	IdDossiers []ds.IdDossier
+}
+
+func (ct *Controller) EventsSendDocumentsCamp(c echo.Context) error {
+	var args SendDocumentsCampIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+	err := ct.sendDocumentsCamp(c.Request().Host, args)
+	if err != nil {
+		return err
+	}
+	return c.NoContent(200)
+}
+
+func (ct *Controller) sendDocumentsCamp(host string, args SendDocumentsCampIn) error {
+	camp, err := cps.SelectCamp(ct.db, args.IdCamp)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	dossiers, err := logic.LoadDossiers(ct.db, args.IdDossiers...)
+	if err != nil {
+		return err
+	}
+	pool, err := mails.NewPool(ct.smtp, ct.asso.MailsSettings, nil)
+	if err != nil {
+		return err
+	}
+	defer pool.Close()
+
+	for idDossier := range dossiers.Dossiers {
+		dossier := dossiers.For(idDossier)
+		responsable := dossier.Responsable()
+
+		err = utils.InTx(ct.db, func(tx *sql.Tx) error {
+			event, err := evs.Event{IdDossier: idDossier, Kind: evs.CampDocs, Created: time.Now()}.Insert(tx)
+			if err != nil {
+				return err
+			}
+			err = evs.EventCampDocs{IdEvent: event.Id, IdCamp: camp.Id}.Insert(tx)
+			if err != nil {
+				return err
+			}
+			url := logic.URLEspacePerso(ct.key, host, idDossier, utils.QPInt("idEvent", event.Id))
+			body, err := mails.NotifieDocumentsCamp(ct.asso, mails.NewContact(&responsable), camp.Label(), url)
+			if err != nil {
+				return err
+			}
+			err = pool.SendMail(responsable.Mail, fmt.Sprintf("Documents du séjour %s", camp.Label()), body, dossier.Dossier.CopiesMails, nil)
+			if err != nil {
+				return err
+			}
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (ct *Controller) EventsSendSondages(c echo.Context) error {
+	idCamp, err := utils.QueryParamInt[cps.IdCamp](c, "idCamp")
+	if err != nil {
+		return err
+	}
+	err = ct.sendSondages(c.Request().Host, idCamp)
+	if err != nil {
+		return err
+	}
+	return c.NoContent(200)
+}
+
+func (ct *Controller) sendSondages(host string, idCamp cps.IdCamp) error {
+	camp, err := cps.LoadCampPersonnes(ct.db, idCamp)
+	if err != nil {
+		return err
+	}
+	dossiers, err := logic.LoadDossiers(ct.db, camp.IdDossiers()...)
+	if err != nil {
+		return err
+	}
+	pool, err := mails.NewPool(ct.smtp, ct.asso.MailsSettings, nil)
+	if err != nil {
+		return err
+	}
+	defer pool.Close()
+
+	for idDossier := range dossiers.Dossiers {
+		dossier := dossiers.For(idDossier)
+		if _, hasInscrit := dossier.CampsInscrits()[idCamp]; !hasInscrit {
+			continue
+		}
+		responsable := dossier.Responsable()
+		err = utils.InTx(ct.db, func(tx *sql.Tx) error {
+			event, err := evs.Event{IdDossier: idDossier, Kind: evs.Sondage, Created: time.Now()}.Insert(tx)
+			if err != nil {
+				return err
+			}
+			err = evs.EventSondage{IdEvent: event.Id, IdCamp: idCamp}.Insert(tx)
+			if err != nil {
+				return err
+			}
+			url := logic.URLEspacePerso(ct.key, host, idDossier, utils.QPInt("idEvent", event.Id))
+			body, err := mails.NotifieSondage(ct.asso, mails.NewContact(&responsable), camp.Camp.Label(), url)
+			if err != nil {
+				return err
+			}
+			err = pool.SendMail(responsable.Mail, fmt.Sprintf("Avis sur le séjour %s", camp.Camp.Label()), body, dossier.Dossier.CopiesMails, nil)
+			if err != nil {
+				return err
+			}
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

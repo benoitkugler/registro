@@ -55,6 +55,7 @@
         @delete-paiement="deletePaiement"
         @send-message="sendMessage"
         @delete-message="deleteMessage"
+        @send-facture="sendFacture"
         ref="detailsPannel"
       ></DossierDetailsPannel>
       <div v-else class="text-center font-italic my-6">
@@ -357,6 +358,16 @@ async function deleteMessage(event: Event) {
   });
   if (res === undefined) return;
   controller.showMessage("Message supprimé avec succès.");
+  ensureDossier();
+}
+
+async function sendFacture() {
+  if (dossierDetails.value == null) return;
+  const res = await controller.EventsSendFacture({
+    idDossier: dossierDetails.value.Dossier.Dossier.Id,
+  });
+  if (res === undefined) return;
+  controller.showMessage("Demande de règlement envoyé avec succès.");
   ensureDossier();
 }
 </script>

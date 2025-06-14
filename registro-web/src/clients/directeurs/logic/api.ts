@@ -150,52 +150,44 @@ export interface ParticipantsOut {
   Participants: ParticipantExt[] | null;
   Dossiers: Record<IdDossier, DossierHeader> | null;
 }
-// registro/controllers/logic.PublicFile
-export interface PublicFile {
-  Key: string;
-  Id: IdFile;
-  Taille: Int;
-  NomClient: string;
-  Uploaded: Time;
-}
-// registro/controllers/logic.CampItem
+// registro/logic.CampItem
 export interface CampItem {
   Id: IdCamp;
   Label: string;
   IsOld: boolean;
 }
-// registro/controllers/logic.EventExt[registro/controllers/logic.Message]
+// registro/logic.EventExt[registro/logic.Message]
 export interface EventExt_Message {
   Event: Event;
   Content: Message;
 }
-// registro/controllers/logic.IdentTarget
+// registro/logic.IdentTarget
 export interface IdentTarget {
   IdTemporaire: IdPersonne;
   Rattache: boolean;
   RattacheTo: IdPersonne;
 }
-// registro/controllers/logic.Inscription
+// registro/logic.Inscription
 export interface Inscription {
   Dossier: Dossier;
   Message: string;
   Responsable: Personne;
   Participants: ParticipantCamp[] | null;
 }
-// registro/controllers/logic.InscriptionsValideIn
+// registro/logic.InscriptionsValideIn
 export interface InscriptionsValideIn {
   IdDossier: IdDossier;
   Statuts: Record<IdParticipant, StatutParticipant> | null;
   SendMail: boolean;
 }
-// registro/controllers/logic.Message
+// registro/logic.Message
 export interface Message {
   Message: EventMessage;
   OrigineCampLabel: string;
   VuParCampsIDs: IdCamp[] | null;
   VuParCamps: string[] | null;
 }
-// registro/controllers/logic.ParticipantExt
+// registro/logic.ParticipantExt
 export interface ParticipantExt {
   Participant: Participant;
   Personne: Personne;
@@ -203,14 +195,22 @@ export interface ParticipantExt {
   HasBirthday: boolean;
   MomentInscription: Time;
 }
-// registro/controllers/logic.StatutExt
+// registro/logic.PublicFile
+export interface PublicFile {
+  Key: string;
+  Id: IdFile;
+  Taille: Int;
+  NomClient: string;
+  Uploaded: Time;
+}
+// registro/logic.StatutExt
 export interface StatutExt {
   Causes: StatutCauses;
   Statut: StatutParticipant;
   AllowedChanges: StatutParticipant[] | null;
   Validable: boolean;
 }
-// registro/controllers/logic.StatutPaiement
+// registro/logic.StatutPaiement
 export const StatutPaiement = {
   Complet: 3,
   EnCours: 2,
@@ -225,7 +225,7 @@ export const StatutPaiementLabels: Record<StatutPaiement, string> = {
   [StatutPaiement.NonCommence]: "Non commencé",
 };
 
-// registro/controllers/search.PersonneHeader
+// registro/logic/search.PersonneHeader
 export interface PersonneHeader {
   Id: IdPersonne;
   Label: string;
@@ -233,7 +233,7 @@ export interface PersonneHeader {
   DateNaissance: Date;
   IsTemp: boolean;
 }
-// registro/controllers/search.ScoredPersonne
+// registro/logic/search.ScoredPersonne
 export interface ScoredPersonne {
   ScorePercent: Int;
   Personne: PersonneHeader;
@@ -834,7 +834,10 @@ export interface OptID_IdPersonne {
 		as base class for an app controller.
 	*/
 export abstract class AbstractAPI {
-  constructor(protected baseURL: string, public authToken: string) {}
+  constructor(
+    protected baseURL: string,
+    public authToken: string,
+  ) {}
 
   protected abstract handleError(error: any): void;
 
@@ -852,7 +855,7 @@ export abstract class AbstractAPI {
       const rep: AxiosResponse<CampItem[] | null> = await Axios.post(
         fullUrl,
         null,
-        { headers: this.getHeaders() }
+        { headers: this.getHeaders() },
       );
       return rep.data;
     } catch (error) {
@@ -885,7 +888,7 @@ export abstract class AbstractAPI {
     try {
       const rep: AxiosResponse<PersonneHeader[] | null> = await Axios.get(
         fullUrl,
-        { headers: this.getHeaders(), params: { search: params["search"] } }
+        { headers: this.getHeaders(), params: { search: params["search"] } },
       );
       return rep.data;
     } catch (error) {
@@ -900,7 +903,7 @@ export abstract class AbstractAPI {
     try {
       const rep: AxiosResponse<Inscription[] | null> = await Axios.get(
         fullUrl,
-        { headers: this.getHeaders() }
+        { headers: this.getHeaders() },
       );
       return rep.data;
     } catch (error) {
@@ -919,7 +922,7 @@ export abstract class AbstractAPI {
         {
           headers: this.getHeaders(),
           params: { idPersonne: String(params["idPersonne"]) },
-        }
+        },
       );
       return rep.data;
     } catch (error) {
@@ -935,7 +938,7 @@ export abstract class AbstractAPI {
       const rep: AxiosResponse<Inscription> = await Axios.post(
         fullUrl,
         params,
-        { headers: this.getHeaders() }
+        { headers: this.getHeaders() },
       );
       return rep.data;
     } catch (error) {
@@ -968,7 +971,7 @@ export abstract class AbstractAPI {
       const rep: AxiosResponse<Inscription> = await Axios.post(
         fullUrl,
         params,
-        { headers: this.getHeaders() }
+        { headers: this.getHeaders() },
       );
       return rep.data;
     } catch (error) {
@@ -1010,7 +1013,7 @@ export abstract class AbstractAPI {
     try {
       const rep: AxiosResponse<FicheSanitaireExt[] | null> = await Axios.get(
         fullUrl,
-        { headers: this.getHeaders() }
+        { headers: this.getHeaders() },
       );
       return rep.data;
     } catch (error) {
@@ -1036,7 +1039,7 @@ export abstract class AbstractAPI {
       const startIndex = header.indexOf("filename=") + 9;
       const endIndex = header.length;
       const filename = decodeURIComponent(
-        header.substring(startIndex, endIndex)
+        header.substring(startIndex, endIndex),
       );
       return { blob: rep.data, filename: filename };
     } catch (error) {
@@ -1060,7 +1063,7 @@ export abstract class AbstractAPI {
       const startIndex = header.indexOf("filename=") + 9;
       const endIndex = header.length;
       const filename = decodeURIComponent(
-        header.substring(startIndex, endIndex)
+        header.substring(startIndex, endIndex),
       );
       return { blob: rep.data, filename: filename };
     } catch (error) {
@@ -1090,7 +1093,7 @@ export abstract class AbstractAPI {
       const rep: AxiosResponse<EventExt_Message> = await Axios.put(
         fullUrl,
         params,
-        { headers: this.getHeaders() }
+        { headers: this.getHeaders() },
       );
       return rep.data;
     } catch (error) {
@@ -1116,7 +1119,7 @@ export abstract class AbstractAPI {
             idEvent: String(params["idEvent"]),
             seen: params["seen"] ? "ok" : "",
           },
-        }
+        },
       );
       return rep.data;
     } catch (error) {
@@ -1131,7 +1134,7 @@ export abstract class AbstractAPI {
     try {
       const rep: AxiosResponse<EquipierExt[] | null> = await Axios.get(
         fullUrl,
-        { headers: this.getHeaders() }
+        { headers: this.getHeaders() },
       );
       return rep.data;
     } catch (error) {
@@ -1176,7 +1179,7 @@ export abstract class AbstractAPI {
       const rep: AxiosResponse<EquipierExt[] | null> = await Axios.post(
         fullUrl,
         params,
-        { headers: this.getHeaders() }
+        { headers: this.getHeaders() },
       );
       return rep.data;
     } catch (error) {
@@ -1302,7 +1305,7 @@ export abstract class AbstractAPI {
       const rep: AxiosResponse<PublicFile> = await Axios.post(
         fullUrl,
         formData,
-        { headers: this.getHeaders() }
+        { headers: this.getHeaders() },
       );
       return rep.data;
     } catch (error) {
@@ -1333,7 +1336,7 @@ export abstract class AbstractAPI {
       const rep: AxiosResponse<DemandeDirecteur> = await Axios.put(
         fullUrl,
         null,
-        { headers: this.getHeaders() }
+        { headers: this.getHeaders() },
       );
       return rep.data;
     } catch (error) {
@@ -1371,7 +1374,7 @@ export abstract class AbstractAPI {
   /** DocumentsUploadDemandeFile performs the request and handles the error */
   async DocumentsUploadDemandeFile(
     file: File,
-    params: { idDemande: IdDemande }
+    params: { idDemande: IdDemande },
   ) {
     const fullUrl = this.baseURL + "/api/v1/directeurs/documents/demande/file";
     this.startRequest();
@@ -1384,7 +1387,7 @@ export abstract class AbstractAPI {
         {
           headers: this.getHeaders(),
           params: { idDemande: String(params["idDemande"]) },
-        }
+        },
       );
       return rep.data;
     } catch (error) {
@@ -1418,7 +1421,7 @@ export abstract class AbstractAPI {
         {
           headers: this.getHeaders(),
           params: { idDemande: String(params["idDemande"]) },
-        }
+        },
       );
       return rep.data;
     } catch (error) {
@@ -1448,7 +1451,7 @@ export abstract class AbstractAPI {
     try {
       const rep: AxiosResponse<DocumentsUploadedOut> = await Axios.get(
         fullUrl,
-        { headers: this.getHeaders() }
+        { headers: this.getHeaders() },
       );
       return rep.data;
     } catch (error) {

@@ -150,6 +150,7 @@ func (ct *Controller) SelectPersonne(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
+// errors are wrapped
 func dossierAndResp(db ds.DB, id ds.IdDossier) (ds.Dossier, pr.Personne, error) {
 	dossier, err := ds.SelectDossier(db, id)
 	if err != nil {

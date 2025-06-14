@@ -19,34 +19,6 @@
         class="mx-1"
       ></v-btn>
 
-      <v-tooltip text="Ajouter un paiement" location="top">
-        <template #activator="{ props: tooltipProps }">
-          <v-btn
-            icon
-            size="small"
-            class="mx-1"
-            v-bind="tooltipProps"
-            @click="emit('createPaiement')"
-          >
-            <v-icon color="green">mdi-cash-plus</v-icon>
-          </v-btn>
-        </template>
-      </v-tooltip>
-
-      <v-tooltip text="Envoyer un message" location="top">
-        <template #activator="{ props: tooltipProps }">
-          <v-btn
-            icon
-            size="small"
-            class="mx-1"
-            v-bind="tooltipProps"
-            @click="showMessage = true"
-          >
-            <v-icon color="green">mdi-email-plus</v-icon>
-          </v-btn>
-        </template>
-      </v-tooltip>
-
       <v-menu>
         <template #activator="{ props: menuProps }">
           <v-btn
@@ -57,7 +29,30 @@
           >
           </v-btn>
         </template>
+        <!-- actions -->
         <v-list density="compact">
+          <v-list-item
+            prepend-icon="mdi-email"
+            @click="showMessage = true"
+            title="Envoyer un message"
+            subtitle="Notification par email"
+          >
+          </v-list-item>
+          <v-list-item
+            prepend-icon="mdi-invoice-send"
+            @click="emit('sendFacture')"
+            title="Envoyer une demande de règlement"
+            subtitle="Notification par email"
+          >
+          </v-list-item>
+          <v-divider></v-divider>
+          <v-list-item
+            prepend-icon="mdi-cash-plus"
+            @click="emit('createPaiement')"
+            title="Ajouter un paiement"
+          >
+          </v-list-item>
+          <v-divider></v-divider>
           <v-list-item
             prepend-icon="mdi-link"
             @click="showLinks = true"
@@ -70,11 +65,11 @@
             title="Fusionner vers ..."
           ></v-list-item>
           <v-divider></v-divider>
-          <v-list-item
-            prepend-icon="mdi-delete"
-            @click="showDeleteDialog = true"
-            title="Supprimer"
-          ></v-list-item>
+          <v-list-item @click="showDeleteDialog = true" title="Supprimer">
+            <template #prepend>
+              <v-icon color="red">mdi-delete</v-icon>
+            </template>
+          </v-list-item>
         </v-list>
       </v-menu>
     </template>
@@ -370,6 +365,7 @@ const emit = defineEmits<{
   // events
   (e: "sendMessage", contenu: string): void;
   (e: "deleteMessage", event: Event): void;
+  (e: "sendFacture"): void;
 }>();
 
 defineExpose({ showEditPaiement, showEditDossier });

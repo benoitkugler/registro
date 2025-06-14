@@ -22,6 +22,9 @@ var (
 	preinscriptionT               *template.Template
 	notifieFusionDossierT         *template.Template
 	notifieMessageT               *template.Template
+	notifieFactureT               *template.Template
+	notifieDocumentsCampT         *template.Template
+	notifieSondageT               *template.Template
 	notifiePlaceLibereeT          *template.Template
 	notifieValidationInscriptionT *template.Template
 	notifieModificationOptionsT   *template.Template
@@ -35,6 +38,9 @@ func init() {
 	preinscriptionT = parseTemplate("templates/preinscription.html")
 	notifieFusionDossierT = parseTemplate("templates/notifieFusionDossier.html")
 	notifieMessageT = parseTemplate("templates/notifieMessage.html")
+	notifieFactureT = parseTemplate("templates/notifieFacture.html")
+	notifieDocumentsCampT = parseTemplate("templates/notifieDocumentsCamp.html")
+	notifieSondageT = parseTemplate("templates/notifieSondage.html")
 	notifiePlaceLibereeT = parseTemplate("templates/notifiePlaceLiberee.html")
 	notifieValidationInscriptionT = parseTemplate("templates/notifieValidationInscription.html")
 	notifieModificationOptionsT = parseTemplate("templates/notifieModificationOptions.html")
@@ -120,12 +126,12 @@ type champsCommuns struct {
 // type paramsNotifieMessage struct {
 // 	champsCommuns
 // 	Contenu         string
-// 	LienEspacePerso string
+// 	EspacePersoURL string
 // }
 
 // type paramsNotifFusion struct {
 // 	champsCommuns
-// 	LienEspacePerso string
+// 	EspacePersoURL string
 // }
 
 // type paramsAccuseReceptionSimple struct {
@@ -166,7 +172,7 @@ type champsCommuns struct {
 // 	return strings.Join(tmp, ", ")
 // }
 
-// type paramsRenvoieLienEspacePerso struct {
+// type paramsRenvoieEspacePersoURL struct {
 // 	champsCommuns
 // 	Mail     string
 // 	Dossiers []ResumeDossier
@@ -199,8 +205,8 @@ func NotifieMessage(asso config.Asso, contact Contact, contenu, lienEspacePerso 
 	contenu = strings.ReplaceAll(contenu, "\n", "<br/>")
 	args := struct {
 		champsCommuns
-		Contenu         template.HTML
-		LienEspacePerso string
+		Contenu        template.HTML
+		EspacePersoURL string
 	}{
 		champsCommuns: champsCommuns{
 			Title:       "Nouveau message",
@@ -208,10 +214,62 @@ func NotifieMessage(asso config.Asso, contact Contact, contenu, lienEspacePerso 
 			Asso:        asso,
 			Signature:   mailAuto,
 		},
-		Contenu:         template.HTML(contenu),
-		LienEspacePerso: lienEspacePerso,
+		Contenu:        template.HTML(contenu),
+		EspacePersoURL: lienEspacePerso,
 	}
 	return render(notifieMessageT, args)
+}
+
+func NotifieFacture(asso config.Asso, contact Contact, lienEspacePerso string) (string, error) {
+	args := struct {
+		champsCommuns
+		EspacePersoURL string
+	}{
+		champsCommuns: champsCommuns{
+			Title:       "Demande de règlement",
+			Salutations: contact.Salutations(),
+			Asso:        asso,
+			Signature:   mailAuto,
+		},
+		EspacePersoURL: lienEspacePerso,
+	}
+	return render(notifieFactureT, args)
+}
+
+func NotifieDocumentsCamp(asso config.Asso, contact Contact, campLabel string, lienEspacePerso string) (string, error) {
+	args := struct {
+		champsCommuns
+		CampLabel      string
+		EspacePersoURL string
+	}{
+		champsCommuns: champsCommuns{
+			Title:       "Documents du séjour",
+			Salutations: contact.Salutations(),
+			Asso:        asso,
+			Signature:   mailAuto,
+		},
+		CampLabel:      campLabel,
+		EspacePersoURL: lienEspacePerso,
+	}
+	return render(notifieDocumentsCampT, args)
+}
+
+func NotifieSondage(asso config.Asso, contact Contact, campLabel string, lienEspacePerso string) (string, error) {
+	args := struct {
+		champsCommuns
+		CampLabel      string
+		EspacePersoURL string
+	}{
+		champsCommuns: champsCommuns{
+			Title:       "Avis sur le séjour",
+			Salutations: contact.Salutations(),
+			Asso:        asso,
+			Signature:   mailAuto,
+		},
+		CampLabel:      campLabel,
+		EspacePersoURL: lienEspacePerso,
+	}
+	return render(notifieSondageT, args)
 }
 
 type RespoWithLink struct {
@@ -237,15 +295,15 @@ func Preinscription(asso config.Asso, mail string, responsables []RespoWithLink)
 	return render(preinscriptionT, args)
 }
 
-// func NewRenvoieLienEspacePerso(mail string, dossiers []ResumeDossier) (string, error) {
+// func NewRenvoieEspacePersoURL(mail string, dossiers []ResumeDossier) (string, error) {
 // 	commun := newChampCommuns(Contact{}, "Espace de suivi")
 // 	commun.SignatureMail = "<i>Ps : Ceci est un mail automatique, merci de ne pas y répondre.</i>"
-// 	p := paramsRenvoieLienEspacePerso{
+// 	p := paramsRenvoieEspacePersoURL{
 // 		champsCommuns: commun,
 // 		Mail:          mail,
 // 		Dossiers:      dossiers,
 // 	}
-// 	return render(templates.RenvoieLienEspacePerso, "base.html", p)
+// 	return render(templates.RenvoieEspacePersoURL, "base.html", p)
 // }
 
 func ConfirmeInscription(asso config.Asso, contact Contact, urlConfirmeInscription string) (string, error) {
@@ -268,10 +326,10 @@ func ConfirmeInscription(asso config.Asso, contact Contact, urlConfirmeInscripti
 func NotifieValidationInscription(asso config.Asso, contact Contact, lienEspacePerso string, inscrits, attente, astatuer []Participant) (string, error) {
 	args := struct {
 		champsCommuns
-		Inscrits        []Participant
-		Attente         []Participant
-		AStatuer        []Participant
-		LienEspacePerso string
+		Inscrits       []Participant
+		Attente        []Participant
+		AStatuer       []Participant
+		EspacePersoURL string
 	}{
 		champsCommuns: champsCommuns{
 			Title:       "Inscription reçue",
@@ -279,10 +337,10 @@ func NotifieValidationInscription(asso config.Asso, contact Contact, lienEspaceP
 			Signature:   mailAutoSignature,
 			Asso:        asso,
 		},
-		Inscrits:        inscrits,
-		Attente:         attente,
-		AStatuer:        astatuer,
-		LienEspacePerso: lienEspacePerso,
+		Inscrits:       inscrits,
+		Attente:        attente,
+		AStatuer:       astatuer,
+		EspacePersoURL: lienEspacePerso,
 	}
 
 	return render(notifieValidationInscriptionT, args)
@@ -403,7 +461,7 @@ const mailAuto template.HTML = "<i>PS: Merci de ne pas répondre directement à 
 func NotifieFusionDossier(cfg config.Asso, contact Contact, lienEspacePerso string) (string, error) {
 	args := struct {
 		champsCommuns
-		LienEspacePerso string
+		EspacePersoURL string
 	}{
 		champsCommuns: champsCommuns{
 			Title:       "Fusion de votre dossier",
@@ -411,7 +469,7 @@ func NotifieFusionDossier(cfg config.Asso, contact Contact, lienEspacePerso stri
 			Asso:        cfg,
 			Signature:   cfg.MailsSettings.SignatureMailCentre + "<br/><br/>" + mailAuto,
 		},
-		LienEspacePerso: lienEspacePerso,
+		EspacePersoURL: lienEspacePerso,
 	}
 	return render(notifieFusionDossierT, args)
 }
@@ -419,9 +477,9 @@ func NotifieFusionDossier(cfg config.Asso, contact Contact, lienEspacePerso stri
 func NotifiePlaceLiberee(cfg config.Asso, contact Contact, camp string, lienEspacePerso string) (string, error) {
 	args := struct {
 		champsCommuns
-		Contact         Contact
-		Camp            string
-		LienEspacePerso string
+		Contact        Contact
+		Camp           string
+		EspacePersoURL string
 	}{
 		champsCommuns: champsCommuns{
 			Title:       "Place disponible",
@@ -429,9 +487,9 @@ func NotifiePlaceLiberee(cfg config.Asso, contact Contact, camp string, lienEspa
 			Asso:        cfg,
 			Signature:   cfg.MailsSettings.SignatureMailCentre + "<br/><br/>" + mailAuto,
 		},
-		Contact:         contact,
-		Camp:            camp,
-		LienEspacePerso: lienEspacePerso,
+		Contact:        contact,
+		Camp:           camp,
+		EspacePersoURL: lienEspacePerso,
 	}
 	return render(notifiePlaceLibereeT, args)
 }

@@ -49,15 +49,24 @@ func IterContentBy[T EventContent](evs Events) iter.Seq[EventExt[T]] {
 
 // UnreadMessagesForBackoffice returns the [Event]s with kind [evs.Message],
 // not yet seen by the backoffice
-func (evs Events) UnreadMessagesForBackoffice() (out []Event) {
-	for _, ev := range evs {
-		if message, ok := ev.Content.(Message); ok {
-			if message.Message.Origine != events.FromBackoffice && !message.Message.VuBackoffice {
-				out = append(out, ev)
-			}
+func (evs Events) UnreadMessagesForBackoffice() (out []EventExt[Message]) {
+	for ev := range IterContentBy[Message](evs) {
+		if ev.Content.Message.Origine != events.FromBackoffice && !ev.Content.Message.VuBackoffice {
+			out = append(out, ev)
 		}
 	}
 	return out
+}
+
+// HasSendCampDocuments returns [true] is the documents for the
+// given camp has been sent (at least once)
+func (evs Events) HasSendCampDocuments(idCamp cps.IdCamp) bool {
+	for camp := range IterContentBy[CampDocs](evs) {
+		if camp.Content.IdCamp == idCamp {
+			return true
+		}
+	}
+	return false
 }
 
 // Event exposes on event on the dossier track
@@ -112,7 +121,19 @@ func (ld *eventsContent) newMessage(ev evs.Event) Message {
 	return out
 }
 
-type Facture struct{}
+type Facture struct {
+	IsRappel bool
+}
+
+// check is their is a previous facture sent
+func (ld *eventsContent) newFacture(ev evs.Event, all evs.Events) Facture {
+	for _, other := range all {
+		if other.Id != ev.Id && other.Kind == evs.Facture && other.Created.Before(ev.Created) {
+			return Facture{true}
+		}
+	}
+	return Facture{false}
+}
 
 type CampDocs struct {
 	IdCamp    cps.IdCamp
@@ -259,7 +280,7 @@ func loadEventsContent(db evs.DB, ids ...evs.IdEvent) (out eventsContent, _ erro
 	return out, nil
 }
 
-func (ec *eventsContent) build(event evs.Event) Event {
+func (ec *eventsContent) build(event evs.Event, dossierEvents evs.Events) Event {
 	out := Event{Id: event.Id, idDossier: event.IdDossier, Created: event.Created}
 	switch event.Kind {
 	case evs.Supprime:
@@ -271,7 +292,7 @@ func (ec *eventsContent) build(event evs.Event) Event {
 	case evs.PlaceLiberee:
 		out.Content = ec.newPlaceLiberee(event)
 	case evs.Facture:
-		out.Content = Facture{}
+		out.Content = ec.newFacture(event, dossierEvents)
 	case evs.CampDocs:
 		out.Content = ec.newCampDocs(event)
 	case evs.Attestation:
@@ -319,7 +340,7 @@ func (ld *EventsData) For(idDossier ds.IdDossier) Events {
 	raws := ld.events[idDossier]
 	out := make([]Event, 0, len(raws))
 	for _, event := range raws {
-		out = append(out, ld.eventsContent.build(event))
+		out = append(out, ld.eventsContent.build(event, raws))
 	}
 	return out
 }
@@ -334,5 +355,5 @@ func LoadEvent(db evs.DB, id evs.IdEvent) (Event, error) {
 	if err != nil {
 		return Event{}, utils.SQLError(err)
 	}
-	return content.build(event), nil
+	return content.build(event, nil), nil
 }

@@ -4,7 +4,8 @@
     icon="mdi-invoice"
     :time="props.event.Created"
   >
-    Facture envoyée
+    Demande de règlement envoyée.
+    <i v-if="props.content.IsRappel">Il s'agit d'un rappel.</i>
   </EventItem>
 </template>
 

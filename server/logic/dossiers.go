@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"slices"
+	"strings"
 	"time"
 
 	"registro/crypto"
@@ -109,6 +110,16 @@ func (de *Dossier) Personnes() (out []pr.Personne) {
 		out = append(out, de.personnesM[id])
 	}
 	return out
+}
+
+func (de *Dossier) ParticipantsLabels() string {
+	personnes := de.Personnes()
+	// extract participants
+	chunks := make([]string, 0, len(personnes)-1)
+	for _, pe := range personnes[1:] {
+		chunks = append(chunks, pe.PrenomNOM())
+	}
+	return strings.Join(chunks, ", ")
 }
 
 // PersonnesFor returns the personne for every given participants

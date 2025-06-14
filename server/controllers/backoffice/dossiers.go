@@ -114,16 +114,10 @@ type DossierHeader struct {
 }
 
 func newDossierHeader(dossier logic.Dossier) DossierHeader {
-	personnes := dossier.Personnes()
-	// extract participants
-	chunks := make([]string, 0, len(personnes)-1)
-	for _, pe := range personnes[1:] {
-		chunks = append(chunks, pe.PrenomNOM())
-	}
 	return DossierHeader{
 		Id:           dossier.Dossier.Id,
-		Responsable:  personnes[0].PrenomNOM(),
-		Participants: strings.Join(chunks, ", "),
+		Responsable:  dossier.Responsable().PrenomNOM(),
+		Participants: dossier.ParticipantsLabels(),
 		NewMessages:  len(dossier.Events.UnreadMessagesForBackoffice()),
 	}
 }
@@ -318,8 +312,8 @@ func (ct *Controller) DossiersCreate(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) createDossier(idR pr.IdPersonne) (DossierHeader, error) {
-	responsable, err := pr.SelectPersonne(ct.db, idR)
+func (ct *Controller) createDossier(idResponsable pr.IdPersonne) (DossierHeader, error) {
+	responsable, err := pr.SelectPersonne(ct.db, idResponsable)
 	if err != nil {
 		return DossierHeader{}, err
 	}

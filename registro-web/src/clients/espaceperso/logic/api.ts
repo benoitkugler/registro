@@ -60,11 +60,6 @@ export interface FilesCamp {
   Generated: GeneratedFile[] | null;
   Files: PublicFile[] | null;
 }
-// registro/controllers/espaceperso.GeneratedFile
-export interface GeneratedFile {
-  NomClient: string;
-  Key: string;
-}
 // registro/controllers/espaceperso.Joomeo
 export interface Joomeo {
   SpaceURL: string;
@@ -100,25 +95,22 @@ export interface UpdateSondageIn {
   IdCamp: IdCamp;
   Reponse: ReponseSondage;
 }
-// registro/controllers/logic.PublicFile
-export interface PublicFile {
-  Key: string;
-  Id: IdFile;
-  Taille: Int;
+// registro/controllers/files.GeneratedFile
+export interface GeneratedFile {
   NomClient: string;
-  Uploaded: Time;
+  Key: string;
 }
-// registro/controllers/logic.AideResolved
+// registro/logic.AideResolved
 export interface AideResolved {
   Structure: string;
   Montant: Montant;
 }
-// registro/controllers/logic.Attestation
+// registro/logic.Attestation
 export interface Attestation {
   Distribution: Distribution;
   IsPresence: boolean;
 }
-// registro/controllers/logic.BilanFinancesPub
+// registro/logic.BilanFinancesPub
 export interface BilanFinancesPub {
   Inscrits: Record<IdParticipant, BilanParticipantPub> | null;
   Demande: string;
@@ -127,7 +119,7 @@ export interface BilanFinancesPub {
   Restant: string;
   Statut: StatutPaiement;
 }
-// registro/controllers/logic.BilanParticipantPub
+// registro/logic.BilanParticipantPub
 export interface BilanParticipantPub {
   AvecOption: Montant;
   AvecOptionDescription: string;
@@ -136,12 +128,12 @@ export interface BilanParticipantPub {
   AvecAides: string;
   Net: string;
 }
-// registro/controllers/logic.CampDocs
+// registro/logic.CampDocs
 export interface CampDocs {
   IdCamp: IdCamp;
   CampLabel: string;
 }
-// registro/controllers/logic.DossierExt
+// registro/logic.DossierExt
 export interface DossierExt {
   Dossier: Dossier;
   Responsable: string;
@@ -152,7 +144,7 @@ export interface DossierExt {
   Paiements: Paiements;
   Bilan: BilanFinancesPub;
 }
-// registro/controllers/logic.Event
+// registro/logic.Event
 export interface Event {
   Id: IdEvent;
   Created: Time;
@@ -172,7 +164,7 @@ export const EventContentKind = {
 export type EventContentKind =
   (typeof EventContentKind)[keyof typeof EventContentKind];
 
-// registro/controllers/logic.EventContent
+// registro/logic.EventContent
 export type EventContent =
   | { Kind: "Attestation"; Data: Attestation }
   | { Kind: "CampDocs"; Data: CampDocs }
@@ -183,30 +175,38 @@ export type EventContent =
   | { Kind: "Supprime"; Data: Supprime }
   | { Kind: "Validation"; Data: Validation };
 
-// registro/controllers/logic.Events
+// registro/logic.Events
 export type Events = Event[] | null;
-// registro/controllers/logic.Facture
+// registro/logic.Facture
 export type Facture = Record<string, never>;
-// registro/controllers/logic.Message
+// registro/logic.Message
 export interface Message {
   Message: EventMessage;
   OrigineCampLabel: string;
   VuParCampsIDs: IdCamp[] | null;
   VuParCamps: string[] | null;
 }
-// registro/controllers/logic.PlaceLiberee
+// registro/logic.PlaceLiberee
 export interface PlaceLiberee {
   IdParticipant: IdParticipant;
   IdCamp: IdCamp;
   ParticipantLabel: string;
   CampLabel: string;
 }
-// registro/controllers/logic.Sondage
+// registro/logic.PublicFile
+export interface PublicFile {
+  Key: string;
+  Id: IdFile;
+  Taille: Int;
+  NomClient: string;
+  Uploaded: Time;
+}
+// registro/logic.Sondage
 export interface Sondage {
   IdCamp: IdCamp;
   CampLabel: string;
 }
-// registro/controllers/logic.StatutPaiement
+// registro/logic.StatutPaiement
 export const StatutPaiement = {
   Complet: 3,
   EnCours: 2,
@@ -216,14 +216,14 @@ export type StatutPaiement =
   (typeof StatutPaiement)[keyof typeof StatutPaiement];
 
 export const StatutPaiementLabels: Record<StatutPaiement, string> = {
-  [StatutPaiement.Complet]: "",
-  [StatutPaiement.EnCours]: "",
-  [StatutPaiement.NonCommence]: "",
+  [StatutPaiement.Complet]: "Complet",
+  [StatutPaiement.EnCours]: "En cours",
+  [StatutPaiement.NonCommence]: "Non commencé",
 };
 
-// registro/controllers/logic.Supprime
+// registro/logic.Supprime
 export type Supprime = Record<string, never>;
-// registro/controllers/logic.Validation
+// registro/logic.Validation
 export interface Validation {
   ByCamp: string;
 }
@@ -826,7 +826,10 @@ export interface OptID_IdPersonne {
 		as base class for an app controller.
 	*/
 export abstract class AbstractAPI {
-  constructor(protected baseURL: string, public authToken: string) {}
+  constructor(
+    protected baseURL: string,
+    public authToken: string,
+  ) {}
 
   protected abstract handleError(error: any): void;
 
@@ -954,7 +957,7 @@ export abstract class AbstractAPI {
   /** UploadVaccin performs the request and handles the error */
   async UploadVaccin(
     file: File,
-    params: { token: string; idPersonne: IdPersonne }
+    params: { token: string; idPersonne: IdPersonne },
   ) {
     const fullUrl = this.baseURL + "/api/v1/espaceperso/fichesanitaires";
     this.startRequest();
@@ -970,7 +973,7 @@ export abstract class AbstractAPI {
             token: params["token"],
             idPersonne: String(params["idPersonne"]),
           },
-        }
+        },
       );
       return rep.data;
     } catch (error) {
@@ -1060,7 +1063,7 @@ export abstract class AbstractAPI {
   /** UploadDocument performs the request and handles the error */
   async UploadDocument(
     file: File,
-    params: { token: string; idDemande: IdDemande; idPersonne: IdPersonne }
+    params: { token: string; idDemande: IdDemande; idPersonne: IdPersonne },
   ) {
     const fullUrl = this.baseURL + "/api/v1/espaceperso/documents";
     this.startRequest();
@@ -1077,7 +1080,7 @@ export abstract class AbstractAPI {
             idDemande: String(params["idDemande"]),
             idPersonne: String(params["idPersonne"]),
           },
-        }
+        },
       );
       return rep.data;
     } catch (error) {

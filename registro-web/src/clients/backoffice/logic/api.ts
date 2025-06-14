@@ -47,6 +47,13 @@ export interface DossierDetails {
   VirementCode: string;
   BankAccounts: Ar2_string[] | null;
 }
+// registro/controllers/backoffice.DossierDocumentsState
+export interface DossierDocumentsState {
+  Id: IdDossier;
+  Responsable: string;
+  Participants: string;
+  DocumentsSent: boolean;
+}
 // registro/controllers/backoffice.DossierHeader
 export interface DossierHeader {
   Id: IdDossier;
@@ -146,30 +153,31 @@ export interface SearchDossierOut {
   Dossiers: DossierHeader[] | null;
   Total: Int;
 }
+// registro/controllers/backoffice.SendDocumentsCampIn
+export interface SendDocumentsCampIn {
+  IdCamp: IdCamp;
+  IdDossiers: IdDossier[] | null;
+}
+// registro/controllers/backoffice.SendDocumentsCampPreview
+export interface SendDocumentsCampPreview {
+  Dossiers: DossierDocumentsState[] | null;
+}
 // registro/controllers/files.GeneratedFile
 export interface GeneratedFile {
   NomClient: string;
   Key: string;
 }
-// registro/controllers/logic.PublicFile
-export interface PublicFile {
-  Key: string;
-  Id: IdFile;
-  Taille: Int;
-  NomClient: string;
-  Uploaded: Time;
-}
-// registro/controllers/logic.AideResolved
+// registro/logic.AideResolved
 export interface AideResolved {
   Structure: string;
   Montant: Montant;
 }
-// registro/controllers/logic.Attestation
+// registro/logic.Attestation
 export interface Attestation {
   Distribution: Distribution;
   IsPresence: boolean;
 }
-// registro/controllers/logic.BilanFinancesPub
+// registro/logic.BilanFinancesPub
 export interface BilanFinancesPub {
   Inscrits: Record<IdParticipant, BilanParticipantPub> | null;
   Demande: string;
@@ -178,7 +186,7 @@ export interface BilanFinancesPub {
   Restant: string;
   Statut: StatutPaiement;
 }
-// registro/controllers/logic.BilanParticipantPub
+// registro/logic.BilanParticipantPub
 export interface BilanParticipantPub {
   AvecOption: Montant;
   AvecOptionDescription: string;
@@ -187,18 +195,18 @@ export interface BilanParticipantPub {
   AvecAides: string;
   Net: string;
 }
-// registro/controllers/logic.CampDocs
+// registro/logic.CampDocs
 export interface CampDocs {
   IdCamp: IdCamp;
   CampLabel: string;
 }
-// registro/controllers/logic.CampItem
+// registro/logic.CampItem
 export interface CampItem {
   Id: IdCamp;
   Label: string;
   IsOld: boolean;
 }
-// registro/controllers/logic.DossierExt
+// registro/logic.DossierExt
 export interface DossierExt {
   Dossier: Dossier;
   Responsable: string;
@@ -209,7 +217,7 @@ export interface DossierExt {
   Paiements: Paiements;
   Bilan: BilanFinancesPub;
 }
-// registro/controllers/logic.Event
+// registro/logic.Event
 export interface Event {
   Id: IdEvent;
   Created: Time;
@@ -229,7 +237,7 @@ export const EventContentKind = {
 export type EventContentKind =
   (typeof EventContentKind)[keyof typeof EventContentKind];
 
-// registro/controllers/logic.EventContent
+// registro/logic.EventContent
 export type EventContent =
   | { Kind: "Attestation"; Data: Attestation }
   | { Kind: "CampDocs"; Data: CampDocs }
@@ -240,37 +248,39 @@ export type EventContent =
   | { Kind: "Supprime"; Data: Supprime }
   | { Kind: "Validation"; Data: Validation };
 
-// registro/controllers/logic.Events
+// registro/logic.Events
 export type Events = Event[] | null;
-// registro/controllers/logic.Facture
-export type Facture = Record<string, never>;
-// registro/controllers/logic.IdentTarget
+// registro/logic.Facture
+export interface Facture {
+  IsRappel: boolean;
+}
+// registro/logic.IdentTarget
 export interface IdentTarget {
   IdTemporaire: IdPersonne;
   Rattache: boolean;
   RattacheTo: IdPersonne;
 }
-// registro/controllers/logic.Inscription
+// registro/logic.Inscription
 export interface Inscription {
   Dossier: Dossier;
   Message: string;
   Responsable: Personne;
   Participants: ParticipantCamp[] | null;
 }
-// registro/controllers/logic.InscriptionsValideIn
+// registro/logic.InscriptionsValideIn
 export interface InscriptionsValideIn {
   IdDossier: IdDossier;
   Statuts: Record<IdParticipant, StatutParticipant> | null;
   SendMail: boolean;
 }
-// registro/controllers/logic.Message
+// registro/logic.Message
 export interface Message {
   Message: EventMessage;
   OrigineCampLabel: string;
   VuParCampsIDs: IdCamp[] | null;
   VuParCamps: string[] | null;
 }
-// registro/controllers/logic.ParticipantExt
+// registro/logic.ParticipantExt
 export interface ParticipantExt {
   Participant: Participant;
   Personne: Personne;
@@ -278,26 +288,34 @@ export interface ParticipantExt {
   HasBirthday: boolean;
   MomentInscription: Time;
 }
-// registro/controllers/logic.PlaceLiberee
+// registro/logic.PlaceLiberee
 export interface PlaceLiberee {
   IdParticipant: IdParticipant;
   IdCamp: IdCamp;
   ParticipantLabel: string;
   CampLabel: string;
 }
-// registro/controllers/logic.Sondage
+// registro/logic.PublicFile
+export interface PublicFile {
+  Key: string;
+  Id: IdFile;
+  Taille: Int;
+  NomClient: string;
+  Uploaded: Time;
+}
+// registro/logic.Sondage
 export interface Sondage {
   IdCamp: IdCamp;
   CampLabel: string;
 }
-// registro/controllers/logic.StatutExt
+// registro/logic.StatutExt
 export interface StatutExt {
   Causes: StatutCauses;
   Statut: StatutParticipant;
   AllowedChanges: StatutParticipant[] | null;
   Validable: boolean;
 }
-// registro/controllers/logic.StatutPaiement
+// registro/logic.StatutPaiement
 export const StatutPaiement = {
   Complet: 3,
   EnCours: 2,
@@ -312,13 +330,13 @@ export const StatutPaiementLabels: Record<StatutPaiement, string> = {
   [StatutPaiement.NonCommence]: "Non commencé",
 };
 
-// registro/controllers/logic.Supprime
+// registro/logic.Supprime
 export type Supprime = Record<string, never>;
-// registro/controllers/logic.Validation
+// registro/logic.Validation
 export interface Validation {
   ByCamp: string;
 }
-// registro/controllers/search.PersonneHeader
+// registro/logic/search.PersonneHeader
 export interface PersonneHeader {
   Id: IdPersonne;
   Label: string;
@@ -326,7 +344,7 @@ export interface PersonneHeader {
   DateNaissance: Date;
   IsTemp: boolean;
 }
-// registro/controllers/search.ScoredPersonne
+// registro/logic/search.ScoredPersonne
 export interface ScoredPersonne {
   ScorePercent: Int;
   Personne: PersonneHeader;
@@ -796,7 +814,10 @@ export interface OptID_IdCamp {
 		as base class for an app controller.
 	*/
 export abstract class AbstractAPI {
-  constructor(protected baseURL: string, public authToken: string) {}
+  constructor(
+    protected baseURL: string,
+    public authToken: string,
+  ) {}
 
   protected abstract handleError(error: any): void;
 
@@ -829,7 +850,7 @@ export abstract class AbstractAPI {
       const rep: AxiosResponse<CampItem[] | null> = await Axios.post(
         fullUrl,
         null,
-        { headers: this.getHeaders() }
+        { headers: this.getHeaders() },
       );
       return rep.data;
     } catch (error) {
@@ -844,7 +865,7 @@ export abstract class AbstractAPI {
     try {
       const rep: AxiosResponse<PersonneHeader[] | null> = await Axios.get(
         fullUrl,
-        { headers: this.getHeaders(), params: { search: params["search"] } }
+        { headers: this.getHeaders(), params: { search: params["search"] } },
       );
       return rep.data;
     } catch (error) {
@@ -888,7 +909,7 @@ export abstract class AbstractAPI {
       const rep: AxiosResponse<CampHeader[] | null> = await Axios.put(
         fullUrl,
         params,
-        { headers: this.getHeaders() }
+        { headers: this.getHeaders() },
       );
       return rep.data;
     } catch (error) {
@@ -1003,7 +1024,7 @@ export abstract class AbstractAPI {
       const rep: AxiosResponse<ParticipantExt> = await Axios.put(
         fullUrl,
         params,
-        { headers: this.getHeaders() }
+        { headers: this.getHeaders() },
       );
       return rep.data;
     } catch (error) {
@@ -1073,7 +1094,7 @@ export abstract class AbstractAPI {
     try {
       const rep: AxiosResponse<Inscription[] | null> = await Axios.get(
         fullUrl,
-        { headers: this.getHeaders() }
+        { headers: this.getHeaders() },
       );
       return rep.data;
     } catch (error) {
@@ -1092,7 +1113,7 @@ export abstract class AbstractAPI {
         {
           headers: this.getHeaders(),
           params: { idPersonne: String(params["idPersonne"]) },
-        }
+        },
       );
       return rep.data;
     } catch (error) {
@@ -1108,7 +1129,7 @@ export abstract class AbstractAPI {
       const rep: AxiosResponse<Inscription> = await Axios.post(
         fullUrl,
         params,
-        { headers: this.getHeaders() }
+        { headers: this.getHeaders() },
       );
       return rep.data;
     } catch (error) {
@@ -1153,7 +1174,7 @@ export abstract class AbstractAPI {
       const rep: AxiosResponse<SearchDossierOut> = await Axios.post(
         fullUrl,
         params,
-        { headers: this.getHeaders() }
+        { headers: this.getHeaders() },
       );
       return rep.data;
     } catch (error) {
@@ -1199,7 +1220,7 @@ export abstract class AbstractAPI {
       const rep: AxiosResponse<DossiersUpdateOut> = await Axios.post(
         fullUrl,
         params,
-        { headers: this.getHeaders() }
+        { headers: this.getHeaders() },
       );
       return rep.data;
     } catch (error) {
@@ -1343,7 +1364,7 @@ export abstract class AbstractAPI {
         {
           headers: this.getHeaders(),
           params: { idAide: String(params["idAide"]) },
-        }
+        },
       );
       return rep.data;
     } catch (error) {
@@ -1450,6 +1471,66 @@ export abstract class AbstractAPI {
     }
   }
 
+  /** EventsSendFacture performs the request and handles the error */
+  async EventsSendFacture(params: { idDossier: IdDossier }) {
+    const fullUrl = this.baseURL + "/api/v1/backoffice/events/facture";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, null, {
+        headers: this.getHeaders(),
+        params: { idDossier: String(params["idDossier"]) },
+      });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EventsSendDocumentsCampPreview performs the request and handles the error */
+  async EventsSendDocumentsCampPreview(params: { idCamp: IdCamp }) {
+    const fullUrl = this.baseURL + "/api/v1/backoffice/events/documents-camp";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<SendDocumentsCampPreview> = await Axios.get(
+        fullUrl,
+        {
+          headers: this.getHeaders(),
+          params: { idCamp: String(params["idCamp"]) },
+        },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EventsSendDocumentsCamp performs the request and handles the error */
+  async EventsSendDocumentsCamp(params: SendDocumentsCampIn) {
+    const fullUrl = this.baseURL + "/api/v1/backoffice/events/documents-camp";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EventsSendSondages performs the request and handles the error */
+  async EventsSendSondages(params: { idCamp: IdCamp }) {
+    const fullUrl = this.baseURL + "/api/v1/backoffice/events/sondage";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, null, {
+        headers: this.getHeaders(),
+        params: { idCamp: String(params["idCamp"]) },
+      });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
   /** PersonnesGet performs the request and handles the error */
   async PersonnesGet(params: { search: string }) {
     const fullUrl = this.baseURL + "/api/v1/backoffice/personnes/search";
@@ -1457,7 +1538,7 @@ export abstract class AbstractAPI {
     try {
       const rep: AxiosResponse<PersonneHeader[] | null> = await Axios.get(
         fullUrl,
-        { headers: this.getHeaders(), params: { search: params["search"] } }
+        { headers: this.getHeaders(), params: { search: params["search"] } },
       );
       return rep.data;
     } catch (error) {
@@ -1488,7 +1569,7 @@ export abstract class AbstractAPI {
       const rep: AxiosResponse<PersonneHeader> = await Axios.put(
         fullUrl,
         null,
-        { headers: this.getHeaders() }
+        { headers: this.getHeaders() },
       );
       return rep.data;
     } catch (error) {
@@ -1504,7 +1585,7 @@ export abstract class AbstractAPI {
       const rep: AxiosResponse<PersonneHeader> = await Axios.post(
         fullUrl,
         params,
-        { headers: this.getHeaders() }
+        { headers: this.getHeaders() },
       );
       return rep.data;
     } catch (error) {

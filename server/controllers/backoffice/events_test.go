@@ -18,7 +18,7 @@ func createMessage(db events.DB, idDossier ds.IdDossier, origine events.MessageO
 	return err
 }
 
-func Test_messages(t *testing.T) {
+func Test_events(t *testing.T) {
 	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
 		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",
 		"../../migrations/init.sql")
@@ -61,6 +61,43 @@ func Test_messages(t *testing.T) {
 		tu.AssertNoErr(t, err)
 
 		err = ct.markMessagesSeen(d1.Id)
+		tu.AssertNoErr(t, err)
+	})
+
+	t.Run("facture", func(t *testing.T) {
+		err = ct.sendFacture("", d1.Id)
+		tu.AssertNoErr(t, err)
+	})
+
+	t.Run("documents & sondages", func(t *testing.T) {
+		const toSend = 5
+		var ids []ds.IdDossier
+		for i := range [toSend + 3]int{} {
+			pe, err := pr.Personne{}.Insert(ct.db)
+			tu.AssertNoErr(t, err)
+			dossier, err := ct.createDossier(pe.Id)
+			tu.AssertNoErr(t, err)
+			pa, err := ct.createParticipant(ParticipantsCreateIn{IdDossier: dossier.Id, IdCamp: camp1.Id, IdPersonne: pe.Id})
+			tu.AssertNoErr(t, err)
+
+			if i < toSend {
+				pa.Participant.Statut = cps.Inscrit
+				err = ct.updateParticipant(pa.Participant)
+				tu.AssertNoErr(t, err)
+
+				ids = append(ids, dossier.Id)
+			}
+
+		}
+
+		preview, err := ct.previewSendDocumentsCamp(camp1.Id)
+		tu.AssertNoErr(t, err)
+		tu.Assert(t, len(preview.Dossiers) == toSend)
+
+		err = ct.sendDocumentsCamp("", SendDocumentsCampIn{IdCamp: camp1.Id, IdDossiers: ids})
+		tu.AssertNoErr(t, err)
+
+		err = ct.sendSondages("", camp1.Id)
 		tu.AssertNoErr(t, err)
 	})
 }

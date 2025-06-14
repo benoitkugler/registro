@@ -25,7 +25,7 @@ import (
 // }
 
 // func TestRenvoieLien(t *testing.T) {
-// 	html, err := NewRenvoieLienEspacePerso("smsld@free.fr", []ResumeDossier{
+// 	html, err := NewRenvoieEspacePersoURL("smsld@free.fr", []ResumeDossier{
 // 		{
 // 			Responsable: rd.BasePersonne{Nom: "lkd  kmsslkd", Prenom: "ddd zz"},
 // 			Lien:        "http://free.fr",
@@ -82,6 +82,44 @@ func TestNotifieMessage(t *testing.T) {
 	tu.AssertNoErr(t, err)
 
 	tu.Write(t, "NotifieMessage.html", []byte(html))
+}
+
+func TestNotifieFacture(t *testing.T) {
+	asso, _ := loadEnv(t)
+
+	html, err := NotifieFacture(asso,
+		Contact{Prenom: "Claudy", Sexe: pr.Woman},
+		"https://acve.fr/inscription/valide?data:cryp4tedinscriptin",
+	)
+	tu.AssertNoErr(t, err)
+
+	tu.Write(t, "NotifieFacture.html", []byte(html))
+}
+
+func TestNotifieDocumentsCamp(t *testing.T) {
+	asso, _ := loadEnv(t)
+
+	html, err := NotifieDocumentsCamp(asso,
+		Contact{Prenom: "Claudy", Sexe: pr.Woman},
+		"Vive la vie 2025",
+		"https://acve.fr/inscription/valide?data:cryp4tedinscriptin",
+	)
+	tu.AssertNoErr(t, err)
+
+	tu.Write(t, "NotifieDocumentsCamp.html", []byte(html))
+}
+
+func TestNotifieSondage(t *testing.T) {
+	asso, _ := loadEnv(t)
+
+	html, err := NotifieSondage(asso,
+		Contact{Prenom: "Claudy", Sexe: pr.Woman},
+		"Vive la vie 2025",
+		"https://acve.fr/inscription/valide?data:cryp4tedinscriptin",
+	)
+	tu.AssertNoErr(t, err)
+
+	tu.Write(t, "NotifieSondage.html", []byte(html))
 }
 
 // func TestDebloqueFS(t *testing.T) {

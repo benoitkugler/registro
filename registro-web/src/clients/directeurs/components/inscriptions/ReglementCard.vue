@@ -1,6 +1,6 @@
 <template>
   <v-card
-    title="Suivi du réglement"
+    title="Suivi du règlement"
     :subtitle="`${completCount} / ${
       props.data.Participants?.length || 0
     } complet`"
