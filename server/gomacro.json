@@ -96,5 +96,35 @@
             "Mode": "go/randdata",
             "Output": "sql/events/gen_randdata_test.go"
         }
+    ],
+    "routes_backoffice.go": [
+        {
+            "Mode": "typescript/api",
+            "Output": "../registro-web/src/clients/backoffice/logic/api.ts"
+        }
+    ],
+    "routes_equipier.go": [
+        {
+            "Mode": "typescript/api",
+            "Output": "../registro-web/src/clients/equipier/logic/api.ts"
+        }
+    ],
+    "routes_espaceperso.go": [
+        {
+            "Mode": "typescript/api",
+            "Output": "../registro-web/src/clients/espaceperso/logic/api.ts"
+        }
+    ],
+    "routes_inscription.go": [
+        {
+            "Mode": "typescript/api",
+            "Output": "../registro-web/src/clients/inscription/logic/api.ts"
+        }
+    ],
+    "routes_services.go": [
+        {
+            "Mode": "typescript/api",
+            "Output": "../registro-web/src/clients/services/logic/api.ts"
+        }
     ]
 }

@@ -64,8 +64,10 @@ export default defineConfig(({ command }) => ({
       input: {
         backoffice: resolve(__dirname, "src/clients/backoffice/index.html"),
         directeurs: resolve(__dirname, "src/clients/directeurs/index.html"),
-        inscription: resolve(__dirname, "src/clients/inscription/index.html"),
         equipier: resolve(__dirname, "src/clients/equipier/index.html"),
+        espaceperso: resolve(__dirname, "src/clients/espaceperso/index.html"),
+        inscription: resolve(__dirname, "src/clients/inscription/index.html"),
+        services: resolve(__dirname, "src/clients/services/index.html"),
       },
     },
   },

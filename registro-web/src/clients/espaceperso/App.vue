@@ -1,7 +1,7 @@
 <template>
   <v-app>
     <v-main>
-      <router-view />
+      <Main></Main>
 
       <v-snackbar
         style="z-index: 10000"
@@ -41,6 +41,7 @@
 import { reactive, ref } from "vue";
 import { controller } from "./logic/logic";
 import type { Action } from "@/utils";
+import Main from "./Main.vue";
 
 const message = reactive({
   text: "",

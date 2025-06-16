@@ -178,7 +178,9 @@ export type EventContent =
 // registro/logic.Events
 export type Events = Event[] | null;
 // registro/logic.Facture
-export type Facture = Record<string, never>;
+export interface Facture {
+  IsRappel: boolean;
+}
 // registro/logic.Message
 export interface Message {
   Message: EventMessage;

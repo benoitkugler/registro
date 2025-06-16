@@ -213,10 +213,9 @@
 </template>
 
 <script lang="ts" setup>
-import { useRouter } from "vue-router";
 import { computed, onMounted, ref } from "vue";
-import NavBar from "../components/NavBar.vue";
-import { controller } from "../logic/logic";
+import NavBar from "./components/NavBar.vue";
+import { controller } from "./logic/logic";
 import {
   StatutParticipant,
   StatutParticipantLabels,
@@ -224,16 +223,15 @@ import {
   type IdCamp,
   type Participant,
   type ParticipantCamp,
-} from "../logic/api";
+} from "./logic/api";
 import { buildPseudoEvents, Camps, Formatters, Personnes } from "@/utils";
-import ParticipantsEditCard from "../components/ParticipantsEditCard.vue";
-import FinancesCard from "../components/FinancesCard.vue";
-import JoomeoCard from "../components/JoomeoCard.vue";
-import FichessanitairesCard from "../components/FichessanitairesCard.vue";
-import SondagesCard from "../components/SondagesCard.vue";
-import DocumentsCard from "../components/DocumentsCard.vue";
+import ParticipantsEditCard from "./components/ParticipantsEditCard.vue";
+import FinancesCard from "./components/FinancesCard.vue";
+import JoomeoCard from "./components/JoomeoCard.vue";
+import FichessanitairesCard from "./components/FichessanitairesCard.vue";
+import SondagesCard from "./components/SondagesCard.vue";
+import DocumentsCard from "./components/DocumentsCard.vue";
 import { endpoints } from "@/clients/directeurs/logic/logic";
-const router = useRouter();
 
 // id token
 const token = ref("");
