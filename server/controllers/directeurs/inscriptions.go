@@ -22,7 +22,7 @@ func (ct *Controller) InscriptionsGet(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-// sortParticipants affiche les participants du camp en premier
+// sortParticipants affiche les participants du séjour en premier
 func sortParticipants(insc logic.Inscription, user cps.IdCamp) {
 	slices.SortFunc(insc.Participants, func(a, b cps.ParticipantCamp) int {
 		if a.Camp.Id == user {

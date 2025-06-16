@@ -58,7 +58,7 @@
             <v-row>
               <v-col cols="2" align-self="center">
                 <v-tooltip
-                  :text="`${equipier.Personne} a son anniveraire pendant le camp !`"
+                  :text="`${equipier.Personne} a son anniveraire pendant le séjour !`"
                 >
                   <template #activator="{ props }">
                     <v-icon v-bind="props" color="pink"

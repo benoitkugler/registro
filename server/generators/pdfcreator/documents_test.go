@@ -260,7 +260,7 @@ const lettre1 = `
 <p>Pensez également à remplir la fiche sanitaire...</p>
 <p>Lors de transports en bus et des sorties extérieures, des masques grand public seront fournis aux ados. inutile de venir avec (sauf si votre ado voyage en train pour venir au camp...).</p>
 <p>Vous trouverez également en pièce jointe une liste de vêtements et de matériel. Cette liste est non exhaustive mais la place dans les tentes sera réduite (car les bagages devront être rangés dans la tente où dormiront les ados afin d&#39;éviter tout échange de vêtement ou de matériel...) donc ne pas prendre de trop gros bagages... Aucun service de lingerie ne fonctionnera mais les ados pourront laver leurs vêtements à la main si nécessaire...</p>
-<p>Nous allons créer un groupe WhatsApp pour donner facilement des nouvelles quotidiennes durant le camp. merci de m&#39;indiquer le numéro de téléphone à utiliser.</p>
+<p>Nous allons créer un groupe WhatsApp pour donner facilement des nouvelles quotidiennes durant le séjour. merci de m&#39;indiquer le numéro de téléphone à utiliser.</p>
 <p>Les téléphones des ados seront mis en consigne au début du séjour et ne seront donnés qu&#39;à certains moments : merci de bien prévenir vos ados de ce point !</p>
 <p>Je reste disponible en cas de questions !</p>
 <p>A très bientôt !</p>

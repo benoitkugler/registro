@@ -10,7 +10,7 @@
       :to="{ path: '/camps' }"
       color="primary"
     >
-      Camps
+      Séjours
     </v-list-item>
     <v-list-item
       prepend-icon="mdi-calendar-multiple-check"

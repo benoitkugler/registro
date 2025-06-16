@@ -263,7 +263,7 @@ func (p pc) duree() int {
 	return p.Camp.Duree
 }
 
-// prixBase renvoie le prix du camp, en prenant en compte une éventuelle option et le quotient familial
+// prixBase renvoie le prix du séjour, en prenant en compte une éventuelle option et le quotient familial
 // une courte description est aussi renvoyée
 func (p pc) prixBase() (cps.Montant, string) {
 	optPart := p.Participant.OptionPrix

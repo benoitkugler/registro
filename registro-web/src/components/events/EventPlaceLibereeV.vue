@@ -8,7 +8,7 @@
     <a href="">
       {{ props.content.ParticipantLabel }}
     </a>
-    s'est libérée sur le camp <a href=""> {{ props.content.CampLabel }} </a>.
+    s'est libérée sur le séjour <a href=""> {{ props.content.CampLabel }} </a>.
   </EventItem>
 </template>
 

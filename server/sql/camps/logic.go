@@ -69,7 +69,7 @@ func (stats *StatistiquesInscrits) add(p ParticipantPersonne) {
 // propriété d'un séjour nécessitant la liste des inscrits.
 type CampLoader struct {
 	Camp         Camp
-	participants Participants // liste (exacte) des participants du camp
+	participants Participants // liste (exacte) des participants du séjour
 	// Doit contenir au moins les participants
 	personnes pr.Personnes
 }
@@ -147,7 +147,7 @@ func (cd *Camp) restePlace(stats StatistiquesInscrits, participants []pr.Personn
 }
 
 // keepEquilibreGF renvoie `true` si l'ajout des [participants]
-// ne perturbe pas l'équilibre G/F (ou si le camp ne demande pas d'équilibre).
+// ne perturbe pas l'équilibre G/F (ou si le séjour ne demande pas d'équilibre).
 func (cd *Camp) keepEquilibreGF(stats StatistiquesInscrits, participants []pr.Personne) bool {
 	if !cd.NeedEquilibreGF {
 		return true
@@ -214,7 +214,7 @@ func (cp *Camp) Plage() sh.Plage { return sh.Plage{From: cp.DateDebut, Duree: cp
 
 func (cp *Camp) DateFin() sh.Date { return cp.Plage().To() }
 
-// IsPassedBy renvoie `true` si le camp est
+// IsPassedBy renvoie `true` si le séjour est
 // passé d'au moins [jours].
 func (cp *Camp) IsPassedBy(jours int) bool {
 	const oneDay = 24 * time.Hour
@@ -300,7 +300,7 @@ func (gs Groupes) TrouveGroupe(dateNaissance shared.Date) (Groupe, bool) {
 }
 
 // Directeur renvoie le directeur (unique par construction)
-// du camp donné, où false s'il n'existe pas.
+// du séjour donné, où false s'il n'existe pas.
 func (equipiers Equipiers) Directeur() (Equipier, bool) {
 	for _, eq := range equipiers {
 		if eq.Roles.Is(Direction) {

@@ -98,6 +98,16 @@
             ></v-list-item>
 
             <v-divider thickness="1"></v-divider>
+
+            <v-list-item
+              title="Envoyer le sondage"
+              subtitle="de fin de séjour"
+              prepend-icon="mdi-comment-quote"
+              @click="emit('send-sondage')"
+            >
+            </v-list-item>
+
+            <v-divider thickness="1"></v-divider>
             <v-list-item
               prepend-icon="mdi-delete"
               :disabled="props.camp.Stats.Inscriptions > 0"
@@ -126,6 +136,7 @@ const emit = defineEmits<{
   (e: "edit-taux"): void;
   (e: "delete"): void;
   (e: "show-documents"): void;
+  (e: "send-sondage"): void;
 }>();
 
 const allAttente = computed(
@@ -134,7 +145,7 @@ const allAttente = computed(
 
 const showDelete = ref(false);
 
-/** renvoie la couleur de la période du camp */
+/** renvoie la couleur de la période du séjour */
 const periodeColor = computed(() => {
   const month = new Date(props.camp.Camp.Camp.DateDebut).getUTCMonth() + 1;
   switch (month) {

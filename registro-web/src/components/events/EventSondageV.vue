@@ -6,7 +6,7 @@
   >
     <v-row>
       <v-col align-self="center">
-        Un sondage concernant le camp
+        Un sondage concernant le séjour
         {{ props.content.CampLabel }}
         a été envoyé.
       </v-col>

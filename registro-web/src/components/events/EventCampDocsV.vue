@@ -1,11 +1,7 @@
 <template>
-  <EventItem
-    icon="mdi-file-document"
-    color="light-blue"
-    :time="props.event.Created"
-  >
-    Les documents du camp <a href=""> {{ props.content.CampLabel }} </a> ont été
-    envoyés.
+  <EventItem icon="mdi-mail" color="light-blue" :time="props.event.Created">
+    Les documents du séjour <a href=""> {{ props.content.CampLabel }} </a> ont
+    été envoyés.
   </EventItem>
 </template>
 

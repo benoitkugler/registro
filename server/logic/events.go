@@ -267,7 +267,7 @@ func loadEventsContent(db evs.DB, ids ...evs.IdEvent) (out eventsContent, _ erro
 			idCamps = append(idCamps, m.IdCamp.Id)
 		}
 	}
-	idCamps = slices.Concat(idCamps, tmp1bis.IdCamps(), tmp5.IdCamps(), out.participants.IdCamps())
+	idCamps = slices.Concat(idCamps, tmp1bis.IdCamps(), tmp2.IdCamps(), tmp5.IdCamps(), out.participants.IdCamps())
 	out.camps, err = cps.SelectCamps(db, idCamps...)
 	if err != nil {
 		return eventsContent{}, utils.SQLError(err)

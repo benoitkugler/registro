@@ -13,7 +13,7 @@
     <v-card-text>
       <v-row>
         <v-col cols="3">Participant</v-col>
-        <v-col cols="2" class="text-center">Prix du camp</v-col>
+        <v-col cols="2" class="text-center">Prix du séjour</v-col>
         <v-col cols="2" class="text-center">Prix avec option</v-col>
         <v-col cols="3" class="text-center">Aides extérieures</v-col>
         <v-col cols="2" class="text-right">Sous-total</v-col>

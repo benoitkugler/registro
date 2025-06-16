@@ -86,7 +86,7 @@ type EventMessageVu struct {
 	guard EventKind `gomacro-sql-guard:"#[EventKind.Message]"`
 }
 
-// EventCampDocs indique le camp concerné par l'envoi des documents.
+// EventCampDocs indique le séjour concerné par l'envoi des documents.
 //
 // gomacro:SQL ADD UNIQUE(IdEvent)
 // gomacro:SQL ADD FOREIGN KEY (IdEvent, guard) REFERENCES Event(Id,Kind) ON DELETE CASCADE
@@ -97,7 +97,7 @@ type EventCampDocs struct {
 	guard EventKind `gomacro-sql-guard:"#[EventKind.CampDocs]"`
 }
 
-// EventSondage indique le camp concerné par le sondage.
+// EventSondage indique le séjour concerné par le sondage.
 //
 // gomacro:SQL ADD UNIQUE(IdEvent)
 // gomacro:SQL ADD FOREIGN KEY (IdEvent, guard) REFERENCES Event(Id,Kind) ON DELETE CASCADE

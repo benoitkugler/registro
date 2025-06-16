@@ -25,7 +25,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// Une modification après J-7 (début du camp)
+// Une modification après J-7 (début du séjour)
 // entraine une notification par email
 const updateLimitation = 7 * 24 * time.Hour
 
@@ -367,7 +367,7 @@ type SondageExt struct {
 
 // Renvoie les sondages existant.
 // Pour les séjours qui n'en n'ont pas encore, on renvoie
-// un sondage vide si le camp est "ouvert au sondage" pour le dossier,
+// un sondage vide si le séjour est "ouvert au sondage" pour le dossier,
 // et si au moins un participant est en liste principal.
 func (ct *Controller) loadSondages(id ds.IdDossier) ([]SondageExt, error) {
 	dossier, err := logic.LoadDossier(ct.db, id)

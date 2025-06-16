@@ -30,9 +30,9 @@ const (
 	AStatuer StatutParticipant = iota // A statuer
 	// définitivment refusé (non concerné par une place libérée)
 	Refuse // Refusé définitivement
-	// le profil ne suit pas les conditions du camp
+	// le profil ne suit pas les conditions du séjour
 	AttenteProfilInvalide // Profil limite
-	// le camp est déjà complet
+	// le séjour est déjà complet
 	AttenteCampComplet // Camp complet
 	// une place s'est libérée et on attend une confirmation
 	EnAttenteReponse // En attente de réponse
@@ -169,7 +169,7 @@ type OptionPrixCamp struct {
 
 	Statuts []PrixParStatut
 
-	// Prix de chaque jour (0-based) du camp (souvent constant), en centimes.
+	// Prix de chaque jour (0-based) du séjour (souvent constant), en centimes.
 	// L'unité est celle du séjour associé.
 	// Le champ [Prix] du séjour peut être inférieur à la somme
 	// pour une remise.
@@ -178,13 +178,13 @@ type OptionPrixCamp struct {
 
 type PrixParStatut struct {
 	Id          int16
-	Prix        int // prix en centimes (l'unité est celle du camp)
+	Prix        int // prix en centimes (l'unité est celle du séjour)
 	Label       string
 	Description string // longue description
 }
 
 // OptionPrixParticipant répond à OptionPrixCamp. L'option est active si :
-//   - elle est active dans le camp
+//   - elle est active dans le séjour
 //   - elle est non nulle dans le participant
 type OptionPrixParticipant struct {
 	IdStatut int16
@@ -372,7 +372,7 @@ const (
 )
 
 // PresenceOffsets encode une différence par rapport
-// à une plage de référence (celle du camp).
+// à une plage de référence (celle du séjour).
 //
 // La valeur zéro correspond à la date par défaut.
 type PresenceOffsets struct {

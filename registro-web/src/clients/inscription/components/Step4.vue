@@ -56,7 +56,7 @@
   >
     <v-card-text style="line-height: 2em">
       Je m’engage à m’intéresser et à respecter la foi en Jésus-Christ. <br />
-      Je m’engage à avoir une attitude constructive dans le camp :
+      Je m’engage à avoir une attitude constructive dans le séjour :
       <ul class="px-4">
         <li>en coopérant avec les encadrants et dans l’équipe</li>
         <li>en participant activement aux activités organisées</li>
@@ -86,7 +86,7 @@
         v-if="settings.ShowFondSoutien"
         color="primary"
         v-model="fondSoutien"
-        label="Je souhaite être contacté par le fond de soutien pour éviter que le prix du camp ne soit un obstacle à l'inscription."
+        label="Je souhaite être contacté par le fond de soutien pour éviter que le prix du séjour ne soit un obstacle à l'inscription."
       >
       </v-checkbox>
 

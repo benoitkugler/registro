@@ -1,5 +1,5 @@
 <template>
-  <v-card title="Editer le camp">
+  <v-card title="Editer le séjour">
     <v-card-text>
       <v-form>
         <v-row>

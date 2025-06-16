@@ -235,7 +235,7 @@ func match(dossier logic.DossierFinance,
 			hasAllAttente                              = true
 		)
 		for _, part := range dossier.Participants {
-			// ignore les participants en dehors du camp sélectionné
+			// ignore les participants en dehors du séjour sélectionné
 			if idCamp.Valid && idCamp.Id != part.IdCamp {
 				continue
 			}

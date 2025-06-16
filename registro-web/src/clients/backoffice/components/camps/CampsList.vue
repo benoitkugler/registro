@@ -91,6 +91,12 @@
         Aucun camp ne correspond aux filtres actuels.
       </i>
 
+      <v-progress-linear
+        v-if="isSendingSondage"
+        indeterminate
+        color="secondary"
+      ></v-progress-linear>
+
       <CampHeaderRow
         v-for="(camp, index) in pageList"
         :key="index"
@@ -100,6 +106,7 @@
         @edit-taux="toEditTaux = camp"
         @delete="deleteCamp(camp)"
         @show-documents="showDocumentsFor = camp"
+        @send-sondage="sendSondage(camp.Camp.Camp.Id)"
       ></CampHeaderRow>
 
       <v-pagination :length="pagesCount" v-model="currentPage"></v-pagination>
@@ -381,4 +388,13 @@ async function openInsc() {
 }
 
 const showDocumentsFor = ref<CampHeader | null>(null);
+
+const isSendingSondage = ref(false);
+async function sendSondage(idCamp: IdCamp) {
+  isSendingSondage.value = true;
+  const res = await controller.EventsSendSondages({ idCamp });
+  isSendingSondage.value = false;
+  if (res === undefined) return;
+  controller.showMessage("Sondage envoyé avec succès.");
+}
 </script>

@@ -1,9 +1,5 @@
 <template>
   <v-row no-gutters class="ma-2">
-    <!-- create dossier dialog -->
-    <v-dialog v-model="showCreateDossier" max-width="400px">
-      <CreateDossierCard @create="createDossier"></CreateDossierCard>
-    </v-dialog>
     <!-- liste de recherche -->
     <v-col cols="6">
       <v-card
@@ -17,6 +13,21 @@
         <template #append>
           <v-btn icon size="small" @click="showCreateDossier = true">
             <v-icon color="green">mdi-plus</v-icon>
+          </v-btn>
+          <v-divider thickness="1" vertical class="mx-2"></v-divider>
+          <v-btn size="small">
+            Actions
+            <v-menu activator="parent">
+              <v-list>
+                <v-list-item
+                  title="Envoyer les documents"
+                  subtitle="d'un séjour"
+                  prepend-icon="mdi-mail"
+                  @click="showSendDocuments = true"
+                >
+                </v-list-item>
+              </v-list>
+            </v-menu>
           </v-btn>
         </template>
 
@@ -62,6 +73,19 @@
         Sélectionner un dossier...
       </div>
     </v-col>
+
+    <!-- create dossier dialog -->
+    <v-dialog v-model="showCreateDossier" max-width="400px">
+      <CreateDossierCard @create="createDossier"></CreateDossierCard>
+    </v-dialog>
+
+    <!-- send documents -->
+    <v-dialog v-model="showSendDocuments" max-width="1000px">
+      <SendDocumentsCampCard
+        :camps="allCamps"
+        @send="sendDocumentsCamp"
+      ></SendDocumentsCampCard>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -74,8 +98,6 @@ import {
   type DossierDetails,
   type Dossier,
   type AidesCreateIn,
-  type Structureaides,
-  type IdAide,
   type Aide,
   type Participant,
   type ParticipantsCreateIn,
@@ -86,12 +108,15 @@ import {
   type DossiersMergeIn,
   type Event,
   type DossierHeader,
+  type IdAide,
+  type IdCamp,
 } from "../../logic/api";
 import { controller, emptyQuery, idQuery } from "../../logic/logic";
 import DossierDetailsPannel from "./dossiers/DossierDetailsPannel.vue";
 import CreateDossierCard from "./dossiers/CreateDossierCard.vue";
 import DossierList from "./dossiers/DossierList.vue";
 import { watch } from "vue";
+import SendDocumentsCampCard from "./dossiers/SendDocumentsCampCard.vue";
 
 const props = defineProps<{
   initialDossier?: IdDossier;
@@ -369,5 +394,17 @@ async function sendFacture() {
   if (res === undefined) return;
   controller.showMessage("Demande de règlement envoyé avec succès.");
   ensureDossier();
+}
+
+const showSendDocuments = ref(false);
+async function sendDocumentsCamp(idCamp: IdCamp, idDossiers: IdDossier[]) {
+  const res = await controller.EventsSendDocumentsCamp({
+    IdCamp: idCamp,
+    IdDossiers: idDossiers,
+  });
+  showSendDocuments.value = false;
+  if (res === undefined) return;
+  ensureDossier();
+  controller.showMessage("Documents du séjour envoyés avec succès.");
 }
 </script>
