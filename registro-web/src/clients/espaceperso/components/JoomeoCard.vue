@@ -9,7 +9,7 @@
     v-else-if="data.Loggin"
     class="mx-auto"
     title="Identifiants et albums Joomeo"
-    subtitle="Retrouvez les photos prises dans nos séjours"
+    subtitle="Retrouvez les photos prises dans nos séjours."
     min-width="600px"
   >
     <v-card-text>
