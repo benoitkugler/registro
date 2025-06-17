@@ -12,11 +12,13 @@
       </div>
     </template>
     <v-row justify="space-between" no-gutters>
-      <v-col align-self="center">
+      <v-col align-self="center" cols="10">
         <slot></slot>
       </v-col>
-      <v-col align-self="center" cols="2" class="text-grey ml-4">
-        {{ Formatters.time(props.time) }}
+      <v-col align-self="center" cols="2" class="text-grey pl-2">
+        <small>
+          {{ Formatters.time(props.time) }}
+        </small>
       </v-col>
     </v-row>
   </v-timeline-item>

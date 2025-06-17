@@ -44,7 +44,7 @@
       </v-card>
     </v-col>
     <!-- pannel de détails -->
-    <v-col>
+    <v-col cols="6">
       <DossierDetailsPannel
         v-if="dossierDetails != null"
         :dossier="dossierDetails"

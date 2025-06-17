@@ -19,14 +19,16 @@
       </v-card>
     </v-dialog>
     <v-row no-gutters>
-      <v-col align-self="center">
+      <v-col align-self="center" cols="11">
         <v-card :class="colorClass">
           <v-card-text class="pa-1">
-            <pre>{{ props.content.Message.Contenu }}</pre>
+            <pre style="white-space: pre-wrap">{{
+              props.content.Message.Contenu
+            }}</pre>
           </v-card-text>
         </v-card>
       </v-col>
-      <v-col cols="auto" align-self="center">
+      <v-col cols="1" align-self="center">
         <v-btn
           v-if="allowDelete"
           icon

@@ -301,7 +301,7 @@
           <v-spacer></v-spacer>
           <v-btn
             :disabled="!messageContenu.length"
-            @click="
+            @click.once="
               emit('sendMessage', messageContenu);
               showMessage = false;
             "
