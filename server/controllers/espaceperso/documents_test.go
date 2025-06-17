@@ -49,12 +49,12 @@ func TestDocuments(t *testing.T) {
 
 	ct := NewController(db.DB, crypto.Encrypter{}, config.SMTP{}, config.Asso{}, fs.NewFileSystem(os.TempDir()), config.Joomeo{})
 
-	docs, err := ct.loadDocuments(dossier.Id)
+	docs, err := ct.markAndloadDocuments(dossier.Id)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(docs.FilesToRead) == 1)
 	tu.Assert(t, len(docs.FilesToUpload) == 2)
 	tu.Assert(t, len(docs.FilesToUpload[0].Demandes[0].Uploaded) == 0)
-	tu.Assert(t, docs.ToFillCount == 2)
+	tu.Assert(t, docs.ToReadOrFillCount == 2)
 
 	_, err = ct.uploadDocument(dossier.Id, d1.Id, pe4.Id, tu.PngData, "test.png")
 	tu.AssertErr(t, err)
@@ -62,8 +62,8 @@ func TestDocuments(t *testing.T) {
 	_, err = ct.uploadDocument(dossier.Id, d1.Id, pe1.Id, tu.PngData, "test.png")
 	tu.AssertNoErr(t, err)
 
-	docs, err = ct.loadDocuments(dossier.Id)
+	docs, err = ct.markAndloadDocuments(dossier.Id)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(docs.FilesToUpload[0].Demandes[0].Uploaded) == 1)
-	tu.Assert(t, docs.ToFillCount == 1)
+	tu.Assert(t, docs.ToReadOrFillCount == 1)
 }

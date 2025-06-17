@@ -3,6 +3,7 @@ package espaceperso
 import (
 	"errors"
 	"slices"
+	"time"
 
 	filesAPI "registro/controllers/files"
 	"registro/crypto"
@@ -17,12 +18,12 @@ import (
 )
 
 type Documents struct {
-	FilesToRead   []FilesCamp
-	FilesToUpload []DemandesPersonne
-	ToFillCount   int
+	FilesToRead       []FilesCamp
+	FilesToUpload     []DemandesPersonne
+	ToReadOrFillCount int
 }
 
-func (docs *Documents) setToFillCount() {
+func (docs *Documents) setToReadOrFillCount(lastLoaded time.Time, events logic.Events) {
 	toFill := 0
 	for _, personne := range docs.FilesToUpload {
 		for _, demande := range personne.Demandes {
@@ -31,10 +32,30 @@ func (docs *Documents) setToFillCount() {
 			}
 		}
 	}
-	docs.ToFillCount = toFill
+
+	// heuristic to count the documents to read
+	campsToRead := make(utils.Set[cps.IdCamp])
+	for content := range logic.IterEventsBy[logic.CampDocs](events) {
+		sendAt := content.Event.Created
+		// check if the docs have been sent AFTER the last time the parent
+		// was here
+		if sendAt.After(lastLoaded) {
+			campsToRead.Add(content.Content.IdCamp)
+		}
+	}
+	// sum, restricted to the camps
+	toRead := 0
+	for _, camp := range docs.FilesToRead {
+		if campsToRead.Has(camp.idCamp) {
+			toRead += len(camp.Files) + len(camp.Generated)
+		}
+	}
+
+	docs.ToReadOrFillCount = toRead + toFill
 }
 
 type FilesCamp struct {
+	idCamp    cps.IdCamp
 	Camp      string
 	Generated []filesAPI.GeneratedFile
 	Files     []logic.PublicFile
@@ -58,19 +79,34 @@ func (ct *Controller) LoadDocuments(c echo.Context) error {
 	if err != nil {
 		return errors.New("Lien invalide.")
 	}
-	out, err := ct.loadDocuments(id)
+	out, err := ct.markAndloadDocuments(id)
 	if err != nil {
 		return err
 	}
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) loadDocuments(id ds.IdDossier) (Documents, error) {
+// also update the [LastLoadDocuments] dossier field
+func (ct *Controller) markAndloadDocuments(id ds.IdDossier) (Documents, error) {
 	dossier, err := logic.LoadDossier(ct.db, id)
 	if err != nil {
 		return Documents{}, err
 	}
-	return loadDocuments(ct.db, ct.key, dossier)
+
+	// start by updating last seen so that
+	// the notification are updated properly
+	dossier.Dossier.LastLoadDocuments = time.Now()
+	_, err = dossier.Dossier.Update(ct.db)
+	if err != nil {
+		return Documents{}, utils.SQLError(err)
+	}
+
+	out, err := loadDocuments(ct.db, ct.key, dossier)
+	if err != nil {
+		return Documents{}, err
+	}
+
+	return out, nil
 }
 
 func loadDocuments(db ds.DB, key crypto.Encrypter, dossier logic.Dossier) (Documents, error) {
@@ -87,7 +123,7 @@ func loadDocuments(db ds.DB, key crypto.Encrypter, dossier logic.Dossier) (Docum
 
 	var out Documents
 	for _, camp := range camps {
-		item := FilesCamp{Camp: camp.Label()}
+		item := FilesCamp{idCamp: camp.Id, Camp: camp.Label()}
 		// other files
 		for _, link := range byCamp[camp.Id] {
 			if (link.IsLettre && camp.DocumentsToShow.LettreDirecteur) ||
@@ -158,7 +194,7 @@ func loadDocuments(db ds.DB, key crypto.Encrypter, dossier logic.Dossier) (Docum
 		}
 	}
 
-	out.setToFillCount()
+	out.setToReadOrFillCount(dossier.Dossier.LastLoadDocuments, dossier.Events)
 	return out, nil
 }
 

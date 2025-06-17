@@ -46,30 +46,53 @@
       <v-col align-self="center" cols="5">
         <v-card subtitle="Participants">
           <template #append>
-            <v-btn @click="showDocuments = true" size="small" class="mr-1">
+            <v-btn size="small" class="mr-1">
               <template #prepend>
                 <v-icon>mdi-folder</v-icon>
               </template>
               <v-badge
-                :color="data.DocumentsToFillCount ? 'pink' : 'transparent'"
-                :content="data.DocumentsToFillCount || ''"
+                :color="allDocumentsToFillCount ? 'pink' : 'transparent'"
+                :content="allDocumentsToFillCount || ''"
                 floating
               >
                 Documents
               </v-badge>
+
+              <v-menu activator="parent">
+                <v-list>
+                  <v-list-item
+                    title="Documents du séjour"
+                    subtitle="Lettre du directeur, ..."
+                    prepend-icon="mdi-mail"
+                    @click="showDocuments = true"
+                  >
+                    <template #append v-if="data.DocumentsToReadOrFillCount">
+                      <v-badge
+                        color="pink"
+                        :content="data.DocumentsToReadOrFillCount"
+                        inline
+                      >
+                      </v-badge>
+                    </template>
+                  </v-list-item>
+                  <v-list-item
+                    title="Fiches sanitaires"
+                    prepend-icon="mdi-pill"
+                    @click="showFichesantaires = true"
+                  >
+                    <template #append v-if="data.FichesanitaireToFillCount">
+                      <v-badge
+                        color="pink"
+                        :content="data.FichesanitaireToFillCount"
+                        inline
+                      >
+                      </v-badge>
+                    </template>
+                  </v-list-item>
+                </v-list>
+              </v-menu>
             </v-btn>
-            <v-btn @click="showFichesantaires = true" size="small" class="mr-1">
-              <template #prepend>
-                <v-icon>mdi-pill</v-icon>
-              </template>
-              <v-badge
-                :color="data.FichesanitaireToFillCount ? 'pink' : 'transparent'"
-                :content="data.FichesanitaireToFillCount || ''"
-                floating
-              >
-                Fiches sanitaires
-              </v-badge>
-            </v-btn>
+
             <!-- TODO -->
             <!-- <v-btn @click="showEditOptions = true" size="small">
               <template #prepend>
@@ -202,7 +225,7 @@
     <DocumentsCard
       :token="token"
       @close="showDocuments = false"
-      @update-notifs="v => data!.DocumentsToFillCount = v"
+      @update-notifs="v => data!.DocumentsToReadOrFillCount = v"
     ></DocumentsCard>
   </v-dialog>
 </template>
@@ -247,6 +270,13 @@ async function fetchData() {
 
 const events = computed(() =>
   data.value == null ? [] : buildPseudoEvents(data.value.Dossier, "espaceperso")
+);
+
+const allDocumentsToFillCount = computed(() =>
+  data.value
+    ? data.value.DocumentsToReadOrFillCount +
+      data.value.FichesanitaireToFillCount
+    : 0
 );
 
 const showCreateMessage = ref(false);

@@ -96,7 +96,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: "updateNotifs", toFill: Int): void;
+  (e: "updateNotifs", toReadOrFill: Int): void;
 }>();
 
 onMounted(fetchData);
@@ -105,7 +105,8 @@ const data = ref<Documents | null>(null);
 async function fetchData() {
   const res = await controller.LoadDocuments({ token: props.token });
   if (res === undefined) return;
-  data.value = res || [];
+  data.value = res;
+  emit("updateNotifs", res.ToReadOrFillCount);
 }
 
 async function uploadDocument(
@@ -121,7 +122,7 @@ async function uploadDocument(
   if (res === undefined) return;
   controller.showMessage("Document téléversé avec succès. Merci !");
   await fetchData();
-  emit("updateNotifs", data.value!.ToFillCount);
+  emit("updateNotifs", data.value!.ToReadOrFillCount);
 }
 
 async function deleteDocument(file: PublicFile) {
@@ -129,6 +130,6 @@ async function deleteDocument(file: PublicFile) {
   if (res === undefined) return;
   controller.showMessage("Document supprimé avec succès.");
   await fetchData();
-  emit("updateNotifs", data.value!.ToFillCount);
+  emit("updateNotifs", data.value!.ToReadOrFillCount);
 }
 </script>

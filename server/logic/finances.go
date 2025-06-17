@@ -1,6 +1,7 @@
 package logic
 
 import (
+	"errors"
 	"fmt"
 
 	cps "registro/sql/camps"
@@ -25,6 +26,9 @@ func LoadDossiersFinance(db ds.DB, id ds.IdDossier) (DossierFinance, error) {
 	ld, err := LoadDossiersFinances(db, id)
 	if err != nil {
 		return DossierFinance{}, err
+	}
+	if _, has := ld.Dossiers.Dossiers[id]; !has {
+		return DossierFinance{}, errors.New("Dossier introuvable")
 	}
 	return ld.For(id), nil
 }

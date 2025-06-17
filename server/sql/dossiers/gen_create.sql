@@ -13,7 +13,7 @@ CREATE TABLE dossiers (
     DemandeFondSoutien boolean NOT NULL,
     IsValidated boolean NOT NULL,
     MomentInscription timestamp(0) with time zone NOT NULL,
-    LastSeenEspaceperso timestamp(0) with time zone NOT NULL,
+    LastLoadDocuments timestamp(0) with time zone NOT NULL,
     KeyV1 text NOT NULL
 );
 

@@ -371,7 +371,7 @@ func (ct *Controller) loadMessages(idCamp cps.IdCamp) (Messages, error) {
 	for idDossier := range dossiers.Dossiers {
 		dossier := dossiers.For(idDossier)
 
-		out.Messages = slices.AppendSeq(out.Messages, logic.IterContentBy[logic.Message](dossier.Events))
+		out.Messages = slices.AppendSeq(out.Messages, logic.IterEventsBy[logic.Message](dossier.Events))
 
 		item := DossierPersonnes{
 			Responsable: dossier.Responsable().NOMPrenom(),

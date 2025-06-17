@@ -18,6 +18,6 @@ func TestIterEvents(t *testing.T) {
 		{Content: Supprime{}},
 		{Content: Facture{}},
 	}
-	tu.Assert(t, len(slices.Collect(IterContentBy[Supprime](l))) == 4)
-	tu.Assert(t, len(slices.Collect(IterContentBy[Message](l))) == 0)
+	tu.Assert(t, len(slices.Collect(IterEventsBy[Supprime](l))) == 4)
+	tu.Assert(t, len(slices.Collect(IterEventsBy[Message](l))) == 0)
 }

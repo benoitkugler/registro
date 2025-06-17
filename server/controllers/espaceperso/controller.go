@@ -60,10 +60,10 @@ func (ct *Controller) Load(c echo.Context) error {
 }
 
 type Data struct {
-	Dossier                   logic.DossierExt
-	DocumentsToFillCount      int // number to fill
-	FichesanitaireToFillCount int
-	IsPaiementOpen            bool
+	Dossier                    logic.DossierExt
+	DocumentsToReadOrFillCount int // number to read or fill
+	FichesanitaireToFillCount  int
+	IsPaiementOpen             bool
 }
 
 func (ct *Controller) load(id ds.IdDossier) (Data, error) {
@@ -81,7 +81,7 @@ func (ct *Controller) load(id ds.IdDossier) (Data, error) {
 	}
 	return Data{
 		dossier.Publish(ct.key),
-		documents.ToFillCount,
+		documents.ToReadOrFillCount,
 		fiches.ToFillCount,
 		false, // TODO
 	}, nil
@@ -389,7 +389,7 @@ func (ct *Controller) loadSondages(id ds.IdDossier) ([]SondageExt, error) {
 		campsToAdd.Delete(sondage.IdCamp)
 	}
 	// 2 : complete with "open" camps
-	for event := range logic.IterContentBy[logic.Sondage](dossier.Events) {
+	for event := range logic.IterEventsBy[logic.Sondage](dossier.Events) {
 		if !campsToAdd.Has(event.Content.IdCamp) { // already included
 			continue
 		}

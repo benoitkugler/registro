@@ -68,7 +68,8 @@ type Dossier struct {
 	// (ou de la création pour les ajouts manuels)
 	MomentInscription time.Time
 
-	LastSeenEspaceperso time.Time // connection sur l'espace personnel
+	// Dernière visualisation des documents sur l'espace personnel
+	LastLoadDocuments time.Time
 
 	KeyV1 string // Deprecated: for backward compatibility only
 }

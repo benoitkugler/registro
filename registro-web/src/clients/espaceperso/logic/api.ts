@@ -16,7 +16,7 @@ export type Time = string & { __opaque__: "Time" };
 // registro/controllers/espaceperso.Data
 export interface Data {
   Dossier: DossierExt;
-  DocumentsToFillCount: Int;
+  DocumentsToReadOrFillCount: Int;
   FichesanitaireToFillCount: Int;
   IsPaiementOpen: boolean;
 }
@@ -36,7 +36,7 @@ export interface DemandesPersonne {
 export interface Documents {
   FilesToRead: FilesCamp[] | null;
   FilesToUpload: DemandesPersonne[] | null;
-  ToFillCount: Int;
+  ToReadOrFillCount: Int;
 }
 // registro/controllers/espaceperso.FichesanitaireExt
 export interface FichesanitaireExt {
@@ -474,7 +474,7 @@ export interface Dossier {
   DemandeFondSoutien: boolean;
   IsValidated: boolean;
   MomentInscription: Time;
-  LastSeenEspaceperso: Time;
+  LastLoadDocuments: Time;
   KeyV1: string;
 }
 export type IdDossier = number & { __opaque__: "IdDossier" };

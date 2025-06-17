@@ -1,6 +1,7 @@
 package logic
 
 import (
+	"errors"
 	"fmt"
 	"html/template"
 	"slices"
@@ -30,6 +31,9 @@ func LoadDossier(db ds.DB, id ds.IdDossier) (Dossier, error) {
 	ld, err := LoadDossiers(db, id)
 	if err != nil {
 		return Dossier{}, err
+	}
+	if _, has := ld.Dossiers[id]; !has {
+		return Dossier{}, errors.New("Dossier introuvable")
 	}
 	return ld.For(id), nil
 }

@@ -35,7 +35,7 @@ type EventExt[T EventContent] struct {
 	Content T
 }
 
-func IterContentBy[T EventContent](evs Events) iter.Seq[EventExt[T]] {
+func IterEventsBy[T EventContent](evs Events) iter.Seq[EventExt[T]] {
 	return func(yield func(EventExt[T]) bool) {
 		for _, ev := range evs {
 			if typed, ok := ev.Content.(T); ok {
@@ -50,7 +50,7 @@ func IterContentBy[T EventContent](evs Events) iter.Seq[EventExt[T]] {
 // UnreadMessagesForBackoffice returns the [Event]s with kind [evs.Message],
 // not yet seen by the backoffice
 func (evs Events) UnreadMessagesForBackoffice() (out []EventExt[Message]) {
-	for ev := range IterContentBy[Message](evs) {
+	for ev := range IterEventsBy[Message](evs) {
 		if ev.Content.Message.Origine != events.FromBackoffice && !ev.Content.Message.VuBackoffice {
 			out = append(out, ev)
 		}
@@ -61,7 +61,7 @@ func (evs Events) UnreadMessagesForBackoffice() (out []EventExt[Message]) {
 // HasSendCampDocuments returns [true] is the documents for the
 // given camp has been sent (at least once)
 func (evs Events) HasSendCampDocuments(idCamp cps.IdCamp) bool {
-	for camp := range IterContentBy[CampDocs](evs) {
+	for camp := range IterEventsBy[CampDocs](evs) {
 		if camp.Content.IdCamp == idCamp {
 			return true
 		}

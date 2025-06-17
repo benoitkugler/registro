@@ -24,7 +24,7 @@ func randDossier() Dossier {
 	s.DemandeFondSoutien = randbool()
 	s.IsValidated = randbool()
 	s.MomentInscription = randtTime()
-	s.LastSeenEspaceperso = randtTime()
+	s.LastLoadDocuments = randtTime()
 	s.KeyV1 = randstring()
 
 	return s
