@@ -30,7 +30,7 @@ const (
 func newStatement(s string) statement {
 	out := statement{content: s}
 	switch {
-	case strings.HasPrefix(s, "CREATE TYPE"):
+	case strings.HasPrefix(s, "CREATE TYPE") || strings.HasPrefix(s, "DROP TYPE"):
 		out.kind = createType
 	case strings.HasPrefix(s, "CREATE TABLE"):
 		out.kind = table

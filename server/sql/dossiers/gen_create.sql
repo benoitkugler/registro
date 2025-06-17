@@ -1,4 +1,6 @@
 -- Code genererated by gomacro/generator/sql. DO NOT EDIT.
+DROP TYPE IF EXISTS Montant;
+
 CREATE TYPE Montant AS (
     Cent integer,
     Currency smallint

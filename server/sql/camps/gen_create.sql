@@ -1,4 +1,6 @@
 -- Code genererated by gomacro/generator/sql. DO NOT EDIT.
+DROP TYPE IF EXISTS PresenceOffsets;
+
 CREATE TYPE PresenceOffsets AS (
     Debut integer,
     Fin integer
