@@ -91,22 +91,17 @@
                 }"
               >
                 <template #append>
-                  <v-tooltip
-                    :text="
-                      StatutParticipantLabels[participant.Participant.Statut]
+                  <v-chip
+                    :prepend-icon="
+                      Formatters.statutParticipant(
+                        participant.Participant.Statut
+                      ).icon
                     "
                   >
-                    <template #activator="{ props: tooltipProps }">
-                      <v-icon
-                        v-bind="tooltipProps"
-                        :icon="
-                          Formatters.statutParticipant(
-                            participant.Participant.Statut
-                          ).icon
-                        "
-                      ></v-icon>
-                    </template>
-                  </v-tooltip>
+                    {{
+                      StatutParticipantLabels[participant.Participant.Statut]
+                    }}
+                  </v-chip>
                 </template>
               </v-list-item>
             </v-list>
