@@ -115,6 +115,12 @@
               >
                 <template #append>
                   <v-chip
+                    variant="elevated"
+                    :color="
+                      Formatters.statutParticipant(
+                        participant.Participant.Statut
+                      ).color
+                    "
                     :prepend-icon="
                       Formatters.statutParticipant(
                         participant.Participant.Statut
