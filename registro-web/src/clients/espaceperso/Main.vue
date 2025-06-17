@@ -157,6 +157,7 @@
                   v-for="event in events"
                   :event="event"
                   @go-to-sondage="(id) => (showSondages = id)"
+                  @go-to-documents="showDocuments = true"
                 >
                 </EventSwitch>
               </v-timeline>
@@ -235,10 +236,13 @@ import { computed, onMounted, ref } from "vue";
 import NavBar from "./components/NavBar.vue";
 import { controller } from "./logic/logic";
 import {
+  EventContentKind,
   StatutParticipant,
   StatutParticipantLabels,
   type Data,
+  type Event,
   type IdCamp,
+  type IdEvent,
   type Participant,
   type ParticipantCamp,
 } from "./logic/api";
@@ -254,11 +258,19 @@ import { endpoints } from "@/clients/directeurs/logic/logic";
 // id token
 const token = ref("");
 
-onMounted(() => {
-  // store ID token
+onMounted(async () => {
   const query = new URLSearchParams(window.location.search);
+  // store ID token
   token.value = query.get("token") || "";
-  fetchData();
+  // also fetch the possibly event linking to the page
+  const fromIdEvent = Number(query.get("idEvent") || 0) as IdEvent;
+  await fetchData();
+  if (!data.value) return;
+  const event = (data.value.Dossier.Events || []).find(
+    (ev) => ev.Id == fromIdEvent
+  );
+  if (!event) return;
+  handleFromEvent(event);
 });
 
 const data = ref<Data | null>(null);
@@ -278,6 +290,17 @@ const allDocumentsToFillCount = computed(() =>
       data.value.FichesanitaireToFillCount
     : 0
 );
+
+function handleFromEvent(event: Event) {
+  switch (event.Content.Kind) {
+    case EventContentKind.CampDocs:
+      showDocuments.value = true;
+      return;
+    default:
+      // TODO
+      return;
+  }
+}
 
 const showCreateMessage = ref(false);
 const createMessageContent = ref("");

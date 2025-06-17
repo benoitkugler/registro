@@ -59,6 +59,8 @@
     "
     :event="props.event.Event"
     :content="props.event.Event.Content.Data"
+    :user="props.event.User"
+    @go-to-documents="(id) => emit('goToDocuments', id)"
   ></EventCampDocsV>
   <EventAttestationV
     v-else-if="
@@ -105,6 +107,7 @@ const emit = defineEmits<{
   (e: "editPaiement", paiement: Paiement): void;
   (e: "deleteMessage", event: Event): void;
   (e: "goToSondage", idCamp: IdCamp): void;
+  (e: "goToDocuments", idCamp: IdCamp): void;
 }>();
 </script>
 
