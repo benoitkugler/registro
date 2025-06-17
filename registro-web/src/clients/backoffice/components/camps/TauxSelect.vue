@@ -1,7 +1,7 @@
 <template>
   <!-- Two modes : SELECT an existing one or CREATE a new one-->
   <v-row>
-    <v-col>
+    <v-col align-self="center">
       <v-select
         v-if="modelValue.Id > 0"
         variant="outlined"
@@ -49,6 +49,9 @@
           ></v-text-field>
         </v-col>
       </v-row>
+    </v-col>
+    <v-col cols="auto">
+      <v-divider thickness="2" vertical class="py-4">ou</v-divider>
     </v-col>
     <v-col align-self="center" cols="auto">
       <v-btn @click="onSwitch">

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"registro/config"
+	"registro/controllers/backoffice"
 	"registro/controllers/directeurs"
 	filesAPI "registro/controllers/files"
 	fsAPI "registro/controllers/files"
@@ -64,6 +65,16 @@ type Data struct {
 	DocumentsToReadOrFillCount int // number to read or fill
 	FichesanitaireToFillCount  int
 	IsPaiementOpen             bool
+	PaiementSettings           PaiementSettings
+}
+
+// PaiementSettings exposes the instruction to
+// pay the bill (which may depend on the asso)
+type PaiementSettings struct {
+	VirementCode          string
+	BankAccounts          [][2]string
+	SupportPaiementByCard bool // true if an external service to pay by CB is available
+	Cheque                config.ChequeSettings
 }
 
 func (ct *Controller) load(id ds.IdDossier) (Data, error) {
@@ -83,7 +94,13 @@ func (ct *Controller) load(id ds.IdDossier) (Data, error) {
 		dossier.Publish(ct.key),
 		documents.ToReadOrFillCount,
 		fiches.ToFillCount,
-		false, // TODO
+		dossier.IsPaiementOpen(),
+		PaiementSettings{
+			backoffice.OffuscateurVirements.Mask(id),
+			ct.asso.BankAccounts(),
+			false, // TODO
+			ct.asso.ChequeSettings,
+		},
 	}, nil
 }
 

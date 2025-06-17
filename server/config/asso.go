@@ -21,6 +21,7 @@ type Asso struct {
 	MailsSettings MailsSettings
 
 	bankNames, bankIBANs []string // displayed in espace perso
+	ChequeSettings       ChequeSettings
 
 	SupportBonsCAF, SupportANCV bool // if true, displayed in inscription form
 	EmailRetraitMedia           string
@@ -59,6 +60,11 @@ var acve = Asso{
 
 	bankNames: []string{"Crédit Mutuel (FR)", "Crédit mutual (CHF)"},
 
+	ChequeSettings: ChequeSettings{
+		Ordre:   "ACVE",
+		Adresse: [2]string{"Centre d'inscriptions - Marie-Pierre Buffet", "27, impasse Vignon - 26150 Chamaloc"},
+	},
+
 	SupportBonsCAF: true, SupportANCV: true,
 	EmailRetraitMedia:  "contact@acve.asso.fr",
 	ShowFondSoutien:    false,
@@ -87,10 +93,20 @@ var repere = Asso{
 
 	bankNames: []string{"Crédit Mutuel (FR)", "Crédit mutual (CHF)"},
 
+	ChequeSettings: ChequeSettings{
+		Ordre:   "ACVE",
+		Adresse: [2]string{"Centre d'inscriptions - Marie-Pierre Buffet", "27, impasse Vignon - 26150 Chamaloc"},
+	},
+
 	SupportBonsCAF: false, SupportANCV: false,
 	EmailRetraitMedia:  "webmaster@lerepere.ch",
 	ShowFondSoutien:    true,
 	ShowCharteConduite: true,
+}
+
+type ChequeSettings struct {
+	Ordre   string
+	Adresse [2]string // nom - adresse
 }
 
 type MailsSettings struct {

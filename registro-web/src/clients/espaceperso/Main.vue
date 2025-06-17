@@ -141,6 +141,7 @@
           :token="token"
           :dossier="data.Dossier"
           :is-paiement-open="data.IsPaiementOpen"
+          :settings="data.PaiementSettings"
           @refresh="fetchData"
         ></FinancesCard>
       </v-col>

@@ -3,6 +3,7 @@
 import type { AxiosResponse } from "axios";
 import Axios from "axios";
 
+export type Ar2_string = [string, string];
 export type Ar4_Int = [Int, Int, Int, Int];
 
 // AAAA-MM-YY date format
@@ -13,12 +14,18 @@ export type Int = number & { __opaque__: "Int" };
 // ISO date-time string
 export type Time = string & { __opaque__: "Time" };
 
+// registro/config.ChequeSettings
+export interface ChequeSettings {
+  Ordre: string;
+  Adresse: Ar2_string;
+}
 // registro/controllers/espaceperso.Data
 export interface Data {
   Dossier: DossierExt;
   DocumentsToReadOrFillCount: Int;
   FichesanitaireToFillCount: Int;
   IsPaiementOpen: boolean;
+  PaiementSettings: PaiementSettings;
 }
 // registro/controllers/espaceperso.DemandePersonne
 export interface DemandePersonne {
@@ -66,6 +73,13 @@ export interface Joomeo {
   Loggin: string;
   Password: string;
   Albums: string[] | null;
+}
+// registro/controllers/espaceperso.PaiementSettings
+export interface PaiementSettings {
+  VirementCode: string;
+  BankAccounts: Ar2_string[] | null;
+  SupportPaiementByCard: boolean;
+  Cheque: ChequeSettings;
 }
 // registro/controllers/espaceperso.SendMessageIn
 export interface SendMessageIn {

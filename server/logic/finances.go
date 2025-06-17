@@ -89,11 +89,32 @@ type DossierFinance struct {
 
 	taux ds.Taux
 
-	aides      map[cps.IdParticipant]cps.Aides // including not validated
+	aides      map[cps.IdParticipant]cps.Aides // exact list, including not validated
 	aidesFiles map[cps.IdAide]fs.File          // enough for [aides]
 	structures cps.Structureaides              // enough for [aides]
 
 	paiements ds.Paiements // liste exacte
+}
+
+// IsPaiementOpen returns [true] if the Espace perso
+// should allow paiements
+// TODO : see https://github.com/benoitkugler/registro/issues/77
+func (de *DossierFinance) IsPaiementOpen() bool {
+	// every participant must have been validated
+	for _, part := range de.Participants {
+		if part.Statut == cps.AStatuer {
+			return false
+		}
+	}
+	// aide en attente de validation
+	for _, aides := range de.aides {
+		for _, aide := range aides {
+			if !aide.Valide {
+				return false
+			}
+		}
+	}
+	return true
 }
 
 // Bilan additionne le prix pour chaque participant et

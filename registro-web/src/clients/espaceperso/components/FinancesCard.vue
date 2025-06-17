@@ -5,7 +5,10 @@
         size="small"
         class="mr-1"
         @click="showReglement = true"
-        :disabled="!props.isPaiementOpen"
+        :disabled="
+          !props.isPaiementOpen ||
+          props.dossier.Bilan.Statut == StatutPaiement.Complet
+        "
       >
         <template #prepend>
           <v-icon>mdi-cash-plus</v-icon>
@@ -111,6 +114,7 @@
       <FinancesReglementCard
         :token="props.token"
         :dossier="props.dossier"
+        :settings="props.settings"
       ></FinancesReglementCard>
     </v-dialog>
   </v-card>
@@ -121,6 +125,7 @@ import {
   StatutPaiement,
   type Aide,
   type DossierExt,
+  type PaiementSettings,
   type Structureaides,
 } from "../logic/api";
 import { computed, onMounted, ref } from "vue";
@@ -132,6 +137,7 @@ const props = defineProps<{
   token: string;
   dossier: DossierExt;
   isPaiementOpen: boolean;
+  settings: PaiementSettings;
 }>();
 
 const emit = defineEmits<{
