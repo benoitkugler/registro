@@ -37,6 +37,14 @@ export class Endpoints {
     return this.baseURL + "/api/v1/directeurs/lettre-image" + `?token=${token}`;
   }
 
+  ParticipantsDownloadListe(token: string) {
+    return (
+      this.baseURL +
+      "/api/v1/directeurs/participants/download-liste" +
+      `?token=${token}`
+    );
+  }
+
   RenderDocumentCamp(documentToken: string, isMiniature: boolean) {
     return (
       this.baseURL +

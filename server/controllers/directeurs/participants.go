@@ -11,6 +11,7 @@ import (
 
 	fsAPI "registro/controllers/files"
 	"registro/generators/pdfcreator"
+	"registro/generators/sheets"
 	"registro/logic"
 	"registro/mails"
 	cps "registro/sql/camps"
@@ -82,7 +83,7 @@ func (ct *Controller) updateParticipant(args cps.Participant) error {
 	if err != nil {
 		return utils.SQLError(err)
 	}
-	current.Details = args.Details
+	current.Commentaire = args.Commentaire
 	current.Navette = args.Navette
 	_, err = current.Update(ct.db)
 	if err != nil {
@@ -200,7 +201,7 @@ func (ct *Controller) downloadFicheSanitaire(user cps.IdCamp, id cps.IdParticipa
 
 func (ct *Controller) ParticipantsDownloadAllFichesSanitaires(c echo.Context) error {
 	user := JWTUser(c)
-	content, name, err := ct.downloadFichesSanitaires(user)
+	content, name, err := ct.renderFichesSanitaires(user)
 	if err != nil {
 		return err
 	}
@@ -209,7 +210,7 @@ func (ct *Controller) ParticipantsDownloadAllFichesSanitaires(c echo.Context) er
 }
 
 // ignore les participants majeurs et les fiches vides
-func (ct *Controller) downloadFichesSanitaires(user cps.IdCamp) ([]byte, string, error) {
+func (ct *Controller) renderFichesSanitaires(user cps.IdCamp) ([]byte, string, error) {
 	camp, err := cps.SelectCamp(ct.db, user)
 	if err != nil {
 		return nil, "", utils.SQLError(err)
@@ -291,7 +292,7 @@ func (ct *Controller) streamFichesAndVaccins(user cps.IdCamp, response http.Resp
 	archiveName := fmt.Sprintf("Fiches sanitaires et vaccins %s.zip", camp.Camp.Label())
 
 	return fsAPI.StreamZip(response, archiveName, func(yield func(fsAPI.ZipItem, error) bool) {
-		for _, part := range camp.Participants() {
+		for _, part := range camp.Participants(true) {
 			personne := part.Personne
 			proprio := personne.NOMPrenom()
 			fiche, hasFiche := fiches[personne.Id]
@@ -488,4 +489,43 @@ func (ct *Controller) createMessage(host string, idCamp cps.IdCamp, args CreateM
 		return MessageExt{}, err
 	}
 	return loadMessage(ct.db, event.Id)
+}
+
+func (ct *Controller) ParticipantsDownloadListe(c echo.Context) error {
+	user := JWTUser(c)
+	content, name, err := ct.renderListeParticipants(user)
+	if err != nil {
+		return err
+	}
+	mimeType := fsAPI.SetBlobHeader(c, content, name)
+	return c.Blob(200, mimeType, content)
+}
+
+func (ct *Controller) renderListeParticipants(user cps.IdCamp) ([]byte, string, error) {
+	camp, err := cps.LoadCampPersonnes(ct.db, user)
+	if err != nil {
+		return nil, "", err
+	}
+	groupes, err := cps.SelectGroupesByIdCamps(ct.db, user)
+	if err != nil {
+		return nil, "", utils.SQLError(err)
+	}
+	links, err := cps.SelectGroupeParticipantsByIdCamps(ct.db, user)
+	if err != nil {
+		return nil, "", utils.SQLError(err)
+	}
+	participantToGroupe := make(map[cps.IdParticipant]cps.Groupe)
+	for _, link := range links {
+		participantToGroupe[link.IdParticipant] = groupes[link.IdGroupe]
+	}
+	dossiers, err := logic.LoadDossiers(ct.db, camp.IdDossiers()...)
+	if err != nil {
+		return nil, "", err
+	}
+	content, err := sheets.ListeParticipants(camp.Camp, camp.Participants(true), dossiers, participantToGroupe)
+	if err != nil {
+		return nil, "", err
+	}
+	name := fmt.Sprintf("Participants %s.xlsx", camp.Camp.Label())
+	return content, name, nil
 }

@@ -4,6 +4,10 @@ import (
 	"bytes"
 	"strconv"
 
+	"registro/logic"
+	cps "registro/sql/camps"
+	"registro/utils"
+
 	"github.com/xuri/excelize/v2"
 )
 
@@ -352,14 +356,14 @@ func CreateTableTotal(headers []string, liste [][]Cell, total string) ([]byte, e
 	return f.Bytes(), nil
 }
 
-// CreateSuiviFinancierCamp renvoie un tableau des participants avec l'état de leur facture
+// SuiviFinancierCamp renvoie un tableau des participants avec l'état de leur facture
 // Les champs suivants sont requis :
 //   - FinancesPNomPrenom
 //   - FinancesPPrixBase
 //   - FinancesPPrixNet
 //   - FinancesPTotalAides
 //   - FinancesPEtatPaiement
-func CreateSuiviFinancierCamp(liste [][]Cell, totalDemande,
+func SuiviFinancierCamp(liste [][]Cell, totalDemande,
 	totalAides string,
 ) ([]byte, error) {
 	totals := []oneTotal{
@@ -380,63 +384,64 @@ func CreateSuiviFinancierCamp(liste [][]Cell, totalDemande,
 	return f.Bytes(), nil
 }
 
-// Les champs suivants sont requis :
-//   - PersonneNom
-//   - PersonnePrenom
-//   - PersonneSexe
-//   - ParticipantAgeDebutCamp
-//   - PersonneDateNaissance
-//   - InscriptionDateHeure
-//   - ParticipantGroupe
-//   - ParticipantAnimateur
-//   - ParticipantBus
-//   - PersonneMail
-//   - ParticipantOptionPrix
-//   - ParticipantPresence
-//   - ParticipantMaterielSki
-//   - ParticipantMaterielSkiType
-//   - ParticipantRespoNomPrenom
-//   - ParticipantRespoMail
-//   - ParticipantRespoTels
-//   - ParticipantRespoAdresse
-//   - ParticipantRespoCodePostal
-//   - ParticipantRespoVille
-//   - ParticipantRespoPays
-func CreateListeParticipants(inscrits, attente [][]Cell) ([]byte, error) {
+// ListeParticipants renvoie un document Excel
+func ListeParticipants(camp cps.Camp, inscrits []cps.ParticipantPersonne, dossiers logic.Dossiers, groupes map[cps.IdParticipant]cps.Groupe) ([]byte, error) {
 	headersParticipant := [...]string{
-		"Nom",                   // PersonneNom
-		"Prénom",                // PersonnePrenom
-		"Sexe",                  // PersonneSexe
-		"Age (début de camp)",   // ParticipantAgeDebutCamp
-		"Date de naissance",     // PersonneDateNaissance
-		"Inscription",           // InscriptionDateHeure
-		"Groupe",                // ParticipantGroupe
-		"Animateur",             // ParticipantAnimateur
-		"Navette",               // ParticipantBus
-		"Mail du participant",   // PersonneMail
-		"Option sur le prix",    // ParticipantOptionPrix
-		"Présence",              // ParticipantPresence
-		"Matériel de ski",       // ParticipantMaterielSki
-		"Loueur (matériel ski)", // ParticipantMaterielSkiType
+		"Inscription",
+		"Nom",
+		"Prénom",
+		"Sexe",
+		"Date de naissance",
+		"Age (début de camp)",
+		"Mail du participant",
+		"Groupe",
+		"Navette",
+		"Commentaire",
 	}
 
 	headersResponsable := [...]string{
-		"Responsable", // ParticipantRespoNomPrenom
-		"Mail",        // ParticipantRespoMail
-		"Tel.",        // ParticipantRespoTels
-		"Adresse",     // ParticipantRespoAdresse
-		"Code postal", // ParticipantRespoCodePostal
-		"Ville",       // ParticipantRespoVille
-		"Pays",        // ParticipantRespoPays
+		"Responsable",
+		"Mail",
+		"Tel.",
+		"Adresse",
+		"Code postal",
+		"Ville",
+		"Pays",
 	}
 
 	headers := append(headersParticipant[:], headersResponsable[:]...)
 	colLine := len(headersParticipant) + 1
 
-	dummyRow := make([]Cell, len(headers))
-	liste := append(append(inscrits, dummyRow, dummyRow), attente...) // saut de lignes entre inscrits et attente
+	rows := make([][]Cell, len(inscrits))
+	for i, inscrit := range inscrits {
+		dossier := dossiers.For(inscrit.Participant.IdDossier)
+		responsable := dossier.Responsable()
+		groupe := groupes[inscrit.Participant.Id]
+		var row [len(headersParticipant) + len(headersResponsable)]Cell = [...]Cell{
+			// inscrit
+			{Value: utils.FormatTime(dossier.Dossier.MomentInscription)},                         // Inscription
+			{Value: inscrit.Personne.FNom()},                                                     // Nom
+			{Value: inscrit.Personne.FPrenom()},                                                  // Prénom
+			{Value: inscrit.Personne.Sexe.String()},                                              // Sexe
+			{Value: inscrit.Personne.DateNaissance.String()},                                     // Date de naissance
+			{ValueF: float32(camp.AgeDebutCamp(inscrit.Personne.DateNaissance)), NumFormat: Int}, // Age (début de camp)
+			{Value: inscrit.Personne.Mail},                                                       // Mail du participant
+			{Value: groupe.Nom, Color: groupe.Couleur},                                           // Groupe
+			{Value: inscrit.Participant.Navette.String()},                                        // Navette
+			{Value: inscrit.Participant.Commentaire},                                             // Commentaire
+			// responsable
+			{Value: responsable.NOMPrenom()},   // Responsable
+			{Value: responsable.Mail},          // Mail
+			{Value: responsable.Tels.String()}, // Tel.
+			{Value: responsable.Adresse},       // Adresse
+			{Value: responsable.CodePostal},    // Code postal
+			{Value: responsable.Ville},         // Ville
+			{Value: string(responsable.Pays)},  // Pays
+		}
+		rows[i] = row[:]
+	}
 
-	f, err := renderListe(headers, liste, nil, false, colLine)
+	f, err := renderListe(headers, rows, nil, false, colLine)
 	if err != nil {
 		return nil, err
 	}

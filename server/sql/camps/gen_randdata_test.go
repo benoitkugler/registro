@@ -221,7 +221,7 @@ func randParticipant() Participant {
 	s.Remises = randRemises()
 	s.QuotientFamilial = randint()
 	s.OptionPrix = randOptionPrixParticipant()
-	s.Details = randstring()
+	s.Commentaire = randstring()
 	s.Navette = randNavette()
 
 	return s

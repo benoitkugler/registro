@@ -173,7 +173,7 @@ func (ct *Controller) updateParticipant(args cps.Participant) error {
 	current.Remises = args.Remises
 	current.QuotientFamilial = args.QuotientFamilial
 	current.OptionPrix = args.OptionPrix
-	current.Details = args.Details
+	current.Commentaire = args.Commentaire
 	current.Navette = args.Navette
 	_, err = current.Update(ct.db)
 	if err != nil {

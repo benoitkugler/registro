@@ -48,6 +48,15 @@
             <v-divider thickness="1"></v-divider>
 
             <v-list-item
+              prepend-icon="mdi-file-excel"
+              title="Exporter"
+              subtitle="au format Excel"
+              link
+              :href="endpoints.ParticipantsDownloadListe(controller.authToken)"
+            ></v-list-item>
+            <v-divider thickness="1"></v-divider>
+
+            <v-list-item
               prepend-icon="mdi-currency-eur"
               title="Suivi du règlement"
               @click="showReglements = true"
@@ -127,7 +136,7 @@
 
 <script lang="ts" setup>
 import { ref, onMounted, computed } from "vue";
-import { controller } from "../../logic/logic";
+import { controller, endpoints } from "../../logic/logic";
 import {
   Sexe,
   StatutParticipant,

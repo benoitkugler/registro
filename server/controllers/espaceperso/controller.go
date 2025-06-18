@@ -197,7 +197,7 @@ func (ct *Controller) updateParticipants(host string, args UpdateParticipantsIn)
 				return errors.New("access forbidden")
 			}
 			current.Navette = newP.Navette
-			current.Details = newP.Details
+			current.Commentaire = newP.Commentaire
 			current.OptionPrix = newP.OptionPrix // TODO: sanitize
 			_, err = current.Update(tx)
 			if err != nil {

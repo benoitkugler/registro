@@ -10,6 +10,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/lib/pq"
@@ -162,4 +163,27 @@ func MapKeysSorted[K cmp.Ordered, V any](m map[K]V) []K {
 	out := MapKeys(m)
 	slices.Sort(out)
 	return out
+}
+
+func FormatTime(t time.Time) string {
+	if t.IsZero() {
+		return ""
+	}
+	month := months[int(t.Month()-1)]
+	return fmt.Sprintf("%d %s %04d à %02dh%02d", t.Day(), month, t.Year(), t.Hour(), t.Minute())
+}
+
+var months = [12]string{
+	"Janv.",
+	"Févr.",
+	"Mars ",
+	"Avril",
+	"Mai  ",
+	"Juin ",
+	"Juil.",
+	"Août ",
+	"Sept.",
+	"Oct.",
+	"Nov.",
+	"Déc.",
 }

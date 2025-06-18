@@ -106,9 +106,12 @@ func LoadCampsPersonnes(db DB, ids ...IdCamp) ([]CampLoader, error) {
 	return out, nil
 }
 
-func (cd CampLoader) Participants() []ParticipantPersonne {
+func (cd CampLoader) Participants(onlyInscrits bool) []ParticipantPersonne {
 	out := make([]ParticipantPersonne, 0, len(cd.participants))
 	for _, participant := range cd.participants {
+		if onlyInscrits && participant.Statut != Inscrit {
+			continue
+		}
 		pe := cd.personnes[participant.IdPersonne]
 		out = append(out, ParticipantPersonne{participant, pe})
 	}
@@ -133,7 +136,7 @@ func (cd CampLoader) Personnes(onlyInscrits bool) pr.Personnes {
 
 func (cd CampLoader) Stats() StatistiquesInscrits {
 	var stats StatistiquesInscrits
-	for _, p := range cd.Participants() {
+	for _, p := range cd.Participants(false) {
 		stats.add(p)
 	}
 	return stats

@@ -2,7 +2,14 @@ package sheets
 
 import (
 	"testing"
+	"time"
 
+	"registro/logic"
+	cps "registro/sql/camps"
+	"registro/sql/dossiers"
+	pr "registro/sql/personnes"
+	"registro/sql/shared"
+	"registro/utils"
 	tu "registro/utils/testutils"
 )
 
@@ -35,21 +42,36 @@ func TestCreateTable(t *testing.T) {
 func TestCreateComplex(t *testing.T) {
 	// TODO: consolidate with real data
 
-	content, err := CreateSuiviFinancierCamp([][]Cell{
+	content, err := SuiviFinancierCamp([][]Cell{
 		{{}, {}, {}, {}, {}},
 		{{}, {}, {}, {}, {}},
 		{{}, {}, {}, {}, {}},
 	}, "1354.5€", "1546.4€")
 	tu.AssertNoErr(t, err)
 	tu.Write(t, "registro_SuiviFinancierCamp.xlsx", content)
+}
 
-	liste := [][]Cell{
-		{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}},
-		{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}},
-		{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}},
-		{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}},
+func TestListeParticipants(t *testing.T) {
+	camp := cps.Camp{DateDebut: shared.NewDateFrom(time.Now())}
+	p1 := pr.Personne{Etatcivil: pr.Etatcivil{
+		Nom: utils.RandString(12, false), Prenom: utils.RandString(12, false),
+		Sexe:          pr.Man,
+		DateNaissance: shared.NewDate(2000, time.August, 5),
+	}}
+	inscrit1 := cps.ParticipantPersonne{
+		Participant: cps.Participant{Id: 1, IdDossier: 1, Commentaire: utils.RandString(10, true), Navette: cps.AllerRetour},
+		Personne:    p1,
 	}
-	content, err = CreateListeParticipants(liste, liste)
+	inscrit2 := cps.ParticipantPersonne{
+		Participant: cps.Participant{Id: 2, IdDossier: 1, Commentaire: utils.RandString(10, true)},
+		Personne:    p1,
+	}
+	g1, g2 := cps.Groupe{Nom: "Groupe 1", Couleur: "#AA12BB"}, cps.Groupe{Nom: "Groupe 2"}
+	content, err := ListeParticipants(camp, []cps.ParticipantPersonne{
+		inscrit1, inscrit2, inscrit1,
+	}, logic.Dossiers{Dossiers: dossiers.Dossiers{
+		1: dossiers.Dossier{MomentInscription: time.Now(), IdResponsable: 2},
+	}}, map[cps.IdParticipant]cps.Groupe{1: g1, 2: g2})
 	tu.AssertNoErr(t, err)
 	tu.Write(t, "registro_ListeParticipants.xlsx", content)
 }

@@ -111,10 +111,7 @@ func renderListeParticipants(db *sql.DB, asso config.Asso, id cps.IdCamp) ([]byt
 		return nil, "", utils.SQLError(err)
 	}
 	var participants []pdfcreator.Participant
-	for _, part := range camp.Participants() {
-		if part.Participant.Statut != cps.Inscrit {
-			continue
-		}
+	for _, part := range camp.Participants(true) {
 		dossier := dossiers[part.Participant.IdDossier]
 		respo := responsables[dossier.IdResponsable]
 		mail := part.Personne.Mail

@@ -55,7 +55,7 @@ func TestFichesSanitaires(t *testing.T) {
 	_, _, err = ct.downloadFicheSanitaire(camp.Id, pa1.Id)
 	tu.AssertNoErr(t, err)
 
-	_, _, err = ct.downloadFichesSanitaires(camp.Id)
+	_, _, err = ct.renderFichesSanitaires(camp.Id)
 	tu.AssertNoErr(t, err)
 }
 

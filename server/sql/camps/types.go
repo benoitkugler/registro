@@ -71,6 +71,19 @@ func (b Navette) Includes(aller bool) bool {
 	return b == Retour || b == AllerRetour
 }
 
+func (b Navette) String() string {
+	switch b {
+	case Aller:
+		return "Aller"
+	case Retour:
+		return "Retour"
+	case AllerRetour:
+		return "Aller/Retour"
+	default:
+		return ""
+	}
+}
+
 // Remises altère le prix payé par un participant
 type Remises struct {
 	ReducEquipiers int // en %

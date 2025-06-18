@@ -19,6 +19,8 @@ func setupRoutesMisc(e *echo.Echo, dir *directeurs.Controller, fs *files.Control
 
 	e.POST("/api/v1/directeurs/lettre-image", dir.LettreImageUpload, dir.JWTMiddlewareForQuery())
 
+	e.GET("/api/v1/directeurs/participants/download-liste", dir.ParticipantsDownloadListe, dir.JWTMiddlewareForQuery())
+
 	// Documents générés
 
 	e.GET("/api/v1/document-camp", fs.RenderDocumentCamp)

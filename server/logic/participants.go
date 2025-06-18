@@ -37,7 +37,7 @@ func LoadParticipants(db cps.DB, id cps.IdCamp) ([]ParticipantExt, ds.Dossiers, 
 		return nil, nil, cps.CampExt{}, utils.SQLError(err)
 	}
 
-	pp := camp.Participants()
+	pp := camp.Participants(false)
 	l := make([]ParticipantExt, len(pp))
 	for i, p := range pp {
 		l[i] = NewParticipantExt(p.Participant, p.Personne, camp.Camp, dossiers[p.Participant.IdDossier])
