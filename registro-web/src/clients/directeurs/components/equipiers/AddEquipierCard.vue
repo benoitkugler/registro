@@ -5,7 +5,7 @@
   >
     <v-card-text class="mt-4">
       <v-row>
-        <v-col>
+        <v-col align-self="center">
           <SelectPersonne
             v-if="!args.CreatePersonne"
             label="Personne"
@@ -50,6 +50,9 @@
               ></v-text-field>
             </v-col>
           </v-row>
+        </v-col>
+        <v-col cols="auto">
+          <v-divider thickness="2" vertical class="py-2">ou</v-divider>
         </v-col>
         <v-col cols="auto" align-self="center">
           <v-btn @click="args.CreatePersonne = !args.CreatePersonne">
