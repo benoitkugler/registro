@@ -491,7 +491,7 @@ export interface Dossier {
   DemandeFondSoutien: boolean;
   IsValidated: boolean;
   MomentInscription: Time;
-  LastSeenEspaceperso: Time;
+  LastLoadDocuments: Time;
   KeyV1: string;
 }
 export type IdDossier = number & { __opaque__: "IdDossier" };
