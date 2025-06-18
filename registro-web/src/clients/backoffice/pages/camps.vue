@@ -8,7 +8,7 @@
     >
   </NavBar>
 
-  <CampsList v-if="current === undefined" @click="goTo"></CampsList>
+  <CampsList v-if="current === undefined" @show-participants="goTo"></CampsList>
   <CampParticipants :id="current" v-else></CampParticipants>
 </template>
 

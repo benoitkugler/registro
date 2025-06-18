@@ -101,8 +101,8 @@
         v-for="(camp, index) in pageList"
         :key="index"
         :camp="camp"
-        @click="emit('click', camp)"
-        @edit="toEdit = camp.Camp.Camp"
+        @click="toEdit = camp.Camp.Camp"
+        @show-participants="emit('show-participants', camp)"
         @edit-taux="toEditTaux = camp"
         @delete="deleteCamp(camp)"
         @show-documents="showDocumentsFor = camp"
@@ -227,7 +227,7 @@ import CampsSelector from "./CampsSelector.vue";
 import DocumentsCard from "./DocumentsCard.vue";
 
 const emit = defineEmits<{
-  (e: "click", camp: CampHeader): void;
+  (e: "show-participants", camp: CampHeader): void;
 }>();
 
 onMounted(fetchCamps);
