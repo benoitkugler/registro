@@ -600,3 +600,37 @@ export function swapItems<T>(origin: number, target: number, list: T[]) {
     return before;
   }
 }
+
+// const response = await fetch(url, {
+//     method: "POST",
+//     headers: {
+//       Accept: "application/json",
+//       "Content-Type": "application/json",
+//     },
+//     body: JSON.stringify(data),
+//   });
+export async function readJSONStream<R>(
+  response: Response,
+  onValue: (v: R) => void,
+  onError: (err: string) => void
+) {
+  const readableStream = response.body;
+  if (!readableStream) return;
+  const reader = readableStream.getReader();
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    const text = new TextDecoder("utf-8").decode(value);
+    const objects = text.split("\n");
+    for (const obj of objects) {
+      if (!obj.length) continue;
+      try {
+        let result = JSON.parse(obj) as R;
+        onValue(result);
+      } catch (e) {
+        onError(obj);
+        return;
+      }
+    }
+  }
+}

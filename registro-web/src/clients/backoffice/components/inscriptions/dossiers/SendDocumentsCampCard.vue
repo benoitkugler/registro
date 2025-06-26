@@ -26,17 +26,25 @@
                   rounded
                   class="my-1"
                 >
-                  <template #prepend v-if="dossier.DocumentsSent">
-                    <v-chip color="green" class="mr-2">Envoyés</v-chip>
-                  </template>
-
                   <template #append="{ isSelected, select }">
-                    <v-checkbox-btn
-                      density="compact"
-                      hide-details
-                      :model-value="isSelected"
-                      @update:model-value="select"
-                    ></v-checkbox-btn>
+                    <v-row>
+                      <v-col>
+                        <v-chip
+                          v-if="dossier.DocumentsSent"
+                          color="green"
+                          class="mr-2"
+                          >Envoyés</v-chip
+                        >
+                      </v-col>
+                      <v-col>
+                        <v-checkbox-btn
+                          density="compact"
+                          hide-details
+                          :model-value="isSelected"
+                          @update:model-value="select"
+                        ></v-checkbox-btn>
+                      </v-col>
+                    </v-row>
                   </template>
                 </v-list-item>
               </v-list>

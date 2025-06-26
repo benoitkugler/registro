@@ -41,9 +41,9 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, reactive, ref } from "vue";
+import { reactive, ref } from "vue";
 import { controller } from "./logic/logic";
-import type { Action } from "@/utils";
+import { type Action } from "@/utils";
 import { useRouter } from "vue-router";
 
 const message = reactive({

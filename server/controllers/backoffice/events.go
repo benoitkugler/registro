@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"net/http"
 	"time"
 
 	"registro/logic"
@@ -350,4 +351,62 @@ func (ct *Controller) sendSondages(host string, idCamp cps.IdCamp) error {
 	}
 
 	return nil
+}
+
+type RelancePaiementIn struct {
+	IdDossiers []ds.IdDossier
+}
+
+func (ct *Controller) EventsSendRelancePaiement(c echo.Context) error {
+	var args RelancePaiementIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+	return ct.sendRelancePaiement(c.Response(), c.Request().Host, args)
+}
+
+func (ct *Controller) sendRelancePaiement(resp http.ResponseWriter, host string, args RelancePaiementIn) error {
+	dossiers, err := logic.LoadDossiers(ct.db, args.IdDossiers...)
+	if err != nil {
+		return err
+	}
+	ids := dossiers.Dossiers.IDs() // ensure unicity
+	pool, err := mails.NewPool(ct.smtp, ct.asso.MailsSettings, nil)
+	if err != nil {
+		return err
+	}
+	defer pool.Close()
+
+	type Progress struct {
+		Current int
+		Total   int
+	}
+
+	return utils.StreamJSON(resp, func(yield func(Progress, error) bool) {
+		for index, idDossier := range ids {
+			dossier := dossiers.For(idDossier)
+			responsable := dossier.Responsable()
+
+			err = utils.InTx(ct.db, func(tx *sql.Tx) error {
+				event, err := evs.Event{IdDossier: idDossier, Kind: evs.Facture, Created: time.Now()}.Insert(tx)
+				if err != nil {
+					return err
+				}
+				url := logic.URLEspacePerso(ct.key, host, idDossier, utils.QPInt("idEvent", event.Id))
+				// notifie le responsable
+				body, err := mails.NotifieFacture(ct.asso, mails.NewContact(&responsable), url)
+				if err != nil {
+					return err
+				}
+				err = pool.SendMail(responsable.Mail, "Demande de règlement", body, dossier.Dossier.CopiesMails, nil)
+				if err != nil {
+					return err
+				}
+				return nil
+			})
+			if !yield(Progress{Current: index + 1, Total: len(ids)}, err) {
+				return
+			}
+		}
+	})
 }

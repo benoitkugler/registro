@@ -7,7 +7,6 @@ import (
 
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
-	"registro/sql/events"
 	evs "registro/sql/events"
 	pr "registro/sql/personnes"
 	"registro/utils"
@@ -49,9 +48,9 @@ func IterEventsBy[T EventContent](evs Events) iter.Seq[EventExt[T]] {
 
 // UnreadMessagesForBackoffice returns the [Event]s with kind [evs.Message],
 // not yet seen by the backoffice
-func (evs Events) UnreadMessagesForBackoffice() (out []EventExt[Message]) {
-	for ev := range IterEventsBy[Message](evs) {
-		if ev.Content.Message.Origine != events.FromBackoffice && !ev.Content.Message.VuBackoffice {
+func (events Events) UnreadMessagesForBackoffice() (out []EventExt[Message]) {
+	for ev := range IterEventsBy[Message](events) {
+		if ev.Content.Message.Origine != evs.FromBackoffice && !ev.Content.Message.VuBackoffice {
 			out = append(out, ev)
 		}
 	}
@@ -60,13 +59,24 @@ func (evs Events) UnreadMessagesForBackoffice() (out []EventExt[Message]) {
 
 // HasSendCampDocuments returns [true] is the documents for the
 // given camp has been sent (at least once)
-func (evs Events) HasSendCampDocuments(idCamp cps.IdCamp) bool {
-	for camp := range IterEventsBy[CampDocs](evs) {
+func (events Events) HasSendCampDocuments(idCamp cps.IdCamp) bool {
+	for camp := range IterEventsBy[CampDocs](events) {
 		if camp.Content.IdCamp == idCamp {
 			return true
 		}
 	}
 	return false
+}
+
+// LastBy may return a zero value
+func (events Events) LastBy(kind evs.EventKind) Event {
+	var last Event
+	for _, event := range events {
+		if event.Raw().Kind == kind && event.Created.After(last.Created) {
+			last = event
+		}
+	}
+	return last
 }
 
 // Event exposes on event on the dossier track

@@ -70,3 +70,8 @@ export function idQuery(id: IdDossier): SearchDossierIn {
   empty.Pattern = `id:${id}`;
   return empty;
 }
+
+export type RequestProgress = {
+  Current: Int;
+  Total: Int;
+};

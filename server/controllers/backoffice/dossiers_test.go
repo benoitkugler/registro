@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"registro/config"
+	"registro/logic"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
 	"registro/sql/events"
@@ -218,4 +219,12 @@ func TestController_mergeDossiers(t *testing.T) {
 
 	err = ct.mergeDossier("", DossiersMergeIn{d2.Id, d1.Id, true})
 	tu.AssertNoErr(t, err)
+}
+
+func TestQueryReglement(t *testing.T) {
+	tu.Assert(t, Partiel.match(logic.EnCours))
+	tu.Assert(t, !Partiel.match(logic.NonCommence))
+	tu.Assert(t, (Partiel | Zero).match(logic.EnCours))
+	tu.Assert(t, (Partiel | Zero).match(logic.NonCommence))
+	tu.Assert(t, !(Partiel | Zero).match(logic.Complet))
 }

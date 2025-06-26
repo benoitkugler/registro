@@ -1,6 +1,8 @@
 package backoffice
 
 import (
+	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -99,5 +101,28 @@ func Test_events(t *testing.T) {
 
 		err = ct.sendSondages("", camp1.Id)
 		tu.AssertNoErr(t, err)
+	})
+
+	t.Run("relance paiement", func(t *testing.T) {
+		const toSend = 5
+		var ids []ds.IdDossier
+		for range [toSend]int{} {
+			pe, err := pr.Personne{}.Insert(ct.db)
+			tu.AssertNoErr(t, err)
+			dossier, err := ct.createDossier(pe.Id)
+			tu.AssertNoErr(t, err)
+			_, err = ct.createParticipant(ParticipantsCreateIn{IdDossier: dossier.Id, IdCamp: camp1.Id, IdPersonne: pe.Id})
+			tu.AssertNoErr(t, err)
+			ids = append(ids, dossier.Id)
+		}
+
+		preview, err := ct.previewRelancePaiement(camp1.Id)
+		tu.AssertNoErr(t, err)
+		tu.Assert(t, len(preview) == 0)
+
+		out := httptest.NewRecorder()
+		err = ct.sendRelancePaiement(out, "", RelancePaiementIn{ids})
+		tu.AssertNoErr(t, err)
+		tu.Assert(t, strings.Count(out.Body.String(), "\n") == 5)
 	})
 }

@@ -108,6 +108,13 @@ export interface ParticipantsMoveIn {
   Id: IdParticipant;
   Target: IdCamp;
 }
+// registro/controllers/backoffice.PreviewRelance
+export interface PreviewRelance {
+  Id: IdDossier;
+  Responsable: string;
+  Bilan: BilanFinancesPub;
+  LastEventFacture: Time;
+}
 // registro/controllers/backoffice.QueryAttente
 export const QueryAttente = {
   EmptyQA: 0,
@@ -127,20 +134,24 @@ export const QueryAttenteLabels: Record<QueryAttente, string> = {
 // registro/controllers/backoffice.QueryReglement
 export const QueryReglement = {
   EmptyQR: 0,
-  Zero: 1,
   Partiel: 2,
-  Total: 3,
+  Total: 4,
+  Zero: 1,
 } as const;
 export type QueryReglement =
   (typeof QueryReglement)[keyof typeof QueryReglement];
 
 export const QueryReglementLabels: Record<QueryReglement, string> = {
   [QueryReglement.EmptyQR]: "Indifférent",
-  [QueryReglement.Zero]: "Non commencé",
   [QueryReglement.Partiel]: "En cours",
   [QueryReglement.Total]: "Complété",
+  [QueryReglement.Zero]: "Non commencé",
 };
 
+// registro/controllers/backoffice.RelancePaiementIn
+export interface RelancePaiementIn {
+  IdDossiers: IdDossier[] | null;
+}
 // registro/controllers/backoffice.SearchDossierIn
 export interface SearchDossierIn {
   Pattern: string;
@@ -466,7 +477,7 @@ export interface Participant {
   Remises: Remises;
   QuotientFamilial: Int;
   OptionPrix: OptionPrixParticipant;
-  Details: string;
+  Commentaire: string;
   Navette: Navette;
 }
 // registro/sql/camps.ParticipantCamp
@@ -1526,6 +1537,44 @@ export abstract class AbstractAPI {
         params: { idCamp: String(params["idCamp"]) },
       });
       return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EventsSendRelancePaiementPreview performs the request and handles the error */
+  async EventsSendRelancePaiementPreview(params: { idCamp: IdCamp }) {
+    const fullUrl = this.baseURL + "/api/v1/backoffice/events/relance-paiement";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<PreviewRelance[] | null> = await Axios.get(
+        fullUrl,
+        {
+          headers: this.getHeaders(),
+          params: { idCamp: String(params["idCamp"]) },
+        },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EventsSendRelancePaiement return a streaming Response (JSON line format) */
+  async EventsSendRelancePaiement(params: RelancePaiementIn) {
+    const fullUrl = this.baseURL + "/api/v1/backoffice/events/relance-paiement";
+    this.startRequest();
+    try {
+      const response = await fetch(fullUrl, {
+        method: "POST",
+        headers: {
+          ...this.getHeaders(),
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(params),
+      });
+      return response;
     } catch (error) {
       this.handleError(error);
     }

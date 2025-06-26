@@ -93,8 +93,8 @@ type ZipItem struct {
 // StreamZip writes [files] into a .ZIP response,
 // properly escaping [archiveName].
 func StreamZip(resp http.ResponseWriter, archiveName string, files iter.Seq2[ZipItem, error]) error {
-	resp.Header().Set(echo.HeaderContentType, "application/x-zip")
-	resp.Header().Set(echo.HeaderContentDisposition, utils.AttachementHeader(archiveName))
+	resp.Header().Set("Content-Type", "application/x-zip")
+	resp.Header().Set("Content-Disposition", utils.AttachementHeader(archiveName))
 	if flusher, ok := resp.(http.Flusher); ok {
 		// this is needed so that browsers display a progress bar
 		flusher.Flush()

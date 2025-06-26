@@ -83,7 +83,11 @@
               <v-chip
                 v-bind="menuProps"
                 prepend-icon="mdi-currency-eur"
-                :color="statutColor(props.dossier.Dossier.Bilan.Statut)"
+                :color="
+                  Formatters.colorStatutPaiement(
+                    props.dossier.Dossier.Bilan.Statut
+                  )
+                "
               >
                 {{ props.dossier.Dossier.Bilan.Recu }} payé sur
                 {{ props.dossier.Dossier.Bilan.Demande }}
@@ -330,7 +334,12 @@ import {
   type Participant,
   type ParticipantsCreateIn,
 } from "../../../logic/api";
-import { buildPseudoEvents, copyToClipboard, Personnes } from "@/utils";
+import {
+  buildPseudoEvents,
+  copyToClipboard,
+  Formatters,
+  Personnes,
+} from "@/utils";
 import FactureCard from "./FactureCard.vue";
 import PaiementEditCard from "./PaiementEditCard.vue";
 import { controller } from "@/clients/backoffice/logic/logic";
@@ -369,17 +378,6 @@ const emit = defineEmits<{
 }>();
 
 defineExpose({ showEditPaiement, showEditDossier });
-
-function statutColor(s: StatutPaiement) {
-  switch (s) {
-    case StatutPaiement.NonCommence:
-      return "red";
-    case StatutPaiement.EnCours:
-      return "orange";
-    case StatutPaiement.Complet:
-      return "green";
-  }
-}
 
 const events = computed(() =>
   buildPseudoEvents(props.dossier.Dossier, "backoffice")

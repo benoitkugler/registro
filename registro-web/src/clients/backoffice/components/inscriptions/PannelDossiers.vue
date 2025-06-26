@@ -26,6 +26,13 @@
                   @click="showSendDocuments = true"
                 >
                 </v-list-item>
+                <v-divider></v-divider>
+                <v-list-item
+                  title="Envoyer une relance de paiement"
+                  prepend-icon="mdi-invoice-send"
+                  @click="showRelancePaiement = true"
+                >
+                </v-list-item>
               </v-list>
             </v-menu>
           </v-btn>
@@ -86,6 +93,27 @@
         @send="sendDocumentsCamp"
       ></SendDocumentsCampCard>
     </v-dialog>
+
+    <!-- preview relance paiements -->
+    <v-dialog v-model="showRelancePaiement" max-width="1000px">
+      <SendRelancePaiementCard
+        :camps="allCamps"
+        @send="sendRelancePaiement"
+      ></SendRelancePaiementCard>
+    </v-dialog>
+
+    <v-dialog
+      :model-value="relancePaiementProgress != null"
+      max-width="400px"
+      persistent
+    >
+      <RequestProgressCard
+        v-if="relancePaiementProgress"
+        title="Envoi des relances en cours"
+        :current="relancePaiementProgress.Current"
+        :total="relancePaiementProgress.Total"
+      ></RequestProgressCard>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -111,12 +139,21 @@ import {
   type IdAide,
   type IdCamp,
 } from "../../logic/api";
-import { controller, emptyQuery, idQuery } from "../../logic/logic";
+import {
+  controller,
+  emptyQuery,
+  idQuery,
+  type RequestProgress,
+} from "../../logic/logic";
 import DossierDetailsPannel from "./dossiers/DossierDetailsPannel.vue";
 import CreateDossierCard from "./dossiers/CreateDossierCard.vue";
 import DossierList from "./dossiers/DossierList.vue";
 import { watch } from "vue";
 import SendDocumentsCampCard from "./dossiers/SendDocumentsCampCard.vue";
+import SendRelancePaiementCard from "./dossiers/SendRelancePaiementCard.vue";
+import { readJSONStream } from "@/utils";
+import RequestProgressCard from "./dossiers/RequestProgressCard.vue";
+import type { Int } from "@/urls";
 
 const props = defineProps<{
   initialDossier?: IdDossier;
@@ -406,5 +443,30 @@ async function sendDocumentsCamp(idCamp: IdCamp, idDossiers: IdDossier[]) {
   if (res === undefined) return;
   ensureDossier();
   controller.showMessage("Documents du séjour envoyés avec succès.");
+}
+
+const showRelancePaiement = ref(false);
+const relancePaiementProgress = ref<RequestProgress | null>(null);
+async function sendRelancePaiement(idCamp: IdCamp, idDossiers: IdDossier[]) {
+  // start with initial 0 progress
+  relancePaiementProgress.value = {
+    Current: 0 as Int,
+    Total: idDossiers.length as Int,
+  };
+  const res = await controller.EventsSendRelancePaiement({
+    IdDossiers: idDossiers,
+  });
+  if (res === undefined) {
+    relancePaiementProgress.value = null;
+    return;
+  }
+  await readJSONStream<RequestProgress>(
+    res,
+    (v) => (relancePaiementProgress.value = v),
+    (err) => controller.onError("Envoi de la relance", err)
+  );
+  relancePaiementProgress.value = null;
+  ensureDossier();
+  controller.showMessage("Toutes les relances ont été envoyées avec succès.");
 }
 </script>

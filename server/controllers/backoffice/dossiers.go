@@ -70,14 +70,20 @@ const (
 	AvecAttenteOnly                     // Seulement avec liste d'attente
 )
 
+// Flag
 type QueryReglement uint8
 
 const (
-	EmptyQR QueryReglement = iota // Indifférent
-	Zero                          // Non commencé
-	Partiel                       // En cours
-	Total                         // Complété
+	EmptyQR QueryReglement = 0               // Indifférent
+	Zero    QueryReglement = 1 << (iota - 1) // Non commencé
+	Partiel                                  // En cours
+	Total                                    // Complété
 )
+
+func (qr QueryReglement) match(statut logic.StatutPaiement) bool {
+	var flag QueryReglement = 1 << (statut - 1)
+	return qr&flag != 0
+}
 
 // The zero value defaults to returning everything
 type SearchDossierIn struct {
@@ -143,37 +149,25 @@ func isIdQuery(pattern string) (ds.IdDossier, bool) {
 	return 0, false
 }
 
-func (ct *Controller) searchDossiers(query SearchDossierIn) (SearchDossierOut, error) {
-	var (
-		dossiers ds.Dossiers
-		err      error
-	)
+func loadAndFilter(db ds.DB, query SearchDossierIn) ([]logic.DossierFinance, int, error) {
+	dossiers, err := ds.SelectAllDossiers(db)
+	if err != nil {
+		return nil, 0, utils.SQLError(err)
+	}
+	allDossiersCount := len(dossiers)
 
 	if idDossier, isId := isIdQuery(query.Pattern); isId {
-		dossiers, err = ds.SelectDossiers(ct.db, idDossier)
-		if err != nil {
-			return SearchDossierOut{}, utils.SQLError(err)
-		}
+		dossiers = ds.Dossiers{idDossier: dossiers[idDossier]}
 		query = SearchDossierIn{} // reset the query to force the match
-	} else {
-		dossiers, err = ds.SelectAllDossiers(ct.db)
-		if err != nil {
-			return SearchDossierOut{}, utils.SQLError(err)
-		}
-		// dossiers.RestrictByValidated(true)
 	}
+
 	ids := dossiers.IDs()
 
-	data, err := logic.LoadDossiersFinances(ct.db, ids...)
+	data, err := logic.LoadDossiersFinances(db, ids...)
 	if err != nil {
-		return SearchDossierOut{}, err
+		return nil, 0, err
 	}
 
-	sortByMessages := false
-	if query.Pattern == sortByMessagesPattern {
-		sortByMessages = true
-		query.Pattern = "" // reset the query to force the match
-	}
 	queryText := search.NewQuery(query.Pattern)
 
 	var filtered []logic.DossierFinance
@@ -182,6 +176,21 @@ func (ct *Controller) searchDossiers(query SearchDossierIn) (SearchDossierOut, e
 		if match(dossier, queryText, query.IdCamp, query.Attente, query.Reglement) {
 			filtered = append(filtered, dossier)
 		}
+	}
+
+	return filtered, allDossiersCount, nil
+}
+
+func (ct *Controller) searchDossiers(query SearchDossierIn) (SearchDossierOut, error) {
+	sortByMessages := false
+	if query.Pattern == sortByMessagesPattern {
+		sortByMessages = true
+		query.Pattern = "" // reset the query to force the match
+	}
+
+	filtered, totalCount, err := loadAndFilter(ct.db, query)
+	if err != nil {
+		return SearchDossierOut{}, err
 	}
 
 	// sort by messages time
@@ -202,7 +211,7 @@ func (ct *Controller) searchDossiers(query SearchDossierIn) (SearchDossierOut, e
 	for i, v := range filtered {
 		out[i] = newDossierHeader(v.Dossier)
 	}
-	return SearchDossierOut{out, len(ids)}, nil
+	return SearchDossierOut{out, totalCount}, nil
 }
 
 func match(dossier logic.DossierFinance,
@@ -258,8 +267,8 @@ func match(dossier logic.DossierFinance,
 
 	// critère financier
 	if reglement != EmptyQR {
-		matchStatut := dossier.Bilan().StatutPaiement() == logic.StatutPaiement(reglement)
-		if !matchStatut {
+		statut := dossier.Bilan().StatutPaiement()
+		if !reglement.match(statut) {
 			return false
 		}
 	}
@@ -826,4 +835,46 @@ func (ct *Controller) mergeDossier(host string, args DossiersMergeIn) error {
 
 		return nil
 	})
+}
+
+type PreviewRelance struct {
+	Id               ds.IdDossier
+	Responsable      string
+	Bilan            logic.BilanFinancesPub
+	LastEventFacture time.Time // maybe empty
+}
+
+func (ct *Controller) EventsSendRelancePaiementPreview(c echo.Context) error {
+	idCamp, err := utils.QueryParamInt[cps.IdCamp](c, "idCamp")
+	if err != nil {
+		return err
+	}
+	out, err := ct.previewRelancePaiement(idCamp)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) previewRelancePaiement(idCamp cps.IdCamp) ([]PreviewRelance, error) {
+	filtered, _, err := loadAndFilter(ct.db, SearchDossierIn{
+		IdCamp:    idCamp.Opt(),
+		Reglement: Partiel | Zero,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	out := make([]PreviewRelance, len(filtered))
+	for i, dossier := range filtered {
+
+		dossier.LastEventTime()
+		out[i] = PreviewRelance{
+			dossier.Dossier.Dossier.Id,
+			dossier.Responsable().NOMPrenom(),
+			dossier.Publish(ct.key).Bilan,
+			dossier.Events.LastBy(evs.Facture).Created,
+		}
+	}
+	return out, nil
 }

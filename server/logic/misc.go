@@ -25,11 +25,7 @@ func NewCampItem(camp cps.Camp) CampItem {
 	return CampItem{camp.Id, camp.Label(), camp.IsPassedBy(deltaOld)}
 }
 
-func LoadCamps(db cps.DB) ([]CampItem, error) {
-	camps, err := cps.SelectAllCamps(db)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
+func NewCampItems(camps cps.Camps) []CampItem {
 	list := utils.MapValues(camps)
 	slices.SortFunc(list, func(a, b cps.Camp) int { return int(a.Id - b.Id) })
 	slices.SortStableFunc(list, func(a, b cps.Camp) int { return -a.DateDebut.Time().Compare(b.DateDebut.Time()) })
@@ -38,7 +34,15 @@ func LoadCamps(db cps.DB) ([]CampItem, error) {
 	for i, camp := range list {
 		out[i] = NewCampItem(camp)
 	}
-	return out, nil
+	return out
+}
+
+func LoadCamps(db cps.DB) ([]CampItem, error) {
+	camps, err := cps.SelectAllCamps(db)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	return NewCampItems(camps), nil
 }
 
 func SelectPersonne(db pr.DB, pattern string, removeTemp bool) ([]search.PersonneHeader, error) {
