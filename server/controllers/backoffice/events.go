@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"net/http"
+	"iter"
 	"time"
 
 	"registro/logic"
@@ -238,58 +238,60 @@ func (ct *Controller) EventsSendDocumentsCamp(c echo.Context) error {
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
-	err := ct.sendDocumentsCamp(c.Request().Host, args)
+	it, err := ct.sendDocumentsCamp(c.Request().Host, args)
 	if err != nil {
 		return err
 	}
-	return c.NoContent(200)
+	return utils.StreamJSON(c.Response(), it)
 }
 
-func (ct *Controller) sendDocumentsCamp(host string, args SendDocumentsCampIn) error {
+func (ct *Controller) sendDocumentsCamp(host string, args SendDocumentsCampIn) (iter.Seq2[SendProgress, error], error) {
 	camp, err := cps.SelectCamp(ct.db, args.IdCamp)
 	if err != nil {
-		return utils.SQLError(err)
+		return nil, utils.SQLError(err)
 	}
 	dossiers, err := logic.LoadDossiers(ct.db, args.IdDossiers...)
 	if err != nil {
-		return err
+		return nil, err
 	}
+	ids := dossiers.Dossiers.IDs() // ensure unicity
 	pool, err := mails.NewPool(ct.smtp, ct.asso.MailsSettings, nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	defer pool.Close()
 
-	for idDossier := range dossiers.Dossiers {
-		dossier := dossiers.For(idDossier)
-		responsable := dossier.Responsable()
+	return func(yield func(SendProgress, error) bool) {
+		defer pool.Close()
 
-		err = utils.InTx(ct.db, func(tx *sql.Tx) error {
-			event, err := evs.Event{IdDossier: idDossier, Kind: evs.CampDocs, Created: time.Now()}.Insert(tx)
-			if err != nil {
-				return err
+		for index, idDossier := range ids {
+			dossier := dossiers.For(idDossier)
+			responsable := dossier.Responsable()
+
+			err = utils.InTx(ct.db, func(tx *sql.Tx) error {
+				event, err := evs.Event{IdDossier: idDossier, Kind: evs.CampDocs, Created: time.Now()}.Insert(tx)
+				if err != nil {
+					return err
+				}
+				err = evs.EventCampDocs{IdEvent: event.Id, IdCamp: camp.Id}.Insert(tx)
+				if err != nil {
+					return err
+				}
+				url := logic.URLEspacePerso(ct.key, host, idDossier, utils.QPInt("idEvent", event.Id))
+				body, err := mails.NotifieDocumentsCamp(ct.asso, mails.NewContact(&responsable), camp.Label(), url)
+				if err != nil {
+					return err
+				}
+				err = pool.SendMail(responsable.Mail, fmt.Sprintf("Documents du séjour %s", camp.Label()), body, dossier.Dossier.CopiesMails, nil)
+				if err != nil {
+					return err
+				}
+				return nil
+			})
+			if !yield(SendProgress{Current: index + 1, Total: len(ids)}, err) {
+				return
 			}
-			err = evs.EventCampDocs{IdEvent: event.Id, IdCamp: camp.Id}.Insert(tx)
-			if err != nil {
-				return err
-			}
-			url := logic.URLEspacePerso(ct.key, host, idDossier, utils.QPInt("idEvent", event.Id))
-			body, err := mails.NotifieDocumentsCamp(ct.asso, mails.NewContact(&responsable), camp.Label(), url)
-			if err != nil {
-				return err
-			}
-			err = pool.SendMail(responsable.Mail, fmt.Sprintf("Documents du séjour %s", camp.Label()), body, dossier.Dossier.CopiesMails, nil)
-			if err != nil {
-				return err
-			}
-			return nil
-		})
-		if err != nil {
-			return err
 		}
-	}
-
-	return nil
+	}, nil
 }
 
 func (ct *Controller) EventsSendSondages(c echo.Context) error {
@@ -297,60 +299,62 @@ func (ct *Controller) EventsSendSondages(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	err = ct.sendSondages(c.Request().Host, idCamp)
+	it, err := ct.sendSondages(c.Request().Host, idCamp)
 	if err != nil {
 		return err
 	}
-	return c.NoContent(200)
+	return utils.StreamJSON(c.Response(), it)
 }
 
-func (ct *Controller) sendSondages(host string, idCamp cps.IdCamp) error {
+func (ct *Controller) sendSondages(host string, idCamp cps.IdCamp) (iter.Seq2[SendProgress, error], error) {
 	camp, err := cps.LoadCampPersonnes(ct.db, idCamp)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	dossiers, err := logic.LoadDossiers(ct.db, camp.IdDossiers()...)
 	if err != nil {
-		return err
+		return nil, err
 	}
+	ids := dossiers.Dossiers.IDs() // ensure unicity
 	pool, err := mails.NewPool(ct.smtp, ct.asso.MailsSettings, nil)
 	if err != nil {
-		return err
-	}
-	defer pool.Close()
-
-	for idDossier := range dossiers.Dossiers {
-		dossier := dossiers.For(idDossier)
-		if _, hasInscrit := dossier.CampsInscrits()[idCamp]; !hasInscrit {
-			continue
-		}
-		responsable := dossier.Responsable()
-		err = utils.InTx(ct.db, func(tx *sql.Tx) error {
-			event, err := evs.Event{IdDossier: idDossier, Kind: evs.Sondage, Created: time.Now()}.Insert(tx)
-			if err != nil {
-				return err
-			}
-			err = evs.EventSondage{IdEvent: event.Id, IdCamp: idCamp}.Insert(tx)
-			if err != nil {
-				return err
-			}
-			url := logic.URLEspacePerso(ct.key, host, idDossier, utils.QPInt("idEvent", event.Id))
-			body, err := mails.NotifieSondage(ct.asso, mails.NewContact(&responsable), camp.Camp.Label(), url)
-			if err != nil {
-				return err
-			}
-			err = pool.SendMail(responsable.Mail, fmt.Sprintf("Avis sur le séjour %s", camp.Camp.Label()), body, dossier.Dossier.CopiesMails, nil)
-			if err != nil {
-				return err
-			}
-			return nil
-		})
-		if err != nil {
-			return err
-		}
+		return nil, err
 	}
 
-	return nil
+	return func(yield func(SendProgress, error) bool) {
+		defer pool.Close()
+
+		for index, idDossier := range ids {
+			dossier := dossiers.For(idDossier)
+			if _, hasInscrit := dossier.CampsInscrits()[idCamp]; !hasInscrit {
+				continue
+			}
+			responsable := dossier.Responsable()
+			err = utils.InTx(ct.db, func(tx *sql.Tx) error {
+				event, err := evs.Event{IdDossier: idDossier, Kind: evs.Sondage, Created: time.Now()}.Insert(tx)
+				if err != nil {
+					return err
+				}
+				err = evs.EventSondage{IdEvent: event.Id, IdCamp: idCamp}.Insert(tx)
+				if err != nil {
+					return err
+				}
+				url := logic.URLEspacePerso(ct.key, host, idDossier, utils.QPInt("idEvent", event.Id))
+				body, err := mails.NotifieSondage(ct.asso, mails.NewContact(&responsable), camp.Camp.Label(), url)
+				if err != nil {
+					return err
+				}
+				err = pool.SendMail(responsable.Mail, fmt.Sprintf("Avis sur le séjour %s", camp.Camp.Label()), body, dossier.Dossier.CopiesMails, nil)
+				if err != nil {
+					return err
+				}
+				return nil
+			})
+			if !yield(SendProgress{Current: index + 1, Total: len(ids)}, err) {
+				return
+			}
+		}
+	}, nil
 }
 
 type RelancePaiementIn struct {
@@ -362,27 +366,32 @@ func (ct *Controller) EventsSendRelancePaiement(c echo.Context) error {
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
-	return ct.sendRelancePaiement(c.Response(), c.Request().Host, args)
-}
-
-func (ct *Controller) sendRelancePaiement(resp http.ResponseWriter, host string, args RelancePaiementIn) error {
-	dossiers, err := logic.LoadDossiers(ct.db, args.IdDossiers...)
+	it, err := ct.sendRelancePaiement(c.Request().Host, args)
 	if err != nil {
 		return err
+	}
+	return utils.StreamJSON(c.Response(), it)
+}
+
+type SendProgress struct {
+	Current int
+	Total   int
+}
+
+func (ct *Controller) sendRelancePaiement(host string, args RelancePaiementIn) (iter.Seq2[SendProgress, error], error) {
+	dossiers, err := logic.LoadDossiers(ct.db, args.IdDossiers...)
+	if err != nil {
+		return nil, err
 	}
 	ids := dossiers.Dossiers.IDs() // ensure unicity
 	pool, err := mails.NewPool(ct.smtp, ct.asso.MailsSettings, nil)
 	if err != nil {
-		return err
-	}
-	defer pool.Close()
-
-	type Progress struct {
-		Current int
-		Total   int
+		return nil, err
 	}
 
-	return utils.StreamJSON(resp, func(yield func(Progress, error) bool) {
+	return func(yield func(SendProgress, error) bool) {
+		defer pool.Close()
+
 		for index, idDossier := range ids {
 			dossier := dossiers.For(idDossier)
 			responsable := dossier.Responsable()
@@ -404,9 +413,9 @@ func (ct *Controller) sendRelancePaiement(resp http.ResponseWriter, host string,
 				}
 				return nil
 			})
-			if !yield(Progress{Current: index + 1, Total: len(ids)}, err) {
+			if !yield(SendProgress{Current: index + 1, Total: len(ids)}, err) {
 				return
 			}
 		}
-	})
+	}, nil
 }

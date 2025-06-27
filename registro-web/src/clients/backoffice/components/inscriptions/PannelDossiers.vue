@@ -102,6 +102,21 @@
       ></SendRelancePaiementCard>
     </v-dialog>
 
+    <!-- monitor documents -->
+    <v-dialog
+      :model-value="documentsCampProgress != null"
+      max-width="400px"
+      persistent
+    >
+      <RequestProgressCard
+        v-if="documentsCampProgress"
+        title="Envoi des documents en cours"
+        :current="documentsCampProgress.Current"
+        :total="documentsCampProgress.Total"
+      ></RequestProgressCard>
+    </v-dialog>
+
+    <!-- monitor relances -->
     <v-dialog
       :model-value="relancePaiementProgress != null"
       max-width="400px"
@@ -138,13 +153,9 @@ import {
   type DossierHeader,
   type IdAide,
   type IdCamp,
+  type SendProgress,
 } from "../../logic/api";
-import {
-  controller,
-  emptyQuery,
-  idQuery,
-  type RequestProgress,
-} from "../../logic/logic";
+import { controller, emptyQuery, idQuery } from "../../logic/logic";
 import DossierDetailsPannel from "./dossiers/DossierDetailsPannel.vue";
 import CreateDossierCard from "./dossiers/CreateDossierCard.vue";
 import DossierList from "./dossiers/DossierList.vue";
@@ -152,7 +163,7 @@ import { watch } from "vue";
 import SendDocumentsCampCard from "./dossiers/SendDocumentsCampCard.vue";
 import SendRelancePaiementCard from "./dossiers/SendRelancePaiementCard.vue";
 import { readJSONStream } from "@/utils";
-import RequestProgressCard from "./dossiers/RequestProgressCard.vue";
+import RequestProgressCard from "../RequestProgressCard.vue";
 import type { Int } from "@/urls";
 
 const props = defineProps<{
@@ -434,19 +445,33 @@ async function sendFacture() {
 }
 
 const showSendDocuments = ref(false);
+const documentsCampProgress = ref<SendProgress | null>(null);
 async function sendDocumentsCamp(idCamp: IdCamp, idDossiers: IdDossier[]) {
+  // start with initial 0 progress
+  documentsCampProgress.value = {
+    Current: 0 as Int,
+    Total: idDossiers.length as Int,
+  };
   const res = await controller.EventsSendDocumentsCamp({
     IdCamp: idCamp,
     IdDossiers: idDossiers,
   });
-  showSendDocuments.value = false;
-  if (res === undefined) return;
+  if (res === undefined) {
+    documentsCampProgress.value = null;
+    return;
+  }
+  await readJSONStream(
+    res,
+    (v) => (documentsCampProgress.value = v),
+    (err) => controller.onError("Envoi des documents", err)
+  );
+  documentsCampProgress.value = null;
   ensureDossier();
   controller.showMessage("Documents du séjour envoyés avec succès.");
 }
 
 const showRelancePaiement = ref(false);
-const relancePaiementProgress = ref<RequestProgress | null>(null);
+const relancePaiementProgress = ref<SendProgress | null>(null);
 async function sendRelancePaiement(idCamp: IdCamp, idDossiers: IdDossier[]) {
   // start with initial 0 progress
   relancePaiementProgress.value = {
@@ -460,7 +485,7 @@ async function sendRelancePaiement(idCamp: IdCamp, idDossiers: IdDossier[]) {
     relancePaiementProgress.value = null;
     return;
   }
-  await readJSONStream<RequestProgress>(
+  await readJSONStream(
     res,
     (v) => (relancePaiementProgress.value = v),
     (err) => controller.onError("Envoi de la relance", err)

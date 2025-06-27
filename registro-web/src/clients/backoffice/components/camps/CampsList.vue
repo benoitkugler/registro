@@ -91,12 +91,6 @@
         Aucun camp ne correspond aux filtres actuels.
       </i>
 
-      <v-progress-linear
-        v-if="isSendingSondage"
-        indeterminate
-        color="secondary"
-      ></v-progress-linear>
-
       <CampHeaderRow
         v-for="(camp, index) in pageList"
         :key="index"
@@ -206,6 +200,20 @@
       :camp="showDocumentsFor"
     ></DocumentsCard>
   </v-dialog>
+
+  <!-- monitor sondages -->
+  <v-dialog
+    :model-value="sondagesProgress != null"
+    max-width="400px"
+    persistent
+  >
+    <RequestProgressCard
+      v-if="sondagesProgress"
+      title="Envoi du sondage en cours"
+      :current="sondagesProgress.Current"
+      :total="sondagesProgress.Total"
+    ></RequestProgressCard>
+  </v-dialog>
 </template>
 
 <script lang="ts" setup>
@@ -217,14 +225,16 @@ import type {
   IdCamp,
   IdTaux,
   Int,
+  SendProgress,
   Taux,
 } from "@/clients/backoffice/logic/api";
 import CampEdit from "./CampEdit.vue";
 import TauxSelect from "./TauxSelect.vue";
 import CampHeaderRow from "./CampHeaderRow.vue";
-import { Camps, normalize } from "@/utils";
+import { Camps, normalize, readJSONStream } from "@/utils";
 import CampsSelector from "./CampsSelector.vue";
 import DocumentsCard from "./DocumentsCard.vue";
+import RequestProgressCard from "../RequestProgressCard.vue";
 
 const emit = defineEmits<{
   (e: "show-participants", camp: CampHeader): void;
@@ -389,12 +399,24 @@ async function openInsc() {
 
 const showDocumentsFor = ref<CampHeader | null>(null);
 
-const isSendingSondage = ref(false);
+const sondagesProgress = ref<SendProgress | null>(null);
 async function sendSondage(idCamp: IdCamp) {
-  isSendingSondage.value = true;
+  // start with initial 0 progress
+  sondagesProgress.value = {
+    Current: 0 as Int,
+    Total: 10 as Int, // just a guess
+  };
   const res = await controller.EventsSendSondages({ idCamp });
-  isSendingSondage.value = false;
-  if (res === undefined) return;
+  if (res === undefined) {
+    sondagesProgress.value = null;
+    return;
+  }
+  await readJSONStream(
+    res,
+    (v) => (sondagesProgress.value = v),
+    (err) => controller.onError("Envoi du sondage", err)
+  );
+  sondagesProgress.value = null;
   controller.showMessage("Sondage envoyé avec succès.");
 }
 </script>

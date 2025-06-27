@@ -96,10 +96,14 @@ func Test_events(t *testing.T) {
 		tu.AssertNoErr(t, err)
 		tu.Assert(t, len(preview.Dossiers) == toSend)
 
-		err = ct.sendDocumentsCamp("", SendDocumentsCampIn{IdCamp: camp1.Id, IdDossiers: ids})
+		it, err := ct.sendDocumentsCamp("", SendDocumentsCampIn{IdCamp: camp1.Id, IdDossiers: ids})
+		tu.AssertNoErr(t, err)
+		err = utils.StreamJSON(httptest.NewRecorder(), it)
 		tu.AssertNoErr(t, err)
 
-		err = ct.sendSondages("", camp1.Id)
+		it, err = ct.sendSondages("", camp1.Id)
+		tu.AssertNoErr(t, err)
+		err = utils.StreamJSON(httptest.NewRecorder(), it)
 		tu.AssertNoErr(t, err)
 	})
 
@@ -121,7 +125,9 @@ func Test_events(t *testing.T) {
 		tu.Assert(t, len(preview) == 0)
 
 		out := httptest.NewRecorder()
-		err = ct.sendRelancePaiement(out, "", RelancePaiementIn{ids})
+		it, err := ct.sendRelancePaiement("", RelancePaiementIn{ids})
+		tu.AssertNoErr(t, err)
+		err = utils.StreamJSON(out, it)
 		tu.AssertNoErr(t, err)
 		tu.Assert(t, strings.Count(out.Body.String(), "\n") == 5)
 	})

@@ -12,6 +12,26 @@
         </v-col>
         <v-col align-self="center">
           <v-card v-if="preview" subtitle="Dossiers à contacter">
+            <template #append v-if="preview.Dossiers?.length">
+              <v-checkbox
+                label="Tout sélectionner"
+                density="compact"
+                hide-details
+                :indeterminate="
+                  !!selected.length &&
+                  selected.length != (preview.Dossiers || []).length
+                "
+                :model-value="
+                  selected.length == (preview.Dossiers || []).length
+                "
+                @update:model-value="
+                  selected = allSelected
+                    ? []
+                    : (preview.Dossiers || []).map((v) => v.Id)
+                "
+              ></v-checkbox>
+            </template>
+
             <v-card-text>
               <v-list
                 selectable
@@ -56,18 +76,11 @@
     <v-card-actions>
       <v-spacer></v-spacer>
       <v-btn
-        :disabled="!idCamp || !selected.length || isSending"
-        @click="
-          isSending = true;
-          emit('send', idCamp, selected);
-        "
+        :disabled="!idCamp || !selected.length"
+        @click="emit('send', idCamp, selected)"
       >
         <template #append>
-          <v-progress-circular
-            v-if="isSending"
-            indeterminate
-          ></v-progress-circular>
-          <v-icon v-else>mdi-send</v-icon>
+          <v-icon>mdi-send</v-icon>
         </template>
         Envoyer
       </v-btn>
@@ -83,6 +96,7 @@ import {
   type SendDocumentsCampPreview,
 } from "@/clients/backoffice/logic/api";
 import { controller } from "@/clients/backoffice/logic/logic";
+import { computed } from "vue";
 import { ref } from "vue";
 
 const props = defineProps<{
@@ -109,6 +123,7 @@ async function fetchPreview() {
 }
 
 const selected = ref<IdDossier[]>([]);
-
-const isSending = ref(false);
+const allSelected = computed(
+  () => selected.value.length == (preview.value?.Dossiers || []).length
+);
 </script>

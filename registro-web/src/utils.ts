@@ -601,6 +601,8 @@ export function swapItems<T>(origin: number, target: number, list: T[]) {
   }
 }
 
+export type JSONStreamResponse<T> = Response & { __tag__: T };
+
 // const response = await fetch(url, {
 //     method: "POST",
 //     headers: {
@@ -610,7 +612,7 @@ export function swapItems<T>(origin: number, target: number, list: T[]) {
 //     body: JSON.stringify(data),
 //   });
 export async function readJSONStream<R>(
-  response: Response,
+  response: JSONStreamResponse<R>,
   onValue: (v: R) => void,
   onError: (err: string) => void
 ) {

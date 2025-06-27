@@ -3,6 +3,7 @@
 import type { AxiosResponse } from "axios";
 import Axios from "axios";
 
+import type { JSONStreamResponse } from "@/utils";
 export type Ar2_string = [string, string];
 export type Ar4_Int = [Int, Int, Int, Int];
 
@@ -172,6 +173,11 @@ export interface SendDocumentsCampIn {
 // registro/controllers/backoffice.SendDocumentsCampPreview
 export interface SendDocumentsCampPreview {
   Dossiers: DossierDocumentsState[] | null;
+}
+// registro/controllers/backoffice.SendProgress
+export interface SendProgress {
+  Current: Int;
+  Total: Int;
 }
 // registro/controllers/files.GeneratedFile
 export interface GeneratedFile {
@@ -1515,28 +1521,44 @@ export abstract class AbstractAPI {
     }
   }
 
-  /** EventsSendDocumentsCamp performs the request and handles the error */
+  /** EventsSendDocumentsCamp return a streaming Response (JSON line format) */
   async EventsSendDocumentsCamp(params: SendDocumentsCampIn) {
     const fullUrl = this.baseURL + "/api/v1/backoffice/events/documents-camp";
     this.startRequest();
     try {
-      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-      return true;
+      const response = await fetch(fullUrl, {
+        method: "POST",
+        headers: {
+          ...this.getHeaders(),
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(params),
+      });
+      return response as JSONStreamResponse<SendProgress>;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  /** EventsSendSondages performs the request and handles the error */
+  /** EventsSendSondages return a streaming Response (JSON line format) */
   async EventsSendSondages(params: { idCamp: IdCamp }) {
-    const fullUrl = this.baseURL + "/api/v1/backoffice/events/sondage";
+    const fullUrl =
+      this.baseURL +
+      "/api/v1/backoffice/events/sondage" +
+      "?" +
+      new URLSearchParams({ idCamp: String(params["idCamp"]) }).toString();
     this.startRequest();
     try {
-      await Axios.post(fullUrl, null, {
-        headers: this.getHeaders(),
-        params: { idCamp: String(params["idCamp"]) },
+      const response = await fetch(fullUrl, {
+        method: "POST",
+        headers: {
+          ...this.getHeaders(),
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
       });
-      return true;
+      return response as JSONStreamResponse<SendProgress>;
     } catch (error) {
       this.handleError(error);
     }
@@ -1574,7 +1596,7 @@ export abstract class AbstractAPI {
         },
         body: JSON.stringify(params),
       });
-      return response;
+      return response as JSONStreamResponse<SendProgress>;
     } catch (error) {
       this.handleError(error);
     }

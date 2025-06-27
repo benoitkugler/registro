@@ -80,7 +80,7 @@ func setupRoutesBackoffice(e *echo.Echo, ct *backoffice.Controller) {
 	gr.POST("/api/v1/backoffice/events/documents-camp", ct.EventsSendDocumentsCamp)
 	gr.POST("/api/v1/backoffice/events/sondage", ct.EventsSendSondages)
 	gr.GET("/api/v1/backoffice/events/relance-paiement", ct.EventsSendRelancePaiementPreview)
-	gr.POST("/api/v1/backoffice/events/relance-paiement", ct.EventsSendRelancePaiement) // JSONStream
+	gr.POST("/api/v1/backoffice/events/relance-paiement", ct.EventsSendRelancePaiement)
 
 	// Onglet Annuaire
 
