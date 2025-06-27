@@ -23,7 +23,7 @@
               <v-row>
                 <v-col>
                   <v-text-field
-                    v-model="inner[index].Details"
+                    v-model="inner[index].Commentaire"
                     label="Information libre"
                     density="compact"
                     variant="outlined"

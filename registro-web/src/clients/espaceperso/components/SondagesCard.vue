@@ -18,7 +18,7 @@
         séjour.
       </div>
 
-      <v-tabs v-model="tab" v-if="data.length" grow>
+      <v-tabs v-model="tab" v-if="data.length" grow class="mt-2">
         <v-tab v-for="camp in data" :value="camp.Sondage.IdCamp">
           {{ camp.Camp }}
           <v-badge
@@ -34,87 +34,92 @@
           <v-card subtitle="Vos impressions sur le séjour">
             <v-card-text>
               <v-row>
-                <v-col>
-                  <RatingField
-                    label="Informations avant le séjour"
-                    v-model="camp.Sondage.InfosAvantSejour"
-                  ></RatingField
-                ></v-col>
-                <v-col>
-                  <RatingField
-                    label="Informations pendant le séjour"
-                    v-model="camp.Sondage.InfosPendantSejour"
-                  ></RatingField
-                ></v-col>
-                <v-col>
-                  <RatingField
-                    label="L'hébergement"
-                    v-model="camp.Sondage.Hebergement"
-                  ></RatingField
-                ></v-col>
-              </v-row>
+                <v-col cols="6">
+                  <v-row>
+                    <v-col>
+                      <RatingField
+                        label="Informations avant le séjour"
+                        v-model="camp.Sondage.InfosAvantSejour"
+                      ></RatingField
+                    ></v-col>
+                    <v-col>
+                      <RatingField
+                        label="Informations pendant le séjour"
+                        v-model="camp.Sondage.InfosPendantSejour"
+                      ></RatingField
+                    ></v-col>
+                    <v-col>
+                      <RatingField
+                        label="L'hébergement"
+                        v-model="camp.Sondage.Hebergement"
+                      ></RatingField
+                    ></v-col>
+                  </v-row>
 
-              <v-row>
-                <v-col>
-                  <RatingField
-                    label="Les activités"
-                    v-model="camp.Sondage.Activites"
-                  ></RatingField
-                ></v-col>
-                <v-col>
-                  <RatingField
-                    label="Le thème"
-                    v-model="camp.Sondage.Theme"
-                  ></RatingField
-                ></v-col>
-                <v-col>
-                  <RatingField
-                    label="La nourriture"
-                    v-model="camp.Sondage.Nourriture"
-                  ></RatingField
-                ></v-col>
-              </v-row>
-              <v-row>
-                <v-col>
-                  <RatingField
-                    label="L'hygiène corporelle et vestimentaire"
-                    v-model="camp.Sondage.Hygiene"
-                  ></RatingField
-                ></v-col>
-                <v-col>
-                  <RatingField
-                    label="L'ambiance du groupe"
-                    v-model="camp.Sondage.Ambiance"
-                  ></RatingField
-                ></v-col>
-                <v-col>
-                  <RatingField
-                    label="Le ressenti global de votre enfant"
-                    v-model="camp.Sondage.Ressenti"
-                  ></RatingField
-                ></v-col>
-              </v-row>
-
-              <v-row>
-                <v-col>
-                  <v-textarea
-                    rows="3"
-                    label="Message du participant"
-                    hint="Si le participant souhaite donner son avis sur le séjour qu'il a vécu, la parole lui est donnée ci-dessus. Des regrets ? De bons souvenirs ? Des propositions d'amélioration ?"
-                    persistent-hint
-                    v-model="camp.Sondage.MessageEnfant"
-                  >
-                  </v-textarea>
+                  <v-row>
+                    <v-col>
+                      <RatingField
+                        label="Les activités"
+                        v-model="camp.Sondage.Activites"
+                      ></RatingField
+                    ></v-col>
+                    <v-col>
+                      <RatingField
+                        label="Le thème"
+                        v-model="camp.Sondage.Theme"
+                      ></RatingField
+                    ></v-col>
+                    <v-col>
+                      <RatingField
+                        label="La nourriture"
+                        v-model="camp.Sondage.Nourriture"
+                      ></RatingField
+                    ></v-col>
+                  </v-row>
+                  <v-row>
+                    <v-col>
+                      <RatingField
+                        label="L'hygiène corporelle et vestimentaire"
+                        v-model="camp.Sondage.Hygiene"
+                      ></RatingField
+                    ></v-col>
+                    <v-col>
+                      <RatingField
+                        label="L'ambiance du groupe"
+                        v-model="camp.Sondage.Ambiance"
+                      ></RatingField
+                    ></v-col>
+                    <v-col>
+                      <RatingField
+                        label="Le ressenti global de votre enfant"
+                        v-model="camp.Sondage.Ressenti"
+                      ></RatingField
+                    ></v-col>
+                  </v-row>
                 </v-col>
-                <v-col>
-                  <v-textarea
-                    rows="3"
-                    label="Message du responsable"
-                    hint="En tant que responsable, vous avez une remarque, une suggestion, un ressenti à partager : avec plaisir ! N'hésitez pas à aborder tous les domaines : encadrement, activités, hébergement, repas, linge, etc. Nous prendrons soin de vous apporter une réponse en cas de besoin."
-                    persistent-hint
-                    v-model="camp.Sondage.MessageResponsable"
-                  >
-                  </v-textarea>
+                <v-col cols="6">
+                  <v-row>
+                    <v-col cols="12">
+                      <v-textarea
+                        rows="3"
+                        label="Message du participant"
+                        hint="Le participant souhaite donner son avis : des regrets ? de bons souvenirs ? des propositions d'amélioration ?"
+                        persistent-hint
+                        v-model="camp.Sondage.MessageEnfant"
+                      >
+                      </v-textarea>
+                    </v-col>
+                    <v-col>
+                      <v-textarea
+                        rows="3"
+                        label="Message du responsable"
+                        hint="En tant que responsable, vous avez une remarque, une suggestion, un ressenti à partager : avec plaisir ! Nous prendrons soin de vous apporter une réponse en cas de besoin."
+                        persistent-hint
+                        v-model="camp.Sondage.MessageResponsable"
+                      >
+                      </v-textarea>
+                    </v-col>
+                  </v-row>
                 </v-col>
               </v-row>
             </v-card-text>

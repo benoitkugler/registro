@@ -103,6 +103,12 @@
             "Output": "../registro-web/src/clients/backoffice/logic/api.ts"
         }
     ],
+    "routes_directeurs.go": [
+        {
+            "Mode": "typescript/api",
+            "Output": "../registro-web/src/clients/directeurs/logic/api.ts"
+        }
+    ],
     "routes_equipier.go": [
         {
             "Mode": "typescript/api",

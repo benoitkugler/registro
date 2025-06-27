@@ -356,7 +356,7 @@ export interface Participant {
   Remises: Remises;
   QuotientFamilial: Int;
   OptionPrix: OptionPrixParticipant;
-  Details: string;
+  Commentaire: string;
   Navette: Navette;
 }
 // registro/sql/camps.ParticipantCamp

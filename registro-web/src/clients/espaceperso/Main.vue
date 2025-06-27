@@ -1,5 +1,5 @@
 <template>
-  <NavBar title="Bienvenue sur votre espace de suivi">
+  <NavBar title="Espace de suivi de votre inscription">
     <v-btn @click="showSondages = 0 as IdCamp">
       <template #prepend>
         <v-icon>mdi-comment-quote</v-icon>
@@ -143,12 +143,13 @@
           :is-paiement-open="data.IsPaiementOpen"
           :settings="data.PaiementSettings"
           @refresh="fetchData"
+          @show-reglement="showReglement = true"
         ></FinancesCard>
       </v-col>
 
       <!-- fil des messages -->
       <v-col align-self="center">
-        <v-card subtitle="Suivi de votre inscription">
+        <v-card subtitle="Fil de suivi de votre inscription">
           <template #append>
             <v-btn @click="showCreateMessage = true">
               <template #prepend>
@@ -236,6 +237,26 @@
       @update-notifs="v => data!.DocumentsToReadOrFillCount = v"
     ></DocumentsCard>
   </v-dialog>
+
+  <!-- reglement -->
+  <v-dialog v-if="data" v-model="showReglement" max-width="800px">
+    <FinancesReglementCard
+      :token="token"
+      :dossier="data.Dossier"
+      :settings="data.PaiementSettings"
+    ></FinancesReglementCard>
+  </v-dialog>
+
+  <!-- présentation initiale -->
+  <v-dialog v-model="showPresentation" max-width="800px">
+    <PresentationCard></PresentationCard>
+  </v-dialog>
+
+  <!-- présentation initiale -->
+  <v-dialog v-model="showValidation" max-width="800px">
+    <ValidationInscriptionCard v-if="data" :dossier="data.Dossier">
+    </ValidationInscriptionCard>
+  </v-dialog>
 </template>
 
 <script lang="ts" setup>
@@ -261,23 +282,37 @@ import FichessanitairesCard from "./components/FichessanitairesCard.vue";
 import SondagesCard from "./components/SondagesCard.vue";
 import DocumentsCard from "./components/DocumentsCard.vue";
 import { endpoints } from "@/clients/directeurs/logic/logic";
+import FinancesReglementCard from "./components/FinancesReglementCard.vue";
+import PresentationCard from "./components/PresentationCard.vue";
+import ValidationInscriptionCard from "./components/ValidationInscriptionCard.vue";
 
 // id token
 const token = ref("");
 
 onMounted(async () => {
+  // process query params
   const query = new URLSearchParams(window.location.search);
-  // store ID token
-  token.value = query.get("token") || "";
-  // also fetch the possibly event linking to the page
+  const tokenS = query.get("token") || "";
+  const fromInscription = !!query.get("from-inscription");
   const fromIdEvent = Number(query.get("idEvent") || 0) as IdEvent;
+
+  // always store the token and load the data
+  token.value = tokenS;
   await fetchData();
   if (!data.value) return;
-  const event = (data.value.Dossier.Events || []).find(
+
+  // then, handle from inscription
+  if (fromInscription) {
+    showPresentation.value = true;
+    return;
+  }
+
+  // and the possibly event linking to the page
+  const fromEvent = (data.value.Dossier.Events || []).find(
     (ev) => ev.Id == fromIdEvent
   );
-  if (!event) return;
-  handleFromEvent(event);
+  if (!fromEvent) return;
+  handleFromEvent(fromEvent);
 });
 
 const data = ref<Data | null>(null);
@@ -300,6 +335,15 @@ const allDocumentsToFillCount = computed(() =>
 
 function handleFromEvent(event: Event) {
   switch (event.Content.Kind) {
+    case EventContentKind.Validation:
+      showValidation.value = true;
+      return;
+    case EventContentKind.Sondage:
+      showSondages.value = event.Content.Data.IdCamp;
+      return;
+    case EventContentKind.Facture:
+      showReglement.value = true;
+      return;
     case EventContentKind.CampDocs:
       showDocuments.value = true;
       return;
@@ -350,4 +394,12 @@ const showPhotos = ref(false);
 const showFichesantaires = ref(false);
 
 const showDocuments = ref(false);
+
+const showReglement = ref(false);
+
+// mail reçu après avoir validé (tout ou partie)
+const showValidation = ref(false);
+
+// redirection après l'inscription (avant toute validation)
+const showPresentation = ref(false);
 </script>

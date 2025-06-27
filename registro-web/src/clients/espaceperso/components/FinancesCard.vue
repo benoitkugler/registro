@@ -4,7 +4,7 @@
       <v-btn
         size="small"
         class="mr-1"
-        @click="showReglement = true"
+        @click="emit('showReglement')"
         :disabled="
           !props.isPaiementOpen ||
           props.dossier.Bilan.Statut == StatutPaiement.Complet
@@ -109,14 +109,6 @@
         @save="createAide"
       ></AideCard>
     </v-dialog>
-
-    <v-dialog v-model="showReglement" max-width="800px">
-      <FinancesReglementCard
-        :token="props.token"
-        :dossier="props.dossier"
-        :settings="props.settings"
-      ></FinancesReglementCard>
-    </v-dialog>
   </v-card>
 </template>
 
@@ -132,16 +124,15 @@ import { computed, onMounted, ref } from "vue";
 import AideCard from "./AideCard.vue";
 import { controller } from "../logic/logic";
 import { Formatters } from "@/utils";
-import FinancesReglementCard from "./FinancesReglementCard.vue";
 const props = defineProps<{
   token: string;
   dossier: DossierExt;
   isPaiementOpen: boolean;
-  settings: PaiementSettings;
 }>();
 
 const emit = defineEmits<{
   (e: "refresh"): void;
+  (e: "showReglement"): void;
 }>();
 
 onMounted(fetchStructures);
@@ -174,6 +165,4 @@ async function fetchStructures() {
   if (res === undefined) return;
   structures.value = res || {};
 }
-
-const showReglement = ref(false);
 </script>
