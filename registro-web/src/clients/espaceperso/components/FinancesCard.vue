@@ -102,7 +102,7 @@
       </v-row>
     </v-card-text>
 
-    <v-dialog v-model="showCreateAide" max-width="800px">
+    <v-dialog v-model="showCreateAide" max-width="450px">
       <AideCard
         :dossier="props.dossier"
         :structureaides="structures"
@@ -117,7 +117,6 @@ import {
   StatutPaiement,
   type Aide,
   type DossierExt,
-  type PaiementSettings,
   type Structureaides,
 } from "../logic/api";
 import { computed, onMounted, ref } from "vue";

@@ -1,12 +1,15 @@
 <template>
-  <v-card title="Ajouter une aide extérieure">
+  <v-card
+    title="Ajouter une aide extérieure"
+    subtitle="Cette aide sera vérifiée par le centre."
+  >
     <v-card-text>
       <v-row>
         <v-col>
           <v-select
             variant="outlined"
             density="comfortable"
-            label="Participant"
+            label="Participant concerné"
             v-model="aide.IdParticipant"
             :items="participantsItems"
           >
@@ -19,6 +22,8 @@
             </template>
           </v-select>
         </v-col>
+      </v-row>
+      <v-row>
         <v-col>
           <v-select
             variant="outlined"
@@ -34,13 +39,15 @@
         </v-col>
       </v-row>
       <v-row>
-        <v-col align-self="center" cols="5">
+        <v-col align-self="center">
           <MontantField
             label="Valeur"
             v-model="aide.Valeur"
             hide-details
           ></MontantField>
         </v-col>
+      </v-row>
+      <v-row>
         <v-col align-self="center">
           <v-checkbox
             v-model="aide.ParJour"
@@ -75,7 +82,7 @@
         :disabled="!isAideValide"
         @click="emit('save', aide, file!)"
       >
-        Ajouter
+        Ajouter pour vérification
       </v-btn>
     </v-card-actions>
   </v-card>
