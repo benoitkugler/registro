@@ -4,21 +4,25 @@
     icon="mdi-map-marker-check"
     :time="props.event.Created"
   >
-    Inscription confirmée
-    <v-tooltip
-      :text="
-        'Inscription reçue et confirmée ' +
-        (props.content.ByCamp
-          ? `par la direction du séjour ${props.content.ByCamp}.`
-          : `par le centre.`)
-      "
-    >
-      <template #activator="{ props: tooltipProps }">
-        <v-chip v-bind="tooltipProps" prepend-icon="mdi-account">
-          {{ props.content.ByCamp ? props.content.ByCamp : "Centre" }}
-        </v-chip>
-      </template>
-    </v-tooltip>
+    <v-row no-gutters>
+      <v-col align-self="center">
+        Inscription reçue et confirmée
+        {{
+          props.content.ByCamp
+            ? `par la direction du séjour ${props.content.ByCamp}.`
+            : `par le centre.`
+        }}
+      </v-col>
+      <v-col align-self="center" cols="auto">
+        <v-btn
+          icon="mdi-information"
+          flat
+          size="small"
+          class="mr-2"
+          @click="emit('goToValidation')"
+        ></v-btn>
+      </v-col>
+    </v-row>
   </EventItem>
 </template>
 
@@ -29,6 +33,8 @@ const props = defineProps<{
   event: Event;
   content: Validation;
 }>();
+
+const emit = defineEmits<{ (e: "goToValidation"): void }>();
 </script>
 
 <style scoped></style>

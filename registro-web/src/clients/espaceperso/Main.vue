@@ -166,6 +166,7 @@
                   :event="event"
                   @go-to-sondage="(id) => (showSondages = id)"
                   @go-to-documents="showDocuments = true"
+                  @go-to-validation="showValidation = true"
                 >
                 </EventSwitch>
               </v-timeline>

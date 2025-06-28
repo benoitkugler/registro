@@ -25,6 +25,7 @@
     "
     :event="props.event.Event"
     :content="props.event.Event.Content.Data"
+    @go-to-validation="emit('goToValidation')"
   ></EventValidationV>
   <EventMessageV
     v-else-if="
@@ -108,6 +109,7 @@ const emit = defineEmits<{
   (e: "deleteMessage", event: Event): void;
   (e: "goToSondage", idCamp: IdCamp): void;
   (e: "goToDocuments", idCamp: IdCamp): void;
+  (e: "goToValidation"): void;
 }>();
 </script>
 
