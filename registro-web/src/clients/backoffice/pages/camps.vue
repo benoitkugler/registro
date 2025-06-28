@@ -9,7 +9,11 @@
   </NavBar>
 
   <CampsList v-if="current === undefined" @show-participants="goTo"></CampsList>
-  <CampParticipants :id="current" v-else></CampParticipants>
+  <CampParticipants
+    :id="current"
+    :id-participant="queryURL.idParticipant"
+    v-else
+  ></CampParticipants>
 </template>
 
 <script lang="ts" setup>

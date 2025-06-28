@@ -228,13 +228,14 @@ import {
   type CampsLoadOut,
   type IdCamp,
   type IdDossier,
+  type IdParticipant,
   type IdPersonne,
   type Participant,
   type ParticipantExt,
   type ParticipantsCreateIn,
   type ParticipantsMoveIn,
 } from "@/clients/backoffice/logic/api";
-import { Camps, Participants, Personnes } from "@/utils";
+import { Camps, copy, Participants, Personnes } from "@/utils";
 import {
   goToDossier,
   goToParticipant,
@@ -243,14 +244,17 @@ import {
 
 const props = defineProps<{
   id: IdCamp;
+  idParticipant?: IdParticipant;
 }>();
 
-onMounted(() => {
-  loadCamp();
+onMounted(async () => {
   fetchCamps();
+  await loadCamp();
+  ensureParticipant();
 });
 
 watch(() => props.id, loadCamp);
+watch(() => props.idParticipant, ensureParticipant);
 
 const isLoading = ref(false);
 
@@ -277,6 +281,15 @@ async function loadCamp() {
   data.value = res;
 }
 
+function ensureParticipant() {
+  if (props.idParticipant === undefined) return;
+  const participant = (data.value?.Participants || []).find(
+    (p) => p.Participant.Id == props.idParticipant
+  );
+  if (!participant) return;
+  toEdit.value = copy(participant);
+}
+
 const toCreate = ref<ParticipantsCreateIn | null>(null);
 async function createParticipant() {
   if (toCreate.value == null || data.value == null) return;
@@ -285,6 +298,8 @@ async function createParticipant() {
   if (res === undefined) return;
   controller.showMessage("Participant créé avec succès.");
   data.value.Participants = (data.value.Participants || []).concat(res);
+  // start edit
+  toEdit.value = copy(res);
 }
 
 const toEdit = ref<ParticipantExt | null>(null);
