@@ -300,13 +300,13 @@ ALTER TABLE event_messages
     ADD FOREIGN KEY (IdEvent, guard) REFERENCES events (Id, Kind) ON DELETE CASCADE;
 
 ALTER TABLE event_messages
-    ADD CHECK (Origine <> 2
-    /* MessageOrigine.FromDirecteur */
+    ADD CHECK (Origine <> 3
+    /* Acteur.Directeur */
         OR OrigineCamp IS NOT NULL);
 
 ALTER TABLE event_messages
-    ADD CHECK (Origine = 2
-    /* MessageOrigine.FromDirecteur */
+    ADD CHECK (Origine = 3
+    /* Acteur.Directeur */
         OR OrigineCamp IS NULL);
 
 ALTER TABLE event_messages

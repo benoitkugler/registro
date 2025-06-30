@@ -64,7 +64,7 @@ func main() {
 		e.DefaultHTTPErrorHandler(err, c)
 	}
 
-	backofficeCt, err := backoffice.NewController(db, encrypter, keys.Backoffice, fs, smtp, asso, joomeo, helloasso)
+	backofficeCt, err := backoffice.NewController(db, encrypter, keys.Backoffice, keys.FondSoutien, fs, smtp, asso, joomeo, helloasso)
 	check(err)
 
 	directeursCt, err := directeurs.NewController(db, keys.EncryptKey, keys.Directeurs, fs, smtp, asso, joomeo)
@@ -87,10 +87,6 @@ func main() {
 			ExposeHeaders: []string{"Content-Disposition"},
 		}))
 		fmt.Println("\tenabling CORS")
-
-		tokenB, err := backofficeCt.NewToken(false)
-		check(err)
-		fmt.Println("\tbackoffice dev token:", tokenB)
 
 		// select and generate a directeur token
 		camps, err := cp.SelectAllCamps(db)

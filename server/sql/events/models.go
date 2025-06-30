@@ -41,17 +41,22 @@ type EventValidation struct {
 // gomacro:SQL ADD UNIQUE(IdEvent)
 // gomacro:SQL ADD FOREIGN KEY (IdEvent, guard) REFERENCES Event(Id,Kind) ON DELETE CASCADE
 //
-// gomacro:SQL ADD CHECK(Origine <> #[MessageOrigine.FromDirecteur] OR OrigineCamp IS NOT NULL)
-// gomacro:SQL ADD CHECK(Origine = #[MessageOrigine.FromDirecteur] OR OrigineCamp IS NULL)
+// gomacro:SQL ADD CHECK(Origine <> #[Acteur.Directeur] OR OrigineCamp IS NOT NULL)
+// gomacro:SQL ADD CHECK(Origine = #[Acteur.Directeur] OR OrigineCamp IS NULL)
 type EventMessage struct {
 	IdEvent IdEvent `gomacro-sql-on-delete:"CASCADE"`
 
 	Contenu     string
-	Origine     MessageOrigine
+	Origine     Acteur
 	OrigineCamp OptIdCamp `gomacro-sql-foreign:"Camp"`
 
 	VuBackoffice  bool
 	VuEspaceperso bool
+
+	// OnlyToFondSoutien est utilisé pour restreindre la visibilité d'un message
+	// au fond de soutien.
+	// Ce champ n'est utilisé que pour les messages avec Origine == Espaceperso
+	OnlyToFondSoutien bool
 
 	guard EventKind `gomacro-sql-guard:"#[EventKind.Message]"`
 }
@@ -59,7 +64,7 @@ type EventMessage struct {
 // CreateMessage does not wrap errors
 func CreateMessage(db DB, idDossier dossiers.IdDossier, created time.Time,
 	contenu string,
-	origine MessageOrigine, origineCamp OptIdCamp,
+	origine Acteur, origineCamp OptIdCamp,
 ) (Event, EventMessage, error) {
 	event, err := Event{IdDossier: idDossier, Kind: Message, Created: created}.Insert(db)
 	if err != nil {

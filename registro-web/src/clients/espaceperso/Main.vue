@@ -289,6 +289,7 @@ import { computed, onMounted, ref } from "vue";
 import NavBar from "./components/NavBar.vue";
 import { controller } from "./logic/logic";
 import {
+  Acteur,
   EventContentKind,
   StatutParticipant,
   StatutParticipantLabels,
@@ -345,7 +346,9 @@ async function fetchData() {
 }
 
 const events = computed(() =>
-  data.value == null ? [] : buildPseudoEvents(data.value.Dossier, "espaceperso")
+  data.value == null
+    ? []
+    : buildPseudoEvents(data.value.Dossier, Acteur.Espaceperso)
 );
 
 const allDocumentsToFillCount = computed(() =>

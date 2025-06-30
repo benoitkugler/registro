@@ -16,7 +16,7 @@
         <v-btn
           size="small"
           color="green"
-          v-if="props.user == 'espaceperso' && !props.content.Accepted"
+          v-if="props.user == Acteur.Espaceperso && !props.content.Accepted"
           @click="emit('acceptPlaceLiberee')"
         >
           <template #prepend>
@@ -33,13 +33,16 @@
 </template>
 
 <script setup lang="ts">
-import { type Event, type PlaceLiberee } from "@/clients/backoffice/logic/api";
-import type { User } from "@/utils";
+import {
+  Acteur,
+  type Event,
+  type PlaceLiberee,
+} from "@/clients/backoffice/logic/api";
 
 const props = defineProps<{
   event: Event;
   content: PlaceLiberee;
-  user: User;
+  user: Acteur;
 }>();
 
 const emit = defineEmits<{ (e: "acceptPlaceLiberee"): void }>();

@@ -22,10 +22,11 @@ CREATE TABLE event_camp_docss (
 CREATE TABLE event_messages (
     IdEvent integer NOT NULL,
     Contenu text NOT NULL,
-    Origine smallint CHECK (Origine IN (0, 1, 2)) NOT NULL,
+    Origine smallint CHECK (Origine IN (0, 1, 2, 3)) NOT NULL,
     OrigineCamp integer,
     VuBackoffice boolean NOT NULL,
     VuEspaceperso boolean NOT NULL,
+    OnlyToFondSoutien boolean NOT NULL,
     guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7)) NOT NULL
 );
 
@@ -86,13 +87,13 @@ ALTER TABLE event_messages
     ADD FOREIGN KEY (IdEvent, guard) REFERENCES events (Id, Kind) ON DELETE CASCADE;
 
 ALTER TABLE event_messages
-    ADD CHECK (Origine <> 2
-    /* MessageOrigine.FromDirecteur */
+    ADD CHECK (Origine <> 3
+    /* Acteur.Directeur */
         OR OrigineCamp IS NOT NULL);
 
 ALTER TABLE event_messages
-    ADD CHECK (Origine = 2
-    /* MessageOrigine.FromDirecteur */
+    ADD CHECK (Origine = 3
+    /* Acteur.Directeur */
         OR OrigineCamp IS NULL);
 
 ALTER TABLE event_messages

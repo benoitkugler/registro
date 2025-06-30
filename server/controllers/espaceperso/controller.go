@@ -130,7 +130,7 @@ func (ct *Controller) sendMessage(args SendMessageIn) (logic.Event, error) {
 	if err != nil {
 		return logic.Event{}, err
 	}
-	event, message, err := evs.CreateMessage(ct.db, id, time.Now(), args.Message, evs.FromEspaceperso, evs.OptIdCamp{})
+	event, message, err := evs.CreateMessage(ct.db, id, time.Now(), args.Message, evs.Espaceperso, evs.OptIdCamp{})
 	if err != nil {
 		return logic.Event{}, utils.SQLError(err)
 	}

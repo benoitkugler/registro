@@ -292,10 +292,11 @@ CREATE TABLE event_camp_docss (
 CREATE TABLE event_messages (
     IdEvent integer NOT NULL,
     Contenu text NOT NULL,
-    Origine smallint CHECK (Origine IN (0, 1, 2)) NOT NULL,
+    Origine smallint CHECK (Origine IN (0, 1, 2, 3)) NOT NULL,
     OrigineCamp integer,
     VuBackoffice boolean NOT NULL,
     VuEspaceperso boolean NOT NULL,
+    OnlyToFondSoutien boolean NOT NULL,
     guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7)) NOT NULL
 );
 

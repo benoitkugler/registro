@@ -1,4 +1,5 @@
 import {
+  Acteur,
   CurrencyLabels,
   Sexe,
   StatutPaiement,
@@ -387,14 +388,12 @@ export namespace Formatters {
   }
 }
 
-export type User = "espaceperso" | "backoffice";
-
 export type PseudoEvent =
-  | { Kind: "event"; Event: Event; User: User }
+  | { Kind: "event"; Event: Event; User: Acteur }
   | {
       Kind: "paiement";
       Paiement: Paiement;
-      User: User;
+      User: Acteur;
     }
   | {
       Kind: "inscription-time";
@@ -413,7 +412,7 @@ function pseudoEventTime(event: PseudoEvent): Date {
 }
 
 /** add the inscription time and paiements and sort by time */
-export function buildPseudoEvents(dossier: DossierExt, user: User) {
+export function buildPseudoEvents(dossier: DossierExt, user: Acteur) {
   const evList: PseudoEvent[] = (dossier.Events || []).map((ev) => ({
     Kind: "event",
     Event: ev,

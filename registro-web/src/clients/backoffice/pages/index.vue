@@ -47,7 +47,7 @@ async function loggin() {
   if (res === undefined) return;
 
   if (res.IsValid) {
-    controller.setToken(res.Token);
+    controller.setToken(res.Token, res.IsFondSoutien);
     controller.showMessage("Bienvenue !");
     router.push({ path: "/camps" });
   } else {

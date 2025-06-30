@@ -16,7 +16,9 @@
       </v-col>
       <v-col align-self="center" cols="auto">
         <v-btn
-          v-if="props.user == 'backoffice'"
+          v-if="
+            props.user == Acteur.Backoffice || props.user == Acteur.Fondsoutien
+          "
           icon="mdi-pencil"
           size="x-small"
           @click="emit('edit')"
@@ -27,12 +29,12 @@
 </template>
 
 <script setup lang="ts">
-import { type Paiement } from "@/clients/backoffice/logic/api";
-import { Formatters, type User } from "@/utils";
+import { Acteur, type Paiement } from "@/clients/backoffice/logic/api";
+import { Formatters } from "@/utils";
 
 const props = defineProps<{
   paiement: Paiement;
-  user: User;
+  user: Acteur;
 }>();
 
 const emit = defineEmits<{

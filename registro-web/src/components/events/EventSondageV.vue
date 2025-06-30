@@ -12,7 +12,7 @@
       </v-col>
       <v-col align-self="center" cols="auto">
         <v-btn size="small" @click="emit('goToSondage', props.content.IdCamp)">
-          {{ props.user == "espaceperso" ? "répondre" : "aller" }}
+          {{ props.user == Acteur.Espaceperso ? "répondre" : "aller" }}
         </v-btn>
       </v-col>
     </v-row>
@@ -21,16 +21,16 @@
 
 <script setup lang="ts">
 import {
+  Acteur,
   type Event,
   type IdCamp,
   type Sondage,
 } from "@/clients/backoffice/logic/api";
-import type { User } from "@/utils";
 
 const props = defineProps<{
   event: Event;
   content: Sondage;
-  user: User;
+  user: Acteur;
 }>();
 
 const emit = defineEmits<{ (e: "goToSondage", idCamp: IdCamp): void }>();

@@ -9,7 +9,6 @@ import {
   type Int,
   type SearchDossierIn,
 } from "./api";
-import { devToken } from "../env";
 
 class Controller extends AbstractAPI {
   constructor(
@@ -19,6 +18,7 @@ class Controller extends AbstractAPI {
       color?: string,
       action?: Action
     ) => void,
+    public isFondSoutien: boolean,
     baseURL: string,
     authToken: string
   ) {
@@ -29,8 +29,9 @@ class Controller extends AbstractAPI {
     return this.authToken != "";
   }
 
-  setToken(token: string) {
+  setToken(token: string, isFondSoutien: boolean) {
     this.authToken = token;
+    this.isFondSoutien = isFondSoutien;
   }
 
   protected handleError(error: any): void {
@@ -41,14 +42,12 @@ class Controller extends AbstractAPI {
   protected startRequest(): void {}
 }
 
-/** `isDev` is true when the client app is served in dev mode */
-const isDev = import.meta.env.DEV;
-
 export const controller = new Controller(
   (_, __) => {},
   (_, __) => {},
+  false,
   baseURL(),
-  isDev ? devToken : ""
+  ""
 );
 
 export function isCampOpen(camp: CampExt) {

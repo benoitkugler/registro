@@ -25,11 +25,12 @@ type EventsSendMessageIn struct {
 // EventsSendMessage creates a new message and sends a notification
 // to the responsable.
 func (ct *Controller) EventsSendMessage(c echo.Context) error {
+	_, isFondSoutien := JWTUser(c)
 	var args EventsSendMessageIn
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
-	_, err := ct.sendMessage(c.Request().Host, args)
+	_, err := ct.sendMessage(c.Request().Host, args, isFondSoutien)
 	if err != nil {
 		return err
 	}
@@ -37,14 +38,18 @@ func (ct *Controller) EventsSendMessage(c echo.Context) error {
 }
 
 // add a message and send a notification
-func (ct *Controller) sendMessage(host string, args EventsSendMessageIn) (event evs.Event, _ error) {
+func (ct *Controller) sendMessage(host string, args EventsSendMessageIn, isFondSoutien bool) (event evs.Event, _ error) {
 	dossier, responsable, err := dossierAndResp(ct.db, args.IdDossier)
 	if err != nil {
 		return evs.Event{}, utils.SQLError(err)
 	}
 	url := logic.URLEspacePerso(ct.key, host, args.IdDossier)
 	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
-		event, _, err = evs.CreateMessage(tx, args.IdDossier, time.Now(), args.Contenu, evs.FromBackoffice, evs.OptIdCamp{})
+		origine := evs.Backoffice
+		if isFondSoutien {
+			origine = evs.Fondsoutien
+		}
+		event, _, err = evs.CreateMessage(tx, args.IdDossier, time.Now(), args.Contenu, origine, evs.OptIdCamp{})
 		if err != nil {
 			return err
 		}
@@ -85,7 +90,7 @@ func (ct *Controller) deleteEvent(id evs.IdEvent) error {
 	if !ok {
 		return errors.New("invalid event Kind (expected Message)")
 	}
-	if message.Message.Origine != evs.FromBackoffice {
+	if message.Message.Origine != evs.Backoffice {
 		return errors.New("invalid Message.Origine (expected FromBackoffice)")
 	}
 	return utils.InTx(ct.db, func(tx *sql.Tx) error {
@@ -128,7 +133,7 @@ func (ct *Controller) markMessagesSeen(idDossier ds.IdDossier) error {
 	var updates evs.EventMessages
 	for _, event := range events {
 		if message, isMessage := event.Content.(logic.Message); isMessage {
-			if message.Message.Origine != evs.FromBackoffice {
+			if message.Message.Origine != evs.Backoffice {
 				message.Message.VuBackoffice = true
 				updates = append(updates, message.Message)
 			}

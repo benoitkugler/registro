@@ -34,12 +34,13 @@ type Controller struct {
 	joomeo    config.Joomeo
 	helloasso config.Helloasso
 
-	password string // backoffice client key
+	password            string // backoffice client key
+	passwordFondsoutien string // backoffice client key, with Fond de soutien role
 
 	builtins fs.Builtins
 }
 
-func NewController(db *sql.DB, key crypto.Encrypter, password string, files fs.FileSystem, smtp config.SMTP, asso config.Asso, joomeo config.Joomeo, helloasso config.Helloasso) (*Controller, error) {
+func NewController(db *sql.DB, key crypto.Encrypter, password, passwordFondsoutien string, files fs.FileSystem, smtp config.SMTP, asso config.Asso, joomeo config.Joomeo, helloasso config.Helloasso) (*Controller, error) {
 	builtins, err := fs.LoadBuiltins(db)
 	if err != nil {
 		return nil, err
@@ -53,13 +54,15 @@ func NewController(db *sql.DB, key crypto.Encrypter, password string, files fs.F
 		joomeo,
 		helloasso,
 		password,
+		passwordFondsoutien,
 		builtins,
 	}, nil
 }
 
 // customClaims are custom claims extending default ones.
 type customClaims struct {
-	IsAdmin bool
+	IsAdmin       bool
+	IsFondSoutien bool
 	jwt.RegisteredClaims
 }
 
@@ -86,10 +89,11 @@ const deltaToken = 3 * 24 * time.Hour
 // NewToken generate a connection token.
 //
 // It may also be used to setup a dev. token.
-func (ct *Controller) NewToken(isAdmin bool) (string, error) {
+func (ct *Controller) NewToken(isAdmin, isFondSoutien bool) (string, error) {
 	// Set custom claims
 	claims := &customClaims{
-		IsAdmin: isAdmin,
+		IsAdmin:       isAdmin,
+		IsFondSoutien: isFondSoutien,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(deltaToken)),
 		},
@@ -104,31 +108,43 @@ func (ct *Controller) NewToken(isAdmin bool) (string, error) {
 
 // JWTUser expects a JWT authentified request, and must
 // only be used in routes protected by [Controller.JWTMiddleware] or [Controller.JWTMiddlewareForQuery]
-func JWTUser(c echo.Context) (isAdmin bool) {
+func JWTUser(c echo.Context) (isAdmin, isFondSoutien bool) {
 	meta := c.Get("user").(*jwt.Token).Claims.(*customClaims) // the token is valid here
-	return meta.IsAdmin
+	return meta.IsAdmin, meta.IsFondSoutien
 }
 
 type LogginOut struct {
-	IsValid bool
-	Token   string
+	IsValid       bool
+	IsFondSoutien bool
+	Token         string
 }
 
 // Loggin is called to enter the web app,
 // and returns a token if the password is valid.
 func (ct *Controller) Loggin(c echo.Context) error {
 	password := c.QueryParam("password")
-
-	var out LogginOut
-	if ct.password == password {
-		token, err := ct.NewToken(false)
-		if err != nil {
-			return err
-		}
-		out = LogginOut{IsValid: true, Token: token}
+	out, err := ct.loggin(password)
+	if err != nil {
+		return err
 	}
-
 	return c.JSON(200, out)
+}
+
+func (ct *Controller) loggin(password string) (LogginOut, error) {
+	var isFondSoutien bool
+	switch password {
+	case ct.password:
+		isFondSoutien = false
+	case ct.passwordFondsoutien:
+		isFondSoutien = true
+	default:
+		return LogginOut{}, nil
+	}
+	token, err := ct.NewToken(false, isFondSoutien)
+	if err != nil {
+		return LogginOut{}, err
+	}
+	return LogginOut{IsValid: true, IsFondSoutien: isFondSoutien, Token: token}, nil
 }
 
 // ---------------------------------- Shared API ----------------------------------

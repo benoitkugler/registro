@@ -47,7 +47,7 @@
 
 <script lang="ts" setup>
 import { Formatters } from "@/utils";
-import { MessageOrigine, type EventExt_Message } from "../../logic/api";
+import { Acteur, type EventExt_Message } from "../../logic/api";
 import { isMessageFromUs, isMessageNew } from "../../logic/logic";
 import { computed } from "vue";
 
@@ -64,7 +64,8 @@ const emit = defineEmits<{
 // contrary of isSeen
 const isNew = computed(() => isMessageNew(props.message));
 const isFromUs = computed(() => isMessageFromUs(props.message));
-const isFromBackoffice = computed(
-  () => props.message.Content.Message.Origine == MessageOrigine.FromBackoffice
-);
+const isFromBackoffice = computed(() => {
+  const o = props.message.Content.Message.Origine;
+  return o == Acteur.Backoffice || o == Acteur.Fondsoutien;
+});
 </script>

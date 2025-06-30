@@ -31,7 +31,7 @@ func newInscription(de Dossier) Inscription {
 	// collect the messages
 	for event := range IterEventsBy[Message](de.Events) {
 		content := event.Content.Message
-		if content.Origine == evs.FromEspaceperso {
+		if content.Origine == evs.Espaceperso {
 			chunks = append(chunks, content.Contenu)
 		}
 	}

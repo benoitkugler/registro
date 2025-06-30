@@ -469,7 +469,7 @@ func (ct *Controller) createMessage(host string, idCamp cps.IdCamp, args CreateM
 	url := logic.URLEspacePerso(ct.key, host, args.IdDossier)
 	var event evs.Event
 	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
-		event, _, err = evs.CreateMessage(tx, args.IdDossier, time.Now(), args.Contenu, evs.FromDirecteur, idCamp.Opt())
+		event, _, err = evs.CreateMessage(tx, args.IdDossier, time.Now(), args.Contenu, evs.Directeur, idCamp.Opt())
 		if err != nil {
 			return err
 		}

@@ -44,15 +44,15 @@ func TestController_searchDossiers(t *testing.T) {
 	dossier2, err := ds.Dossier{IsValidated: true, IdResponsable: pe1.Id, IdTaux: 1, MomentInscription: time.Now()}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	err = createMessage(db, dossier1.Id, events.FromEspaceperso, cps.OptIdCamp{})
+	err = createMessage(db, dossier1.Id, events.Espaceperso, cps.OptIdCamp{})
 	tu.AssertNoErr(t, err)
-	err = createMessage(db, dossier1.Id, events.FromDirecteur, camp1.Id.Opt())
+	err = createMessage(db, dossier1.Id, events.Directeur, camp1.Id.Opt())
 	tu.AssertNoErr(t, err)
-	err = createMessage(db, dossier2.Id, events.FromEspaceperso, cps.OptIdCamp{})
+	err = createMessage(db, dossier2.Id, events.Espaceperso, cps.OptIdCamp{})
 	tu.AssertNoErr(t, err)
-	err = createMessage(db, dossier2.Id, events.FromBackoffice, cps.OptIdCamp{})
+	err = createMessage(db, dossier2.Id, events.Backoffice, cps.OptIdCamp{})
 	tu.AssertNoErr(t, err)
-	err = createMessage(db, dossier2.Id, events.FromBackoffice, cps.OptIdCamp{})
+	err = createMessage(db, dossier2.Id, events.Backoffice, cps.OptIdCamp{})
 	tu.AssertNoErr(t, err)
 
 	ct := Controller{db: db.DB}

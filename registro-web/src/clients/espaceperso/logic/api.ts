@@ -534,6 +534,22 @@ export interface Paiement {
 }
 // registro/sql/dossiers.Paiements
 export type Paiements = Record<IdPaiement, Paiement> | null;
+// registro/sql/events.Acteur
+export const Acteur = {
+  Espaceperso: 0,
+  Backoffice: 1,
+  Fondsoutien: 2,
+  Directeur: 3,
+} as const;
+export type Acteur = (typeof Acteur)[keyof typeof Acteur];
+
+export const ActeurLabels: Record<Acteur, string> = {
+  [Acteur.Espaceperso]: "",
+  [Acteur.Backoffice]: "",
+  [Acteur.Fondsoutien]: "",
+  [Acteur.Directeur]: "",
+};
+
 // registro/sql/events.Distribution
 export const Distribution = {
   DEspacePerso: 0,
@@ -552,27 +568,13 @@ export const DistributionLabels: Record<Distribution, string> = {
 export interface EventMessage {
   IdEvent: IdEvent;
   Contenu: string;
-  Origine: MessageOrigine;
+  Origine: Acteur;
   OrigineCamp: OptID_IdCamp;
   VuBackoffice: boolean;
   VuEspaceperso: boolean;
+  OnlyToFondSoutien: boolean;
 }
 export type IdEvent = number & { __opaque__: "IdEvent" };
-// registro/sql/events.MessageOrigine
-export const MessageOrigine = {
-  FromEspaceperso: 0,
-  FromBackoffice: 1,
-  FromDirecteur: 2,
-} as const;
-export type MessageOrigine =
-  (typeof MessageOrigine)[keyof typeof MessageOrigine];
-
-export const MessageOrigineLabels: Record<MessageOrigine, string> = {
-  [MessageOrigine.FromEspaceperso]: "",
-  [MessageOrigine.FromBackoffice]: "",
-  [MessageOrigine.FromDirecteur]: "",
-};
-
 // registro/sql/files.Categorie
 export const Categorie = {
   NoBuiltin: 0,

@@ -30,7 +30,7 @@
           </v-col>
           <v-col>
             <v-text-field
-              v-model="inner.Details"
+              v-model="inner.Commentaire"
               label="Commentaire"
               density="compact"
               variant="outlined"

@@ -320,6 +320,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import {
+  Acteur,
   StatutPaiement,
   type Aide,
   type AidesCreateIn,
@@ -380,7 +381,10 @@ const emit = defineEmits<{
 defineExpose({ showEditPaiement, showEditDossier });
 
 const events = computed(() =>
-  buildPseudoEvents(props.dossier.Dossier, "backoffice")
+  buildPseudoEvents(
+    props.dossier.Dossier,
+    controller.isFondSoutien ? Acteur.Fondsoutien : Acteur.Backoffice
+  )
 );
 
 const showDeleteDialog = ref(false);

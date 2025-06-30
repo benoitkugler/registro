@@ -1,6 +1,11 @@
 <template>
   <v-navigation-drawer app v-model="showSideBar" temporary>
-    <v-list-item title="Registro - Backoffice" :subtitle="version">
+    <v-list-item
+      :title="
+        isFondSoutien ? 'Registro - Fond de soutien' : 'Registro - Backoffice'
+      "
+      :subtitle="version"
+    >
     </v-list-item>
     <v-divider></v-divider>
 
@@ -64,7 +69,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
+import { controller } from "../logic/logic";
 
 const logo = `${import.meta.env.BASE_URL}${import.meta.env.VITE_ASSO}/logo.png`;
 
@@ -75,4 +81,6 @@ const props = defineProps<{
   title: string;
   hideMenu?: boolean;
 }>();
+
+const isFondSoutien = computed(() => controller.isFondSoutien);
 </script>

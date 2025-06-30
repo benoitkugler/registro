@@ -9,7 +9,7 @@
         <v-btn
           size="small"
           @click="emit('goToDocuments', props.content.IdCamp)"
-          v-if="props.user == 'espaceperso'"
+          v-if="props.user == Acteur.Espaceperso"
           class="mr-2"
         >
           Lire
@@ -24,13 +24,13 @@ import {
   type Event,
   type CampDocs,
   type IdCamp,
+  Acteur,
 } from "@/clients/backoffice/logic/api";
-import type { User } from "@/utils";
 
 const props = defineProps<{
   event: Event;
   content: CampDocs;
-  user: User;
+  user: Acteur;
 }>();
 
 const emit = defineEmits<{ (e: "goToDocuments", idCamp: IdCamp): void }>();

@@ -49,18 +49,17 @@
 
 <script setup lang="ts">
 import {
-  MessageOrigine,
+  Acteur,
   type Event,
   type Message,
 } from "@/clients/backoffice/logic/api";
 import EventItem from "./EventItem.vue";
 import { computed, ref } from "vue";
-import type { User } from "@/utils";
 
 const props = defineProps<{
   event: Event;
   content: Message;
-  user: User;
+  user: Acteur;
 }>();
 
 const emit = defineEmits<{
@@ -71,29 +70,29 @@ const colorClass = computed(() =>
   origineToColor(props.content.Message.Origine)
 );
 
-const allowDelete = computed(() => props.user == "backoffice" && fromUs);
+const allowDelete = computed(
+  () =>
+    props.user == Acteur.Backoffice ||
+    (props.user == Acteur.Fondsoutien && fromUs)
+);
 
-function origineToColor(or: MessageOrigine) {
+function origineToColor(or: Acteur) {
   switch (or) {
-    case MessageOrigine.FromBackoffice:
+    case Acteur.Backoffice:
       return "bg-light-green-lighten-3";
-    case MessageOrigine.FromDirecteur:
+    case Acteur.Backoffice:
+      return "bg-orange-lighten-3";
+    case Acteur.Directeur:
       return "bg-lime";
-    case MessageOrigine.FromEspaceperso:
+    case Acteur.Espaceperso:
       return "bg-light-blue-lighten-3";
   }
 }
 
 const showConfirme = ref(false);
 
-/** true is sent by us */
-const fromUs = computed(
-  () =>
-    props.content.Message.Origine ==
-    (props.user == "backoffice"
-      ? MessageOrigine.FromBackoffice
-      : MessageOrigine.FromEspaceperso)
-);
+/** true if message is sent by the current user */
+const fromUs = computed(() => props.content.Message.Origine == props.user);
 </script>
 
 <style scoped></style>

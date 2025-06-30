@@ -24,12 +24,13 @@ const (
 
 )
 
-type MessageOrigine uint8
+type Acteur uint8
 
 const (
-	FromEspaceperso MessageOrigine = iota
-	FromBackoffice
-	FromDirecteur
+	Espaceperso Acteur = iota
+	Backoffice
+	Fondsoutien
+	Directeur
 )
 
 type Distribution uint8

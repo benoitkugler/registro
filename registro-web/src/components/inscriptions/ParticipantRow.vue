@@ -70,7 +70,7 @@
       }}
     </v-col>
     <v-col align-self="center">
-      {{ props.participant.Participant.Details }}
+      {{ props.participant.Participant.Commentaire }}
     </v-col>
     <v-spacer></v-spacer>
     <v-col cols="2" align-self="center">

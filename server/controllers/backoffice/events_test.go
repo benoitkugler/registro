@@ -15,7 +15,7 @@ import (
 	tu "registro/utils/testutils"
 )
 
-func createMessage(db events.DB, idDossier ds.IdDossier, origine events.MessageOrigine, origineCamp events.OptIdCamp) error {
+func createMessage(db events.DB, idDossier ds.IdDossier, origine events.Acteur, origineCamp events.OptIdCamp) error {
 	_, _, err := events.CreateMessage(db, idDossier, time.Now(), utils.RandString(30, true), origine, origineCamp)
 	return err
 }
@@ -42,24 +42,27 @@ func Test_events(t *testing.T) {
 		event, err := ct.sendMessage("localhost", EventsSendMessageIn{IdDossier: d1.Id, Contenu: `
 		Merci pur l'inscriptio !
 		
-		Question : donnez moi vos on cafs
+		Question : donnez moi vos bons cafs
 		
 		Merci
 		Marie-Pierre
-		`})
+		`}, false)
 		tu.AssertNoErr(t, err)
 		tu.Assert(t, event.Kind == events.Message)
 
 		err = ct.deleteEvent(event.Id)
 		tu.AssertNoErr(t, err)
+
+		_, err = ct.sendMessage("localhost", EventsSendMessageIn{IdDossier: d1.Id, Contenu: `.`}, true)
+		tu.AssertNoErr(t, err)
 	})
 
 	t.Run("mark seen", func(t *testing.T) {
-		err = createMessage(ct.db, d1.Id, events.FromEspaceperso, events.OptIdCamp{})
+		err = createMessage(ct.db, d1.Id, events.Espaceperso, events.OptIdCamp{})
 		tu.AssertNoErr(t, err)
-		err = createMessage(ct.db, d1.Id, events.FromBackoffice, events.OptIdCamp{})
+		err = createMessage(ct.db, d1.Id, events.Backoffice, events.OptIdCamp{})
 		tu.AssertNoErr(t, err)
-		err = createMessage(ct.db, d1.Id, events.FromDirecteur, camp1.Id.Opt())
+		err = createMessage(ct.db, d1.Id, events.Directeur, camp1.Id.Opt())
 		tu.AssertNoErr(t, err)
 
 		err = ct.markMessagesSeen(d1.Id)

@@ -50,7 +50,7 @@ func IterEventsBy[T EventContent](evs Events) iter.Seq[EventExt[T]] {
 // not yet seen by the backoffice
 func (events Events) UnreadMessagesForBackoffice() (out []EventExt[Message]) {
 	for ev := range IterEventsBy[Message](events) {
-		if ev.Content.Message.Origine != evs.FromBackoffice && !ev.Content.Message.VuBackoffice {
+		if ev.Content.Message.Origine != evs.Backoffice && !ev.Content.Message.VuBackoffice {
 			out = append(out, ev)
 		}
 	}

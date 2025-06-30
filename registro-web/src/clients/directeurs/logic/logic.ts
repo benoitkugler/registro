@@ -3,11 +3,9 @@ import { baseURL, parseError, type Action } from "@/utils";
 import { devCamp, devToken } from "../env";
 import {
   AbstractAPI,
-  MessageOrigine,
+  Acteur,
   type CampItem,
   type EventExt_Message,
-  type IdCamp,
-  type IdDemande,
   type Lettredirecteur,
 } from "./api";
 import { Endpoints } from "@/urls";
@@ -67,7 +65,7 @@ export type LettreOptions = Pick<
 
 export function isMessageFromUs(message: EventExt_Message) {
   return (
-    message.Content.Message.Origine == MessageOrigine.FromDirecteur &&
+    message.Content.Message.Origine == Acteur.Directeur &&
     message.Content.Message.OrigineCamp.Id == controller.camp?.Id
   );
 }
