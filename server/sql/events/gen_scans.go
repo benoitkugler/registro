@@ -858,6 +858,7 @@ func scanOneEventPlaceLiberee(row scanner) (EventPlaceLiberee, error) {
 	err := row.Scan(
 		&item.IdEvent,
 		&item.IdParticipant,
+		&item.Accepted,
 	)
 	return item, err
 }
@@ -868,7 +869,7 @@ func ScanEventPlaceLiberee(row *sql.Row) (EventPlaceLiberee, error) {
 
 // SelectAll returns all the items in the event_place_liberees table.
 func SelectAllEventPlaceLiberees(db DB) (EventPlaceLiberees, error) {
-	rows, err := db.Query("SELECT idevent, idparticipant FROM event_place_liberees")
+	rows, err := db.Query("SELECT idevent, idparticipant, accepted FROM event_place_liberees")
 	if err != nil {
 		return nil, err
 	}
@@ -904,11 +905,11 @@ func ScanEventPlaceLiberees(rs *sql.Rows) (EventPlaceLiberees, error) {
 
 func (item EventPlaceLiberee) Insert(db DB) error {
 	_, err := db.Exec(`INSERT INTO event_place_liberees (
-			idevent, idparticipant
+			idevent, idparticipant, accepted
 			) VALUES (
-			$1, $2
+			$1, $2, $3
 			);
-			`, item.IdEvent, item.IdParticipant)
+			`, item.IdEvent, item.IdParticipant, item.Accepted)
 	if err != nil {
 		return err
 	}
@@ -925,13 +926,14 @@ func InsertManyEventPlaceLiberees(tx *sql.Tx, items ...EventPlaceLiberee) error 
 	stmt, err := tx.Prepare(pq.CopyIn("event_place_liberees",
 		"idevent",
 		"idparticipant",
+		"accepted",
 	))
 	if err != nil {
 		return err
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdEvent, item.IdParticipant)
+		_, err = stmt.Exec(item.IdEvent, item.IdParticipant, item.Accepted)
 		if err != nil {
 			return err
 		}
@@ -976,7 +978,7 @@ func (items EventPlaceLiberees) IdEvents() []IdEvent {
 
 // SelectEventPlaceLibereeByIdEvent return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectEventPlaceLibereeByIdEvent(tx DB, idEvent IdEvent) (item EventPlaceLiberee, found bool, err error) {
-	row := tx.QueryRow("SELECT idevent, idparticipant FROM event_place_liberees WHERE idevent = $1", idEvent)
+	row := tx.QueryRow("SELECT idevent, idparticipant, accepted FROM event_place_liberees WHERE idevent = $1", idEvent)
 	item, err = ScanEventPlaceLiberee(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
@@ -985,7 +987,7 @@ func SelectEventPlaceLibereeByIdEvent(tx DB, idEvent IdEvent) (item EventPlaceLi
 }
 
 func SelectEventPlaceLibereesByIdEvents(tx DB, idEvents_ ...IdEvent) (EventPlaceLiberees, error) {
-	rows, err := tx.Query("SELECT idevent, idparticipant FROM event_place_liberees WHERE idevent = ANY($1)", IdEventArrayToPQ(idEvents_))
+	rows, err := tx.Query("SELECT idevent, idparticipant, accepted FROM event_place_liberees WHERE idevent = ANY($1)", IdEventArrayToPQ(idEvents_))
 	if err != nil {
 		return nil, err
 	}
@@ -993,7 +995,7 @@ func SelectEventPlaceLibereesByIdEvents(tx DB, idEvents_ ...IdEvent) (EventPlace
 }
 
 func DeleteEventPlaceLibereesByIdEvents(tx DB, idEvents_ ...IdEvent) (EventPlaceLiberees, error) {
-	rows, err := tx.Query("DELETE FROM event_place_liberees WHERE idevent = ANY($1) RETURNING idevent, idparticipant", IdEventArrayToPQ(idEvents_))
+	rows, err := tx.Query("DELETE FROM event_place_liberees WHERE idevent = ANY($1) RETURNING idevent, idparticipant, accepted", IdEventArrayToPQ(idEvents_))
 	if err != nil {
 		return nil, err
 	}
@@ -1021,7 +1023,7 @@ func (items EventPlaceLiberees) IdParticipants() []camps.IdParticipant {
 }
 
 func SelectEventPlaceLibereesByIdParticipants(tx DB, idParticipants_ ...camps.IdParticipant) (EventPlaceLiberees, error) {
-	rows, err := tx.Query("SELECT idevent, idparticipant FROM event_place_liberees WHERE idparticipant = ANY($1)", camps.IdParticipantArrayToPQ(idParticipants_))
+	rows, err := tx.Query("SELECT idevent, idparticipant, accepted FROM event_place_liberees WHERE idparticipant = ANY($1)", camps.IdParticipantArrayToPQ(idParticipants_))
 	if err != nil {
 		return nil, err
 	}
@@ -1029,7 +1031,7 @@ func SelectEventPlaceLibereesByIdParticipants(tx DB, idParticipants_ ...camps.Id
 }
 
 func DeleteEventPlaceLibereesByIdParticipants(tx DB, idParticipants_ ...camps.IdParticipant) (EventPlaceLiberees, error) {
-	rows, err := tx.Query("DELETE FROM event_place_liberees WHERE idparticipant = ANY($1) RETURNING idevent, idparticipant", camps.IdParticipantArrayToPQ(idParticipants_))
+	rows, err := tx.Query("DELETE FROM event_place_liberees WHERE idparticipant = ANY($1) RETURNING idevent, idparticipant, accepted", camps.IdParticipantArrayToPQ(idParticipants_))
 	if err != nil {
 		return nil, err
 	}

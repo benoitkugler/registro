@@ -349,6 +349,7 @@ async function setPlaceLiberee() {
   confirmeSetPlaceLiberee.value = null;
   const res = await controller.ParticipantsSetPlaceLiberee({ id });
   if (res === undefined) return;
+  controller.showMessage("Notification de place libérée envoyée avec succès.");
   // update the participant
   if (data.value == null) return;
   const item = data.value.Participants?.find((p) => p.Participant.Id == id)!;

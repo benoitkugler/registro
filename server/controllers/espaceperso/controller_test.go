@@ -196,3 +196,46 @@ func TestDownloadDocuments(t *testing.T) {
 	_, err = ct.renderFacture(dossier.Id)
 	tu.AssertNoErr(t, err)
 }
+
+func loadEnv(t *testing.T) (config.Asso, config.SMTP) {
+	tu.LoadEnv(t, "../../env.sh")
+
+	asso, err := config.NewAsso()
+	tu.AssertNoErr(t, err)
+	smtp, err := config.NewSMTP(false)
+	tu.AssertNoErr(t, err)
+	return asso, smtp
+}
+
+func TestPlaceLiberee(t *testing.T) {
+	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
+		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",
+		"../../migrations/init.sql")
+	defer db.Remove()
+
+	asso, smtp := loadEnv(t)
+
+	pe, err := pr.Personne{}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	dossier, err := ds.Dossier{IdTaux: 1, IdResponsable: pe.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	camp, err := cps.Camp{IdTaux: 1}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	pa, err := cps.Participant{IdTaux: 1, IdCamp: camp.Id, IdPersonne: pe.Id, IdDossier: dossier.Id, Statut: cps.AttenteCampComplet}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	ev, err := events.Event{IdDossier: dossier.Id, Kind: events.PlaceLiberee, Created: time.Now()}.Insert(db)
+	tu.AssertNoErr(t, err)
+	err = events.EventPlaceLiberee{IdEvent: ev.Id, IdParticipant: pa.Id, Accepted: false}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	ct := Controller{db: db.DB, asso: asso, smtp: smtp}
+	err = ct.acceptePlaceLiberee(dossier.Id, ev.Id)
+	tu.AssertNoErr(t, err)
+
+	err = ct.acceptePlaceLiberee(dossier.Id, ev.Id)
+	tu.AssertErr(t, err) // already accepted
+}

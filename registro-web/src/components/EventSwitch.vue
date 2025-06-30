@@ -44,6 +44,8 @@
     "
     :event="props.event.Event"
     :content="props.event.Event.Content.Data"
+    :user="props.event.User"
+    @accept-place-liberee="emit('acceptPlaceLiberee', props.event.Event.Id)"
   ></EventPlaceLibereeV>
   <EventFactureV
     v-else-if="
@@ -88,6 +90,7 @@ import {
   EventContentKind,
   type Event,
   type IdCamp,
+  type IdEvent,
   type Paiement,
 } from "@/clients/backoffice/logic/api";
 import EventMessageV from "./events/EventMessageV.vue";
@@ -110,6 +113,7 @@ const emit = defineEmits<{
   (e: "goToSondage", idCamp: IdCamp): void;
   (e: "goToDocuments", idCamp: IdCamp): void;
   (e: "goToValidation"): void;
+  (e: "acceptPlaceLiberee", idEvent: IdEvent): void;
 }>();
 </script>
 

@@ -204,6 +204,7 @@ export interface Message {
 }
 // registro/logic.PlaceLiberee
 export interface PlaceLiberee {
+  Accepted: boolean;
   IdParticipant: IdParticipant;
   IdCamp: IdCamp;
   ParticipantLabel: string;
@@ -1027,6 +1028,22 @@ export abstract class AbstractAPI {
           token: params["token"],
           idPersonne: String(params["idPersonne"]),
         },
+      });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** AcceptePlaceLiberee performs the request and handles the error */
+  async AcceptePlaceLiberee(params: { token: string; idEvent: IdEvent }) {
+    const fullUrl =
+      this.baseURL + "/api/v1/espaceperso/events/accept-place-liberee";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, null, {
+        headers: this.getHeaders(),
+        params: { token: params["token"], idEvent: String(params["idEvent"]) },
       });
       return true;
     } catch (error) {

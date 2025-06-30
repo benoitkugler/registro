@@ -3,6 +3,7 @@ package espaceperso
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"slices"
 	"time"
 
@@ -18,8 +19,9 @@ import (
 	"registro/mails"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
-	"registro/sql/events"
+	evs "registro/sql/events"
 	fs "registro/sql/files"
+	pe "registro/sql/personnes"
 	pr "registro/sql/personnes"
 	"registro/utils"
 
@@ -128,7 +130,7 @@ func (ct *Controller) sendMessage(args SendMessageIn) (logic.Event, error) {
 	if err != nil {
 		return logic.Event{}, err
 	}
-	event, message, err := events.CreateMessage(ct.db, id, time.Now(), args.Message, events.FromEspaceperso, events.OptIdCamp{})
+	event, message, err := evs.CreateMessage(ct.db, id, time.Now(), args.Message, evs.FromEspaceperso, evs.OptIdCamp{})
 	if err != nil {
 		return logic.Event{}, utils.SQLError(err)
 	}
@@ -572,4 +574,81 @@ func (ct *Controller) renderFacture(id ds.IdDossier) ([]byte, error) {
 		return nil, err
 	}
 	return content, nil
+}
+
+func (ct *Controller) AcceptePlaceLiberee(c echo.Context) error {
+	token := c.QueryParam("token")
+	idDossier, err := crypto.DecryptID[ds.IdDossier](ct.key, token)
+	if err != nil {
+		return err
+	}
+	idEvent, err := utils.QueryParamInt[evs.IdEvent](c, "idEvent")
+	if err != nil {
+		return err
+	}
+	err = ct.acceptePlaceLiberee(idDossier, idEvent)
+	if err != nil {
+		return err
+	}
+	return c.NoContent(200)
+}
+
+func (ct *Controller) acceptePlaceLiberee(idDossier ds.IdDossier, idEvent evs.IdEvent) error {
+	event, err := logic.LoadEvent(ct.db, idEvent)
+	if err != nil {
+		return err
+	}
+	pl, ok := event.Content.(logic.PlaceLiberee)
+	if !ok {
+		return errors.New("internal error: expected PlaceLiberee")
+	}
+	if pl.Accepted {
+		return errors.New("internal error: place already accepted")
+	}
+	participant, err := cps.SelectParticipant(ct.db, pl.IdParticipant)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	if participant.IdDossier != idDossier {
+		return errors.New("internal error: inconsistent Dossier")
+	}
+	camp, err := cps.SelectCamp(ct.db, participant.IdCamp)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	personne, err := pe.SelectPersonne(ct.db, participant.IdPersonne)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	return utils.InTx(ct.db, func(tx *sql.Tx) error {
+		// update the participant
+		participant.Statut = cps.Inscrit
+		_, err = participant.Update(tx)
+		if err != nil {
+			return err
+		}
+		// mark event as accepted
+		_, err = evs.DeleteEventPlaceLibereesByIdEvents(tx, event.Id)
+		if err != nil {
+			return err
+		}
+		err = evs.EventPlaceLiberee{IdEvent: event.Id, IdParticipant: participant.Id, Accepted: true}.Insert(tx)
+		if err != nil {
+			return err
+		}
+		// notify backoffice
+		html := fmt.Sprintf(`Bonjour, <br /><br />
+	La place libre sur le séjour %s a été acceptée par %s. <br /><br />
+	Le statut du participant a automatiquement été mis à jour. <br /><br />
+	Bon courage !
+	`, camp.Label(), personne.PrenomNOM())
+
+		err = mails.NewMailer(ct.smtp, ct.asso.MailsSettings).SendMail(ct.asso.ContactMail, "Place acceptée", html, nil, nil)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
 }

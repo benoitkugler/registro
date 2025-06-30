@@ -25,6 +25,8 @@ func setupRoutesEspaceperso(e *echo.Echo, ct *espaceperso.Controller) {
 
 	e.PUT("/api/v1/espaceperso/fichesanitaires/transfert", ct.TransfertFicheSanitaire)
 
+	e.POST("/api/v1/espaceperso/events/accept-place-liberee", ct.AcceptePlaceLiberee)
+
 	// Sondages
 	e.GET("/api/v1/espaceperso/sondages", ct.LoadSondages)
 	e.POST("/api/v1/espaceperso/sondages", ct.UpdateSondages)

@@ -307,6 +307,7 @@ export interface ParticipantExt {
 }
 // registro/logic.PlaceLiberee
 export interface PlaceLiberee {
+  Accepted: boolean;
   IdParticipant: IdParticipant;
   IdCamp: IdCamp;
   ParticipantLabel: string;

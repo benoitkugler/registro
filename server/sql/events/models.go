@@ -115,6 +115,7 @@ type EventSondage struct {
 type EventPlaceLiberee struct {
 	IdEvent       IdEvent `gomacro-sql-on-delete:"CASCADE"`
 	IdParticipant camps.IdParticipant
+	Accepted      bool
 
 	guard EventKind `gomacro-sql-guard:"#[EventKind.PlaceLiberee]"`
 }

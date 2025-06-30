@@ -38,6 +38,7 @@ CREATE TABLE event_message_vus (
 CREATE TABLE event_place_liberees (
     IdEvent integer NOT NULL,
     IdParticipant integer NOT NULL,
+    Accepted boolean NOT NULL,
     guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7)) NOT NULL
 );
 

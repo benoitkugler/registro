@@ -158,6 +158,7 @@ func (ld *eventsContent) newCampDocs(ev evs.Event) CampDocs {
 }
 
 type PlaceLiberee struct {
+	Accepted         bool
 	IdParticipant    cps.IdParticipant
 	IdCamp           cps.IdCamp
 	ParticipantLabel string
@@ -171,8 +172,9 @@ func (ld *eventsContent) newPlaceLiberee(ev evs.Event) PlaceLiberee {
 	camp := ld.camps[participant.IdCamp]
 	pers := ld.personnes[participant.IdPersonne]
 	return PlaceLiberee{
-		IdParticipant: m.IdParticipant, IdCamp: participant.IdCamp,
-		ParticipantLabel: pers.PrenomN(), CampLabel: camp.Label(),
+		m.Accepted,
+		m.IdParticipant, participant.IdCamp,
+		pers.PrenomN(), camp.Label(),
 	}
 }
 

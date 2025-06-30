@@ -73,6 +73,7 @@ func randEventPlaceLiberee() EventPlaceLiberee {
 	var s EventPlaceLiberee
 	s.IdEvent = randIdEvent()
 	s.IdParticipant = randcam_IdParticipant()
+	s.Accepted = randbool()
 
 	return s
 }

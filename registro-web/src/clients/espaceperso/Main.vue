@@ -167,6 +167,7 @@
                   @go-to-sondage="(id) => (showSondages = id)"
                   @go-to-documents="showDocuments = true"
                   @go-to-validation="showValidation = true"
+                  @accept-place-liberee="(id) => handleFromEvent(id)"
                 >
                 </EventSwitch>
               </v-timeline>
@@ -258,6 +259,29 @@
     <ValidationInscriptionCard v-if="data" :dossier="data.Dossier">
     </ValidationInscriptionCard>
   </v-dialog>
+
+  <!-- confirme accept place -->
+  <v-dialog
+    :model-value="showConfirmAccept != null"
+    @update:model-value="showConfirmAccept = null"
+    max-width="600px"
+  >
+    <v-card title="Accepter la place" v-if="showConfirmAccept">
+      <v-card-text>
+        Confirmez-vous l'inscription de
+        {{ showConfirmAccept.Content.Data.ParticipantLabel }}
+        sur le séjour
+        {{ showConfirmAccept.Content.Data.CampLabel }} ? <br /><br />
+        <span class="text-grey"
+          >Un mail de notification sera envoyé automatiquement au centre.</span
+        >
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn color="success" @click="acceptePlaceLiberee">Confirmer</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script lang="ts" setup>
@@ -274,6 +298,7 @@ import {
   type IdEvent,
   type Participant,
   type ParticipantCamp,
+  type PlaceLiberee,
 } from "./logic/api";
 import { buildPseudoEvents, Camps, Formatters, Personnes } from "@/utils";
 import ParticipantsEditCard from "./components/ParticipantsEditCard.vue";
@@ -309,11 +334,7 @@ onMounted(async () => {
   }
 
   // and the possibly event linking to the page
-  const fromEvent = (data.value.Dossier.Events || []).find(
-    (ev) => ev.Id == fromIdEvent
-  );
-  if (!fromEvent) return;
-  handleFromEvent(fromEvent);
+  handleFromEvent(fromIdEvent);
 });
 
 const data = ref<Data | null>(null);
@@ -334,19 +355,27 @@ const allDocumentsToFillCount = computed(() =>
     : 0
 );
 
-function handleFromEvent(event: Event) {
+function handleFromEvent(fromIdEvent: IdEvent) {
+  if (!data.value) return;
+  const event = (data.value.Dossier.Events || []).find(
+    (ev) => ev.Id == fromIdEvent
+  );
+  if (!event) return;
   switch (event.Content.Kind) {
     case EventContentKind.Validation:
       showValidation.value = true;
       return;
-    case EventContentKind.Sondage:
-      showSondages.value = event.Content.Data.IdCamp;
-      return;
     case EventContentKind.Facture:
       showReglement.value = true;
       return;
+    case EventContentKind.PlaceLiberee:
+      showConfirmAccept.value = event as EventPlaceLiberee;
+      return;
     case EventContentKind.CampDocs:
       showDocuments.value = true;
+      return;
+    case EventContentKind.Sondage:
+      showSondages.value = event.Content.Data.IdCamp;
       return;
     default:
       // TODO
@@ -403,4 +432,22 @@ const showValidation = ref(false);
 
 // redirection après l'inscription (avant toute validation)
 const showPresentation = ref(false);
+
+type EventPlaceLiberee = Event & {
+  Content: { Kind: "PlaceLiberee"; Data: PlaceLiberee };
+};
+
+const showConfirmAccept = ref<EventPlaceLiberee | null>(null);
+async function acceptePlaceLiberee() {
+  const event = showConfirmAccept.value;
+  if (!event) return;
+  showConfirmAccept.value = null;
+  const res = await controller.AcceptePlaceLiberee({
+    token: token.value,
+    idEvent: event.Id,
+  });
+  if (res === undefined) return;
+  fetchData();
+  controller.showMessage("Place acceptée avec succès.");
+}
 </script>
