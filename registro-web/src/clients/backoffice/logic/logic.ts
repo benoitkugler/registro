@@ -60,6 +60,8 @@ export function emptyQuery(): SearchDossierIn {
     IdCamp: { Valid: false, Id: 0 as IdCamp },
     Attente: QueryAttente.EmptyQA,
     Reglement: QueryReglement.EmptyQR,
+    SortByNewMessages: false,
+    OnlyFondSoutien: false,
   };
 }
 
