@@ -109,7 +109,8 @@ func (ct *Controller) load(id ds.IdDossier) (Data, error) {
 type SendMessageIn struct {
 	Token string
 
-	Message string
+	Message           string
+	OnlyToFondSoutien bool
 }
 
 // SendMessage inscrit un nouveau message, sans notifications
@@ -130,7 +131,7 @@ func (ct *Controller) sendMessage(args SendMessageIn) (logic.Event, error) {
 	if err != nil {
 		return logic.Event{}, err
 	}
-	event, message, err := evs.CreateMessage(ct.db, id, time.Now(), args.Message, evs.Espaceperso, evs.OptIdCamp{})
+	event, message, err := evs.CreateMessage(ct.db, id, time.Now(), evs.EventMessage{Contenu: args.Message, Origine: evs.Espaceperso, OnlyToFondSoutien: args.OnlyToFondSoutien})
 	if err != nil {
 		return logic.Event{}, utils.SQLError(err)
 	}

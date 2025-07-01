@@ -15,6 +15,7 @@
       </v-col>
       <v-col align-self="center" cols="auto">
         <v-btn
+          v-if="props.user == Acteur.Espaceperso"
           icon="mdi-information"
           flat
           size="small"
@@ -27,11 +28,16 @@
 </template>
 
 <script setup lang="ts">
-import { type Event, type Validation } from "@/clients/backoffice/logic/api";
+import {
+  Acteur,
+  type Event,
+  type Validation,
+} from "@/clients/backoffice/logic/api";
 
 const props = defineProps<{
   event: Event;
   content: Validation;
+  user: Acteur;
 }>();
 
 const emit = defineEmits<{ (e: "goToValidation"): void }>();

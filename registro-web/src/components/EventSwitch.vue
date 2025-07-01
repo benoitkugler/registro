@@ -25,6 +25,7 @@
     "
     :event="props.event.Event"
     :content="props.event.Event.Content.Data"
+    :user="props.event.User"
     @go-to-validation="emit('goToValidation')"
   ></EventValidationV>
   <EventMessageV
@@ -36,6 +37,7 @@
     :content="props.event.Event.Content.Data"
     :user="props.event.User"
     @delete="emit('deleteMessage', props.event.Event)"
+    @reply-fond-soutien="emit('replyFondSoutien')"
   ></EventMessageV>
   <EventPlaceLibereeV
     v-else-if="
@@ -114,6 +116,7 @@ const emit = defineEmits<{
   (e: "goToDocuments", idCamp: IdCamp): void;
   (e: "goToValidation"): void;
   (e: "acceptPlaceLiberee", idEvent: IdEvent): void;
+  (e: "replyFondSoutien"): void;
 }>();
 </script>
 

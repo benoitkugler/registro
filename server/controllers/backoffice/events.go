@@ -47,9 +47,9 @@ func (ct *Controller) sendMessage(host string, args EventsSendMessageIn, isFondS
 	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
 		origine := evs.Backoffice
 		if isFondSoutien {
-			origine = evs.Fondsoutien
+			origine = evs.FondSoutien
 		}
-		event, _, err = evs.CreateMessage(tx, args.IdDossier, time.Now(), args.Contenu, origine, evs.OptIdCamp{})
+		event, _, err = evs.CreateMessage(tx, args.IdDossier, time.Now(), evs.EventMessage{Contenu: args.Contenu, Origine: origine})
 		if err != nil {
 			return err
 		}
@@ -114,30 +114,32 @@ func (ct *Controller) deleteEvent(id evs.IdEvent) error {
 // EventsMarkMessagesSeen set the messages of the given dossier as seen
 // by the backoffice.
 func (ct *Controller) EventsMarkMessagesSeen(c echo.Context) error {
+	_, isFondSoutien := JWTUser(c)
 	idDossier, err := utils.QueryParamInt[ds.IdDossier](c, "idDossier")
 	if err != nil {
 		return err
 	}
-	err = ct.markMessagesSeen(idDossier)
+	err = ct.markMessagesSeen(idDossier, isFondSoutien)
 	if err != nil {
 		return err
 	}
 	return c.NoContent(200)
 }
 
-func (ct *Controller) markMessagesSeen(idDossier ds.IdDossier) error {
+func (ct *Controller) markMessagesSeen(idDossier ds.IdDossier, isFondSoutien bool) error {
 	events, err := logic.LoadEventsByDossier(ct.db, idDossier)
 	if err != nil {
 		return err
 	}
 	var updates evs.EventMessages
-	for _, event := range events {
-		if message, isMessage := event.Content.(logic.Message); isMessage {
-			if message.Message.Origine != evs.Backoffice {
-				message.Message.VuBackoffice = true
-				updates = append(updates, message.Message)
-			}
+	for _, event := range events.UnreadMessagesFor(isFondSoutien) {
+		message := event.Content.Message
+		if isFondSoutien {
+			message.VuFondSoutien = true
+		} else {
+			message.VuBackoffice = true
 		}
+		updates = append(updates, message)
 	}
 	return utils.InTx(ct.db, func(tx *sql.Tx) error {
 		_, err = evs.DeleteEventMessagesByIdEvents(tx, updates.IdEvents()...)

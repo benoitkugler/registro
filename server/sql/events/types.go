@@ -29,7 +29,7 @@ type Acteur uint8
 const (
 	Espaceperso Acteur = iota
 	Backoffice
-	Fondsoutien
+	FondSoutien
 	Directeur
 )
 

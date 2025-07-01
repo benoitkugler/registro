@@ -36,12 +36,25 @@ func TestController_searchDossiers(t *testing.T) {
 
 	pe1, err := pr.Personne{IsTemp: false, Etatcivil: pr.Etatcivil{DateNaissance: shared.Date(time.Now())}}.Insert(db)
 	tu.AssertNoErr(t, err)
-	camp1, err := cps.Camp{IdTaux: 1, Places: 20, AgeMin: 6, AgeMax: 12}.Insert(db)
+	pe2, err := pr.Personne{IsTemp: false, Etatcivil: pr.Etatcivil{DateNaissance: shared.Date(time.Now())}}.Insert(db)
+	tu.AssertNoErr(t, err)
+	pe3, err := pr.Personne{IsTemp: false, Etatcivil: pr.Etatcivil{DateNaissance: shared.Date(time.Now())}}.Insert(db)
+	tu.AssertNoErr(t, err)
+	camp1, err := cps.Camp{IdTaux: 1, Places: 20, AgeMin: 6, AgeMax: 12, Prix: ds.NewEuros(100)}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	dossier1, err := ds.Dossier{IsValidated: true, IdResponsable: pe1.Id, IdTaux: 1, MomentInscription: time.Now()}.Insert(db)
 	tu.AssertNoErr(t, err)
 	dossier2, err := ds.Dossier{IsValidated: true, IdResponsable: pe1.Id, IdTaux: 1, MomentInscription: time.Now()}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	_, err = cps.Participant{IdCamp: camp1.Id, IdDossier: dossier2.Id, IdTaux: 1, IdPersonne: pe3.Id, Statut: cps.Inscrit}.Insert(db)
+	tu.AssertNoErr(t, err)
+	_, err = cps.Participant{IdCamp: camp1.Id, IdDossier: dossier1.Id, IdTaux: 1, IdPersonne: pe1.Id, Statut: cps.AttenteCampComplet}.Insert(db)
+	tu.AssertNoErr(t, err)
+	_, err = cps.Participant{IdCamp: camp1.Id, IdDossier: dossier1.Id, IdTaux: 1, IdPersonne: pe2.Id, Statut: cps.Inscrit}.Insert(db)
+	tu.AssertNoErr(t, err)
+	_, err = ds.Paiement{Montant: ds.NewEuros(50), IdDossier: dossier1.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	err = createMessage(db, dossier1.Id, events.Espaceperso, cps.OptIdCamp{})
@@ -57,26 +70,36 @@ func TestController_searchDossiers(t *testing.T) {
 
 	ct := Controller{db: db.DB}
 
-	out, err := ct.searchDossiers(SearchDossierIn{Pattern: OffuscateurVirements.Mask(dossier1.Id)})
+	out, err := ct.searchDossiers(SearchDossierIn{Pattern: OffuscateurVirements.Mask(dossier1.Id)}, false)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(out.Dossiers) == 1)
 
-	out, err = ct.searchDossiers(SearchDossierIn{Pattern: fmt.Sprintf("id:%d", dossier2.Id)})
+	out, err = ct.searchDossiers(SearchDossierIn{Pattern: fmt.Sprintf("id:%d", dossier2.Id)}, false)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(out.Dossiers) == 1)
 
-	out, err = ct.searchDossiers(SearchDossierIn{Pattern: fmt.Sprintf("id:%d", dossier2.Id+1)})
+	out, err = ct.searchDossiers(SearchDossierIn{Pattern: fmt.Sprintf("id:%d", dossier2.Id+1)}, false)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(out.Dossiers) == 0)
 
-	out, err = ct.searchDossiers(SearchDossierIn{Pattern: "test"})
+	out, err = ct.searchDossiers(SearchDossierIn{Pattern: "test"}, false)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(out.Dossiers) == 0)
 
-	out, err = ct.searchDossiers(SearchDossierIn{Pattern: sortByMessagesPattern})
+	out, err = ct.searchDossiers(SearchDossierIn{SortByNewMessages: true}, false)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(out.Dossiers) == 2)
 	tu.Assert(t, out.Dossiers[0].Id == dossier1.Id) // 2 messages
+
+	out, err = ct.searchDossiers(SearchDossierIn{Reglement: Partiel, Attente: AvecAttente}, false)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(out.Dossiers) == 1)
+	out, err = ct.searchDossiers(SearchDossierIn{Reglement: Total}, false)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(out.Dossiers) == 0)
+	out, err = ct.searchDossiers(SearchDossierIn{Reglement: Total, Attente: AvecAttente}, false)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(out.Dossiers) == 0)
 }
 
 func TestController_aides(t *testing.T) {

@@ -26,6 +26,7 @@ CREATE TABLE event_messages (
     OrigineCamp integer,
     VuBackoffice boolean NOT NULL,
     VuEspaceperso boolean NOT NULL,
+    VuFondSoutien boolean NOT NULL,
     OnlyToFondSoutien boolean NOT NULL,
     guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7)) NOT NULL
 );

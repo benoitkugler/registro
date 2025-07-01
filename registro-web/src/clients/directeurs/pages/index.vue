@@ -13,6 +13,7 @@
         ></SelectCamp>
 
         <v-text-field
+          class="mt-2"
           label="Mot de passe"
           v-model="password"
           @update:model-value="errors = []"

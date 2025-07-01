@@ -85,6 +85,7 @@ export interface PaiementSettings {
 export interface SendMessageIn {
   Token: string;
   Message: string;
+  OnlyToFondSoutien: boolean;
 }
 // registro/controllers/espaceperso.SondageExt
 export interface SondageExt {
@@ -538,7 +539,7 @@ export type Paiements = Record<IdPaiement, Paiement> | null;
 export const Acteur = {
   Espaceperso: 0,
   Backoffice: 1,
-  Fondsoutien: 2,
+  FondSoutien: 2,
   Directeur: 3,
 } as const;
 export type Acteur = (typeof Acteur)[keyof typeof Acteur];
@@ -546,7 +547,7 @@ export type Acteur = (typeof Acteur)[keyof typeof Acteur];
 export const ActeurLabels: Record<Acteur, string> = {
   [Acteur.Espaceperso]: "",
   [Acteur.Backoffice]: "",
-  [Acteur.Fondsoutien]: "",
+  [Acteur.FondSoutien]: "",
   [Acteur.Directeur]: "",
 };
 
@@ -572,6 +573,7 @@ export interface EventMessage {
   OrigineCamp: OptID_IdCamp;
   VuBackoffice: boolean;
   VuEspaceperso: boolean;
+  VuFondSoutien: boolean;
   OnlyToFondSoutien: boolean;
 }
 export type IdEvent = number & { __opaque__: "IdEvent" };

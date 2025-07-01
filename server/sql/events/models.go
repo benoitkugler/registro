@@ -52,6 +52,7 @@ type EventMessage struct {
 
 	VuBackoffice  bool
 	VuEspaceperso bool
+	VuFondSoutien bool
 
 	// OnlyToFondSoutien est utilisé pour restreindre la visibilité d'un message
 	// au fond de soutien.
@@ -62,20 +63,12 @@ type EventMessage struct {
 }
 
 // CreateMessage does not wrap errors
-func CreateMessage(db DB, idDossier dossiers.IdDossier, created time.Time,
-	contenu string,
-	origine Acteur, origineCamp OptIdCamp,
-) (Event, EventMessage, error) {
+func CreateMessage(db DB, idDossier dossiers.IdDossier, created time.Time, message EventMessage) (Event, EventMessage, error) {
 	event, err := Event{IdDossier: idDossier, Kind: Message, Created: created}.Insert(db)
 	if err != nil {
 		return Event{}, EventMessage{}, err
 	}
-	message := EventMessage{
-		IdEvent:     event.Id,
-		Contenu:     contenu,
-		Origine:     origine,
-		OrigineCamp: origineCamp,
-	}
+	message.IdEvent = event.Id
 	err = message.Insert(db)
 	return event, message, err
 }

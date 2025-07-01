@@ -16,7 +16,7 @@ import (
 )
 
 func createMessage(db events.DB, idDossier ds.IdDossier, origine events.Acteur, origineCamp events.OptIdCamp) error {
-	_, _, err := events.CreateMessage(db, idDossier, time.Now(), utils.RandString(30, true), origine, origineCamp)
+	_, _, err := events.CreateMessage(db, idDossier, time.Now(), events.EventMessage{Contenu: utils.RandString(30, true), Origine: origine, OrigineCamp: origineCamp})
 	return err
 }
 
@@ -65,7 +65,10 @@ func Test_events(t *testing.T) {
 		err = createMessage(ct.db, d1.Id, events.Directeur, camp1.Id.Opt())
 		tu.AssertNoErr(t, err)
 
-		err = ct.markMessagesSeen(d1.Id)
+		err = ct.markMessagesSeen(d1.Id, false)
+		tu.AssertNoErr(t, err)
+
+		err = ct.markMessagesSeen(d1.Id, true)
 		tu.AssertNoErr(t, err)
 	})
 

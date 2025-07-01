@@ -66,6 +66,6 @@ const isNew = computed(() => isMessageNew(props.message));
 const isFromUs = computed(() => isMessageFromUs(props.message));
 const isFromBackoffice = computed(() => {
   const o = props.message.Content.Message.Origine;
-  return o == Acteur.Backoffice || o == Acteur.Fondsoutien;
+  return o == Acteur.Backoffice || o == Acteur.FondSoutien;
 });
 </script>

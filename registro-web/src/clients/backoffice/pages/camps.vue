@@ -20,7 +20,7 @@
 import { computed } from "vue";
 import NavBar from "../components/NavBar.vue";
 import CampsList from "../components/camps/CampsList.vue";
-import type { CampHeader, IdCamp } from "../logic/api";
+import type { CampHeader } from "../logic/api";
 import CampParticipants from "../components/camps/CampParticipants.vue";
 import { useRouter } from "vue-router";
 import { parseQueryURLCamps, type QueryURLCamps } from "../plugins/router";

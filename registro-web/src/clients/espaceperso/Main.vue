@@ -151,7 +151,9 @@
       <v-col align-self="center">
         <v-card subtitle="Fil de suivi de votre inscription">
           <template #append>
-            <v-btn @click="showCreateMessage = true">
+            <v-btn
+              @click="showCreateMessage = { content: '', toFondSoutien: false }"
+            >
               <template #prepend>
                 <v-icon>mdi-email</v-icon>
               </template>
@@ -168,6 +170,9 @@
                   @go-to-documents="showDocuments = true"
                   @go-to-validation="showValidation = true"
                   @accept-place-liberee="(id) => handleFromEvent(id)"
+                  @reply-fond-soutien="
+                    showCreateMessage = { content: '', toFondSoutien: true }
+                  "
                 >
                 </EventSwitch>
               </v-timeline>
@@ -187,19 +192,34 @@
   </v-container>
 
   <!-- new message -->
-  <v-dialog v-model="showCreateMessage" max-width="600px">
-    <v-card title="Nouveau message">
+  <v-dialog
+    :model-value="showCreateMessage != null"
+    @update:model-value="showCreateMessage = null"
+    max-width="600px"
+  >
+    <v-card
+      v-if="showCreateMessage"
+      title="Nouveau message"
+      :subtitle="
+        showCreateMessage.toFondSoutien
+          ? 'Ce message ne sera visible que par le fond de soutien.'
+          : 'Ce message sera visible par le centre et les directeurs.'
+      "
+    >
       <v-card-text>
         <v-textarea
           autofocus
           placeholder="Rédigez votre message..."
-          v-model="createMessageContent"
+          v-model="showCreateMessage.content"
           rows="10"
         ></v-textarea>
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn :disabled="!createMessageContent.length" @click="sendMessage">
+        <v-btn
+          :disabled="!showCreateMessage.content.length"
+          @click="sendMessage"
+        >
           <template #prepend>
             <v-icon>mdi-send</v-icon>
           </template>
@@ -300,6 +320,7 @@ import {
   type Participant,
   type ParticipantCamp,
   type PlaceLiberee,
+  type SendMessageIn,
 } from "./logic/api";
 import { buildPseudoEvents, Camps, Formatters, Personnes } from "@/utils";
 import ParticipantsEditCard from "./components/ParticipantsEditCard.vue";
@@ -386,15 +407,19 @@ function handleFromEvent(fromIdEvent: IdEvent) {
   }
 }
 
-const showCreateMessage = ref(false);
-const createMessageContent = ref("");
+const showCreateMessage = ref<{
+  content: string;
+  toFondSoutien: boolean;
+} | null>(null);
 async function sendMessage() {
-  if (!createMessageContent.value.length || !data.value) return;
-  showCreateMessage.value = false;
-  const res = await controller.SendMessage({
+  if (!showCreateMessage.value || !data.value) return;
+  const args: SendMessageIn = {
     Token: token.value,
-    Message: createMessageContent.value,
-  });
+    Message: showCreateMessage.value.content,
+    OnlyToFondSoutien: showCreateMessage.value.toFondSoutien,
+  };
+  showCreateMessage.value = null;
+  const res = await controller.SendMessage(args);
   if (res === undefined) return;
   controller.showMessage("Message envoyé avec succès.");
   data.value.Dossier.Events = (data.value.Dossier.Events || []).concat(res);

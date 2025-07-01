@@ -87,10 +87,12 @@ func (qr QueryReglement) match(statut logic.StatutPaiement) bool {
 
 // The zero value defaults to returning everything
 type SearchDossierIn struct {
-	Pattern   string // Responsable et participants
-	IdCamp    evs.OptIdCamp
-	Attente   QueryAttente
-	Reglement QueryReglement
+	Pattern           string // Responsable et participants
+	IdCamp            evs.OptIdCamp
+	Attente           QueryAttente
+	Reglement         QueryReglement
+	SortByNewMessages bool
+	OnlyFondSoutien   bool
 }
 
 type SearchDossierOut struct {
@@ -101,11 +103,12 @@ type SearchDossierOut struct {
 // DossiersSearch returns a list of [Dossier] headers
 // matching the given query, sorted by activity time (defined by the messages)
 func (ct *Controller) DossiersSearch(c echo.Context) error {
+	_, isFondSoutien := JWTUser(c)
 	var args SearchDossierIn
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
-	out, err := ct.searchDossiers(args)
+	out, err := ct.searchDossiers(args, isFondSoutien)
 	if err != nil {
 		return err
 	}
@@ -119,19 +122,16 @@ type DossierHeader struct {
 	NewMessages  int
 }
 
-func newDossierHeader(dossier logic.Dossier) DossierHeader {
+func newDossierHeader(dossier logic.Dossier, isFondSoutien bool) DossierHeader {
 	return DossierHeader{
 		Id:           dossier.Dossier.Id,
 		Responsable:  dossier.Responsable().PrenomNOM(),
 		Participants: dossier.ParticipantsLabels(),
-		NewMessages:  len(dossier.Events.UnreadMessagesForBackoffice()),
+		NewMessages:  len(dossier.Events.UnreadMessagesFor(isFondSoutien)),
 	}
 }
 
-const (
-	sortByMessagesPattern = "sort:messages"
-	byIdPrefix            = "id:"
-)
+const byIdPrefix = "id:"
 
 // isIdQuery tries for the special Virement label or an Id pattern
 func isIdQuery(pattern string) (ds.IdDossier, bool) {
@@ -157,8 +157,10 @@ func loadAndFilter(db ds.DB, query SearchDossierIn) ([]logic.DossierFinance, int
 	allDossiersCount := len(dossiers)
 
 	if idDossier, isId := isIdQuery(query.Pattern); isId {
-		dossiers = ds.Dossiers{idDossier: dossiers[idDossier]}
-		query = SearchDossierIn{} // reset the query to force the match
+		if dossier, has := dossiers[idDossier]; has {
+			dossiers = ds.Dossiers{idDossier: dossier}
+			query = SearchDossierIn{} // reset the query to force the match
+		}
 	}
 
 	ids := dossiers.IDs()
@@ -173,7 +175,7 @@ func loadAndFilter(db ds.DB, query SearchDossierIn) ([]logic.DossierFinance, int
 	var filtered []logic.DossierFinance
 	for _, id := range ids {
 		dossier := data.For(id)
-		if match(dossier, queryText, query.IdCamp, query.Attente, query.Reglement) {
+		if match(dossier, queryText, query.IdCamp, query.Attente, query.Reglement, query.OnlyFondSoutien) {
 			filtered = append(filtered, dossier)
 		}
 	}
@@ -181,13 +183,7 @@ func loadAndFilter(db ds.DB, query SearchDossierIn) ([]logic.DossierFinance, int
 	return filtered, allDossiersCount, nil
 }
 
-func (ct *Controller) searchDossiers(query SearchDossierIn) (SearchDossierOut, error) {
-	sortByMessages := false
-	if query.Pattern == sortByMessagesPattern {
-		sortByMessages = true
-		query.Pattern = "" // reset the query to force the match
-	}
-
+func (ct *Controller) searchDossiers(query SearchDossierIn, isFondSoutien bool) (SearchDossierOut, error) {
 	filtered, totalCount, err := loadAndFilter(ct.db, query)
 	if err != nil {
 		return SearchDossierOut{}, err
@@ -196,27 +192,35 @@ func (ct *Controller) searchDossiers(query SearchDossierIn) (SearchDossierOut, e
 	// sort by messages time
 	slices.SortFunc(filtered, func(a, b logic.DossierFinance) int { return a.LastEventTime().Compare(b.LastEventTime()) })
 
-	if sortByMessages {
+	if query.SortByNewMessages {
 		slices.SortStableFunc(filtered, func(a, b logic.DossierFinance) int {
-			return len(b.Events.UnreadMessagesForBackoffice()) - len(a.Events.UnreadMessagesForBackoffice())
+			return len(b.Events.UnreadMessagesFor(isFondSoutien)) - len(a.Events.UnreadMessagesFor(isFondSoutien))
 		})
 	}
 
 	// paginate and return the headers only
-	const maxCount = 50
+	const maxCount = 40
 	if len(filtered) > maxCount {
 		filtered = filtered[:maxCount]
 	}
 	out := make([]DossierHeader, len(filtered))
 	for i, v := range filtered {
-		out[i] = newDossierHeader(v.Dossier)
+		out[i] = newDossierHeader(v.Dossier, isFondSoutien)
 	}
 	return SearchDossierOut{out, totalCount}, nil
 }
 
 func match(dossier logic.DossierFinance,
 	text search.Query, idCamp evs.OptIdCamp, attente QueryAttente, reglement QueryReglement,
+	onlyFondSoutien bool,
 ) bool {
+	// critère fond de soutien
+	if onlyFondSoutien {
+		if !dossier.Dossier.Dossier.DemandeFondSoutien {
+			return false
+		}
+	}
+
 	// critère camp
 	if idCamp.Valid {
 		_, hasCamp := dossier.Camps()[idCamp.Id]
@@ -226,13 +230,7 @@ func match(dossier logic.DossierFinance,
 	}
 
 	// critère texte
-	matchText := false
-	for _, personne := range dossier.Personnes() {
-		if text.Match(personne) {
-			matchText = true
-			break
-		}
-	}
+	matchText := slices.ContainsFunc(dossier.Personnes(), text.Match)
 	if !matchText {
 		return false
 	}
@@ -257,11 +255,17 @@ func match(dossier logic.DossierFinance,
 		}
 		switch attente {
 		case AvecAttente:
-			return hasAtLeastOneAttente
+			if !hasAtLeastOneAttente {
+				return false
+			}
 		case AvecInscrits:
-			return hasAtLeastOneInscrit
+			if !hasAtLeastOneInscrit {
+				return false
+			}
 		case AvecAttenteOnly:
-			return hasAllAttente
+			if !hasAllAttente {
+				return false
+			}
 		}
 	}
 

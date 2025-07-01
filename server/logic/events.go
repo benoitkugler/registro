@@ -46,11 +46,13 @@ func IterEventsBy[T EventContent](evs Events) iter.Seq[EventExt[T]] {
 	}
 }
 
-// UnreadMessagesForBackoffice returns the [Event]s with kind [evs.Message],
-// not yet seen by the backoffice
-func (events Events) UnreadMessagesForBackoffice() (out []EventExt[Message]) {
+// UnreadMessagesFor returns the [Event]s with kind [evs.Message],
+// not yet seen by the backoffice or fond de soutien.
+// Only message with specified target are considered.
+func (events Events) UnreadMessagesFor(isFondSoutien bool) (out []EventExt[Message]) {
 	for ev := range IterEventsBy[Message](events) {
-		if ev.Content.Message.Origine != evs.Backoffice && !ev.Content.Message.VuBackoffice {
+		if (isFondSoutien && ev.Content.Message.OnlyToFondSoutien && !ev.Content.Message.VuFondSoutien) ||
+			(ev.Content.Message.Origine != evs.Backoffice && !ev.Content.Message.VuBackoffice) {
 			out = append(out, ev)
 		}
 	}

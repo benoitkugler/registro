@@ -656,7 +656,7 @@ func ConfirmeInscription(db *sql.DB, id in.IdInscription) (ds.Dossier, error) {
 		// on insert le message du formulaire
 		if content := strings.TrimSpace(insc.Message); content != "" {
 			created := insc.DateHeure.Add(time.Second) // on s'assure que le message vient après le moment d'inscription
-			_, _, err = events.CreateMessage(tx, dossier.Id, created, content, events.Espaceperso, cps.OptIdCamp{})
+			_, _, err = events.CreateMessage(tx, dossier.Id, created, events.EventMessage{Contenu: content, Origine: events.Espaceperso})
 			if err != nil {
 				return err
 			}

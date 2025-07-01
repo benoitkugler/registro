@@ -1,12 +1,14 @@
 import {
   Acteur,
   CurrencyLabels,
+  EventContentKind,
   Sexe,
   StatutPaiement,
   StatutParticipant,
   type CampExt,
   type CampItem,
   type DossierExt,
+  type EventMessage,
   type ParticipantExt,
 } from "./clients/backoffice/logic/api";
 import {
@@ -17,7 +19,11 @@ import {
   type Montant,
   type PrixQuotientFamilial,
 } from "./clients/backoffice/logic/api";
-import type { Role, Roles } from "./clients/directeurs/logic/api";
+import {
+  EventKind,
+  type Role,
+  type Roles,
+} from "./clients/directeurs/logic/api";
 import type { Date_, Int } from "./clients/inscription/logic/api";
 import { addDays, isDateZero, newDate_ } from "./components/date";
 
@@ -411,13 +417,35 @@ function pseudoEventTime(event: PseudoEvent): Date {
   }
 }
 
+function isMessageVisibleBy(message: EventMessage, user: Acteur) {
+  const aboutFondSoutien =
+    message.Origine == Acteur.FondSoutien || message.OnlyToFondSoutien;
+  switch (user) {
+    case Acteur.Backoffice:
+      return !aboutFondSoutien;
+    case Acteur.Directeur:
+      return !aboutFondSoutien;
+    case Acteur.Espaceperso:
+      return true;
+    case Acteur.FondSoutien:
+      return true;
+  }
+}
+
 /** add the inscription time and paiements and sort by time */
 export function buildPseudoEvents(dossier: DossierExt, user: Acteur) {
-  const evList: PseudoEvent[] = (dossier.Events || []).map((ev) => ({
-    Kind: "event",
-    Event: ev,
-    User: user,
-  }));
+  // hide fond de soutien
+  const evList: PseudoEvent[] = (dossier.Events || [])
+    .filter((ev) =>
+      ev.Content.Kind == EventContentKind.Message
+        ? isMessageVisibleBy(ev.Content.Data.Message, user)
+        : true
+    )
+    .map((ev) => ({
+      Kind: "event",
+      Event: ev,
+      User: user,
+    }));
   const paiements: PseudoEvent[] = Object.values(dossier.Paiements || {}).map(
     (p) => ({
       Kind: "paiement",

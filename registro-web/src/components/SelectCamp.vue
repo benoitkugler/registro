@@ -9,6 +9,7 @@
     :model-value="zeroableToNullable(modelValue)"
     @update:model-value="(id) => (modelValue = nullableToZeroable(id))"
     no-data-text="Aucun séjour n'existe."
+    hide-details
   >
     <template #prepend>
       <v-tooltip

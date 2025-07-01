@@ -171,7 +171,7 @@ func addMessages(db *sql.DB) {
 	ids := dossiers.IDs()
 	id := ids[rand.Intn(len(ids))]
 
-	_, _, err = events.CreateMessage(db, id, time.Now(), utils.RandString(20, true), events.Espaceperso, cps.OptIdCamp{})
+	_, _, err = events.CreateMessage(db, id, time.Now(), events.EventMessage{Contenu: utils.RandString(20, true), Origine: events.Espaceperso})
 	check(err)
 
 	camps, err := cps.SelectAllCamps(db)
@@ -181,7 +181,7 @@ func addMessages(db *sql.DB) {
 		return
 	}
 	camp := camps.IDs()[0]
-	_, _, err = events.CreateMessage(db, id, time.Now(), utils.RandString(20, true), events.Directeur, camp.Opt())
+	_, _, err = events.CreateMessage(db, id, time.Now(), events.EventMessage{Contenu: utils.RandString(20, true), Origine: events.Directeur, OrigineCamp: camp.Opt()})
 	check(err)
 
 	fmt.Println("Added messages to dossier", id)

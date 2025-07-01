@@ -372,7 +372,13 @@ func (ct *Controller) loadMessages(idCamp cps.IdCamp) (Messages, error) {
 	for idDossier := range dossiers.Dossiers {
 		dossier := dossiers.For(idDossier)
 
-		out.Messages = slices.AppendSeq(out.Messages, logic.IterEventsBy[logic.Message](dossier.Events))
+		// hide fond de soutien
+		for message := range logic.IterEventsBy[logic.Message](dossier.Events) {
+			if message.Content.Message.Origine == evs.FondSoutien || message.Content.Message.OnlyToFondSoutien {
+				continue
+			}
+			out.Messages = append(out.Messages, message)
+		}
 
 		item := DossierPersonnes{
 			Responsable: dossier.Responsable().NOMPrenom(),
@@ -469,7 +475,7 @@ func (ct *Controller) createMessage(host string, idCamp cps.IdCamp, args CreateM
 	url := logic.URLEspacePerso(ct.key, host, args.IdDossier)
 	var event evs.Event
 	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
-		event, _, err = evs.CreateMessage(tx, args.IdDossier, time.Now(), args.Contenu, evs.Directeur, idCamp.Opt())
+		event, _, err = evs.CreateMessage(tx, args.IdDossier, time.Now(), evs.EventMessage{Contenu: args.Contenu, Origine: evs.Directeur, OrigineCamp: idCamp.Opt()})
 		if err != nil {
 			return err
 		}

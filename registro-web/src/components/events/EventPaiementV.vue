@@ -17,7 +17,7 @@
       <v-col align-self="center" cols="auto">
         <v-btn
           v-if="
-            props.user == Acteur.Backoffice || props.user == Acteur.Fondsoutien
+            props.user == Acteur.Backoffice || props.user == Acteur.FondSoutien
           "
           icon="mdi-pencil"
           size="x-small"

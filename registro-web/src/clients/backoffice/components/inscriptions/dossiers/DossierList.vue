@@ -12,75 +12,131 @@
           v-model="query.Pattern"
           @update:model-value="searchDossiers"
         >
+          <template #append-inner>
+            <v-chip
+              class="ml-1"
+              size="small"
+              v-if="query.IdCamp.Valid"
+              prepend-icon="mdi-bed"
+            >
+              {{ props.camps.find((c) => c.Id == query.IdCamp.Id)?.Label }}
+            </v-chip>
+            <v-chip
+              class="ml-1"
+              size="small"
+              v-if="query.Attente != QueryAttente.EmptyQA"
+              prepend-icon="mdi-clock"
+            >
+              {{ QueryAttenteLabels[query.Attente] }}
+            </v-chip>
+            <v-chip
+              class="ml-1"
+              size="small"
+              v-if="query.Reglement != QueryReglement.EmptyQR"
+              prepend-icon="mdi-currency-eur"
+            >
+              {{ QueryReglementLabels[query.Reglement] }}
+            </v-chip>
+            <v-chip class="ml-1" size="small" v-if="query.OnlyFondSoutien">
+              Fond de soutien
+            </v-chip>
+          </template>
+
           <template #append>
-            <v-tooltip text="Trier selon les nouveaux messages">
-              <template #activator="{ props: tooltipProps }">
-                <v-btn
-                  v-bind="tooltipProps"
-                  icon
-                  size="small"
-                  class="mr-1"
-                  @click="searchMessages"
-                >
-                  <v-icon color="light-blue-darken-3">mdi-email</v-icon>
+            <v-menu location="left top" :close-on-content-click="false">
+              <template #activator="{ props: menuProps }">
+                <v-btn v-bind="menuProps" size="small" variant="flat" icon>
+                  <v-icon>mdi-filter-cog</v-icon>
+                  <v-tooltip
+                    activator="parent"
+                    text="Autres critères de recherche"
+                  >
+                  </v-tooltip>
                 </v-btn>
               </template>
-            </v-tooltip>
-
-            <v-tooltip text="Autres critères de recherche">
-              <template #activator="{ props: tooltipProps }">
-                <v-btn
-                  size="small"
-                  variant="flat"
-                  v-bind="tooltipProps"
-                  :icon="
-                    showDetailsQuery ? 'mdi-chevron-up' : 'mdi-chevron-down'
-                  "
-                  @click="showDetailsQuery = !showDetailsQuery"
-                ></v-btn>
-              </template>
-            </v-tooltip>
+              <v-card min-width="400px" title="Filtrer les dossiers">
+                <v-card-text>
+                  <v-row>
+                    <v-col>
+                      <SelectCamp
+                        label="Camp"
+                        :camps="props.camps"
+                        :model-value="
+                          nullableToZeroable(optToNullable(query.IdCamp))
+                        "
+                        @update:model-value="
+                          (id) => {
+                            query.IdCamp = nullableToOpt(
+                              zeroableToNullable(id)
+                            );
+                            searchDossiers();
+                          }
+                        "
+                      ></SelectCamp>
+                    </v-col>
+                  </v-row>
+                  <v-row>
+                    <v-col>
+                      <v-select
+                        density="compact"
+                        variant="outlined"
+                        label="Liste d'attente"
+                        v-model="query.Attente"
+                        :items="selectItems(QueryAttenteLabels)"
+                        @update:model-value="searchDossiers"
+                        hide-details
+                      ></v-select>
+                    </v-col>
+                  </v-row>
+                  <v-row>
+                    <v-col>
+                      <v-select
+                        density="compact"
+                        variant="outlined"
+                        label="Réglement"
+                        v-model="query.Reglement"
+                        :items="selectItems(QueryReglementLabels)"
+                        @update:model-value="searchDossiers"
+                        hide-details
+                      ></v-select>
+                    </v-col>
+                  </v-row>
+                  <v-row>
+                    <v-col>
+                      <v-switch
+                        label="Trier selon les nouveaux messages"
+                        hint="Affiche les nouveaux messages en premier."
+                        persistent-hint
+                        density="compact"
+                        color="light-blue-darken-3"
+                        v-model="query.SortByNewMessages"
+                        @update:model-value="searchDossiers"
+                      >
+                      </v-switch>
+                    </v-col>
+                  </v-row>
+                  <v-row>
+                    <v-col>
+                      <v-switch
+                        label="Fond de soutien"
+                        hint="N'affiche que les dossiers demandant le fond de soutien."
+                        persistent-hint
+                        density="compact"
+                        color="orange"
+                        v-model="query.OnlyFondSoutien"
+                        @update:model-value="searchDossiers"
+                      >
+                      </v-switch>
+                    </v-col>
+                  </v-row>
+                </v-card-text>
+              </v-card>
+            </v-menu>
           </template>
         </DebounceField>
       </v-col>
     </v-row>
-    <v-expand-transition>
-      <v-row v-show="showDetailsQuery" class="mx-0">
-        <v-col cols="5">
-          <SelectCamp
-            label="Camp"
-            :camps="props.camps"
-            :model-value="nullableToZeroable(optToNullable(query.IdCamp))"
-            @update:model-value="
-              (id) => {
-                query.IdCamp = nullableToOpt(zeroableToNullable(id));
-                searchDossiers();
-              }
-            "
-          ></SelectCamp>
-        </v-col>
-        <v-col>
-          <v-select
-            density="compact"
-            variant="outlined"
-            label="Liste d'attente"
-            v-model="query.Attente"
-            :items="selectItems(QueryAttenteLabels)"
-            @update:model-value="searchDossiers"
-          ></v-select>
-        </v-col>
-        <v-col>
-          <v-select
-            density="compact"
-            variant="outlined"
-            label="Réglement"
-            v-model="query.Reglement"
-            :items="selectItems(QueryReglementLabels)"
-            @update:model-value="searchDossiers"
-          ></v-select>
-        </v-col>
-      </v-row>
-    </v-expand-transition>
+
     <v-list
       v-if="dossierHeaders != null"
       class="mt-2"
@@ -112,7 +168,9 @@
 
 <script setup lang="ts">
 import {
+  QueryAttente,
   QueryAttenteLabels,
+  QueryReglement,
   QueryReglementLabels,
   type CampItem,
   type DossierHeader,
@@ -146,18 +204,11 @@ defineExpose({ searchDossiers });
 
 watch(() => query.value, searchDossiers, { immediate: true });
 
-const showDetailsQuery = ref(false);
-
 const dossierHeaders = ref<SearchDossierOut | null>(null);
 async function searchDossiers() {
   const res = await controller.DossiersSearch(query.value);
   if (res === undefined) return;
   dossierHeaders.value = res;
   emit("update", res);
-}
-
-function searchMessages() {
-  query.value.Pattern = "sort:messages";
-  searchDossiers();
 }
 </script>
