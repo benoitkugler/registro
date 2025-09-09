@@ -14,8 +14,31 @@
               <v-chip prepend-icon="mdi-map-marker"> {{ camp.Lieu }}</v-chip>
             </v-card-text>
           </v-col>
-          <v-col align-self="center" cols="5" v-if="camp.ImageURL">
-            <v-img class="mr-2" :src="camp.ImageURL"></v-img>
+          <v-col align-self="center" cols="5">
+            <div style="position: relative" class="mr-2">
+              <v-img :src="camp.ImageURL" v-if="camp.ImageURL"></v-img>
+              <div v-else style="height: 80px"></div>
+
+              <v-overlay
+                :model-value="camp.IsComplet"
+                contained
+                width="100%"
+                height="100%"
+                :scrim="false"
+                persistent
+              >
+                <v-row no-gutters class="h-100">
+                  <v-col align-self="center">
+                    <v-img
+                      class="mx-auto"
+                      width="90%"
+                      :src="complet"
+                      style="opacity: 0.7"
+                    ></v-img>
+                  </v-col>
+                </v-row>
+              </v-overlay>
+            </div>
           </v-col>
         </v-row>
       </v-card>
@@ -26,6 +49,7 @@
 <script lang="ts" setup>
 import type { CampExt, IdCamp } from "../logic/api";
 import { Camps } from "@/utils";
+import complet from "@/assets/complet.png";
 
 const props = defineProps<{
   camps: CampExt[];

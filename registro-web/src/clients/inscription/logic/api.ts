@@ -22,6 +22,7 @@ export interface CampExt {
   AgeMax: Int;
   Prix: string;
   Direction: string;
+  IsComplet: boolean;
 }
 // registro/controllers/inscriptions.Data
 export interface Data {
@@ -58,7 +59,7 @@ export interface Settings {
   ShowFondSoutien: boolean;
   ShowCharteConduite: boolean;
 }
-export type IdCamp = number & { __opaque__: "IdCamp" };
+export type IdCamp = Int & { __opaque_int__: "IdCamp" };
 // registro/sql/camps.OptionNavette
 export interface OptionNavette {
   Actif: boolean;

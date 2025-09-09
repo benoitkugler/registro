@@ -87,9 +87,12 @@ type CampExt struct {
 
 	// Nom et prénom du directeur et ses adjoints
 	Direction string
+
+	// Indique si le nombre d'inscrits maximum est atteint
+	IsComplet bool
 }
 
-func newCampExt(camp cps.Camp, taux ds.Taux, direction []pr.Personne) CampExt {
+func newCampExt(camp cps.Camp, taux ds.Taux, direction []pr.Personne, participants cps.Participants) CampExt {
 	chunks := make([]string, len(direction))
 	for i, p := range direction {
 		chunks[i] = p.PrenomN()
@@ -101,7 +104,12 @@ func newCampExt(camp cps.Camp, taux ds.Taux, direction []pr.Personne) CampExt {
 		nminus1 := strings.Join(chunks[:len(chunks)-1], ", ")
 		dir = nminus1 + " et " + chunks[len(chunks)-1]
 	}
-
+	inscrits := 0
+	for _, p := range participants {
+		if p.Statut == cps.Inscrit {
+			inscrits += 1
+		}
+	}
 	return CampExt{
 		Id:          camp.Id,
 		Nom:         camp.Nom,
@@ -118,6 +126,8 @@ func newCampExt(camp cps.Camp, taux ds.Taux, direction []pr.Personne) CampExt {
 		Prix: taux.Convertible(camp.Prix).String(),
 
 		Direction: dir,
+
+		IsComplet: inscrits >= camp.Places,
 	}
 }
 
@@ -194,6 +204,11 @@ func (ct *Controller) LoadCamps() (cps.Camps, []CampExt, error) {
 	if err != nil {
 		return nil, nil, utils.SQLError(err)
 	}
+	tmp, err := cps.SelectParticipantsByIdCamps(ct.db, camps.IDs()...)
+	if err != nil {
+		return nil, nil, utils.SQLError(err)
+	}
+	participants := tmp.ByIdCamp()
 
 	list := make([]CampExt, 0, len(camps))
 	for _, camp := range camps {
@@ -202,7 +217,7 @@ func (ct *Controller) LoadCamps() (cps.Camps, []CampExt, error) {
 		for i, eq := range eqs {
 			direction[i] = personnes[eq.IdPersonne]
 		}
-		list = append(list, newCampExt(camp, tauxs[camp.IdTaux], direction))
+		list = append(list, newCampExt(camp, tauxs[camp.IdTaux], direction, participants[camp.Id]))
 	}
 
 	return camps, list, nil

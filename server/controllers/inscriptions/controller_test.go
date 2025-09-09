@@ -32,7 +32,7 @@ func TestController_load(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	_, err = cps.Camp{IdTaux: 1, DateDebut: shared.NewDateFrom(debut), Duree: duree, Ouvert: false}.Insert(db)
 	tu.AssertNoErr(t, err)
-	c3, err := cps.Camp{IdTaux: 1, DateDebut: shared.NewDateFrom(now), Duree: duree, Ouvert: true}.Insert(db)
+	c3, err := cps.Camp{IdTaux: 1, DateDebut: shared.NewDateFrom(now), Duree: duree, Ouvert: true, Places: 0}.Insert(db)
 	tu.AssertNoErr(t, err)
 	_, err = cps.Camp{IdTaux: 1, DateDebut: shared.NewDateFrom(now), Duree: duree, Ouvert: false}.Insert(db)
 	tu.AssertNoErr(t, err)
@@ -45,10 +45,12 @@ func TestController_load(t *testing.T) {
 	ct := NewController(db.DB, crypto.Encrypter{}, config.SMTP{}, config.Asso{})
 
 	t.Run("loadCamps", func(t *testing.T) {
-		camps, _, err := ct.LoadCamps()
+		camps, list, err := ct.LoadCamps()
 		tu.AssertNoErr(t, err)
 		tu.Assert(t, slices.Equal(camps.IDs(), []cps.IdCamp{c3.Id}))
 		tu.Assert(t, slices.Equal(camps.IdTauxs(), []ds.IdTaux{1}))
+		tu.Assert(t, len(list) == 1)
+		tu.Assert(t, list[0].IsComplet)
 	})
 
 	t.Run("decodePreinscription", func(t *testing.T) {
