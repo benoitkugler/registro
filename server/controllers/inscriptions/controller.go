@@ -92,7 +92,7 @@ type CampExt struct {
 func newCampExt(camp cps.Camp, taux ds.Taux, direction []pr.Personne) CampExt {
 	chunks := make([]string, len(direction))
 	for i, p := range direction {
-		chunks[i] = p.PrenomNOM()
+		chunks[i] = p.PrenomN()
 	}
 	var dir string
 	if len(chunks) == 1 {
