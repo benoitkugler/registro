@@ -22,6 +22,7 @@ export interface CampExt {
   AgeMax: Int;
   Prix: string;
   Direction: string;
+  IsClosed: boolean;
   IsComplet: boolean;
 }
 // registro/controllers/inscriptions.Data

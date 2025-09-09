@@ -48,7 +48,7 @@ func randCamp() Camp {
 	s.AgeMin = randint()
 	s.AgeMax = randint()
 	s.NeedEquilibreGF = randbool()
-	s.Ouvert = randbool()
+	s.Statut = randStatutCamp()
 	s.Prix = randdos_Montant()
 	s.OptionPrix = randOptionPrixCamp()
 	s.OptionQuotientFamilial = randPrixQuotientFamilial()
@@ -347,6 +347,12 @@ func randSondage() Sondage {
 	s.MessageResponsable = randstring()
 
 	return s
+}
+
+func randStatutCamp() StatutCamp {
+	choix := [...]StatutCamp{Ferme, VisibleFerme, Ouvert}
+	i := rand.Intn(len(choix))
+	return choix[i]
 }
 
 func randStatutParticipant() StatutParticipant {

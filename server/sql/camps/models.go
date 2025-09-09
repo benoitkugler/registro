@@ -49,7 +49,7 @@ type Camp struct {
 	AgeMax          int  // inclusif
 	NeedEquilibreGF bool // si 'true', prend en compte le nombre de garçons et filles
 
-	Ouvert bool // ouvert aux inscriptions ou non
+	Statut StatutCamp // ouvert aux inscriptions ou non
 
 	Prix                   Montant
 	OptionPrix             OptionPrixCamp

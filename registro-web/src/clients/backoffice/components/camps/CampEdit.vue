@@ -32,11 +32,14 @@
             ></v-text-field>
           </v-col>
           <v-col>
-            <BoolField
-              label="Ouvert aux inscriptions"
-              v-model="inner.Ouvert"
+            <v-select
+              label="Ouverture aux inscriptions"
+              variant="outlined"
+              density="compact"
+              :items="campStatutItems"
               hide-details
-            ></BoolField>
+              v-model="inner.Statut"
+            ></v-select>
           </v-col>
         </v-row>
         <v-row>
@@ -203,9 +206,10 @@ import { ref, computed } from "vue";
 import {
   OptionPrixKind,
   OptionPrixKindLabels,
+  StatutCampLabels,
   type Camp,
 } from "@/clients/backoffice/logic/api";
-import { Camps, copy } from "@/utils";
+import { Camps, copy, selectItems } from "@/utils";
 import CampOptionsPrix from "./CampOptionsPrix.vue";
 const props = defineProps<{
   camp: Camp;
@@ -231,4 +235,6 @@ const areFieldsValid = computed(
       inner.value.OptionPrix.Jours?.length != inner.value.Duree
     )
 );
+
+const campStatutItems = selectItems(StatutCampLabels);
 </script>

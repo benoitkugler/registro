@@ -21,6 +21,14 @@ func (id IdEquipier) Opt() shared.OptID[IdEquipier] {
 	return shared.OptID[IdEquipier]{Id: id, Valid: true}
 }
 
+type StatutCamp uint8
+
+const (
+	Ferme        StatutCamp = iota // Caché et fermé
+	VisibleFerme                   // Visible mais fermé
+	Ouvert                         // Visible et ouvert
+)
+
 // StatutParticipant définit le statut d'un participant
 // par rapport à la liste d'attente
 type StatutParticipant uint8

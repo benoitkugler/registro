@@ -28,13 +28,15 @@ func TestController_load(t *testing.T) {
 	const duree = 5
 	now := time.Now()
 	debut := now.Add((-duree - 2) * 24 * time.Hour) // camp terminé
-	_, err := cps.Camp{IdTaux: 1, DateDebut: shared.NewDateFrom(debut), Duree: duree, Ouvert: true}.Insert(db)
+	_, err := cps.Camp{IdTaux: 1, DateDebut: shared.NewDateFrom(debut), Duree: duree, Statut: cps.Ouvert}.Insert(db)
 	tu.AssertNoErr(t, err)
-	_, err = cps.Camp{IdTaux: 1, DateDebut: shared.NewDateFrom(debut), Duree: duree, Ouvert: false}.Insert(db)
+	_, err = cps.Camp{IdTaux: 1, DateDebut: shared.NewDateFrom(debut), Duree: duree, Statut: cps.Ferme}.Insert(db)
 	tu.AssertNoErr(t, err)
-	c3, err := cps.Camp{IdTaux: 1, DateDebut: shared.NewDateFrom(now), Duree: duree, Ouvert: true, Places: 0}.Insert(db)
+	c3, err := cps.Camp{IdTaux: 1, DateDebut: shared.NewDateFrom(now), Duree: duree, Statut: cps.Ouvert, Places: 0, Nom: "C3"}.Insert(db)
 	tu.AssertNoErr(t, err)
-	_, err = cps.Camp{IdTaux: 1, DateDebut: shared.NewDateFrom(now), Duree: duree, Ouvert: false}.Insert(db)
+	_, err = cps.Camp{IdTaux: 1, DateDebut: shared.NewDateFrom(now), Duree: duree, Statut: cps.Ferme}.Insert(db)
+	tu.AssertNoErr(t, err)
+	c5, err := cps.Camp{IdTaux: 1, DateDebut: shared.NewDateFrom(now), Duree: duree, Statut: cps.VisibleFerme, Nom: "C5"}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	p1, err := pr.Personne{}.Insert(db)
@@ -47,10 +49,11 @@ func TestController_load(t *testing.T) {
 	t.Run("loadCamps", func(t *testing.T) {
 		camps, list, err := ct.LoadCamps()
 		tu.AssertNoErr(t, err)
-		tu.Assert(t, slices.Equal(camps.IDs(), []cps.IdCamp{c3.Id}))
-		tu.Assert(t, slices.Equal(camps.IdTauxs(), []ds.IdTaux{1}))
-		tu.Assert(t, len(list) == 1)
+		tu.Assert(t, slices.Equal(camps.IdTauxs(), []ds.IdTaux{1, 1}))
+		tu.Assert(t, len(list) == 2)
+		tu.Assert(t, list[0].Id == c3.Id && list[1].Id == c5.Id)
 		tu.Assert(t, list[0].IsComplet)
+		tu.Assert(t, !list[0].IsClosed && list[1].IsClosed)
 	})
 
 	t.Run("decodePreinscription", func(t *testing.T) {
@@ -139,9 +142,9 @@ func TestController_saveInscription(t *testing.T) {
 
 	taux2, err := ds.Taux{Euros: 1000}.Insert(db)
 	tu.AssertNoErr(t, err)
-	camp, err := cps.Camp{IdTaux: 1, DateDebut: shared.NewDateFrom(time.Now()), Duree: 3, Ouvert: true}.Insert(db)
+	camp, err := cps.Camp{IdTaux: 1, DateDebut: shared.NewDateFrom(time.Now()), Duree: 3, Statut: cps.Ouvert}.Insert(db)
 	tu.AssertNoErr(t, err)
-	camp2, err := cps.Camp{IdTaux: taux2.Id, DateDebut: shared.NewDateFrom(time.Now()), Duree: 3, Ouvert: true}.Insert(db)
+	camp2, err := cps.Camp{IdTaux: taux2.Id, DateDebut: shared.NewDateFrom(time.Now()), Duree: 3, Statut: cps.Ouvert}.Insert(db)
 	tu.AssertNoErr(t, err)
 	pers, err := pr.Personne{}.Insert(db)
 	tu.AssertNoErr(t, err)
@@ -206,9 +209,9 @@ func TestController_confirmeInscription(t *testing.T) {
 
 	cfg, creds := loadEnv(t)
 
-	camp, err := cps.Camp{IdTaux: 1, DateDebut: shared.NewDateFrom(time.Now()), Duree: 3, Ouvert: true}.Insert(db)
+	camp, err := cps.Camp{IdTaux: 1, DateDebut: shared.NewDateFrom(time.Now()), Duree: 3, Statut: cps.Ouvert}.Insert(db)
 	tu.AssertNoErr(t, err)
-	camp2, err := cps.Camp{IdTaux: 1, DateDebut: shared.NewDateFrom(time.Now()), Duree: 3, Ouvert: true}.Insert(db)
+	camp2, err := cps.Camp{IdTaux: 1, DateDebut: shared.NewDateFrom(time.Now()), Duree: 3, Statut: cps.Ouvert}.Insert(db)
 	tu.AssertNoErr(t, err)
 	_, err = cps.Groupe{IdCamp: camp.Id, Plage: shared.Plage{
 		From:  shared.NewDateFrom(time.Now().Add(-50 * 24 * time.Hour)),

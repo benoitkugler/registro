@@ -398,7 +398,7 @@ export interface Camp {
   AgeMin: Int;
   AgeMax: Int;
   NeedEquilibreGF: boolean;
-  Ouvert: boolean;
+  Statut: StatutCamp;
   Prix: Montant;
   OptionPrix: OptionPrixCamp;
   OptionQuotientFamilial: PrixQuotientFamilial;
@@ -418,10 +418,10 @@ export interface DocumentsToShow {
   ListeVetements: boolean;
   ListeParticipants: boolean;
 }
-export type IdAide = number & { __opaque__: "IdAide" };
-export type IdCamp = number & { __opaque__: "IdCamp" };
-export type IdParticipant = number & { __opaque__: "IdParticipant" };
-export type IdStructureaide = number & { __opaque__: "IdStructureaide" };
+export type IdAide = Int & { __opaque_int__: "IdAide" };
+export type IdCamp = Int & { __opaque_int__: "IdCamp" };
+export type IdParticipant = Int & { __opaque_int__: "IdParticipant" };
+export type IdStructureaide = Int & { __opaque_int__: "IdStructureaide" };
 // registro/sql/camps.Jours
 export type Jours = Int[] | null;
 // registro/sql/camps.ListeVetements
@@ -524,6 +524,20 @@ export interface StatistiquesInscrits {
   Exceptions: Int;
   Attente: Int;
 }
+// registro/sql/camps.StatutCamp
+export const StatutCamp = {
+  Ferme: 0,
+  VisibleFerme: 1,
+  Ouvert: 2,
+} as const;
+export type StatutCamp = (typeof StatutCamp)[keyof typeof StatutCamp];
+
+export const StatutCampLabels: Record<StatutCamp, string> = {
+  [StatutCamp.Ferme]: "Caché et fermé",
+  [StatutCamp.VisibleFerme]: "Visible mais fermé",
+  [StatutCamp.Ouvert]: "Visible et ouvert",
+};
+
 // registro/sql/camps.StatutCauses
 export interface StatutCauses {
   AgeMin: boolean;
@@ -592,9 +606,9 @@ export interface Dossier {
   LastLoadDocuments: Time;
   KeyV1: string;
 }
-export type IdDossier = number & { __opaque__: "IdDossier" };
-export type IdPaiement = number & { __opaque__: "IdPaiement" };
-export type IdTaux = number & { __opaque__: "IdTaux" };
+export type IdDossier = Int & { __opaque_int__: "IdDossier" };
+export type IdPaiement = Int & { __opaque_int__: "IdPaiement" };
+export type IdTaux = Int & { __opaque_int__: "IdTaux" };
 // registro/sql/dossiers.ModePaiement
 export const ModePaiement = {
   Cheque: 0,
@@ -684,8 +698,8 @@ export interface EventMessage {
   VuFondSoutien: boolean;
   OnlyToFondSoutien: boolean;
 }
-export type IdEvent = number & { __opaque__: "IdEvent" };
-export type IdFile = number & { __opaque__: "IdFile" };
+export type IdEvent = Int & { __opaque_int__: "IdEvent" };
+export type IdFile = Int & { __opaque_int__: "IdFile" };
 // registro/sql/personnes.Approfondissement
 export const Approfondissement = {
   AAucun: 0,
@@ -757,7 +771,7 @@ export const DiplomeLabels: Record<Diplome, string> = {
   [Diplome.DZzautre]: "AUTRE",
 };
 
-export type IdPersonne = number & { __opaque__: "IdPersonne" };
+export type IdPersonne = Int & { __opaque_int__: "IdPersonne" };
 // registro/sql/personnes.Mails
 export type Mails = string[] | null;
 // registro/sql/personnes.Nationnalite

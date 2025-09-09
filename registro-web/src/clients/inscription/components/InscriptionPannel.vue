@@ -43,7 +43,7 @@
           <Step2
             :model-value="inner.Participants || []"
             @update:model-value="(l) => (inner.Participants = l)"
-            :camps="props.camps"
+            :camps="props.camps.filter((c) => !c.IsClosed)"
             :responsable="inner.Responsable"
             :preselected="props.preselected"
           ></Step2>

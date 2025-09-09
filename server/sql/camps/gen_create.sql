@@ -31,7 +31,7 @@ CREATE TABLE camps (
     AgeMin integer NOT NULL,
     AgeMax integer NOT NULL,
     NeedEquilibreGF boolean NOT NULL,
-    Ouvert boolean NOT NULL,
+    Statut smallint CHECK (Statut IN (0, 1, 2)) NOT NULL,
     Prix Montant NOT NULL,
     OptionPrix jsonb NOT NULL,
     OptionQuotientFamilial integer[] CHECK (array_length(OptionQuotientFamilial, 1) = 4) NOT NULL,

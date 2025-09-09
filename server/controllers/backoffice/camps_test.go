@@ -33,16 +33,17 @@ func TestCRUD(t *testing.T) {
 
 		camp, err := ct.createCamp()
 		tu.AssertNoErr(t, err)
+		tu.Assert(t, camp.Camp.Camp.Statut == cps.VisibleFerme)
 
 		camps, err = ct.getCamps()
 		tu.AssertNoErr(t, err)
 		tu.Assert(t, len(camps) == 1)
 
-		camp.Camp.Camp.Ouvert = true
+		camp.Camp.Camp.Statut = cps.Ouvert
 		camp.Camp.Camp.Navette = cps.OptionNavette{Actif: true, Commentaire: "7 € Aller retour"}
 		updated, err := ct.updateCamp(camp.Camp.Camp)
 		tu.AssertNoErr(t, err)
-		tu.Assert(t, updated.Camp.Ouvert)
+		tu.Assert(t, updated.Camp.Statut == cps.Ouvert)
 
 		err = ct.deleteCamp(camp.Camp.Camp.Id)
 		tu.AssertNoErr(t, err)

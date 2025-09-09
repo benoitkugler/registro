@@ -126,6 +126,7 @@ func defaultCamp(idTaux ds.IdTaux) cps.Camp {
 		DateDebut: shared.NewDateFrom(time.Now()), Duree: 1,
 		Places: 40, AgeMin: 6, AgeMax: 12,
 		Password: utils.RandPassword(6),
+		Statut:   cps.VisibleFerme,
 	}
 }
 
@@ -199,7 +200,7 @@ func (ct *Controller) updateCamp(args cps.Camp) (cps.CampExt, error) {
 	camp.AgeMin = args.AgeMin
 	camp.AgeMax = args.AgeMax
 	camp.NeedEquilibreGF = args.NeedEquilibreGF
-	camp.Ouvert = args.Ouvert
+	camp.Statut = args.Statut
 	camp.Prix = args.Prix
 	camp.OptionPrix = args.OptionPrix
 	camp.OptionQuotientFamilial = args.OptionQuotientFamilial
@@ -341,7 +342,7 @@ func (ct *Controller) ouvreInscriptions(args OuvreInscriptionsIn) error {
 	}
 	return utils.InTx(ct.db, func(tx *sql.Tx) error {
 		for _, camp := range camps {
-			camp.Ouvert = true
+			camp.Statut = cps.Ouvert
 			_, err = camp.Update(tx)
 			if err != nil {
 				return err

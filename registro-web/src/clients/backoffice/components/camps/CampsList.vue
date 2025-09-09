@@ -219,14 +219,15 @@
 <script lang="ts" setup>
 import { ref, computed, onMounted, reactive } from "vue";
 import { controller, isCampOpen } from "@/clients/backoffice/logic/logic";
-import type {
-  Camp,
-  CampHeader,
-  IdCamp,
-  IdTaux,
-  Int,
-  SendProgress,
-  Taux,
+import {
+  StatutCamp,
+  type Camp,
+  type CampHeader,
+  type IdCamp,
+  type IdTaux,
+  type Int,
+  type SendProgress,
+  type Taux,
 } from "@/clients/backoffice/logic/api";
 import CampEdit from "./CampEdit.vue";
 import TauxSelect from "./TauxSelect.vue";
@@ -381,7 +382,7 @@ const showOpenInsc = ref(false);
 function startOpenInsc() {
   // hint : all camps not open yet
   campToOpen.value = Array.from(campsData.values())
-    .filter((c) => !c.Camp.Camp.Ouvert)
+    .filter((c) => c.Camp.Camp.Statut != StatutCamp.Ouvert)
     .map((c) => c.Camp.Camp.Id);
   showOpenInsc.value = true;
 }

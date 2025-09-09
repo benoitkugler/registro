@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -88,6 +89,8 @@ type CampExt struct {
 	// Nom et prénom du directeur et ses adjoints
 	Direction string
 
+	// Indique si les inscriptions sont encore fermées.
+	IsClosed bool
 	// Indique si le nombre d'inscrits maximum est atteint
 	IsComplet bool
 }
@@ -127,6 +130,7 @@ func newCampExt(camp cps.Camp, taux ds.Taux, direction []pr.Personne, participan
 
 		Direction: dir,
 
+		IsClosed:  camp.Statut == cps.VisibleFerme,
 		IsComplet: inscrits >= camp.Places,
 	}
 }
@@ -180,14 +184,14 @@ func (ct *Controller) initInscription(preinscription string) (Data, error) {
 	}, nil
 }
 
-// LoadCamps renvoie les camps ouverts aux inscriptions et non terminés
+// LoadCamps renvoie les camps visibles aux inscriptions et non terminés
 func (ct *Controller) LoadCamps() (cps.Camps, []CampExt, error) {
 	camps, err := cps.SelectAllCamps(ct.db)
 	if err != nil {
 		return nil, nil, utils.SQLError(err)
 	}
 	for id, camp := range camps {
-		if camp.Ext().IsTerminated || !camp.Ouvert {
+		if camp.Ext().IsTerminated || camp.Statut == cps.Ferme {
 			delete(camps, id)
 		}
 	}
@@ -219,6 +223,8 @@ func (ct *Controller) LoadCamps() (cps.Camps, []CampExt, error) {
 		}
 		list = append(list, newCampExt(camp, tauxs[camp.IdTaux], direction, participants[camp.Id]))
 	}
+
+	slices.SortFunc(list, func(a, b CampExt) int { return strings.Compare(a.Nom, b.Nom) })
 
 	return camps, list, nil
 }
