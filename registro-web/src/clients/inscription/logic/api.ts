@@ -56,6 +56,7 @@ export interface SearchHistoryOut {
 export interface Settings {
   SupportBonsCAF: boolean;
   SupportANCV: boolean;
+  SupportPaiementEnLigne: boolean;
   EmailRetraitMedia: string;
   ShowFondSoutien: boolean;
   ShowCharteConduite: boolean;

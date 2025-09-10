@@ -9,7 +9,7 @@
         indicatif.
       </v-alert>
 
-      <v-alert class="my-1">
+      <v-alert class="my-1" v-if="props.settings.SupportPaiementEnLigne">
         PAIEMENT EN LIGNE : Vous pourrez payer en ligne via votre espace de
         suivi.
       </v-alert>

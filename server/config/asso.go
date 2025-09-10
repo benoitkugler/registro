@@ -24,6 +24,7 @@ type Asso struct {
 	ChequeSettings       ChequeSettings
 
 	SupportBonsCAF, SupportANCV bool // if true, displayed in inscription form
+	SupportPaiementEnLigne      bool // if true, displayed in inscription and activated on espaceperso
 	EmailRetraitMedia           string
 	ShowFondSoutien             bool // if true, displayed in inscription form
 	ShowCharteConduite          bool // if true, displayed in inscription form
@@ -66,9 +67,10 @@ var acve = Asso{
 	},
 
 	SupportBonsCAF: true, SupportANCV: true,
-	EmailRetraitMedia:  "contact@acve.asso.fr",
-	ShowFondSoutien:    false,
-	ShowCharteConduite: false,
+	SupportPaiementEnLigne: true,
+	EmailRetraitMedia:      "contact@acve.asso.fr",
+	ShowFondSoutien:        false,
+	ShowCharteConduite:     false,
 }
 
 var repere = Asso{
@@ -99,9 +101,10 @@ var repere = Asso{
 	},
 
 	SupportBonsCAF: false, SupportANCV: false,
-	EmailRetraitMedia:  "webmaster@lerepere.ch",
-	ShowFondSoutien:    true,
-	ShowCharteConduite: true,
+	SupportPaiementEnLigne: false,
+	EmailRetraitMedia:      "webmaster@lerepere.ch",
+	ShowFondSoutien:        true,
+	ShowCharteConduite:     true,
 }
 
 type ChequeSettings struct {

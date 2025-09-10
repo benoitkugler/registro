@@ -12,7 +12,7 @@
               title="Payer en ligne"
               subtitle="par carte bancaire"
               :value="ModePaiement.EnLigne"
-              :disabled="!props.settings.SupportPaiementByCard"
+              :disabled="!props.settings.SupportPaiementEnLigne"
             >
               <template #append>
                 <v-icon>mdi-credit-card</v-icon>

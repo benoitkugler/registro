@@ -78,7 +78,7 @@ export interface Joomeo {
 export interface PaiementSettings {
   VirementCode: string;
   BankAccounts: Ar2_string[] | null;
-  SupportPaiementByCard: boolean;
+  SupportPaiementEnLigne: boolean;
   Cheque: ChequeSettings;
 }
 // registro/controllers/espaceperso.SendMessageIn
@@ -273,7 +273,7 @@ export interface Camp {
   AgeMin: Int;
   AgeMax: Int;
   NeedEquilibreGF: boolean;
-  Ouvert: boolean;
+  Statut: StatutCamp;
   Prix: Montant;
   OptionPrix: OptionPrixCamp;
   OptionQuotientFamilial: PrixQuotientFamilial;
@@ -288,11 +288,11 @@ export interface DocumentsToShow {
   ListeVetements: boolean;
   ListeParticipants: boolean;
 }
-export type IdAide = number & { __opaque__: "IdAide" };
-export type IdCamp = number & { __opaque__: "IdCamp" };
-export type IdParticipant = number & { __opaque__: "IdParticipant" };
-export type IdSondage = number & { __opaque__: "IdSondage" };
-export type IdStructureaide = number & { __opaque__: "IdStructureaide" };
+export type IdAide = Int & { __opaque_int__: "IdAide" };
+export type IdCamp = Int & { __opaque_int__: "IdCamp" };
+export type IdParticipant = Int & { __opaque_int__: "IdParticipant" };
+export type IdSondage = Int & { __opaque_int__: "IdSondage" };
+export type IdStructureaide = Int & { __opaque_int__: "IdStructureaide" };
 // registro/sql/camps.Jours
 export type Jours = Int[] | null;
 // registro/sql/camps.ListeVetements
@@ -432,6 +432,20 @@ export interface Sondage {
   MessageEnfant: string;
   MessageResponsable: string;
 }
+// registro/sql/camps.StatutCamp
+export const StatutCamp = {
+  Ferme: 0,
+  VisibleFerme: 1,
+  Ouvert: 2,
+} as const;
+export type StatutCamp = (typeof StatutCamp)[keyof typeof StatutCamp];
+
+export const StatutCampLabels: Record<StatutCamp, string> = {
+  [StatutCamp.Ferme]: "Caché et fermé",
+  [StatutCamp.VisibleFerme]: "Visible mais fermé",
+  [StatutCamp.Ouvert]: "Visible et ouvert",
+};
+
 // registro/sql/camps.StatutParticipant
 export const StatutParticipant = {
   AStatuer: 0,
@@ -493,9 +507,9 @@ export interface Dossier {
   LastLoadDocuments: Time;
   KeyV1: string;
 }
-export type IdDossier = number & { __opaque__: "IdDossier" };
-export type IdPaiement = number & { __opaque__: "IdPaiement" };
-export type IdTaux = number & { __opaque__: "IdTaux" };
+export type IdDossier = Int & { __opaque_int__: "IdDossier" };
+export type IdPaiement = Int & { __opaque_int__: "IdPaiement" };
+export type IdTaux = Int & { __opaque_int__: "IdTaux" };
 // registro/sql/dossiers.ModePaiement
 export const ModePaiement = {
   Cheque: 0,
@@ -576,7 +590,7 @@ export interface EventMessage {
   VuFondSoutien: boolean;
   OnlyToFondSoutien: boolean;
 }
-export type IdEvent = number & { __opaque__: "IdEvent" };
+export type IdEvent = Int & { __opaque_int__: "IdEvent" };
 // registro/sql/files.Categorie
 export const Categorie = {
   NoBuiltin: 0,
@@ -627,8 +641,8 @@ export interface Demande {
   MaxDocs: Int;
   JoursValide: Int;
 }
-export type IdDemande = number & { __opaque__: "IdDemande" };
-export type IdFile = number & { __opaque__: "IdFile" };
+export type IdDemande = Int & { __opaque_int__: "IdDemande" };
+export type IdFile = Int & { __opaque_int__: "IdFile" };
 // registro/sql/personnes.Allergies
 export interface Allergies {
   Asthme: boolean;
@@ -737,7 +751,7 @@ export const FichesanitaireStateLabels: Record<FichesanitaireState, string> = {
   [FichesanitaireState.UpToDate]: "Remplie",
 };
 
-export type IdPersonne = number & { __opaque__: "IdPersonne" };
+export type IdPersonne = Int & { __opaque_int__: "IdPersonne" };
 // registro/sql/personnes.Mails
 export type Mails = string[] | null;
 // registro/sql/personnes.Maladies
