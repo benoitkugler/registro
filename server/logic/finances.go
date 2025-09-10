@@ -126,13 +126,16 @@ func (de *DossierFinance) IsPaiementOpen() bool {
 // Les aides en cours de validation sont ignorées.
 func (df DossierFinance) Bilan() BilanFinances {
 	inscrits := map[cps.IdParticipant]BilanParticipant{}
-	demande, recu, aides := df.taux.Zero(), df.taux.Zero(), df.taux.Zero()
+	demande, recu, aides, demandeEnAttente := df.taux.Zero(), df.taux.Zero(), df.taux.Zero(), df.taux.Zero()
 
 	for _, participant := range df.Participants {
+		camp := df.camps[participant.IdCamp]
 		if participant.Statut != cps.Inscrit {
+			// simmplify by just using the camp Prix
+			demandeEnAttente.Add(camp.Prix)
 			continue
 		}
-		data := pc{participant, df.camps[participant.IdCamp], df.aides[participant.Id], df.structures}
+		data := pc{participant, camp, df.aides[participant.Id], df.structures}
 		bilan := data.bilan()
 		inscrits[participant.Id] = bilan
 		demande.Add(bilan.net(df.taux))
@@ -147,8 +150,8 @@ func (df DossierFinance) Bilan() BilanFinances {
 		}
 	}
 
-	// [demande], [recu] and [aides] have the same currency
-	return BilanFinances{inscrits, demande.Cent, recu.Cent, aides.Cent, demande.Currency}
+	// [demande], [demandeEnAttente], [recu] and [aides] have the same currency
+	return BilanFinances{inscrits, demande.Cent, demandeEnAttente.Cent, recu.Cent, aides.Cent, demande.Currency}
 }
 
 // BilanFinances résume l'état financier d'un dossier
@@ -157,8 +160,9 @@ type BilanFinances struct {
 
 	// totaux, en centimes
 
-	demande int // montant demandé final (avant déduction des paiements déjà effectués)
-	recu    int // somme des paiements reçus
+	demande          int // montant demandé final (avant déduction des paiements déjà effectués)
+	demandeEnAttente int // pour les participants en liste d'attente
+	recu             int // somme des paiements reçus
 
 	aides int // total des aides
 

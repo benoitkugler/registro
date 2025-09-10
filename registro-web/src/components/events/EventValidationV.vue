@@ -18,7 +18,6 @@
           v-if="props.user == Acteur.Espaceperso"
           icon="mdi-information"
           flat
-          size="small"
           class="mr-2"
           @click="emit('goToValidation')"
         ></v-btn>

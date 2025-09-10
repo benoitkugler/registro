@@ -133,6 +133,7 @@ export interface BilanFinancesPub {
   Recu: string;
   Restant: string;
   Statut: StatutPaiement;
+  DemandeEnAttenteValidation: string;
 }
 // registro/logic.BilanParticipantPub
 export interface BilanParticipantPub {

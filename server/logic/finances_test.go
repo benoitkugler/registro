@@ -42,7 +42,7 @@ func TestDossierFinance_Bilan(t *testing.T) {
 			2: {chf(150), "", cps.Remises{}, nil},
 			3: {chf(150), "", cps.Remises{}, nil},
 		},
-		40000, 35000, 0, ds.FrancsSuisse,
+		40000, 15000, 35000, 0, ds.FrancsSuisse,
 	}))
 
 	// avec aides
@@ -65,7 +65,7 @@ func TestDossierFinance_Bilan(t *testing.T) {
 			2: {chf(150), "", cps.Remises{}, nil},
 			3: {chf(150), "", cps.Remises{}, nil},
 		},
-		40000 - 1000 - 200*10, 35000, 1000 + 200*10, ds.FrancsSuisse,
+		40000 - 1000 - 200*10, 15000, 35000, 1000 + 200*10, ds.FrancsSuisse,
 	}))
 
 	// avec remises
@@ -90,7 +90,7 @@ func TestDossierFinance_Bilan(t *testing.T) {
 			2: {chf(150), "", cps.Remises{}, nil},
 			3: {chf(150), "", cps.Remises{}, nil},
 		},
-		40000 - 500 - 1500, 35000, 0, ds.FrancsSuisse,
+		40000 - 500 - 1500, 15000, 35000, 0, ds.FrancsSuisse,
 	}))
 
 	// avec remises et aides
@@ -114,7 +114,7 @@ func TestDossierFinance_Bilan(t *testing.T) {
 				ReducEnfants:   5,
 			}, []AideResolved{{"", eur(20)}}},
 		},
-		10000 - 1000 - 500 - 900, 35000, 1000, ds.FrancsSuisse,
+		10000 - 1000 - 500 - 900, 0, 35000, 1000, ds.FrancsSuisse,
 	}))
 }
 

@@ -132,7 +132,11 @@ const emit = defineEmits<{
   (e: "refresh"): void;
 }>();
 
-const mode = ref<ModePaiement>(ModePaiement.EnLigne);
+const mode = ref<ModePaiement>(
+  props.settings.SupportPaiementEnLigne
+    ? ModePaiement.EnLigne
+    : ModePaiement.Virement
+);
 
 async function copyIBAN(iban: string) {
   await copyToClipboard(iban);

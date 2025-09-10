@@ -15,6 +15,12 @@
         :icon="Formatters.statutParticipant(StatutParticipant.Inscrit).icon"
       >
         <v-row>
+          <v-col align-self="center" class="text-center">
+            <v-chip v-for="participant in inscrits" class="my-1">
+              {{ participant.Personne.Prenom }} :
+              {{ Camps.label(participant.Camp) }}
+            </v-chip>
+          </v-col>
           <v-col cols="7"
             >Nous sommes ravis de vous confirmer
             {{
@@ -24,12 +30,6 @@
             }}
             et nous nous réjouissons des moments à passer ensemble !</v-col
           >
-          <v-col align-self="center" class="text-right">
-            <v-chip v-for="participant in inscrits" class="my-1">
-              {{ participant.Personne.Prenom }} :
-              {{ Camps.label(participant.Camp) }}
-            </v-chip>
-          </v-col>
         </v-row>
       </v-alert>
 
@@ -45,40 +45,40 @@
         "
       >
         <v-row>
+          <v-col align-self="center" class="text-center">
+            <v-chip v-for="participant in attente" class="my-1">
+              {{ participant.Personne.Prenom }} :
+              {{ Camps.label(participant.Camp) }}
+            </v-chip>
+          </v-col>
           <v-col cols="7"
             >Malheureusement, nous avons dû placer
             {{ attente.length == 1 ? "cette demande" : "ces demandes" }}
             en liste d'attente. Nous reviendrons vers vous si une place se
             libère.</v-col
           >
-          <v-col align-self="center" class="text-right">
-            <v-chip v-for="participant in attente" class="my-1">
-              {{ participant.Personne.Prenom }} :
-              {{ Camps.label(participant.Camp) }}
-            </v-chip>
-          </v-col>
         </v-row>
       </v-alert>
 
       <!-- a statuer -->
       <v-alert
         v-if="aStatuer.length"
-        type="warning"
         color="grey-lighten-1"
         class="my-2"
         elevation="2"
+        :icon="Formatters.statutParticipant(StatutParticipant.AStatuer).icon"
       >
         <v-row>
-          <v-col cols="7">
-            Nous n'avons pas encore statué pour
-            {{ aStatuer.length == 1 ? "cette demande" : "ces demandes" }}
-            et nous reviendrons vers vous au plus vite.
-          </v-col>
-          <v-col align-self="center" class="text-right">
+          <v-col align-self="center" class="text-center">
             <v-chip v-for="participant in aStatuer" class="my-1">
               {{ participant.Personne.Prenom }} :
               {{ Camps.label(participant.Camp) }}
             </v-chip>
+          </v-col>
+          <v-col cols="7">
+            Nous n'avons pas encore statué pour
+            {{ aStatuer.length == 1 ? "cette demande" : "ces demandes" }}
+            et nous reviendrons vers vous au plus vite.
           </v-col>
         </v-row>
       </v-alert>

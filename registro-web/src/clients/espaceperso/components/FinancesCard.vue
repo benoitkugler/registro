@@ -34,7 +34,15 @@
           {{ dossier.Bilan.Demande }}
         </v-col>
       </v-row>
-      <v-row class="my-0">
+
+      <v-row class="my-2" v-if="dossier.Bilan.DemandeEnAttenteValidation">
+        <v-col class="text-grey">Séjours en attente de validation</v-col>
+        <v-col cols="4" class="text-right text-grey">
+          {{ dossier.Bilan.DemandeEnAttenteValidation }}
+        </v-col>
+      </v-row>
+
+      <v-row class="my-0" v-if="dossier.Bilan.Aides">
         <v-col cols="auto">
           <v-menu>
             <template #activator="{ props: menuProps }">
@@ -69,6 +77,9 @@
             </template>
             <v-card title="Paiements">
               <v-card-text>
+                <i v-if="!Object.values(props.dossier.Paiements || {}).length">
+                  Aucun paiement n'a encore été enregistré.
+                </i>
                 <v-chip
                   v-for="paiement in props.dossier.Paiements"
                   class="mx-1"

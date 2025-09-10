@@ -226,10 +226,16 @@ type BilanFinancesPub struct {
 	Inscrits map[cps.IdParticipant]BilanParticipantPub
 
 	Demande string // total des participants, aides déjà déduises
-	Aides   string // total des aides extérieures
+	// Total des aides extérieures, ou vide
+	Aides   string
 	Recu    string // total des paiements
 	Restant string // Demande - Recu
 	Statut  StatutPaiement
+
+	// Prix indicatif (sans remises ni aides) des prix
+	// des séjours des participants non inscrits,
+	// ou vide.
+	DemandeEnAttenteValidation string
 }
 
 func (d DossierFinance) Publish(key crypto.Encrypter) DossierExt {
@@ -240,13 +246,23 @@ func (d DossierFinance) Publish(key crypto.Encrypter) DossierExt {
 		inscrits[k] = v.publish(taux)
 	}
 
+	enAttente := ""
+	if b.demandeEnAttente != 0 {
+		enAttente = taux.Convertible(ds.Montant{Cent: b.demandeEnAttente, Currency: b.currency}).String()
+	}
+	aides := ""
+	if b.aides != 0 {
+		aides = taux.Convertible(ds.Montant{Cent: b.aides, Currency: b.currency}).String()
+	}
+
 	bilan := BilanFinancesPub{
 		inscrits,
 		taux.Convertible(ds.Montant{Cent: b.demande, Currency: b.currency}).String(),
-		taux.Convertible(ds.Montant{Cent: b.aides, Currency: b.currency}).String(),
+		aides,
 		taux.Convertible(ds.Montant{Cent: b.recu, Currency: b.currency}).String(),
 		taux.Convertible(b.ApresPaiement()).String(),
 		b.StatutPaiement(),
+		enAttente,
 	}
 
 	aideFiles := make(map[cps.IdAide]PublicFile)
