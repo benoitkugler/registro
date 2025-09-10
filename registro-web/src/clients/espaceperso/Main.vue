@@ -14,7 +14,7 @@
     </v-btn>
     <v-menu>
       <template #activator="{ props: menuProps }">
-        <v-btn v-bind="menuProps">
+        <v-btn v-bind="menuProps" :disabled="!enableJustificatifs">
           <template #prepend>
             <v-icon>mdi-download</v-icon>
           </template>
@@ -406,6 +406,15 @@ function handleFromEvent(fromIdEvent: IdEvent) {
       return;
   }
 }
+
+const enableJustificatifs = computed(() => {
+  if (data.value == null) return false;
+  return (
+    (data.value.Dossier.Participants || []).find(
+      (p) => p.Participant.Statut == StatutParticipant.Inscrit
+    ) != undefined
+  );
+});
 
 const showCreateMessage = ref<{
   content: string;
