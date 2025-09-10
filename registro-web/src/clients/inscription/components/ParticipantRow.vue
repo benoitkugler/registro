@@ -28,11 +28,7 @@
             <v-col sm="5" cols="12">
               <SexeField
                 v-model="participant.Sexe"
-                :rules="[
-                  FormRules.required(
-                    'Nous avons besoin du sexe des participants pour constituer des groupes.'
-                  ),
-                ]"
+                :rules="[FormRules.required('Le sexe est requis.')]"
               ></SexeField>
             </v-col>
             <v-col sm="7" cols="12">
@@ -116,7 +112,7 @@ const participant = defineModel<Participant>({ required: true });
 
 function checkDateNaissance(d: Date_) {
   if (isDateZero(d)) {
-    return "Nous avons besoin de l'âge des participants pour constituer des groupes.";
+    return "La date de naissance est requise.";
   }
   return true;
 }
