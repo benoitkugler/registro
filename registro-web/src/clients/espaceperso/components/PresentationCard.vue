@@ -10,11 +10,11 @@
         Merci de privilégier ce système aux mails.
       </v-alert>
 
-      Cet espace évoluera au fil de l'inscription, et vous donnera accès aux
-      étapes suivantes :
+      Cet espace évoluera au fil de l'inscription, et vous donnera accès au
+      suivi de votre demande:
       <v-list>
         <v-list-item
-          title="Validation"
+          title="Notification de validation"
           subtitle="Après prise en compte de votre inscription par le centre."
           append-icon="mdi-check"
         >
