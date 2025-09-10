@@ -1,4 +1,12 @@
 -- Code genererated by gomacro/generator/sql. DO NOT EDIT.
+DROP TYPE IF EXISTS DocumentsToShow;
+
+CREATE TYPE DocumentsToShow AS (
+    LettreDirecteur boolean,
+    ListeVetements boolean,
+    ListeParticipants boolean
+);
+
 DROP TYPE IF EXISTS PresenceOffsets;
 
 CREATE TYPE PresenceOffsets AS (
@@ -37,7 +45,7 @@ CREATE TABLE camps (
     OptionQuotientFamilial integer[] CHECK (array_length(OptionQuotientFamilial, 1) = 4) NOT NULL,
     Password text NOT NULL,
     DocumentsReady boolean NOT NULL,
-    DocumentsToShow jsonb NOT NULL,
+    DocumentsToShow DocumentsToShow NOT NULL,
     Vetements jsonb NOT NULL
 );
 
@@ -294,29 +302,6 @@ BEGIN
     IF NOT is_valid THEN
         RAISE WARNING '% is not a boolean', data;
     END IF;
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION gomacro_validate_json_camp_DocumentsToShow (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean;
-BEGIN
-    IF jsonb_typeof(data) != 'object' THEN
-        RETURN FALSE;
-    END IF;
-    is_valid := (
-        SELECT
-            bool_and(key IN ('LettreDirecteur', 'ListeVetements', 'ListeParticipants'))
-        FROM
-            jsonb_each(data))
-        AND gomacro_validate_json_boolean (data -> 'LettreDirecteur')
-        AND gomacro_validate_json_boolean (data -> 'ListeVetements')
-        AND gomacro_validate_json_boolean (data -> 'ListeParticipants');
     RETURN is_valid;
 END;
 $$
@@ -587,9 +572,6 @@ END;
 $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
-
-ALTER TABLE camps
-    ADD CONSTRAINT DocumentsToShow_gomacro CHECK (gomacro_validate_json_camp_DocumentsToShow (DocumentsToShow));
 
 ALTER TABLE camps
     ADD CONSTRAINT Vetements_gomacro CHECK (gomacro_validate_json_camp_ListeVetements (Vetements));

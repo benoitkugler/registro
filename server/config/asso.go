@@ -28,6 +28,7 @@ type Asso struct {
 	EmailRetraitMedia           string
 	ShowFondSoutien             bool // if true, displayed in inscription form
 	ShowCharteConduite          bool // if true, displayed in inscription form
+	AskNationnalite             bool // if true, displayed for participants in inscription form
 }
 
 func (a *Asso) BankAccounts() [][2]string {
@@ -71,6 +72,7 @@ var acve = Asso{
 	EmailRetraitMedia:      "contact@acve.asso.fr",
 	ShowFondSoutien:        false,
 	ShowCharteConduite:     false,
+	AskNationnalite:        false,
 }
 
 var repere = Asso{
@@ -105,6 +107,7 @@ var repere = Asso{
 	EmailRetraitMedia:      "webmaster@lerepere.ch",
 	ShowFondSoutien:        true,
 	ShowCharteConduite:     true,
+	AskNationnalite:        true,
 }
 
 type ChequeSettings struct {

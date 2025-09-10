@@ -87,7 +87,7 @@ func cmpDate(in, out shared.Date) diff {
 }
 
 type fieldEnum interface {
-	pr.Sexe | pr.Approfondissement | pr.Diplome | pr.Nationnalite
+	pr.Sexe | pr.Approfondissement | pr.Diplome
 }
 
 func cmpEnum[T fieldEnum](in, out T) diff {
@@ -132,7 +132,7 @@ type conflicts struct {
 type fields interface {
 	string | bool |
 		shared.Date | pr.Departement | pr.Tels | pr.Pays |
-		fieldEnum
+		fieldEnum | pr.Nationnalite
 }
 
 func cmpGeneric[T fields](entrant, existant T) diff {
@@ -157,7 +157,7 @@ func cmpGeneric[T fields](entrant, existant T) diff {
 	case pr.Approfondissement:
 		return cmpEnum(v1.(pr.Approfondissement), v2.(pr.Approfondissement))
 	case pr.Nationnalite:
-		return cmpEnum(v1.(pr.Nationnalite), v2.(pr.Nationnalite))
+		return cmpBool(v1.(pr.Nationnalite).IsSuisse, v2.(pr.Nationnalite).IsSuisse)
 	default:
 		panic("exhaustive type switch")
 	}

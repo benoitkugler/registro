@@ -142,6 +142,7 @@ type Settings struct {
 	EmailRetraitMedia      string
 	ShowFondSoutien        bool
 	ShowCharteConduite     bool
+	AskNationnalite        bool
 }
 
 func (ct *Controller) GetCamps(c echo.Context) error {
@@ -182,6 +183,7 @@ func (ct *Controller) initInscription(preinscription string) (Data, error) {
 			EmailRetraitMedia:      ct.asso.EmailRetraitMedia,
 			ShowFondSoutien:        ct.asso.ShowFondSoutien,
 			ShowCharteConduite:     ct.asso.ShowCharteConduite,
+			AskNationnalite:        ct.asso.AskNationnalite,
 		},
 	}, nil
 }
@@ -532,15 +534,6 @@ func (ct *Controller) saveInscription(host string, publicInsc Inscription) (err 
 }
 
 const queryParamIdInscription = "insc-token"
-
-func (ct *Controller) decodePreIdent(crypted string) (pr.OptIdPersonne, error) {
-	if crypted == "" { // pas de pré identification
-		return pr.OptIdPersonne{}, nil
-	}
-
-	id, err := crypto.DecryptID[pr.IdPersonne](ct.key, crypted)
-	return id.Opt(), err
-}
 
 // ConfirmeInscription valide l'inscription et crée le [Dossier] associé,
 // redirigeant ensuite vers l'espace perso.

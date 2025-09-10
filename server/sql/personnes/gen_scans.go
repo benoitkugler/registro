@@ -7,6 +7,8 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"strings"
 
 	"github.com/lib/pq"
 )
@@ -358,6 +360,87 @@ func (s Tels) Value() (driver.Value, error) {
 	return pq.StringArray(s).Value()
 }
 
+func (s *Maladies) Scan(src any) error {
+	bs, ok := src.([]byte)
+	if !ok {
+		return fmt.Errorf("unsupported type %T", src)
+	}
+	fields := strings.Split(string(bs[1:len(bs)-1]), ",")
+	if len(fields) != 9 {
+		return fmt.Errorf("unsupported number of fields %d", len(fields))
+	}
+
+	s.Rubeole = bool(fields[0] == "t")
+
+	s.Varicelle = bool(fields[1] == "t")
+
+	s.Angine = bool(fields[2] == "t")
+
+	s.Oreillons = bool(fields[3] == "t")
+
+	s.Scarlatine = bool(fields[4] == "t")
+
+	s.Coqueluche = bool(fields[5] == "t")
+
+	s.Otite = bool(fields[6] == "t")
+
+	s.Rougeole = bool(fields[7] == "t")
+
+	s.Rhumatisme = bool(fields[8] == "t")
+
+	return nil
+}
+func (s Maladies) Value() (driver.Value, error) {
+	bs := fmt.Sprintf("(%t, %t, %t, %t, %t, %t, %t, %t, %t)", s.Rubeole, s.Varicelle, s.Angine, s.Oreillons, s.Scarlatine, s.Coqueluche, s.Otite, s.Rougeole, s.Rhumatisme)
+	return driver.Value(bs), nil
+}
+
+func (s *Nationnalite) Scan(src any) error {
+	bs, ok := src.([]byte)
+	if !ok {
+		return fmt.Errorf("unsupported type %T", src)
+	}
+	fields := strings.Split(string(bs[1:len(bs)-1]), ",")
+	if len(fields) != 1 {
+		return fmt.Errorf("unsupported number of fields %d", len(fields))
+	}
+
+	s.IsSuisse = bool(fields[0] == "t")
+
+	return nil
+}
+func (s Nationnalite) Value() (driver.Value, error) {
+	bs := fmt.Sprintf("(%t)", s.IsSuisse)
+	return driver.Value(bs), nil
+}
+
+func (s *Publicite) Scan(src any) error {
+	bs, ok := src.([]byte)
+	if !ok {
+		return fmt.Errorf("unsupported type %T", src)
+	}
+	fields := strings.Split(string(bs[1:len(bs)-1]), ",")
+	if len(fields) != 5 {
+		return fmt.Errorf("unsupported number of fields %d", len(fields))
+	}
+
+	s.VersionPapier = bool(fields[0] == "t")
+
+	s.PubHiver = bool(fields[1] == "t")
+
+	s.PubEte = bool(fields[2] == "t")
+
+	s.EchoRocher = bool(fields[3] == "t")
+
+	s.Eonews = bool(fields[4] == "t")
+
+	return nil
+}
+func (s Publicite) Value() (driver.Value, error) {
+	bs := fmt.Sprintf("(%t, %t, %t, %t, %t)", s.VersionPapier, s.PubHiver, s.PubEte, s.EchoRocher, s.Eonews)
+	return driver.Value(bs), nil
+}
+
 func IdPersonneArrayToPQ(ids []IdPersonne) pq.Int64Array {
 	out := make(pq.Int64Array, len(ids))
 	for i, v := range ids {
@@ -388,11 +471,5 @@ func ScanIdPersonneArray(rs *sql.Rows) ([]IdPersonne, error) {
 func (s *Allergies) Scan(src any) error          { return loadJSON(s, src) }
 func (s Allergies) Value() (driver.Value, error) { return dumpJSON(s) }
 
-func (s *Maladies) Scan(src any) error          { return loadJSON(s, src) }
-func (s Maladies) Value() (driver.Value, error) { return dumpJSON(s) }
-
 func (s *Medecin) Scan(src any) error          { return loadJSON(s, src) }
 func (s Medecin) Value() (driver.Value, error) { return dumpJSON(s) }
-
-func (s *Publicite) Scan(src any) error          { return loadJSON(s, src) }
-func (s Publicite) Value() (driver.Value, error) { return dumpJSON(s) }

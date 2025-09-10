@@ -1945,6 +1945,29 @@ func (s Roles) Value() (driver.Value, error) {
 	return tmp.Value()
 }
 
+func (s *DocumentsToShow) Scan(src any) error {
+	bs, ok := src.([]byte)
+	if !ok {
+		return fmt.Errorf("unsupported type %T", src)
+	}
+	fields := strings.Split(string(bs[1:len(bs)-1]), ",")
+	if len(fields) != 3 {
+		return fmt.Errorf("unsupported number of fields %d", len(fields))
+	}
+
+	s.LettreDirecteur = bool(fields[0] == "t")
+
+	s.ListeVetements = bool(fields[1] == "t")
+
+	s.ListeParticipants = bool(fields[2] == "t")
+
+	return nil
+}
+func (s DocumentsToShow) Value() (driver.Value, error) {
+	bs := fmt.Sprintf("(%t, %t, %t)", s.LettreDirecteur, s.ListeVetements, s.ListeParticipants)
+	return driver.Value(bs), nil
+}
+
 func (s *PresenceOffsets) Scan(src any) error {
 	bs, ok := src.([]byte)
 	if !ok {
@@ -1970,7 +1993,7 @@ func (s *PresenceOffsets) Scan(src any) error {
 	return nil
 }
 func (s PresenceOffsets) Value() (driver.Value, error) {
-	bs := fmt.Appendf(nil, "(%d, %d)", s.Debut, s.Fin)
+	bs := fmt.Sprintf("(%d, %d)", s.Debut, s.Fin)
 	return driver.Value(bs), nil
 }
 
@@ -2189,9 +2212,6 @@ func ScanIdStructureaideArray(rs *sql.Rows) ([]IdStructureaide, error) {
 	}
 	return ints, nil
 }
-
-func (s *DocumentsToShow) Scan(src any) error          { return loadJSON(s, src) }
-func (s DocumentsToShow) Value() (driver.Value, error) { return dumpJSON(s) }
 
 func (s *ListeVetements) Scan(src any) error          { return loadJSON(s, src) }
 func (s ListeVetements) Value() (driver.Value, error) { return dumpJSON(s) }

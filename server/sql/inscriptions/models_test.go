@@ -1,10 +1,13 @@
 package inscriptions
 
 import (
+	"database/sql"
 	"testing"
 
 	"registro/sql/camps"
 	"registro/sql/dossiers"
+	"registro/sql/personnes"
+	"registro/utils"
 	tu "registro/utils/testutils"
 )
 
@@ -20,6 +23,15 @@ func TestSQL(t *testing.T) {
 	insc, err := Inscription{IdTaux: taux.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	err = InscriptionParticipant{IdInscription: insc.Id, IdTaux: taux.Id, IdCamp: camp.Id}.Insert(db)
+	part := InscriptionParticipant{
+		IdInscription: insc.Id, IdTaux: taux.Id, IdCamp: camp.Id,
+		Nationnalite: personnes.Nationnalite{IsSuisse: true},
+	}
+	err = part.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	err = utils.InTx(db.DB, func(tx *sql.Tx) error {
+		return InsertManyInscriptionParticipants(tx, part, part)
+	})
 	tu.AssertNoErr(t, err)
 }

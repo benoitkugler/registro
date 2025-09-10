@@ -1,31 +1,22 @@
 <template>
-  <v-select
-    label="Nationalité"
+  <v-checkbox
+    label="Nationalité Suisse ?"
     variant="outlined"
     density="compact"
-    :items="items"
     :readonly="props.readonly"
-    :hide-details="props.hideDetails"
-    v-model="modelValue"
-    :rules="props.rules"
-  ></v-select>
+    hide-details
+    :model-value="modelValue.IsSuisse"
+    @update:model-value="(b) => (modelValue.IsSuisse = b || false)"
+  ></v-checkbox>
 </template>
 
 <script setup lang="ts">
-import {
-  Nationnalite,
-  NationnaliteLabels,
-} from "@/clients/inscription/logic/api";
-import { selectItems } from "@/utils";
+import type { Nationnalite } from "@/clients/inscription/logic/api";
 const props = defineProps<{
-  hideDetails?: boolean;
   readonly?: boolean;
-  rules?: any[];
 }>();
 
 const modelValue = defineModel<Nationnalite>({ required: true });
-
-const items = selectItems(NationnaliteLabels);
 </script>
 
 <style scoped></style>

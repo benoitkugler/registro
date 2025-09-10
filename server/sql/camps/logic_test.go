@@ -44,7 +44,7 @@ func TestCampLoader_Stats(t *testing.T) {
 				3: part(1, Refuse), 4: part(1, AttenteProfilInvalide),
 				5: part(1, AttenteCampComplet), 6: part(1, EnAttenteReponse),
 			},
-			pr.Personnes{1: pers(0, 0)},
+			pr.Personnes{1: pers(0, pr.Nationnalite{})},
 			StatistiquesInscrits{Inscriptions: 6, Valides: 1, Refus: 1, AStatuer: 1, Exceptions: 1, Attente: 2},
 		},
 		{
@@ -52,7 +52,7 @@ func TestCampLoader_Stats(t *testing.T) {
 				1: part(1, Inscrit), 2: part(2, Inscrit), 6: part(3, Inscrit),
 				3: part(1, Refuse), 4: part(2, Refuse), 5: part(3, Refuse),
 			},
-			pr.Personnes{1: pers(0, 0), 2: pers(pr.Woman, pr.Francaise), 3: pers(pr.Woman, pr.Suisse)},
+			pr.Personnes{1: pers(0, pr.Nationnalite{}), 2: pers(pr.Woman, pr.Nationnalite{}), 3: pers(pr.Woman, pr.Nationnalite{IsSuisse: true})},
 			StatistiquesInscrits{
 				Inscriptions: 6, InscriptionsFilles: 4, InscriptionsSuisses: 2,
 				Valides: 3, ValidesFilles: 2, ValidesSuisses: 1,
@@ -92,7 +92,7 @@ func TestCampLoader_Status(t *testing.T) {
 		NeedEquilibreGF: true,
 		DateDebut:       shared.NewDateFrom(time.Now()),
 	}
-	personnes := pr.Personnes{1: pers(pr.Man, 0), 2: pers(pr.Woman, 0)}
+	personnes := pr.Personnes{1: pers(pr.Man, pr.Nationnalite{}), 2: pers(pr.Woman, pr.Nationnalite{})}
 	participants := Participants{
 		1: part(1, Inscrit), 2: part(2, Inscrit), 3: part(2, Inscrit), // 3 inscrits
 		4: part(1, Refuse), // ignored

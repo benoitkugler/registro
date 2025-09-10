@@ -1,8 +1,38 @@
 -- Code genererated by gomacro/generator/sql. DO NOT EDIT.
+DROP TYPE IF EXISTS Maladies;
+
+CREATE TYPE Maladies AS (
+    Rubeole boolean,
+    Varicelle boolean,
+    Angine boolean,
+    Oreillons boolean,
+    Scarlatine boolean,
+    Coqueluche boolean,
+    Otite boolean,
+    Rougeole boolean,
+    Rhumatisme boolean
+);
+
+DROP TYPE IF EXISTS Nationnalite;
+
+CREATE TYPE Nationnalite AS (
+    IsSuisse boolean
+);
+
+DROP TYPE IF EXISTS Publicite;
+
+CREATE TYPE Publicite AS (
+    VersionPapier boolean,
+    PubHiver boolean,
+    PubEte boolean,
+    EchoRocher boolean,
+    Eonews boolean
+);
+
 CREATE TABLE fichesanitaires (
     IdPersonne integer NOT NULL,
     TraitementMedical boolean NOT NULL,
-    Maladies jsonb NOT NULL,
+    Maladies Maladies NOT NULL,
     Allergies jsonb NOT NULL,
     DifficultesSante text NOT NULL,
     Recommandations text NOT NULL,
@@ -22,7 +52,7 @@ CREATE TABLE personnes (
     DateNaissance date NOT NULL,
     VilleNaissance text NOT NULL,
     DepartementNaissance text NOT NULL,
-    Nationnalite smallint CHECK (Nationnalite IN (0, 1, 2)) NOT NULL,
+    Nationnalite Nationnalite NOT NULL,
     Tels text[],
     Mail text NOT NULL,
     Adresse text NOT NULL,
@@ -36,7 +66,7 @@ CREATE TABLE personnes (
     Fonctionnaire boolean NOT NULL,
     Diplome smallint CHECK (Diplome IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19)) NOT NULL,
     Approfondissement smallint CHECK (Approfondissement IN (0, 1, 2, 3, 4, 5)) NOT NULL,
-    Publicite jsonb NOT NULL,
+    Publicite Publicite NOT NULL,
     IsTemp boolean NOT NULL
 );
 
@@ -99,35 +129,6 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION gomacro_validate_json_pers_Maladies (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean;
-BEGIN
-    IF jsonb_typeof(data) != 'object' THEN
-        RETURN FALSE;
-    END IF;
-    is_valid := (
-        SELECT
-            bool_and(key IN ('Rubeole', 'Varicelle', 'Angine', 'Oreillons', 'Scarlatine', 'Coqueluche', 'Otite', 'Rougeole', 'Rhumatisme'))
-        FROM
-            jsonb_each(data))
-        AND gomacro_validate_json_boolean (data -> 'Rubeole')
-        AND gomacro_validate_json_boolean (data -> 'Varicelle')
-        AND gomacro_validate_json_boolean (data -> 'Angine')
-        AND gomacro_validate_json_boolean (data -> 'Oreillons')
-        AND gomacro_validate_json_boolean (data -> 'Scarlatine')
-        AND gomacro_validate_json_boolean (data -> 'Coqueluche')
-        AND gomacro_validate_json_boolean (data -> 'Otite')
-        AND gomacro_validate_json_boolean (data -> 'Rougeole')
-        AND gomacro_validate_json_boolean (data -> 'Rhumatisme');
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
 CREATE OR REPLACE FUNCTION gomacro_validate_json_pers_Medecin (data jsonb)
     RETURNS boolean
     AS $$
@@ -144,31 +145,6 @@ BEGIN
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'Nom')
         AND gomacro_validate_json_string (data -> 'Tel');
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION gomacro_validate_json_pers_Publicite (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean;
-BEGIN
-    IF jsonb_typeof(data) != 'object' THEN
-        RETURN FALSE;
-    END IF;
-    is_valid := (
-        SELECT
-            bool_and(key IN ('VersionPapier', 'PubHiver', 'PubEte', 'EchoRocher', 'Eonews'))
-        FROM
-            jsonb_each(data))
-        AND gomacro_validate_json_boolean (data -> 'VersionPapier')
-        AND gomacro_validate_json_boolean (data -> 'PubHiver')
-        AND gomacro_validate_json_boolean (data -> 'PubEte')
-        AND gomacro_validate_json_boolean (data -> 'EchoRocher')
-        AND gomacro_validate_json_boolean (data -> 'Eonews');
     RETURN is_valid;
 END;
 $$
@@ -194,11 +170,5 @@ ALTER TABLE fichesanitaires
     ADD CONSTRAINT Allergies_gomacro CHECK (gomacro_validate_json_pers_Allergies (Allergies));
 
 ALTER TABLE fichesanitaires
-    ADD CONSTRAINT Maladies_gomacro CHECK (gomacro_validate_json_pers_Maladies (Maladies));
-
-ALTER TABLE fichesanitaires
     ADD CONSTRAINT Medecin_gomacro CHECK (gomacro_validate_json_pers_Medecin (Medecin));
-
-ALTER TABLE personnes
-    ADD CONSTRAINT Publicite_gomacro CHECK (gomacro_validate_json_pers_Publicite (Publicite));
 

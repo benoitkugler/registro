@@ -91,9 +91,10 @@ func randper_Mails() personnes.Mails {
 }
 
 func randper_Nationnalite() personnes.Nationnalite {
-	choix := [...]personnes.Nationnalite{personnes.Autre, personnes.Francaise, personnes.Suisse}
-	i := rand.Intn(len(choix))
-	return choix[i]
+	var s personnes.Nationnalite
+	s.IsSuisse = randbool()
+
+	return s
 }
 
 func randper_Pays() personnes.Pays {

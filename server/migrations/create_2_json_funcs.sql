@@ -40,35 +40,6 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION gomacro_validate_json_pers_Maladies (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean;
-BEGIN
-    IF jsonb_typeof(data) != 'object' THEN
-        RETURN FALSE;
-    END IF;
-    is_valid := (
-        SELECT
-            bool_and(key IN ('Rubeole', 'Varicelle', 'Angine', 'Oreillons', 'Scarlatine', 'Coqueluche', 'Otite', 'Rougeole', 'Rhumatisme'))
-        FROM
-            jsonb_each(data))
-        AND gomacro_validate_json_boolean (data -> 'Rubeole')
-        AND gomacro_validate_json_boolean (data -> 'Varicelle')
-        AND gomacro_validate_json_boolean (data -> 'Angine')
-        AND gomacro_validate_json_boolean (data -> 'Oreillons')
-        AND gomacro_validate_json_boolean (data -> 'Scarlatine')
-        AND gomacro_validate_json_boolean (data -> 'Coqueluche')
-        AND gomacro_validate_json_boolean (data -> 'Otite')
-        AND gomacro_validate_json_boolean (data -> 'Rougeole')
-        AND gomacro_validate_json_boolean (data -> 'Rhumatisme');
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
 CREATE OR REPLACE FUNCTION gomacro_validate_json_pers_Medecin (data jsonb)
     RETURNS boolean
     AS $$
@@ -85,31 +56,6 @@ BEGIN
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'Nom')
         AND gomacro_validate_json_string (data -> 'Tel');
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION gomacro_validate_json_pers_Publicite (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean;
-BEGIN
-    IF jsonb_typeof(data) != 'object' THEN
-        RETURN FALSE;
-    END IF;
-    is_valid := (
-        SELECT
-            bool_and(key IN ('VersionPapier', 'PubHiver', 'PubEte', 'EchoRocher', 'Eonews'))
-        FROM
-            jsonb_each(data))
-        AND gomacro_validate_json_boolean (data -> 'VersionPapier')
-        AND gomacro_validate_json_boolean (data -> 'PubHiver')
-        AND gomacro_validate_json_boolean (data -> 'PubEte')
-        AND gomacro_validate_json_boolean (data -> 'EchoRocher')
-        AND gomacro_validate_json_boolean (data -> 'Eonews');
     RETURN is_valid;
 END;
 $$
@@ -209,29 +155,6 @@ BEGIN
     IF NOT is_valid THEN
         RAISE WARNING '% is not a boolean', data;
     END IF;
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION gomacro_validate_json_camp_DocumentsToShow (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean;
-BEGIN
-    IF jsonb_typeof(data) != 'object' THEN
-        RETURN FALSE;
-    END IF;
-    is_valid := (
-        SELECT
-            bool_and(key IN ('LettreDirecteur', 'ListeVetements', 'ListeParticipants'))
-        FROM
-            jsonb_each(data))
-        AND gomacro_validate_json_boolean (data -> 'LettreDirecteur')
-        AND gomacro_validate_json_boolean (data -> 'ListeVetements')
-        AND gomacro_validate_json_boolean (data -> 'ListeParticipants');
     RETURN is_valid;
 END;
 $$

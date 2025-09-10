@@ -19,7 +19,7 @@ CREATE TABLE inscription_participants (
     Prenom text NOT NULL,
     DateNaissance date NOT NULL,
     Sexe smallint CHECK (Sexe IN (0, 1, 2)) NOT NULL,
-    Nationnalite smallint CHECK (Nationnalite IN (0, 1, 2)) NOT NULL
+    Nationnalite Nationnalite NOT NULL
 );
 
 -- constraints

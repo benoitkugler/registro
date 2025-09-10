@@ -553,7 +553,7 @@ func (s *Montant) Scan(src any) error {
 	return nil
 }
 func (s Montant) Value() (driver.Value, error) {
-	bs := fmt.Appendf(nil, "(%d, %d)", s.Cent, s.Currency)
+	bs := fmt.Sprintf("(%d, %d)", s.Cent, s.Currency)
 	return driver.Value(bs), nil
 }
 

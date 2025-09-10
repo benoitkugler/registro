@@ -60,6 +60,7 @@ export interface Settings {
   EmailRetraitMedia: string;
   ShowFondSoutien: boolean;
   ShowCharteConduite: boolean;
+  AskNationnalite: boolean;
 }
 export type IdCamp = Int & { __opaque_int__: "IdCamp" };
 // registro/sql/camps.OptionNavette

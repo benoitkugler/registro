@@ -11,6 +11,26 @@ import (
 	tu "registro/utils/testutils"
 )
 
+func TestCompositeBoolean(t *testing.T) {
+	db := tu.NewTestDB(t, "gen_create.sql")
+	defer db.Remove()
+
+	p := randPersonne()
+	p.Nationnalite.IsSuisse = true
+	p, err := p.Insert(db)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, p.Nationnalite.IsSuisse)
+
+	p, err = SelectPersonne(db, p.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, p.Nationnalite.IsSuisse)
+
+	p.Nationnalite.IsSuisse = false
+	p, err = p.Update(db)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, !p.Nationnalite.IsSuisse)
+}
+
 func TestSQL(t *testing.T) {
 	db := tu.NewTestDB(t, "gen_create.sql")
 	defer db.Remove()

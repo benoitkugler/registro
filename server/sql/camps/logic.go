@@ -36,7 +36,7 @@ func (stats *StatistiquesInscrits) add(p ParticipantPersonne) {
 	stats.Inscriptions += 1
 
 	isFille := p.Personne.Sexe == pr.Woman
-	isSuisse := p.Personne.Nationnalite == pr.Suisse
+	isSuisse := p.Personne.Nationnalite.IsSuisse
 
 	if isFille {
 		stats.InscriptionsFilles += 1

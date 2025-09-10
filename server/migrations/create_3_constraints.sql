@@ -22,13 +22,7 @@ ALTER TABLE fichesanitaires
     ADD CONSTRAINT Allergies_gomacro CHECK (gomacro_validate_json_pers_Allergies (Allergies));
 
 ALTER TABLE fichesanitaires
-    ADD CONSTRAINT Maladies_gomacro CHECK (gomacro_validate_json_pers_Maladies (Maladies));
-
-ALTER TABLE fichesanitaires
     ADD CONSTRAINT Medecin_gomacro CHECK (gomacro_validate_json_pers_Medecin (Medecin));
-
-ALTER TABLE personnes
-    ADD CONSTRAINT Publicite_gomacro CHECK (gomacro_validate_json_pers_Publicite (Publicite));
 
 ALTER TABLE tauxs
     ADD UNIQUE (Label);
@@ -143,9 +137,6 @@ ALTER TABLE equipiers
 
 ALTER TABLE equipiers
     ADD FOREIGN KEY (IdPersonne) REFERENCES personnes ON DELETE CASCADE;
-
-ALTER TABLE camps
-    ADD CONSTRAINT DocumentsToShow_gomacro CHECK (gomacro_validate_json_camp_DocumentsToShow (DocumentsToShow));
 
 ALTER TABLE camps
     ADD CONSTRAINT Vetements_gomacro CHECK (gomacro_validate_json_camp_ListeVetements (Vetements));

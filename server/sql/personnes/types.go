@@ -49,7 +49,8 @@ type Etatcivil struct {
 	DateNaissance        shared.Date
 	VilleNaissance       string
 	DepartementNaissance Departement
-	Nationnalite         Nationnalite
+
+	Nationnalite Nationnalite
 
 	Tels Tels
 	Mail string
@@ -95,13 +96,9 @@ func (p *Etatcivil) PrenomN() string {
 
 // Nationnalite encode la nationnalité,
 // qui peut être différente du [Pays]
-type Nationnalite uint8
-
-const (
-	Autre     Nationnalite = iota // Autre
-	Francaise                     // Française
-	Suisse                        // Suisse
-)
+type Nationnalite struct {
+	IsSuisse bool
+}
 
 type Diplome uint8
 

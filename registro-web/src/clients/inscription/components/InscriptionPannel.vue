@@ -44,6 +44,7 @@
             :model-value="inner.Participants || []"
             @update:model-value="(l) => (inner.Participants = l)"
             :camps="props.camps.filter((c) => !c.IsClosed)"
+            :settings="props.data.Settings"
             :responsable="inner.Responsable"
             :preselected="props.preselected"
           ></Step2>

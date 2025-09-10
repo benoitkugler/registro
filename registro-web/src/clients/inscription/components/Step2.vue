@@ -11,9 +11,10 @@
     <v-card-text>
       <ParticipantRow
         v-for="(participant, i) in participants"
+        :camps="props.camps"
+        :settings="props.settings"
         :model-value="participant"
         @update:model-value="(v) => (participants[i] = v)"
-        :camps="props.camps"
         @delete="deleteParticipant(i)"
       ></ParticipantRow>
     </v-card-text>
@@ -24,14 +25,15 @@
 <script lang="ts" setup>
 import { nextTick, onMounted, useTemplateRef } from "vue";
 import {
-  Nationnalite,
   Sexe,
   type CampExt,
   type Date_,
   type IdCamp,
+  type Nationnalite,
   type Participant,
   type Pays,
   type ResponsableLegal,
+  type Settings,
 } from "../logic/api";
 import ParticipantRow from "./ParticipantRow.vue";
 
@@ -39,6 +41,7 @@ const props = defineProps<{
   camps: CampExt[];
   responsable: ResponsableLegal;
   preselected: IdCamp;
+  settings: Settings;
 }>();
 
 const participants = defineModel<Participant[]>({ required: true });
@@ -55,9 +58,8 @@ onMounted(() =>
 const bottomRef = useTemplateRef("bottom");
 
 function nationnaliteFromPays(s: Pays): Nationnalite {
-  if (s == "FR") return Nationnalite.Francaise;
-  if (s == "CH") return Nationnalite.Suisse;
-  return Nationnalite.Autre;
+  if (s == "CH") return { IsSuisse: true };
+  return { IsSuisse: false };
 }
 
 // prend en compte une éventulle pré-sélection du séjour

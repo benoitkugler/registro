@@ -38,7 +38,7 @@
               ></DateNaissanceField>
             </v-col>
           </v-row>
-          <v-row>
+          <v-row v-if="props.settings.AskNationnalite">
             <v-col>
               <NationaliteField
                 v-model="participant.Nationnalite"
@@ -95,13 +95,14 @@
 
 <script lang="ts" setup>
 import { computed, ref } from "vue";
-import type { CampExt, Date_, Participant } from "../logic/api";
+import type { CampExt, Date_, Participant, Settings } from "../logic/api";
 import { Camps, FormRules } from "@/utils";
 import { ageFrom, isDateZero } from "@/components/date";
 import CampCard from "./CampCard.vue";
 
 const props = defineProps<{
   camps: CampExt[];
+  settings: Settings;
 }>();
 
 const emit = defineEmits<{

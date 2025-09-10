@@ -84,9 +84,10 @@ func randMedecin() Medecin {
 }
 
 func randNationnalite() Nationnalite {
-	choix := [...]Nationnalite{Autre, Francaise, Suisse}
-	i := rand.Intn(len(choix))
-	return choix[i]
+	var s Nationnalite
+	s.IsSuisse = randbool()
+
+	return s
 }
 
 func randPays() Pays {
