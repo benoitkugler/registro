@@ -83,19 +83,9 @@ export interface ResponsableLegal {
 // registro/sql/personnes.Mails
 export type Mails = string[] | null;
 // registro/sql/personnes.Nationnalite
-export const Nationnalite = {
-  Autre: 0,
-  Francaise: 1,
-  Suisse: 2,
-} as const;
-export type Nationnalite = (typeof Nationnalite)[keyof typeof Nationnalite];
-
-export const NationnaliteLabels: Record<Nationnalite, string> = {
-  [Nationnalite.Autre]: "Autre",
-  [Nationnalite.Francaise]: "Française",
-  [Nationnalite.Suisse]: "Suisse",
-};
-
+export interface Nationnalite {
+  IsSuisse: boolean;
+}
 // registro/sql/personnes.Pays
 export type Pays = string;
 // registro/sql/personnes.Sexe

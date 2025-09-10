@@ -254,7 +254,7 @@ export interface Camp {
   AgeMin: Int;
   AgeMax: Int;
   NeedEquilibreGF: boolean;
-  Ouvert: boolean;
+  Statut: StatutCamp;
   Prix: Montant;
   OptionPrix: OptionPrixCamp;
   OptionQuotientFamilial: PrixQuotientFamilial;
@@ -294,9 +294,9 @@ export const FormStatusEquipierLabels: Record<FormStatusEquipier, string> = {
   [FormStatusEquipier.Answered]: "Répondu",
 };
 
-export type IdCamp = number & { __opaque__: "IdCamp" };
-export type IdEquipier = number & { __opaque__: "IdEquipier" };
-export type IdParticipant = number & { __opaque__: "IdParticipant" };
+export type IdCamp = Int & { __opaque_int__: "IdCamp" };
+export type IdEquipier = Int & { __opaque_int__: "IdEquipier" };
+export type IdParticipant = Int & { __opaque_int__: "IdParticipant" };
 // registro/sql/camps.Jours
 export type Jours = Int[] | null;
 // registro/sql/camps.Lettredirecteur
@@ -435,6 +435,20 @@ export const RoleLabels: Record<Role, string> = {
 
 // registro/sql/camps.Roles
 export type Roles = Role[] | null;
+// registro/sql/camps.StatutCamp
+export const StatutCamp = {
+  Ferme: 0,
+  VisibleFerme: 1,
+  Ouvert: 2,
+} as const;
+export type StatutCamp = (typeof StatutCamp)[keyof typeof StatutCamp];
+
+export const StatutCampLabels: Record<StatutCamp, string> = {
+  [StatutCamp.Ferme]: "Caché et fermé",
+  [StatutCamp.VisibleFerme]: "Visible mais fermé",
+  [StatutCamp.Ouvert]: "Visible et ouvert",
+};
+
 // registro/sql/camps.StatutCauses
 export interface StatutCauses {
   AgeMin: boolean;
@@ -494,8 +508,8 @@ export interface Dossier {
   LastLoadDocuments: Time;
   KeyV1: string;
 }
-export type IdDossier = number & { __opaque__: "IdDossier" };
-export type IdTaux = number & { __opaque__: "IdTaux" };
+export type IdDossier = Int & { __opaque_int__: "IdDossier" };
+export type IdTaux = Int & { __opaque_int__: "IdTaux" };
 // registro/sql/dossiers.Montant
 export interface Montant {
   Cent: Int;
@@ -559,7 +573,7 @@ export interface EventMessage {
   VuFondSoutien: boolean;
   OnlyToFondSoutien: boolean;
 }
-export type IdEvent = number & { __opaque__: "IdEvent" };
+export type IdEvent = Int & { __opaque_int__: "IdEvent" };
 // registro/sql/files.Categorie
 export const Categorie = {
   NoBuiltin: 0,
@@ -610,8 +624,8 @@ export interface Demande {
   MaxDocs: Int;
   JoursValide: Int;
 }
-export type IdDemande = number & { __opaque__: "IdDemande" };
-export type IdFile = number & { __opaque__: "IdFile" };
+export type IdDemande = Int & { __opaque_int__: "IdDemande" };
+export type IdFile = Int & { __opaque_int__: "IdFile" };
 // registro/sql/personnes.Allergies
 export interface Allergies {
   Asthme: boolean;
@@ -720,7 +734,7 @@ export const FichesanitaireStateLabels: Record<FichesanitaireState, string> = {
   [FichesanitaireState.UpToDate]: "Remplie",
 };
 
-export type IdPersonne = number & { __opaque__: "IdPersonne" };
+export type IdPersonne = Int & { __opaque_int__: "IdPersonne" };
 // registro/sql/personnes.Mails
 export type Mails = string[] | null;
 // registro/sql/personnes.Maladies
@@ -741,19 +755,9 @@ export interface Medecin {
   Tel: Tel;
 }
 // registro/sql/personnes.Nationnalite
-export const Nationnalite = {
-  Autre: 0,
-  Francaise: 1,
-  Suisse: 2,
-} as const;
-export type Nationnalite = (typeof Nationnalite)[keyof typeof Nationnalite];
-
-export const NationnaliteLabels: Record<Nationnalite, string> = {
-  [Nationnalite.Autre]: "Autre",
-  [Nationnalite.Francaise]: "Française",
-  [Nationnalite.Suisse]: "Suisse",
-};
-
+export interface Nationnalite {
+  IsSuisse: boolean;
+}
 // registro/sql/personnes.Pays
 export type Pays = string;
 // registro/sql/personnes.Personne
