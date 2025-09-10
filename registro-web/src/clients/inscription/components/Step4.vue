@@ -82,20 +82,28 @@
 
   <v-card class="my-2 border-secondary border-lg" title="Message">
     <v-card-text>
-      <v-checkbox
-        v-if="settings.ShowFondSoutien"
-        color="primary"
-        v-model="fondSoutien"
-        label="Je souhaite être contacté par le fond de soutien pour éviter que le prix du séjour ne soit un obstacle à l'inscription."
-      >
-      </v-checkbox>
-
       <v-textarea
         variant="outlined"
         v-model="message"
         label="Une question, un souhait ... ?"
         rows="3"
       ></v-textarea>
+    </v-card-text>
+  </v-card>
+
+  <v-card
+    class="my-2 border-secondary border-lg"
+    title="Fond de soutien"
+    v-if="settings.ShowFondSoutien"
+  >
+    <v-card-text>
+      <v-checkbox
+        color="primary"
+        v-model="fondSoutien"
+        label="Je souhaite être contacté par le fond de soutien pour éviter que le prix du séjour ne soit un obstacle à l'inscription."
+        hide-details
+      >
+      </v-checkbox>
     </v-card-text>
   </v-card>
 
