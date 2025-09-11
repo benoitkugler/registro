@@ -1,11 +1,14 @@
 {{ define "content" }}
 <table cellpadding="0">
+  <!-- aucun insrit, phrase positive -->
+  {{ if eq (len .Inscrits) 0}}
   <tr>
     <td>
       Nous avons bien pris connaissance de votre demande d'inscription, et nous
       vous en remercions !
     </td>
   </tr>
+  {{ end }}
 
   <tr>
     <td>

@@ -332,7 +332,7 @@ func NotifieValidationInscription(asso config.Asso, contact Contact, lienEspaceP
 		EspacePersoURL string
 	}{
 		champsCommuns: champsCommuns{
-			Title:       "Inscription reçue",
+			Title:       "Inscription confirmée",
 			Salutations: contact.Salutations(),
 			Signature:   mailAutoSignature,
 			Asso:        asso,

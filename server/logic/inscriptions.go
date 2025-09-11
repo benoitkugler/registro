@@ -330,7 +330,7 @@ func ValideInscription(db *sql.DB, key crypto.Encrypter, smtp config.SMTP, asso 
 			if err != nil {
 				return err
 			}
-			err = mails.NewMailer(smtp, asso.MailsSettings).SendMail(resp.Mail, "Inscription reçue", html, dossier.CopiesMails, nil)
+			err = mails.NewMailer(smtp, asso.MailsSettings).SendMail(resp.Mail, "Inscription confirmée", html, dossier.CopiesMails, nil)
 			if err != nil {
 				return err
 			}
