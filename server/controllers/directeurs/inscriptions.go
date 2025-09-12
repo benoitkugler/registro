@@ -46,7 +46,7 @@ func (ct *Controller) getInscriptions(user cps.IdCamp) ([]logic.Inscription, err
 	// restrict to new inscriptions
 	dossiers.RestrictByValidated(false)
 
-	out, err := logic.LoadInscriptions(ct.db, dossiers.IDs()...)
+	out, err := logic.LoadInscriptions(ct.db, directeursBypass, dossiers.IDs()...)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +88,7 @@ func (ct *Controller) InscriptionsIdentifiePersonne(c echo.Context) error {
 		return err
 	}
 
-	l, err := logic.LoadInscriptions(ct.db, args.IdDossier)
+	l, err := logic.LoadInscriptions(ct.db, directeursBypass, args.IdDossier)
 	if err != nil {
 		return err
 	}
@@ -107,7 +107,7 @@ func (ct *Controller) InscriptionsHintValide(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	out, err := ct.hintValideInscription(id)
+	out, err := logic.HintValideInscription(ct.db, directeursBypass, id)
 	if err != nil {
 		return err
 	}
@@ -116,15 +116,6 @@ func (ct *Controller) InscriptionsHintValide(c echo.Context) error {
 
 // for now, this is hard-coded
 var directeursBypass = logic.StatutBypassRights{ProfilInvalide: false, CampComplet: true, Inscrit: false}
-
-func (ct *Controller) hintValideInscription(id ds.IdDossier) (logic.StatutHints, error) {
-	loader, err := logic.LoadDossier(ct.db, id)
-	if err != nil {
-		return nil, err
-	}
-
-	return loader.StatutHints(ct.db, directeursBypass)
-}
 
 type InscriptionsValideIn = logic.InscriptionsValideIn
 
@@ -140,7 +131,7 @@ func (ct *Controller) InscriptionsValide(c echo.Context) error {
 		return err
 	}
 
-	l, err := logic.LoadInscriptions(ct.db, args.IdDossier)
+	l, err := logic.LoadInscriptions(ct.db, directeursBypass, args.IdDossier)
 	if err != nil {
 		return err
 	}

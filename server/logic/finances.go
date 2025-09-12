@@ -45,7 +45,7 @@ func LoadDossiersFinances(db ds.DB, ids ...ds.IdDossier) (DossiersFinances, erro
 		return DossiersFinances{}, utils.SQLError(err)
 	}
 
-	aides, err := cps.SelectAidesByIdParticipants(db, dossiers.allParticipants...)
+	aides, err := cps.SelectAidesByIdParticipants(db, dossiers.participantsIDs...)
 	if err != nil {
 		return DossiersFinances{}, utils.SQLError(err)
 	}

@@ -13,11 +13,15 @@
           <v-icon v-bind="tooltipProps" color="green"> mdi-check </v-icon>
         </template>
       </v-tooltip>
-      <v-btn v-else :disabled="!allIdentified" @click="emit('valide')">
+      <v-btn
+        v-else
+        :disabled="!allIdentified || !props.inscription.Participants?.length"
+        @click="emit('valide')"
+      >
         <template #prepend>
-          <v-icon>mdi-check</v-icon>
+          <v-icon>mdi-check-all</v-icon>
         </template>
-        Valider</v-btn
+        Tout valider</v-btn
       >
       <v-menu v-if="!props.hideDelete">
         <template #activator="{ props: menuProps }">
@@ -69,24 +73,63 @@
             <v-col align-self="center" cols="3" class="text-center">
               {{ Camps.label(part.Camp) }}
             </v-col>
-            <v-col
-              align-self="center"
-              cols="auto"
-              v-if="part.Participant.Statut != StatutParticipant.AStatuer"
-            >
-              <v-icon
-                :color="
-                  Formatters.statutParticipant(part.Participant.Statut).color
-                "
-                :icon="
-                  Formatters.statutParticipant(part.Participant.Statut).icon
-                "
-              >
-              </v-icon>
-            </v-col>
             <v-spacer></v-spacer>
+
+            <v-col align-self="center" cols="1" class="pr-2 text-center">
+              <!-- participant déjà validé -->
+              <template
+                v-if="part.Participant.Statut != StatutParticipant.AStatuer"
+              >
+                <v-icon
+                  :color="
+                    Formatters.statutParticipant(part.Participant.Statut).color
+                  "
+                  :icon="
+                    Formatters.statutParticipant(part.Participant.Statut).icon
+                  "
+                >
+                </v-icon>
+              </template>
+              <template v-else-if="isValidable(part.Participant)">
+                <v-btn
+                  size="small"
+                  title="Valider ce participant..."
+                  @click="emit('valide', part.Participant.Id)"
+                >
+                  <v-icon
+                    :icon="
+                      Formatters.statutParticipant(StatutParticipant.AStatuer)
+                        .icon
+                    "
+                  ></v-icon>
+                  <v-icon>mdi-arrow-right</v-icon>
+                  <v-icon
+                    :icon="
+                      Formatters.statutParticipant(
+                        (props.inscription.StatutHints || {})[
+                          part.Participant.Id
+                        ].Statut
+                      ).icon
+                    "
+                    :color="
+                      Formatters.statutParticipant(
+                        (props.inscription.StatutHints || {})[
+                          part.Participant.Id
+                        ].Statut
+                      ).color
+                    "
+                  >
+                  </v-icon>
+                </v-btn>
+              </template>
+            </v-col>
             <v-col align-self="center" cols="auto" v-if="!props.hideDelete">
-              <v-btn icon size="x-small" @click="toDelete = part">
+              <v-btn
+                icon
+                size="x-small"
+                @click="toDelete = part"
+                title="Supprimer ce participant..."
+              >
                 <v-icon color="red">mdi-delete</v-icon>
               </v-btn>
             </v-col>
@@ -146,25 +189,28 @@
 <script setup lang="ts">
 import { Camps, Formatters, Personnes } from "@/utils";
 import {
+  StatutParticipant,
+  type IdCamp,
   type IdentTarget,
   type IdParticipant,
   type Inscription,
+  type Participant,
   type ParticipantCamp,
 } from "../../clients/backoffice/logic/api";
 import InscriptionEtatcivilCols from "./InscriptionEtatcivilCols.vue";
 import { computed, ref } from "vue";
 import type { SimilairesAPI } from "../types";
-import { StatutParticipant } from "@/clients/directeurs/logic/api";
 const props = defineProps<{
   inscription: Inscription;
   api: SimilairesAPI;
+  user: IdCamp | null; // null for admin
   hideDelete?: boolean;
   alreadyValidated?: boolean;
 }>();
 
 const emit = defineEmits<{
   (e: "identifie", params: IdentTarget): void;
-  (e: "valide"): void;
+  (e: "valide", idParticipant?: IdParticipant): void;
   (e: "merge"): void;
   (e: "delete"): void;
   (e: "deleteParticipant", id: IdParticipant): void;
@@ -175,6 +221,12 @@ const allIdentified = computed(
     !props.inscription.Responsable.IsTemp &&
     !!props.inscription.Participants?.every((pr) => !pr.Personne.IsTemp)
 );
+
+function isValidable(part: Participant) {
+  return (
+    allIdentified.value && (props.user === null || props.user == part.IdCamp)
+  );
+}
 
 const toDelete = ref<ParticipantCamp | null>(null);
 </script>

@@ -205,6 +205,7 @@ export interface BilanFinancesPub {
   Recu: string;
   Restant: string;
   Statut: StatutPaiement;
+  DemandeEnAttenteValidation: string;
 }
 // registro/logic.BilanParticipantPub
 export interface BilanParticipantPub {
@@ -286,6 +287,7 @@ export interface Inscription {
   Message: string;
   Responsable: Personne;
   Participants: ParticipantCamp[] | null;
+  StatutHints: Record<IdParticipant, StatutExt> | null;
 }
 // registro/logic.InscriptionsValideIn
 export interface InscriptionsValideIn {
@@ -1187,8 +1189,12 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseURL + "/api/v1/backoffice/inscriptions/valide";
     this.startRequest();
     try {
-      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-      return true;
+      const rep: AxiosResponse<Inscription> = await Axios.post(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }

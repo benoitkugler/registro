@@ -7,16 +7,12 @@
       <CardValideParticipantRow
         v-for="p in participants"
         :participant="p"
-        :statut="props.statuts[p.Participant.Id]"
+        :statut="(props.inscription.StatutHints || {})[p.Participant.Id]"
         v-model="inner[p.Participant.Id]"
       ></CardValideParticipantRow>
     </v-card-text>
     <v-card-actions>
-      <!-- only for backoffice -->
-      <v-btn
-        @click="emit('valide', inner, false)"
-        :disabled="!isValid"
-        v-if="props.idCamp === undefined"
+      <v-btn @click="emit('valide', inner, false)" :disabled="!isValid"
         >Valider sans notification</v-btn
       >
       <v-spacer></v-spacer>
@@ -32,25 +28,25 @@ import { computed, ref } from "vue";
 import {
   type IdParticipant,
   type Inscription,
-  type IdCamp,
-  type StatutExt,
   StatutParticipant,
 } from "../../clients/backoffice/logic/api";
 import CardValideParticipantRow from "./CardValideParticipantRow.vue";
 
 const props = defineProps<{
   inscription: Inscription;
-  statuts: { [key in IdParticipant]: StatutExt };
-  idCamp?: IdCamp; // only edit these participants
+  idParticipants?: IdParticipant[]; // only edit these participants
 }>();
 
 const emit = defineEmits<{
   (e: "valide", params: Statuts, sendMail: boolean): void;
 }>();
 
+// restricted to user choice
 const participants = computed(() =>
   (props.inscription.Participants || []).filter((p) =>
-    props.idCamp ? p.Camp.Id == props.idCamp : true
+    props.idParticipants
+      ? props.idParticipants.includes(p.Participant.Id)
+      : true
   )
 );
 
@@ -58,8 +54,13 @@ const participants = computed(() =>
 const inner = ref(
   Object.fromEntries(
     participants.value
-      .filter((p) => props.statuts[p.Participant.Id].Validable)
-      .map((p) => [p.Participant.Id, props.statuts[p.Participant.Id].Statut])
+      .filter(
+        (p) => (props.inscription.StatutHints || {})[p.Participant.Id].Validable
+      )
+      .map((p) => [
+        p.Participant.Id,
+        (props.inscription.StatutHints || {})[p.Participant.Id].Statut,
+      ])
   ) as Statuts
 );
 

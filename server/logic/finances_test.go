@@ -119,7 +119,7 @@ func TestDossierFinance_Bilan(t *testing.T) {
 }
 
 func Test_pc_prixBase(t *testing.T) {
-	status := []cps.PrixParStatut{{1, 8000, "Enfant", ""}, {2, 9000, "Adulte", ""}}
+	status := []cps.PrixParStatut{{Id: 1, Prix: 8000, Label: "Enfant", Description: ""}, {Id: 2, Prix: 9000, Label: "Adulte", Description: ""}}
 	jours := []int{1000, 2000, 3000, 4000}
 	type fields struct {
 		optPart cps.OptionPrixParticipant

@@ -173,6 +173,7 @@ export interface Inscription {
   Message: string;
   Responsable: Personne;
   Participants: ParticipantCamp[] | null;
+  StatutHints: Record<IdParticipant, StatutExt> | null;
 }
 // registro/logic.InscriptionsValideIn
 export interface InscriptionsValideIn {

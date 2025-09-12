@@ -27,16 +27,16 @@ func Test_inscriptions(t *testing.T) {
 
 	camp1, err := cps.Camp{IdTaux: 1, Places: 20, AgeMin: 6, AgeMax: 12, Nom: "C2", DateDebut: shared.Date(time.Now())}.Insert(db)
 	tu.AssertNoErr(t, err)
-	camp2, err := cps.Camp{IdTaux: 1, Places: 20, AgeMin: 6, AgeMax: 12, Nom: "C3", DateDebut: shared.Date(time.Now())}.Insert(db)
+	camp2, err := cps.Camp{IdTaux: 1, Places: 20, AgeMin: 8, AgeMax: 12, Nom: "C3", DateDebut: shared.Date(time.Now())}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	dossier1, err := ds.Dossier{IdResponsable: pe1.Id, IdTaux: 1, MomentInscription: time.Now()}.Insert(db)
 	tu.AssertNoErr(t, err)
-	_, err = cps.Participant{IdCamp: camp1.Id, IdPersonne: pe1.Id, IdDossier: dossier1.Id, IdTaux: 1}.Insert(db)
+	pa1, err := cps.Participant{IdCamp: camp1.Id, IdPersonne: pe1.Id, IdDossier: dossier1.Id, IdTaux: 1}.Insert(db)
 	tu.AssertNoErr(t, err)
-	_, err = cps.Participant{IdCamp: camp1.Id, IdPersonne: pe2.Id, IdDossier: dossier1.Id, IdTaux: 1}.Insert(db)
+	pa2, err := cps.Participant{IdCamp: camp1.Id, IdPersonne: pe2.Id, IdDossier: dossier1.Id, IdTaux: 1}.Insert(db)
 	tu.AssertNoErr(t, err)
-	_, err = cps.Participant{IdCamp: camp2.Id, IdPersonne: pe2.Id, IdDossier: dossier1.Id, IdTaux: 1}.Insert(db)
+	pa3, err := cps.Participant{IdCamp: camp2.Id, IdPersonne: pe2.Id, IdDossier: dossier1.Id, IdTaux: 1}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	asso, smtp := loadEnv(t)
@@ -50,6 +50,9 @@ func Test_inscriptions(t *testing.T) {
 		tu.Assert(t, insc.Participants[0].Camp.Id == camp1.Id)
 		tu.Assert(t, insc.Participants[1].Camp.Id == camp1.Id)
 		tu.Assert(t, insc.Participants[2].Camp.Id == camp2.Id)
+		tu.Assert(t, insc.StatutHints[pa1.Id].Statut == cps.Inscrit)
+		tu.Assert(t, insc.StatutHints[pa2.Id].Statut == cps.Inscrit)
+		tu.Assert(t, insc.StatutHints[pa3.Id].Statut == cps.AttenteProfilInvalide)
 
 		l, err = ct.getInscriptions(camp2.Id)
 		tu.AssertNoErr(t, err)
@@ -61,7 +64,7 @@ func Test_inscriptions(t *testing.T) {
 	})
 
 	t.Run("valide", func(t *testing.T) {
-		hints, err := ct.hintValideInscription(dossier1.Id)
+		hints, err := logic.HintValideInscription(ct.db, directeursBypass, dossier1.Id)
 		tu.AssertNoErr(t, err)
 
 		values := make(map[cps.IdParticipant]cps.StatutParticipant)
@@ -89,6 +92,6 @@ func Test_inscriptions(t *testing.T) {
 		tu.AssertNoErr(t, err)
 		data, err = logic.LoadDossier(db, dossier1.Id)
 		tu.AssertNoErr(t, err)
-		tu.Assert(t, data.Dossier.IsValidated)
+		tu.Assert(t, !data.Dossier.IsValidated) // not validable because of age
 	})
 }

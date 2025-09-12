@@ -362,6 +362,9 @@ export namespace Formatters {
         return { icon: "mdi-help" };
       case StatutParticipant.Inscrit:
         return { icon: "mdi-check", color: "green" };
+      case StatutParticipant.AttenteCampComplet:
+      case StatutParticipant.AttenteProfilInvalide:
+        return { icon: "mdi-clock", color: "deep-orange" };
       default:
         return { icon: "mdi-clock" };
     }

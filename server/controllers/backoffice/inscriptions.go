@@ -26,7 +26,7 @@ func (ct *Controller) getInscriptions() ([]logic.Inscription, error) {
 	}
 	dossiers.RestrictByValidated(false)
 
-	return logic.LoadInscriptions(ct.db, dossiers.IDs()...)
+	return logic.LoadInscriptions(ct.db, backofficeRights, dossiers.IDs()...)
 }
 
 func (ct *Controller) InscriptionsSearchSimilaires(c echo.Context) error {
@@ -59,7 +59,7 @@ func (ct *Controller) InscriptionsIdentifiePersonne(c echo.Context) error {
 		return err
 	}
 
-	l, err := logic.LoadInscriptions(ct.db, args.IdDossier)
+	l, err := logic.LoadInscriptions(ct.db, backofficeRights, args.IdDossier)
 	if err != nil {
 		return err
 	}
@@ -77,7 +77,7 @@ func (ct *Controller) InscriptionsHintValide(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	out, err := ct.hintValideInscription(id)
+	out, err := logic.HintValideInscription(ct.db, backofficeRights, id)
 	if err != nil {
 		return err
 	}
@@ -85,15 +85,6 @@ func (ct *Controller) InscriptionsHintValide(c echo.Context) error {
 }
 
 var backofficeRights = logic.StatutBypassRights{ProfilInvalide: true, CampComplet: true, Inscrit: true}
-
-func (ct *Controller) hintValideInscription(id ds.IdDossier) (logic.StatutHints, error) {
-	loader, err := logic.LoadDossier(ct.db, id)
-	if err != nil {
-		return nil, err
-	}
-
-	return loader.StatutHints(ct.db, backofficeRights)
-}
 
 // InscriptionsValide marque l'inscription comme validée, après s'être assuré
 // qu'aucune personne impliquée n'est temporaire.
@@ -109,7 +100,14 @@ func (ct *Controller) InscriptionsValide(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	return c.NoContent(200)
+
+	l, err := logic.LoadInscriptions(ct.db, backofficeRights, args.IdDossier)
+	if err != nil {
+		return err
+	}
+	out := l[0]
+
+	return c.JSON(200, out)
 }
 
 func (ct *Controller) valideInscription(host string, args logic.InscriptionsValideIn) error {

@@ -74,7 +74,7 @@ func TestValideInscription(t *testing.T) {
 
 	ct := Controller{db: db.DB, asso: asso, smtp: smtp}
 
-	hints, err := ct.hintValideInscription(dossier1.Id)
+	hints, err := logic.HintValideInscription(ct.db, backofficeRights, dossier1.Id)
 	tu.AssertNoErr(t, err)
 
 	values := make(map[cps.IdParticipant]cps.StatutParticipant)

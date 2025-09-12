@@ -63,6 +63,25 @@ func (d *StatutParticipant) UnmarshalJSON(src []byte) error {
 	return json.Unmarshal(src, (*uint8)(d))
 }
 
+func (s StatutParticipant) String() string {
+	switch s {
+	case AStatuer:
+		return "A statuer"
+	case Refuse:
+		return "Refusé définitivement"
+	case AttenteProfilInvalide:
+		return "Profil limite"
+	case AttenteCampComplet:
+		return "Camp complet"
+	case EnAttenteReponse:
+		return "En attente de réponse"
+	case Inscrit:
+		return "Inscrit"
+	default:
+		return "unknown statut"
+	}
+}
+
 type Navette uint8
 
 const (

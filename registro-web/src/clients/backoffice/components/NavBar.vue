@@ -1,11 +1,12 @@
 <template>
-  <v-navigation-drawer app v-model="showSideBar" temporary>
-    <v-list-item
-      :title="
-        isFondSoutien ? 'Registro - Fond de soutien' : 'Registro - Backoffice'
-      "
-      :subtitle="version"
-    >
+  <v-navigation-drawer
+    app
+    :model-value="!props.hideMenu"
+    expand-on-hover
+    permanent
+    rail
+  >
+    <v-list-item prepend-icon="mdi-menu" :title="`Registro ${version}`">
     </v-list-item>
     <v-divider></v-divider>
 
@@ -35,21 +36,25 @@
       Annuaire
     </v-list-item>
     <v-divider> </v-divider>
-    <v-list-item
-      prepend-icon="mdi-logout"
-      link
-      :to="{ path: '/' }"
-      color="primary"
-    >
-      Se déconnecter
-    </v-list-item>
+
+    <template #append>
+      <v-list-item
+        prepend-icon="mdi-account-circle-outline"
+        :title="isFondSoutien ? 'Fond de soutien' : 'Administrateur'"
+      >
+      </v-list-item>
+      <v-list-item
+        prepend-icon="mdi-logout"
+        link
+        :to="{ path: '/' }"
+        color="primary"
+      >
+        Se déconnecter
+      </v-list-item>
+    </template>
   </v-navigation-drawer>
 
   <v-app-bar rounded elevation="4" color="secondary">
-    <v-app-bar-nav-icon
-      v-if="!hideMenu"
-      @click="showSideBar = !showSideBar"
-    ></v-app-bar-nav-icon>
     <v-app-bar-title>
       <v-row>
         <v-col align-self="center" cols="auto">
@@ -76,7 +81,6 @@ const logo = `${import.meta.env.BASE_URL}${import.meta.env.VITE_ASSO}/logo.png`;
 
 const version = `v${VITE_APP_VERSION}`;
 
-const showSideBar = ref(false);
 const props = defineProps<{
   title: string;
   hideMenu?: boolean;

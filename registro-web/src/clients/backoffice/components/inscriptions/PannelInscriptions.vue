@@ -17,11 +17,18 @@
       <div v-else>
         <InscriptionRow
           class="my-1"
+          :user="null"
           v-for="(insc, i) in displayed"
           :key="i"
           :inscription="insc"
           @identifie="(v) => identifie(insc.Dossier.Id, v)"
-          @valide="startValideInsc(insc)"
+          @valide="
+            (v) =>
+              (inscToValid = {
+                inscription: insc,
+                participants: v === undefined ? undefined : [v],
+              })
+          "
           @merge="inscToMerge = insc.Dossier.Id"
           @delete="deleteInsc(insc)"
           @delete-participant="
@@ -58,9 +65,8 @@
       <CardValide
         v-if="inscToValid"
         :inscription="inscToValid.inscription"
-        :statuts="inscToValid.statuts"
-        :rights="{ AgeInvalide: true, CampComplet: true }"
-        @valide="valideInsc"
+        :id-participants="inscToValid.participants"
+        @valide="valideInscription"
       ></CardValide>
     </v-dialog>
   </v-card>
@@ -136,17 +142,10 @@ async function identifie(id: IdDossier, target: IdentTarget) {
 
 const inscToValid = ref<{
   inscription: Inscription;
-  statuts: Record<IdParticipant, StatutExt>;
+  participants?: IdParticipant[];
 } | null>(null);
-async function startValideInsc(insc: Inscription) {
-  const res = await controller.InscriptionsHintValide({
-    idDossier: insc.Dossier.Id,
-  });
-  if (res === undefined) return;
-  inscToValid.value = { inscription: insc, statuts: res || {} };
-}
 
-async function valideInsc(
+async function valideInscription(
   statuts: Record<IdParticipant, StatutParticipant>,
   sendMail: boolean
 ) {
@@ -160,13 +159,20 @@ async function valideInsc(
   });
   if (res === undefined) return;
 
-  controller.showMessage("Inscription validée avec succès.", "", {
-    title: "Aller au dossier",
-    action: () => emit("goTo", id),
-  });
+  if (res.Dossier.IsValidated) {
+    controller.showMessage("Inscription validée avec succès.", "", {
+      title: "Aller au dossier",
+      action: () => emit("goTo", id),
+    });
 
-  // delete from this view
-  data.value = data.value.filter((val) => val.Dossier.Id != id);
+    // delete from this view
+    data.value = data.value.filter((val) => val.Dossier.Id != id);
+  } else {
+    controller.showMessage("Participant validé avec succès.");
+    // just update the data
+    const index = data.value.findIndex((insc) => insc.Dossier.Id == id);
+    data.value[index] = res;
+  }
 }
 
 async function deleteInsc(insc: Inscription) {

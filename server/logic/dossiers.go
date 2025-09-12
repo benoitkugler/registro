@@ -18,12 +18,12 @@ import (
 // Dossiers stores enough data to
 // handle most of the [Dossier] related logic.
 type Dossiers struct {
-	Dossiers        ds.Dossiers
-	allParticipants []cps.IdParticipant
-	participants    map[ds.IdDossier]cps.Participants
-	personnes       pr.Personnes
-	camps           cps.Camps
-	events          EventsData
+	Dossiers              ds.Dossiers
+	participantsIDs       []cps.IdParticipant
+	participantsByDossier map[ds.IdDossier]cps.Participants
+	personnes             pr.Personnes
+	camps                 cps.Camps // all camps used by [participantsIDs]
+	events                EventsData
 }
 
 // LoadDossier is a convenient wrapper around [LoadDossiers]
@@ -72,7 +72,7 @@ func LoadDossiers(db ds.DB, ids ...ds.IdDossier) (Dossiers, error) {
 }
 
 func (ld *Dossiers) For(id ds.IdDossier) Dossier {
-	dossier, participants := ld.Dossiers[id], ld.participants[id]
+	dossier, participants := ld.Dossiers[id], ld.participantsByDossier[id]
 	events := ld.events.For(id)
 	return Dossier{dossier, participants, ld.personnes, ld.camps, events}
 }

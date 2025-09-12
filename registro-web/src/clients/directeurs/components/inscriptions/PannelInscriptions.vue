@@ -17,13 +17,20 @@
       <div v-else>
         <InscriptionRow
           class="my-1"
+          :user="controller.camp!.Id"
           v-for="(insc, i) in displayed"
           :key="i"
           :inscription="insc"
           hide-delete
           :already-validated="isValidatedByUs(insc)"
           @identifie="(v) => identifie(insc.Dossier.Id, v)"
-          @valide="startValideInsc(insc)"
+          @valide="
+            (v) =>
+              (inscToValid = {
+                inscription: insc,
+                participants: v === undefined ? ownParticipants(insc) : [v],
+              })
+          "
           :api="{
             SearchSimilaires:
               controller.InscriptionsSearchSimilaires.bind(controller),
@@ -42,9 +49,7 @@
       <CardValide
         v-if="inscToValid"
         :inscription="inscToValid.inscription"
-        :statuts="inscToValid.statuts"
-        :rights="{ AgeInvalide: false, CampComplet: true }"
-        :id-camp="controller.camp!.Id"
+        :id-participants="inscToValid.participants"
         @valide="valideInsc"
       ></CardValide>
     </v-dialog>
@@ -64,6 +69,7 @@ import {
 } from "../../logic/api";
 import InscriptionRow from "@/components/inscriptions/InscriptionRow.vue";
 import { normalize, Personnes, Camps } from "@/utils";
+import { send } from "vite";
 
 const props = defineProps<{}>();
 
@@ -122,25 +128,26 @@ async function identifie(id: IdDossier, target: IdentTarget) {
 
 const inscToValid = ref<{
   inscription: Inscription;
-  statuts: Record<IdParticipant, StatutExt>;
+  participants?: IdParticipant[];
 } | null>(null);
-async function startValideInsc(insc: Inscription) {
-  const res = await controller.InscriptionsHintValide({
-    idDossier: insc.Dossier.Id,
-  });
-  if (res === undefined) return;
-  inscToValid.value = { inscription: insc, statuts: res || {} };
+
+function ownParticipants(insc: Inscription) {
+  return (insc.Participants || [])
+    .filter((p) => p.Camp.Id == controller.camp?.Id)
+    .map((p) => p.Participant.Id);
 }
 
-async function valideInsc(statuts: Record<IdParticipant, StatutParticipant>) {
+async function valideInsc(
+  statuts: Record<IdParticipant, StatutParticipant>,
+  sendMail: boolean
+) {
   if (!inscToValid.value) return;
   const id = inscToValid.value.inscription.Dossier.Id;
   inscToValid.value = null;
   const res = await controller.InscriptionsValide({
     IdDossier: id,
     Statuts: statuts,
-    // we always send a mail
-    SendMail: true,
+    SendMail: sendMail,
   });
   if (res === undefined) return;
 

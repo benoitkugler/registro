@@ -24,9 +24,10 @@ type Inscription struct {
 	Message      string // le message (optionnel) du formulaire d'inscription
 	Responsable  pr.Personne
 	Participants []cps.ParticipantCamp
+	StatutHints  StatutHints
 }
 
-func newInscription(de Dossier) Inscription {
+func newInscription(de Dossier, statutHints StatutHints) Inscription {
 	var chunks []string
 	// collect the messages
 	for event := range IterEventsBy[Message](de.Events) {
@@ -42,19 +43,27 @@ func newInscription(de Dossier) Inscription {
 		Responsable:  de.Responsable(),
 		Participants: de.ParticipantsExt(),
 		Message:      message,
+		StatutHints:  statutHints,
 	}
 }
 
 // LoadInscriptions sorts by time
-func LoadInscriptions(db ds.DB, ids ...ds.IdDossier) ([]Inscription, error) {
-	loader, err := LoadDossiers(db, ids...)
+func LoadInscriptions(db ds.DB, byPass StatutBypassRights, ids ...ds.IdDossier) ([]Inscription, error) {
+	loaders, err := LoadDossiers(db, ids...)
+	if err != nil {
+		return nil, err
+	}
+
+	camps, err := cps.LoadCampsPersonnes(db, loaders.camps.IDs()...)
 	if err != nil {
 		return nil, err
 	}
 
 	out := make([]Inscription, len(ids))
 	for i, id := range ids {
-		out[i] = newInscription(loader.For(id))
+		loader := loaders.For(id)
+		hints := loader.StatutHints(camps, byPass)
+		out[i] = newInscription(loader, hints)
 	}
 
 	// sort by time
@@ -98,7 +107,8 @@ func IdentifiePersonne(db *sql.DB, args IdentTarget) error {
 	if args.IdTemporaire == args.RattacheTo {
 		return errors.New("internal error: same target and origin profil")
 	}
-	err = utils.InTx(db, func(tx *sql.Tx) error {
+
+	return utils.InTx(db, func(tx *sql.Tx) error {
 		existant, err := pr.SelectPersonne(tx, args.RattacheTo)
 		if err != nil {
 			return err
@@ -139,27 +149,24 @@ func IdentifiePersonne(db *sql.DB, args IdentTarget) error {
 
 		return nil
 	})
-
-	return err
 }
 
 type StatutHints = map[cps.IdParticipant]StatutExt
 
 // StatutHints renvoie le statut qu'il faudrait appliquer
 // au participant du dossier.
-func (dossier Dossier) StatutHints(db ds.DB, bypass StatutBypassRights) (StatutHints, error) {
+// [camps] doit contenir au moins tous les séjours du dossier.
+func (dossier Dossier) StatutHints(camps []cps.CampLoader, bypass StatutBypassRights) StatutHints {
 	// le status est calculé camp par camp
 	partsByCamp := dossier.Participants.ByIdCamp()
 
-	// on calcule le statut des participants (requiert les participants et personnes déjà inscrites)
-	camps, err := cps.LoadCampsPersonnes(db, dossier.Camps().IDs()...)
-	if err != nil {
-		return nil, err
-	}
-
 	out := make(StatutHints)
 	for _, camp := range camps {
-		incommingPa := utils.MapValues(partsByCamp[camp.Camp.Id])
+		participantsL, ok := partsByCamp[camp.Camp.Id]
+		if !ok { // ignore other camps
+			continue
+		}
+		incommingPa := utils.MapValues(participantsL)
 		incommingPe := dossier.PersonnesFor(incommingPa)
 
 		for index, status := range camp.Status(incommingPe) {
@@ -168,7 +175,7 @@ func (dossier Dossier) StatutHints(db ds.DB, bypass StatutBypassRights) (StatutH
 		}
 	}
 
-	return out, err
+	return out
 }
 
 // StatutBypassRights grants the rights to validate a participant,
@@ -231,11 +238,26 @@ func allValidated(ps cps.Participants) bool {
 	return true
 }
 
+// HintValideInscription load an inscription and compute the validation status.
+func HintValideInscription(db cps.DB, byPass StatutBypassRights, id ds.IdDossier) (StatutHints, error) {
+	loader, err := LoadDossier(db, id)
+	if err != nil {
+		return nil, err
+	}
+	// on calcule le statut des participants (requiert les participants et personnes déjà inscrites)
+	camps, err := cps.LoadCampsPersonnes(db, loader.Camps().IDs()...)
+	if err != nil {
+		return nil, err
+	}
+
+	return loader.StatutHints(camps, byPass), nil
+}
+
 // InscriptionsValideIn indique le statut des participants
 // à appliquer.
 type InscriptionsValideIn struct {
 	IdDossier ds.IdDossier
-	// choosen by the clients
+	// choosen by the clients, may be partial
 	Statuts  map[cps.IdParticipant]cps.StatutParticipant
 	SendMail bool
 }
@@ -253,10 +275,13 @@ func ValideInscription(db *sql.DB, key crypto.Encrypter, smtp config.SMTP, asso 
 	}
 	dossier := loader.Dossier
 
-	hints, err := loader.StatutHints(db, bypass)
+	// on calcule le statut des participants (requiert les participants et personnes déjà inscrites)
+	camps, err := cps.LoadCampsPersonnes(db, loader.Camps().IDs()...)
 	if err != nil {
 		return err
 	}
+
+	hints := loader.StatutHints(camps, bypass)
 
 	// on s'assure qu'aucune personne n'est temporaire
 	for _, pe := range loader.Personnes() {
@@ -269,23 +294,22 @@ func ValideInscription(db *sql.DB, key crypto.Encrypter, smtp config.SMTP, asso 
 		var inscrits, attente, astatuer []mails.Participant
 		for _, pExt := range loader.ParticipantsExt() {
 			participant := pExt.Participant
-			mPart := mails.Participant{Personne: pExt.Personne.PrenomNOM(), Camp: pExt.Camp.Label()}
-			hint := hints[participant.Id]
-			// ignore participant not validable (already validated or restricte for directors)
+			mailPart := mails.Participant{Personne: pExt.Personne.PrenomNOM(), Camp: pExt.Camp.Label()}
+			serverHint := hints[participant.Id]
+			newStatut, hasNew := args.Statuts[participant.Id]
+
+			// ignore participant not validable (already validated or restricted for directors)
 			// or for other camps
-			if !hint.Validable || (idCamp.Valid && !idCamp.Is(participant.IdCamp)) {
+			if !hasNew || !serverHint.Validable || (idCamp.Valid && !idCamp.Is(participant.IdCamp)) {
+				// in the mail, only show the remaining participants
 				if participant.Statut == cps.AStatuer {
-					astatuer = append(astatuer, mPart)
+					astatuer = append(astatuer, mailPart)
 				}
 				continue
 			}
 
-			// check the new status is present and allowed
-			newStatut, _ := args.Statuts[participant.Id]
-			if newStatut == 0 {
-				return errors.New("internal error: missing participant in InscriptionsValideIn.Statuts")
-			}
-			if !hint.IsAllowed(newStatut) {
+			// check if the new status is allowed
+			if !serverHint.IsAllowed(newStatut) {
 				return errors.New("internal error: statut not allowed")
 			}
 
@@ -298,9 +322,9 @@ func ValideInscription(db *sql.DB, key crypto.Encrypter, smtp config.SMTP, asso 
 			loader.Participants[participant.Id] = participant
 
 			if newStatut == cps.Inscrit {
-				inscrits = append(inscrits, mPart)
+				inscrits = append(inscrits, mailPart)
 			} else {
-				attente = append(attente, mPart)
+				attente = append(attente, mailPart)
 			}
 		}
 
