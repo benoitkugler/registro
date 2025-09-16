@@ -65,11 +65,9 @@ import {
   type IdentTarget,
   type IdParticipant,
   type Inscription,
-  type StatutExt,
 } from "../../logic/api";
 import InscriptionRow from "@/components/inscriptions/InscriptionRow.vue";
 import { normalize, Personnes, Camps } from "@/utils";
-import { send } from "vite";
 
 const props = defineProps<{}>();
 

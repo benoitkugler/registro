@@ -39,7 +39,6 @@
 </template>
 
 <script setup lang="ts">
-import { VTimePicker } from "vuetify/labs/VTimePicker";
 import type { Date_, Time } from "@/clients/backoffice/logic/api";
 import { computed, ref } from "vue";
 import { newDate_ } from "./date";

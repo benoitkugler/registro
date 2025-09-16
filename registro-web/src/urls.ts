@@ -5,7 +5,7 @@ export type Int = number & { __opaque__: "Int" };
 export interface LettreImageUploadOut {
   location: string;
 }
-export type IdDemande = number & { __opaque__: "IdDemande" };
+export type IdDemande = Int & { __opaque_int__: "IdDemande" };
 
 /** Endpoints exposes the HTTP urls handled by the server. */
 export class Endpoints {

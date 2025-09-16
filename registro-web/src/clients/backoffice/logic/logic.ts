@@ -3,6 +3,7 @@ import {
   AbstractAPI,
   QueryAttente,
   QueryReglement,
+  StatutCamp,
   type CampExt,
   type IdCamp,
   type IdDossier,
@@ -51,7 +52,7 @@ export const controller = new Controller(
 );
 
 export function isCampOpen(camp: CampExt) {
-  return camp.Camp.Ouvert && !camp.IsTerminated;
+  return camp.Camp.Statut != StatutCamp.Ferme && !camp.IsTerminated;
 }
 
 export function emptyQuery(): SearchDossierIn {
