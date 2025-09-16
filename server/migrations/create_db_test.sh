@@ -9,10 +9,6 @@ cat init.sql >> create_all.sql &&
 echo "Reset database <test>..." &&
 dropdb test && 
 createdb test && 
-echo "Setup tables..." && 
-psql -v ON_ERROR_STOP=1 test < create_1_tables.sql &&
-psql -v ON_ERROR_STOP=1 test < create_2_json_funcs.sql &&
-psql -v ON_ERROR_STOP=1 test < create_3_constraints.sql &&
-echo "Add predeclared items..." &&
-psql -v ON_ERROR_STOP=1 test < init.sql &&
+echo "Setup tables and add predeclared items..." && 
+psql -v ON_ERROR_STOP=1 test < create_all.sql &&
 echo "Done (created DB 'test')."
