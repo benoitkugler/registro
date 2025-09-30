@@ -16,6 +16,7 @@ export type Time = string & { __opaque__: "Time" };
 
 // registro/config.ChequeSettings
 export interface ChequeSettings {
+  IsValid: boolean;
   Ordre: string;
   Adresse: Ar2_string;
 }
@@ -79,7 +80,7 @@ export interface PaiementSettings {
   VirementCode: string;
   BankAccounts: Ar2_string[] | null;
   SupportPaiementEnLigne: boolean;
-  Cheque: ChequeSettings;
+  Cheques: ChequeSettings;
 }
 // registro/controllers/espaceperso.SendMessageIn
 export interface SendMessageIn {

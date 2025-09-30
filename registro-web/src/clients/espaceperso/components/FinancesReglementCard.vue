@@ -12,7 +12,7 @@
               title="Payer en ligne"
               subtitle="par carte bancaire"
               :value="ModePaiement.EnLigne"
-              :disabled="!props.settings.SupportPaiementEnLigne"
+              v-if="props.settings.SupportPaiementEnLigne"
             >
               <template #append>
                 <v-icon>mdi-credit-card</v-icon>
@@ -33,6 +33,7 @@
               class="my-2"
               title="Payer par chèque"
               :value="ModePaiement.Cheque"
+              v-if="props.settings.Cheques.IsValid"
             >
               <template #append>
                 <v-icon>mdi-checkbook</v-icon>
@@ -90,13 +91,13 @@
             </v-card-text>
             <v-card-text v-else-if="mode == ModePaiement.Cheque">
               Merci d'envoyer votre chèque à l'ordre
-              <b>{{ props.settings.Cheque.Ordre }}</b> à l'adresse suivante :
+              <b>{{ props.settings.Cheques.Ordre }}</b> à l'adresse suivante :
               <v-row justify="center">
                 <v-col cols="auto">
                   <v-card class="my-2">
                     <v-card-text>
-                      {{ props.settings.Cheque.Adresse[0] }} <br />
-                      {{ props.settings.Cheque.Adresse[1] }}
+                      {{ props.settings.Cheques.Adresse[0] }} <br />
+                      {{ props.settings.Cheques.Adresse[1] }}
                     </v-card-text>
                   </v-card>
                 </v-col>
@@ -128,9 +129,7 @@ const props = defineProps<{
   settings: PaiementSettings;
 }>();
 
-const emit = defineEmits<{
-  (e: "refresh"): void;
-}>();
+const emit = defineEmits<{}>();
 
 const mode = ref<ModePaiement>(
   props.settings.SupportPaiementEnLigne

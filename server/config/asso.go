@@ -20,8 +20,8 @@ type Asso struct {
 
 	MailsSettings MailsSettings
 
-	bankNames, bankIBANs []string // displayed in espace perso
-	ChequeSettings       ChequeSettings
+	bankNames, bankIBANs []string       // displayed in espace perso
+	ChequeSettings       ChequeSettings // nil for disabled
 
 	SupportBonsCAF, SupportANCV bool // if true, displayed in inscription form
 	SupportPaiementEnLigne      bool // if true, displayed in inscription and activated on espaceperso
@@ -63,6 +63,7 @@ var acve = Asso{
 	bankNames: []string{"Crédit Mutuel (FR)", "Crédit mutual (CHF)"},
 
 	ChequeSettings: ChequeSettings{
+		IsValid: true,
 		Ordre:   "ACVE",
 		Adresse: [2]string{"Centre d'inscriptions - Marie-Pierre Buffet", "27, impasse Vignon - 26150 Chamaloc"},
 	},
@@ -97,10 +98,7 @@ var repere = Asso{
 
 	bankNames: []string{"Crédit Mutuel (FR)", "Crédit mutual (CHF)"},
 
-	ChequeSettings: ChequeSettings{
-		Ordre:   "ACVE",
-		Adresse: [2]string{"Centre d'inscriptions - Marie-Pierre Buffet", "27, impasse Vignon - 26150 Chamaloc"},
-	},
+	ChequeSettings: ChequeSettings{}, // disabled
 
 	SupportBonsCAF: false, SupportANCV: false,
 	SupportPaiementEnLigne: false,
@@ -111,6 +109,7 @@ var repere = Asso{
 }
 
 type ChequeSettings struct {
+	IsValid bool
 	Ordre   string
 	Adresse [2]string // nom - adresse
 }

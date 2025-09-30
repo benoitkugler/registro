@@ -77,7 +77,7 @@ type PaiementSettings struct {
 	BankAccounts [][2]string
 	// true if an external service to pay by CB is available
 	SupportPaiementEnLigne bool
-	Cheque                 config.ChequeSettings
+	Cheques                config.ChequeSettings
 }
 
 func (ct *Controller) load(id ds.IdDossier) (Data, error) {
