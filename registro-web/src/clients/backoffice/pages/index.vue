@@ -49,7 +49,7 @@ async function loggin() {
   if (res.IsValid) {
     controller.setToken(res.Token, res.IsFondSoutien);
     controller.showMessage("Bienvenue !");
-    router.push({ path: "/camps" });
+    router.push({ path: "/inscriptions" });
   } else {
     errors.value = ["Clé de connection incorrecte."];
   }
