@@ -53,7 +53,6 @@
               height="36"
               rounded
               color="primary"
-              @click.stop="emit('show-participants')"
             >
               <strong
                 >{{ props.camp.Stats.Valides }}/{{
@@ -81,10 +80,8 @@
             ></v-btn>
           </template>
           <v-list density="compact">
-            <v-list-item
-              prepend-icon="mdi-view-list"
-              @click="emit('show-participants')"
-              >Afficher les participants</v-list-item
+            <v-list-item prepend-icon="mdi-pencil" @click="emit('edit')"
+              >Modifier les paramètres</v-list-item
             >
 
             <v-list-item
@@ -135,7 +132,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: "click"): void;
-  (e: "show-participants"): void;
+  (e: "edit"): void;
   (e: "edit-taux"): void;
   (e: "delete"): void;
   (e: "show-documents"): void;
