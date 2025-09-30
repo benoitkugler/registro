@@ -16,6 +16,7 @@ import (
 	"registro/logic/search"
 	"registro/mails"
 	cps "registro/sql/camps"
+	"registro/sql/dossiers"
 	ds "registro/sql/dossiers"
 	"registro/sql/events"
 	in "registro/sql/inscriptions"
@@ -496,8 +497,8 @@ func (ct *Controller) BuildInscription(publicInsc Inscription) (insc in.Inscript
 		PartageAdressesOK:  publicInsc.PartageAdressesOK,
 		DemandeFondSoutien: publicInsc.DemandeFondSoutien,
 
-		DateHeure:   time.Now().Truncate(time.Second),
-		IsConfirmed: false,
+		DateHeure:          time.Now().Truncate(time.Second),
+		ConfirmedAsDossier: dossiers.OptIdDossier{},
 	}
 
 	return insc, ps, nil
@@ -553,6 +554,8 @@ func (ct *Controller) ConfirmeInscription(c echo.Context) error {
 
 // ConfirmeInscription transforme l'inscription en dossier,
 // et rapproche (automatiquement) les profils.
+//
+// Si l'inscription a déjà été validée
 func ConfirmeInscription(db *sql.DB, id in.IdInscription) (ds.Dossier, error) {
 	insc, err := in.SelectInscription(db, id)
 	if err != nil {
@@ -563,8 +566,13 @@ func ConfirmeInscription(db *sql.DB, id in.IdInscription) (ds.Dossier, error) {
 		return ds.Dossier{}, utils.SQLError(err)
 	}
 
-	if insc.IsConfirmed {
-		return ds.Dossier{}, errors.New("inscription déjà confirmé")
+	if insc.ConfirmedAsDossier.Valid {
+		// Just redirect:
+		dossier, err := ds.SelectDossier(db, insc.ConfirmedAsDossier.Id)
+		if err != nil {
+			return ds.Dossier{}, utils.SQLError(err)
+		}
+		return dossier, nil
 	}
 
 	// on charge l'index une fois pour toutes ...
@@ -678,8 +686,8 @@ func ConfirmeInscription(db *sql.DB, id in.IdInscription) (ds.Dossier, error) {
 			}
 		}
 
-		// tag the inscription as Confirmed
-		insc.IsConfirmed = true
+		// tag the inscription as confirmed
+		insc.ConfirmedAsDossier = dossier.Id.Opt()
 		_, err = insc.Update(tx)
 		return err
 	})

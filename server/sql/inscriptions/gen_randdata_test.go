@@ -25,7 +25,7 @@ func randInscription() Inscription {
 	s.PartageAdressesOK = randbool()
 	s.DemandeFondSoutien = randbool()
 	s.DateHeure = randtTime()
-	s.IsConfirmed = randbool()
+	s.ConfirmedAsDossier = randsha_OptID_dos_IdDossier()
 
 	return s
 }
@@ -78,6 +78,10 @@ func randcam_IdCamp() camps.IdCamp {
 	return camps.IdCamp(randint64())
 }
 
+func randdos_IdDossier() dossiers.IdDossier {
+	return dossiers.IdDossier(randint64())
+}
+
 func randdos_IdTaux() dossiers.IdTaux {
 	return dossiers.IdTaux(randint64())
 }
@@ -113,6 +117,14 @@ func randper_Tels() personnes.Tels {
 
 func randsha_Date() shared.Date {
 	return shared.Date(randtDate())
+}
+
+func randsha_OptID_dos_IdDossier() shared.OptID[dossiers.IdDossier] {
+	var s shared.OptID[dossiers.IdDossier]
+	s.Id = randdos_IdDossier()
+	s.Valid = randbool()
+
+	return s
 }
 
 var letterRunes2 = []rune("azertyuiopqsdfghjklmwxcvbn123456789é@!?&èïab ")

@@ -66,6 +66,7 @@ type Data struct {
 	Dossier                    logic.DossierExt
 	DocumentsToReadOrFillCount int // number to read or fill
 	FichesanitaireToFillCount  int
+	MailCentre                 string
 	IsPaiementOpen             bool
 	PaiementSettings           PaiementSettings
 }
@@ -97,6 +98,7 @@ func (ct *Controller) load(id ds.IdDossier) (Data, error) {
 		dossier.Publish(ct.key),
 		documents.ToReadOrFillCount,
 		fiches.ToFillCount,
+		ct.asso.ContactMail,
 		dossier.IsPaiementOpen(),
 		PaiementSettings{
 			backoffice.OffuscateurVirements.Mask(id),

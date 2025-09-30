@@ -309,7 +309,8 @@ func Preinscription(asso config.Asso, mail string, responsables []RespoWithLink)
 func ConfirmeInscription(asso config.Asso, contact Contact, urlConfirmeInscription string) (string, error) {
 	args := struct {
 		champsCommuns
-		URL template.HTML
+		URL        template.HTML
+		MailCentre string
 	}{
 		champsCommuns: champsCommuns{
 			Title:       "Validation de l'adresse mail",
@@ -317,7 +318,8 @@ func ConfirmeInscription(asso config.Asso, contact Contact, urlConfirmeInscripti
 			Signature:   mailAutoSignature,
 			Asso:        asso,
 		},
-		URL: template.HTML(urlConfirmeInscription),
+		URL:        template.HTML(urlConfirmeInscription),
+		MailCentre: asso.ContactMail,
 	}
 
 	return render(confirmeInscriptionT, args)

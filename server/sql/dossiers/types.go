@@ -2,7 +2,13 @@ package dossiers
 
 import (
 	"math"
+
+	"registro/sql/shared"
 )
+
+type OptIdDossier = shared.OptID[IdDossier]
+
+func (id IdDossier) Opt() OptIdDossier { return OptIdDossier{Id: id, Valid: true} }
 
 // Mode de paiement
 type ModePaiement uint8

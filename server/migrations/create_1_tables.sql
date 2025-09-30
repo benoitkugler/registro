@@ -293,7 +293,7 @@ CREATE TABLE inscriptions (
     PartageAdressesOK boolean NOT NULL,
     DemandeFondSoutien boolean NOT NULL,
     DateHeure timestamp(0) with time zone NOT NULL,
-    IsConfirmed boolean NOT NULL
+    ConfirmedAsDossier integer
 );
 
 CREATE TABLE inscription_participants (

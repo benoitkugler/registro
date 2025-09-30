@@ -15,7 +15,7 @@ type Asso struct {
 	ColorPrimary, ColorSecondary template.CSS // included as background-color
 
 	// Used as default right header.
-	// Also used in "Lettre aux parents" if UseCoordCentre is true
+	// Also used in "Lettre aux parents" if UseCoordCentre is true, and as contact in espaceperso
 	ContactNom, ContactTel, ContactMail string
 
 	MailsSettings MailsSettings
@@ -82,7 +82,7 @@ var repere = Asso{
 
 	ContactNom:  "Repère - Centre d'inscriptions",
 	ContactTel:  "",
-	ContactMail: "info@lerepere.ch",
+	ContactMail: "webmaster@lerepere.ch",
 
 	Icon:           "logo_repere.png",
 	ColorPrimary:   "#2b678a",

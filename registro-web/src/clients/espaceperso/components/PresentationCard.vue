@@ -3,16 +3,11 @@
     <v-card-text>
       Cette page regroupe toutes les informations liées à votre inscription et
       vous permet d'interagir avec les directeurs de séjour et le centre
-      d'inscription.
-
-      <v-alert type="info" class="my-4">
-        Le fil de messages vous permet de converser directement avec le centre.
-        Merci de privilégier ce système aux mails.
-      </v-alert>
+      d'inscription, en utilisant le fil de messages. <br /><br />
 
       Cet espace évoluera au fil de l'inscription, et vous donnera accès au
       suivi de votre demande:
-      <v-list>
+      <v-list class="mb-2">
         <v-list-item
           title="Notification de validation"
           subtitle="Après prise en compte de votre inscription par le centre."
@@ -47,10 +42,22 @@
           append-icon="mdi-comment-quote"
         ></v-list-item>
       </v-list>
+
+      La prochaine étape ? La confirmation de votre inscription vous sera donnée
+      par le responsable du camp. Si un camp est déjà complet, vous serez mis
+      sur liste d'attente. <br />
+      Sans nouvelle d'ici 10 jours, veuillez contacter :
+      <a :href="`mailto:${props.mailCentre}`">
+        {{ props.mailCentre }}
+      </a>
     </v-card-text>
   </v-card>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+const props = defineProps<{
+  mailCentre: string;
+}>();
+</script>
 
 <style scoped></style>

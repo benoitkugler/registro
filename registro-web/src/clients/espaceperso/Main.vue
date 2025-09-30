@@ -271,7 +271,10 @@
 
   <!-- présentation initiale -->
   <v-dialog v-model="showPresentation" max-width="800px">
-    <PresentationCard></PresentationCard>
+    <PresentationCard
+      v-if="data"
+      :mail-centre="data.MailCentre"
+    ></PresentationCard>
   </v-dialog>
 
   <!-- présentation initiale -->

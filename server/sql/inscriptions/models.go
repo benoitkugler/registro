@@ -34,11 +34,11 @@ type Inscription struct {
 
 	DateHeure time.Time
 
-	// IsConfirmed is set to 'true' when the
+	// ConfirmedAsDossier is set when the
 	// mail has been confirmed and the [Dossier] has been created.
 	// Note that the [Dossier.IsValidated] is still false,
 	// since some personnes may still require to be identified by humans
-	IsConfirmed bool
+	ConfirmedAsDossier dossiers.OptIdDossier `gomacro-sql-on-delete:"SET NULL" gomacro-sql-foreign:"Dossier"`
 }
 
 // InscriptionParticipant

@@ -242,6 +242,9 @@ ALTER TABLE inscriptions
 ALTER TABLE inscriptions
     ADD FOREIGN KEY (IdTaux) REFERENCES tauxs;
 
+ALTER TABLE inscriptions
+    ADD FOREIGN KEY (ConfirmedAsDossier) REFERENCES dossiers ON DELETE SET NULL;
+
 ALTER TABLE inscription_participants
     ADD FOREIGN KEY (IdCamp, IdTaux) REFERENCES camps (Id, IdTaux) ON DELETE CASCADE;
 
