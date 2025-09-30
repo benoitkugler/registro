@@ -90,7 +90,7 @@
         ></InscriptionPannel>
       </v-container>
       <v-container class="fill-height" fluid v-else>
-        <CampsList :camps="camps" @clicked="initWithCamp"></CampsList>
+        <CampsList :camps="camps" @goTo="initWithCamp"></CampsList>
       </v-container>
 
       <v-footer color="secondary">

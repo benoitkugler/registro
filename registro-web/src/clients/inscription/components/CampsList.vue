@@ -1,7 +1,10 @@
 <template>
   <v-row>
     <v-col v-for="camp in props.camps" cols="12" sm="6" md="4">
-      <v-card @click="emit('clicked', camp.Id)" :disabled="camp.IsClosed">
+      <v-card
+        @click="camp.IsClosed ? null : emit('goTo', camp.Id)"
+        :disabled="camp.IsClosed"
+      >
         <v-row>
           <v-col cols="7">
             <v-card-title>
@@ -60,6 +63,6 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: "clicked", idCamp: IdCamp): void;
+  (e: "goTo", idCamp: IdCamp): void;
 }>();
 </script>
