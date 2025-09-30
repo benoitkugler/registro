@@ -41,6 +41,7 @@
         <v-card-text>
           <DossierList
             :camps="allCamps"
+            :allow-fonds-soutien="controller.isFondsSoutien"
             :selected="dossierDetails?.Dossier.Dossier.Id"
             v-model:query="query"
             @click="onSelectDossier"

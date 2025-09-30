@@ -86,5 +86,5 @@ const props = defineProps<{
   hideMenu?: boolean;
 }>();
 
-const isFondSoutien = computed(() => controller.isFondSoutien);
+const isFondSoutien = computed(() => controller.isFondsSoutien);
 </script>

@@ -115,7 +115,7 @@
                       </v-switch>
                     </v-col>
                   </v-row>
-                  <v-row>
+                  <v-row v-if="props.allowFondsSoutien">
                     <v-col>
                       <v-switch
                         label="Fond de soutien"
@@ -190,6 +190,7 @@ import { ref, watch } from "vue";
 
 const props = defineProps<{
   camps: CampItem[];
+  allowFondsSoutien: boolean;
   selected?: IdDossier;
 }>();
 
