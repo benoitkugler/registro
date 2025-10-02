@@ -35,10 +35,13 @@
                 label="Mail"
                 hide-details
                 v-model="search"
+                @keydown.enter.prevent="
+                  search.length < 3 ? null : searchHistory()
+                "
               >
               </v-text-field>
             </v-col>
-            <v-col align-self="center" cols="6" sm="autp">
+            <v-col align-self="center" cols="6" sm="auto">
               <v-btn
                 variant="outlined"
                 :disabled="search.length < 3"
