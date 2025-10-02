@@ -61,6 +61,7 @@ export interface Settings {
   ShowFondSoutien: boolean;
   ShowCharteConduite: boolean;
   AskNationnalite: boolean;
+  ShowInscriptionRapide: boolean;
 }
 export type IdCamp = Int & { __opaque_int__: "IdCamp" };
 // registro/sql/camps.OptionNavette

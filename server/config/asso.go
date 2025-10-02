@@ -29,6 +29,7 @@ type Asso struct {
 	ShowFondSoutien             bool // if true, displayed in inscription form
 	ShowCharteConduite          bool // if true, displayed in inscription form
 	AskNationnalite             bool // if true, displayed for participants in inscription form
+	ShowInscriptionRapide       bool // if true, displays a bar in inscription form
 }
 
 func (a *Asso) BankAccounts() [][2]string {
@@ -74,6 +75,7 @@ var acve = Asso{
 	ShowFondSoutien:        false,
 	ShowCharteConduite:     false,
 	AskNationnalite:        false,
+	ShowInscriptionRapide:  true,
 }
 
 var repere = Asso{
@@ -106,6 +108,7 @@ var repere = Asso{
 	ShowFondSoutien:        true,
 	ShowCharteConduite:     true,
 	AskNationnalite:        true,
+	ShowInscriptionRapide:  false, // pour la première année
 }
 
 type ChequeSettings struct {

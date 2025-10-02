@@ -214,7 +214,8 @@ async function initInscription(
     );
   }
   data.value = res;
-  showPreinscription.value = preinscription == "";
+  showPreinscription.value =
+    res.Settings.ShowInscriptionRapide && preinscription == "";
 }
 
 // camps ouverts aux inscriptions

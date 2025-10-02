@@ -144,6 +144,7 @@ type Settings struct {
 	ShowFondSoutien        bool
 	ShowCharteConduite     bool
 	AskNationnalite        bool
+	ShowInscriptionRapide  bool
 }
 
 func (ct *Controller) GetCamps(c echo.Context) error {
@@ -185,6 +186,7 @@ func (ct *Controller) initInscription(preinscription string) (Data, error) {
 			ShowFondSoutien:        ct.asso.ShowFondSoutien,
 			ShowCharteConduite:     ct.asso.ShowCharteConduite,
 			AskNationnalite:        ct.asso.AskNationnalite,
+			ShowInscriptionRapide:  ct.asso.ShowInscriptionRapide,
 		},
 	}, nil
 }
