@@ -66,8 +66,8 @@
           </div>
         </div>
         <div v-else-if="mailFound === false">
-          Votre adresse n'a pas été trouvée. Aucun problème, vous pouvez
-          reprendre l'inscription standard !
+          Votre adresse n'a pas été trouvée. Aucun problème, vous pouvez suivre
+          le parcours d'inscription standard ci-dessous !
         </div>
       </v-alert>
 
