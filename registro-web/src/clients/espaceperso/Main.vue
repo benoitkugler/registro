@@ -273,6 +273,7 @@
   <v-dialog v-model="showPresentation" max-width="800px">
     <PresentationCard
       v-if="data"
+      :asso-title="data.AssoTitle"
       :mail-centre="data.MailCentre"
     ></PresentationCard>
   </v-dialog>

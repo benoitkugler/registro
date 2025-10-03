@@ -1,7 +1,7 @@
 <template>
-  <v-card title="Régler la pension" class="mt-2">
+  <v-card title="Régler le séjour" class="mt-2">
     <v-card-text>
-      Le montant de la pension à régler est de
+      Le montant à régler est de
       <b> {{ props.dossier.Bilan.Restant }} </b>.
       <v-row class="mt-4">
         <v-col align-self="start" cols="4">

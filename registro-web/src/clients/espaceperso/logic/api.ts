@@ -25,6 +25,7 @@ export interface Data {
   Dossier: DossierExt;
   DocumentsToReadOrFillCount: Int;
   FichesanitaireToFillCount: Int;
+  AssoTitle: string;
   MailCentre: string;
   IsPaiementOpen: boolean;
   PaiementSettings: PaiementSettings;

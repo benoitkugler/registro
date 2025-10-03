@@ -2,20 +2,20 @@
   <v-card title="Bienvenue sur votre espace de suivi !">
     <v-card-text>
       Cette page regroupe toutes les informations liées à votre inscription et
-      vous permet d'interagir avec les directeurs de séjour et le centre
-      d'inscription, en utilisant le fil de messages. <br /><br />
+      vous permet d'interagir avec les directeurs de séjour et l'association
+      {{ props.assoTitle }}, en utilisant le fil de messages. <br /><br />
 
       Cet espace évoluera au fil de l'inscription, et vous donnera accès au
       suivi de votre demande:
       <v-list class="mb-2">
         <v-list-item
           title="Notification de validation"
-          subtitle="Après prise en compte de votre inscription par le centre."
+          subtitle="Après prise en compte de votre inscription par notre association."
           append-icon="mdi-check"
         >
         </v-list-item>
         <v-list-item
-          title="Réglement de la pension"
+          title="Réglement des séjours"
           append-icon="mdi-currency-eur"
         >
         </v-list-item>
@@ -56,6 +56,7 @@
 
 <script setup lang="ts">
 const props = defineProps<{
+  assoTitle: string;
   mailCentre: string;
 }>();
 </script>
