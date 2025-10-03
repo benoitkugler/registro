@@ -78,15 +78,6 @@ const props = defineProps<{
 
 const participants = defineModel<Participant[]>({ required: true });
 
-onMounted(() =>
-  nextTick(() => {
-    // make sure at least one participant is defined
-    if (!participants.length) {
-      addParticipant();
-    }
-  })
-);
-
 const isStart = ref(participants.value.length == 0);
 
 const bottomRef = useTemplateRef("bottom");
