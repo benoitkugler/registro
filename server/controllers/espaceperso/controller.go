@@ -508,17 +508,7 @@ func (ct *Controller) renderAttestationPresence(id ds.IdDossier) ([]byte, error)
 	if err != nil {
 		return nil, err
 	}
-	// restrict to inscrits with started camp
-	var filtered []cps.ParticipantCamp
-	for _, p := range dossier.ParticipantsExt() {
-		if p.Participant.Statut != cps.Inscrit {
-			continue
-		}
-		if hasStarted := p.Camp.DateDebut.Time().Before(time.Now()); !hasStarted {
-			continue
-		}
-		filtered = append(filtered, p)
-	}
+	filtered := dossier.ParticipantsExtReal() // restrict to inscrits with started camp
 	responsable := dossier.Responsable()
 	destinataire := pdfcreator.Destinataire{
 		NomPrenom:  responsable.NOMPrenom(),
@@ -559,14 +549,7 @@ func (ct *Controller) renderFacture(id ds.IdDossier) ([]byte, error) {
 		CodePostal: responsable.CodePostal,
 		Ville:      responsable.Ville,
 	}
-	// restrict to inscrits with started camp
-	var filtered []cps.ParticipantCamp
-	for _, p := range dossier.ParticipantsExt() {
-		if p.Participant.Statut != cps.Inscrit {
-			continue
-		}
-		filtered = append(filtered, p)
-	}
+	filtered := dossier.ParticipantsExtReal() // restrict to inscrits with started camp
 	// sort by time
 	finances := dossier.Publish(ct.key)
 	var paiements []ds.Paiement

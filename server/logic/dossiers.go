@@ -105,6 +105,22 @@ func (de *Dossier) ParticipantsExt() []cps.ParticipantCamp {
 	return ps
 }
 
+// ParticipantsExtReal is like [ParticipantsExt], but is restricted to inscrits
+// with started camp (at current time)
+func (de *Dossier) ParticipantsExtReal() []cps.ParticipantCamp {
+	var out []cps.ParticipantCamp
+	for _, p := range de.ParticipantsExt() {
+		if p.Participant.Statut != cps.Inscrit {
+			continue
+		}
+		if hasStarted := p.Camp.DateDebut.Time().Before(time.Now()); !hasStarted {
+			continue
+		}
+		out = append(out, p)
+	}
+	return out
+}
+
 // Personnes returns the responsable first, then sort by ID.
 // Among participants, repetition are removed
 func (de *Dossier) Personnes() (out []pr.Personne) {
