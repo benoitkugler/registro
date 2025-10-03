@@ -31,7 +31,8 @@
     </v-list-item>
 
     <v-divider></v-divider>
-    <v-list-item
+    <!-- This is not ready just yet -->
+    <!-- <v-list-item
       prepend-icon="mdi-credit-card-outline"
       append-icon="mdi-open-in-new"
       link
@@ -40,7 +41,7 @@
       color="primary"
     >
       Comptabilité
-    </v-list-item>
+    </v-list-item> -->
 
     <v-divider></v-divider>
     <v-list-item
