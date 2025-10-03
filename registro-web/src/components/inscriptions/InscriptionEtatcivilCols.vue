@@ -13,7 +13,14 @@
             </v-chip>
           </template>
 
+          <v-card v-if="props.acteur == Acteur.Directeur">
+            <v-card-text>
+              Le rapprochement de ce profil requiert une action du centre
+              d'inscription.
+            </v-card-text>
+          </v-card>
           <CardSimilaires
+            v-else
             :api="props.api"
             :personne="props.personne"
             @identifie="(v) => emit('identifie', v)"
@@ -48,6 +55,7 @@
 
 <script setup lang="ts">
 import {
+  Acteur,
   type IdentTarget,
   type Personne,
 } from "../../clients/backoffice/logic/api";
@@ -58,6 +66,7 @@ import type { SimilairesAPI } from "../types";
 const props = defineProps<{
   personne: Personne;
   api: SimilairesAPI;
+  acteur: Acteur;
 }>();
 
 const emit = defineEmits<{

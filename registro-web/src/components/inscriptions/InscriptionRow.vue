@@ -55,6 +55,7 @@
             <InscriptionEtatcivilCols
               :api="props.api"
               :personne="props.inscription.Responsable"
+              :acteur="acteur"
               @identifie="(v) => emit('identifie', v)"
             ></InscriptionEtatcivilCols>
           </v-row>
@@ -68,6 +69,7 @@
             <InscriptionEtatcivilCols
               :api="props.api"
               :personne="part.Personne"
+              :acteur="acteur"
               @identifie="(v) => emit('identifie', v)"
             ></InscriptionEtatcivilCols>
             <v-col align-self="center" cols="3" class="text-center">
@@ -189,6 +191,7 @@
 <script setup lang="ts">
 import { Camps, Formatters, Personnes } from "@/utils";
 import {
+  Acteur,
   StatutParticipant,
   type IdCamp,
   type IdentTarget,
@@ -215,6 +218,10 @@ const emit = defineEmits<{
   (e: "delete"): void;
   (e: "deleteParticipant", id: IdParticipant): void;
 }>();
+
+const acteur = computed(() =>
+  props.user == null ? Acteur.Backoffice : Acteur.Directeur
+);
 
 const allIdentified = computed(
   () =>
