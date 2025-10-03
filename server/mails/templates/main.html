@@ -6,73 +6,65 @@
     <meta http-uiv="Content-Type" content="text/html; charset=UTF-8" />
     <title>Courriel {{ .Asso.Title }}</title>
     <style type="text/css">
-        body {
-          margin: 0 auto;
-          padding: 0;
-          min-width: 100%;
-          font-family: sans-serif;
-        }
+      body {
+        margin: 0 auto;
+        padding: 0;
+        min-width: 100%;
+        font-family: sans-serif;
+      }
 
-        table {
-          margin: 0 0 0 0;
-        }
+      table {
+        margin: 0 0 0 0;
+      }
 
-        ul {
-          margin-top: 2px;
-          margin-bottom: 2px;
-        }
-
-        span.yellow-title {
-          margin-top: 10px;
-          margin-bottom: 7px;
-          padding: 10px;
-          /* display: block; */
-          /* border-radius: 10px; */
-          font-size: 1.1em;
-          font-style: italic;
-          background-color: {{ $.Asso.ColorSecondary }};
+      ul {
+        margin-top: 2px;
+        margin-bottom: 2px;
       }
 
       .color-asso {
-            background-color: {{ $.Asso.ColorPrimary }};
-        }
+          background-color: {{ $.Asso.ColorPrimary }};
+      }
 
+      .color-secondary {
+          background-color: {{ $.Asso.ColorSecondary }};
+      }
 
-        .header {
-          height: 40px;
-          text-align: center;
-          font-size: 16px;
-          font-weight: bold;
-        }
+      .header {
+        height: 40px;
+        text-align: center;
+        font-size: 16px;
+        font-weight: bold;
+      }
 
-        .bonjour {
-          padding-top: 20px;
-          padding-left: 10px;
-          padding-bottom: 5px;
-          font-size: 16px;
-        }
+      .bonjour {
+        padding-top: 20px;
+        padding-left: 10px;
+        padding-bottom: 5px;
+        font-size: 16px;
+      }
 
-        .content {
-          font-size: 16px;
-          line-height: 30px;
-        }
+      .content {
+        font-size: 16px;
+        line-height: 30px;
+      }
 
-        .signature {
-          height: 70px;
-          text-align: left;
-          font-size: 16px;
-        }
+      .signature {
+        height: 70px;
+        text-align: left;
+        font-size: 16px;
+      }
 
-        .footer {
-          text-align: left;
-          height: 45px;
-          font-size: 12px;
-        }
+      .footer {
+        text-align: left;
+        height: 45px;
+        font-size: 12px;
+      }
 
-        table.coordonnees {
-          margin-left: 30px;
-          color: #5b3c33;
-        }
+      table.coordonnees {
+        margin-left: 30px;
+        color: #5b3c33;
+      }
     </style>
   </head>
 
@@ -84,7 +76,7 @@
       cellspacing="0"
       cellpadding="0"
     >
-      <tr class="header color-asso">
+      <tr class="header color-secondary">
         <td colspan="2" style="text-align: center; padding: 5px">
           {{ .Asso.Title }} - {{ .Title }}
         </td>
@@ -100,7 +92,7 @@
         <td colspan="2" style="padding: 10px">{{ .Signature }}</td>
       </tr>
 
-      <tr class="footer color-asso">
+      <tr class="footer color-secondary">
         <td style="padding: 5px">{{ .Asso.Title}}</td>
         <td style="padding: 5px; text-align: right">{{ .Asso.Infos }}</td>
       </tr>
