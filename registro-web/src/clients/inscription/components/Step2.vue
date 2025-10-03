@@ -64,7 +64,7 @@ import {
   type Participant,
   type Pays,
   type ResponsableLegal,
-  type Settings,
+  type ConfigInscription,
 } from "../logic/api";
 import ParticipantRow from "./ParticipantRow.vue";
 import { ref } from "vue";
@@ -73,7 +73,7 @@ const props = defineProps<{
   camps: CampExt[];
   responsable: ResponsableLegal;
   preselected: IdCamp;
-  settings: Settings;
+  settings: ConfigInscription;
 }>();
 
 const participants = defineModel<Participant[]>({ required: true });

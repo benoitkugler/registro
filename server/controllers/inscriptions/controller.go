@@ -136,17 +136,6 @@ func newCampExt(camp cps.Camp, taux ds.Taux, direction []pr.Personne, participan
 	}
 }
 
-type Settings struct {
-	SupportBonsCAF         bool
-	SupportANCV            bool
-	SupportPaiementEnLigne bool
-	EmailRetraitMedia      string
-	ShowFondSoutien        bool
-	ShowCharteConduite     bool
-	AskNationnalite        bool
-	ShowInscriptionRapide  bool
-}
-
 func (ct *Controller) GetCamps(c echo.Context) error {
 	_, out, err := ct.LoadCamps()
 	if err != nil {
@@ -157,7 +146,7 @@ func (ct *Controller) GetCamps(c echo.Context) error {
 
 type Data struct {
 	InitialInscription Inscription
-	Settings           Settings
+	Settings           config.ConfigInscription
 }
 
 func (ct *Controller) initInscription(preinscription string) (Data, error) {
@@ -178,16 +167,7 @@ func (ct *Controller) initInscription(preinscription string) (Data, error) {
 
 	return Data{
 		InitialInscription: initialInscription,
-		Settings: Settings{
-			SupportBonsCAF:         ct.asso.SupportBonsCAF,
-			SupportANCV:            ct.asso.SupportANCV,
-			SupportPaiementEnLigne: ct.asso.SupportPaiementEnLigne,
-			EmailRetraitMedia:      ct.asso.EmailRetraitMedia,
-			ShowFondSoutien:        ct.asso.ShowFondSoutien,
-			ShowCharteConduite:     ct.asso.ShowCharteConduite,
-			AskNationnalite:        ct.asso.AskNationnalite,
-			ShowInscriptionRapide:  ct.asso.ShowInscriptionRapide,
-		},
+		Settings:           ct.asso.ConfigInscription,
 	}, nil
 }
 

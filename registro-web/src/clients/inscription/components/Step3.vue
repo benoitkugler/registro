@@ -34,14 +34,20 @@
         <i>plusieurs participants</i> inscrits ou pour un
         <i>équipier</i> bénévole sur un de nos séjours.
       </v-alert>
+
+      <v-alert class="my-1" v-if="props.settings.ShowAnnulationConditions">
+        ANNULATION : En cas d'annulation, il est demandé un montant de
+        <i>10%</i> pour 30 à 10 jours avant le camp et <i>30%</i> par la suite,
+        sauf pour raison impérative.
+      </v-alert>
     </v-card-text>
   </v-card>
 </template>
 
 <script lang="ts" setup>
-import type { Settings } from "../logic/api";
+import type { ConfigInscription } from "../logic/api";
 
 const props = defineProps<{
-  settings: Settings;
+  settings: ConfigInscription;
 }>();
 </script>

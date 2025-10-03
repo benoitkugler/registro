@@ -23,13 +23,7 @@ type Asso struct {
 	bankNames, bankIBANs []string       // displayed in espace perso
 	ChequeSettings       ChequeSettings // nil for disabled
 
-	SupportBonsCAF, SupportANCV bool // if true, displayed in inscription form
-	SupportPaiementEnLigne      bool // if true, displayed in inscription and activated on espaceperso
-	EmailRetraitMedia           string
-	ShowFondSoutien             bool // if true, displayed in inscription form
-	ShowCharteConduite          bool // if true, displayed in inscription form
-	AskNationnalite             bool // if true, displayed for participants in inscription form
-	ShowInscriptionRapide       bool // if true, displays a bar in inscription form
+	ConfigInscription
 }
 
 func (a *Asso) BankAccounts() [][2]string {
@@ -39,6 +33,18 @@ func (a *Asso) BankAccounts() [][2]string {
 		out[i] = [2]string{name, iban}
 	}
 	return out
+}
+
+type ConfigInscription struct {
+	SupportBonsCAF, SupportANCV bool // if true, displayed in inscription form
+	SupportPaiementEnLigne      bool // if true, displayed in inscription and activated on espaceperso
+	EmailRetraitMedia           string
+	ShowFondSoutien             bool // if true, displayed in inscription form
+	ShowCharteConduite          bool // if true, displayed in inscription form
+	AskNationnalite             bool // if true, displayed for participants in inscription form
+	ShowInscriptionRapide       bool // if true, displays a bar in inscription form
+	ShowAutorisationVehicules   bool // if true, displays an autorisation checkbox in inscription form
+	ShowAnnulationConditions    bool // if true, displays a warning in inscription form (step 3)
 }
 
 var acve = Asso{
@@ -69,13 +75,17 @@ var acve = Asso{
 		Adresse: [2]string{"Centre d'inscriptions - Marie-Pierre Buffet", "27, impasse Vignon - 26150 Chamaloc"},
 	},
 
-	SupportBonsCAF: true, SupportANCV: true,
-	SupportPaiementEnLigne: true,
-	EmailRetraitMedia:      "contact@acve.asso.fr",
-	ShowFondSoutien:        false,
-	ShowCharteConduite:     false,
-	AskNationnalite:        false,
-	ShowInscriptionRapide:  true,
+	ConfigInscription: ConfigInscription{
+		SupportBonsCAF: true, SupportANCV: true,
+		SupportPaiementEnLigne:    true,
+		EmailRetraitMedia:         "contact@acve.asso.fr",
+		ShowFondSoutien:           false,
+		ShowCharteConduite:        false,
+		AskNationnalite:           false,
+		ShowInscriptionRapide:     true,
+		ShowAutorisationVehicules: true,
+		ShowAnnulationConditions:  false,
+	},
 }
 
 var repere = Asso{
@@ -102,13 +112,17 @@ var repere = Asso{
 
 	ChequeSettings: ChequeSettings{}, // disabled
 
-	SupportBonsCAF: false, SupportANCV: false,
-	SupportPaiementEnLigne: false,
-	EmailRetraitMedia:      "webmaster@lerepere.ch",
-	ShowFondSoutien:        true,
-	ShowCharteConduite:     true,
-	AskNationnalite:        true,
-	ShowInscriptionRapide:  false, // pour la première année
+	ConfigInscription: ConfigInscription{
+		SupportBonsCAF: false, SupportANCV: false,
+		SupportPaiementEnLigne:    false,
+		EmailRetraitMedia:         "webmaster@lerepere.ch",
+		ShowFondSoutien:           true,
+		ShowCharteConduite:        true,
+		AskNationnalite:           true,
+		ShowInscriptionRapide:     false, // pour la première année
+		ShowAutorisationVehicules: false,
+		ShowAnnulationConditions:  true,
+	},
 }
 
 type ChequeSettings struct {

@@ -1,21 +1,25 @@
 <template>
   <v-card class="my-1 border-secondary border-lg" title="Autorisations">
     <v-card-text>
-      <v-row>
-        <v-col cols="12">
-          <v-checkbox readonly :model-value="true" color="primary">
-            <template #label>
-              <div>
-                Pour chaque participant dont j'ai la responsabilité, j'autorise
-                le transport dans les véhicules de l'association. <br />
-                En cas de nécessité , j'autorise l'appel aux soins légaux de
-                médecine et de chirurgie et je m'engage à rembourser les frais
-                avancés.
-              </div>
-            </template>
-          </v-checkbox>
-        </v-col>
-      </v-row>
+      <v-checkbox
+        readonly
+        :model-value="true"
+        color="primary"
+        hide-details
+        v-if="props.settings.ShowAutorisationVehicules"
+      >
+        <template #label>
+          Pour chaque participant dont j'ai la responsabilité, j'autorise le
+          transport dans les véhicules de l'association.
+        </template>
+      </v-checkbox>
+
+      <v-checkbox readonly :model-value="true" color="primary" hide-details>
+        <template #label>
+          En cas de nécessité , j'autorise l'appel aux soins légaux de médecine
+          et de chirurgie et je m'engage à rembourser les frais avancés.
+        </template>
+      </v-checkbox>
 
       <v-checkbox readonly :model-value="true" color="primary" hide-details>
         <template #label>
@@ -128,12 +132,12 @@
 
 <script lang="ts" setup>
 import { computed } from "vue";
-import type { Settings } from "../logic/api";
+import type { ConfigInscription } from "../logic/api";
 import { FormRules } from "@/utils";
 import { useDisplay } from "vuetify";
 
 const props = defineProps<{
-  settings: Settings;
+  settings: ConfigInscription;
 }>();
 
 const { smAndUp } = useDisplay();
