@@ -463,7 +463,7 @@ export type StatutParticipant =
   (typeof StatutParticipant)[keyof typeof StatutParticipant];
 
 export const StatutParticipantLabels: Record<StatutParticipant, string> = {
-  [StatutParticipant.AStatuer]: "A statuer",
+  [StatutParticipant.AStatuer]: "En attente de validation",
   [StatutParticipant.Refuse]: "Refusé définitivement",
   [StatutParticipant.AttenteProfilInvalide]: "Profil limite",
   [StatutParticipant.AttenteCampComplet]: "Camp complet",
