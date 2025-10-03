@@ -239,7 +239,7 @@ func TestController_confirmeInscription(t *testing.T) {
 		tu.Assert(t, dossier.MomentInscription.Equal(insc.DateHeure))
 
 		insc, err = in.SelectInscription(ct.db, insc.Id)
-		tu.Assert(t, insc.IsConfirmed == true)
+		tu.Assert(t, insc.ConfirmedAsDossier.Valid == true)
 
 		respo, err := pr.SelectPersonne(ct.db, dossier.IdResponsable)
 		tu.AssertNoErr(t, err)
@@ -250,8 +250,13 @@ func TestController_confirmeInscription(t *testing.T) {
 		tu.AssertNoErr(t, err)
 		tu.Assert(t, len(events) == 1) //  message
 
-		_, err = ConfirmeInscription(ct.db, insc.Id) // already confirmed
-		tu.AssertErr(t, err)
+		// already confirmed : just redirect
+		dossier, err = ConfirmeInscription(ct.db, insc.Id)
+		tu.AssertNoErr(t, err)
+
+		// check we are allowed to delete the dossier
+		_, err = ds.DeleteDossierById(ct.db, dossier.Id)
+		tu.AssertNoErr(t, err)
 	})
 
 	// check that the same participant are

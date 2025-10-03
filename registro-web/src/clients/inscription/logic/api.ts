@@ -7,6 +7,19 @@ import Axios from "axios";
 export type Date_ = string & { __opaque__: "Date" };
 
 export type Int = number & { __opaque__: "Int" };
+// registro/config.ConfigInscription
+export interface ConfigInscription {
+  SupportBonsCAF: boolean;
+  SupportANCV: boolean;
+  SupportPaiementEnLigne: boolean;
+  EmailRetraitMedia: string;
+  ShowFondSoutien: boolean;
+  ShowCharteConduite: boolean;
+  AskNationnalite: boolean;
+  ShowInscriptionRapide: boolean;
+  ShowAutorisationVehicules: boolean;
+  ShowAnnulationConditions: boolean;
+}
 // registro/controllers/inscriptions.CampExt
 export interface CampExt {
   Id: IdCamp;
@@ -20,6 +33,7 @@ export interface CampExt {
   Places: Int;
   AgeMin: Int;
   AgeMax: Int;
+  Meta: Meta;
   Prix: string;
   Direction: string;
   IsClosed: boolean;
@@ -28,7 +42,7 @@ export interface CampExt {
 // registro/controllers/inscriptions.Data
 export interface Data {
   InitialInscription: Inscription;
-  Settings: Settings;
+  Settings: ConfigInscription;
 }
 // registro/controllers/inscriptions.Inscription
 export interface Inscription {
@@ -52,17 +66,9 @@ export interface Participant {
 export interface SearchHistoryOut {
   MailFound: boolean;
 }
-// registro/controllers/inscriptions.Settings
-export interface Settings {
-  SupportBonsCAF: boolean;
-  SupportANCV: boolean;
-  SupportPaiementEnLigne: boolean;
-  EmailRetraitMedia: string;
-  ShowFondSoutien: boolean;
-  ShowCharteConduite: boolean;
-  AskNationnalite: boolean;
-}
 export type IdCamp = Int & { __opaque_int__: "IdCamp" };
+// registro/sql/camps.Meta
+export type Meta = Record<string, string> | null;
 // registro/sql/camps.OptionNavette
 export interface OptionNavette {
   Actif: boolean;

@@ -263,6 +263,7 @@ export interface Camp {
   DocumentsReady: boolean;
   DocumentsToShow: DocumentsToShow;
   Vetements: ListeVetements;
+  Meta: Meta;
 }
 // registro/sql/camps.DocumentsToShow
 export interface DocumentsToShow {
@@ -313,6 +314,8 @@ export interface ListeVetements {
   Vetements: Vetement[] | null;
   Complement: string;
 }
+// registro/sql/camps.Meta
+export type Meta = Record<string, string> | null;
 // registro/sql/camps.Navette
 export const Navette = {
   NoBus: 0,
@@ -470,7 +473,7 @@ export type StatutParticipant =
   (typeof StatutParticipant)[keyof typeof StatutParticipant];
 
 export const StatutParticipantLabels: Record<StatutParticipant, string> = {
-  [StatutParticipant.AStatuer]: "A statuer",
+  [StatutParticipant.AStatuer]: "En attente de validation",
   [StatutParticipant.Refuse]: "Refusé définitivement",
   [StatutParticipant.AttenteProfilInvalide]: "Profil limite",
   [StatutParticipant.AttenteCampComplet]: "Camp complet",

@@ -7,15 +7,15 @@
     class="mx-auto"
   >
     <v-card-text>
-      <v-alert color="secondary" icon="mdi-comment-quote" v-if="data.length">
+      <v-alert v-if="data.length" color="secondary" icon="mdi-comment-quote">
         Afin d'améliorer nos prestations, nous avons à cœur de vous laisser la
         parole. Vos suggestions, remarques et ressentis nous aiderons à
         améliorer nos séjours. Merci d'avance de ce temps que vous réserverez
         pour répondre à cette courte enquête.
       </v-alert>
       <div v-else>
-        L'enquête n'est pas encore ouverte. Vous pouvez repasser à la fin du
-        séjour.
+        L'enquête n'est pas encore ouverte. Vous pourrez revenir ici donner
+        votre avis une fois le séjour terminé.
       </div>
 
       <v-tabs v-model="tab" v-if="data.length" grow class="mt-2">

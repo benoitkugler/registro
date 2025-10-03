@@ -35,7 +35,7 @@ type StatutParticipant uint8
 
 const (
 	// personne n'a encore décidé ou placer le participant
-	AStatuer StatutParticipant = iota // A statuer
+	AStatuer StatutParticipant = iota // En attente de validation
 	// définitivment refusé (non concerné par une place libérée)
 	Refuse // Refusé définitivement
 	// le profil ne suit pas les conditions du séjour
@@ -455,3 +455,6 @@ type DocumentsToShow struct {
 	ListeVetements    bool
 	ListeParticipants bool
 }
+
+// Meta is a list of (untyped) key/value pairs.
+type Meta map[string]string

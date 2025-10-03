@@ -47,7 +47,7 @@ func IterEventsBy[T EventContent](evs Events) iter.Seq[EventExt[T]] {
 }
 
 // UnreadMessagesFor returns the [Event]s with kind [evs.Message],
-// not yet seen by the backoffice or fond de soutien.
+// not yet seen by the backoffice or fonds de soutien.
 // Only message with specified target are considered.
 func (events Events) UnreadMessagesFor(isFondSoutien bool) (out []EventExt[Message]) {
 	for ev := range IterEventsBy[Message](events) {

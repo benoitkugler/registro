@@ -372,7 +372,7 @@ func (ct *Controller) loadMessages(idCamp cps.IdCamp) (Messages, error) {
 	for idDossier := range dossiers.Dossiers {
 		dossier := dossiers.For(idDossier)
 
-		// hide fond de soutien
+		// hide fonds de soutien
 		for message := range logic.IterEventsBy[logic.Message](dossier.Events) {
 			if message.Content.Message.Origine == evs.FondSoutien || message.Content.Message.OnlyToFondSoutien {
 				continue
@@ -528,7 +528,8 @@ func (ct *Controller) renderListeParticipants(user cps.IdCamp) ([]byte, string, 
 	if err != nil {
 		return nil, "", err
 	}
-	content, err := sheets.ListeParticipants(camp.Camp, camp.Participants(true), dossiers, participantToGroupe)
+	showNationnaliteSuisse := ct.asso.AskNationnalite
+	content, err := sheets.ListeParticipants(camp.Camp, camp.Participants(true), dossiers, participantToGroupe, showNationnaliteSuisse)
 	if err != nil {
 		return nil, "", err
 	}

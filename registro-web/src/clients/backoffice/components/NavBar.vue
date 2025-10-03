@@ -40,7 +40,7 @@
     <template #append>
       <v-list-item
         prepend-icon="mdi-account-circle-outline"
-        :title="isFondSoutien ? 'Fond de soutien' : 'Administrateur'"
+        :title="isFondSoutien ? 'Fonds de soutien' : 'Administrateur'"
       >
       </v-list-item>
       <v-list-item
@@ -86,5 +86,5 @@ const props = defineProps<{
   hideMenu?: boolean;
 }>();
 
-const isFondSoutien = computed(() => controller.isFondSoutien);
+const isFondSoutien = computed(() => controller.isFondsSoutien);
 </script>

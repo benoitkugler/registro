@@ -69,18 +69,7 @@ func TestPool(t *testing.T) {
 				margin-top: 2px;
 				margin-bottom: 2px;
 			}
-
-			span.yellow-title {
-				margin-top: 10px;
-				margin-bottom: 7px;
-				padding: 10px;
-
-
-				font-size: 1.1em;
-				font-style: italic;
-				background-color: #feee00;
-			}
-
+ 
 			.header {
 				height: 40px;
 				text-align: center;

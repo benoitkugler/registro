@@ -16,6 +16,7 @@ import (
 	"registro/logic/search"
 	"registro/mails"
 	cps "registro/sql/camps"
+	"registro/sql/dossiers"
 	ds "registro/sql/dossiers"
 	"registro/sql/events"
 	in "registro/sql/inscriptions"
@@ -83,6 +84,8 @@ type CampExt struct {
 	AgeMin      int // inclusif
 	AgeMax      int // inclusif
 
+	Meta cps.Meta
+
 	// Formatted, possibly including several currencies
 	Prix string
 
@@ -125,6 +128,7 @@ func newCampExt(camp cps.Camp, taux ds.Taux, direction []pr.Personne, participan
 		Places:      camp.Places,
 		AgeMin:      camp.AgeMin,
 		AgeMax:      camp.AgeMax,
+		Meta:        camp.Meta,
 
 		Prix: taux.Convertible(camp.Prix).String(),
 
@@ -133,16 +137,6 @@ func newCampExt(camp cps.Camp, taux ds.Taux, direction []pr.Personne, participan
 		IsClosed:  camp.Statut == cps.VisibleFerme,
 		IsComplet: inscrits >= camp.Places,
 	}
-}
-
-type Settings struct {
-	SupportBonsCAF         bool
-	SupportANCV            bool
-	SupportPaiementEnLigne bool
-	EmailRetraitMedia      string
-	ShowFondSoutien        bool
-	ShowCharteConduite     bool
-	AskNationnalite        bool
 }
 
 func (ct *Controller) GetCamps(c echo.Context) error {
@@ -155,7 +149,7 @@ func (ct *Controller) GetCamps(c echo.Context) error {
 
 type Data struct {
 	InitialInscription Inscription
-	Settings           Settings
+	Settings           config.ConfigInscription
 }
 
 func (ct *Controller) initInscription(preinscription string) (Data, error) {
@@ -176,15 +170,7 @@ func (ct *Controller) initInscription(preinscription string) (Data, error) {
 
 	return Data{
 		InitialInscription: initialInscription,
-		Settings: Settings{
-			SupportBonsCAF:         ct.asso.SupportBonsCAF,
-			SupportANCV:            ct.asso.SupportANCV,
-			SupportPaiementEnLigne: ct.asso.SupportPaiementEnLigne,
-			EmailRetraitMedia:      ct.asso.EmailRetraitMedia,
-			ShowFondSoutien:        ct.asso.ShowFondSoutien,
-			ShowCharteConduite:     ct.asso.ShowCharteConduite,
-			AskNationnalite:        ct.asso.AskNationnalite,
-		},
+		Settings:           ct.asso.ConfigInscription,
 	}, nil
 }
 
@@ -496,8 +482,8 @@ func (ct *Controller) BuildInscription(publicInsc Inscription) (insc in.Inscript
 		PartageAdressesOK:  publicInsc.PartageAdressesOK,
 		DemandeFondSoutien: publicInsc.DemandeFondSoutien,
 
-		DateHeure:   time.Now().Truncate(time.Second),
-		IsConfirmed: false,
+		DateHeure:          time.Now().Truncate(time.Second),
+		ConfirmedAsDossier: dossiers.OptIdDossier{},
 	}
 
 	return insc, ps, nil
@@ -553,6 +539,8 @@ func (ct *Controller) ConfirmeInscription(c echo.Context) error {
 
 // ConfirmeInscription transforme l'inscription en dossier,
 // et rapproche (automatiquement) les profils.
+//
+// Si l'inscription a déjà été validée
 func ConfirmeInscription(db *sql.DB, id in.IdInscription) (ds.Dossier, error) {
 	insc, err := in.SelectInscription(db, id)
 	if err != nil {
@@ -563,8 +551,13 @@ func ConfirmeInscription(db *sql.DB, id in.IdInscription) (ds.Dossier, error) {
 		return ds.Dossier{}, utils.SQLError(err)
 	}
 
-	if insc.IsConfirmed {
-		return ds.Dossier{}, errors.New("inscription déjà confirmé")
+	if insc.ConfirmedAsDossier.Valid {
+		// Just redirect:
+		dossier, err := ds.SelectDossier(db, insc.ConfirmedAsDossier.Id)
+		if err != nil {
+			return ds.Dossier{}, utils.SQLError(err)
+		}
+		return dossier, nil
 	}
 
 	// on charge l'index une fois pour toutes ...
@@ -678,8 +671,8 @@ func ConfirmeInscription(db *sql.DB, id in.IdInscription) (ds.Dossier, error) {
 			}
 		}
 
-		// tag the inscription as Confirmed
-		insc.IsConfirmed = true
+		// tag the inscription as confirmed
+		insc.ConfirmedAsDossier = dossier.Id.Opt()
 		_, err = insc.Update(tx)
 		return err
 	})

@@ -157,7 +157,8 @@ CREATE TABLE camps (
     Password text NOT NULL,
     DocumentsReady boolean NOT NULL,
     DocumentsToShow DocumentsToShow NOT NULL,
-    Vetements jsonb NOT NULL
+    Vetements jsonb NOT NULL,
+    Meta jsonb NOT NULL
 );
 
 CREATE TABLE equipiers (
@@ -293,7 +294,7 @@ CREATE TABLE inscriptions (
     PartageAdressesOK boolean NOT NULL,
     DemandeFondSoutien boolean NOT NULL,
     DateHeure timestamp(0) with time zone NOT NULL,
-    IsConfirmed boolean NOT NULL
+    ConfirmedAsDossier integer
 );
 
 CREATE TABLE inscription_participants (
@@ -751,6 +752,25 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION gomacro_validate_json_map_string (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) = 'null' THEN
+        -- accept null value coming from nil maps
+        RETURN TRUE;
+    END IF;
+    RETURN jsonb_typeof(data) = 'object'
+        AND (
+            SELECT
+                bool_and(gomacro_validate_json_string (value))
+            FROM
+                jsonb_each(data));
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
 CREATE OR REPLACE FUNCTION gomacro_validate_json_number (data jsonb)
     RETURNS boolean
     AS $$
@@ -1042,6 +1062,9 @@ ALTER TABLE participants
 ALTER TABLE participants
     ADD CONSTRAINT Remises_gomacro CHECK (gomacro_validate_json_camp_Remises (Remises));
 
+ALTER TABLE camps
+    ADD CONSTRAINT Meta_gomacro CHECK (gomacro_validate_json_map_string (Meta));
+
 ALTER TABLE groupes
     ADD CONSTRAINT Plage_gomacro CHECK (gomacro_validate_json_shar_Plage (Plage));
 
@@ -1130,6 +1153,9 @@ ALTER TABLE inscriptions
 
 ALTER TABLE inscriptions
     ADD FOREIGN KEY (IdTaux) REFERENCES tauxs;
+
+ALTER TABLE inscriptions
+    ADD FOREIGN KEY (ConfirmedAsDossier) REFERENCES dossiers ON DELETE SET NULL;
 
 ALTER TABLE inscription_participants
     ADD FOREIGN KEY (IdCamp, IdTaux) REFERENCES camps (Id, IdTaux) ON DELETE CASCADE;

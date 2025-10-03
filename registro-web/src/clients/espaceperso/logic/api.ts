@@ -16,6 +16,7 @@ export type Time = string & { __opaque__: "Time" };
 
 // registro/config.ChequeSettings
 export interface ChequeSettings {
+  IsValid: boolean;
   Ordre: string;
   Adresse: Ar2_string;
 }
@@ -24,6 +25,8 @@ export interface Data {
   Dossier: DossierExt;
   DocumentsToReadOrFillCount: Int;
   FichesanitaireToFillCount: Int;
+  AssoTitle: string;
+  MailCentre: string;
   IsPaiementOpen: boolean;
   PaiementSettings: PaiementSettings;
 }
@@ -79,7 +82,7 @@ export interface PaiementSettings {
   VirementCode: string;
   BankAccounts: Ar2_string[] | null;
   SupportPaiementEnLigne: boolean;
-  Cheque: ChequeSettings;
+  Cheques: ChequeSettings;
 }
 // registro/controllers/espaceperso.SendMessageIn
 export interface SendMessageIn {
@@ -282,6 +285,7 @@ export interface Camp {
   DocumentsReady: boolean;
   DocumentsToShow: DocumentsToShow;
   Vetements: ListeVetements;
+  Meta: Meta;
 }
 // registro/sql/camps.DocumentsToShow
 export interface DocumentsToShow {
@@ -301,6 +305,8 @@ export interface ListeVetements {
   Vetements: Vetement[] | null;
   Complement: string;
 }
+// registro/sql/camps.Meta
+export type Meta = Record<string, string> | null;
 // registro/sql/camps.Navette
 export const Navette = {
   NoBus: 0,
@@ -460,7 +466,7 @@ export type StatutParticipant =
   (typeof StatutParticipant)[keyof typeof StatutParticipant];
 
 export const StatutParticipantLabels: Record<StatutParticipant, string> = {
-  [StatutParticipant.AStatuer]: "A statuer",
+  [StatutParticipant.AStatuer]: "En attente de validation",
   [StatutParticipant.Refuse]: "Refusé définitivement",
   [StatutParticipant.AttenteProfilInvalide]: "Profil limite",
   [StatutParticipant.AttenteCampComplet]: "Camp complet",

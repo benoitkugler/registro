@@ -374,6 +374,25 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION gomacro_validate_json_map_string (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) = 'null' THEN
+        -- accept null value coming from nil maps
+        RETURN TRUE;
+    END IF;
+    RETURN jsonb_typeof(data) = 'object'
+        AND (
+            SELECT
+                bool_and(gomacro_validate_json_string (value))
+            FROM
+                jsonb_each(data));
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
 CREATE OR REPLACE FUNCTION gomacro_validate_json_number (data jsonb)
     RETURNS boolean
     AS $$

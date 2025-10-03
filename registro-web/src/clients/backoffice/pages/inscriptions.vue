@@ -4,7 +4,7 @@
       :model-value="currentTab"
       @update:model-value="v => setTab(v as InscriptionsTab)"
     >
-      <v-tab value="insc">Nouvelles inscriptions</v-tab>
+      <v-tab value="insc">Inscriptions en attente</v-tab>
       <v-tab value="doss">Suivi des dossiers</v-tab>
     </v-tabs>
   </NavBar>

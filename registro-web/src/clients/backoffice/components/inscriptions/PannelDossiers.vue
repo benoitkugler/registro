@@ -16,19 +16,23 @@
           </v-btn>
           <v-divider thickness="1" vertical class="mx-2"></v-divider>
           <v-btn size="small">
+            <template #prepend>
+              <v-icon>mdi-send-circle-outline</v-icon>
+            </template>
             Actions
             <v-menu activator="parent">
               <v-list>
                 <v-list-item
-                  title="Envoyer les documents"
-                  subtitle="d'un séjour"
+                  title="Documents..."
+                  subtitle="Paramétrer et envoyer les documents d'un séjour"
                   prepend-icon="mdi-mail"
                   @click="showSendDocuments = true"
                 >
                 </v-list-item>
                 <v-divider></v-divider>
                 <v-list-item
-                  title="Envoyer une relance de paiement"
+                  title="Relance de paiement..."
+                  subtitle="Paramétrer et envoyer une relance, pour un séjour"
                   prepend-icon="mdi-invoice-send"
                   @click="showRelancePaiement = true"
                 >
@@ -41,6 +45,7 @@
         <v-card-text>
           <DossierList
             :camps="allCamps"
+            :allow-fonds-soutien="controller.isFondsSoutien"
             :selected="dossierDetails?.Dossier.Dossier.Id"
             v-model:query="query"
             @click="onSelectDossier"

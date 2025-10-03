@@ -38,6 +38,7 @@ func main() {
 	asso, keys, dbCreds, smtp, joomeo, directories := loadEnvs(isDev)
 	encrypter := crypto.NewEncrypter(keys.EncryptKey)
 	fmt.Println("Loading env. -> OK.")
+	fmt.Println("\tASSO:", asso.Title)
 	fmt.Println("\tFILES_DIR:", directories.Files)
 	fmt.Println("\tASSETS_DIR:", directories.Assets)
 	fmt.Println("\tCACHE_DIR:", directories.Cache)
@@ -53,7 +54,7 @@ func main() {
 	db, err := dbCreds.ConnectPostgres()
 	check(err)
 	check(db.Ping())
-	fmt.Println("Connecting DB -> OK.")
+	fmt.Println("Connecting: OK.")
 
 	fs := files.NewFileSystem(directories.Files)
 

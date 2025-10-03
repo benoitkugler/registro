@@ -153,6 +153,9 @@ ALTER TABLE participants
 ALTER TABLE participants
     ADD CONSTRAINT Remises_gomacro CHECK (gomacro_validate_json_camp_Remises (Remises));
 
+ALTER TABLE camps
+    ADD CONSTRAINT Meta_gomacro CHECK (gomacro_validate_json_map_string (Meta));
+
 ALTER TABLE groupes
     ADD CONSTRAINT Plage_gomacro CHECK (gomacro_validate_json_shar_Plage (Plage));
 
@@ -241,6 +244,9 @@ ALTER TABLE inscriptions
 
 ALTER TABLE inscriptions
     ADD FOREIGN KEY (IdTaux) REFERENCES tauxs;
+
+ALTER TABLE inscriptions
+    ADD FOREIGN KEY (ConfirmedAsDossier) REFERENCES dossiers ON DELETE SET NULL;
 
 ALTER TABLE inscription_participants
     ADD FOREIGN KEY (IdCamp, IdTaux) REFERENCES camps (Id, IdTaux) ON DELETE CASCADE;

@@ -3,7 +3,7 @@
     title="Profil du responsable légal"
     :subtitle="
       smAndUp
-        ? `Personne majeure qui sera le contact pour le suivi de l'inscription.`
+        ? `Merci de préciser la personne majeure qui sera le contact pour le suivi de l'inscription.`
         : `Contact pour le suivi de l'inscription.`
     "
   >

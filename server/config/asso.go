@@ -15,20 +15,15 @@ type Asso struct {
 	ColorPrimary, ColorSecondary template.CSS // included as background-color
 
 	// Used as default right header.
-	// Also used in "Lettre aux parents" if UseCoordCentre is true
+	// Also used in "Lettre aux parents" if UseCoordCentre is true, and as contact in espaceperso
 	ContactNom, ContactTel, ContactMail string
 
 	MailsSettings MailsSettings
 
-	bankNames, bankIBANs []string // displayed in espace perso
-	ChequeSettings       ChequeSettings
+	bankNames, bankIBANs []string       // displayed in espace perso
+	ChequeSettings       ChequeSettings // nil for disabled
 
-	SupportBonsCAF, SupportANCV bool // if true, displayed in inscription form
-	SupportPaiementEnLigne      bool // if true, displayed in inscription and activated on espaceperso
-	EmailRetraitMedia           string
-	ShowFondSoutien             bool // if true, displayed in inscription form
-	ShowCharteConduite          bool // if true, displayed in inscription form
-	AskNationnalite             bool // if true, displayed for participants in inscription form
+	ConfigInscription
 }
 
 func (a *Asso) BankAccounts() [][2]string {
@@ -38,6 +33,18 @@ func (a *Asso) BankAccounts() [][2]string {
 		out[i] = [2]string{name, iban}
 	}
 	return out
+}
+
+type ConfigInscription struct {
+	SupportBonsCAF, SupportANCV bool // if true, displayed in inscription form
+	SupportPaiementEnLigne      bool // if true, displayed in inscription and activated on espaceperso
+	EmailRetraitMedia           string
+	ShowFondSoutien             bool // if true, displayed in inscription form
+	ShowCharteConduite          bool // if true, displayed in inscription form
+	AskNationnalite             bool // if true, displayed for participants in inscription form
+	ShowInscriptionRapide       bool // if true, displays a bar in inscription form
+	ShowAutorisationVehicules   bool // if true, displays an autorisation checkbox in inscription form
+	ShowAnnulationConditions    bool // if true, displays a warning in inscription form (step 3)
 }
 
 var acve = Asso{
@@ -63,29 +70,35 @@ var acve = Asso{
 	bankNames: []string{"Crédit Mutuel (FR)", "Crédit mutual (CHF)"},
 
 	ChequeSettings: ChequeSettings{
+		IsValid: true,
 		Ordre:   "ACVE",
 		Adresse: [2]string{"Centre d'inscriptions - Marie-Pierre Buffet", "27, impasse Vignon - 26150 Chamaloc"},
 	},
 
-	SupportBonsCAF: true, SupportANCV: true,
-	SupportPaiementEnLigne: true,
-	EmailRetraitMedia:      "contact@acve.asso.fr",
-	ShowFondSoutien:        false,
-	ShowCharteConduite:     false,
-	AskNationnalite:        false,
+	ConfigInscription: ConfigInscription{
+		SupportBonsCAF: true, SupportANCV: true,
+		SupportPaiementEnLigne:    true,
+		EmailRetraitMedia:         "contact@acve.asso.fr",
+		ShowFondSoutien:           false,
+		ShowCharteConduite:        false,
+		AskNationnalite:           false,
+		ShowInscriptionRapide:     true,
+		ShowAutorisationVehicules: true,
+		ShowAnnulationConditions:  false,
+	},
 }
 
 var repere = Asso{
 	Title: "Repère",
-	Infos: "Association Repère - 2022",
+	Infos: "2025",
 
 	ContactNom:  "Repère - Centre d'inscriptions",
 	ContactTel:  "",
-	ContactMail: "info@lerepere.ch",
+	ContactMail: "webmaster@lerepere.ch",
 
 	Icon:           "logo_repere.png",
 	ColorPrimary:   "#2b678a",
-	ColorSecondary: "#2eaadc",
+	ColorSecondary: "#2ebfdc",
 
 	MailsSettings: MailsSettings{
 		AssoName:            "Repère",
@@ -97,20 +110,23 @@ var repere = Asso{
 
 	bankNames: []string{"Crédit Mutuel (FR)", "Crédit mutual (CHF)"},
 
-	ChequeSettings: ChequeSettings{
-		Ordre:   "ACVE",
-		Adresse: [2]string{"Centre d'inscriptions - Marie-Pierre Buffet", "27, impasse Vignon - 26150 Chamaloc"},
-	},
+	ChequeSettings: ChequeSettings{}, // disabled
 
-	SupportBonsCAF: false, SupportANCV: false,
-	SupportPaiementEnLigne: false,
-	EmailRetraitMedia:      "webmaster@lerepere.ch",
-	ShowFondSoutien:        true,
-	ShowCharteConduite:     true,
-	AskNationnalite:        true,
+	ConfigInscription: ConfigInscription{
+		SupportBonsCAF: false, SupportANCV: false,
+		SupportPaiementEnLigne:    false,
+		EmailRetraitMedia:         "webmaster@lerepere.ch",
+		ShowFondSoutien:           true,
+		ShowCharteConduite:        true,
+		AskNationnalite:           true,
+		ShowInscriptionRapide:     false, // pour la première année
+		ShowAutorisationVehicules: false,
+		ShowAnnulationConditions:  true,
+	},
 }
 
 type ChequeSettings struct {
+	IsValid bool
 	Ordre   string
 	Adresse [2]string // nom - adresse
 }

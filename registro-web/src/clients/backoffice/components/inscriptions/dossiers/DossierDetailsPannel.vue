@@ -383,7 +383,7 @@ defineExpose({ showEditPaiement, showEditDossier });
 const events = computed(() =>
   buildPseudoEvents(
     props.dossier.Dossier,
-    controller.isFondSoutien ? Acteur.FondSoutien : Acteur.Backoffice
+    controller.isFondsSoutien ? Acteur.FondSoutien : Acteur.Backoffice
   )
 );
 

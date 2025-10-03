@@ -8,7 +8,7 @@ CREATE TABLE inscriptions (
     PartageAdressesOK boolean NOT NULL,
     DemandeFondSoutien boolean NOT NULL,
     DateHeure timestamp(0) with time zone NOT NULL,
-    IsConfirmed boolean NOT NULL
+    ConfirmedAsDossier integer
 );
 
 CREATE TABLE inscription_participants (
@@ -28,6 +28,9 @@ ALTER TABLE inscriptions
 
 ALTER TABLE inscriptions
     ADD FOREIGN KEY (IdTaux) REFERENCES tauxs;
+
+ALTER TABLE inscriptions
+    ADD FOREIGN KEY (ConfirmedAsDossier) REFERENCES dossiers ON DELETE SET NULL;
 
 ALTER TABLE inscription_participants
     ADD FOREIGN KEY (IdCamp, IdTaux) REFERENCES camps (Id, IdTaux) ON DELETE CASCADE;

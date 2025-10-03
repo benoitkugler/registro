@@ -1,9 +1,9 @@
 <template>
-  <v-card title="Inscription reçue">
+  <v-card title="Inscription confirmée">
     <v-card-text>
       <div class="mb-4">
-        Nous avons bien reçu votre demande d'inscription, et nous vous en
-        remercions. Voici son statut :
+        Nous avons bien reçu votre inscription, et nous vous en remercions.
+        Voici son statut :
       </div>
 
       <!-- inscrits -->

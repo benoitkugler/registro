@@ -157,7 +157,8 @@ CREATE TABLE camps (
     Password text NOT NULL,
     DocumentsReady boolean NOT NULL,
     DocumentsToShow DocumentsToShow NOT NULL,
-    Vetements jsonb NOT NULL
+    Vetements jsonb NOT NULL,
+    Meta jsonb NOT NULL
 );
 
 CREATE TABLE equipiers (
@@ -293,7 +294,7 @@ CREATE TABLE inscriptions (
     PartageAdressesOK boolean NOT NULL,
     DemandeFondSoutien boolean NOT NULL,
     DateHeure timestamp(0) with time zone NOT NULL,
-    IsConfirmed boolean NOT NULL
+    ConfirmedAsDossier integer
 );
 
 CREATE TABLE inscription_participants (

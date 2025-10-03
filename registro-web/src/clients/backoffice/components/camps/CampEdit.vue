@@ -1,5 +1,5 @@
 <template>
-  <v-card title="Editer le séjour">
+  <v-card title="Editer les paramètres du séjour">
     <v-card-text>
       <v-form>
         <v-row>
@@ -75,34 +75,16 @@
           <v-col align-self="center" cols="3" class="text-center">
             <v-menu :close-on-content-click="false">
               <template #activator="{ props: menuProps }">
-                <v-chip v-bind="menuProps" elevation="1" label>
-                  <div
-                    class="mx-1"
-                    v-if="
-                      !Camps.isQuotientFamilialActive(
-                        inner.OptionQuotientFamilial
-                      ) && inner.OptionPrix.Active == OptionPrixKind.NoOption
-                    "
-                  >
-                    Aucune option
-                  </div>
-                  <div
-                    class="mx-1"
-                    v-if="
-                      Camps.isQuotientFamilialActive(
-                        inner.OptionQuotientFamilial
-                      )
-                    "
-                  >
-                    Quotient familial
-                  </div>
-                  <div
-                    class="mx-1"
-                    v-if="inner.OptionPrix.Active != OptionPrixKind.NoOption"
-                  >
-                    {{ OptionPrixKindLabels[inner.OptionPrix.Active] }}
-                  </div>
-                </v-chip>
+                <v-text-field
+                  v-bind="menuProps"
+                  readonly
+                  label="Option sur le prix"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  :model-value="formatOption(inner)"
+                >
+                </v-text-field>
               </template>
 
               <CampOptionsPrix
@@ -179,6 +161,26 @@
               v-model="inner.ImageURL"
             ></v-text-field>
           </v-col>
+          <v-col cols="auto" align-self="center">
+            <v-chip elevation="1" label>
+              Métadonnées ({{ Object.keys(inner.Meta || {}).length }})
+              <v-menu
+                activator="parent"
+                :close-on-content-click="false"
+                v-model="showEditMeta"
+              >
+                <CampMetaEdit
+                  :meta="inner.Meta"
+                  @save="
+                    (v) => {
+                      inner.Meta = v;
+                      showEditMeta = false;
+                    }
+                  "
+                ></CampMetaEdit>
+              </v-menu>
+            </v-chip>
+          </v-col>
           <v-col>
             <v-text-field
               label="Mot de passe"
@@ -211,6 +213,7 @@ import {
 } from "@/clients/backoffice/logic/api";
 import { Camps, copy, selectItems } from "@/utils";
 import CampOptionsPrix from "./CampOptionsPrix.vue";
+import CampMetaEdit from "./CampMetaEdit.vue";
 const props = defineProps<{
   camp: Camp;
 }>();
@@ -237,4 +240,23 @@ const areFieldsValid = computed(
 );
 
 const campStatutItems = selectItems(StatutCampLabels);
+
+const showEditMeta = ref(false);
+
+function formatOption(inner: Camp) {
+  const hasQF = Camps.isQuotientFamilialActive(inner.OptionQuotientFamilial);
+  const hasOption = inner.OptionPrix.Active != OptionPrixKind.NoOption;
+  if (!hasQF && !hasOption) {
+    return "Aucune";
+  }
+
+  const chunks: string[] = [];
+  if (Camps.isQuotientFamilialActive(inner.OptionQuotientFamilial)) {
+    chunks.push("Quotient familial");
+  }
+  if (inner.OptionPrix.Active != OptionPrixKind.NoOption) {
+    chunks.push(OptionPrixKindLabels[inner.OptionPrix.Active]);
+  }
+  return chunks.join(", ");
+}
 </script>

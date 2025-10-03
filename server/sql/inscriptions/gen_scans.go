@@ -37,7 +37,7 @@ func scanOneInscription(row scanner) (Inscription, error) {
 		&item.PartageAdressesOK,
 		&item.DemandeFondSoutien,
 		&item.DateHeure,
-		&item.IsConfirmed,
+		&item.ConfirmedAsDossier,
 	)
 	return item, err
 }
@@ -46,7 +46,7 @@ func ScanInscription(row *sql.Row) (Inscription, error) { return scanOneInscript
 
 // SelectAll returns all the items in the inscriptions table.
 func SelectAllInscriptions(db DB) (Inscriptions, error) {
-	rows, err := db.Query("SELECT id, idtaux, responsable, message, copiesmails, partageadressesok, demandefondsoutien, dateheure, isconfirmed FROM inscriptions")
+	rows, err := db.Query("SELECT id, idtaux, responsable, message, copiesmails, partageadressesok, demandefondsoutien, dateheure, confirmedasdossier FROM inscriptions")
 	if err != nil {
 		return nil, err
 	}
@@ -55,13 +55,13 @@ func SelectAllInscriptions(db DB) (Inscriptions, error) {
 
 // SelectInscription returns the entry matching 'id'.
 func SelectInscription(tx DB, id IdInscription) (Inscription, error) {
-	row := tx.QueryRow("SELECT id, idtaux, responsable, message, copiesmails, partageadressesok, demandefondsoutien, dateheure, isconfirmed FROM inscriptions WHERE id = $1", id)
+	row := tx.QueryRow("SELECT id, idtaux, responsable, message, copiesmails, partageadressesok, demandefondsoutien, dateheure, confirmedasdossier FROM inscriptions WHERE id = $1", id)
 	return ScanInscription(row)
 }
 
 // SelectInscriptions returns the entry matching the given 'ids'.
 func SelectInscriptions(tx DB, ids ...IdInscription) (Inscriptions, error) {
-	rows, err := tx.Query("SELECT id, idtaux, responsable, message, copiesmails, partageadressesok, demandefondsoutien, dateheure, isconfirmed FROM inscriptions WHERE id = ANY($1)", IdInscriptionArrayToPQ(ids))
+	rows, err := tx.Query("SELECT id, idtaux, responsable, message, copiesmails, partageadressesok, demandefondsoutien, dateheure, confirmedasdossier FROM inscriptions WHERE id = ANY($1)", IdInscriptionArrayToPQ(ids))
 	if err != nil {
 		return nil, err
 	}
@@ -106,28 +106,28 @@ func ScanInscriptions(rs *sql.Rows) (Inscriptions, error) {
 // Insert one Inscription in the database and returns the item with id filled.
 func (item Inscription) Insert(tx DB) (out Inscription, err error) {
 	row := tx.QueryRow(`INSERT INTO inscriptions (
-		idtaux, responsable, message, copiesmails, partageadressesok, demandefondsoutien, dateheure, isconfirmed
+		idtaux, responsable, message, copiesmails, partageadressesok, demandefondsoutien, dateheure, confirmedasdossier
 		) VALUES (
 		$1, $2, $3, $4, $5, $6, $7, $8
-		) RETURNING id, idtaux, responsable, message, copiesmails, partageadressesok, demandefondsoutien, dateheure, isconfirmed;
-		`, item.IdTaux, item.Responsable, item.Message, item.CopiesMails, item.PartageAdressesOK, item.DemandeFondSoutien, item.DateHeure, item.IsConfirmed)
+		) RETURNING id, idtaux, responsable, message, copiesmails, partageadressesok, demandefondsoutien, dateheure, confirmedasdossier;
+		`, item.IdTaux, item.Responsable, item.Message, item.CopiesMails, item.PartageAdressesOK, item.DemandeFondSoutien, item.DateHeure, item.ConfirmedAsDossier)
 	return ScanInscription(row)
 }
 
 // Update Inscription in the database and returns the new version.
 func (item Inscription) Update(tx DB) (out Inscription, err error) {
 	row := tx.QueryRow(`UPDATE inscriptions SET (
-		idtaux, responsable, message, copiesmails, partageadressesok, demandefondsoutien, dateheure, isconfirmed
+		idtaux, responsable, message, copiesmails, partageadressesok, demandefondsoutien, dateheure, confirmedasdossier
 		) = (
 		$1, $2, $3, $4, $5, $6, $7, $8
-		) WHERE id = $9 RETURNING id, idtaux, responsable, message, copiesmails, partageadressesok, demandefondsoutien, dateheure, isconfirmed;
-		`, item.IdTaux, item.Responsable, item.Message, item.CopiesMails, item.PartageAdressesOK, item.DemandeFondSoutien, item.DateHeure, item.IsConfirmed, item.Id)
+		) WHERE id = $9 RETURNING id, idtaux, responsable, message, copiesmails, partageadressesok, demandefondsoutien, dateheure, confirmedasdossier;
+		`, item.IdTaux, item.Responsable, item.Message, item.CopiesMails, item.PartageAdressesOK, item.DemandeFondSoutien, item.DateHeure, item.ConfirmedAsDossier, item.Id)
 	return ScanInscription(row)
 }
 
 // Deletes the Inscription and returns the item
 func DeleteInscriptionById(tx DB, id IdInscription) (Inscription, error) {
-	row := tx.QueryRow("DELETE FROM inscriptions WHERE id = $1 RETURNING id, idtaux, responsable, message, copiesmails, partageadressesok, demandefondsoutien, dateheure, isconfirmed;", id)
+	row := tx.QueryRow("DELETE FROM inscriptions WHERE id = $1 RETURNING id, idtaux, responsable, message, copiesmails, partageadressesok, demandefondsoutien, dateheure, confirmedasdossier;", id)
 	return ScanInscription(row)
 }
 
@@ -166,7 +166,7 @@ func (items Inscriptions) IdTauxs() []dossiers.IdTaux {
 }
 
 func SelectInscriptionsByIdTauxs(tx DB, idTauxs_ ...dossiers.IdTaux) (Inscriptions, error) {
-	rows, err := tx.Query("SELECT id, idtaux, responsable, message, copiesmails, partageadressesok, demandefondsoutien, dateheure, isconfirmed FROM inscriptions WHERE idtaux = ANY($1)", dossiers.IdTauxArrayToPQ(idTauxs_))
+	rows, err := tx.Query("SELECT id, idtaux, responsable, message, copiesmails, partageadressesok, demandefondsoutien, dateheure, confirmedasdossier FROM inscriptions WHERE idtaux = ANY($1)", dossiers.IdTauxArrayToPQ(idTauxs_))
 	if err != nil {
 		return nil, err
 	}
@@ -175,6 +175,22 @@ func SelectInscriptionsByIdTauxs(tx DB, idTauxs_ ...dossiers.IdTaux) (Inscriptio
 
 func DeleteInscriptionsByIdTauxs(tx DB, idTauxs_ ...dossiers.IdTaux) ([]IdInscription, error) {
 	rows, err := tx.Query("DELETE FROM inscriptions WHERE idtaux = ANY($1) RETURNING id", dossiers.IdTauxArrayToPQ(idTauxs_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIdInscriptionArray(rows)
+}
+
+func SelectInscriptionsByConfirmedAsDossiers(tx DB, confirmedAsDossiers_ ...dossiers.IdDossier) (Inscriptions, error) {
+	rows, err := tx.Query("SELECT id, idtaux, responsable, message, copiesmails, partageadressesok, demandefondsoutien, dateheure, confirmedasdossier FROM inscriptions WHERE confirmedasdossier = ANY($1)", dossiers.IdDossierArrayToPQ(confirmedAsDossiers_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanInscriptions(rows)
+}
+
+func DeleteInscriptionsByConfirmedAsDossiers(tx DB, confirmedAsDossiers_ ...dossiers.IdDossier) ([]IdInscription, error) {
+	rows, err := tx.Query("DELETE FROM inscriptions WHERE confirmedasdossier = ANY($1) RETURNING id", dossiers.IdDossierArrayToPQ(confirmedAsDossiers_))
 	if err != nil {
 		return nil, err
 	}
@@ -404,7 +420,7 @@ func DeleteInscriptionParticipantsByIdTauxs(tx DB, idTauxs_ ...dossiers.IdTaux) 
 
 // SelectInscriptionByIdAndIdTaux return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectInscriptionByIdAndIdTaux(tx DB, id IdInscription, idTaux dossiers.IdTaux) (item Inscription, found bool, err error) {
-	row := tx.QueryRow("SELECT id, idtaux, responsable, message, copiesmails, partageadressesok, demandefondsoutien, dateheure, isconfirmed FROM inscriptions WHERE Id = $1 AND IdTaux = $2", id, idTaux)
+	row := tx.QueryRow("SELECT id, idtaux, responsable, message, copiesmails, partageadressesok, demandefondsoutien, dateheure, confirmedasdossier FROM inscriptions WHERE Id = $1 AND IdTaux = $2", id, idTaux)
 	item, err = ScanInscription(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil

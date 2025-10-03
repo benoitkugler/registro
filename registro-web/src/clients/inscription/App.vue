@@ -35,10 +35,13 @@
                 label="Mail"
                 hide-details
                 v-model="search"
+                @keydown.enter.prevent="
+                  search.length < 3 ? null : searchHistory()
+                "
               >
               </v-text-field>
             </v-col>
-            <v-col align-self="center" cols="6" sm="autp">
+            <v-col align-self="center" cols="6" sm="auto">
               <v-btn
                 variant="outlined"
                 :disabled="search.length < 3"
@@ -63,8 +66,8 @@
           </div>
         </div>
         <div v-else-if="mailFound === false">
-          Votre adresse n'a pas été trouvée. Aucun problème, vous pouvez
-          reprendre l'inscription standard !
+          Votre adresse n'a pas été trouvée. Aucun problème, vous pouvez suivre
+          le parcours d'inscription standard ci-dessous !
         </div>
       </v-alert>
 
@@ -90,7 +93,7 @@
         ></InscriptionPannel>
       </v-container>
       <v-container class="fill-height" fluid v-else>
-        <CampsList :camps="camps" @clicked="initWithCamp"></CampsList>
+        <CampsList :camps="camps" @goTo="initWithCamp"></CampsList>
       </v-container>
 
       <v-footer color="secondary">
@@ -211,7 +214,8 @@ async function initInscription(
     );
   }
   data.value = res;
-  showPreinscription.value = preinscription == "";
+  showPreinscription.value =
+    res.Settings.ShowInscriptionRapide && preinscription == "";
 }
 
 // camps ouverts aux inscriptions

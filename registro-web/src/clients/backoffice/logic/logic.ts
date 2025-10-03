@@ -19,7 +19,7 @@ class Controller extends AbstractAPI {
       color?: string,
       action?: Action
     ) => void,
-    public isFondSoutien: boolean,
+    public isFondsSoutien: boolean,
     baseURL: string,
     authToken: string
   ) {
@@ -30,9 +30,9 @@ class Controller extends AbstractAPI {
     return this.authToken != "";
   }
 
-  setToken(token: string, isFondSoutien: boolean) {
+  setToken(token: string, isFondsSoutien: boolean) {
     this.authToken = token;
-    this.isFondSoutien = isFondSoutien;
+    this.isFondsSoutien = isFondsSoutien;
   }
 
   protected handleError(error: any): void {

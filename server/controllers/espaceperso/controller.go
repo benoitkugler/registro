@@ -66,6 +66,8 @@ type Data struct {
 	Dossier                    logic.DossierExt
 	DocumentsToReadOrFillCount int // number to read or fill
 	FichesanitaireToFillCount  int
+	AssoTitle                  string
+	MailCentre                 string
 	IsPaiementOpen             bool
 	PaiementSettings           PaiementSettings
 }
@@ -77,7 +79,7 @@ type PaiementSettings struct {
 	BankAccounts [][2]string
 	// true if an external service to pay by CB is available
 	SupportPaiementEnLigne bool
-	Cheque                 config.ChequeSettings
+	Cheques                config.ChequeSettings
 }
 
 func (ct *Controller) load(id ds.IdDossier) (Data, error) {
@@ -97,6 +99,8 @@ func (ct *Controller) load(id ds.IdDossier) (Data, error) {
 		dossier.Publish(ct.key),
 		documents.ToReadOrFillCount,
 		fiches.ToFillCount,
+		ct.asso.Title,
+		ct.asso.ContactMail,
 		dossier.IsPaiementOpen(),
 		PaiementSettings{
 			backoffice.OffuscateurVirements.Mask(id),
@@ -504,17 +508,7 @@ func (ct *Controller) renderAttestationPresence(id ds.IdDossier) ([]byte, error)
 	if err != nil {
 		return nil, err
 	}
-	// restrict to inscrits with started camp
-	var filtered []cps.ParticipantCamp
-	for _, p := range dossier.ParticipantsExt() {
-		if p.Participant.Statut != cps.Inscrit {
-			continue
-		}
-		if hasStarted := p.Camp.DateDebut.Time().Before(time.Now()); !hasStarted {
-			continue
-		}
-		filtered = append(filtered, p)
-	}
+	filtered := dossier.ParticipantsExtReal() // restrict to inscrits with started camp
 	responsable := dossier.Responsable()
 	destinataire := pdfcreator.Destinataire{
 		NomPrenom:  responsable.NOMPrenom(),
@@ -555,14 +549,7 @@ func (ct *Controller) renderFacture(id ds.IdDossier) ([]byte, error) {
 		CodePostal: responsable.CodePostal,
 		Ville:      responsable.Ville,
 	}
-	// restrict to inscrits with started camp
-	var filtered []cps.ParticipantCamp
-	for _, p := range dossier.ParticipantsExt() {
-		if p.Participant.Statut != cps.Inscrit {
-			continue
-		}
-		filtered = append(filtered, p)
-	}
+	filtered := dossier.ParticipantsExtReal() // restrict to inscrits with started camp
 	// sort by time
 	finances := dossier.Publish(ct.key)
 	var paiements []ds.Paiement
