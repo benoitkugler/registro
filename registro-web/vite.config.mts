@@ -52,13 +52,6 @@ export default defineConfig(({ command }) => ({
   server: {
     port: 3000,
   },
-  css: {
-    preprocessorOptions: {
-      sass: {
-        api: "modern-compiler",
-      },
-    },
-  },
   build: {
     rollupOptions: {
       input: {

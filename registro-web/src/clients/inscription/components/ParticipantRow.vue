@@ -95,14 +95,19 @@
 
 <script lang="ts" setup>
 import { computed, ref } from "vue";
-import type { CampExt, Date_, Participant, Settings } from "../logic/api";
+import type {
+  CampExt,
+  Date_,
+  Participant,
+  ConfigInscription,
+} from "../logic/api";
 import { Camps, FormRules } from "@/utils";
 import { ageFrom, isDateZero } from "@/components/date";
 import CampCard from "./CampCard.vue";
 
 const props = defineProps<{
   camps: CampExt[];
-  settings: Settings;
+  settings: ConfigInscription;
 }>();
 
 const emit = defineEmits<{
