@@ -202,7 +202,7 @@
       title="Nouveau message"
       :subtitle="
         showCreateMessage.toFondSoutien
-          ? 'Ce message ne sera visible que par le fond de soutien.'
+          ? 'Ce message ne sera visible que par le fonds de soutien.'
           : 'Ce message sera visible par le centre et les directeurs.'
       "
     >

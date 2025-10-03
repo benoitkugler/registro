@@ -35,7 +35,7 @@ type Controller struct {
 	helloasso config.Helloasso
 
 	password            string // backoffice client key
-	passwordFondsoutien string // backoffice client key, with Fond de soutien role
+	passwordFondsoutien string // backoffice client key, with Fonds de soutien role
 
 	builtins fs.Builtins
 }

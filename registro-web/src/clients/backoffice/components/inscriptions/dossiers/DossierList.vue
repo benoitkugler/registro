@@ -38,7 +38,7 @@
               {{ QueryReglementLabels[query.Reglement] }}
             </v-chip>
             <v-chip class="ml-1" size="small" v-if="query.OnlyFondSoutien">
-              Fond de soutien
+              Fonds de soutien
             </v-chip>
           </template>
 
@@ -118,8 +118,8 @@
                   <v-row v-if="props.allowFondsSoutien">
                     <v-col>
                       <v-switch
-                        label="Fond de soutien"
-                        hint="N'affiche que les dossiers demandant le fond de soutien."
+                        label="Fonds de soutien"
+                        hint="N'affiche que les dossiers demandant le fonds de soutien."
                         persistent-hint
                         density="compact"
                         color="orange"

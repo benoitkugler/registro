@@ -40,7 +40,7 @@
         <template #prepend>
           <v-icon>mdi-reply</v-icon>
         </template>
-        Répondre au fond de soutien
+        Répondre au fonds de soutien
       </v-btn>
     </v-row>
 

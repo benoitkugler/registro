@@ -214,7 +214,7 @@ func match(dossier logic.DossierFinance,
 	text search.Query, idCamp evs.OptIdCamp, attente QueryAttente, reglement QueryReglement,
 	onlyFondSoutien bool,
 ) bool {
-	// critère fond de soutien
+	// critère fonds de soutien
 	if onlyFondSoutien {
 		if !dossier.Dossier.Dossier.DemandeFondSoutien {
 			return false

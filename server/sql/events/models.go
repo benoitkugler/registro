@@ -55,7 +55,7 @@ type EventMessage struct {
 	VuFondSoutien bool
 
 	// OnlyToFondSoutien est utilisé pour restreindre la visibilité d'un message
-	// au fond de soutien.
+	// au fonds de soutien.
 	// Ce champ n'est utilisé que pour les messages avec Origine == Espaceperso
 	OnlyToFondSoutien bool
 

@@ -40,7 +40,7 @@
           <BoolField
             hide-details
             v-model="innerDossier.DemandeFondSoutien"
-            label="Demande le fond de soutien"
+            label="Demande le fonds de soutien"
           >
           </BoolField>
         </v-col>

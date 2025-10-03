@@ -93,14 +93,14 @@
 
   <v-card
     class="my-2 border-secondary border-lg"
-    title="Fond de soutien"
+    title="Fonds de soutien"
     v-if="settings.ShowFondSoutien"
   >
     <v-card-text>
       <v-checkbox
         color="primary"
         v-model="fondSoutien"
-        label="Je souhaite être contacté par le fond de soutien pour éviter que le prix du séjour ne soit un obstacle à l'inscription."
+        label="Je souhaite être contacté par le fonds de soutien pour éviter que le prix du séjour ne soit un obstacle à l'inscription."
         hide-details
       >
       </v-checkbox>
