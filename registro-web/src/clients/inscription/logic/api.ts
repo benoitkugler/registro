@@ -33,6 +33,7 @@ export interface CampExt {
   Places: Int;
   AgeMin: Int;
   AgeMax: Int;
+  Meta: Meta;
   Prix: string;
   Direction: string;
   IsClosed: boolean;
@@ -66,6 +67,8 @@ export interface SearchHistoryOut {
   MailFound: boolean;
 }
 export type IdCamp = Int & { __opaque_int__: "IdCamp" };
+// registro/sql/camps.Meta
+export type Meta = Record<string, string> | null;
 // registro/sql/camps.OptionNavette
 export interface OptionNavette {
   Actif: boolean;

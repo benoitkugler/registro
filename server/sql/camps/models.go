@@ -61,6 +61,10 @@ type Camp struct {
 	DocumentsToShow DocumentsToShow
 
 	Vetements ListeVetements
+
+	// Meta permet d'ajouter une liste de clé/valeur
+	// personnalisable.
+	Meta Meta
 }
 
 // Lettredirecteur conserve le html utilisé pour générer la lettre.

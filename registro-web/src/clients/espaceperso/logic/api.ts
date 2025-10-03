@@ -285,6 +285,7 @@ export interface Camp {
   DocumentsReady: boolean;
   DocumentsToShow: DocumentsToShow;
   Vetements: ListeVetements;
+  Meta: Meta;
 }
 // registro/sql/camps.DocumentsToShow
 export interface DocumentsToShow {
@@ -304,6 +305,8 @@ export interface ListeVetements {
   Vetements: Vetement[] | null;
   Complement: string;
 }
+// registro/sql/camps.Meta
+export type Meta = Record<string, string> | null;
 // registro/sql/camps.Navette
 export const Navette = {
   NoBus: 0,

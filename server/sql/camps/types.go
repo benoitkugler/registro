@@ -455,3 +455,6 @@ type DocumentsToShow struct {
 	ListeVetements    bool
 	ListeParticipants bool
 }
+
+// Meta is a list of (untyped) key/value pairs.
+type Meta map[string]string

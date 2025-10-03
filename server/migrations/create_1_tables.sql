@@ -157,7 +157,8 @@ CREATE TABLE camps (
     Password text NOT NULL,
     DocumentsReady boolean NOT NULL,
     DocumentsToShow DocumentsToShow NOT NULL,
-    Vetements jsonb NOT NULL
+    Vetements jsonb NOT NULL,
+    Meta jsonb NOT NULL
 );
 
 CREATE TABLE equipiers (

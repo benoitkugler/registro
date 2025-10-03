@@ -84,6 +84,8 @@ type CampExt struct {
 	AgeMin      int // inclusif
 	AgeMax      int // inclusif
 
+	Meta cps.Meta
+
 	// Formatted, possibly including several currencies
 	Prix string
 
@@ -126,6 +128,7 @@ func newCampExt(camp cps.Camp, taux ds.Taux, direction []pr.Personne, participan
 		Places:      camp.Places,
 		AgeMin:      camp.AgeMin,
 		AgeMax:      camp.AgeMax,
+		Meta:        camp.Meta,
 
 		Prix: taux.Convertible(camp.Prix).String(),
 

@@ -56,6 +56,7 @@ func randCamp() Camp {
 	s.DocumentsReady = randbool()
 	s.DocumentsToShow = randDocumentsToShow()
 	s.Vetements = randListeVetements()
+	s.Meta = randMeta()
 
 	return s
 }
@@ -171,6 +172,19 @@ func randListeVetements() ListeVetements {
 	s.Complement = randstring()
 
 	return s
+}
+
+func randMapstringstring() map[string]string {
+	l := 40 + rand.Intn(10)
+	out := make(map[string]string, l)
+	for i := 0; i < l; i++ {
+		out[randstring()] = randstring()
+	}
+	return out
+}
+
+func randMeta() Meta {
+	return Meta(randMapstringstring())
 }
 
 func randNavette() Navette {
