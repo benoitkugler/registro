@@ -18,7 +18,7 @@
         <template #prepend>
           <v-icon>mdi-plus</v-icon>
         </template>
-        Créer un participant</v-btn
+        Ajouter un participant</v-btn
       >
     </template>
     <v-card-text class="mt-4">
