@@ -384,8 +384,17 @@ func SuiviFinancierCamp(liste [][]Cell, totalDemande,
 	return f.Bytes(), nil
 }
 
+func formatBool(b bool) string {
+	if b {
+		return "Oui"
+	}
+	return "Non"
+}
+
 // ListeParticipants renvoie un document Excel
-func ListeParticipants(camp cps.Camp, inscrits []cps.ParticipantPersonne, dossiers logic.Dossiers, groupes map[cps.IdParticipant]cps.Groupe) ([]byte, error) {
+func ListeParticipants(camp cps.Camp, inscrits []cps.ParticipantPersonne, dossiers logic.Dossiers, groupes map[cps.IdParticipant]cps.Groupe,
+	showNationnaliteSuisse bool,
+) ([]byte, error) {
 	headersParticipant := [...]string{
 		"Inscription",
 		"Nom",
@@ -397,6 +406,10 @@ func ListeParticipants(camp cps.Camp, inscrits []cps.ParticipantPersonne, dossie
 		"Groupe",
 		"Navette",
 		"Commentaire",
+		"", // hidden if showNationnaliteSuisse is false
+	}
+	if showNationnaliteSuisse {
+		headersParticipant[10] = "Nationalité suisse"
 	}
 
 	headersResponsable := [...]string{
@@ -417,6 +430,10 @@ func ListeParticipants(camp cps.Camp, inscrits []cps.ParticipantPersonne, dossie
 		dossier := dossiers.For(inscrit.Participant.IdDossier)
 		responsable := dossier.Responsable()
 		groupe := groupes[inscrit.Participant.Id]
+		nationalite := ""
+		if showNationnaliteSuisse {
+			nationalite = formatBool(inscrit.Personne.Nationnalite.IsSuisse)
+		}
 		var row [len(headersParticipant) + len(headersResponsable)]Cell = [...]Cell{
 			// inscrit
 			{Value: utils.FormatTime(dossier.Dossier.MomentInscription)},                         // Inscription
@@ -429,6 +446,7 @@ func ListeParticipants(camp cps.Camp, inscrits []cps.ParticipantPersonne, dossie
 			{Value: groupe.Nom, Color: groupe.Couleur},                                           // Groupe
 			{Value: inscrit.Participant.Navette.String()},                                        // Navette
 			{Value: inscrit.Participant.Commentaire},                                             // Commentaire
+			{Value: nationalite},                                                                 // Suisse ?
 			// responsable
 			{Value: responsable.NOMPrenom()},   // Responsable
 			{Value: responsable.Mail},          // Mail

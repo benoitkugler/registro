@@ -57,21 +57,29 @@ func TestListeParticipants(t *testing.T) {
 		Nom: utils.RandString(12, false), Prenom: utils.RandString(12, false),
 		Sexe:          pr.Man,
 		DateNaissance: shared.NewDate(2000, time.August, 5),
+		Nationnalite:  pr.Nationnalite{IsSuisse: true},
 	}}
+	p2 := p1
+	p2.Nationnalite.IsSuisse = false
 	inscrit1 := cps.ParticipantPersonne{
 		Participant: cps.Participant{Id: 1, IdDossier: 1, Commentaire: utils.RandString(10, true), Navette: cps.AllerRetour},
 		Personne:    p1,
 	}
 	inscrit2 := cps.ParticipantPersonne{
 		Participant: cps.Participant{Id: 2, IdDossier: 1, Commentaire: utils.RandString(10, true)},
-		Personne:    p1,
+		Personne:    p2,
 	}
 	g1, g2 := cps.Groupe{Nom: "Groupe 1", Couleur: "#AA12BB"}, cps.Groupe{Nom: "Groupe 2"}
-	content, err := ListeParticipants(camp, []cps.ParticipantPersonne{
-		inscrit1, inscrit2, inscrit1,
-	}, logic.Dossiers{Dossiers: dossiers.Dossiers{
+	liste := []cps.ParticipantPersonne{inscrit1, inscrit2, inscrit1}
+	dossiers := logic.Dossiers{Dossiers: dossiers.Dossiers{
 		1: dossiers.Dossier{MomentInscription: time.Now(), IdResponsable: 2},
-	}}, map[cps.IdParticipant]cps.Groupe{1: g1, 2: g2})
+	}}
+
+	content, err := ListeParticipants(camp, liste, dossiers, map[cps.IdParticipant]cps.Groupe{1: g1, 2: g2}, false)
 	tu.AssertNoErr(t, err)
-	tu.Write(t, "registro_ListeParticipants.xlsx", content)
+	tu.Write(t, "registro_ListeParticipants_1.xlsx", content)
+
+	content, err = ListeParticipants(camp, liste, dossiers, map[cps.IdParticipant]cps.Groupe{1: g1, 2: g2}, true)
+	tu.AssertNoErr(t, err)
+	tu.Write(t, "registro_ListeParticipants_2.xlsx", content)
 }

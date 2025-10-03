@@ -528,7 +528,8 @@ func (ct *Controller) renderListeParticipants(user cps.IdCamp) ([]byte, string, 
 	if err != nil {
 		return nil, "", err
 	}
-	content, err := sheets.ListeParticipants(camp.Camp, camp.Participants(true), dossiers, participantToGroupe)
+	showNationnaliteSuisse := ct.asso.AskNationnalite
+	content, err := sheets.ListeParticipants(camp.Camp, camp.Participants(true), dossiers, participantToGroupe, showNationnaliteSuisse)
 	if err != nil {
 		return nil, "", err
 	}
