@@ -4,7 +4,8 @@
     variant="outlined"
     density="compact"
     :readonly="props.readonly"
-    hide-details
+    hint="Cochez si vous avez la nationalité suisse."
+    persistent-hint
     :model-value="modelValue.IsSuisse"
     @update:model-value="(b) => (modelValue.IsSuisse = b || false)"
   ></v-checkbox>
