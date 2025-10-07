@@ -3,6 +3,7 @@ package backoffice
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -100,7 +101,9 @@ func (ct *Controller) createManyCamp(args CampsCreateManyIn) (out []CampHeader, 
 			return err
 		}
 		for i := 0; i < args.Count; i++ {
-			camp, err := defaultCamp(args.Taux.Id).Insert(tx)
+			camp := defaultCamp(args.Taux.Id)
+			camp.Nom += fmt.Sprintf(" %d", i+1)
+			camp, err := camp.Insert(tx)
 			if err != nil {
 				return err
 			}
