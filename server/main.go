@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -10,7 +9,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 
 	"registro/config"
 	"registro/controllers/backoffice"
@@ -24,7 +22,6 @@ import (
 	"registro/logic"
 	cp "registro/sql/camps"
 	"registro/sql/files"
-	"registro/utils"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -102,23 +99,6 @@ func main() {
 			fmt.Println("\tdirecteurs dev env:")
 			fmt.Printf("export const devCamp = %s;\nexport const devToken = %q\n", b, tokenC)
 		}
-
-		e.GET("/debug/stream", func(c echo.Context) error {
-			iter := func(yield func(struct{ V int }, error) bool) {
-				for i := range [10]int{} {
-					if i == 5 {
-						if !yield(struct{ V int }{}, errors.New("argh")) {
-							break
-						}
-					}
-					if !yield(struct{ V int }{i}, nil) {
-						break
-					}
-					time.Sleep(500 * time.Millisecond)
-				}
-			}
-			return utils.StreamJSON(c.Response(), iter)
-		})
 	}
 
 	setupRoutesBackoffice(e, backofficeCt)
