@@ -16,16 +16,17 @@ import (
 )
 
 const (
-	messageDirecteur = `Vous avez maintenant accès à l'album de votre camp (permission lecture/écriture).
-	Vous pouvez retrouver les informations liées à cette album sur votre espace directeur (https://acve.fr/directeurs).
+	messageDirecteur = `Vous avez maintenant accès à l'album de votre camp.
+	Vous pouvez retrouver les informations liées à cet album sur votre espace directeur.
 	`
+
 	messageParents = `Bonjour,
 
-    Envie d'avoir un aperçu des activités du %s édition %d?
+    Envie d'avoir un aperçu des activités du %s ?
     Des photos sont disponibles (ou le seront très prochainement) sur un espace dédié.
     Vous y avez accès en suivant le lien ci-dessous. 
     
-    Vous pouvez retrouver les informations de connexion sur votre espace personnel ACVE.
+    Vous pouvez retrouver les informations de connexion sur votre espace d'inscription.
 
 	Bon visionnage !
 	`
@@ -81,8 +82,9 @@ func sendRequest(method string, url string, body any, headers map[string]string)
 }
 
 type (
-	AlbumId  = string
-	FolderId = string
+	AlbumId   = string
+	FolderId  = string
+	ContactId = string
 )
 
 // Api exposes the REST JSON Joomeo API
@@ -201,7 +203,8 @@ func (api Api) getFolders(id FolderId) ([]folderJ, error) {
 	return response.List, nil
 }
 
-// [GetSejoursFolder] return the sejours root folder id
+// [GetSejoursFolder] return the sejours root folder id,
+// found by comparing folder names to the one specified in the config.
 func (api *Api) GetSejoursFolder() (FolderId, error) {
 	rootFolders, err := api.getFolders("")
 	if err != nil {
@@ -222,19 +225,25 @@ type albumJ struct {
 	FolderId string  `json:"folderid"`
 }
 
-// if contactid is not empty, restrict to the ones shared to it
-func (api Api) getAlbums(folderid FolderId, contactid string) ([]albumJ, error) {
+func queryByFolder(folderId FolderId) url.Values {
 	query := make(url.Values)
-	query.Set("filter", fmt.Sprintf("folderid=%s", folderid))
-	if contactid != "" {
-		query.Set("contactid", contactid)
-	}
+	query.Set("filter", fmt.Sprintf("folderid=%s", folderId))
+	return query
+}
 
+func queryByContact(contactId string) url.Values {
+	query := make(url.Values)
+	query.Set("contactid", contactId)
+	return query
+}
+
+// returns the albums specified by [query]
+func (api Api) getAlbums(query url.Values) ([]albumJ, error) {
 	url := fmt.Sprintf("%s/users/%s/albums?%s", baseUrl, api.spaceName, query.Encode())
 	resp, err := sendRequest(http.MethodGet, url, nil, map[string]string{
 		"X-API-KEY":   api.apiKey,
 		"X-SESSIONID": api.sessionid,
-		"X-FIELDS":    "folderid",
+		"X-FIELDS":    "folderid,label,date",
 	})
 	if err != nil {
 		return nil, err
@@ -265,17 +274,17 @@ type Album struct {
 
 	FilesCount int
 
-	contacts []ContactPermission
+	Contacts []ContactPermission
 }
 
 func newAlbum(alb albumJ, filesCount int, contacts []ContactPermission) Album {
 	return Album{alb.AlbumId, alb.Label, alb.Date.date(), filesCount, contacts}
 }
 
-// FindContact performs a case insensitive match
+// FindContact performs a case insensitive match in [Contacts]
 func (alb Album) FindContact(mail string) (ContactPermission, bool) {
 	mail = strings.ToLower(mail)
-	for _, contact := range alb.contacts {
+	for _, contact := range alb.Contacts {
 		if strings.ToLower(contact.Mail) == mail {
 			return contact, true
 		}
@@ -289,8 +298,9 @@ func (api *Api) LoadAlbums(ids utils.Set[AlbumId]) (map[AlbumId]Album, error) {
 	if err != nil {
 		return nil, err
 	}
-	// fetch all albums at first
-	albums, err := api.getAlbums(root, "")
+	// fetch all albums at first, since Joomeo does not provide
+	// a way to query a list of albums in one call.
+	albums, err := api.getAlbums(queryByFolder(root))
 	if err != nil {
 		return nil, err
 	}
@@ -299,7 +309,7 @@ func (api *Api) LoadAlbums(ids utils.Set[AlbumId]) (map[AlbumId]Album, error) {
 		if !ids.Has(alb.AlbumId) {
 			continue
 		}
-		contacts, err := api.LoadContactsFor(alb.AlbumId)
+		contacts, err := api.loadContactsFor(alb.AlbumId)
 		if err != nil {
 			return nil, err
 		}
@@ -310,6 +320,40 @@ func (api *Api) LoadAlbums(ids utils.Set[AlbumId]) (map[AlbumId]Album, error) {
 		out[alb.AlbumId] = newAlbum(alb, filesCount, contacts)
 	}
 	return out, nil
+}
+
+// LoadAlbum fetches one album. Use [LoadAlbums] to query a list.
+func (api *Api) LoadAlbum(albumId AlbumId) (Album, error) {
+	url := fmt.Sprintf("%s/users/%s/albums/%s", baseUrl, api.spaceName, albumId)
+	resp, err := sendRequest(http.MethodGet, url, nil, map[string]string{
+		"X-API-KEY":   api.apiKey,
+		"X-SESSIONID": api.sessionid,
+		"X-FIELDS":    "folderid,label,date",
+	})
+	if err != nil {
+		return Album{}, err
+	}
+	if err = checkError(resp, 200); err != nil {
+		return Album{}, err
+	}
+
+	var out albumJ
+	err = json.NewDecoder(resp.Body).Decode(&out)
+	if err != nil {
+		return Album{}, fmt.Errorf("impossible de décoder la réponse Joomeo: %s", err)
+	}
+
+	contacts, err := api.loadContactsFor(albumId)
+	if err != nil {
+		return Album{}, err
+	}
+
+	filesCount, err := api.resolveAlbumFilesCount(albumId)
+	if err != nil {
+		return Album{}, err
+	}
+
+	return newAlbum(out, filesCount, contacts), nil
 }
 
 type AccessRules struct {
@@ -327,9 +371,9 @@ type AlbumAccessRules struct {
 	AllowComments   bool `json:"allowComments"`
 }
 
-// LoadContactsFor renvoi les contacts de l'album demandé,
+// loadContactsFor renvoi les contacts de l'album demandé,
 // avec les permissions correspondantes.
-func (api *Api) LoadContactsFor(albumId AlbumId) ([]ContactPermission, error) {
+func (api *Api) loadContactsFor(albumId AlbumId) ([]ContactPermission, error) {
 	url := fmt.Sprintf("%s/users/%s/contacts?albumid=%s", baseUrl, api.spaceName, albumId)
 	resp, err := sendRequest(http.MethodGet, url, nil, map[string]string{
 		"X-API-KEY":   api.apiKey,
@@ -582,113 +626,112 @@ func (api *Api) GetContactByMail(mail string) (Contact, []string, error) {
 	}
 	contact := response.List[0]
 
-	albums, err := api.getAlbumsLabelsFor(contact.Id)
+	albums, err := api.getAlbums(queryByContact(contact.Id))
 	if err != nil {
 		return Contact{}, nil, err
 	}
+	labels := make([]string, len(albums))
+	for i, album := range albums {
+		labels[i] = album.Label
+	}
 
-	return contact, albums, nil
+	return contact, labels, nil
 }
 
-// returns the albums labels accessible by the given contact
-func (api Api) getAlbumsLabelsFor(contactId string) ([]string, error) {
-	url := fmt.Sprintf("%s/users/%s/albums?contactid=%s", baseUrl, api.spaceName, contactId)
-	resp, err := sendRequest(http.MethodGet, url, nil, map[string]string{
-		"X-API-KEY":   api.apiKey,
-		"X-SESSIONID": api.sessionid,
-		"X-FIELDS":    "folderid, label",
-	})
+// AddContacts imite [AddDirecteur] mais pour plusieurs contacts,
+// avec une permission lecture et un message adapté.
+// Si le contact est déjà associé à l'album, il est ignoré.
+func (api *Api) AddContacts(camp string, albumId AlbumId, mails []string, sendMail bool) error {
+	// 0 - fetch already linked contacts
+	// 1 - create all the contacts
+	// 2 - send the invite one by one
+
+	tmp, err := api.loadContactsFor(albumId)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	if err = checkError(resp, 200); err != nil {
-		return nil, err
+	alreadyAttached := utils.NewSet[ContactId]()
+	for _, ct := range tmp {
+		alreadyAttached.Add(ct.Id)
 	}
 
-	var response struct {
-		TotalCount int      `json:"totalCount"`
-		PageCount  int      `json:"pageCount"`
-		List       []albumJ `json:"list"`
+	url := fmt.Sprintf("%s/users/%s/contacts", baseUrl, api.spaceName)
+	contacts := make([]map[string]any, len(mails))
+	for i, mail := range mails {
+		contacts[i] = map[string]any{
+			"email":              mail,
+			"returnDataIfExists": true,
+			"type":               0,
+		}
 	}
-	err = json.NewDecoder(resp.Body).Decode(&response)
+	resp1, err := sendRequest(http.MethodPost, url, contacts, map[string]string{
+		"X-API-KEY":   api.apiKey,
+		"X-SESSIONID": api.sessionid,
+		"X-BULK":      "1",
+		"X-FIELDS":    "email,password",
+	})
 	if err != nil {
-		return nil, fmt.Errorf("impossible de décoder la réponse Joomeo: %s", err)
+		return fmt.Errorf("creating contact: %s", err)
 	}
-	if response.PageCount < response.TotalCount {
-		return nil, fmt.Errorf("internal error: number of folders not supported")
+	defer resp1.Body.Close()
+	if err = checkError(resp1, 201); err != nil {
+		return fmt.Errorf("creating contact: %s", err)
 	}
-	out := make([]string, len(response.List))
-	for i, album := range response.List {
-		out[i] = album.Label
+	var out struct {
+		Successes []Contact         `json:"successes"`
+		Failures  []json.RawMessage `json:"failures"`
 	}
-	return out, nil
+	err = json.NewDecoder(resp1.Body).Decode(&out)
+	if err != nil {
+		return fmt.Errorf("impossible de décoder la réponse Joomeo: %s", err)
+	}
+	if len(out.Failures) != 0 {
+		return fmt.Errorf("creating contacts: %v", out.Failures)
+	}
+
+	// share the album
+	args := map[string]any{
+		"allowDownload":   true,
+		"allowUpload":     false,
+		"allowPrintOrder": true,
+		"allowComments":   true,
+	}
+	if sendMail {
+		args["subject"] = "Album photos"
+		args["message"] = fmt.Sprintf(messageParents, camp)
+	}
+
+	for _, contact := range out.Successes {
+		if alreadyAttached.Has(contact.Id) {
+			continue
+		}
+
+		url = fmt.Sprintf("%s/users/%s/contacts/%s/albums/%s", baseUrl, api.spaceName, contact.Id, albumId)
+		resp, err := sendRequest(http.MethodPut, url, args, map[string]string{
+			"X-API-KEY":   api.apiKey,
+			"X-SESSIONID": api.sessionid,
+		})
+		if err != nil {
+			return fmt.Errorf("Invitation du contact %s impossible (%s).", contact.Mail, err)
+		}
+		if err = checkError(resp, 200); err != nil {
+			return fmt.Errorf("Invitation du contact %s impossible (%s).", contact.Mail, err)
+		}
+		_ = resp.Body.Close()
+	}
+
+	return nil
 }
 
 //
 // TODO - check the following
 //
 
-type AlbumExt struct {
-	AlbumId  string   `json:"albumid"`
-	Label    string   `json:"label"`
-	Date     date     `json:"date"`
-	FolderId FolderId `json:"folderid"`
-
-	NbFiles int // not returned by JOOMEO
-}
-
-// GetAlbumMetadatas renvoi un dictionnaire contenant un résumé des informations
-// de l'album demandé
-func (api *Api) GetAlbumMetadatas(albumid string) (AlbumExt, error) {
-	url := fmt.Sprintf("%s/users/%s/albums/%s", baseUrl, api.spaceName, albumid)
-	resp, err := sendRequest(http.MethodGet, url, nil, map[string]string{
-		"X-API-KEY":   api.apiKey,
-		"X-SESSIONID": api.sessionid,
-		"X-FIELDS":    "folderid",
-	})
-	if err != nil {
-		return AlbumExt{}, err
-	}
-	if err = checkError(resp, 200); err != nil {
-		return AlbumExt{}, err
-	}
-
-	var out AlbumExt
-	err = json.NewDecoder(resp.Body).Decode(&out)
-	if err != nil {
-		return AlbumExt{}, fmt.Errorf("impossible de décoder la réponse Joomeo: %s", err)
-	}
-
-	// resolve number of files
-	url = fmt.Sprintf("%s/users/%s/albums/%s/files", baseUrl, api.spaceName, albumid)
-	resp2, err := sendRequest(http.MethodGet, url, nil, map[string]string{
-		"X-API-KEY":   api.apiKey,
-		"X-SESSIONID": api.sessionid,
-	})
-	if err != nil {
-		return AlbumExt{}, err
-	}
-	if err = checkError(resp2, 200); err != nil {
-		return AlbumExt{}, err
-	}
-
-	var response2 struct {
-		TotalCount int `json:"totalCount"`
-	}
-	err = json.NewDecoder(resp2.Body).Decode(&response2)
-	if err != nil {
-		return AlbumExt{}, fmt.Errorf("impossible de décoder la réponse Joomeo: %s", err)
-	}
-	out.NbFiles = response2.TotalCount
-
-	return out, nil
-}
-
 type folder struct {
-	Id     FolderId `json:"folderid"`
-	Label  string   `json:"label"`
-	id     int64
-	childs []AlbumExt
+	Id    FolderId `json:"folderid"`
+	Label string   `json:"label"`
+	id    int64
+	// childs []AlbumExt
 }
 
 // func (api *Api) GetAllAlbumsContacts() (map[FolderId]folder, map[string]AlbumExt, map[string]Contact, error) {
@@ -810,93 +853,21 @@ func (api *Api) setAdvancedRights(contactId string) error {
 	return nil
 }
 
-// AjouteContacts imite AjouteDirecteur mais pour plusieurs contacts,
-// avec une permission lecture et un message adapté.
-// Renvoie une liste d'erreurs (mail par mail) et une erreur globale.
-func (api *Api) AjouteContacts(campNom string, campAnnee int, albumid string, mails []string, envoiMail bool) ([]string, error) {
-	url := fmt.Sprintf("%s/users/%s/contacts", baseUrl, api.spaceName)
-
-	contacts := make([]map[string]any, len(mails))
-	for i, mail := range mails {
-		contacts[i] = map[string]any{
-			"email":              mail,
-			"returnDataIfExists": true,
-			"type":               0,
-		}
-	}
-	resp1, err := sendRequest(http.MethodPost, url, contacts, map[string]string{
-		"X-API-KEY":   api.apiKey,
-		"X-SESSIONID": api.sessionid,
-		"X-BULK":      "1",
-		"X-FIELDS":    "email,password",
-	})
-	if err != nil {
-		return nil, fmt.Errorf("creating contact: %s", err)
-	}
-	defer resp1.Body.Close()
-	if err = checkError(resp1, 201); err != nil {
-		return nil, fmt.Errorf("creating contact: %s", err)
-	}
-
-	var out struct {
-		Successes []Contact         `json:"successes"`
-		Failures  []json.RawMessage `json:"failures"`
-	}
-	err = json.NewDecoder(resp1.Body).Decode(&out)
-	if err != nil {
-		return nil, fmt.Errorf("impossible de décoder la réponse Joomeo: %s", err)
-	}
-
-	var allErrors []string
-	for _, err := range out.Failures {
-		allErrors = append(allErrors, string(err))
-	}
-
-	// share the album
-	args := map[string]any{
-		"allowDownload":   true,
-		"allowUpload":     false,
-		"allowPrintOrder": true,
-		"allowComments":   true,
-	}
-	if envoiMail {
-		args["subject"] = "Album photos ACVE"
-		args["message"] = fmt.Sprintf(messageParents, campNom, campAnnee)
-	}
-
-	for _, contact := range out.Successes {
-		url = fmt.Sprintf("%s/users/%s/contacts/%s/albums/%s", baseUrl, api.spaceName, contact.Id, albumid)
-		resp3, err := sendRequest(http.MethodPut, url, args, map[string]string{
-			"X-API-KEY":   api.apiKey,
-			"X-SESSIONID": api.sessionid,
-		})
-		if err != nil {
-			allErrors = append(allErrors, fmt.Sprintf("Invitation du contact %s impossible (%s).", contact.Mail, err))
-		}
-		defer resp3.Body.Close()
-		if err = checkError(resp3, 200); err != nil {
-			allErrors = append(allErrors, fmt.Sprintf("Invitation du contact %s impossible (%s).", contact.Mail, err))
-		}
-	}
-
-	return allErrors, nil
-}
-
 // SetContactUploader ajoute le contact comme uploader.
-func (api *Api) SetContactUploader(albumid, contactId string) error {
+func (api *Api) SetContactUploader(albumId AlbumId, contactId ContactId) error {
 	err := api.setAdvancedRights(contactId)
 	if err != nil {
 		return err
 	}
 
-	_, err = api.setContactUploader(albumid, contactId, false)
+	_, err = api.setContactUploader(albumId, contactId, false)
 	return err
 }
 
-// RemoveContact retire l'accès à l'album donné pour le contact donné.
+// UnlinkContact retire l'accès à l'album donné pour le contact donné.
 // Le contact n'est pas supprimé et conserve son accès aux autres albums.
-func (api *Api) RemoveContact(albumid, contactid string) error {
-	url := fmt.Sprintf("%s/users/%s/contacts/%s/albums/%s", baseUrl, api.spaceName, contactid, albumid)
+func (api *Api) UnlinkContact(albumId AlbumId, contactId ContactId) error {
+	url := fmt.Sprintf("%s/users/%s/contacts/%s/albums/%s", baseUrl, api.spaceName, contactId, albumId)
 	resp, err := sendRequest(http.MethodDelete, url, nil, map[string]string{
 		"X-API-KEY":   api.apiKey,
 		"X-SESSIONID": api.sessionid,

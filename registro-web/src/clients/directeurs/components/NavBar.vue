@@ -29,6 +29,15 @@
     >
       Equipiers
     </v-list-item>
+    <v-divider></v-divider>
+    <v-list-item
+      prepend-icon="mdi-image-album"
+      link
+      :to="{ path: '/joomeo' }"
+      color="primary"
+    >
+      Album Joomeo
+    </v-list-item>
 
     <v-divider></v-divider>
     <!-- This is not ready just yet -->

@@ -74,4 +74,7 @@ func setupRoutesDirecteurs(e *echo.Echo, ct *directeurs.Controller) {
 	gr.DELETE("/api/v1/directeurs/documents/demande/apply", ct.DocumentsUnapplyDemande)
 
 	gr.GET("/api/v1/directeurs/documents/uploaded", ct.DocumentsGetUploaded)
+
+	// Joomeo
+	gr.GET("/api/v1/directeurs/joomeo", ct.JoomeoLoad)
 }

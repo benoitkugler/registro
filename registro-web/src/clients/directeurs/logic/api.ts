@@ -128,6 +128,14 @@ export interface FicheSanitaireExt {
   Fiche: Fichesanitaire;
   Vaccins: PublicFile[] | null;
 }
+// registro/controllers/directeurs.Joomeo
+export interface Joomeo {
+  SpaceURL: string;
+  Album: Album;
+  MailsResponsables: string[] | null;
+  MailsInscrits: string[] | null;
+  MailsEquipiers: string[] | null;
+}
 // registro/controllers/directeurs.LettreOut
 export interface LettreOut {
   Lettre: Lettredirecteur;
@@ -149,6 +157,39 @@ export interface Messages {
 export interface ParticipantsOut {
   Participants: ParticipantExt[] | null;
   Dossiers: Record<IdDossier, DossierHeader> | null;
+}
+// registro/joomeo.AccessRules
+export interface AccessRules {
+  allowCreateAlbum: boolean;
+  allowDeleteAlbum: boolean;
+  allowDeleteFile: boolean;
+  allowEditFileCaption: boolean;
+  allowUpdateAlbum: boolean;
+}
+// registro/joomeo.Album
+export interface Album {
+  Id: string;
+  Label: string;
+  Date: Time;
+  FilesCount: Int;
+  Contacts: ContactPermission[] | null;
+}
+// registro/joomeo.AlbumAccessRules
+export interface AlbumAccessRules {
+  allowDownload: boolean;
+  allowUpload: boolean;
+  allowPrintOrder: boolean;
+  allowComments: boolean;
+}
+// registro/joomeo.ContactPermission
+export interface ContactPermission {
+  contactid: string;
+  email: string;
+  login: string;
+  password: string;
+  accessRules: AccessRules;
+  type: Int;
+  albumAccessRules: AlbumAccessRules;
 }
 // registro/logic.CampItem
 export interface CampItem {
@@ -1465,6 +1506,20 @@ export abstract class AbstractAPI {
         fullUrl,
         { headers: this.getHeaders() },
       );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** JoomeoLoad performs the request and handles the error */
+  async JoomeoLoad() {
+    const fullUrl = this.baseURL + "/api/v1/directeurs/joomeo";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<Joomeo> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+      });
       return rep.data;
     } catch (error) {
       this.handleError(error);

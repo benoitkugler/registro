@@ -207,6 +207,18 @@ export namespace FormRules {
         : "L'adresse mail semble invalide";
     };
   }
+
+  // Joomeo special case of mails, stricter
+  const patternMailJoomeo =
+    /^[A-Z0-9._%+-]{1,64}@(?:[A-Z0-9-]{1,63}\.){1,125}[A-Z]{2,63}$/i;
+  export function mailJoomeo() {
+    return (mail: string) => {
+      if (!mail) return true;
+      return patternMailJoomeo.test(mail)
+        ? true
+        : "Mail non accepté par Jooméo";
+    };
+  }
 }
 
 interface Camp {
