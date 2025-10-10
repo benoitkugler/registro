@@ -7,10 +7,13 @@ import (
 
 type Joomeo struct {
 	Apikey, Login, Password string
+	// the Joomeo top-level folder Label to use
+	// to store sejours albums
+	RootFolder string
 }
 
 // NewJoomeo uses env variables to build Joomeo credentials :
-// JOOMEO_APIKEY, JOOMEO_LOGIN, JOOMEO_PASSWORD
+// JOOMEO_APIKEY, JOOMEO_LOGIN, JOOMEO_PASSWORD, JOOMEO_ROOT_FOLDER
 func NewJoomeo() (out Joomeo, err error) {
 	out.Apikey = os.Getenv("JOOMEO_APIKEY")
 	if out.Apikey == "" {
@@ -25,6 +28,10 @@ func NewJoomeo() (out Joomeo, err error) {
 	out.Password = os.Getenv("JOOMEO_PASSWORD")
 	if out.Password == "" {
 		return Joomeo{}, errors.New("missing env JOOMEO_PASSWORD")
+	}
+	out.RootFolder = os.Getenv("JOOMEO_ROOT_FOLDER")
+	if out.RootFolder == "" {
+		return Joomeo{}, errors.New("missing env JOOMEO_ROOT_FOLDER")
 	}
 
 	return out, nil

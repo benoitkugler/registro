@@ -15,6 +15,16 @@ export type Int = number & { __opaque__: "Int" };
 // ISO date-time string
 export type Time = string & { __opaque__: "Time" };
 
+// database/sql.NullBool
+export interface NullBool {
+  Bool: boolean;
+  Valid: boolean;
+}
+// registro/controllers/backoffice.AddDirecteursToAlbumsIn
+export interface AddDirecteursToAlbumsIn {
+  IdCamps: IdCamp[] | null;
+  SendMail: boolean;
+}
 // registro/controllers/backoffice.AidesCreateIn
 export interface AidesCreateIn {
   IdParticipant: IdParticipant;
@@ -25,6 +35,14 @@ export interface CampHeader {
   Camp: CampExt;
   Taux: Taux;
   Stats: StatistiquesInscrits;
+  HasDirecteur: boolean;
+}
+// registro/controllers/backoffice.CampJoomeo
+export interface CampJoomeo {
+  Camp: Camp;
+  HasDirecteur: boolean;
+  Album: Album;
+  DirecteurPermission: ContactPermission;
 }
 // registro/controllers/backoffice.CampsCreateManyIn
 export interface CampsCreateManyIn {
@@ -40,6 +58,16 @@ export interface CampsLoadOut {
 export interface CampsSetTauxIn {
   IdCamp: IdCamp;
   Taux: Taux;
+}
+// registro/controllers/backoffice.CreateAlbumsIn
+export interface CreateAlbumsIn {
+  IdCamps: IdCamp[] | null;
+}
+// registro/controllers/backoffice.CreateEquipierIn
+export interface CreateEquipierIn {
+  IdPersonne: IdPersonne;
+  IdCamp: IdCamp;
+  Roles: Roles;
 }
 // registro/controllers/backoffice.DossierDetails
 export interface DossierDetails {
@@ -186,6 +214,38 @@ export interface SendProgress {
 export interface GeneratedFile {
   NomClient: string;
   Key: string;
+}
+// registro/joomeo.AccessRules
+export interface AccessRules {
+  allowCreateAlbum: boolean;
+  allowDeleteAlbum: boolean;
+  allowDeleteFile: boolean;
+  allowEditFileCaption: boolean;
+  allowUpdateAlbum: boolean;
+}
+// registro/joomeo.Album
+export interface Album {
+  Id: string;
+  Label: string;
+  Date: Time;
+  FilesCount: Int;
+}
+// registro/joomeo.AlbumAccessRules
+export interface AlbumAccessRules {
+  allowDownload: boolean;
+  allowUpload: boolean;
+  allowPrintOrder: boolean;
+  allowComments: boolean;
+}
+// registro/joomeo.ContactPermission
+export interface ContactPermission {
+  contactid: string;
+  email: string;
+  login: string;
+  password: string;
+  accessRules: AccessRules;
+  type: Int;
+  albumAccessRules: AlbumAccessRules;
 }
 // registro/logic.AideResolved
 export interface AideResolved {
@@ -408,6 +468,7 @@ export interface Camp {
   DocumentsReady: boolean;
   DocumentsToShow: DocumentsToShow;
   Vetements: ListeVetements;
+  JoomeoID: string;
   Meta: Meta;
 }
 // registro/sql/camps.CampExt
@@ -421,8 +482,34 @@ export interface DocumentsToShow {
   ListeVetements: boolean;
   ListeParticipants: boolean;
 }
+// registro/sql/camps.Equipier
+export interface Equipier {
+  Id: IdEquipier;
+  IdCamp: IdCamp;
+  IdPersonne: IdPersonne;
+  Roles: Roles;
+  Presence: PresenceOffsets;
+  FormStatus: FormStatusEquipier;
+  AccepteCharte: NullBool;
+}
+// registro/sql/camps.FormStatusEquipier
+export const FormStatusEquipier = {
+  NotSend: 0,
+  Pending: 1,
+  Answered: 2,
+} as const;
+export type FormStatusEquipier =
+  (typeof FormStatusEquipier)[keyof typeof FormStatusEquipier];
+
+export const FormStatusEquipierLabels: Record<FormStatusEquipier, string> = {
+  [FormStatusEquipier.NotSend]: "Non envoyé",
+  [FormStatusEquipier.Pending]: "En attente",
+  [FormStatusEquipier.Answered]: "Répondu",
+};
+
 export type IdAide = Int & { __opaque_int__: "IdAide" };
 export type IdCamp = Int & { __opaque_int__: "IdCamp" };
+export type IdEquipier = Int & { __opaque_int__: "IdEquipier" };
 export type IdParticipant = Int & { __opaque_int__: "IdParticipant" };
 export type IdStructureaide = Int & { __opaque_int__: "IdStructureaide" };
 // registro/sql/camps.Jours
@@ -501,6 +588,11 @@ export interface ParticipantCamp {
   Participant: Participant;
   Personne: Personne;
 }
+// registro/sql/camps.PresenceOffsets
+export interface PresenceOffsets {
+  Debut: Int;
+  Fin: Int;
+}
 // registro/sql/camps.PrixParStatut
 export interface PrixParStatut {
   Id: Int;
@@ -516,6 +608,42 @@ export interface Remises {
   ReducEnfants: Int;
   ReducSpeciale: Montant;
 }
+// registro/sql/camps.Role
+export const Role = {
+  Direction: 0,
+  Adjoint: 1,
+  Animation: 2,
+  Menage: 3,
+  Cuisine: 4,
+  Intendance: 5,
+  Infirmerie: 6,
+  AideAnimation: 7,
+  Lingerie: 8,
+  Chauffeur: 9,
+  Factotum: 10,
+  Babysiter: 11,
+  AutreRole: 12,
+} as const;
+export type Role = (typeof Role)[keyof typeof Role];
+
+export const RoleLabels: Record<Role, string> = {
+  [Role.Direction]: "Direction",
+  [Role.Adjoint]: "Adjoint",
+  [Role.Animation]: "Animation",
+  [Role.Menage]: "Ménage",
+  [Role.Cuisine]: "Cuisine",
+  [Role.Intendance]: "Intendance",
+  [Role.Infirmerie]: "Assistant sanitaire",
+  [Role.AideAnimation]: "Aide-animateur",
+  [Role.Lingerie]: "Lingerie",
+  [Role.Chauffeur]: "Chauffeur",
+  [Role.Factotum]: "Factotum",
+  [Role.Babysiter]: "Baby-sitter",
+  [Role.AutreRole]: "Autre",
+};
+
+// registro/sql/camps.Roles
+export type Roles = Role[] | null;
 // registro/sql/camps.StatistiquesInscrits
 export interface StatistiquesInscrits {
   Inscriptions: Int;
@@ -998,7 +1126,7 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseURL + "/api/v1/backoffice/camps-taux";
     this.startRequest();
     try {
-      const rep: AxiosResponse<CampHeader> = await Axios.post(fullUrl, params, {
+      const rep: AxiosResponse<Taux> = await Axios.post(fullUrl, params, {
         headers: this.getHeaders(),
       });
       return rep.data;
@@ -1113,6 +1241,63 @@ export abstract class AbstractAPI {
       const rep: AxiosResponse<Participant> = await Axios.post(fullUrl, null, {
         headers: this.getHeaders(),
         params: { id: String(params["id"]) },
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** CampsLoadAlbums performs the request and handles the error */
+  async CampsLoadAlbums() {
+    const fullUrl = this.baseURL + "/api/v1/backoffice/camps/joomeo";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<CampJoomeo[] | null> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** CampsCreateAlbums performs the request and handles the error */
+  async CampsCreateAlbums(params: CreateAlbumsIn) {
+    const fullUrl = this.baseURL + "/api/v1/backoffice/camps/joomeo";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<Record<IdCamp, Album> | null> = await Axios.put(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** CampsAddDirecteursToAlbums performs the request and handles the error */
+  async CampsAddDirecteursToAlbums(params: AddDirecteursToAlbumsIn) {
+    const fullUrl = this.baseURL + "/api/v1/backoffice/camps/joomeo";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<Record<IdCamp, ContactPermission> | null> =
+        await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** CampsCreateEquipier performs the request and handles the error */
+  async CampsCreateEquipier(params: CreateEquipierIn) {
+    const fullUrl = this.baseURL + "/api/v1/backoffice/camps/equipiers";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<Equipier> = await Axios.put(fullUrl, params, {
+        headers: this.getHeaders(),
       });
       return rep.data;
     } catch (error) {

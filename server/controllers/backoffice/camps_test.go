@@ -53,7 +53,7 @@ func TestCRUD(t *testing.T) {
 		camp, err := ct.createCamp()
 		tu.AssertNoErr(t, err)
 
-		_, err = ct.createEquipier(CreateEquipierIn{pe.Id, camp.Camp.Camp.Id})
+		_, err = ct.createEquipier(CreateEquipierIn{pe.Id, camp.Camp.Camp.Id, cps.Roles{cp.Direction}})
 		tu.AssertNoErr(t, err)
 	})
 

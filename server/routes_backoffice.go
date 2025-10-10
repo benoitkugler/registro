@@ -41,6 +41,12 @@ func setupRoutesBackoffice(e *echo.Echo, ct *backoffice.Controller) {
 	gr.POST("/api/v1/backoffice/participants/move", ct.ParticipantsMove)
 	gr.POST("/api/v1/backoffice/participants/place-liberee", ct.ParticipantsSetPlaceLiberee)
 
+	gr.GET("/api/v1/backoffice/camps/joomeo", ct.CampsLoadAlbums)
+	gr.PUT("/api/v1/backoffice/camps/joomeo", ct.CampsCreateAlbums)
+	gr.POST("/api/v1/backoffice/camps/joomeo", ct.CampsAddDirecteursToAlbums)
+
+	gr.PUT("/api/v1/backoffice/camps/equipiers", ct.CampsCreateEquipier)
+
 	// Onglet Inscriptions/Dossiers
 
 	gr.GET("/api/v1/backoffice/inscriptions", ct.InscriptionsGet)

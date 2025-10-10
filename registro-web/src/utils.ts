@@ -94,6 +94,12 @@ export function copy<T>(v: T): T {
   return JSON.parse(JSON.stringify(v));
 }
 
+export function recordEntries<S extends number, T>(data: Record<S, T> | null) {
+  return Object.entries(data || {}).map(
+    (entry) => [Number(entry[0]) as S, entry[1] as T] as const
+  );
+}
+
 export function mapFromObject<S extends number, T extends { Id: S }>(
   data:
     | {
@@ -101,12 +107,7 @@ export function mapFromObject<S extends number, T extends { Id: S }>(
       }
     | null
 ) {
-  return new Map<S, T>(
-    Object.entries(data || {}).map((entry) => [
-      Number(entry[0]) as S,
-      entry[1] as T,
-    ])
-  );
+  return new Map<S, T>(recordEntries(data));
 }
 
 export function isInt<T extends number>(s: string | null): T | null {

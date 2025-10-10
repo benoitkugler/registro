@@ -47,7 +47,7 @@ func TestBuiltins_Defaut(t *testing.T) {
 		}},
 	}
 	for _, tt := range tests {
-		got := b.Defaut(tt.equipier)
+		got := b.Defaut(tt.equipier.Id, tt.equipier.Roles)
 		tu.Assert(t, reflect.DeepEqual(got, tt.want))
 	}
 }

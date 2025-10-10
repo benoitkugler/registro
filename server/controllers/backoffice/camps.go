@@ -32,9 +32,10 @@ func (ct *Controller) loadTaux() (ds.Tauxs, error) {
 }
 
 type CampHeader struct {
-	Camp  cps.CampExt
-	Taux  ds.Taux
-	Stats cps.StatistiquesInscrits
+	Camp         cps.CampExt
+	Taux         ds.Taux
+	Stats        cps.StatistiquesInscrits
+	HasDirecteur bool
 }
 
 func (ct *Controller) CampsGet(c echo.Context) error {
@@ -59,9 +60,15 @@ func (ct *Controller) getCamps() ([]CampHeader, error) {
 		return nil, err
 	}
 
+	directeurs, err := loadDirecteurs(ct.db, camps.IDs())
+	if err != nil {
+		return nil, err
+	}
+
 	out := make([]CampHeader, len(loaders))
 	for i, loader := range loaders {
-		out[i] = CampHeader{loader.Camp.Ext(), taux[loader.Camp.IdTaux], loader.Stats()}
+		_, hasDirecteur := directeurs[loader.Camp.Id]
+		out[i] = CampHeader{loader.Camp.Ext(), taux[loader.Camp.IdTaux], loader.Stats(), hasDirecteur}
 	}
 	return out, nil
 }
@@ -107,7 +114,7 @@ func (ct *Controller) createManyCamp(args CampsCreateManyIn) (out []CampHeader, 
 			if err != nil {
 				return err
 			}
-			out = append(out, CampHeader{camp.Ext(), args.Taux, cps.StatistiquesInscrits{}})
+			out = append(out, CampHeader{camp.Ext(), args.Taux, cps.StatistiquesInscrits{}, false})
 		}
 		return nil
 	})
@@ -163,7 +170,7 @@ func (ct *Controller) createCamp() (CampHeader, error) {
 	if err != nil {
 		return CampHeader{}, utils.SQLError(err)
 	}
-	return CampHeader{camp.Ext(), taux, cps.StatistiquesInscrits{}}, nil
+	return CampHeader{camp.Ext(), taux, cps.StatistiquesInscrits{}, false}, nil
 }
 
 func (ct *Controller) CampsUpdate(c echo.Context) error {
@@ -239,7 +246,7 @@ func (ct *Controller) CampsSetTaux(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) setTaux(args CampsSetTauxIn) (out CampHeader, _ error) {
+func (ct *Controller) setTaux(args CampsSetTauxIn) (out ds.Taux, _ error) {
 	err := utils.InTx(ct.db, func(tx *sql.Tx) error {
 		participants, err := cps.SelectParticipantsByIdCamps(tx, args.IdCamp)
 		if err != nil {
@@ -262,7 +269,7 @@ func (ct *Controller) setTaux(args CampsSetTauxIn) (out CampHeader, _ error) {
 		if err != nil {
 			return err
 		}
-		out = CampHeader{camp.Ext(), args.Taux, cps.StatistiquesInscrits{}} // no participants
+		out = args.Taux
 		return nil
 	})
 	return out, err
@@ -430,9 +437,10 @@ func (ct *Controller) getCampDocument(id cps.IdCamp) (FilesCamp, error) {
 type CreateEquipierIn struct {
 	IdPersonne pr.IdPersonne
 	IdCamp     cps.IdCamp
+	Roles      cps.Roles // to select default Demandes
 }
 
-func (ct *Controller) CampCreateEquipier(c echo.Context) error {
+func (ct *Controller) CampsCreateEquipier(c echo.Context) error {
 	var args CreateEquipierIn
 	if err := c.Bind(&args); err != nil {
 		return err
@@ -447,11 +455,11 @@ func (ct *Controller) CampCreateEquipier(c echo.Context) error {
 func (ct *Controller) createEquipier(args CreateEquipierIn) (out cps.Equipier, _ error) {
 	err := utils.InTx(ct.db, func(tx *sql.Tx) error {
 		var err error
-		out, err = cps.Equipier{IdCamp: args.IdCamp, IdPersonne: args.IdPersonne}.Insert(tx)
+		out, err = cps.Equipier{IdCamp: args.IdCamp, IdPersonne: args.IdPersonne, Roles: args.Roles}.Insert(tx)
 		if err != nil {
 			return err
 		}
-		demandes := ct.builtins.Defaut(out)
+		demandes := ct.builtins.Defaut(out.Id, out.Roles)
 		err = fs.InsertManyDemandeEquipiers(tx, demandes...)
 		if err != nil {
 			return err

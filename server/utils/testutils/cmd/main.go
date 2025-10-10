@@ -205,10 +205,8 @@ func createEquipier(db *sql.DB, enc crypto.Encrypter) {
 	builtins, err := fs.LoadBuiltins(db)
 	check(err)
 
-	demandes := builtins.Defaut(equipier)
-	err = utils.InTx(db, func(tx *sql.Tx) error {
-		return fs.InsertManyDemandeEquipiers(tx, demandes...)
-	})
+	demandes := builtins.Defaut(equipier.Id, equipier.Roles)
+	err = utils.InTx(db, func(tx *sql.Tx) error { return fs.InsertManyDemandeEquipiers(tx, demandes...) })
 	check(err)
 
 	key := crypto.EncryptID(enc, equipier.Id)

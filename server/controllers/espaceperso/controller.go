@@ -346,7 +346,7 @@ func (ct *Controller) loadJoomeo(id ds.IdDossier) (Joomeo, error) {
 		return Joomeo{}, utils.SQLError(err)
 	}
 
-	api, err := joomeo.InitApi(ct.joomeo)
+	api, err := joomeo.NewApi(ct.joomeo)
 	if err != nil {
 		return Joomeo{}, err
 	}

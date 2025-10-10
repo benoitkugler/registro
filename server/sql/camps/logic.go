@@ -84,7 +84,7 @@ func LoadCampPersonnes(db DB, id IdCamp) (CampLoader, error) {
 	return out[0], nil
 }
 
-// LoadCampsPersonnes wraps the error
+// LoadCampsPersonnes returns the [Camp]s and [Participant]s, and wraps the error.
 func LoadCampsPersonnes(db DB, ids ...IdCamp) ([]CampLoader, error) {
 	camps, err := SelectCamps(db, ids...)
 	if err != nil {

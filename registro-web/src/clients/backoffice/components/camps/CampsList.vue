@@ -45,39 +45,40 @@
           </v-menu>
         </v-col>
         <v-col align-self="center" cols="auto">
-          <v-menu>
-            <template #activator="{ props: innerProps }">
-              <v-btn
-                v-bind="innerProps"
-                flat
-                icon="mdi-dots-vertical"
-                size="small"
-              >
-              </v-btn>
-            </template>
-            <v-list density="compact">
-              <v-list-item
-                title="Masquer les camps fermés"
-                subtitle="N'afficher que les camps ouverts aux inscriptions"
-                @click="filter.openOnly = !filter.openOnly"
-              >
-                <template #prepend>
-                  <v-checkbox
-                    class="mr-2"
-                    v-model="filter.openOnly"
-                    density="compact"
-                    hide-details
-                  ></v-checkbox>
-                </template>
-              </v-list-item>
-              <v-divider thickness="1"></v-divider>
-              <v-list-item
-                @click="startOpenInsc"
-                title="Ouvrir les inscriptions"
-                prepend-icon="mdi-lock-open"
-              ></v-list-item>
-            </v-list>
-          </v-menu>
+          <v-btn flat icon size="small">
+            <v-icon icon="mdi-dots-vertical"></v-icon>
+            <v-menu activator="parent">
+              <v-list density="compact">
+                <v-list-item
+                  title="Masquer les camps fermés"
+                  subtitle="N'afficher que les camps ouverts aux inscriptions"
+                  @click="filter.openOnly = !filter.openOnly"
+                >
+                  <template #prepend>
+                    <v-checkbox
+                      class="mr-2"
+                      v-model="filter.openOnly"
+                      density="compact"
+                      hide-details
+                    ></v-checkbox>
+                  </template>
+                </v-list-item>
+                <v-divider thickness="1"></v-divider>
+                <v-list-item
+                  @click="showJoomeo = true"
+                  title="Configurer les albums Joomeo..."
+                  prepend-icon="mdi-image-album"
+                ></v-list-item>
+                <v-divider thickness="1"></v-divider>
+                <v-list-item
+                  @click="startOpenInsc"
+                  title="Ouvrir les inscriptions..."
+                  subtitle="sur plusieurs séjours"
+                  prepend-icon="mdi-lock-open"
+                ></v-list-item>
+              </v-list>
+            </v-menu>
+          </v-btn>
         </v-col>
       </v-row>
     </template>
@@ -101,6 +102,9 @@
         @delete="deleteCamp(camp)"
         @show-documents="showDocumentsFor = camp"
         @send-sondage="sendSondage(camp.Camp.Camp.Id)"
+        @add-directeur="
+          (idPersonne) => addDirecteur(idPersonne, camp.Camp.Camp.Id)
+        "
       ></CampHeaderRow>
 
       <v-pagination :length="pagesCount" v-model="currentPage"></v-pagination>
@@ -214,16 +218,22 @@
       :total="sondagesProgress.Total"
     ></RequestProgressCard>
   </v-dialog>
+
+  <v-dialog v-model="showJoomeo">
+    <JoomeoPannel></JoomeoPannel>
+  </v-dialog>
 </template>
 
 <script lang="ts" setup>
 import { ref, computed, onMounted, reactive } from "vue";
 import { controller, isCampOpen } from "@/clients/backoffice/logic/logic";
 import {
+  Role,
   StatutCamp,
   type Camp,
   type CampHeader,
   type IdCamp,
+  type IdPersonne,
   type IdTaux,
   type Int,
   type SendProgress,
@@ -236,6 +246,7 @@ import { Camps, normalize, readJSONStream } from "@/utils";
 import CampsSelector from "./CampsSelector.vue";
 import DocumentsCard from "./DocumentsCard.vue";
 import RequestProgressCard from "../RequestProgressCard.vue";
+import JoomeoPannel from "./JoomeoPannel.vue";
 
 const emit = defineEmits<{
   (e: "show-participants", camp: CampHeader): void;
@@ -328,7 +339,9 @@ async function setTaux() {
   isLoading.value = false;
   if (res === undefined) return;
   controller.showMessage("Taux modifié avec succès.");
-  campsData.set(res.Camp.Camp.Id, res);
+  const camp = campsData.get(val.Camp.Camp.Id)!;
+  camp.Camp.Camp.IdTaux = res.Id;
+  camp.Taux = res;
 }
 
 const showCreateMany = ref(false);
@@ -420,4 +433,17 @@ async function sendSondage(idCamp: IdCamp) {
   sondagesProgress.value = null;
   controller.showMessage("Sondage envoyé avec succès.");
 }
+
+async function addDirecteur(idPersonne: IdPersonne, idCamp: IdCamp) {
+  const res = await controller.CampsCreateEquipier({
+    IdPersonne: idPersonne,
+    IdCamp: idCamp,
+    Roles: [Role.Direction],
+  });
+  if (res === undefined) return;
+  campsData.get(idCamp)!.HasDirecteur = true;
+  controller.showMessage("Directeur ajouté avec succès.");
+}
+
+const showJoomeo = ref(false);
 </script>

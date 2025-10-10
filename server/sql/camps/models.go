@@ -62,6 +62,10 @@ type Camp struct {
 
 	Vetements ListeVetements
 
+	// JoomeoID est l'identifiant de l'album Jooemo attribué
+	// au camp (ou une chaîne vide).
+	JoomeoID string
+
 	// Meta permet d'ajouter une liste de clé/valeur
 	// personnalisable.
 	Meta Meta

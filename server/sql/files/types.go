@@ -133,10 +133,10 @@ func isDemandeOpt(cat Categorie, roles cp.Roles) bool {
 }
 
 // Defaut renvoie les demandes par défaut pour l'équipier donné.
-func (builtinDemandes Builtins) Defaut(equipier cp.Equipier) DemandeEquipiers {
+func (builtinDemandes Builtins) Defaut(id cp.IdEquipier, roles cp.Roles) DemandeEquipiers {
 	// on aggrège les demandes de chaque rôle
 	var categories [nbCategorieEquipier]bool
-	for _, role := range equipier.Roles {
+	for _, role := range roles {
 		for _, cat := range demandesDefaut[role] {
 			categories[cat] = true
 		}
@@ -148,9 +148,9 @@ func (builtinDemandes Builtins) Defaut(equipier cp.Equipier) DemandeEquipiers {
 			continue
 		}
 		demandes = append(demandes, DemandeEquipier{
-			IdEquipier:  equipier.Id,
+			IdEquipier:  id,
 			IdDemande:   builtinDemandes[cat].Id,
-			Optionnelle: isDemandeOpt(Categorie(cat), equipier.Roles),
+			Optionnelle: isDemandeOpt(Categorie(cat), roles),
 		})
 	}
 	return demandes

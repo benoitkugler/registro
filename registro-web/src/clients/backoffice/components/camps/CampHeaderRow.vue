@@ -1,30 +1,4 @@
 <template>
-  <v-dialog v-model="showDelete" max-width="600">
-    <v-card title="Confirmer la suppression">
-      <v-card-text>
-        Etes vous certain de supprimer le séjour
-        <b>{{ Camps.label(props.camp.Camp.Camp) }}</b> ? <br />
-        <br />
-        Les éventuels <i>équipiers</i> déclarés sur ce séjour seront aussi
-        supprimés.
-
-        <br /><br />
-        Attention, cette opération est irréversible.
-      </v-card-text>
-      <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn
-          color="red"
-          @click="
-            showDelete = false;
-            emit('delete');
-          "
-          >Supprimer</v-btn
-        >
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
-
   <v-card :color="periodeColor" no-gutters @click="emit('click')" class="my-1">
     <v-row
       :style="{ 'background-color': periodeColor }"
@@ -98,6 +72,13 @@
             ></v-list-item>
 
             <v-divider thickness="1"></v-divider>
+            <v-list-item
+              prepend-icon="mdi-plus"
+              @click="showAddDirecteur = true"
+              title="Ajouter un directeur..."
+              :disabled="props.camp.HasDirecteur"
+            ></v-list-item>
+            <v-divider thickness="1"></v-divider>
 
             <v-list-item
               title="Envoyer le sondage"
@@ -119,13 +100,68 @@
       </v-col>
     </v-row>
   </v-card>
+
+  <v-dialog v-model="showDelete" max-width="600">
+    <v-card title="Confirmer la suppression">
+      <v-card-text>
+        Etes vous certain de supprimer le séjour
+        <b>{{ Camps.label(props.camp.Camp.Camp) }}</b> ? <br />
+        <br />
+        Les éventuels <i>équipiers</i> déclarés sur ce séjour seront aussi
+        supprimés.
+
+        <br /><br />
+        Attention, cette opération est irréversible.
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn
+          color="red"
+          @click="
+            showDelete = false;
+            emit('delete');
+          "
+          >Supprimer</v-btn
+        >
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
+  <v-dialog v-model="showAddDirecteur" max-width="400px">
+    <v-card title="Ajouter un directeur">
+      <v-card-text>
+        <SelectPersonne
+          initial-personne=""
+          label="Directeur"
+          v-model="idDirecteur"
+          :api="controller"
+        ></SelectPersonne>
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn
+          :disabled="!idDirecteur"
+          @click="
+            showAddDirecteur = false;
+            emit('add-directeur', idDirecteur);
+          "
+          >Ajouter</v-btn
+        >
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import type { CampHeader, Camp } from "@/clients/backoffice/logic/api";
+import type {
+  CampHeader,
+  Camp,
+  IdPersonne,
+} from "@/clients/backoffice/logic/api";
 import CampStats from "./CampStats.vue";
 import { Camps } from "@/utils";
+import { controller } from "../../logic/logic";
 const props = defineProps<{
   camp: CampHeader;
 }>();
@@ -137,6 +173,7 @@ const emit = defineEmits<{
   (e: "delete"): void;
   (e: "show-documents"): void;
   (e: "send-sondage"): void;
+  (e: "add-directeur", id: IdPersonne): void;
 }>();
 
 const allAttente = computed(
@@ -168,4 +205,7 @@ const periodeColor = computed(() => {
       return "rgb(190, 228, 100)";
   }
 });
+
+const showAddDirecteur = ref(false);
+const idDirecteur = ref(0 as IdPersonne);
 </script>
