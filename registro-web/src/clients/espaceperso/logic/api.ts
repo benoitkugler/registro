@@ -285,6 +285,7 @@ export interface Camp {
   DocumentsReady: boolean;
   DocumentsToShow: DocumentsToShow;
   Vetements: ListeVetements;
+  JoomeoID: string;
   Meta: Meta;
 }
 // registro/sql/camps.DocumentsToShow

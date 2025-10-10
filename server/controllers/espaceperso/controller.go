@@ -352,21 +352,16 @@ func (ct *Controller) loadJoomeo(id ds.IdDossier) (Joomeo, error) {
 	}
 	defer api.Close()
 
-	contact, albums, err := api.GetLoginFromMail(responsable.Mail)
+	contact, albums, err := api.GetContactByMail(responsable.Mail)
 	if err != nil {
 		return Joomeo{}, err
-	}
-
-	albumsLabels := make([]string, len(albums))
-	for i, album := range albums {
-		albumsLabels[i] = album.Label
 	}
 
 	return Joomeo{
 		SpaceURL: api.SpaceURL(),
 		Loggin:   contact.Login,
 		Password: contact.Password,
-		Albums:   albumsLabels,
+		Albums:   albums,
 	}, nil
 }
 

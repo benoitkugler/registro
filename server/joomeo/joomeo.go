@@ -552,6 +552,78 @@ func (api *Api) setContactUploader(albumid, contactId string, mailForDirecteur b
 	return response, nil
 }
 
+// Renvoi le contact et la liste des albums authorisés du contact associé à l'adresse mail fournie.
+// Le contact renvoyé peut être vide si [mail] n'est pas utilisé.
+func (api *Api) GetContactByMail(mail string) (Contact, []string, error) {
+	url := fmt.Sprintf("%s/users/%s/contacts", baseUrl, api.spaceName)
+	resp, err := sendRequest(http.MethodGet, url, nil, map[string]string{
+		"X-API-KEY":   api.apiKey,
+		"X-SESSIONID": api.sessionid,
+		"X-FILTER":    fmt.Sprintf("email=%s", mail),
+		"X-FIELDS":    "email,password,accessRules,type",
+	})
+	if err != nil {
+		return Contact{}, nil, err
+	}
+	if err = checkError(resp, 200); err != nil {
+		return Contact{}, nil, err
+	}
+
+	var response struct {
+		List []Contact `json:"list"`
+	}
+	err = json.NewDecoder(resp.Body).Decode(&response)
+	if err != nil {
+		return Contact{}, nil, fmt.Errorf("impossible de décoder la réponse Joomeo: %s", err)
+	}
+
+	if len(response.List) == 0 { // aucun contact n'est encore enregistré
+		return Contact{}, nil, nil
+	}
+	contact := response.List[0]
+
+	albums, err := api.getAlbumsLabelsFor(contact.Id)
+	if err != nil {
+		return Contact{}, nil, err
+	}
+
+	return contact, albums, nil
+}
+
+// returns the albums labels accessible by the given contact
+func (api Api) getAlbumsLabelsFor(contactId string) ([]string, error) {
+	url := fmt.Sprintf("%s/users/%s/albums?contactid=%s", baseUrl, api.spaceName, contactId)
+	resp, err := sendRequest(http.MethodGet, url, nil, map[string]string{
+		"X-API-KEY":   api.apiKey,
+		"X-SESSIONID": api.sessionid,
+		"X-FIELDS":    "folderid, label",
+	})
+	if err != nil {
+		return nil, err
+	}
+	if err = checkError(resp, 200); err != nil {
+		return nil, err
+	}
+
+	var response struct {
+		TotalCount int      `json:"totalCount"`
+		PageCount  int      `json:"pageCount"`
+		List       []albumJ `json:"list"`
+	}
+	err = json.NewDecoder(resp.Body).Decode(&response)
+	if err != nil {
+		return nil, fmt.Errorf("impossible de décoder la réponse Joomeo: %s", err)
+	}
+	if response.PageCount < response.TotalCount {
+		return nil, fmt.Errorf("internal error: number of folders not supported")
+	}
+	out := make([]string, len(response.List))
+	for i, album := range response.List {
+		out[i] = album.Label
+	}
+	return out, nil
+}
+
 //
 // TODO - check the following
 //
@@ -563,39 +635,6 @@ type AlbumExt struct {
 	FolderId FolderId `json:"folderid"`
 
 	NbFiles int // not returned by JOOMEO
-}
-
-// if contactid is not empty, restrict to the ones shared to it
-func (api Api) getAlbumsOld(contactid string) ([]AlbumExt, error) {
-	url := fmt.Sprintf("%s/users/%s/albums", baseUrl, api.spaceName)
-	if contactid != "" {
-		url += "?contactid=" + contactid
-	}
-	resp, err := sendRequest(http.MethodGet, url, nil, map[string]string{
-		"X-API-KEY":   api.apiKey,
-		"X-SESSIONID": api.sessionid,
-		"X-FIELDS":    "folderid",
-	})
-	if err != nil {
-		return nil, err
-	}
-	if err = checkError(resp, 200); err != nil {
-		return nil, err
-	}
-
-	var response struct {
-		TotalCount int        `json:"totalCount"`
-		PageCount  int        `json:"pageCount"`
-		List       []AlbumExt `json:"list"`
-	}
-	err = json.NewDecoder(resp.Body).Decode(&response)
-	if err != nil {
-		return nil, fmt.Errorf("impossible de décoder la réponse Joomeo: %s", err)
-	}
-	if response.PageCount < response.TotalCount {
-		return nil, fmt.Errorf("internal error: number of folders not supported")
-	}
-	return response.List, nil
 }
 
 // GetAlbumMetadatas renvoi un dictionnaire contenant un résumé des informations
@@ -652,57 +691,57 @@ type folder struct {
 	childs []AlbumExt
 }
 
-func (api *Api) GetAllAlbumsContacts() (map[FolderId]folder, map[string]AlbumExt, map[string]Contact, error) {
-	campsFolderId, err := api.GetSejoursFolder()
-	if err != nil {
-		return nil, nil, nil, err
-	}
+// func (api *Api) GetAllAlbumsContacts() (map[FolderId]folder, map[string]AlbumExt, map[string]Contact, error) {
+// 	campsFolderId, err := api.GetSejoursFolder()
+// 	if err != nil {
+// 		return nil, nil, nil, err
+// 	}
 
-	sejoursFolders, err := api.getFolders(campsFolderId)
-	if err != nil {
-		return nil, nil, nil, err
-	}
+// 	sejoursFolders, err := api.getFolders(campsFolderId)
+// 	if err != nil {
+// 		return nil, nil, nil, err
+// 	}
 
-	albumsList, err := api.getAlbumsOld("")
-	if err != nil {
-		return nil, nil, nil, err
-	}
+// 	albumsList, err := api.getAlbumsOld("")
+// 	if err != nil {
+// 		return nil, nil, nil, err
+// 	}
 
-	folders := make(map[FolderId]folder)
-	for i, f := range sejoursFolders {
-		fo := folder{
-			Id:    f.FolderId,
-			Label: f.Label,
-			id:    int64(i),
-		}
-		folders[f.FolderId] = fo
-	}
+// 	folders := make(map[FolderId]folder)
+// 	for i, f := range sejoursFolders {
+// 		fo := folder{
+// 			Id:    f.FolderId,
+// 			Label: f.Label,
+// 			id:    int64(i),
+// 		}
+// 		folders[f.FolderId] = fo
+// 	}
 
-	albums := make(map[string]AlbumExt, len(albumsList))
-	for _, album := range albumsList {
-		if folder, isIn := folders[album.FolderId]; isIn {
-			albums[album.AlbumId] = album
-			folder.childs = append(folder.childs, album)
-			folders[album.FolderId] = folder
-		}
-	}
+// 	albums := make(map[string]AlbumExt, len(albumsList))
+// 	for _, album := range albumsList {
+// 		if folder, isIn := folders[album.FolderId]; isIn {
+// 			albums[album.AlbumId] = album
+// 			folder.childs = append(folder.childs, album)
+// 			folders[album.FolderId] = folder
+// 		}
+// 	}
 
-	contactsList, err := api.getContacts()
-	if err != nil {
-		return nil, nil, nil, err
-	}
-	contacts := make(map[string]Contact, len(contactsList))
-	for _, c := range contactsList {
-		contacts[c.Id] = Contact{
-			Id:       c.Id,
-			Mail:     c.Mail,
-			Login:    c.Login,
-			Password: c.Password,
-		}
-	}
+// 	contactsList, err := api.getContacts()
+// 	if err != nil {
+// 		return nil, nil, nil, err
+// 	}
+// 	contacts := make(map[string]Contact, len(contactsList))
+// 	for _, c := range contactsList {
+// 		contacts[c.Id] = Contact{
+// 			Id:       c.Id,
+// 			Mail:     c.Mail,
+// 			Login:    c.Login,
+// 			Password: c.Password,
+// 		}
+// 	}
 
-	return folders, albums, contacts, nil
-}
+// 	return folders, albums, contacts, nil
+// }
 
 // Contact représente un contact Joomeo
 type Contact struct {
@@ -869,43 +908,4 @@ func (api *Api) RemoveContact(albumid, contactid string) error {
 		return err
 	}
 	return nil
-}
-
-// Renvoi le contact et la liste des albums authorisés du contact associé à l'adresse mail fournie.
-// Le contact renvoyé peut être vide si [mail] n'est pas utilisé.
-// Attention, le champ [NbFiles] n'est pas résolu.
-func (api *Api) GetLoginFromMail(mail string) (Contact, []AlbumExt, error) {
-	url := fmt.Sprintf("%s/users/%s/contacts", baseUrl, api.spaceName)
-	resp, err := sendRequest(http.MethodGet, url, nil, map[string]string{
-		"X-API-KEY":   api.apiKey,
-		"X-SESSIONID": api.sessionid,
-		"X-FILTER":    fmt.Sprintf("email=%s", mail),
-		"X-FIELDS":    "email,password",
-	})
-	if err != nil {
-		return Contact{}, nil, err
-	}
-	if err = checkError(resp, 200); err != nil {
-		return Contact{}, nil, err
-	}
-
-	var response struct {
-		List []Contact `json:"list"`
-	}
-	err = json.NewDecoder(resp.Body).Decode(&response)
-	if err != nil {
-		return Contact{}, nil, fmt.Errorf("impossible de décoder la réponse Joomeo: %s", err)
-	}
-
-	if len(response.List) == 0 { // aucun contact n'est encore enregistré
-		return Contact{}, nil, nil
-	}
-	contact := response.List[0]
-
-	albums, err := api.getAlbumsOld(contact.Id)
-	if err != nil {
-		return Contact{}, nil, err
-	}
-
-	return Contact(contact), albums, nil
 }

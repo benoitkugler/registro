@@ -84,18 +84,41 @@ func TestSejoursAlbums(t *testing.T) {
 	tu.AssertNoErr(t, err)
 }
 
-// func TestLoadAlbumDetailsTime(t *testing.T) {
-// 	api, err := InitApi(devCreds(t))
-// 	tu.AssertNoErr(t, err)
-// 	defer api.Close()
+func TestGetLoginFromMail(t *testing.T) {
+	api, err := NewApi(devCreds(t))
+	tu.AssertNoErr(t, err)
+	defer api.Close()
 
-// 	l, err := api.LoadSejoursAlbums()
-// 	tu.AssertNoErr(t, err)
+	root, err := api.GetSejoursFolder()
+	tu.AssertNoErr(t, err)
 
-// 	ti := time.Now()
-// 	api.loadSejoursAlbumsDetails(slices.Repeat(l[:1], 50))
-// 	fmt.Println(time.Since(ti))
-// }
+	a1, err := api.CreateAlbum(root, "__TEST  1")
+	tu.AssertNoErr(t, err)
+
+	a2, err := api.CreateAlbum(root, "__TEST 2")
+	tu.AssertNoErr(t, err)
+
+	ct, err := api.AddDirecteur(a1.Id, "Dummy@free.fr", false)
+	tu.AssertNoErr(t, err)
+	_, err = api.AddDirecteur(a2.Id, "Dummy@free.fr", false)
+	tu.AssertNoErr(t, err)
+
+	contact, albums, err := api.GetContactByMail("Dummy@free.fr")
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, contact.Id == ct.Id)
+	tu.Assert(t, len(albums) == 2)
+
+	err = api.deleteContact(ct.Id)
+	tu.AssertNoErr(t, err)
+	err = api.DeleteAlbum(a1.Id)
+	tu.AssertNoErr(t, err)
+	err = api.DeleteAlbum(a2.Id)
+	tu.AssertNoErr(t, err)
+}
+
+//
+//
+//
 
 func TestContacts(t *testing.T) {
 	api, err := NewApi(devCreds(t))
@@ -107,39 +130,39 @@ func TestContacts(t *testing.T) {
 	fmt.Println(l)
 }
 
-func TestFolders(t *testing.T) {
-	api, err := NewApi(devCreds(t))
-	tu.AssertNoErr(t, err)
-	defer api.Close()
+// func TestFolders(t *testing.T) {
+// 	api, err := NewApi(devCreds(t))
+// 	tu.AssertNoErr(t, err)
+// 	defer api.Close()
 
-	l, err := api.getFolders("")
-	tu.AssertNoErr(t, err)
-	fmt.Println(l)
+// 	l, err := api.getFolders("")
+// 	tu.AssertNoErr(t, err)
+// 	fmt.Println(l)
 
-	lchildren, err := api.getFolders(l[0].FolderId)
-	tu.AssertNoErr(t, err)
-	fmt.Println(lchildren)
+// 	lchildren, err := api.getFolders(l[0].FolderId)
+// 	tu.AssertNoErr(t, err)
+// 	fmt.Println(lchildren)
 
-	l2, err := api.getAlbumsOld("")
-	tu.AssertNoErr(t, err)
-	tu.Assert(t, len(l2) != 0)
+// 	l2, err := api.getAlbumsOld("")
+// 	tu.AssertNoErr(t, err)
+// 	tu.Assert(t, len(l2) != 0)
 
-	fmt.Println(l2[0].Date.date())
-	fmt.Println(l2[0].FolderId)
-	fmt.Println(l2)
-}
+// 	fmt.Println(l2[0].Date.date())
+// 	fmt.Println(l2[0].FolderId)
+// 	fmt.Println(l2)
+// }
 
-func TestGetAlbumsContacts(t *testing.T) {
-	api, err := NewApi(devCreds(t))
-	tu.AssertNoErr(t, err)
-	defer api.Close()
+// func TestGetAlbumsContacts(t *testing.T) {
+// 	api, err := NewApi(devCreds(t))
+// 	tu.AssertNoErr(t, err)
+// 	defer api.Close()
 
-	m1, m2, m3, err := api.GetAllAlbumsContacts()
-	tu.AssertNoErr(t, err)
-	fmt.Println(m1)
-	fmt.Println(m2)
-	fmt.Println("Nombre de contacts", len(m3))
-}
+// 	m1, m2, m3, err := api.GetAllAlbumsContacts()
+// 	tu.AssertNoErr(t, err)
+// 	fmt.Println(m1)
+// 	fmt.Println(m2)
+// 	fmt.Println("Nombre de contacts", len(m3))
+// }
 
 func TestAjouteContacts(t *testing.T) {
 	api, err := NewApi(devCreds(t))
@@ -179,19 +202,6 @@ func TestSetUploader(t *testing.T) {
 
 	err = api.SetContactUploader(albumidTest, l[0].Id)
 	tu.AssertNoErr(t, err)
-}
-
-func TestGetFromMail(t *testing.T) {
-	api, err := NewApi(devCreds(t))
-	tu.AssertNoErr(t, err)
-	defer api.Close()
-
-	contact, albums, err := api.GetLoginFromMail("x.ben.x@free.fr")
-	tu.AssertNoErr(t, err)
-	tu.Assert(t, contact.Id != "")
-
-	fmt.Println(contact)
-	fmt.Println(albums)
 }
 
 func TestGetMetadatas(t *testing.T) {

@@ -137,7 +137,7 @@ func (ct *Controller) loadJoomeo(id cps.IdEquipier) (Joomeo, error) {
 	}
 	defer api.Close()
 
-	contact, _, err := api.GetLoginFromMail(personne.Mail)
+	contact, _, err := api.GetContactByMail(personne.Mail)
 	if err != nil {
 		return Joomeo{}, fmt.Errorf("accès Joomeo: %s", err)
 	}
