@@ -2,11 +2,12 @@ package sheets
 
 import (
 	"bytes"
+	"fmt"
 	"strconv"
+	"time"
 
 	"registro/logic"
 	cps "registro/sql/camps"
-	"registro/utils"
 
 	"github.com/xuri/excelize/v2"
 )
@@ -391,6 +392,14 @@ func formatBool(b bool) string {
 	return "Non"
 }
 
+// formatTime returns a time following 22/02/2025 21:15:04 format
+func formatTime(t time.Time) string {
+	if t.IsZero() {
+		return ""
+	}
+	return fmt.Sprintf("%02d/%02d/%04d %02d:%02d:%02d", t.Day(), t.Month(), t.Year(), t.Hour(), t.Minute(), t.Second())
+}
+
 // ListeParticipants renvoie un document Excel
 func ListeParticipants(camp cps.Camp, inscrits []cps.ParticipantPersonne, dossiers logic.Dossiers, groupes map[cps.IdParticipant]cps.Groupe,
 	showNationnaliteSuisse bool,
@@ -436,7 +445,7 @@ func ListeParticipants(camp cps.Camp, inscrits []cps.ParticipantPersonne, dossie
 		}
 		var row [len(headersParticipant) + len(headersResponsable)]Cell = [...]Cell{
 			// inscrit
-			{Value: utils.FormatTime(dossier.Dossier.MomentInscription)},                         // Inscription
+			{Value: formatTime(dossier.Dossier.MomentInscription)},                               // Inscription
 			{Value: inscrit.Personne.FNom()},                                                     // Nom
 			{Value: inscrit.Personne.FPrenom()},                                                  // Prénom
 			{Value: inscrit.Personne.Sexe.String()},                                              // Sexe

@@ -83,3 +83,15 @@ func TestListeParticipants(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	tu.Write(t, "registro_ListeParticipants_2.xlsx", content)
 }
+
+func TestFormatTime(t *testing.T) {
+	for _, test := range []struct {
+		t        time.Time
+		expected string
+	}{
+		{time.Time{}, ""},
+		{time.Date(2000, time.January, 3, 1, 1, 12, 0, time.Local), "03/01/2000 01:01:12"},
+	} {
+		tu.Assert(t, formatTime(test.t) == test.expected)
+	}
+}
