@@ -92,6 +92,7 @@ type CampExt struct {
 	// Nom et prénom du directeur et ses adjoints
 	Direction string
 
+	WithoutInscription bool // API visible only
 	// Indique si les inscriptions sont encore fermées.
 	IsClosed bool
 	// Indique si le nombre d'inscrits maximum est atteint
@@ -134,8 +135,9 @@ func newCampExt(camp cps.Camp, taux ds.Taux, direction []pr.Personne, participan
 
 		Direction: dir,
 
-		IsClosed:  camp.Statut == cps.VisibleFerme,
-		IsComplet: inscrits >= camp.Places,
+		WithoutInscription: camp.WithoutInscription,
+		IsClosed:           camp.Statut == cps.VisibleFerme,
+		IsComplet:          inscrits >= camp.Places,
 	}
 }
 
@@ -455,6 +457,9 @@ func (ct *Controller) BuildInscription(publicInsc Inscription) (insc in.Inscript
 		camp, isCampValid := camps[publicPart.IdCamp]
 		if !isCampValid {
 			return insc, ps, errors.New("invalid IdCamp (not existing or open)")
+		}
+		if camp.WithoutInscription {
+			return insc, ps, errors.New("invalid IdCamp (camp without inscription)")
 		}
 		allTaux.Add(camp.IdTaux)
 

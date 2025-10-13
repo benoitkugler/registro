@@ -36,6 +36,7 @@ export interface CampExt {
   Meta: Meta;
   Prix: string;
   Direction: string;
+  WithoutInscription: boolean;
   IsClosed: boolean;
   IsComplet: boolean;
 }

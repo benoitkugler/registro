@@ -39,6 +39,7 @@ CREATE TABLE camps (
     AgeMin integer NOT NULL,
     AgeMax integer NOT NULL,
     NeedEquilibreGF boolean NOT NULL,
+    WithoutInscription boolean NOT NULL,
     Statut smallint CHECK (Statut IN (0, 1, 2)) NOT NULL,
     Prix Montant NOT NULL,
     OptionPrix jsonb NOT NULL,

@@ -461,6 +461,7 @@ export interface Camp {
   AgeMin: Int;
   AgeMax: Int;
   NeedEquilibreGF: boolean;
+  WithoutInscription: boolean;
   Statut: StatutCamp;
   Prix: Montant;
   OptionPrix: OptionPrixCamp;

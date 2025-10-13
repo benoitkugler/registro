@@ -211,6 +211,7 @@ func (ct *Controller) updateCamp(args cps.Camp) (cps.CampExt, error) {
 	camp.AgeMax = args.AgeMax
 	camp.Meta = args.Meta
 	camp.NeedEquilibreGF = args.NeedEquilibreGF
+	camp.WithoutInscription = args.WithoutInscription
 	camp.Statut = args.Statut
 	camp.Prix = args.Prix
 	camp.OptionPrix = args.OptionPrix

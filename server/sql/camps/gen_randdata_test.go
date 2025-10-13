@@ -48,6 +48,7 @@ func randCamp() Camp {
 	s.AgeMin = randint()
 	s.AgeMax = randint()
 	s.NeedEquilibreGF = randbool()
+	s.WithoutInscription = randbool()
 	s.Statut = randStatutCamp()
 	s.Prix = randdos_Montant()
 	s.OptionPrix = randOptionPrixCamp()

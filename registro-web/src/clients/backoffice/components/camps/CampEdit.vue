@@ -41,6 +41,14 @@
               v-model="inner.Statut"
             ></v-select>
           </v-col>
+          <v-col>
+            <v-switch
+              label="Camp sans inscription"
+              v-model="inner.WithoutInscription"
+              color="primary"
+              density="compact"
+            ></v-switch>
+          </v-col>
         </v-row>
         <v-row>
           <v-col align-self="center" cols="2">

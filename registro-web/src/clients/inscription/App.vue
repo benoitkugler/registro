@@ -223,7 +223,8 @@ const camps = ref<CampExt[]>([]);
 async function fetchCamps() {
   const res = await controller.GetCamps();
   if (res === undefined) return;
-  camps.value = res || [];
+  // ignore camp WithoutInscription
+  camps.value = (res || []).filter((c) => !c.WithoutInscription);
 }
 
 // preinscription form
