@@ -229,6 +229,7 @@ export interface Album {
   Label: string;
   Date: Time;
   FilesCount: Int;
+  Contacts: ContactPermission[] | null;
 }
 // registro/joomeo.AlbumAccessRules
 export interface AlbumAccessRules {

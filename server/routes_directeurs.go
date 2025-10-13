@@ -77,4 +77,7 @@ func setupRoutesDirecteurs(e *echo.Echo, ct *directeurs.Controller) {
 
 	// Joomeo
 	gr.GET("/api/v1/directeurs/joomeo", ct.JoomeoLoad)
+	gr.PUT("/api/v1/directeurs/joomeo", ct.JoomeoInvite)
+	gr.POST("/api/v1/directeurs/joomeo", ct.JoomeoSetUploader)
+	gr.DELETE("/api/v1/directeurs/joomeo", ct.JoomeoUnlinkContact)
 }

@@ -136,6 +136,11 @@ export interface Joomeo {
   MailsInscrits: string[] | null;
   MailsEquipiers: string[] | null;
 }
+// registro/controllers/directeurs.JoomeoInviteIn
+export interface JoomeoInviteIn {
+  Mails: string[] | null;
+  SendMail: boolean;
+}
 // registro/controllers/directeurs.LettreOut
 export interface LettreOut {
   Lettre: Lettredirecteur;
@@ -1521,6 +1526,56 @@ export abstract class AbstractAPI {
         headers: this.getHeaders(),
       });
       return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** JoomeoInvite performs the request and handles the error */
+  async JoomeoInvite(params: JoomeoInviteIn) {
+    const fullUrl = this.baseURL + "/api/v1/directeurs/joomeo";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<ContactPermission[] | null> = await Axios.put(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** JoomeoSetUploader performs the request and handles the error */
+  async JoomeoSetUploader(params: { joomeoId: string }) {
+    const fullUrl = this.baseURL + "/api/v1/directeurs/joomeo";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<ContactPermission> = await Axios.post(
+        fullUrl,
+        null,
+        {
+          headers: this.getHeaders(),
+          params: { joomeoId: params["joomeoId"] },
+        },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** JoomeoUnlinkContact performs the request and handles the error */
+  async JoomeoUnlinkContact(params: { joomeoId: string }) {
+    const fullUrl = this.baseURL + "/api/v1/directeurs/joomeo";
+    this.startRequest();
+    try {
+      await Axios.delete(fullUrl, {
+        headers: this.getHeaders(),
+        params: { joomeoId: params["joomeoId"] },
+      });
+      return true;
     } catch (error) {
       this.handleError(error);
     }

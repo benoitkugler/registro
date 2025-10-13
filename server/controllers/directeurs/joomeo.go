@@ -133,3 +133,62 @@ func (ct *Controller) invite(idCamp cps.IdCamp, args JoomeoInviteIn) ([]joomeo.C
 
 	return album.Contacts, nil
 }
+
+func (ct *Controller) JoomeoUnlinkContact(c echo.Context) error {
+	user := JWTUser(c)
+	joomeoId := c.QueryParam("joomeoId")
+
+	err := ct.removeContact(user, joomeoId)
+	if err != nil {
+		return err
+	}
+
+	return c.NoContent(200)
+}
+
+func (ct *Controller) removeContact(idCamp cps.IdCamp, joomeoId string) error {
+	camp, err := cps.SelectCamp(ct.db, idCamp)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	if camp.JoomeoID == "" {
+		return errors.New("internal error: no Joomeo album")
+	}
+	api, err := joomeo.NewApi(ct.joomeo)
+	if err != nil {
+		return err
+	}
+	defer api.Close()
+
+	err = api.UnlinkContact(camp.JoomeoID, joomeoId)
+	return err
+}
+
+func (ct *Controller) JoomeoSetUploader(c echo.Context) error {
+	user := JWTUser(c)
+	joomeoId := c.QueryParam("joomeoId")
+	out, err := ct.setUploader(user, joomeoId)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) setUploader(idCamp cps.IdCamp, contactId string) (joomeo.ContactPermission, error) {
+	camp, err := cps.SelectCamp(ct.db, idCamp)
+	if err != nil {
+		return joomeo.ContactPermission{}, utils.SQLError(err)
+	}
+
+	if camp.JoomeoID == "" {
+		return joomeo.ContactPermission{}, errors.New("internal error: no Joomeo album")
+	}
+	api, err := joomeo.NewApi(ct.joomeo)
+	if err != nil {
+		return joomeo.ContactPermission{}, err
+	}
+	defer api.Close()
+
+	return api.SetContactUploader(camp.JoomeoID, contactId)
+}

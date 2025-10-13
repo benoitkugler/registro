@@ -1,7 +1,6 @@
 package joomeo
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -138,6 +137,10 @@ func TestAddContacts(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(l) == 2)
 
+	perms, err := api.SetContactUploader(a1.Id, l[0].Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, perms.AccesRules.AllowDeleteFile && perms.AlbumPermissions.AllowUpload)
+
 	err = api.UnlinkContact(a1.Id, l[0].Id)
 	tu.AssertNoErr(t, err)
 
@@ -148,65 +151,3 @@ func TestAddContacts(t *testing.T) {
 	err = api.DeleteAlbum(a1.Id)
 	tu.AssertNoErr(t, err)
 }
-
-//
-//
-//
-
-func TestContacts(t *testing.T) {
-	api, err := NewApi(devCreds(t))
-	tu.AssertNoErr(t, err)
-	defer api.Close()
-
-	l, err := api.getContacts()
-	tu.AssertNoErr(t, err)
-	fmt.Println(l)
-}
-
-// func TestFolders(t *testing.T) {
-// 	api, err := NewApi(devCreds(t))
-// 	tu.AssertNoErr(t, err)
-// 	defer api.Close()
-
-// 	l, err := api.getFolders("")
-// 	tu.AssertNoErr(t, err)
-// 	fmt.Println(l)
-
-// 	lchildren, err := api.getFolders(l[0].FolderId)
-// 	tu.AssertNoErr(t, err)
-// 	fmt.Println(lchildren)
-
-// 	l2, err := api.getAlbumsOld("")
-// 	tu.AssertNoErr(t, err)
-// 	tu.Assert(t, len(l2) != 0)
-
-// 	fmt.Println(l2[0].Date.date())
-// 	fmt.Println(l2[0].FolderId)
-// 	fmt.Println(l2)
-// }
-
-// func TestGetAlbumsContacts(t *testing.T) {
-// 	api, err := NewApi(devCreds(t))
-// 	tu.AssertNoErr(t, err)
-// 	defer api.Close()
-
-// 	m1, m2, m3, err := api.GetAllAlbumsContacts()
-// 	tu.AssertNoErr(t, err)
-// 	fmt.Println(m1)
-// 	fmt.Println(m2)
-// 	fmt.Println("Nombre de contacts", len(m3))
-// }
-
-// func TestSetUploader(t *testing.T) {
-// 	api, err := NewApi(devCreds(t))
-// 	tu.AssertNoErr(t, err)
-// 	defer api.Close()
-
-// 	_, err = api.AjouteContacts("C2", 2019, albumidTest, []string{"x.ben.x@free.fr"}, false)
-// 	tu.AssertNoErr(t, err)
-// 	l, err := api.loadContactsFor(albumidTest)
-// 	tu.AssertNoErr(t, err)
-
-// 	err = api.SetContactUploader(albumidTest, l[0].Id)
-// 	tu.AssertNoErr(t, err)
-// }

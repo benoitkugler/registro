@@ -9,9 +9,14 @@
   >
   <v-card v-else title="Album et contacts" class="ma-2">
     <template #append>
-      <v-btn @click="showInvite = true">
+      <v-btn @click="showInvite = true" :disabled="isInviting">
         <template #prepend>
-          <v-icon color="green">mdi-plus</v-icon>
+          <v-progress-circular
+            indeterminate
+            v-if="isInviting"
+            size="small"
+          ></v-progress-circular>
+          <v-icon v-else color="green">mdi-plus</v-icon>
         </template>
         Inviter...
       </v-btn>
@@ -74,11 +79,13 @@
                         title="Permettre l'ajout"
                         subtitle="Donne le droit d'ajouter des photos"
                         prepend-icon="mdi-account-arrow-up"
+                        @click="setUploader(contact.contactid)"
                       ></v-list-item>
                       <v-list-item
                         title="Supprimer"
                         subtitle="Retire l'accès à l'album du séjour"
                         prepend-icon="mdi-delete"
+                        @click="unlink(contact.contactid)"
                       ></v-list-item>
                     </v-list>
                   </v-menu>
@@ -138,6 +145,9 @@
                   :title="mail.mail"
                   :subtitle="mail.kind"
                 >
+                  <template #prepend v-if="mailRule(mail.mail) != true">
+                    <v-icon color="orange">mdi-warning</v-icon>
+                  </template>
                   <template #append v-if="mail.kind == 'Autre'">
                     <v-btn
                       size="small"
@@ -156,9 +166,16 @@
           </v-row>
         </v-card-text>
         <v-card-actions>
-          <v-btn> Inviter sans envoi de mail </v-btn>
+          <v-btn @click="invite(false)" :disabled="!allSelectedMails.length">
+            Inviter sans envoi de mail
+          </v-btn>
           <v-spacer></v-spacer>
-          <v-btn color="green">Inviter par mail</v-btn>
+          <v-btn
+            color="green"
+            @click="invite(true)"
+            :disabled="!allSelectedMails.length"
+            >Inviter par mail</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -243,4 +260,44 @@ const allSelectedMails = computed(() => {
 });
 
 const mailRule = FormRules.mailJoomeo();
+
+const isInviting = ref(false);
+async function invite(sendMail: boolean) {
+  if (!data.value) return;
+  const mails = allSelectedMails.value
+    .filter((m) => mailRule(m.mail) == true)
+    .map((m) => m.mail);
+  if (!mails.length) return;
+
+  showInvite.value = false;
+  isInviting.value = true;
+  const res = await controller.JoomeoInvite({
+    Mails: mails,
+    SendMail: sendMail,
+  });
+  isInviting.value = false;
+  if (res === undefined) return;
+  controller.showMessage("Contacts invités avec succès.");
+  data.value!.Album.Contacts = res || [];
+}
+
+async function setUploader(joomeoId: string) {
+  const l = data.value?.Album.Contacts || [];
+  if (!l) return;
+  const res = await controller.JoomeoSetUploader({ joomeoId });
+  if (res === undefined) return;
+  const index = l.findIndex((rec) => rec.contactid == joomeoId);
+  l[index] = res;
+  controller.showMessage("Permissions accordées avec succès.");
+}
+
+async function unlink(joomeoId: string) {
+  const l = data.value?.Album.Contacts || [];
+  if (!l) return;
+  const res = await controller.JoomeoUnlinkContact({ joomeoId });
+  if (res === undefined) return;
+  const index = l.findIndex((rec) => rec.contactid == joomeoId);
+  l.splice(index, 1);
+  controller.showMessage("Contact retiré avec succès.");
+}
 </script>
