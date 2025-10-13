@@ -112,7 +112,11 @@
   </v-card>
 
   <!-- Edition -->
-  <v-dialog :model-value="toEdit != null" @update:model-value="toEdit = null">
+  <v-dialog
+    :model-value="toEdit != null"
+    @update:model-value="toEdit = null"
+    max-width="800px"
+  >
     <CampEdit
       v-if="toEdit != null"
       :camp="toEdit"

@@ -1,10 +1,14 @@
 <template>
-  <v-card
-    title="Modifier les métadonnées"
-    subtitle="Ces données sont exposées sur l'API publique des camps ouverts aux inscriptions."
-  >
+  <v-card subtitle="Métadonnées exposées sur l'API publique">
     <template #append>
-      <v-btn size="small" class="ml-2" @click="inner.push(['', ''])">
+      <v-btn
+        size="small"
+        class="ml-2"
+        @click="
+          inner.push(['', '']);
+          emitSave();
+        "
+      >
         <template #prepend>
           <v-icon color="green">mdi-plus</v-icon>
         </template>
@@ -20,6 +24,7 @@
             hide-details
             label="Clé"
             v-model="entry[0]"
+            @update:model-value="emitSave"
             autofocus
             :items="props.metaEntriesHints.keys"
           ></v-combobox>
@@ -31,20 +36,25 @@
             hide-details
             label="Valeur"
             v-model="entry[1]"
+            @update:model-value="emitSave"
             :items="props.metaEntriesHints.values"
           ></v-combobox>
         </v-col>
         <v-col cols="auto">
-          <v-btn icon size="small" flat @click="inner.splice(index, 1)">
+          <v-btn
+            icon
+            size="small"
+            flat
+            @click="
+              inner.splice(index, 1);
+              emitSave();
+            "
+          >
             <v-icon color="red">mdi-close</v-icon>
           </v-btn>
         </v-col>
       </v-row>
     </v-card-text>
-    <v-card-actions>
-      <v-spacer></v-spacer>
-      <v-btn :disabled="isDisabled" @click="emitSave"> Valider</v-btn>
-    </v-card-actions>
   </v-card>
 </template>
 
@@ -52,19 +62,18 @@
 import type { Meta } from "@/clients/backoffice/logic/api";
 import { computed, ref } from "vue";
 const props = defineProps<{
-  meta: Meta;
   metaEntriesHints: { keys: string[]; values: string[] };
 }>();
 
-const emit = defineEmits<{
-  (e: "save", meta: NonNullable<Meta>): void;
-}>();
+const meta = defineModel<Meta>({ required: true });
 
-const inner = ref(Object.entries(props.meta || {}));
+// const emit = defineEmits<{}>();
+
+const inner = ref(Object.entries(meta.value || {}));
 
 function emitSave() {
   const m = Object.fromEntries(inner.value);
-  emit("save", m);
+  meta.value = m;
 }
 
 const isDisabled = computed(() => {

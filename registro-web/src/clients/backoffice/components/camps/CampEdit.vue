@@ -1,207 +1,232 @@
 <template>
-  <v-card title="Editer les paramètres du séjour">
+  <v-card title="Paramètres du séjour" :subtitle="Camps.label(props.camp)">
     <v-card-text>
-      <v-form>
-        <v-row>
-          <v-col>
-            <v-text-field
-              autofocus
-              hide-details
-              label="Nom"
-              density="compact"
-              variant="outlined"
-              v-model="inner.Nom"
-            ></v-text-field>
-          </v-col>
-          <v-col>
-            <v-text-field
-              hide-details
-              label="Lieu"
-              density="compact"
-              variant="outlined"
-              v-model="inner.Lieu"
-            ></v-text-field>
-          </v-col>
-          <v-col>
-            <v-text-field
-              hide-details
-              label="Numéro d'agrément"
-              density="compact"
-              variant="outlined"
-              v-model="inner.Agrement"
-            ></v-text-field>
-          </v-col>
-          <v-col>
-            <v-select
-              label="Ouverture aux inscriptions"
-              variant="outlined"
-              density="compact"
-              :items="campStatutItems"
-              hide-details
-              v-model="inner.Statut"
-            ></v-select>
-          </v-col>
-          <v-col>
-            <v-switch
-              label="Camp sans inscription"
-              v-model="inner.WithoutInscription"
-              color="primary"
-              density="compact"
-            ></v-switch>
-          </v-col>
-        </v-row>
-        <v-row>
-          <v-col align-self="center" cols="2">
-            <DateField
-              v-model="inner.DateDebut"
-              label="Date de début"
-              hide-details
-            ></DateField>
-          </v-col>
-          <v-col align-self="center" cols="2">
-            <IntField
-              label="Durée (en jours)"
-              v-model="inner.Duree"
-              hide-details
-            ></IntField>
-          </v-col>
-          <v-col align-self="center" cols="2">
-            <DateField
-              :model-value="Camps.dateFin(inner)"
-              label="Date de fin"
-              readonly
-              hide-details
-            ></DateField>
-          </v-col>
-          <v-col align-self="center" cols="3">
-            <MontantField
-              label="Prix"
-              v-model="inner.Prix"
-              hide-details
-            ></MontantField>
-          </v-col>
-          <v-col align-self="center" cols="3" class="text-center">
-            <v-menu :close-on-content-click="false">
-              <template #activator="{ props: menuProps }">
-                <v-text-field
-                  v-bind="menuProps"
-                  readonly
-                  label="Option sur le prix"
-                  variant="outlined"
-                  density="compact"
-                  hide-details
-                  :model-value="formatOption(inner)"
-                >
-                </v-text-field>
-              </template>
+      <v-card class="my-2" subtitle="Général">
+        <v-card-text>
+          <v-row>
+            <v-col>
+              <v-text-field
+                autofocus
+                hide-details
+                label="Nom"
+                density="compact"
+                variant="outlined"
+                v-model="inner.Nom"
+              ></v-text-field>
+            </v-col>
+            <v-col>
+              <v-text-field
+                hide-details
+                label="Lieu"
+                density="compact"
+                variant="outlined"
+                v-model="inner.Lieu"
+              ></v-text-field>
+            </v-col>
+            <v-col>
+              <v-text-field
+                hide-details
+                label="Numéro d'agrément"
+                density="compact"
+                variant="outlined"
+                v-model="inner.Agrement"
+              ></v-text-field>
+            </v-col>
+          </v-row>
 
-              <CampOptionsPrix
-                :camp="inner"
-                v-model:option-prix="inner.OptionPrix"
-                v-model:option-qf="inner.OptionQuotientFamilial"
-              ></CampOptionsPrix>
-            </v-menu>
-          </v-col>
-        </v-row>
-        <v-row>
-          <v-col align-self="center" cols="2">
-            <IntField
-              v-model="inner.Places"
-              label="Nombre de places"
-            ></IntField>
-          </v-col>
-          <v-col align-self="center" cols="2">
-            <IntField v-model="inner.AgeMin" label="Âge minimum"></IntField>
-          </v-col>
-          <v-col align-self="center" cols="2">
-            <IntField v-model="inner.AgeMax" label="Âge maximum"></IntField>
-          </v-col>
-          <v-col cols="6">
-            <BoolField
-              v-model="inner.NeedEquilibreGF"
-              label="Equilibre G/F demandé"
-              density="compact"
-              persistent-hint
-              hint="Place un inscrit en liste d'attente en cas de déséquilibre Garçons/Filles"
-            ></BoolField>
-          </v-col>
-        </v-row>
-        <v-row>
-          <v-col>
-            <v-textarea
-              variant="outlined"
-              density="compact"
-              label="Description"
-              hint="Ce texte est affiché sur le formulaire d'inscription."
-              persistent-hint
-              rows="3"
-              v-model="inner.Description"
-            ></v-textarea>
-          </v-col>
-          <v-col cols="2"> </v-col>
-          <v-col cols="2">
-            <BoolField
-              label="Navette"
-              v-model="inner.Navette.Actif"
-            ></BoolField>
-          </v-col>
-          <v-col>
-            <v-textarea
-              variant="outlined"
-              density="compact"
-              label="Navette"
-              hint="Ce texte est affiché sur l'espace personnel de suivi."
-              persistent-hint
-              rows="3"
-              :disabled="!inner.Navette.Actif"
-              v-model="inner.Navette.Commentaire"
-            ></v-textarea>
-          </v-col>
-        </v-row>
-        <v-row>
-          <v-col>
-            <v-text-field
-              label="Image"
-              density="compact"
-              variant="outlined"
-              hint="Lien vers une image affichée sur le formulaire d'inscription"
-              persistent-hint
-              v-model="inner.ImageURL"
-            ></v-text-field>
-          </v-col>
-          <v-col cols="auto" align-self="center">
-            <v-chip elevation="1" label>
-              Métadonnées ({{ Object.keys(inner.Meta || {}).length }})
-              <v-menu
-                activator="parent"
-                :close-on-content-click="false"
-                v-model="showEditMeta"
-              >
-                <CampMetaEdit
-                  :meta="inner.Meta"
-                  :meta-entries-hints="metaEntriesHints"
-                  @save="
-                    (v) => {
-                      inner.Meta = v;
-                      showEditMeta = false;
-                    }
-                  "
-                ></CampMetaEdit>
+          <v-row>
+            <v-col align-self="center">
+              <DateField
+                v-model="inner.DateDebut"
+                label="Date de début"
+                hide-details
+              ></DateField>
+            </v-col>
+            <v-col align-self="center">
+              <IntField
+                label="Durée (en jours)"
+                v-model="inner.Duree"
+                hide-details
+              ></IntField>
+            </v-col>
+            <v-col align-self="center">
+              <DateField
+                :model-value="Camps.dateFin(inner)"
+                label="Date de fin"
+                readonly
+                hide-details
+              ></DateField>
+            </v-col>
+          </v-row>
+        </v-card-text>
+      </v-card>
+
+      <v-card class="my-2" subtitle="Prix">
+        <v-card-text>
+          <v-row>
+            <v-col align-self="center" cols="6">
+              <MontantField
+                label="Prix"
+                v-model="inner.Prix"
+                hide-details
+              ></MontantField>
+            </v-col>
+            <v-col align-self="center" cols="6" class="text-center">
+              <v-menu :close-on-content-click="false">
+                <template #activator="{ props: menuProps }">
+                  <v-text-field
+                    v-bind="menuProps"
+                    readonly
+                    label="Option sur le prix"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    :model-value="formatOption(inner)"
+                  >
+                  </v-text-field>
+                </template>
+
+                <CampOptionsPrix
+                  :camp="inner"
+                  v-model:option-prix="inner.OptionPrix"
+                  v-model:option-qf="inner.OptionQuotientFamilial"
+                ></CampOptionsPrix>
               </v-menu>
-            </v-chip>
-          </v-col>
-          <v-col>
-            <v-text-field
-              label="Mot de passe"
-              density="compact"
-              variant="outlined"
-              hint="Mot de passe d'accès à la page Directeur"
-              persistent-hint
-              v-model="inner.Password"
-            ></v-text-field>
-          </v-col>
-        </v-row>
-      </v-form>
+            </v-col>
+          </v-row>
+        </v-card-text>
+      </v-card>
+
+      <v-card class="my-2" subtitle="Visibilité">
+        <v-card-text>
+          <v-row>
+            <v-col align-self="center">
+              <v-select
+                label="Ouverture aux inscriptions"
+                variant="outlined"
+                density="compact"
+                :items="campStatutItems"
+                hide-details
+                v-model="inner.Statut"
+              ></v-select>
+            </v-col>
+            <v-col align-self="center">
+              <v-switch
+                label="Camp sans inscription"
+                v-model="inner.WithoutInscription"
+                color="primary"
+                density="compact"
+                persistent-hint
+                :hint="
+                  inner.WithoutInscription
+                    ? `Camp externe, uniquement visible sur l'API publique.`
+                    : ``
+                "
+              ></v-switch>
+            </v-col>
+          </v-row>
+        </v-card-text>
+      </v-card>
+
+      <v-card class="my-2" subtitle="Filtres sur les inscrits">
+        <v-card-text>
+          <v-row>
+            <v-col align-self="center">
+              <IntField
+                v-model="inner.Places"
+                label="Nombre de places"
+              ></IntField>
+            </v-col>
+            <v-col align-self="center">
+              <IntField v-model="inner.AgeMin" label="Âge minimum"></IntField>
+            </v-col>
+            <v-col align-self="center">
+              <IntField v-model="inner.AgeMax" label="Âge maximum"></IntField>
+            </v-col>
+          </v-row>
+          <v-row>
+            <v-col>
+              <BoolField
+                v-model="inner.NeedEquilibreGF"
+                label="Equilibre G/F demandé"
+                density="compact"
+                persistent-hint
+                hint="Place un inscrit en liste d'attente en cas de déséquilibre Garçons/Filles"
+              ></BoolField>
+            </v-col>
+          </v-row>
+        </v-card-text>
+      </v-card>
+
+      <v-card class="my-2" subtitle="Formulaire d'inscription">
+        <v-card-text>
+          <v-row>
+            <v-col>
+              <v-text-field
+                label="Image"
+                density="compact"
+                variant="outlined"
+                hint="URL d'une image affichée sur le formulaire d'inscription"
+                persistent-hint
+                v-model="inner.ImageURL"
+              ></v-text-field>
+            </v-col>
+          </v-row>
+          <v-row>
+            <v-col>
+              <v-textarea
+                variant="outlined"
+                density="compact"
+                label="Description"
+                hint="Ce texte est affiché sur le formulaire d'inscription."
+                persistent-hint
+                rows="3"
+                v-model="inner.Description"
+              ></v-textarea>
+            </v-col>
+            <v-col cols="2">
+              <BoolField
+                label="Navette"
+                v-model="inner.Navette.Actif"
+              ></BoolField>
+            </v-col>
+            <v-col>
+              <v-textarea
+                variant="outlined"
+                density="compact"
+                label="Navette"
+                hint="Ce texte est affiché sur l'espace personnel de suivi."
+                persistent-hint
+                rows="3"
+                :disabled="!inner.Navette.Actif"
+                v-model="inner.Navette.Commentaire"
+              ></v-textarea>
+            </v-col>
+          </v-row>
+        </v-card-text>
+      </v-card>
+
+      <v-card class="my-2" subtitle="Autre">
+        <v-card-text>
+          <v-row>
+            <v-col>
+              <v-text-field
+                label="Mot de passe"
+                density="compact"
+                variant="outlined"
+                hint="Mot de passe d'accès à la page Directeur"
+                persistent-hint
+                v-model="inner.Password"
+              ></v-text-field>
+            </v-col>
+          </v-row>
+        </v-card-text>
+      </v-card>
+
+      <CampMetaEdit
+        :meta-entries-hints="metaEntriesHints"
+        v-model="inner.Meta"
+      ></CampMetaEdit>
     </v-card-text>
     <v-card-actions>
       <v-spacer></v-spacer>
@@ -250,8 +275,6 @@ const areFieldsValid = computed(
 );
 
 const campStatutItems = selectItems(StatutCampLabels);
-
-const showEditMeta = ref(false);
 
 function formatOption(inner: Camp) {
   const hasQF = Camps.isQuotientFamilialActive(inner.OptionQuotientFamilial);
