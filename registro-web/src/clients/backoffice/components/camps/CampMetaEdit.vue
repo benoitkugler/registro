@@ -14,22 +14,25 @@
     <v-card-text class="pt-2">
       <v-row v-for="(entry, index) in inner">
         <v-col cols="4">
-          <v-text-field
+          <v-combobox
             variant="outlined"
             density="compact"
             hide-details
             label="Clé"
             v-model="entry[0]"
-          ></v-text-field>
+            autofocus
+            :items="props.metaEntriesHints.keys"
+          ></v-combobox>
         </v-col>
         <v-col>
-          <v-text-field
+          <v-combobox
             variant="outlined"
             density="compact"
             hide-details
             label="Valeur"
             v-model="entry[1]"
-          ></v-text-field>
+            :items="props.metaEntriesHints.values"
+          ></v-combobox>
         </v-col>
         <v-col cols="auto">
           <v-btn icon size="small" flat @click="inner.splice(index, 1)">
@@ -50,6 +53,7 @@ import type { Meta } from "@/clients/backoffice/logic/api";
 import { computed, ref } from "vue";
 const props = defineProps<{
   meta: Meta;
+  metaEntriesHints: { keys: string[]; values: string[] };
 }>();
 
 const emit = defineEmits<{

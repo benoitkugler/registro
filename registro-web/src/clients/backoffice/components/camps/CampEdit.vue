@@ -171,6 +171,7 @@
               >
                 <CampMetaEdit
                   :meta="inner.Meta"
+                  :meta-entries-hints="metaEntriesHints"
                   @save="
                     (v) => {
                       inner.Meta = v;
@@ -216,6 +217,7 @@ import CampOptionsPrix from "./CampOptionsPrix.vue";
 import CampMetaEdit from "./CampMetaEdit.vue";
 const props = defineProps<{
   camp: Camp;
+  metaEntriesHints: { keys: string[]; values: string[] };
 }>();
 const emit = defineEmits<{
   (e: "save", camp: Camp): void;

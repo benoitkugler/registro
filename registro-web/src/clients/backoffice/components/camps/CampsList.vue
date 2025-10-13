@@ -116,6 +116,7 @@
     <CampEdit
       v-if="toEdit != null"
       :camp="toEdit"
+      :meta-entries-hints="metaEntriesHints"
       @save="updateCamp"
     ></CampEdit>
   </v-dialog>
@@ -258,6 +259,21 @@ const campsData = reactive(new Map<IdCamp, CampHeader>());
 const isLoading = ref(false);
 
 const filter = reactive({ pattern: "", openOnly: false });
+
+const metaEntriesHints = computed(() => {
+  const keys = new Set<string>();
+  const values = new Set<string>();
+  for (const element of campsData.values()) {
+    for (const entry of Object.entries(element.Camp.Camp.Meta || {})) {
+      keys.add(entry[0]);
+      values.add(entry[1]);
+    }
+  }
+  return {
+    keys: Array.from(keys.keys()).sort(),
+    values: Array.from(values.keys()).sort(),
+  };
+});
 
 // with sort and filter
 const camps = computed(() => {
