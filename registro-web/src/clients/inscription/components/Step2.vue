@@ -12,8 +12,8 @@
       >
     </template>
     <v-card-text v-if="isStart">
-      <v-row class="my-4">
-        <v-col class="text-center">
+      <v-row class="my-4" no-gutters>
+        <v-col align-self="center" class="text-center">
           <v-btn size="large" class="text-none" @click="startWith('own')">
             <template #append>
               <v-icon>mdi-account</v-icon>
@@ -21,20 +21,15 @@
             Je m'inscris comme participant.
           </v-btn>
         </v-col>
-        <v-col class="text-center">
+        <v-col align-self="center" cols="auto">
+          <v-divider vertical thickness="4" class="py-4">ou</v-divider>
+        </v-col>
+        <v-col align-self="center" class="text-center">
           <v-btn size="large" class="text-none" @click="startWith('one')">
             <template #append>
               <v-icon>mdi-account-child</v-icon>
             </template>
             J'inscris un participant.
-          </v-btn>
-        </v-col>
-        <v-col class="text-center">
-          <v-btn size="large" class="text-none" @click="startWith('two')">
-            <template #append>
-              <v-icon>mdi-account-child</v-icon>
-            </template>
-            J'inscris deux participants (ou plus).
           </v-btn>
         </v-col>
       </v-row>
@@ -101,7 +96,7 @@ function newParticipant() {
   return out;
 }
 
-function startWith(mode: "own" | "one" | "two") {
+function startWith(mode: "own" | "one") {
   switch (mode) {
     case "own":
       const newP = newParticipant();
@@ -112,9 +107,6 @@ function startWith(mode: "own" | "one" | "two") {
       break;
     case "one":
       participants.value = [newParticipant()];
-      break;
-    case "two":
-      participants.value = [newParticipant(), newParticipant()];
       break;
   }
   isStart.value = false;
