@@ -14,8 +14,6 @@ func setupRoutesMisc(e *echo.Echo, dir *directeurs.Controller, fs *files.Control
 	// Directeurs
 
 	e.GET("/api/v1/directeurs/equipiers/files", dir.EquipiersDownloadFiles, dir.JWTMiddlewareForQuery())
-	e.GET("/api/v1/directeurs/participants/stream-fiches-sanitaires", dir.ParticipantsStreamFichesAndVaccins, dir.JWTMiddlewareForQuery())
-	e.GET("/api/v1/directeurs/documents/stream-documents", dir.DocumentsStreamUploaded, dir.JWTMiddlewareForQuery())
 
 	e.POST("/api/v1/directeurs/lettre-image", dir.LettreImageUpload, dir.JWTMiddlewareForQuery())
 

@@ -16,14 +16,14 @@
             subtitle="Document unique au format .pdf (sans les vaccins)"
           >
           </v-list-item>
-          <v-list-item
+          <!-- <v-list-item
             title="Fiches et vaccins"
             subtitle="Archive au format .zip"
             :href="
               endpoints.ParticipantsStreamFichesAndVaccins(controller.authToken)
             "
           >
-          </v-list-item>
+          </v-list-item> -->
         </v-list>
       </v-menu>
     </template>

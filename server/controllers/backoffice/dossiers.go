@@ -307,7 +307,7 @@ func (ct *Controller) loadDossier(host string, id ds.IdDossier) (DossierDetails,
 	if err != nil {
 		return DossierDetails{}, err
 	}
-	url := logic.URLEspacePerso(ct.key, host, id)
+	url := logic.EspacePersoURL(ct.key, host, id)
 	virement := OffuscateurVirements.Mask(id)
 	accounts := ct.asso.BankAccounts()
 	return DossierDetails{dossier.Publish(ct.key), url, virement, accounts}, nil
@@ -825,7 +825,7 @@ func (ct *Controller) mergeDossier(host string, args DossiersMergeIn) error {
 		}
 
 		if args.Notifie {
-			url := logic.URLEspacePerso(ct.key, host, args.To)
+			url := logic.EspacePersoURL(ct.key, host, args.To)
 			html, err := mails.NotifieFusionDossier(ct.asso, mails.NewContact(&fromResp), url)
 			if err != nil {
 				return err

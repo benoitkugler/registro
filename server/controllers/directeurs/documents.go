@@ -5,11 +5,15 @@ import (
 	"errors"
 	"fmt"
 	"slices"
+	"strings"
 
 	filesAPI "registro/controllers/files"
 	fsAPI "registro/controllers/files"
+	"registro/generators/pdfcreator"
 	"registro/logic"
+	"registro/mails"
 	cps "registro/sql/camps"
+	ds "registro/sql/dossiers"
 	fs "registro/sql/files"
 	pr "registro/sql/personnes"
 	"registro/utils"
@@ -442,71 +446,95 @@ func (ct *Controller) DocumentsDeleteDemandeFile(c echo.Context) error {
 
 // download API
 
-type DocumentsUploadedOut struct {
-	Personnes         pr.Personnes
-	DemandesDocuments []DemandeDocuments
+type ParticipantDocuments struct {
+	Id             cps.IdParticipant
+	Personne       string
+	Fichesanitaire pr.FichesanitaireState
+	Files          map[fs.IdDemande][]logic.PublicFile
 }
 
-type DemandeDocuments struct {
-	Demande    fs.Demande
-	UploadedBy []pr.IdPersonne // the ones with a file
+// ParticipantsDocuments is a 2D array participants as rows
+// and [Demande]s as columns
+type ParticipantsDocuments struct {
+	// conatins Vaccins, and a column for fiche sanitaire should be added
+	Demandes     fs.Demandes
+	Participants []ParticipantDocuments
 }
 
-// DocumentsGetUploaded renvoie les demandes et fichiers ajoutés par
-// les participants.
-func (ct *Controller) DocumentsGetUploaded(c echo.Context) error {
+func (ct *Controller) ParticipantsLoadFiles(c echo.Context) error {
 	user := JWTUser(c)
-	out, err := ct.getUploaded(user)
+	out, err := ct.loadParticipantsFiles(user)
 	if err != nil {
 		return err
 	}
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) getUploaded(id cps.IdCamp) (DocumentsUploadedOut, error) {
+func (ct *Controller) loadParticipantsFiles(id cps.IdCamp) (ParticipantsDocuments, error) {
 	// demandes
-	links1, err := fs.SelectDemandeCampsByIdCamps(ct.db, id)
+	// always include vaccin
+	vaccinDemande, err := fsAPI.DemandeVaccin(ct.db)
 	if err != nil {
-		return DocumentsUploadedOut{}, utils.SQLError(err)
+		return ParticipantsDocuments{}, err
 	}
-	demandes, err := fs.SelectDemandes(ct.db, links1.IdDemandes()...)
+	tmp, err := fs.SelectDemandeCampsByIdCamps(ct.db, id)
 	if err != nil {
-		return DocumentsUploadedOut{}, utils.SQLError(err)
+		return ParticipantsDocuments{}, utils.SQLError(err)
 	}
+	idDemandes := append(tmp.IdDemandes(), vaccinDemande.Id)
+
 	// personnes et fichiers
 	camp, err := cps.LoadCampPersonnes(ct.db, id)
 	if err != nil {
-		return DocumentsUploadedOut{}, err
+		return ParticipantsDocuments{}, err
 	}
 	personnes := camp.Personnes(true)
-	links2, err := fs.SelectFilePersonnesByIdPersonnes(ct.db, personnes.IDs()...)
-	if err != nil {
-		return DocumentsUploadedOut{}, utils.SQLError(err)
-	}
-	filesByDemande := links2.ByIdDemande()
 
-	out := DocumentsUploadedOut{Personnes: personnes}
-	for _, demande := range demandes {
-		out.DemandesDocuments = append(out.DemandesDocuments, DemandeDocuments{
-			Demande:    demande,
-			UploadedBy: filesByDemande[demande.Id].IdPersonnes(),
+	dossiers, err := ds.SelectDossiers(ct.db, camp.IdDossiers()...)
+	if err != nil {
+		return ParticipantsDocuments{}, utils.SQLError(err)
+	}
+
+	tmp2, err := pr.SelectFichesanitairesByIdPersonnes(ct.db, personnes.IDs()...)
+	if err != nil {
+		return ParticipantsDocuments{}, utils.SQLError(err)
+	}
+	fiches := tmp2.ByIdPersonne()
+
+	files, demandes, err := fsAPI.LoadFilesPersonnes(ct.db, ct.key, idDemandes, personnes.IDs()...)
+	if err != nil {
+		return ParticipantsDocuments{}, err
+	}
+
+	out := ParticipantsDocuments{Demandes: demandes}
+	for _, participant := range camp.Participants(true) {
+		personne, dossier := participant.Personne, dossiers[participant.Participant.IdDossier]
+		filesM := make(map[fs.IdDemande][]logic.PublicFile)
+		for _, demande := range idDemandes {
+			filesM[demande] = files[demande][personne.Id]
+		}
+		out.Participants = append(out.Participants, ParticipantDocuments{
+			Id:             participant.Participant.Id,
+			Personne:       personne.NOMPrenom(),
+			Fichesanitaire: fiches[personne.Id].State(dossier.MomentInscription),
+			Files:          filesM,
 		})
 	}
 
-	slices.SortFunc(out.DemandesDocuments, func(a, b DemandeDocuments) int { return int(a.Demande.Id - b.Demande.Id) })
+	slices.SortFunc(out.Participants, func(a, b ParticipantDocuments) int { return strings.Compare(a.Personne, b.Personne) })
 
 	return out, nil
 }
 
-// DocumentsStreamUploaded télécharge tous les fichiers pour une [Demande],
+// DocumentsStreamFiles télécharge tous les fichiers pour une [Demande],
 // dans une archive .ZIP
-func (ct *Controller) DocumentsStreamUploaded(c echo.Context) error {
+func (ct *Controller) DocumentsStreamFiles(c echo.Context) error {
 	user := JWTUser(c)
 	idDemande, err := utils.QueryParamInt[fs.IdDemande](c, "idDemande")
 	if err != nil {
 		return err
 	}
-	files, archiveName, err := ct.selectDocumentsForDemande(user, idDemande)
+	files, archiveName, err := ct.selectFilesForDemande(user, idDemande)
 	if err != nil {
 		return err
 	}
@@ -524,7 +552,12 @@ func (ct *Controller) DocumentsStreamUploaded(c echo.Context) error {
 	})
 }
 
-func (ct *Controller) selectDocumentsForDemande(idCamp cps.IdCamp, idDemande fs.IdDemande) (fs.Files, string, error) {
+func (ct *Controller) selectFilesForDemande(idCamp cps.IdCamp, idDemande fs.IdDemande) (fs.Files, string, error) {
+	demande, err := fs.SelectDemande(ct.db, idDemande)
+	if err != nil {
+		return nil, "", utils.SQLError(err)
+	}
+
 	// personnes et fichiers
 	camp, err := cps.LoadCampPersonnes(ct.db, idCamp)
 	if err != nil {
@@ -540,6 +573,113 @@ func (ct *Controller) selectDocumentsForDemande(idCamp cps.IdCamp, idDemande fs.
 		return nil, "", utils.SQLError(err)
 	}
 
-	archiveName := fmt.Sprintf("Fichiers %s.zip", camp.Camp.Label())
+	archiveName := fmt.Sprintf("Fichiers %s %s.zip", camp.Camp.Label(), demande.Title())
 	return files, archiveName, nil
+}
+
+func (ct *Controller) DocumentsDownloadFichesSanitaires(c echo.Context) error {
+	user := JWTUser(c)
+	content, name, err := ct.renderFichesSanitaires(user)
+	if err != nil {
+		return err
+	}
+	mimeType := fsAPI.SetBlobHeader(c, content, name)
+	return c.Blob(200, mimeType, content)
+}
+
+// ignore les participants majeurs et les fiches vides
+func (ct *Controller) renderFichesSanitaires(user cps.IdCamp) ([]byte, string, error) {
+	camp, err := cps.SelectCamp(ct.db, user)
+	if err != nil {
+		return nil, "", utils.SQLError(err)
+	}
+	participants, err := cps.SelectParticipantsByIdCamps(ct.db, user)
+	if err != nil {
+		return nil, "", utils.SQLError(err)
+	}
+	dossiers, err := ds.SelectDossiers(ct.db, participants.IdDossiers()...)
+	if err != nil {
+		return nil, "", utils.SQLError(err)
+	}
+	responsables, err := pr.SelectPersonnes(ct.db, dossiers.IdResponsables()...)
+	if err != nil {
+		return nil, "", utils.SQLError(err)
+	}
+	personnes, err := pr.SelectPersonnes(ct.db, participants.IdPersonnes()...)
+	if err != nil {
+		return nil, "", utils.SQLError(err)
+	}
+	tmp, err := pr.SelectFichesanitairesByIdPersonnes(ct.db, personnes.IDs()...)
+	if err != nil {
+		return nil, "", utils.SQLError(err)
+	}
+	fiches := tmp.ByIdPersonne()
+
+	var list []pdfcreator.FicheSanitaire
+	for _, part := range participants {
+		personne := personnes[part.IdPersonne]
+		fiche, hasFiche := fiches[part.IdPersonne]
+		if !hasFiche || personne.Age() >= 18 {
+			continue
+		}
+		responsable := responsables[dossiers[part.IdDossier].IdResponsable]
+		list = append(list, pdfcreator.FicheSanitaire{Personne: personne.Etatcivil, FicheSanitaire: fiche, Responsable: responsable.Etatcivil})
+	}
+	content, err := pdfcreator.CreateFicheSanitaires(ct.asso, list)
+	if err != nil {
+		return nil, "", err
+	}
+	name := fmt.Sprintf("Fiches sanitaires %s.pdf", camp.Label())
+	return content, name, nil
+}
+
+func (ct *Controller) ParticipantsRelanceDocuments(c echo.Context) error {
+	idParticipant, err := utils.QueryParamInt[cps.IdParticipant](c, "idParticipant")
+	if err != nil {
+		return err
+	}
+	err = ct.relanceDocuments(c.Request().Host, idParticipant)
+	if err != nil {
+		return err
+	}
+	return c.NoContent(200)
+}
+
+func (ct *Controller) relanceDocuments(host string, idParticipants ...cps.IdParticipant) error {
+	participants, err := cps.SelectParticipants(ct.db, idParticipants...)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	dossiers, err := logic.LoadDossiers(ct.db, participants.IdDossiers()...)
+	if err != nil {
+		return err
+	}
+	pool, err := mails.NewPool(ct.smtp, ct.asso.MailsSettings, nil)
+	if err != nil {
+		return err
+	}
+	defer pool.Close()
+
+	for _, participant := range participants {
+		dossier := dossiers.For(participant.IdDossier)
+		responsable := dossier.Responsable()
+		camp := dossier.Camps()[participant.IdCamp]
+		personne := dossier.PersonneFor(participant)
+		url := logic.EspacePersoURL(ct.key, host, dossier.Dossier.Id, utils.QP("origine", "relance-documents"))
+
+		html, err := mails.RelanceDocuments(ct.asso, mails.NewContact(&responsable), camp.Label(), personne.Prenom, url)
+		if err != nil {
+			return err
+		}
+		var ccs []string
+		if personne.Mail != "" {
+			ccs = append(ccs, personne.Mail)
+		}
+
+		err = pool.SendMail(responsable.Mail, "Documents du séjour", html, ccs, nil)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

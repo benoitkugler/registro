@@ -151,6 +151,11 @@ func (de *Dossier) PersonnesFor(participants []cps.Participant) []pr.Personne {
 	return out
 }
 
+// PersonneFor returns the personne for the given participant
+func (de *Dossier) PersonneFor(participant cps.Participant) pr.Personne {
+	return de.personnesM[participant.IdPersonne]
+}
+
 // Camps returns the map of [Camp]s concerned by this dossier.
 func (de *Dossier) Camps() cps.Camps { return de.campsInscrits(false) }
 

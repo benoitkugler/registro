@@ -33,11 +33,6 @@ export interface DemandeDirecteur {
   Demande: Demande;
   File: PublicFile;
 }
-// registro/controllers/directeurs.DemandeDocuments
-export interface DemandeDocuments {
-  Demande: Demande;
-  UploadedBy: IdPersonne[] | null;
-}
 // registro/controllers/directeurs.DemandeKey
 export interface DemandeKey {
   IdEquipier: IdEquipier;
@@ -70,11 +65,6 @@ export interface DocumentsOut {
   CampDemandes: DemandeDirecteur[] | null;
   HasLettre: boolean;
   AvailableDemandes: DemandeDirecteur[] | null;
-}
-// registro/controllers/directeurs.DocumentsUploadedOut
-export interface DocumentsUploadedOut {
-  Personnes: Personnes;
-  DemandesDocuments: DemandeDocuments[] | null;
 }
 // registro/controllers/directeurs.DossierHeader
 export interface DossierHeader {
@@ -157,6 +147,18 @@ export interface Messages {
   Messages: EventExt_Message[] | null;
   Dossiers: Record<IdDossier, DossierPersonnes> | null;
   NewMessagesCount: Int;
+}
+// registro/controllers/directeurs.ParticipantDocuments
+export interface ParticipantDocuments {
+  Id: IdParticipant;
+  Personne: string;
+  Fichesanitaire: FichesanitaireState;
+  Files: Record<IdDemande, PublicFile[] | null> | null;
+}
+// registro/controllers/directeurs.ParticipantsDocuments
+export interface ParticipantsDocuments {
+  Demandes: Demandes;
+  Participants: ParticipantDocuments[] | null;
 }
 // registro/controllers/directeurs.ParticipantsOut
 export interface ParticipantsOut {
@@ -301,6 +303,7 @@ export interface Camp {
   AgeMin: Int;
   AgeMax: Int;
   NeedEquilibreGF: boolean;
+  WithoutInscription: boolean;
   Statut: StatutCamp;
   Prix: Montant;
   OptionPrix: OptionPrixCamp;
@@ -675,6 +678,8 @@ export interface Demande {
   MaxDocs: Int;
   JoursValide: Int;
 }
+// registro/sql/files.Demandes
+export type Demandes = Record<IdDemande, Demande> | null;
 export type IdDemande = Int & { __opaque_int__: "IdDemande" };
 export type IdFile = Int & { __opaque_int__: "IdFile" };
 // registro/sql/personnes.Allergies
@@ -837,8 +842,6 @@ export interface Personne {
   Publicite: Publicite;
   IsTemp: boolean;
 }
-// registro/sql/personnes.Personnes
-export type Personnes = Record<IdPersonne, Personne> | null;
 // registro/sql/personnes.Publicite
 export interface Publicite {
   VersionPapier: boolean;
@@ -937,6 +940,24 @@ export abstract class AbstractAPI {
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  /** Returns an URL */
+  DocumentsStreamFiles(idDemande: IdDemande, token: string) {
+    return (
+      this.baseURL +
+      "/api/v1/directeurs/documents/stream-files" +
+      `?idDemande=${idDemande}&token=${token}`
+    );
+  }
+
+  /** Returns an URL */
+  DocumentsDownloadFichesSanitaires(token: string) {
+    return (
+      this.baseURL +
+      "/api/v1/directeurs/documents/download-fiches-sanitaires" +
+      `?token=${token}`
+    );
   }
 
   /** SelectPersonne performs the request and handles the error */
@@ -1105,25 +1126,32 @@ export abstract class AbstractAPI {
     }
   }
 
-  /** ParticipantsDownloadAllFichesSanitaires performs the request and handles the error */
-  async ParticipantsDownloadAllFichesSanitaires() {
-    const fullUrl =
-      this.baseURL +
-      "/api/v1/directeurs/participants/download-fiches-sanitaires";
+  /** ParticipantsLoadFiles performs the request and handles the error */
+  async ParticipantsLoadFiles() {
+    const fullUrl = this.baseURL + "/api/v1/directeurs/participants/files";
     this.startRequest();
     try {
-      const rep: AxiosResponse<Blob> = await Axios.get(fullUrl, {
-        headers: this.getHeaders(),
-        responseType: "arraybuffer",
-      });
-
-      const header = rep.headers["content-disposition"];
-      const startIndex = header.indexOf("filename=") + 9;
-      const endIndex = header.length;
-      const filename = decodeURIComponent(
-        header.substring(startIndex, endIndex),
+      const rep: AxiosResponse<ParticipantsDocuments> = await Axios.get(
+        fullUrl,
+        { headers: this.getHeaders() },
       );
-      return { blob: rep.data, filename: filename };
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** ParticipantsRelanceDocuments performs the request and handles the error */
+  async ParticipantsRelanceDocuments(params: { idParticipant: IdParticipant }) {
+    const fullUrl =
+      this.baseURL + "/api/v1/directeurs/participants/relance-documents";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, null, {
+        headers: this.getHeaders(),
+        params: { idParticipant: String(params["idParticipant"]) },
+      });
+      return true;
     } catch (error) {
       this.handleError(error);
     }
@@ -1497,21 +1525,6 @@ export abstract class AbstractAPI {
         params: { idDemande: String(params["idDemande"]) },
       });
       return true;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  /** DocumentsGetUploaded performs the request and handles the error */
-  async DocumentsGetUploaded() {
-    const fullUrl = this.baseURL + "/api/v1/directeurs/documents/uploaded";
-    this.startRequest();
-    try {
-      const rep: AxiosResponse<DocumentsUploadedOut> = await Axios.get(
-        fullUrl,
-        { headers: this.getHeaders() },
-      );
-      return rep.data;
     } catch (error) {
       this.handleError(error);
     }

@@ -68,6 +68,14 @@ type Demande struct {
 	JoursValide int
 }
 
+// Title returns either the Categorie or the Description
+func (d *Demande) Title() string {
+	if d.Categorie == NoBuiltin {
+		return d.Description
+	}
+	return d.Categorie.String()
+}
+
 // DemandeEquipier représente un document demandé à un équpier
 //
 // gomacro:SQL ADD UNIQUE(IdEquipier, IdDemande)

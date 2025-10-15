@@ -375,7 +375,7 @@ func (ct *Controller) setPlaceLiberee(host string, id cps.IdParticipant) (cps.Pa
 			return err
 		}
 		// notifie par mail
-		url := logic.URLEspacePerso(ct.key, host, participant.IdDossier,
+		url := logic.EspacePersoURL(ct.key, host, participant.IdDossier,
 			utils.QPInt("idEvent", ev.Id))
 		html, err := mails.NotifiePlaceLiberee(ct.asso, mails.NewContact(&responsable), camp.Camp.Label(), url)
 		if err != nil {

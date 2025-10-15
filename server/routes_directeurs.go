@@ -16,6 +16,9 @@ func setupRoutesDirecteurs(e *echo.Echo, ct *directeurs.Controller) {
 	// public image service, secured by key
 	e.GET(directeurs.EndpointLettreImages, ct.LettreImageGet) // ignore
 
+	e.GET("/api/v1/directeurs/documents/stream-files", ct.DocumentsStreamFiles, ct.JWTMiddlewareForQuery())                            // url-only
+	e.GET("/api/v1/directeurs/documents/download-fiches-sanitaires", ct.DocumentsDownloadFichesSanitaires, ct.JWTMiddlewareForQuery()) // url-only
+
 	// see also routes_misc.go
 
 	gr := e.Group("", ct.JWTMiddleware())
@@ -37,7 +40,9 @@ func setupRoutesDirecteurs(e *echo.Echo, ct *directeurs.Controller) {
 	gr.POST("/api/v1/directeurs/participants", ct.ParticipantsUpdate)
 	gr.GET("/api/v1/directeurs/participants/fiches-sanitaires", ct.ParticipantsGetFichesSanitaires)
 	gr.GET("/api/v1/directeurs/participants/download-fiche-sanitaire", ct.ParticipantsDownloadFicheSanitaire)
-	gr.GET("/api/v1/directeurs/participants/download-fiches-sanitaires", ct.ParticipantsDownloadAllFichesSanitaires)
+
+	gr.GET("/api/v1/directeurs/participants/files", ct.ParticipantsLoadFiles)
+	gr.POST("/api/v1/directeurs/participants/relance-documents", ct.ParticipantsRelanceDocuments)
 
 	// Messages
 	gr.GET("/api/v1/directeurs/participants/messages", ct.ParticipantsMessagesLoad)
@@ -72,8 +77,6 @@ func setupRoutesDirecteurs(e *echo.Echo, ct *directeurs.Controller) {
 	gr.DELETE("/api/v1/directeurs/documents/demande/file", ct.DocumentsDeleteDemandeFile)
 	gr.POST("/api/v1/directeurs/documents/demande/apply", ct.DocumentsApplyDemande)
 	gr.DELETE("/api/v1/directeurs/documents/demande/apply", ct.DocumentsUnapplyDemande)
-
-	gr.GET("/api/v1/directeurs/documents/uploaded", ct.DocumentsGetUploaded)
 
 	// Joomeo
 	gr.GET("/api/v1/directeurs/joomeo", ct.JoomeoLoad)

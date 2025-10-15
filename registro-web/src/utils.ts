@@ -21,6 +21,7 @@ import {
 } from "./clients/backoffice/logic/api";
 import {
   EventKind,
+  FichesanitaireState,
   type Role,
   type Roles,
 } from "./clients/directeurs/logic/api";
@@ -393,6 +394,17 @@ export namespace Formatters {
         return "green";
       default:
         return "";
+    }
+  }
+
+  export function colorFichesanitaireState(f: FichesanitaireState) {
+    switch (f) {
+      case FichesanitaireState.NoFiche:
+        return "red";
+      case FichesanitaireState.Outdated:
+        return "orange";
+      case FichesanitaireState.UpToDate:
+        return "green";
     }
   }
 

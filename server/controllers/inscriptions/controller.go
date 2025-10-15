@@ -511,7 +511,7 @@ func (ct *Controller) saveInscription(host string, publicInsc Inscription) (err 
 		// envoie un mail de demande de confirmation
 		cryptedId := crypto.EncryptID(ct.key, insc.Id)
 		urlValide := utils.BuildUrl(host, EndpointConfirmeInscription, utils.QP(queryParamIdInscription, cryptedId))
-		html, err := mails.ConfirmeInscription(ct.asso, mails.Contact{Prenom: insc.Responsable.Prenom, Sexe: insc.Responsable.Sexe}, urlValide)
+		html, err := mails.ValidationMailInscription(ct.asso, mails.Contact{Prenom: insc.Responsable.Prenom, Sexe: insc.Responsable.Sexe}, urlValide)
 		if err != nil {
 			return err
 		}
@@ -538,7 +538,7 @@ func (ct *Controller) ConfirmeInscription(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	url := logic.URLEspacePerso(ct.key, c.Request().Host, dossier.Id, utils.QP("from-inscription", "true"))
+	url := logic.EspacePersoURL(ct.key, c.Request().Host, dossier.Id, utils.QP("from-inscription", "true"))
 	return c.Redirect(307, url)
 }
 

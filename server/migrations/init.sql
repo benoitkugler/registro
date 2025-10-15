@@ -31,7 +31,7 @@ INSERT INTO demandes (Categorie, Description, MaxDocs, JoursValide)
         --
         (7, '', 2, 0),
         --
-        (8, '', 5, 0),
+        (8, 'Vaccins', 5, 0),
         --
         (9, 'Certificat délivré sur place après une formation.', 1, 0),
         --

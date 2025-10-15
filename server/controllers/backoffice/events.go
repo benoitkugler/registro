@@ -43,7 +43,7 @@ func (ct *Controller) sendMessage(host string, args EventsSendMessageIn, isFondS
 	if err != nil {
 		return evs.Event{}, utils.SQLError(err)
 	}
-	url := logic.URLEspacePerso(ct.key, host, args.IdDossier)
+	url := logic.EspacePersoURL(ct.key, host, args.IdDossier)
 	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
 		origine := evs.Backoffice
 		if isFondSoutien {
@@ -173,7 +173,7 @@ func (ct *Controller) sendFacture(host string, id ds.IdDossier) error {
 		if err != nil {
 			return err
 		}
-		url := logic.URLEspacePerso(ct.key, host, id, utils.QPInt("idEvent", event.Id))
+		url := logic.EspacePersoURL(ct.key, host, id, utils.QPInt("idEvent", event.Id))
 		// notifie le responsable
 		body, err := mails.NotifieFacture(ct.asso, mails.NewContact(&responsable), url)
 		if err != nil {
@@ -283,7 +283,7 @@ func (ct *Controller) sendDocumentsCamp(host string, args SendDocumentsCampIn) (
 				if err != nil {
 					return err
 				}
-				url := logic.URLEspacePerso(ct.key, host, idDossier, utils.QPInt("idEvent", event.Id))
+				url := logic.EspacePersoURL(ct.key, host, idDossier, utils.QPInt("idEvent", event.Id))
 				body, err := mails.NotifieDocumentsCamp(ct.asso, mails.NewContact(&responsable), camp.Label(), url)
 				if err != nil {
 					return err
@@ -346,7 +346,7 @@ func (ct *Controller) sendSondages(host string, idCamp cps.IdCamp) (iter.Seq2[Se
 				if err != nil {
 					return err
 				}
-				url := logic.URLEspacePerso(ct.key, host, idDossier, utils.QPInt("idEvent", event.Id))
+				url := logic.EspacePersoURL(ct.key, host, idDossier, utils.QPInt("idEvent", event.Id))
 				body, err := mails.NotifieSondage(ct.asso, mails.NewContact(&responsable), camp.Camp.Label(), url)
 				if err != nil {
 					return err
@@ -408,7 +408,7 @@ func (ct *Controller) sendRelancePaiement(host string, args RelancePaiementIn) (
 				if err != nil {
 					return err
 				}
-				url := logic.URLEspacePerso(ct.key, host, idDossier, utils.QPInt("idEvent", event.Id))
+				url := logic.EspacePersoURL(ct.key, host, idDossier, utils.QPInt("idEvent", event.Id))
 				// notifie le responsable
 				body, err := mails.NotifieFacture(ct.asso, mails.NewContact(&responsable), url)
 				if err != nil {

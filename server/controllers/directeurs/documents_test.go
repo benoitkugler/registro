@@ -32,10 +32,12 @@ func TestDocuments(t *testing.T) {
 		"../../migrations/init.sql")
 	defer db.Remove()
 
+	asso, smtp := loadEnv(t)
+
 	camp, err := cps.Camp{IdTaux: 1}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	pe1, err := pr.Personne{}.Insert(db)
+	pe1, err := pr.Personne{Etatcivil: pr.Etatcivil{Mail: "dummy@free.fr"}}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	pe2, err := pr.Personne{}.Insert(db)
@@ -47,12 +49,12 @@ func TestDocuments(t *testing.T) {
 	dossier, err := ds.Dossier{IdTaux: 1, IdResponsable: pe1.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	_, err = cps.Participant{IdPersonne: pe1.Id, IdCamp: camp.Id, IdDossier: dossier.Id, IdTaux: 1, Statut: cps.Inscrit}.Insert(db)
+	pa1, err := cps.Participant{IdPersonne: pe1.Id, IdCamp: camp.Id, IdDossier: dossier.Id, IdTaux: 1, Statut: cps.Inscrit}.Insert(db)
 	tu.AssertNoErr(t, err)
-	_, err = cps.Participant{IdPersonne: pe2.Id, IdCamp: camp.Id, IdDossier: dossier.Id, IdTaux: 1, Statut: cps.Inscrit}.Insert(db)
+	pa2, err := cps.Participant{IdPersonne: pe2.Id, IdCamp: camp.Id, IdDossier: dossier.Id, IdTaux: 1, Statut: cps.Inscrit}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	ct, err := NewController(db.DB, "", "", files.NewFileSystem(os.TempDir()), config.SMTP{}, config.Asso{}, config.Joomeo{})
+	ct, err := NewController(db.DB, "", "", files.NewFileSystem(os.TempDir()), smtp, asso, config.Joomeo{})
 	tu.AssertNoErr(t, err)
 
 	t.Run("files to download", func(t *testing.T) {
@@ -134,15 +136,18 @@ func TestDocuments(t *testing.T) {
 		err = createFileFor(ct.db, pe3.Id, demande2.Demande.Id)
 		tu.AssertNoErr(t, err)
 
-		out, err := ct.getUploaded(camp.Id)
+		docs, err := ct.loadParticipantsFiles(camp.Id)
 		tu.AssertNoErr(t, err)
-		tu.Assert(t, len(out.Personnes) == 2)
-		tu.Assert(t, len(out.DemandesDocuments) == 2)
-		tu.Assert(t, len(out.DemandesDocuments[0].UploadedBy) == 2)
-		tu.Assert(t, len(out.DemandesDocuments[1].UploadedBy) == 1)
+		tu.Assert(t, len(docs.Demandes) == 3)
+		tu.Assert(t, len(docs.Participants) == 2)
 
-		files, _, err := ct.selectDocumentsForDemande(camp.Id, demande1.Demande.Id)
+		files, _, err := ct.selectFilesForDemande(camp.Id, demande1.Demande.Id)
 		tu.AssertNoErr(t, err)
 		tu.Assert(t, len(files) == 2)
+	})
+
+	t.Run("relance", func(t *testing.T) {
+		err = ct.relanceDocuments("", pa1.Id, pa2.Id)
+		tu.AssertNoErr(t, err)
 	})
 }
