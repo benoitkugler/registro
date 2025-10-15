@@ -6,24 +6,7 @@
   est protégé. Vous pouvez le débloquer en cliquant sur le lien ci-dessous.
 </p>
 
-<table width="100%" style="text-align: center" cellpadding="5">
-  <tr>
-    <td></td>
-    <td width="35%" bgcolor="#feee00">
-      <a
-        style="
-          text-decoration: none;
-          color: #000000;
-          display: inline-block;
-          width: 100%;
-        "
-        href="{{ .URL }}"
-        ><b>PARTAGER</b></a
-      >
-    </td>
-    <td></td>
-  </tr>
-</table>
+{{ template "espacePersoButton" . }}
 
 <p>
   La nouvelle adresse mail <b>{{ .NewMail }}</b> y aura alors accès en lecture

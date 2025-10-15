@@ -16,25 +16,26 @@ import (
 var templates embed.FS
 
 var (
-	inviteEquipierT               *template.Template
-	notifieDonT                   *template.Template
-	confirmeInscriptionT          *template.Template
-	preinscriptionT               *template.Template
-	notifieFusionDossierT         *template.Template
-	notifieMessageT               *template.Template
-	notifieFactureT               *template.Template
-	notifieDocumentsCampT         *template.Template
-	notifieSondageT               *template.Template
-	notifiePlaceLibereeT          *template.Template
-	notifieValidationInscriptionT *template.Template
-	notifieModificationOptionsT   *template.Template
-	transfertFicheSanitaireT      *template.Template
+	inviteEquipierT             *template.Template
+	notifieDonT                 *template.Template
+	validationMailInscriptionT  *template.Template
+	preinscriptionT             *template.Template
+	notifieFusionDossierT       *template.Template
+	notifieMessageT             *template.Template
+	notifieFactureT             *template.Template
+	notifieDocumentsCampT       *template.Template
+	notifieSondageT             *template.Template
+	notifiePlaceLibereeT        *template.Template
+	confirmationInscriptionT    *template.Template
+	notifieModificationOptionsT *template.Template
+	transfertFicheSanitaireT    *template.Template
+	relanceDocumentsT           *template.Template
 )
 
 func init() {
 	inviteEquipierT = parseTemplate("templates/inviteEquipier.html")
 	notifieDonT = parseTemplate("templates/notifieDon.html")
-	confirmeInscriptionT = parseTemplate("templates/confirmeInscription.html")
+	validationMailInscriptionT = parseTemplate("templates/validationMailInscription.html")
 	preinscriptionT = parseTemplate("templates/preinscription.html")
 	notifieFusionDossierT = parseTemplate("templates/notifieFusionDossier.html")
 	notifieMessageT = parseTemplate("templates/notifieMessage.html")
@@ -42,13 +43,14 @@ func init() {
 	notifieDocumentsCampT = parseTemplate("templates/notifieDocumentsCamp.html")
 	notifieSondageT = parseTemplate("templates/notifieSondage.html")
 	notifiePlaceLibereeT = parseTemplate("templates/notifiePlaceLiberee.html")
-	notifieValidationInscriptionT = parseTemplate("templates/notifieValidationInscription.html")
+	confirmationInscriptionT = parseTemplate("templates/confirmationInscription.html")
 	notifieModificationOptionsT = parseTemplate("templates/notifieModificationOptions.html")
 	transfertFicheSanitaireT = parseTemplate("templates/transfertFicheSanitaire.html")
+	relanceDocumentsT = parseTemplate("templates/relanceDocuments.html")
 }
 
 func parseTemplate(templateFile string) *template.Template {
-	main := template.Must(template.New("").ParseFS(templates, "templates/main.html"))
+	main := template.Must(template.New("").ParseFS(templates, "templates/defs.html", "templates/main.html"))
 
 	_, err := main.New("_").ParseFS(templates, templateFile)
 	if err != nil {
@@ -96,13 +98,6 @@ type Participant struct {
 	Camp     string
 }
 
-// type DetailsParticipant struct {
-// 	Participant
-// 	Attente            rd.ListeAttente
-// 	Groupe             string
-// 	NeedFicheSanitaire bool
-// }
-
 type champsCommuns struct {
 	Title       string
 	Salutations string
@@ -111,102 +106,13 @@ type champsCommuns struct {
 	Asso config.Asso
 }
 
-// type paramsValideMail struct {
-// 	champsCommuns
-// 	UrlValideInscription string
-// }
-
-// type paramsDebloqueFicheSanitaire struct {
-// 	champsCommuns
-// 	NomPrenomParticipant      string
-// 	NewMail                   string
-// 	UrlDebloqueFicheSanitaire string
-// }
-
-// type paramsNotifieMessage struct {
-// 	champsCommuns
-// 	Contenu         string
-// 	EspacePersoURL string
-// }
-
-// type paramsNotifFusion struct {
-// 	champsCommuns
-// 	EspacePersoURL string
-// }
-
-// type paramsAccuseReceptionSimple struct {
-// 	Sejour string
-// 	champsCommuns
-// }
-
-// type paramsNotifEnvoisDocs struct {
-// 	LabelCamp string
-// 	Envois    rd.Envois
-// }
-
-// type Responsable struct {
-// 	Contact
-// 	Mail, Tels string
-// }
-
-// type paramsNotifieDirecteur struct {
-// 	champsCommuns
-// 	Directeur    Contact
-// 	Participants []Participant
-// 	Responsable  Responsable
-// 	InfoLines    []string
-// 	LabelCamp    string
-// }
-
-// type ResumeDossier struct {
-// 	Responsable rd.BasePersonne
-// 	Lien        string
-// 	CampsMap    rd.Camps
-// }
-
-// func (r ResumeDossier) Camps() string {
-// 	var tmp []string
-// 	for _, camp := range r.CampsMap {
-// 		tmp = append(tmp, camp.Label().String())
-// 	}
-// 	return strings.Join(tmp, ", ")
-// }
-
-// type paramsRenvoieEspacePersoURL struct {
-// 	champsCommuns
-// 	Mail     string
-// 	Dossiers []ResumeDossier
-// }
-
-// type paramsRenvoieLienJoomeo struct {
-// 	champsCommuns
-// 	Lien     string
-// 	Login    string
-// 	Password string
-// }
-
-// type paramsRenvoieLienFicheSanitaire struct {
-// 	champsCommuns
-// 	Lien   string
-// 	Sejour string
-// }
-
-// func newChampCommuns(contact Contact, title string) champsCommuns {
-// 	return champsCommuns{
-// 		Contact:       contact,
-// 		Title:         title,
-// 		FooterTitle:   rd.Asso.Title,
-// 		FooterInfos:   rd.Asso.Infos,
-// 		SignatureMail: rd.SignatureMail,
-// 	}
-// }
-
 func NotifieMessage(asso config.Asso, contact Contact, contenu, lienEspacePerso string) (string, error) {
 	contenu = strings.ReplaceAll(contenu, "\n", "<br/>")
 	args := struct {
 		champsCommuns
-		Contenu        template.HTML
-		EspacePersoURL string
+		Contenu                template.HTML
+		EspacePersoURL         string
+		EspacePersoButtonLabel string
 	}{
 		champsCommuns: champsCommuns{
 			Title:       "Nouveau message",
@@ -214,8 +120,9 @@ func NotifieMessage(asso config.Asso, contact Contact, contenu, lienEspacePerso 
 			Asso:        asso,
 			Signature:   mailAuto,
 		},
-		Contenu:        template.HTML(contenu),
-		EspacePersoURL: lienEspacePerso,
+		Contenu:                template.HTML(contenu),
+		EspacePersoURL:         lienEspacePerso,
+		EspacePersoButtonLabel: "MON ESPACE",
 	}
 	return render(notifieMessageT, args)
 }
@@ -223,7 +130,8 @@ func NotifieMessage(asso config.Asso, contact Contact, contenu, lienEspacePerso 
 func NotifieFacture(asso config.Asso, contact Contact, lienEspacePerso string) (string, error) {
 	args := struct {
 		champsCommuns
-		EspacePersoURL string
+		EspacePersoURL         string
+		EspacePersoButtonLabel string
 	}{
 		champsCommuns: champsCommuns{
 			Title:       "Demande de règlement",
@@ -231,7 +139,8 @@ func NotifieFacture(asso config.Asso, contact Contact, lienEspacePerso string) (
 			Asso:        asso,
 			Signature:   mailAuto,
 		},
-		EspacePersoURL: lienEspacePerso,
+		EspacePersoURL:         lienEspacePerso,
+		EspacePersoButtonLabel: "MON ESPACE",
 	}
 	return render(notifieFactureT, args)
 }
@@ -239,8 +148,9 @@ func NotifieFacture(asso config.Asso, contact Contact, lienEspacePerso string) (
 func NotifieDocumentsCamp(asso config.Asso, contact Contact, campLabel string, lienEspacePerso string) (string, error) {
 	args := struct {
 		champsCommuns
-		CampLabel      string
-		EspacePersoURL string
+		CampLabel              string
+		EspacePersoURL         string
+		EspacePersoButtonLabel string
 	}{
 		champsCommuns: champsCommuns{
 			Title:       "Documents du séjour",
@@ -248,8 +158,9 @@ func NotifieDocumentsCamp(asso config.Asso, contact Contact, campLabel string, l
 			Asso:        asso,
 			Signature:   mailAuto,
 		},
-		CampLabel:      campLabel,
-		EspacePersoURL: lienEspacePerso,
+		CampLabel:              campLabel,
+		EspacePersoURL:         lienEspacePerso,
+		EspacePersoButtonLabel: "MON ESPACE",
 	}
 	return render(notifieDocumentsCampT, args)
 }
@@ -257,8 +168,9 @@ func NotifieDocumentsCamp(asso config.Asso, contact Contact, campLabel string, l
 func NotifieSondage(asso config.Asso, contact Contact, campLabel string, lienEspacePerso string) (string, error) {
 	args := struct {
 		champsCommuns
-		CampLabel      string
-		EspacePersoURL string
+		CampLabel              string
+		EspacePersoURL         string
+		EspacePersoButtonLabel string
 	}{
 		champsCommuns: champsCommuns{
 			Title:       "Avis sur le séjour",
@@ -266,8 +178,9 @@ func NotifieSondage(asso config.Asso, contact Contact, campLabel string, lienEsp
 			Asso:        asso,
 			Signature:   mailAuto,
 		},
-		CampLabel:      campLabel,
-		EspacePersoURL: lienEspacePerso,
+		CampLabel:              campLabel,
+		EspacePersoURL:         lienEspacePerso,
+		EspacePersoButtonLabel: "RÉPONDRE",
 	}
 	return render(notifieSondageT, args)
 }
@@ -295,22 +208,12 @@ func Preinscription(asso config.Asso, mail string, responsables []RespoWithLink)
 	return render(preinscriptionT, args)
 }
 
-// func NewRenvoieEspacePersoURL(mail string, dossiers []ResumeDossier) (string, error) {
-// 	commun := newChampCommuns(Contact{}, "Espace de suivi")
-// 	commun.SignatureMail = "<i>Ps : Ceci est un mail automatique, merci de ne pas y répondre.</i>"
-// 	p := paramsRenvoieEspacePersoURL{
-// 		champsCommuns: commun,
-// 		Mail:          mail,
-// 		Dossiers:      dossiers,
-// 	}
-// 	return render(templates.RenvoieEspacePersoURL, "base.html", p)
-// }
-
-func ConfirmeInscription(asso config.Asso, contact Contact, urlConfirmeInscription string) (string, error) {
+func ValidationMailInscription(asso config.Asso, contact Contact, urlConfirmeInscription string) (string, error) {
 	args := struct {
 		champsCommuns
-		URL        template.HTML
-		MailCentre string
+		MailCentre             string
+		EspacePersoURL         template.HTML
+		EspacePersoButtonLabel string
 	}{
 		champsCommuns: champsCommuns{
 			Title:       "Validation de l'adresse mail",
@@ -318,20 +221,22 @@ func ConfirmeInscription(asso config.Asso, contact Contact, urlConfirmeInscripti
 			Signature:   mailAutoSignature,
 			Asso:        asso,
 		},
-		URL:        template.HTML(urlConfirmeInscription),
-		MailCentre: asso.ContactMail,
+		MailCentre:             asso.ContactMail,
+		EspacePersoURL:         template.HTML(urlConfirmeInscription),
+		EspacePersoButtonLabel: "VALIDER MON ADRESSE",
 	}
 
-	return render(confirmeInscriptionT, args)
+	return render(validationMailInscriptionT, args)
 }
 
-func NotifieValidationInscription(asso config.Asso, contact Contact, lienEspacePerso string, inscrits, attente, astatuer []Participant) (string, error) {
+func ConfirmationInscription(asso config.Asso, contact Contact, lienEspacePerso string, inscrits, attente, astatuer []Participant) (string, error) {
 	args := struct {
 		champsCommuns
-		Inscrits       []Participant
-		Attente        []Participant
-		AStatuer       []Participant
-		EspacePersoURL string
+		Inscrits               []Participant
+		Attente                []Participant
+		AStatuer               []Participant
+		EspacePersoURL         string
+		EspacePersoButtonLabel string
 	}{
 		champsCommuns: champsCommuns{
 			Title:       "Inscription confirmée",
@@ -339,21 +244,23 @@ func NotifieValidationInscription(asso config.Asso, contact Contact, lienEspaceP
 			Signature:   mailAutoSignature,
 			Asso:        asso,
 		},
-		Inscrits:       inscrits,
-		Attente:        attente,
-		AStatuer:       astatuer,
-		EspacePersoURL: lienEspacePerso,
+		Inscrits:               inscrits,
+		Attente:                attente,
+		AStatuer:               astatuer,
+		EspacePersoURL:         lienEspacePerso,
+		EspacePersoButtonLabel: "Mon espace",
 	}
 
-	return render(notifieValidationInscriptionT, args)
+	return render(confirmationInscriptionT, args)
 }
 
 func TransfertFicheSanitaire(asso config.Asso, urlDebloqueFicheSanitaire, newMail, participant string) (string, error) {
 	args := struct {
 		champsCommuns
-		URL         string
-		NewMail     string
-		Participant string
+		NewMail                string
+		Participant            string
+		EspacePersoURL         string
+		EspacePersoButtonLabel string
 	}{
 		champsCommuns: champsCommuns{
 			Title:       "Accès à la fiche sanitaire",
@@ -361,35 +268,13 @@ func TransfertFicheSanitaire(asso config.Asso, urlDebloqueFicheSanitaire, newMai
 			Signature:   mailAutoSignature,
 			Asso:        asso,
 		},
-		URL:         urlDebloqueFicheSanitaire,
-		NewMail:     newMail,
-		Participant: participant,
+		NewMail:                newMail,
+		Participant:            participant,
+		EspacePersoURL:         urlDebloqueFicheSanitaire,
+		EspacePersoButtonLabel: "PARTAGER",
 	}
 	return render(transfertFicheSanitaireT, args)
 }
-
-// // paramsNotifieDirecteur est à compléter
-// func NewNotifieDirecteur(directeur Contact, participants []Participant, responsable Responsable,
-// 	infoLines []string, labelCamp string,
-// ) (string, error) {
-// 	p := paramsNotifieDirecteur{
-// 		champsCommuns: newChampCommuns(directeur, "Nouvelle inscription"),
-// 		Directeur:     directeur,
-// 		Participants:  participants,
-// 		Responsable:   responsable,
-// 		InfoLines:     infoLines,
-// 		LabelCamp:     labelCamp,
-// 	}
-// 	return render(templates.NotifDirecteur, "base.html", p)
-// }
-
-// func NewNotifieEnvoiDocs(camp rd.Camp) (string, error) {
-// 	p := paramsNotifEnvoisDocs{
-// 		Envois:    camp.Envois,
-// 		LabelCamp: camp.Label().String(),
-// 	}
-// 	return render(templates.NotifEnvoisDocs, "notif_envois_docs.html", p)
-// }
 
 func InviteEquipier(cfg config.Asso, labelCamp string, directeur string, equipier pr.Etatcivil, lienFormulaire string) (string, error) {
 	s := "Cher"
@@ -479,9 +364,10 @@ func NotifieFusionDossier(cfg config.Asso, contact Contact, lienEspacePerso stri
 func NotifiePlaceLiberee(cfg config.Asso, contact Contact, camp string, lienEspacePerso string) (string, error) {
 	args := struct {
 		champsCommuns
-		Contact        Contact
-		Camp           string
-		EspacePersoURL string
+		Contact                Contact
+		Camp                   string
+		EspacePersoURL         string
+		EspacePersoButtonLabel string
 	}{
 		champsCommuns: champsCommuns{
 			Title:       "Place disponible",
@@ -489,11 +375,36 @@ func NotifiePlaceLiberee(cfg config.Asso, contact Contact, camp string, lienEspa
 			Asso:        cfg,
 			Signature:   cfg.MailsSettings.SignatureMailCentre + "<br/><br/>" + mailAuto,
 		},
-		Contact:        contact,
-		Camp:           camp,
-		EspacePersoURL: lienEspacePerso,
+		Contact:                contact,
+		Camp:                   camp,
+		EspacePersoURL:         lienEspacePerso,
+		EspacePersoButtonLabel: "MON ESPACE",
 	}
 	return render(notifiePlaceLibereeT, args)
+}
+
+func RelanceDocuments(cfg config.Asso, contact Contact, camp, prenom, espacePersoURL string) (string, error) {
+	args := struct {
+		champsCommuns
+		Contact                Contact
+		Camp                   string
+		Prenom                 string
+		EspacePersoURL         string
+		EspacePersoButtonLabel string
+	}{
+		champsCommuns: champsCommuns{
+			Title:       "Documents à remplir",
+			Salutations: contact.Salutations(),
+			Asso:        cfg,
+			Signature:   cfg.MailsSettings.SignatureMailCentre + "<br/><br/>" + mailAuto,
+		},
+		Contact:                contact,
+		Camp:                   camp,
+		Prenom:                 prenom,
+		EspacePersoURL:         espacePersoURL,
+		EspacePersoButtonLabel: "COMPLÉTER LES DOCUMENTS",
+	}
+	return render(relanceDocumentsT, args)
 }
 
 // func NewRenvoieLienJoomeo(lien, login, password string) (string, error) {
@@ -517,4 +428,117 @@ func NotifiePlaceLiberee(cfg config.Asso, contact Contact, camp string, lienEspa
 // 		Sejour:        sejour,
 // 	}
 // 	return render(templates.RenvoieLienFicheSanitaire, "base.html", p)
+// }
+
+// // paramsNotifieDirecteur est à compléter
+// func NewNotifieDirecteur(directeur Contact, participants []Participant, responsable Responsable,
+// 	infoLines []string, labelCamp string,
+// ) (string, error) {
+// 	p := paramsNotifieDirecteur{
+// 		champsCommuns: newChampCommuns(directeur, "Nouvelle inscription"),
+// 		Directeur:     directeur,
+// 		Participants:  participants,
+// 		Responsable:   responsable,
+// 		InfoLines:     infoLines,
+// 		LabelCamp:     labelCamp,
+// 	}
+// 	return render(templates.NotifDirecteur, "base.html", p)
+// }
+
+// func NewNotifieEnvoiDocs(camp rd.Camp) (string, error) {
+// 	p := paramsNotifEnvoisDocs{
+// 		Envois:    camp.Envois,
+// 		LabelCamp: camp.Label().String(),
+// 	}
+// 	return render(templates.NotifEnvoisDocs, "notif_envois_docs.html", p)
+// }
+
+// type paramsValideMail struct {
+// 	champsCommuns
+// 	UrlValideInscription string
+// }
+
+// type paramsDebloqueFicheSanitaire struct {
+// 	champsCommuns
+// 	NomPrenomParticipant      string
+// 	NewMail                   string
+// 	UrlDebloqueFicheSanitaire string
+// }
+
+// type paramsNotifieMessage struct {
+// 	champsCommuns
+// 	Contenu         string
+// 	EspacePersoURL string
+// }
+
+// type paramsNotifFusion struct {
+// 	champsCommuns
+// 	EspacePersoURL string
+// }
+
+// type paramsAccuseReceptionSimple struct {
+// 	Sejour string
+// 	champsCommuns
+// }
+
+// type paramsNotifEnvoisDocs struct {
+// 	LabelCamp string
+// 	Envois    rd.Envois
+// }
+
+// type Responsable struct {
+// 	Contact
+// 	Mail, Tels string
+// }
+
+// type paramsNotifieDirecteur struct {
+// 	champsCommuns
+// 	Directeur    Contact
+// 	Participants []Participant
+// 	Responsable  Responsable
+// 	InfoLines    []string
+// 	LabelCamp    string
+// }
+
+// type ResumeDossier struct {
+// 	Responsable rd.BasePersonne
+// 	Lien        string
+// 	CampsMap    rd.Camps
+// }
+
+// func (r ResumeDossier) Camps() string {
+// 	var tmp []string
+// 	for _, camp := range r.CampsMap {
+// 		tmp = append(tmp, camp.Label().String())
+// 	}
+// 	return strings.Join(tmp, ", ")
+// }
+
+// type paramsRenvoieEspacePersoURL struct {
+// 	champsCommuns
+// 	Mail     string
+// 	Dossiers []ResumeDossier
+// }
+
+// type paramsRenvoieLienJoomeo struct {
+// 	champsCommuns
+// 	Lien     string
+// 	Login    string
+// 	Password string
+// }
+
+// type paramsRenvoieLienFicheSanitaire struct {
+// 	champsCommuns
+// 	Lien   string
+// 	Sejour string
+// }
+
+// func newChampCommuns(contact Contact, title string) champsCommuns {
+// 	return champsCommuns{
+// 		Contact:       contact,
+// 		Title:         title,
+// 		FooterTitle:   rd.Asso.Title,
+// 		FooterInfos:   rd.Asso.Infos,
+// 		SignatureMail: rd.SignatureMail,
+// 	}
 // }

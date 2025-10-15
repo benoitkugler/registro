@@ -10,6 +10,203 @@ import (
 	tu "registro/utils/testutils"
 )
 
+func TestNotifieMessage(t *testing.T) {
+	asso, _ := loadEnv(t)
+
+	html, err := NotifieMessage(asso,
+		Contact{Prenom: "Claudy", Sexe: pr.Woman},
+		"sdlmdmlk\nmsldsm\n\nmsldk! smdlsmdlslùd",
+		"https://acve.fr/inscription/valide?data:cryp4tedinscriptin",
+	)
+	tu.AssertNoErr(t, err)
+
+	tu.Write(t, "NotifieMessage.html", []byte(html))
+}
+
+func TestNotifieFacture(t *testing.T) {
+	asso, _ := loadEnv(t)
+
+	html, err := NotifieFacture(asso,
+		Contact{Prenom: "Claudy", Sexe: pr.Woman},
+		"https://acve.fr/inscription/valide?data:cryp4tedinscriptin",
+	)
+	tu.AssertNoErr(t, err)
+
+	tu.Write(t, "NotifieFacture.html", []byte(html))
+}
+
+func TestNotifieDocumentsCamp(t *testing.T) {
+	asso, _ := loadEnv(t)
+
+	html, err := NotifieDocumentsCamp(asso,
+		Contact{Prenom: "Claudy", Sexe: pr.Woman},
+		"Vive la vie 2025",
+		"https://acve.fr/inscription/valide?data:cryp4tedinscriptin",
+	)
+	tu.AssertNoErr(t, err)
+
+	tu.Write(t, "NotifieDocumentsCamp.html", []byte(html))
+}
+
+func TestNotifieSondage(t *testing.T) {
+	asso, _ := loadEnv(t)
+
+	html, err := NotifieSondage(asso,
+		Contact{Prenom: "Claudy", Sexe: pr.Woman},
+		"Vive la vie 2025",
+		"https://acve.fr/inscription/valide?data:cryp4tedinscriptin",
+	)
+	tu.AssertNoErr(t, err)
+
+	tu.Write(t, "NotifieSondage.html", []byte(html))
+}
+
+func TestInviteEquipier(t *testing.T) {
+	cfg, creds := loadEnv(t)
+
+	html, err := InviteEquipier(cfg,
+		fmt.Sprintf("C3 - %d", time.Now().Year()), "Vincent",
+		pr.Etatcivil{Prenom: "Cl audie", Sexe: pr.Woman}, "http://test.fr")
+	tu.AssertNoErr(t, err)
+
+	tu.Write(t, "InviteEquipier.html", []byte(html))
+
+	err = NewMailer(creds, cfg.MailsSettings).SendMail("", "Test", html, nil, nil)
+	tu.AssertNoErr(t, err)
+}
+
+func TestNotifieModificationOptions(t *testing.T) {
+	cfg, _ := loadEnv(t)
+
+	html, err := NotifieModificationOptions(cfg,
+		pr.Etatcivil{Prenom: "Cl audie", Sexe: pr.Woman}, fmt.Sprintf("C3 - %d", time.Now().Year()), []string{
+			"Vincent",
+		}, "http://test.fr")
+	tu.AssertNoErr(t, err)
+
+	tu.Write(t, "NotifieModificationOptions_1.html", []byte(html))
+
+	html, err = NotifieModificationOptions(cfg,
+		pr.Etatcivil{Prenom: "Cl audie", Sexe: pr.Woman}, fmt.Sprintf("C3 - %d", time.Now().Year()), []string{
+			"Vincent",
+			"Beoit Kugler",
+		}, "http://test.fr")
+	tu.AssertNoErr(t, err)
+
+	tu.Write(t, "NotifieModificationOptions_2.html", []byte(html))
+}
+
+func TestNotificationDon(t *testing.T) {
+	cfg, _ := loadEnv(t)
+
+	html, err := NotifieDon(cfg, Contact{Prenom: "Benoit", Sexe: pr.Woman}, dossiers.NewEuros(45.48), "")
+	tu.AssertNoErr(t, err)
+	tu.Write(t, "NotifieDon1.html", []byte(html))
+
+	html, err = NotifieDon(cfg, Contact{Prenom: "Beno it", Sexe: pr.Man}, dossiers.NewEuros(45.48), "Eglise de Montmeyran")
+	tu.AssertNoErr(t, err)
+	tu.Write(t, "NotifieDon2.html", []byte(html))
+}
+
+func TestPreinscription(t *testing.T) {
+	cfg, _ := loadEnv(t)
+
+	html, err := Preinscription(cfg, "xxx.ben@free.fr", []RespoWithLink{
+		{"Ben kug", "https://zmldz?454=46"},
+		{"Jean claude", "https://zmldz?454=46"},
+	})
+	tu.AssertNoErr(t, err)
+	tu.Write(t, "Preinscription.html", []byte(html))
+}
+
+func TestValidationMailInscription(t *testing.T) {
+	cfg, creds := loadEnv(t)
+
+	html, err := ValidationMailInscription(cfg, Contact{Prenom: "Benoit", Sexe: pr.Woman}, "https://acve.fr/confirme?id='ee'")
+	tu.AssertNoErr(t, err)
+	tu.Write(t, "ConfirmeInscription.html", []byte(html))
+
+	err = NewMailer(creds, cfg.MailsSettings).SendMail("", "Vérification de l'adresse mail", html, nil, nil)
+	tu.AssertNoErr(t, err)
+}
+
+func TestConfirmationInscription(t *testing.T) {
+	cfg, _ := loadEnv(t)
+	contact, url := Contact{Prenom: "Benoit", Sexe: pr.Woman}, "https://acve.fr/confirme?id='ee'"
+
+	html, err := ConfirmationInscription(cfg, contact, url,
+		[]Participant{{"Benoit Kugler", "C2 2025"}},
+		[]Participant{},
+		[]Participant{},
+	)
+	tu.AssertNoErr(t, err)
+	tu.Write(t, "ConfirmationInscription_1.html", []byte(html))
+
+	html, err = ConfirmationInscription(cfg, contact, url,
+		[]Participant{{"Benoit Kugler", "C2 2025"}, {"Benoit Kugler", "C3 2025"}},
+		[]Participant{},
+		[]Participant{},
+	)
+	tu.AssertNoErr(t, err)
+	tu.Write(t, "ConfirmationInscription_2.html", []byte(html))
+
+	html, err = ConfirmationInscription(cfg, contact, url,
+		[]Participant{},
+		[]Participant{{"Benoit Kugler", "C2 2025"}},
+		[]Participant{},
+	)
+	tu.AssertNoErr(t, err)
+	tu.Write(t, "ConfirmationInscription_3.html", []byte(html))
+
+	html, err = ConfirmationInscription(cfg, contact, url,
+		[]Participant{},
+		[]Participant{{"Benoit Kugler", "C2 2025"}, {"Benoit Kugler", "C3 2025"}},
+		[]Participant{},
+	)
+	tu.AssertNoErr(t, err)
+	tu.Write(t, "ConfirmationInscription_4.html", []byte(html))
+
+	html, err = ConfirmationInscription(cfg, contact, url,
+		[]Participant{{"Benoit Kugler", "C2 2025"}, {"Benoit Kugler", "C3 2025"}},
+		[]Participant{{"Benoit Kugler", "C2 2025"}, {"Benoit Kugler", "C3 2025"}},
+		[]Participant{{"Benoit Kugler", "C2 2025"}, {"Benoit Kugler", "C3 2025"}},
+	)
+	tu.AssertNoErr(t, err)
+	tu.Write(t, "ConfirmationInscription_5.html", []byte(html))
+}
+
+func TestNotifieFusionDossier(t *testing.T) {
+	cfg, _ := loadEnv(t)
+
+	html, err := NotifieFusionDossier(cfg, Contact{Prenom: "Benoit", Sexe: pr.Woman}, "http://localhost/test")
+	tu.AssertNoErr(t, err)
+	tu.Write(t, "NotifieFusionDossier.html", []byte(html))
+}
+
+func TestTransfertFicheSanitaire(t *testing.T) {
+	cfg, _ := loadEnv(t)
+
+	html, err := TransfertFicheSanitaire(cfg, "http://localhost/test", "dulmmy@free.fr", "Bneoit Kugler")
+	tu.AssertNoErr(t, err)
+	tu.Write(t, "TransfertFicheSanitaire.html", []byte(html))
+}
+
+func TestNotifiePlaceLiberee(t *testing.T) {
+	cfg, _ := loadEnv(t)
+
+	html, err := NotifiePlaceLiberee(cfg, Contact{Prenom: "Benoit", Sexe: pr.Woman}, "Vive la vie - 2056", "http://localhost/test?placelib=45")
+	tu.AssertNoErr(t, err)
+	tu.Write(t, "NotifiePlaceLiberee.html", []byte(html))
+}
+
+func TestRelanceDocuments(t *testing.T) {
+	cfg, _ := loadEnv(t)
+
+	html, err := RelanceDocuments(cfg, Contact{Prenom: "Benoit", Sexe: pr.Woman}, "Vive la vie - 2056", "Julie", "http://localhost/test?placelib=45")
+	tu.AssertNoErr(t, err)
+	tu.Write(t, "RelanceDocuments.html", []byte(html))
+}
+
 // func TestPrein(t *testing.T) {
 // 	html, err := NewPreinscription("smsld@free.fr", []TargetRespo{
 // 		{NomPrenom: "lkdkmslkd", Lien: "http://free.fr"},
@@ -70,57 +267,6 @@ import (
 // 		t.Fatal(err)
 // 	}
 // }
-
-func TestNotifieMessage(t *testing.T) {
-	asso, _ := loadEnv(t)
-
-	html, err := NotifieMessage(asso,
-		Contact{Prenom: "Claudy", Sexe: pr.Woman},
-		"sdlmdmlk\nmsldsm\n\nmsldk! smdlsmdlslùd",
-		"https://acve.fr/inscription/valide?data:cryp4tedinscriptin",
-	)
-	tu.AssertNoErr(t, err)
-
-	tu.Write(t, "NotifieMessage.html", []byte(html))
-}
-
-func TestNotifieFacture(t *testing.T) {
-	asso, _ := loadEnv(t)
-
-	html, err := NotifieFacture(asso,
-		Contact{Prenom: "Claudy", Sexe: pr.Woman},
-		"https://acve.fr/inscription/valide?data:cryp4tedinscriptin",
-	)
-	tu.AssertNoErr(t, err)
-
-	tu.Write(t, "NotifieFacture.html", []byte(html))
-}
-
-func TestNotifieDocumentsCamp(t *testing.T) {
-	asso, _ := loadEnv(t)
-
-	html, err := NotifieDocumentsCamp(asso,
-		Contact{Prenom: "Claudy", Sexe: pr.Woman},
-		"Vive la vie 2025",
-		"https://acve.fr/inscription/valide?data:cryp4tedinscriptin",
-	)
-	tu.AssertNoErr(t, err)
-
-	tu.Write(t, "NotifieDocumentsCamp.html", []byte(html))
-}
-
-func TestNotifieSondage(t *testing.T) {
-	asso, _ := loadEnv(t)
-
-	html, err := NotifieSondage(asso,
-		Contact{Prenom: "Claudy", Sexe: pr.Woman},
-		"Vive la vie 2025",
-		"https://acve.fr/inscription/valide?data:cryp4tedinscriptin",
-	)
-	tu.AssertNoErr(t, err)
-
-	tu.Write(t, "NotifieSondage.html", []byte(html))
-}
 
 // func TestDebloqueFS(t *testing.T) {
 // 	html, err := NewDebloqueFicheSanitaire(
@@ -192,141 +338,3 @@ func TestNotifieSondage(t *testing.T) {
 // 		t.Fatal(err)
 // 	}
 // }
-
-func TestInviteEquipier(t *testing.T) {
-	cfg, creds := loadEnv(t)
-
-	html, err := InviteEquipier(cfg,
-		fmt.Sprintf("C3 - %d", time.Now().Year()), "Vincent",
-		pr.Etatcivil{Prenom: "Cl audie", Sexe: pr.Woman}, "http://test.fr")
-	tu.AssertNoErr(t, err)
-
-	tu.Write(t, "InviteEquipier.html", []byte(html))
-
-	err = NewMailer(creds, cfg.MailsSettings).SendMail("", "Test", html, nil, nil)
-	tu.AssertNoErr(t, err)
-}
-
-func TestNotifieModificationOptions(t *testing.T) {
-	cfg, _ := loadEnv(t)
-
-	html, err := NotifieModificationOptions(cfg,
-		pr.Etatcivil{Prenom: "Cl audie", Sexe: pr.Woman}, fmt.Sprintf("C3 - %d", time.Now().Year()), []string{
-			"Vincent",
-		}, "http://test.fr")
-	tu.AssertNoErr(t, err)
-
-	tu.Write(t, "NotifieModificationOptions_1.html", []byte(html))
-
-	html, err = NotifieModificationOptions(cfg,
-		pr.Etatcivil{Prenom: "Cl audie", Sexe: pr.Woman}, fmt.Sprintf("C3 - %d", time.Now().Year()), []string{
-			"Vincent",
-			"Beoit Kugler",
-		}, "http://test.fr")
-	tu.AssertNoErr(t, err)
-
-	tu.Write(t, "NotifieModificationOptions_2.html", []byte(html))
-}
-
-func TestNotificationDon(t *testing.T) {
-	cfg, _ := loadEnv(t)
-
-	html, err := NotifieDon(cfg, Contact{Prenom: "Benoit", Sexe: pr.Woman}, dossiers.NewEuros(45.48), "")
-	tu.AssertNoErr(t, err)
-	tu.Write(t, "NotifieDon1.html", []byte(html))
-
-	html, err = NotifieDon(cfg, Contact{Prenom: "Beno it", Sexe: pr.Man}, dossiers.NewEuros(45.48), "Eglise de Montmeyran")
-	tu.AssertNoErr(t, err)
-	tu.Write(t, "NotifieDon2.html", []byte(html))
-}
-
-func TestPreinscription(t *testing.T) {
-	cfg, _ := loadEnv(t)
-
-	html, err := Preinscription(cfg, "xxx.ben@free.fr", []RespoWithLink{
-		{"Ben kug", "https://zmldz?454=46"},
-		{"Jean claude", "https://zmldz?454=46"},
-	})
-	tu.AssertNoErr(t, err)
-	tu.Write(t, "Preinscription.html", []byte(html))
-}
-
-func TestConfirmeInscription(t *testing.T) {
-	cfg, creds := loadEnv(t)
-
-	html, err := ConfirmeInscription(cfg, Contact{Prenom: "Benoit", Sexe: pr.Woman}, "https://acve.fr/confirme?id='ee'")
-	tu.AssertNoErr(t, err)
-	tu.Write(t, "ConfirmeInscription.html", []byte(html))
-
-	err = NewMailer(creds, cfg.MailsSettings).SendMail("", "Vérification de l'adresse mail", html, nil, nil)
-	tu.AssertNoErr(t, err)
-}
-
-func TestNotifieValidationInscription(t *testing.T) {
-	cfg, _ := loadEnv(t)
-	contact, url := Contact{Prenom: "Benoit", Sexe: pr.Woman}, "https://acve.fr/confirme?id='ee'"
-
-	html, err := NotifieValidationInscription(cfg, contact, url,
-		[]Participant{{"Benoit Kugler", "C2 2025"}},
-		[]Participant{},
-		[]Participant{},
-	)
-	tu.AssertNoErr(t, err)
-	tu.Write(t, "NotifieValidationInscription_1.html", []byte(html))
-
-	html, err = NotifieValidationInscription(cfg, contact, url,
-		[]Participant{{"Benoit Kugler", "C2 2025"}, {"Benoit Kugler", "C3 2025"}},
-		[]Participant{},
-		[]Participant{},
-	)
-	tu.AssertNoErr(t, err)
-	tu.Write(t, "NotifieValidationInscription_2.html", []byte(html))
-
-	html, err = NotifieValidationInscription(cfg, contact, url,
-		[]Participant{},
-		[]Participant{{"Benoit Kugler", "C2 2025"}},
-		[]Participant{},
-	)
-	tu.AssertNoErr(t, err)
-	tu.Write(t, "NotifieValidationInscription_3.html", []byte(html))
-
-	html, err = NotifieValidationInscription(cfg, contact, url,
-		[]Participant{},
-		[]Participant{{"Benoit Kugler", "C2 2025"}, {"Benoit Kugler", "C3 2025"}},
-		[]Participant{},
-	)
-	tu.AssertNoErr(t, err)
-	tu.Write(t, "NotifieValidationInscription_4.html", []byte(html))
-
-	html, err = NotifieValidationInscription(cfg, contact, url,
-		[]Participant{{"Benoit Kugler", "C2 2025"}, {"Benoit Kugler", "C3 2025"}},
-		[]Participant{{"Benoit Kugler", "C2 2025"}, {"Benoit Kugler", "C3 2025"}},
-		[]Participant{{"Benoit Kugler", "C2 2025"}, {"Benoit Kugler", "C3 2025"}},
-	)
-	tu.AssertNoErr(t, err)
-	tu.Write(t, "NotifieValidationInscription_5.html", []byte(html))
-}
-
-func TestNotifieFusionDossier(t *testing.T) {
-	cfg, _ := loadEnv(t)
-
-	html, err := NotifieFusionDossier(cfg, Contact{Prenom: "Benoit", Sexe: pr.Woman}, "http://localhost/test")
-	tu.AssertNoErr(t, err)
-	tu.Write(t, "NotifieFusionDossier.html", []byte(html))
-}
-
-func TestTransfertFicheSanitaire(t *testing.T) {
-	cfg, _ := loadEnv(t)
-
-	html, err := TransfertFicheSanitaire(cfg, "http://localhost/test", "dulmmy@free.fr", "Bneoit Kugler")
-	tu.AssertNoErr(t, err)
-	tu.Write(t, "TransfertFicheSanitaire.html", []byte(html))
-}
-
-func TestNotifiePlaceLiberee(t *testing.T) {
-	cfg, _ := loadEnv(t)
-
-	html, err := NotifiePlaceLiberee(cfg, Contact{Prenom: "Benoit", Sexe: pr.Woman}, "Vive la vie - 2056", "http://localhost/test?placelib=45")
-	tu.AssertNoErr(t, err)
-	tu.Write(t, "NotifiePlaceLiberee.html", []byte(html))
-}

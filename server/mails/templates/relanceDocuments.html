@@ -1,0 +1,13 @@
+{{ define "content" }}
+<table cellpadding="0">
+  <tr>
+    <td>
+      Le séjour {{ .Camp }} approche pour {{ .Prenom }} ! Merci de compléter les
+      documents du séjour, que vous trouverez sur votre espace de suivi.
+    </td>
+  </tr>
+  <tr>
+    <td>{{ template "espacePersoButton" . }}</td>
+  </tr>
+</table>
+{{ end }}
