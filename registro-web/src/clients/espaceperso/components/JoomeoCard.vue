@@ -26,7 +26,7 @@
           <i v-if="!data.Albums?.length"
             >Aucun album n'est encore disponible.</i
           >
-          <v-chip v-for="album in data.Albums" class="mx-1">{{ album }}</v-chip>
+          <v-chip v-for="album in data.Albums" class="ma-1">{{ album }}</v-chip>
         </v-col>
       </v-row>
     </v-card-text>
