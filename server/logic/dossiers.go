@@ -107,18 +107,24 @@ func (de *Dossier) ParticipantsExt() []cps.ParticipantCamp {
 
 // ParticipantsExtReal is like [ParticipantsExt], but is restricted to inscrits
 // with started camp (at current time)
-func (de *Dossier) ParticipantsExtReal() []cps.ParticipantCamp {
-	var out []cps.ParticipantCamp
+// It returns [true] if all the camps for inscrits have started and there is at least
+// one inscrit.
+func (de *Dossier) ParticipantsExtReal() ([]cps.ParticipantCamp, bool) {
+	var (
+		out        []cps.ParticipantCamp
+		allStarted = true
+	)
 	for _, p := range de.ParticipantsExt() {
 		if p.Participant.Statut != cps.Inscrit {
 			continue
 		}
 		if hasStarted := p.Camp.DateDebut.Time().Before(time.Now()); !hasStarted {
+			allStarted = false
 			continue
 		}
 		out = append(out, p)
 	}
-	return out
+	return out, allStarted && len(out) != 0
 }
 
 // Personnes returns the responsable first, then sort by ID.

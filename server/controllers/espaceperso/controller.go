@@ -70,6 +70,8 @@ type Data struct {
 	MailCentre                 string
 	IsPaiementOpen             bool
 	PaiementSettings           PaiementSettings
+	// EnableJustificatifs is true when all the camps have started (or ended)
+	EnableJustificatifs bool
 }
 
 // PaiementSettings exposes the instruction to
@@ -95,6 +97,7 @@ func (ct *Controller) load(id ds.IdDossier) (Data, error) {
 	if err != nil {
 		return Data{}, err
 	}
+	_, campInscritsStarted := dossier.ParticipantsExtReal()
 	return Data{
 		dossier.Publish(ct.key),
 		documents.ToReadOrFillCount,
@@ -108,6 +111,7 @@ func (ct *Controller) load(id ds.IdDossier) (Data, error) {
 			ct.asso.SupportPaiementEnLigne,
 			ct.asso.ChequeSettings,
 		},
+		campInscritsStarted,
 	}, nil
 }
 
@@ -503,7 +507,10 @@ func (ct *Controller) renderAttestationPresence(id ds.IdDossier) ([]byte, error)
 	if err != nil {
 		return nil, err
 	}
-	filtered := dossier.ParticipantsExtReal() // restrict to inscrits with started camp
+	filtered, allStarted := dossier.ParticipantsExtReal() // restrict to inscrits with started camp
+	if !allStarted {
+		return nil, fmt.Errorf("internal error: some camps have not started")
+	}
 	responsable := dossier.Responsable()
 	destinataire := pdfcreator.Destinataire{
 		NomPrenom:  responsable.NOMPrenom(),
@@ -544,7 +551,11 @@ func (ct *Controller) renderFacture(id ds.IdDossier) ([]byte, error) {
 		CodePostal: responsable.CodePostal,
 		Ville:      responsable.Ville,
 	}
-	filtered := dossier.ParticipantsExtReal() // restrict to inscrits with started camp
+	filtered, allStarted := dossier.ParticipantsExtReal() // restrict to inscrits with started camp
+	if !allStarted {
+		return nil, fmt.Errorf("internal error: some camps have not started")
+	}
+
 	// sort by time
 	finances := dossier.Publish(ct.key)
 	var paiements []ds.Paiement

@@ -29,6 +29,7 @@ export interface Data {
   MailCentre: string;
   IsPaiementOpen: boolean;
   PaiementSettings: PaiementSettings;
+  EnableJustificatifs: boolean;
 }
 // registro/controllers/espaceperso.DemandePersonne
 export interface DemandePersonne {
