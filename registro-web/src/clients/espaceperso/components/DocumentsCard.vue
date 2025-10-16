@@ -60,7 +60,7 @@
                 <template #activator="{ props: tooltipProps }">
                   <v-btn
                     v-bind="tooltipProps"
-                    :href="contentURL(demande.DemandeFile.Key)"
+                    :href="endpoints.LoadDocument(demande.DemandeFile.Key)"
                     class="mr-2"
                     size="small"
                   >
@@ -87,10 +87,15 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import { type Documents, type IdPersonne, type PublicFile } from "../logic/api";
+import {
+  type Documents,
+  type IdDemande,
+  type IdPersonne,
+  type PublicFile,
+} from "../logic/api";
 import { controller } from "../logic/logic";
-import type { IdDemande, Int } from "@/urls";
-import { contentURL } from "@/utils";
+import type { Int } from "@/urls";
+import { endpoints } from "@/utils";
 const props = defineProps<{
   token: string;
 }>();

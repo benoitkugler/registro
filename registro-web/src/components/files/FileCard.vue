@@ -2,7 +2,12 @@
   <v-menu>
     <template #activator="{ props: menuProps }">
       <v-card class="my-2" v-bind="menuProps">
-        <v-img cover :src="miniatureURL(props.file.Key)" width="56px"> </v-img>
+        <v-img
+          cover
+          :src="endpoints.LoadMiniature(props.file.Key)"
+          width="56px"
+        >
+        </v-img>
       </v-card>
     </template>
     <v-card>
@@ -23,14 +28,16 @@
       <v-card-actions>
         <v-btn @click="emit('delete')" color="red"> Supprimer </v-btn>
         <v-spacer></v-spacer>
-        <v-btn :href="contentURL(props.file.Key)"> Télécharger </v-btn>
+        <v-btn :href="endpoints.LoadDocument(props.file.Key)">
+          Télécharger
+        </v-btn>
       </v-card-actions>
     </v-card>
   </v-menu>
 </template>
 
 <script setup lang="ts">
-import { contentURL, miniatureURL, Formatters } from "@/utils";
+import { endpoints, Formatters } from "@/utils";
 import type { PublicFile } from "@/clients/equipier/logic/api";
 
 const props = defineProps<{

@@ -634,18 +634,18 @@ func (ct *Controller) renderFichesSanitaires(user cps.IdCamp) ([]byte, string, e
 }
 
 func (ct *Controller) ParticipantsRelanceDocuments(c echo.Context) error {
-	idParticipant, err := utils.QueryParamInt[cps.IdParticipant](c, "idParticipant")
-	if err != nil {
+	var args []cps.IdParticipant
+	if err := c.Bind(&args); err != nil {
 		return err
 	}
-	err = ct.relanceDocuments(c.Request().Host, idParticipant)
+	err := ct.relanceDocuments(c.Request().Host, args)
 	if err != nil {
 		return err
 	}
 	return c.NoContent(200)
 }
 
-func (ct *Controller) relanceDocuments(host string, idParticipants ...cps.IdParticipant) error {
+func (ct *Controller) relanceDocuments(host string, idParticipants []cps.IdParticipant) error {
 	participants, err := cps.SelectParticipants(ct.db, idParticipants...)
 	if err != nil {
 		return utils.SQLError(err)

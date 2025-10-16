@@ -106,7 +106,6 @@ func main() {
 	setupRoutesEspaceperso(e, espacepersoCt)
 	setupRoutesInscription(e, inscriptionsCt)
 	setupRoutesEquipier(e, equipiersCt)
-	setupRoutesFiles(e, filesCt)
 	setupRoutesServices(e, espacepersoCt)
 	setupRoutesMisc(e, directeursCt, filesCt, espacepersoCt)
 	setupClientApps(e)
@@ -218,10 +217,4 @@ func setupClientApps(e *echo.Echo) {
 
 	// global static files used by frontend apps
 	e.Group("/static", middleware.Gzip(), cacheStatic).Static("/*", "static")
-}
-
-func setupRoutesFiles(e *echo.Echo, filesCt *fsAPI.Controller) {
-	// every endpoint expected a key=<idCrypted> query param
-	e.GET("/api/v1/documents", filesCt.Get)
-	e.GET("/api/v1/documents/miniature", filesCt.GetMiniature)
 }

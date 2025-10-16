@@ -136,16 +136,14 @@
 
 <script lang="ts" setup>
 import { ref, onMounted, computed } from "vue";
-import { controller, endpoints } from "../../logic/logic";
+import { controller } from "../../logic/logic";
 import {
-  Sexe,
-  StatutParticipant,
   type CampItem,
   type Participant,
   type ParticipantExt,
   type ParticipantsOut,
 } from "../../logic/api";
-import { Participants } from "@/utils";
+import { endpoints, Participants } from "@/utils";
 import FichesSanitairesPannel from "./FichesSanitairesPannel.vue";
 import DocumentsPannel from "./DocumentsPannel.vue";
 import MessagesPannel from "./MessagesPannel.vue";

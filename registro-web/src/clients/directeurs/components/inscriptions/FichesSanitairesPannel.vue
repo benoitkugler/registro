@@ -109,7 +109,7 @@
 
 <script lang="ts" setup>
 import { ref, onMounted } from "vue";
-import { controller, endpoints } from "../../logic/logic";
+import { controller } from "../../logic/logic";
 import {
   FichesanitaireState,
   FichesanitaireStateLabels,

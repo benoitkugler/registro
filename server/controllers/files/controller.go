@@ -41,7 +41,7 @@ func NewController(db *sql.DB, key crypto.Encrypter, files fs.FileSystem, asso c
 	return &Controller{db, key, files, asso}
 }
 
-func (ct *Controller) Get(c echo.Context) error {
+func (ct *Controller) LoadDocument(c echo.Context) error {
 	key := c.QueryParam("key")
 	id, err := crypto.DecryptID[fs.IdFile](ct.key, key)
 	if err != nil {
@@ -59,8 +59,8 @@ func (ct *Controller) Get(c echo.Context) error {
 	return c.Blob(200, mimeType, content)
 }
 
-// GetMiniature returns a placeholder image on error
-func (ct *Controller) GetMiniature(c echo.Context) error {
+// LoadMiniature returns a placeholder image on error
+func (ct *Controller) LoadMiniature(c echo.Context) error {
 	key := c.QueryParam("key")
 	id, err := crypto.DecryptID[fs.IdFile](ct.key, key)
 	if err != nil {

@@ -164,10 +164,10 @@
 
 <script lang="ts" setup>
 import { computed, nextTick, onMounted, ref, useTemplateRef } from "vue";
-import { controller, endpoints } from "../../logic/logic";
+import { controller } from "../../logic/logic";
 import type { Int, ListeVetements, Vetement } from "../../logic/api";
 import { DefaultListe } from "./default_liste_vetements";
-import { copy, swapItems } from "@/utils";
+import { copy, endpoints, swapItems } from "@/utils";
 
 const props = defineProps<{}>();
 

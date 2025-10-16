@@ -147,7 +147,7 @@ func TestDocuments(t *testing.T) {
 	})
 
 	t.Run("relance", func(t *testing.T) {
-		err = ct.relanceDocuments("", pa1.Id, pa2.Id)
+		err = ct.relanceDocuments("", []cps.IdParticipant{pa1.Id, pa2.Id})
 		tu.AssertNoErr(t, err)
 	})
 }

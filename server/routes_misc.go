@@ -26,4 +26,8 @@ func setupRoutesMisc(e *echo.Echo, dir *directeurs.Controller, fs *files.Control
 	// Espace perso
 	e.GET("/api/v1/espaceperso/download/attestation", ep.DownloadAttestationPresence)
 	e.GET("/api/v1/espaceperso/download/facture", ep.DownloadFacture)
+
+	// every endpoint expected a key=<idCrypted> query param
+	e.GET("/api/v1/documents", fs.LoadDocument)
+	e.GET("/api/v1/documents/miniature", fs.LoadMiniature)
 }

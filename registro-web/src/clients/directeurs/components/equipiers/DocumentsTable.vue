@@ -44,7 +44,7 @@
 
 <script lang="ts" setup>
 import { ref, onMounted, computed } from "vue";
-import { controller, endpoints } from "../../logic/logic";
+import { controller } from "../../logic/logic";
 import {
   CategorieLabels,
   DemandeState,
@@ -55,6 +55,7 @@ import {
   type IdEquipier,
 } from "../../logic/api";
 import DemandeChip from "./DemandeChip.vue";
+import { endpoints } from "@/utils";
 
 const props = defineProps<{
   equipiers: EquipierExt[];

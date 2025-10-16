@@ -5,38 +5,24 @@ export type Int = number & { __opaque__: "Int" };
 export interface LettreImageUploadOut {
   location: string;
 }
-export type IdDemande = Int & { __opaque_int__: "IdDemande" };
 
 /** Endpoints exposes the HTTP urls handled by the server. */
 export class Endpoints {
   constructor(private baseURL: string) {}
 
+  /** Returns an URL */
   EquipiersDownloadFiles(token: string) {
     return (
       this.baseURL + "/api/v1/directeurs/equipiers/files" + `?token=${token}`
     );
   }
 
-  ParticipantsStreamFichesAndVaccins(token: string) {
-    return (
-      this.baseURL +
-      "/api/v1/directeurs/participants/stream-fiches-sanitaires" +
-      `?token=${token}`
-    );
-  }
-
-  DocumentsStreamUploaded(idDemande: IdDemande, token: string) {
-    return (
-      this.baseURL +
-      "/api/v1/directeurs/documents/stream-documents" +
-      `?idDemande=${idDemande}&token=${token}`
-    );
-  }
-
+  /** Returns an URL */
   LettreImageUpload(token: string) {
     return this.baseURL + "/api/v1/directeurs/lettre-image" + `?token=${token}`;
   }
 
+  /** Returns an URL */
   ParticipantsDownloadListe(token: string) {
     return (
       this.baseURL +
@@ -45,6 +31,7 @@ export class Endpoints {
     );
   }
 
+  /** Returns an URL */
   RenderDocumentCamp(documentToken: string, isMiniature: boolean) {
     return (
       this.baseURL +
@@ -53,6 +40,7 @@ export class Endpoints {
     );
   }
 
+  /** Returns an URL */
   DownloadAttestationPresence(token: string) {
     return (
       this.baseURL +
@@ -61,9 +49,20 @@ export class Endpoints {
     );
   }
 
+  /** Returns an URL */
   DownloadFacture(token: string) {
     return (
       this.baseURL + "/api/v1/espaceperso/download/facture" + `?token=${token}`
     );
+  }
+
+  /** Returns an URL */
+  LoadDocument(key: string) {
+    return this.baseURL + "/api/v1/documents" + `?key=${key}`;
+  }
+
+  /** Returns an URL */
+  LoadMiniature(key: string) {
+    return this.baseURL + "/api/v1/documents/miniature" + `?key=${key}`;
   }
 }

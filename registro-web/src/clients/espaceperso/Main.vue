@@ -326,14 +326,19 @@ import {
   type PlaceLiberee,
   type SendMessageIn,
 } from "./logic/api";
-import { buildPseudoEvents, Camps, Formatters, Personnes } from "@/utils";
+import {
+  buildPseudoEvents,
+  Camps,
+  endpoints,
+  Formatters,
+  Personnes,
+} from "@/utils";
 import ParticipantsEditCard from "./components/ParticipantsEditCard.vue";
 import FinancesCard from "./components/FinancesCard.vue";
 import JoomeoCard from "./components/JoomeoCard.vue";
 import FichessanitairesCard from "./components/FichessanitairesCard.vue";
 import SondagesCard from "./components/SondagesCard.vue";
 import DocumentsCard from "./components/DocumentsCard.vue";
-import { endpoints } from "@/clients/directeurs/logic/logic";
 import FinancesReglementCard from "./components/FinancesReglementCard.vue";
 import PresentationCard from "./components/PresentationCard.vue";
 import ValidationInscriptionCard from "./components/ValidationInscriptionCard.vue";

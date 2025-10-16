@@ -4,15 +4,16 @@
     :href="
       props.isGeneratedDoc
         ? endpoints.RenderDocumentCamp(props.fileKey, false)
-        : contentURL(props.fileKey)
+        : endpoints.LoadDocument(props.fileKey)
     "
+    target="_blank"
   >
     <v-img
       cover
       :src="
         props.isGeneratedDoc
           ? endpoints.RenderDocumentCamp(props.fileKey, true)
-          : miniatureURL(props.fileKey)
+          : endpoints.LoadMiniature(props.fileKey)
       "
       :width="props.large ? '142px' : '48px'"
     >
@@ -29,8 +30,7 @@
 </template>
 
 <script setup lang="ts">
-import { endpoints } from "@/clients/directeurs/logic/logic";
-import { contentURL, miniatureURL } from "@/utils";
+import { endpoints } from "@/utils";
 
 const props = defineProps<{
   fileKey: string;

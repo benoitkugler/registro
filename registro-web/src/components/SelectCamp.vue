@@ -10,6 +10,7 @@
     @update:model-value="(id) => (modelValue = nullableToZeroable(id))"
     no-data-text="Aucun séjour n'existe."
     hide-details
+    autocomplete="off"
   >
     <template #prepend>
       <v-tooltip

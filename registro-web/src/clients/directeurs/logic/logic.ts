@@ -54,8 +54,6 @@ export const controller = new Controller(
   baseURL()
 );
 
-export const endpoints = new Endpoints(baseURL());
-
 if (isDev) controller.setCamp(devCamp as CampItem, "test.fr", devToken);
 
 export type LettreOptions = Pick<

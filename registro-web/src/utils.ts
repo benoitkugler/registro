@@ -19,14 +19,10 @@ import {
   type Montant,
   type PrixQuotientFamilial,
 } from "./clients/backoffice/logic/api";
-import {
-  EventKind,
-  FichesanitaireState,
-  type Role,
-  type Roles,
-} from "./clients/directeurs/logic/api";
+import { FichesanitaireState } from "./clients/directeurs/logic/api";
 import type { Date_, Int } from "./clients/inscription/logic/api";
-import { addDays, isDateZero, newDate_ } from "./components/date";
+import { addDays, isDateZero } from "./components/date";
+import { Endpoints } from "./urls";
 
 export type Action = {
   title: string;
@@ -39,6 +35,8 @@ const localhost = "http://localhost:1323";
 const isDev = import.meta.env.DEV;
 
 export const baseURL = () => (isDev ? localhost : window.location.origin);
+
+export const endpoints = new Endpoints(baseURL());
 
 function arrayBufferToString(buffer: ArrayBuffer) {
   const uintArray = new Uint8Array(buffer);
@@ -621,14 +619,6 @@ export const Departements = [
   "974 - La Réunion",
   "976 - Mayotte",
 ];
-
-// hardcoded, global files endpoint
-export function miniatureURL(key: string) {
-  return `${baseURL()}/api/v1/documents/miniature?key=${key}`;
-}
-export function contentURL(key: string) {
-  return `${baseURL()}/api/v1/documents?key=${key}`;
-}
 
 /** swapItems take the block at the index `origin` and insert it right before
   the block at index `target` (which is between 0 and `list.length`)

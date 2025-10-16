@@ -70,11 +70,10 @@
 import { computed, onMounted, ref } from "vue";
 import {
   controller,
-  endpoints,
   type LettreOptions,
 } from "@/clients/directeurs/logic/logic";
 import type { LettreOut } from "@/clients/directeurs/logic/api";
-import { contentURL, Formatters } from "@/utils";
+import { endpoints, Formatters } from "@/utils";
 
 /* Import TinyMCE */
 import "tinymce";
@@ -193,7 +192,7 @@ async function saveOptions(options: LettreOptions) {
 
 const showPreview = ref(false);
 const urlPreviewPDF = computed(() =>
-  data.value ? contentURL(data.value.File.Key) : ""
+  data.value ? endpoints.LoadDocument(data.value.File.Key) : ""
 );
 
 // Bloc à ajouter à la lettre.

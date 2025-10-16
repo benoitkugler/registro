@@ -1142,15 +1142,12 @@ export abstract class AbstractAPI {
   }
 
   /** ParticipantsRelanceDocuments performs the request and handles the error */
-  async ParticipantsRelanceDocuments(params: { idParticipant: IdParticipant }) {
+  async ParticipantsRelanceDocuments(params: IdParticipant[] | null) {
     const fullUrl =
       this.baseURL + "/api/v1/directeurs/participants/relance-documents";
     this.startRequest();
     try {
-      await Axios.post(fullUrl, null, {
-        headers: this.getHeaders(),
-        params: { idParticipant: String(params["idParticipant"]) },
-      });
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
       return true;
     } catch (error) {
       this.handleError(error);
