@@ -20,6 +20,9 @@
           :error-messages="errors"
           :type="showPassword ? undefined : 'password'"
           name="password"
+          @keydown.enter.prevent="
+            () => (!selected || !password.length ? null : loggin())
+          "
         >
           <template #append-inner>
             <v-btn
