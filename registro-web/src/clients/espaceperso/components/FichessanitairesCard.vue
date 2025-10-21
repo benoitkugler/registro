@@ -1,16 +1,12 @@
 <template>
-  <v-card title="Fiches sanitaires et vaccins">
+  <v-card title="Fiches sanitaires">
     <template #append>
       <v-tabs v-model="tab">
         <v-tab v-for="fiche in fiches" :value="fiche.Fichesanitaire.IdPersonne">
           {{ fiche.Personne }}
           <v-icon
             class="ml-2"
-            v-if="
-              fiche.State == FichesanitaireState.NoFiche ||
-              fiche.State == FichesanitaireState.Outdated ||
-              !fiche.VaccinsFiles?.length
-            "
+            v-if="fiche.State != FichesanitaireState.UpToDate"
             color="warning"
           >
             mdi-alert
@@ -28,10 +24,10 @@
           <FichesanitaireForm
             :fiche="fiche"
             @save="save"
-            @upload-vaccin="(f) => uploadVaccin(index, f)"
-            @delete-vaccin="(f) => deleteVaccin(index, f)"
             @transfert="transfert(fiche.Fichesanitaire)"
           ></FichesanitaireForm>
+          <!-- @upload-vaccin="(f) => uploadVaccin(index, f)"
+            @delete-vaccin="(f) => deleteVaccin(index, f)" -->
         </v-tabs-window-item>
       </v-tabs-window>
     </v-card-text>
@@ -74,11 +70,10 @@ async function fetchData() {
   emit("updateNotifs", res.ToFillCount);
 }
 
-async function save(fiche: Fichesanitaire, respoSecuriteSociale: string) {
+async function save(fiche: Fichesanitaire) {
   const res = await controller.UpdateFichesanitaire({
     Token: props.token,
     Fichesanitaire: fiche,
-    SecuriteSocialeResponsable: respoSecuriteSociale,
   });
   if (res === undefined) return;
   controller.showMessage("La fiche sanitaire a bien été enregistrée. Merci !");

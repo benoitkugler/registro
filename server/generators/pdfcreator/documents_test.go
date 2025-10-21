@@ -39,39 +39,28 @@ func randBool() bool {
 	return i == 0
 }
 
+func randStringOrEmpty() string {
+	if randBool() {
+		return utils.RandString(100, true)
+	}
+	return ""
+}
+
 func randFicheSanitaire() FicheSanitaire {
-	al := pr.Allergies{
-		Alimentaires:    randBool(),
-		Asthme:          randBool(),
-		Medicamenteuses: randBool(),
-		Autres:          utils.RandString(200, true),
-		ConduiteATenir:  "mzkmk \n slkdj lksjd lsdààéàéàsdmskd \n sdsdlk",
-	}
-	ml := pr.Maladies{
-		Angine:     randBool(),
-		Coqueluche: randBool(),
-		Oreillons:  randBool(),
-		Otite:      randBool(),
-		Rhumatisme: randBool(),
-		Rougeole:   randBool(),
-	}
 	fs := pr.Fichesanitaire{
-		TraitementMedical: randBool(),
-		DifficultesSante:  utils.RandString(100, true),
-		Handicap:          randBool(),
-		Recommandations:   utils.RandString(300, true),
-		Tel:               "546565654646",
-		Medecin: pr.Medecin{
+		DifficultesSante:      randStringOrEmpty(),
+		AllergiesAlimentaires: randStringOrEmpty(),
+		TraitementMedical:     randStringOrEmpty(),
+		AutreContact: pr.NomTel{
+			Nom: utils.RandString(30, true),
+			Tel: pr.Tel(utils.RandString(30, true)),
+		},
+		Medecin: pr.NomTel{
 			Nom: utils.RandString(30, true),
 			Tel: pr.Tel(utils.RandString(30, true)),
 		},
 	}
-	if randBool() {
-		fs.Allergies = al
-	}
-	if randBool() {
-		fs.Maladies = ml
-	}
+
 	pers := pr.Etatcivil{
 		Nom:           utils.RandString(15, true),
 		Prenom:        "zkle é@dzkmk è",

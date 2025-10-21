@@ -221,7 +221,7 @@ func (a Allergies) List() []string {
 	return out
 }
 
-type Medecin struct {
+type NomTel struct {
 	Nom string
 	Tel Tel
 }

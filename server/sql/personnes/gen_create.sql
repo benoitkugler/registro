@@ -1,18 +1,4 @@
 -- Code genererated by gomacro/generator/sql. DO NOT EDIT.
-DROP TYPE IF EXISTS Maladies;
-
-CREATE TYPE Maladies AS (
-    Rubeole boolean,
-    Varicelle boolean,
-    Angine boolean,
-    Oreillons boolean,
-    Scarlatine boolean,
-    Coqueluche boolean,
-    Otite boolean,
-    Rougeole boolean,
-    Rhumatisme boolean
-);
-
 DROP TYPE IF EXISTS Nationnalite;
 
 CREATE TYPE Nationnalite AS (
@@ -31,16 +17,13 @@ CREATE TYPE Publicite AS (
 
 CREATE TABLE fichesanitaires (
     IdPersonne integer NOT NULL,
-    TraitementMedical boolean NOT NULL,
-    Maladies Maladies NOT NULL,
-    Allergies jsonb NOT NULL,
     DifficultesSante text NOT NULL,
-    Recommandations text NOT NULL,
-    Handicap boolean NOT NULL,
-    Tel text NOT NULL,
+    AllergiesAlimentaires text NOT NULL,
+    TraitementMedical text NOT NULL,
+    AutreContact jsonb NOT NULL,
     Medecin jsonb NOT NULL,
-    LastModif timestamp(0) with time zone NOT NULL,
-    Mails text[],
+    Modified timestamp(0) with time zone NOT NULL,
+    Owners text[],
     guard boolean NOT NULL
 );
 
@@ -89,47 +72,7 @@ ALTER TABLE fichesanitaires
 ALTER TABLE fichesanitaires
     ADD CHECK (guard = FALSE);
 
-CREATE OR REPLACE FUNCTION gomacro_validate_json_boolean (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean := jsonb_typeof(data) = 'boolean';
-BEGIN
-    IF NOT is_valid THEN
-        RAISE WARNING '% is not a boolean', data;
-    END IF;
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION gomacro_validate_json_pers_Allergies (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean;
-BEGIN
-    IF jsonb_typeof(data) != 'object' THEN
-        RETURN FALSE;
-    END IF;
-    is_valid := (
-        SELECT
-            bool_and(key IN ('Asthme', 'Alimentaires', 'Medicamenteuses', 'Autres', 'ConduiteATenir'))
-        FROM
-            jsonb_each(data))
-        AND gomacro_validate_json_boolean (data -> 'Asthme')
-        AND gomacro_validate_json_boolean (data -> 'Alimentaires')
-        AND gomacro_validate_json_boolean (data -> 'Medicamenteuses')
-        AND gomacro_validate_json_string (data -> 'Autres')
-        AND gomacro_validate_json_string (data -> 'ConduiteATenir');
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION gomacro_validate_json_pers_Medecin (data jsonb)
+CREATE OR REPLACE FUNCTION gomacro_validate_json_pers_NomTel (data jsonb)
     RETURNS boolean
     AS $$
 DECLARE
@@ -167,8 +110,8 @@ LANGUAGE 'plpgsql'
 IMMUTABLE;
 
 ALTER TABLE fichesanitaires
-    ADD CONSTRAINT Allergies_gomacro CHECK (gomacro_validate_json_pers_Allergies (Allergies));
+    ADD CONSTRAINT AutreContact_gomacro CHECK (gomacro_validate_json_pers_NomTel (AutreContact));
 
 ALTER TABLE fichesanitaires
-    ADD CONSTRAINT Medecin_gomacro CHECK (gomacro_validate_json_pers_Medecin (Medecin));
+    ADD CONSTRAINT Medecin_gomacro CHECK (gomacro_validate_json_pers_NomTel (Medecin));
 

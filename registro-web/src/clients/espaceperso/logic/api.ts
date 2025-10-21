@@ -55,10 +55,8 @@ export interface FichesanitaireExt {
   IsLocked: boolean;
   State: FichesanitaireState;
   Fichesanitaire: Fichesanitaire;
-  RespoTels: Tels;
-  RespoSecuriteSociale: string;
-  VaccinsDemande: Demande;
-  VaccinsFiles: PublicFile[] | null;
+  ResponsableNom: string;
+  ResponsableTels: Tels;
 }
 // registro/controllers/espaceperso.Fichesanitaires
 export interface Fichesanitaires {
@@ -100,7 +98,6 @@ export interface SondageExt {
 export interface UpdateFichesanitaireIn {
   Token: string;
   Fichesanitaire: Fichesanitaire;
-  SecuriteSocialeResponsable: string;
 }
 // registro/controllers/espaceperso.UpdateParticipantsIn
 export interface UpdateParticipantsIn {
@@ -370,6 +367,7 @@ export interface Participant {
   OptionPrix: OptionPrixParticipant;
   Commentaire: string;
   Navette: Navette;
+  CharteAccepted: boolean;
 }
 // registro/sql/camps.ParticipantCamp
 export interface ParticipantCamp {
@@ -653,14 +651,6 @@ export interface Demande {
 }
 export type IdDemande = Int & { __opaque_int__: "IdDemande" };
 export type IdFile = Int & { __opaque_int__: "IdFile" };
-// registro/sql/personnes.Allergies
-export interface Allergies {
-  Asthme: boolean;
-  Alimentaires: boolean;
-  Medicamenteuses: boolean;
-  Autres: string;
-  ConduiteATenir: string;
-}
 // registro/sql/personnes.Approfondissement
 export const Approfondissement = {
   AAucun: 0,
@@ -735,16 +725,13 @@ export const DiplomeLabels: Record<Diplome, string> = {
 // registro/sql/personnes.Fichesanitaire
 export interface Fichesanitaire {
   IdPersonne: IdPersonne;
-  TraitementMedical: boolean;
-  Maladies: Maladies;
-  Allergies: Allergies;
   DifficultesSante: string;
-  Recommandations: string;
-  Handicap: boolean;
-  Tel: Tel;
-  Medecin: Medecin;
-  LastModif: Time;
-  Mails: Mails;
+  AllergiesAlimentaires: string;
+  TraitementMedical: string;
+  AutreContact: NomTel;
+  Medecin: NomTel;
+  Modified: Time;
+  Owners: Mails;
 }
 // registro/sql/personnes.FichesanitaireState
 export const FichesanitaireState = {
@@ -764,26 +751,14 @@ export const FichesanitaireStateLabels: Record<FichesanitaireState, string> = {
 export type IdPersonne = Int & { __opaque_int__: "IdPersonne" };
 // registro/sql/personnes.Mails
 export type Mails = string[] | null;
-// registro/sql/personnes.Maladies
-export interface Maladies {
-  Rubeole: boolean;
-  Varicelle: boolean;
-  Angine: boolean;
-  Oreillons: boolean;
-  Scarlatine: boolean;
-  Coqueluche: boolean;
-  Otite: boolean;
-  Rougeole: boolean;
-  Rhumatisme: boolean;
-}
-// registro/sql/personnes.Medecin
-export interface Medecin {
-  Nom: string;
-  Tel: Tel;
-}
 // registro/sql/personnes.Nationnalite
 export interface Nationnalite {
   IsSuisse: boolean;
+}
+// registro/sql/personnes.NomTel
+export interface NomTel {
+  Nom: string;
+  Tel: Tel;
 }
 // registro/sql/personnes.Pays
 export type Pays = string;

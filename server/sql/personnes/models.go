@@ -54,17 +54,17 @@ func SelectByMail(db DB, mail string) (Personnes, error) {
 type Fichesanitaire struct {
 	IdPersonne IdPersonne `gomacro-sql-on-delete:"CASCADE"`
 
-	TraitementMedical bool
-	Maladies          Maladies
-	Allergies         Allergies
-	DifficultesSante  string
-	Recommandations   string
-	Handicap          bool
-	Tel               Tel // added to the one of the responsable
-	Medecin           Medecin
+	DifficultesSante      string
+	AllergiesAlimentaires string
+	TraitementMedical     string
 
-	LastModif time.Time // dernière modification
-	Mails     Mails     // owners
+	Medecin      NomTel
+	AutreContact NomTel // added to the responsable
+
+	// TODO: maybe add assurances
+
+	Modified time.Time
+	Owners   Mails // used for security
 
 	guard bool `gomacro-sql-guard:"false"`
 }

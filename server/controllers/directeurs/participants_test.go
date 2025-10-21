@@ -31,9 +31,9 @@ func TestFichesSanitaires(t *testing.T) {
 	pe3, err := pr.Personne{}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	err = pr.Fichesanitaire{IdPersonne: pe1.Id, TraitementMedical: true}.Insert(db)
+	err = pr.Fichesanitaire{IdPersonne: pe1.Id, TraitementMedical: "Il doit prendre des méicatments !"}.Insert(db)
 	tu.AssertNoErr(t, err)
-	err = pr.Fichesanitaire{IdPersonne: pe2.Id, TraitementMedical: true}.Insert(db)
+	err = pr.Fichesanitaire{IdPersonne: pe2.Id, AllergiesAlimentaires: "Le mais !"}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	dossier, err := ds.Dossier{IdTaux: 1, IdResponsable: pe1.Id}.Insert(db)

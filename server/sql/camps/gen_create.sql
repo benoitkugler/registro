@@ -102,7 +102,8 @@ CREATE TABLE participants (
     QuotientFamilial integer NOT NULL,
     OptionPrix jsonb NOT NULL,
     Commentaire text NOT NULL,
-    Navette smallint CHECK (Navette IN (0, 1, 2, 3)) NOT NULL
+    Navette smallint CHECK (Navette IN (0, 1, 2, 3)) NOT NULL,
+    CharteAccepted boolean NOT NULL
 );
 
 CREATE TABLE sondages (

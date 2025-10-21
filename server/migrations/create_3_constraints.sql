@@ -19,10 +19,10 @@ ALTER TABLE fichesanitaires
     ADD CHECK (guard = FALSE);
 
 ALTER TABLE fichesanitaires
-    ADD CONSTRAINT Allergies_gomacro CHECK (gomacro_validate_json_pers_Allergies (Allergies));
+    ADD CONSTRAINT AutreContact_gomacro CHECK (gomacro_validate_json_pers_NomTel (AutreContact));
 
 ALTER TABLE fichesanitaires
-    ADD CONSTRAINT Medecin_gomacro CHECK (gomacro_validate_json_pers_Medecin (Medecin));
+    ADD CONSTRAINT Medecin_gomacro CHECK (gomacro_validate_json_pers_NomTel (Medecin));
 
 ALTER TABLE tauxs
     ADD UNIQUE (Label);

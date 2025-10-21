@@ -1285,6 +1285,7 @@ func scanOneParticipant(row scanner) (Participant, error) {
 		&item.OptionPrix,
 		&item.Commentaire,
 		&item.Navette,
+		&item.CharteAccepted,
 	)
 	return item, err
 }
@@ -1293,7 +1294,7 @@ func ScanParticipant(row *sql.Row) (Participant, error) { return scanOneParticip
 
 // SelectAll returns all the items in the participants table.
 func SelectAllParticipants(db DB) (Participants, error) {
-	rows, err := db.Query("SELECT id, idcamp, idpersonne, iddossier, idtaux, statut, remises, quotientfamilial, optionprix, commentaire, navette FROM participants")
+	rows, err := db.Query("SELECT id, idcamp, idpersonne, iddossier, idtaux, statut, remises, quotientfamilial, optionprix, commentaire, navette, charteaccepted FROM participants")
 	if err != nil {
 		return nil, err
 	}
@@ -1302,13 +1303,13 @@ func SelectAllParticipants(db DB) (Participants, error) {
 
 // SelectParticipant returns the entry matching 'id'.
 func SelectParticipant(tx DB, id IdParticipant) (Participant, error) {
-	row := tx.QueryRow("SELECT id, idcamp, idpersonne, iddossier, idtaux, statut, remises, quotientfamilial, optionprix, commentaire, navette FROM participants WHERE id = $1", id)
+	row := tx.QueryRow("SELECT id, idcamp, idpersonne, iddossier, idtaux, statut, remises, quotientfamilial, optionprix, commentaire, navette, charteaccepted FROM participants WHERE id = $1", id)
 	return ScanParticipant(row)
 }
 
 // SelectParticipants returns the entry matching the given 'ids'.
 func SelectParticipants(tx DB, ids ...IdParticipant) (Participants, error) {
-	rows, err := tx.Query("SELECT id, idcamp, idpersonne, iddossier, idtaux, statut, remises, quotientfamilial, optionprix, commentaire, navette FROM participants WHERE id = ANY($1)", IdParticipantArrayToPQ(ids))
+	rows, err := tx.Query("SELECT id, idcamp, idpersonne, iddossier, idtaux, statut, remises, quotientfamilial, optionprix, commentaire, navette, charteaccepted FROM participants WHERE id = ANY($1)", IdParticipantArrayToPQ(ids))
 	if err != nil {
 		return nil, err
 	}
@@ -1353,28 +1354,28 @@ func ScanParticipants(rs *sql.Rows) (Participants, error) {
 // Insert one Participant in the database and returns the item with id filled.
 func (item Participant) Insert(tx DB) (out Participant, err error) {
 	row := tx.QueryRow(`INSERT INTO participants (
-		idcamp, idpersonne, iddossier, idtaux, statut, remises, quotientfamilial, optionprix, commentaire, navette
+		idcamp, idpersonne, iddossier, idtaux, statut, remises, quotientfamilial, optionprix, commentaire, navette, charteaccepted
 		) VALUES (
-		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10
-		) RETURNING id, idcamp, idpersonne, iddossier, idtaux, statut, remises, quotientfamilial, optionprix, commentaire, navette;
-		`, item.IdCamp, item.IdPersonne, item.IdDossier, item.IdTaux, item.Statut, item.Remises, item.QuotientFamilial, item.OptionPrix, item.Commentaire, item.Navette)
+		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
+		) RETURNING id, idcamp, idpersonne, iddossier, idtaux, statut, remises, quotientfamilial, optionprix, commentaire, navette, charteaccepted;
+		`, item.IdCamp, item.IdPersonne, item.IdDossier, item.IdTaux, item.Statut, item.Remises, item.QuotientFamilial, item.OptionPrix, item.Commentaire, item.Navette, item.CharteAccepted)
 	return ScanParticipant(row)
 }
 
 // Update Participant in the database and returns the new version.
 func (item Participant) Update(tx DB) (out Participant, err error) {
 	row := tx.QueryRow(`UPDATE participants SET (
-		idcamp, idpersonne, iddossier, idtaux, statut, remises, quotientfamilial, optionprix, commentaire, navette
+		idcamp, idpersonne, iddossier, idtaux, statut, remises, quotientfamilial, optionprix, commentaire, navette, charteaccepted
 		) = (
-		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10
-		) WHERE id = $11 RETURNING id, idcamp, idpersonne, iddossier, idtaux, statut, remises, quotientfamilial, optionprix, commentaire, navette;
-		`, item.IdCamp, item.IdPersonne, item.IdDossier, item.IdTaux, item.Statut, item.Remises, item.QuotientFamilial, item.OptionPrix, item.Commentaire, item.Navette, item.Id)
+		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
+		) WHERE id = $12 RETURNING id, idcamp, idpersonne, iddossier, idtaux, statut, remises, quotientfamilial, optionprix, commentaire, navette, charteaccepted;
+		`, item.IdCamp, item.IdPersonne, item.IdDossier, item.IdTaux, item.Statut, item.Remises, item.QuotientFamilial, item.OptionPrix, item.Commentaire, item.Navette, item.CharteAccepted, item.Id)
 	return ScanParticipant(row)
 }
 
 // Deletes the Participant and returns the item
 func DeleteParticipantById(tx DB, id IdParticipant) (Participant, error) {
-	row := tx.QueryRow("DELETE FROM participants WHERE id = $1 RETURNING id, idcamp, idpersonne, iddossier, idtaux, statut, remises, quotientfamilial, optionprix, commentaire, navette;", id)
+	row := tx.QueryRow("DELETE FROM participants WHERE id = $1 RETURNING id, idcamp, idpersonne, iddossier, idtaux, statut, remises, quotientfamilial, optionprix, commentaire, navette, charteaccepted;", id)
 	return ScanParticipant(row)
 }
 
@@ -1413,7 +1414,7 @@ func (items Participants) IdCamps() []IdCamp {
 }
 
 func SelectParticipantsByIdCamps(tx DB, idCamps_ ...IdCamp) (Participants, error) {
-	rows, err := tx.Query("SELECT id, idcamp, idpersonne, iddossier, idtaux, statut, remises, quotientfamilial, optionprix, commentaire, navette FROM participants WHERE idcamp = ANY($1)", IdCampArrayToPQ(idCamps_))
+	rows, err := tx.Query("SELECT id, idcamp, idpersonne, iddossier, idtaux, statut, remises, quotientfamilial, optionprix, commentaire, navette, charteaccepted FROM participants WHERE idcamp = ANY($1)", IdCampArrayToPQ(idCamps_))
 	if err != nil {
 		return nil, err
 	}
@@ -1454,7 +1455,7 @@ func (items Participants) IdPersonnes() []personnes.IdPersonne {
 }
 
 func SelectParticipantsByIdPersonnes(tx DB, idPersonnes_ ...personnes.IdPersonne) (Participants, error) {
-	rows, err := tx.Query("SELECT id, idcamp, idpersonne, iddossier, idtaux, statut, remises, quotientfamilial, optionprix, commentaire, navette FROM participants WHERE idpersonne = ANY($1)", personnes.IdPersonneArrayToPQ(idPersonnes_))
+	rows, err := tx.Query("SELECT id, idcamp, idpersonne, iddossier, idtaux, statut, remises, quotientfamilial, optionprix, commentaire, navette, charteaccepted FROM participants WHERE idpersonne = ANY($1)", personnes.IdPersonneArrayToPQ(idPersonnes_))
 	if err != nil {
 		return nil, err
 	}
@@ -1495,7 +1496,7 @@ func (items Participants) IdDossiers() []dossiers.IdDossier {
 }
 
 func SelectParticipantsByIdDossiers(tx DB, idDossiers_ ...dossiers.IdDossier) (Participants, error) {
-	rows, err := tx.Query("SELECT id, idcamp, idpersonne, iddossier, idtaux, statut, remises, quotientfamilial, optionprix, commentaire, navette FROM participants WHERE iddossier = ANY($1)", dossiers.IdDossierArrayToPQ(idDossiers_))
+	rows, err := tx.Query("SELECT id, idcamp, idpersonne, iddossier, idtaux, statut, remises, quotientfamilial, optionprix, commentaire, navette, charteaccepted FROM participants WHERE iddossier = ANY($1)", dossiers.IdDossierArrayToPQ(idDossiers_))
 	if err != nil {
 		return nil, err
 	}
@@ -1536,7 +1537,7 @@ func (items Participants) IdTauxs() []dossiers.IdTaux {
 }
 
 func SelectParticipantsByIdTauxs(tx DB, idTauxs_ ...dossiers.IdTaux) (Participants, error) {
-	rows, err := tx.Query("SELECT id, idcamp, idpersonne, iddossier, idtaux, statut, remises, quotientfamilial, optionprix, commentaire, navette FROM participants WHERE idtaux = ANY($1)", dossiers.IdTauxArrayToPQ(idTauxs_))
+	rows, err := tx.Query("SELECT id, idcamp, idpersonne, iddossier, idtaux, statut, remises, quotientfamilial, optionprix, commentaire, navette, charteaccepted FROM participants WHERE idtaux = ANY($1)", dossiers.IdTauxArrayToPQ(idTauxs_))
 	if err != nil {
 		return nil, err
 	}
@@ -1553,7 +1554,7 @@ func DeleteParticipantsByIdTauxs(tx DB, idTauxs_ ...dossiers.IdTaux) ([]IdPartic
 
 // SelectParticipantByIdCampAndIdPersonne return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectParticipantByIdCampAndIdPersonne(tx DB, idCamp IdCamp, idPersonne personnes.IdPersonne) (item Participant, found bool, err error) {
-	row := tx.QueryRow("SELECT id, idcamp, idpersonne, iddossier, idtaux, statut, remises, quotientfamilial, optionprix, commentaire, navette FROM participants WHERE IdCamp = $1 AND IdPersonne = $2", idCamp, idPersonne)
+	row := tx.QueryRow("SELECT id, idcamp, idpersonne, iddossier, idtaux, statut, remises, quotientfamilial, optionprix, commentaire, navette, charteaccepted FROM participants WHERE IdCamp = $1 AND IdPersonne = $2", idCamp, idPersonne)
 	item, err = ScanParticipant(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
@@ -1563,7 +1564,7 @@ func SelectParticipantByIdCampAndIdPersonne(tx DB, idCamp IdCamp, idPersonne per
 
 // SelectParticipantByIdAndIdCamp return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectParticipantByIdAndIdCamp(tx DB, id IdParticipant, idCamp IdCamp) (item Participant, found bool, err error) {
-	row := tx.QueryRow("SELECT id, idcamp, idpersonne, iddossier, idtaux, statut, remises, quotientfamilial, optionprix, commentaire, navette FROM participants WHERE Id = $1 AND IdCamp = $2", id, idCamp)
+	row := tx.QueryRow("SELECT id, idcamp, idpersonne, iddossier, idtaux, statut, remises, quotientfamilial, optionprix, commentaire, navette, charteaccepted FROM participants WHERE Id = $1 AND IdCamp = $2", id, idCamp)
 	item, err = ScanParticipant(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil

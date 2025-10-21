@@ -129,6 +129,8 @@ type Participant struct {
 
 	Commentaire string  // rempli sur l'espace de suivi
 	Navette     Navette // rempli sur l'espace de suivi
+
+	CharteAccepted bool
 }
 
 // Groupe représente un groupe de participants

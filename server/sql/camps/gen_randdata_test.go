@@ -239,6 +239,7 @@ func randParticipant() Participant {
 	s.OptionPrix = randOptionPrixParticipant()
 	s.Commentaire = randstring()
 	s.Navette = randNavette()
+	s.CharteAccepted = randbool()
 
 	return s
 }

@@ -30,16 +30,13 @@ func scanOneFichesanitaire(row scanner) (Fichesanitaire, error) {
 	var item Fichesanitaire
 	err := row.Scan(
 		&item.IdPersonne,
-		&item.TraitementMedical,
-		&item.Maladies,
-		&item.Allergies,
 		&item.DifficultesSante,
-		&item.Recommandations,
-		&item.Handicap,
-		&item.Tel,
+		&item.AllergiesAlimentaires,
+		&item.TraitementMedical,
+		&item.AutreContact,
 		&item.Medecin,
-		&item.LastModif,
-		&item.Mails,
+		&item.Modified,
+		&item.Owners,
 	)
 	return item, err
 }
@@ -48,7 +45,7 @@ func ScanFichesanitaire(row *sql.Row) (Fichesanitaire, error) { return scanOneFi
 
 // SelectAll returns all the items in the fichesanitaires table.
 func SelectAllFichesanitaires(db DB) (Fichesanitaires, error) {
-	rows, err := db.Query("SELECT idpersonne, traitementmedical, maladies, allergies, difficultessante, recommandations, handicap, tel, medecin, lastmodif, mails FROM fichesanitaires")
+	rows, err := db.Query("SELECT idpersonne, difficultessante, allergiesalimentaires, traitementmedical, autrecontact, medecin, modified, owners FROM fichesanitaires")
 	if err != nil {
 		return nil, err
 	}
@@ -84,11 +81,11 @@ func ScanFichesanitaires(rs *sql.Rows) (Fichesanitaires, error) {
 
 func (item Fichesanitaire) Insert(db DB) error {
 	_, err := db.Exec(`INSERT INTO fichesanitaires (
-			idpersonne, traitementmedical, maladies, allergies, difficultessante, recommandations, handicap, tel, medecin, lastmodif, mails
+			idpersonne, difficultessante, allergiesalimentaires, traitementmedical, autrecontact, medecin, modified, owners
 			) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
+			$1, $2, $3, $4, $5, $6, $7, $8
 			);
-			`, item.IdPersonne, item.TraitementMedical, item.Maladies, item.Allergies, item.DifficultesSante, item.Recommandations, item.Handicap, item.Tel, item.Medecin, item.LastModif, item.Mails)
+			`, item.IdPersonne, item.DifficultesSante, item.AllergiesAlimentaires, item.TraitementMedical, item.AutreContact, item.Medecin, item.Modified, item.Owners)
 	if err != nil {
 		return err
 	}
@@ -104,23 +101,20 @@ func InsertManyFichesanitaires(tx *sql.Tx, items ...Fichesanitaire) error {
 
 	stmt, err := tx.Prepare(pq.CopyIn("fichesanitaires",
 		"idpersonne",
-		"traitementmedical",
-		"maladies",
-		"allergies",
 		"difficultessante",
-		"recommandations",
-		"handicap",
-		"tel",
+		"allergiesalimentaires",
+		"traitementmedical",
+		"autrecontact",
 		"medecin",
-		"lastmodif",
-		"mails",
+		"modified",
+		"owners",
 	))
 	if err != nil {
 		return err
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdPersonne, item.TraitementMedical, item.Maladies, item.Allergies, item.DifficultesSante, item.Recommandations, item.Handicap, item.Tel, item.Medecin, item.LastModif, item.Mails)
+		_, err = stmt.Exec(item.IdPersonne, item.DifficultesSante, item.AllergiesAlimentaires, item.TraitementMedical, item.AutreContact, item.Medecin, item.Modified, item.Owners)
 		if err != nil {
 			return err
 		}
@@ -165,7 +159,7 @@ func (items Fichesanitaires) IdPersonnes() []IdPersonne {
 
 // SelectFichesanitaireByIdPersonne return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectFichesanitaireByIdPersonne(tx DB, idPersonne IdPersonne) (item Fichesanitaire, found bool, err error) {
-	row := tx.QueryRow("SELECT idpersonne, traitementmedical, maladies, allergies, difficultessante, recommandations, handicap, tel, medecin, lastmodif, mails FROM fichesanitaires WHERE idpersonne = $1", idPersonne)
+	row := tx.QueryRow("SELECT idpersonne, difficultessante, allergiesalimentaires, traitementmedical, autrecontact, medecin, modified, owners FROM fichesanitaires WHERE idpersonne = $1", idPersonne)
 	item, err = ScanFichesanitaire(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
@@ -174,7 +168,7 @@ func SelectFichesanitaireByIdPersonne(tx DB, idPersonne IdPersonne) (item Fiches
 }
 
 func SelectFichesanitairesByIdPersonnes(tx DB, idPersonnes_ ...IdPersonne) (Fichesanitaires, error) {
-	rows, err := tx.Query("SELECT idpersonne, traitementmedical, maladies, allergies, difficultessante, recommandations, handicap, tel, medecin, lastmodif, mails FROM fichesanitaires WHERE idpersonne = ANY($1)", IdPersonneArrayToPQ(idPersonnes_))
+	rows, err := tx.Query("SELECT idpersonne, difficultessante, allergiesalimentaires, traitementmedical, autrecontact, medecin, modified, owners FROM fichesanitaires WHERE idpersonne = ANY($1)", IdPersonneArrayToPQ(idPersonnes_))
 	if err != nil {
 		return nil, err
 	}
@@ -182,7 +176,7 @@ func SelectFichesanitairesByIdPersonnes(tx DB, idPersonnes_ ...IdPersonne) (Fich
 }
 
 func DeleteFichesanitairesByIdPersonnes(tx DB, idPersonnes_ ...IdPersonne) (Fichesanitaires, error) {
-	rows, err := tx.Query("DELETE FROM fichesanitaires WHERE idpersonne = ANY($1) RETURNING idpersonne, traitementmedical, maladies, allergies, difficultessante, recommandations, handicap, tel, medecin, lastmodif, mails", IdPersonneArrayToPQ(idPersonnes_))
+	rows, err := tx.Query("DELETE FROM fichesanitaires WHERE idpersonne = ANY($1) RETURNING idpersonne, difficultessante, allergiesalimentaires, traitementmedical, autrecontact, medecin, modified, owners", IdPersonneArrayToPQ(idPersonnes_))
 	if err != nil {
 		return nil, err
 	}
@@ -360,41 +354,6 @@ func (s Tels) Value() (driver.Value, error) {
 	return pq.StringArray(s).Value()
 }
 
-func (s *Maladies) Scan(src any) error {
-	bs, ok := src.([]byte)
-	if !ok {
-		return fmt.Errorf("unsupported type %T", src)
-	}
-	fields := strings.Split(string(bs[1:len(bs)-1]), ",")
-	if len(fields) != 9 {
-		return fmt.Errorf("unsupported number of fields %d", len(fields))
-	}
-
-	s.Rubeole = bool(fields[0] == "t")
-
-	s.Varicelle = bool(fields[1] == "t")
-
-	s.Angine = bool(fields[2] == "t")
-
-	s.Oreillons = bool(fields[3] == "t")
-
-	s.Scarlatine = bool(fields[4] == "t")
-
-	s.Coqueluche = bool(fields[5] == "t")
-
-	s.Otite = bool(fields[6] == "t")
-
-	s.Rougeole = bool(fields[7] == "t")
-
-	s.Rhumatisme = bool(fields[8] == "t")
-
-	return nil
-}
-func (s Maladies) Value() (driver.Value, error) {
-	bs := fmt.Sprintf("(%t, %t, %t, %t, %t, %t, %t, %t, %t)", s.Rubeole, s.Varicelle, s.Angine, s.Oreillons, s.Scarlatine, s.Coqueluche, s.Otite, s.Rougeole, s.Rhumatisme)
-	return driver.Value(bs), nil
-}
-
 func (s *Nationnalite) Scan(src any) error {
 	bs, ok := src.([]byte)
 	if !ok {
@@ -468,8 +427,5 @@ func ScanIdPersonneArray(rs *sql.Rows) ([]IdPersonne, error) {
 	return ints, nil
 }
 
-func (s *Allergies) Scan(src any) error          { return loadJSON(s, src) }
-func (s Allergies) Value() (driver.Value, error) { return dumpJSON(s) }
-
-func (s *Medecin) Scan(src any) error          { return loadJSON(s, src) }
-func (s Medecin) Value() (driver.Value, error) { return dumpJSON(s) }
+func (s *NomTel) Scan(src any) error          { return loadJSON(s, src) }
+func (s NomTel) Value() (driver.Value, error) { return dumpJSON(s) }

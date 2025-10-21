@@ -29,19 +29,10 @@
           </v-btn>
         </v-alert>
         <v-alert
-          v-else-if="
-            props.fiche.State == FichesanitaireState.UpToDate &&
-            props.fiche.VaccinsFiles?.length
-          "
+          v-else-if="props.fiche.State == FichesanitaireState.UpToDate"
           type="success"
         >
           La fiche sanitaire est à jour. Merci !
-        </v-alert>
-        <v-alert
-          v-else-if="props.fiche.State == FichesanitaireState.UpToDate"
-          type="warning"
-        >
-          La fiche sanitaire est à jour, mais vous n'avez déposé aucun vaccin.
         </v-alert>
         <v-alert
           v-else-if="props.fiche.State == FichesanitaireState.Outdated"
@@ -60,7 +51,7 @@
 
     <template v-if="!props.fiche.IsLocked">
       <!-- vaccins -->
-      <v-card subtitle="Vaccinations" class="my-2">
+      <!-- <v-card subtitle="Vaccinations" class="my-2">
         <v-card-text>
           Merci de joindre le scan des pages « vaccinations » du carnet de santé
           du participant. Seul le DTPolio est obligatoire pour être accueilli en
@@ -81,215 +72,57 @@
             @delete="(f) => emit('deleteVaccin', f)"
           ></FilesDemande>
         </v-card-text>
-      </v-card>
+      </v-card> -->
 
-      <!-- handicap -->
-      <v-card subtitle="Handicap" class="my-2">
+      <v-card class="my-2" title="Santé">
         <v-card-text>
-          <v-checkbox
-            v-model="inner.Handicap"
-            color="primary"
-            label="Le participant est porteur de handicap. "
-            hide-details
-          ></v-checkbox>
-          <v-fade-transition>
-            <v-alert v-model="inner.Handicap" color="blue-lighten-4">
-              Merci de <b>contacter</b> au plus vite le directeur afin qu’un
-              accueil individualisé puisse être mis en place.
-            </v-alert>
-          </v-fade-transition>
-        </v-card-text>
-      </v-card>
-
-      <!-- traitement -->
-      <v-card subtitle="Traitement" class="my-2">
-        <v-card-text>
-          <v-checkbox
-            v-model="inner.TraitementMedical"
-            color="primary"
-            label="Le participant suit un traitement médical pendant le séjour."
-            hide-details
-          ></v-checkbox>
-          <v-fade-transition>
-            <v-alert v-model="inner.TraitementMedical" color="blue-lighten-4">
-              Merci de joindre une <b>ordonnance</b> récente et les
-              <b>médicaments</b>
-              correspondants (avec la notice). Aucun médicament ne pourra être
-              pris sans ordonnance.
-            </v-alert>
-          </v-fade-transition>
-        </v-card-text>
-      </v-card>
-
-      <!-- maladies -->
-      <v-card subtitle="Maladies" class="my-2">
-        <v-card-text>
-          Le participant a-t-il déjà eu les maladies suivantes ?
-          <v-row class="mt-2">
-            <v-col cols="3" class="py-0">
-              <v-checkbox
-                v-model="inner.Maladies.Rubeole"
-                color="primary"
-                label="Rubéole"
-                hide-details
-              ></v-checkbox>
-            </v-col>
-            <v-col cols="3" class="py-0">
-              <v-checkbox
-                v-model="inner.Maladies.Varicelle"
-                color="primary"
-                label="Varicelle"
-                hide-details
-              ></v-checkbox>
-            </v-col>
-            <v-col cols="3" class="py-0">
-              <v-checkbox
-                v-model="inner.Maladies.Angine"
-                color="primary"
-                label="Angine"
-                hide-details
-              ></v-checkbox>
-            </v-col>
-            <v-col cols="3" class="py-0">
-              <v-checkbox
-                v-model="inner.Maladies.Oreillons"
-                color="primary"
-                label="Oreillons"
-                hide-details
-              ></v-checkbox>
-            </v-col>
-            <v-col cols="3" class="py-0">
-              <v-checkbox
-                v-model="inner.Maladies.Scarlatine"
-                color="primary"
-                label="Scarlatine"
-                hide-details
-              ></v-checkbox>
-            </v-col>
-            <v-col cols="3" class="py-0">
-              <v-checkbox
-                v-model="inner.Maladies.Coqueluche"
-                color="primary"
-                label="Coqueluche"
-                hide-details
-              ></v-checkbox>
-            </v-col>
-            <v-col cols="3" class="py-0">
-              <v-checkbox
-                v-model="inner.Maladies.Otite"
-                color="primary"
-                label="Otite"
-                hide-details
-              ></v-checkbox>
-            </v-col>
-            <v-col cols="3" class="py-0">
-              <v-checkbox
-                v-model="inner.Maladies.Rougeole"
-                color="primary"
-                label="Rougeole"
-                hide-details
-              ></v-checkbox>
-            </v-col>
-            <v-col cols="3" class="py-0">
-              <v-checkbox
-                v-model="inner.Maladies.Rhumatisme"
-                color="primary"
-                label="Rhumatisme articulaire aigü "
-                hide-details
-              ></v-checkbox>
-            </v-col>
-          </v-row>
-        </v-card-text>
-      </v-card>
-
-      <!-- allergies -->
-      <v-card subtitle="Allergies" class="my-2">
-        <v-card-text>
-          Le participant a-t-il une des allergies suivantes ?
-          <v-row class="mt-2">
-            <v-col align-self="center" cols="3" class="py-0">
-              <v-checkbox
-                v-model="inner.Allergies.Asthme"
-                color="primary"
-                label="Asthme"
-                hide-details
-              ></v-checkbox>
-            </v-col>
-            <v-col align-self="center" cols="3" class="py-0">
-              <v-checkbox
-                v-model="inner.Allergies.Alimentaires"
-                color="primary"
-                label="Alimentaires"
-                hide-details
-              ></v-checkbox>
-            </v-col>
-            <v-col align-self="center" cols="3" class="py-0">
-              <v-checkbox
-                v-model="inner.Allergies.Medicamenteuses"
-                color="primary"
-                label="Médicamenteuses"
-                hide-details
-              ></v-checkbox>
-            </v-col>
-            <v-col align-self="center" cols="3" class="py-0">
-              <v-text-field
-                density="compact"
-                variant="outlined"
-                hide-details
-                label="Autres allergies"
-                v-model="inner.Allergies.Autres"
-              ></v-text-field>
-            </v-col>
-          </v-row>
-          <v-fade-transition>
-            <v-row v-if="showConduiteATenir">
-              <v-col>
-                <v-textarea
-                  variant="outlined"
-                  label="Conduite à tenir"
-                  v-model="inner.Allergies.ConduiteATenir"
-                  hint="Préciser la cause de l’allergie et la conduite à tenir (si automédication le signaler). Si un PAI a été mis en place durant le temps scolaire, merci de nous le signaler."
-                  persistent-hint
-                  :rules="[
-                    FormRules.required(
-                      `Merci de nous informer de la conduite à tenir en cas d'allergie.`
-                    ),
-                  ]"
-                ></v-textarea>
-              </v-col>
-            </v-row>
-          </v-fade-transition>
-        </v-card-text>
-      </v-card>
-
-      <!-- divers -->
-      <v-card subtitle="Divers" class="my-2">
-        <v-card-text>
-          <v-row>
-            <v-col>
+          <v-row
+            ><v-col>
               <v-textarea
-                variant="outlined"
                 label="Difficultés de santé"
-                v-model="inner.DifficultesSante"
-                hint="Indiquer les difficultés de santé (maladie, accident, crises convulsives, hospitalisation, opération, rééducation) en précisant les dates et les précautions à prendre."
-                persistent-hint
-              ></v-textarea>
-            </v-col>
-            <v-col>
-              <v-textarea
+                rows="3"
                 variant="outlined"
-                label="Recommandations utiles"
-                v-model="inner.Recommandations"
-                hint="Préciser si le participant porte des lunettes, des lentilles, des prothèses auditives, des prothèses dentaires..."
+                v-model="inner.DifficultesSante"
+                hint="Préciser les problèmes de santé, allergies (non alimentaires), ou tout autre renseignement utile ..."
                 persistent-hint
+              ></v-textarea> </v-col
+          ></v-row>
+
+          <v-row
+            ><v-col>
+              <v-textarea
+                label="Allergies alimentaires"
+                rows="3"
+                variant="outlined"
+                v-model="inner.AllergiesAlimentaires"
+              ></v-textarea> </v-col
+          ></v-row>
+
+          <v-row
+            ><v-col>
+              <v-textarea
+                label="Traitement en cours et mesures proposées"
+                rows="3"
+                variant="outlined"
+                v-model="inner.TraitementMedical"
               ></v-textarea>
-            </v-col>
-          </v-row>
+              <v-fade-transition>
+                <v-alert
+                  :model-value="inner.TraitementMedical != ''"
+                  color="blue-lighten-4"
+                  type="warning"
+                >
+                  Merci d'apporter les médicaments prescrits et leur posologie,
+                  ainsi que d'informer l'équipe à votre arrivée.
+                </v-alert>
+              </v-fade-transition>
+            </v-col></v-row
+          >
         </v-card-text>
       </v-card>
 
-      <!-- médecin -->
-      <v-card subtitle="Médecin traitant" class="my-2">
+      <!-- Médecin -->
+      <v-card title="Médecin traitant" class="my-2">
         <v-card-text>
           <v-row>
             <v-col>
@@ -315,39 +148,51 @@
         </v-card-text>
       </v-card>
 
-      <!-- Responsable -->
-      <v-card subtitle="Responsable légal" class="my-2">
+      <!-- Contacts -->
+      <v-card title="Contacts" class="my-2">
         <v-card-text>
-          <v-row>
-            <v-col align-self="center">
-              Téléphone :
-              <v-chip label v-if="!props.fiche.RespoTels?.length"
-                >Aucun numéro</v-chip
-              >
-              <v-chip label v-for="tel in props.fiche.RespoTels" class="mx-1">{{
-                Formatters.tel(tel)
-              }}</v-chip>
-            </v-col>
-            <v-col align-self="center">
-              <v-text-field
-                variant="outlined"
-                density="compact"
-                label="Numéro de contact"
-                :model-value="Formatters.tel(inner.Tel)"
-                @update:model-value="(s) => (inner.Tel = s)"
-                hint="Numéro de téléphone supplémentaire (optionnel)"
-                persistent-hint
-              ></v-text-field>
-            </v-col>
-          </v-row>
           <v-row>
             <v-col>
               <v-text-field
                 variant="outlined"
                 density="compact"
-                label="Sécurité sociale"
-                v-model="respoSecuriteSociale"
+                readonly
                 hide-details
+                :model-value="props.fiche.ResponsableNom"
+                label="Responsable légal"
+              ></v-text-field>
+            </v-col>
+            <v-col>
+              <v-text-field
+                variant="outlined"
+                density="compact"
+                readonly
+                hide-details
+                :model-value="Formatters.tels(props.fiche.ResponsableTels)"
+                label="Téléphone"
+              ></v-text-field>
+            </v-col>
+          </v-row>
+          <v-divider thickness="2" class="my-4"></v-divider>
+          <v-row>
+            <v-col>
+              <v-text-field
+                variant="outlined"
+                density="compact"
+                readonly
+                v-model="inner.AutreContact.Nom"
+                label="Autre contact"
+                hint="Nom et prénom d'une autre personne à contacter en cas d'urgence."
+                persistent-hint
+              ></v-text-field>
+            </v-col>
+            <v-col>
+              <v-text-field
+                variant="outlined"
+                density="compact"
+                label="Téléphone du contact"
+                :model-value="Formatters.tel(inner.AutreContact.Tel)"
+                @update:model-value="(s) => (inner.AutreContact.Tel = s)"
               ></v-text-field>
             </v-col>
           </v-row>
@@ -362,19 +207,16 @@
       >
         <v-card-text class="text-black">
           Le responsable légal déclare <b>exacts</b> les renseignements portés
-          sur ce formulaire et autorise le responsable du séjour à prendre, le
-          cas échéant, <b>toutes mesures</b> (traitement médical,
-          hospitalisation, intervention chirurgicale) rendues nécessaires par
-          l'état du participant. Il autorise également, si nécessaire, le
-          directeur du séjour à faire sortir le participant de l’hôpital après
-          une hospitalisation.
+          sur ce formulaire. <br />
+          Il autorise le responsable du séjour à prendre des mesures urgentes de
+          soin (traitements médicaux d'urgence, hospitalisation, interventions
+          chirurgicales) rendues nécessaires par l’état du participant.
+          <br />
+          Il autorise également, si nécessaire, le responsable du séjour à faire
+          sortir le participant de l’hôpital après une hospitalisation.
         </v-card-text>
         <v-card-actions>
-          <v-btn
-            block
-            color="success"
-            @click="emit('save', inner, respoSecuriteSociale)"
-          >
+          <v-btn block color="success" @click="emit('save', inner)">
             <template #prepend>
               <v-icon>mdi-content-save</v-icon>
             </template>
@@ -387,43 +229,33 @@
 </template>
 
 <script setup lang="ts">
-import { copy, Formatters, FormRules } from "@/utils";
+import { copy, Formatters } from "@/utils";
 import {
   FichesanitaireState,
   type Fichesanitaire,
   type FichesanitaireExt,
-  type PublicFile,
 } from "../logic/api";
-import { computed, reactive, ref } from "vue";
+import { computed, reactive } from "vue";
 const props = defineProps<{
   fiche: FichesanitaireExt;
 }>();
 
 const emit = defineEmits<{
-  (e: "save", fs: Fichesanitaire, respoSecuriteSociale: string): void;
-  (e: "uploadVaccin", file: File): void;
-  (e: "deleteVaccin", file: PublicFile): void;
+  (e: "save", fs: Fichesanitaire): void;
+  //   (e: "uploadVaccin", file: File): void;
+  //   (e: "deleteVaccin", file: PublicFile): void;
   (e: "transfert"): void;
 }>();
 
 const inner = reactive(copy(props.fiche.Fichesanitaire));
-const respoSecuriteSociale = ref(props.fiche.RespoSecuriteSociale);
 
-const showConduiteATenir = computed(
-  () =>
-    inner.Allergies.Asthme ||
-    inner.Allergies.Alimentaires ||
-    inner.Allergies.Medicamenteuses ||
-    inner.Allergies.Autres.length != 0
-);
-
-const ownerMails = computed(() => props.fiche.Fichesanitaire.Mails || []);
+const ownerMails = computed(() => props.fiche.Fichesanitaire.Owners || []);
 
 const subtitle = computed(() =>
   props.fiche.State == FichesanitaireState.NoFiche
     ? undefined
     : `Dernière modification : ${Formatters.time(
-        props.fiche.Fichesanitaire.LastModif
+        props.fiche.Fichesanitaire.Modified
       )} / Propriétaire(s) :
          ${ownerMails.value.join(" ; ")}`
 );

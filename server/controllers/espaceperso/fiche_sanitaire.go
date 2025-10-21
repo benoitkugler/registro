@@ -14,7 +14,6 @@ import (
 	"registro/logic"
 	"registro/mails"
 	ds "registro/sql/dossiers"
-	fs "registro/sql/files"
 	pr "registro/sql/personnes"
 	"registro/utils"
 
@@ -31,7 +30,7 @@ type Fichesanitaires struct {
 func (fs *Fichesanitaires) setToFillCount() {
 	count := 0
 	for _, fiche := range fs.Fiches {
-		if fiche.IsLocked || fiche.State != pr.UpToDate || len(fiche.VaccinsFiles) == 0 {
+		if fiche.IsLocked || fiche.State != pr.UpToDate {
 			count++
 		}
 	}
@@ -39,15 +38,16 @@ func (fs *Fichesanitaires) setToFillCount() {
 }
 
 type FichesanitaireExt struct {
-	Personne             string
-	IsLocked             bool
-	State                pr.FichesanitaireState
-	Fichesanitaire       pr.Fichesanitaire
-	RespoTels            pr.Tels
-	RespoSecuriteSociale string
+	Personne       string
+	IsLocked       bool
+	State          pr.FichesanitaireState
+	Fichesanitaire pr.Fichesanitaire
 
-	VaccinsDemande fs.Demande
-	VaccinsFiles   []logic.PublicFile
+	ResponsableNom  string
+	ResponsableTels pr.Tels
+
+	// VaccinsDemande fs.Demande
+	// VaccinsFiles   []logic.PublicFile
 }
 
 func (ct *Controller) LoadFichesanitaires(c echo.Context) error {
@@ -71,11 +71,11 @@ func (ct *Controller) loadFichesanitaires(id ds.IdDossier) (out Fichesanitaires,
 	responsable := dossier.Responsable()
 	idPersonnes := dossier.Participants.IdPersonnes()
 
-	// load existing vaccins
-	vaccins, vaccinDemande, err := fsAPI.LoadVaccins(ct.db, ct.key, idPersonnes)
-	if err != nil {
-		return out, err
-	}
+	// // load existing vaccins
+	// vaccins, vaccinDemande, err := fsAPI.LoadVaccins(ct.db, ct.key, idPersonnes)
+	// if err != nil {
+	// 	return out, err
+	// }
 
 	fiches, err := pr.SelectFichesanitairesByIdPersonnes(ct.db, idPersonnes...)
 	if err != nil {
@@ -99,20 +99,17 @@ func (ct *Controller) loadFichesanitaires(id ds.IdDossier) (out Fichesanitaires,
 		fiche.IdPersonne = pers.Id // init ID for empty fiche
 		fsExt := FichesanitaireExt{
 			pers.PrenomNOM(),
-			isFichesanitaireLocked(responsable.Mail, fiche.Mails),
+			isFichesanitaireLocked(responsable.Mail, fiche.Owners),
 			fiche.State(dossier.Dossier.MomentInscription),
 			fiche,
+			responsable.PrenomNOM(),
 			responsable.Tels,
-			responsable.SecuriteSociale,
-
-			vaccinDemande,
-			vaccins[pers.Id],
 		}
 		if fsExt.IsLocked { // hide sensitive information
 			fsExt.Fichesanitaire = pr.Fichesanitaire{
 				IdPersonne: fiche.IdPersonne,
-				Mails:      fiche.Mails,
-				LastModif:  fiche.LastModif,
+				Owners:     fiche.Owners,
+				Modified:   fiche.Modified,
 			}
 		}
 		out.Fiches = append(out.Fiches, fsExt)
@@ -124,8 +121,6 @@ func (ct *Controller) loadFichesanitaires(id ds.IdDossier) (out Fichesanitaires,
 type UpdateFichesanitaireIn struct {
 	Token          string
 	Fichesanitaire pr.Fichesanitaire
-	// for simplicity, it is updated for each participant
-	SecuriteSocialeResponsable string
 }
 
 func (ct *Controller) UpdateFichesanitaire(c echo.Context) error {
@@ -173,23 +168,18 @@ func (ct *Controller) updateFichesanitaire(args UpdateFichesanitaireIn) error {
 		return utils.SQLError(err)
 	}
 
-	if isFichesanitaireLocked(responsable.Mail, fs.Mails) {
+	if isFichesanitaireLocked(responsable.Mail, fs.Owners) {
 		return errors.New("access forbidden")
 	}
 
 	// le premier responsable à modifier devient le proprio de la fiche
-	if len(fs.Mails) == 0 {
-		fs.Mails = []string{responsable.Mail}
+	if len(fs.Owners) == 0 {
+		fs.Owners = []string{responsable.Mail}
 	}
-	args.Fichesanitaire.Mails = fs.Mails
-	args.Fichesanitaire.LastModif = time.Now()
+	args.Fichesanitaire.Owners = fs.Owners
+	args.Fichesanitaire.Modified = time.Now()
 
 	return utils.InTx(ct.db, func(tx *sql.Tx) error {
-		responsable.SecuriteSociale = args.SecuriteSocialeResponsable
-		_, err = responsable.Update(tx)
-		if err != nil {
-			return err
-		}
 		_, err = pr.DeleteFichesanitairesByIdPersonnes(tx, idPersonne)
 		if err != nil {
 			return err
@@ -317,7 +307,7 @@ func (ct *Controller) transfertFicheSanitaire(host string, idDossier ds.IdDossie
 		return err
 	}
 	defer pool.Close()
-	for _, owner := range fiche.Mails {
+	for _, owner := range fiche.Owners {
 		err = pool.SendMail(owner, "Partage d'une fiche sanitaire", html, nil, mails.DefaultReplyTo)
 		if err != nil {
 			return err
@@ -347,10 +337,10 @@ func (ct *Controller) valideTransfertFicheSanitaire(args transfertFicheSanitaire
 	if !found { // should not happen
 		fiche = pr.Fichesanitaire{IdPersonne: args.IdPersonne}
 	}
-	if slices.Contains(fiche.Mails, args.NewMail) {
+	if slices.Contains(fiche.Owners, args.NewMail) {
 		return nil // nothing to do
 	}
-	fiche.Mails = append(fiche.Mails, args.NewMail)
+	fiche.Owners = append(fiche.Owners, args.NewMail)
 	return utils.InTx(ct.db, func(tx *sql.Tx) error {
 		_, err = pr.DeleteFichesanitairesByIdPersonnes(tx, args.IdPersonne)
 		if err != nil {

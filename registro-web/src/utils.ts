@@ -10,6 +10,7 @@ import {
   type DossierExt,
   type EventMessage,
   type ParticipantExt,
+  type Tels,
 } from "./clients/backoffice/logic/api";
 import {
   type Paiement,
@@ -347,6 +348,10 @@ export namespace Formatters {
       chunks.push(tel.substring(start + 2 * i, start + 2 * i + 2));
     }
     return chunks.join(" ");
+  }
+
+  export function tels(tels: Tels) {
+    return (tels || []).map(tel).join("; ");
   }
 
   export function sexeIcon(s: Sexe) {

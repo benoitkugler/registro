@@ -15,10 +15,10 @@ const (
 // State returns the state of the fiche sanitaire with respect to
 // the inscription time.
 func (fs Fichesanitaire) State(inscription time.Time) FichesanitaireState {
-	if fs.LastModif.IsZero() { // never filled
+	if fs.Modified.IsZero() { // never filled
 		return NoFiche
 	}
-	if fs.LastModif.Before(inscription) { // filled some time ago
+	if fs.Modified.Before(inscription) { // filled some time ago
 		return Outdated
 	}
 	return UpToDate
