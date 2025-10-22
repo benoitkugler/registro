@@ -52,9 +52,10 @@ func TestDocuments(t *testing.T) {
 	docs, err := ct.markAndloadDocuments(dossier.Id)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(docs.FilesToRead) == 1)
+	tu.Assert(t, len(docs.FilesToRead[0].Files) == 0 && len(docs.FilesToRead[0].Generated) == 1)
 	tu.Assert(t, len(docs.FilesToUpload) == 2)
 	tu.Assert(t, len(docs.FilesToUpload[0].Demandes[0].Uploaded) == 0)
-	tu.Assert(t, docs.ToReadOrFillCount == 2)
+	tu.Assert(t, docs.ToReadCount == 0 && docs.ToFillCount == 4)
 
 	_, err = ct.uploadDocument(dossier.Id, d1.Id, pe4.Id, tu.PngData, "test.png")
 	tu.AssertErr(t, err)
@@ -65,5 +66,5 @@ func TestDocuments(t *testing.T) {
 	docs, err = ct.markAndloadDocuments(dossier.Id)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(docs.FilesToUpload[0].Demandes[0].Uploaded) == 1)
-	tu.Assert(t, docs.ToReadOrFillCount == 1)
+	tu.Assert(t, docs.ToReadCount == 0 && docs.ToFillCount == 3)
 }

@@ -8,6 +8,7 @@ import (
 	"registro/config"
 	"registro/crypto"
 	"registro/generators/pdfcreator"
+	"registro/logic"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
 	"registro/sql/events"
@@ -121,11 +122,13 @@ func Test_loadFichesanitaires(t *testing.T) {
 	tu.AssertNoErr(t, err)
 
 	ct := Controller{db: db.DB}
-	fs, err := ct.loadFichesanitaires(dossier.Id)
+	ext, err := logic.LoadDossier(ct.db, dossier.Id)
 	tu.AssertNoErr(t, err)
-	tu.Assert(t, len(fs.Fiches) == 1)
-	tu.Assert(t, fs.Fiches[0].Fichesanitaire.IdPersonne == mineur.Id)
-	tu.Assert(t, !fs.Fiches[0].IsLocked && fs.Fiches[0].State == pr.NoFiche)
+	fiches, err := loadFichesanitaires(ct.db, ext)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(fiches) == 1)
+	tu.Assert(t, fiches[0].Fichesanitaire.IdPersonne == mineur.Id)
+	tu.Assert(t, !fiches[0].IsLocked && fiches[0].State == pr.NoFiche)
 }
 
 func Test_sondages(t *testing.T) {
@@ -166,7 +169,7 @@ func Test_sondages(t *testing.T) {
 	tu.AssertNoErr(t, err)
 }
 
-func TestDownloadDocuments(t *testing.T) {
+func TestDownloadJustificatifs(t *testing.T) {
 	err := pdfcreator.Init(os.TempDir(), "../../assets")
 	tu.AssertNoErr(t, err)
 

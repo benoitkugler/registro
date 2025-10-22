@@ -41,22 +41,6 @@ export class Endpoints {
   }
 
   /** Returns an URL */
-  DownloadAttestationPresence(token: string) {
-    return (
-      this.baseURL +
-      "/api/v1/espaceperso/download/attestation" +
-      `?token=${token}`
-    );
-  }
-
-  /** Returns an URL */
-  DownloadFacture(token: string) {
-    return (
-      this.baseURL + "/api/v1/espaceperso/download/facture" + `?token=${token}`
-    );
-  }
-
-  /** Returns an URL */
   LoadDocument(key: string) {
     return this.baseURL + "/api/v1/documents" + `?key=${key}`;
   }

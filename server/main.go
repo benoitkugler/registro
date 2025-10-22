@@ -107,7 +107,7 @@ func main() {
 	setupRoutesInscription(e, inscriptionsCt)
 	setupRoutesEquipier(e, equipiersCt)
 	setupRoutesServices(e, espacepersoCt)
-	setupRoutesMisc(e, directeursCt, filesCt, espacepersoCt)
+	setupRoutesMisc(e, directeursCt, filesCt)
 	setupClientApps(e)
 
 	fmt.Println("Setup done. Starting...")

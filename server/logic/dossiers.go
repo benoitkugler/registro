@@ -180,9 +180,9 @@ func (de *Dossier) campsInscrits(onlyInscrits bool) cps.Camps {
 	return out
 }
 
-// FirstCampFor returns the first camp (by [DateDebut]) [personne]
+// FirstCampFor returns the first camp (defined by [DateDebut]) that [personne]
 // will attend.
-// It return false if [personne] is in waiting list.
+// It return false if [personne] is in waiting list for every camp.
 func (de *Dossier) FirstCampFor(personne pr.IdPersonne) (cps.Camp, bool) {
 	var camps []cps.Camp
 	for _, participant := range de.Participants {

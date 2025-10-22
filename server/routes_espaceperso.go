@@ -9,6 +9,10 @@ import (
 //go:generate ../../../go/src/github.com/benoitkugler/gomacro/cmd/gomacro routes_espaceperso.go typescript/api:../registro-web/src/clients/espaceperso/logic/api.ts
 
 func setupRoutesEspaceperso(e *echo.Echo, ct *espaceperso.Controller) {
+	// Download endpoints
+	e.GET("/api/v1/espaceperso/download/attestation", ct.DownloadAttestationPresence) // url-only
+	e.GET("/api/v1/espaceperso/download/facture", ct.DownloadFacture)                 // url-only
+
 	// JSON API
 	e.GET("/api/v1/espaceperso", ct.Load)
 	e.POST("/api/v1/espaceperso/message", ct.SendMessage)
@@ -18,11 +22,7 @@ func setupRoutesEspaceperso(e *echo.Echo, ct *espaceperso.Controller) {
 
 	e.GET("/api/v1/espaceperso/joomeo", ct.LoadJoomeo)
 
-	e.GET("/api/v1/espaceperso/fichesanitaires", ct.LoadFichesanitaires)
 	e.POST("/api/v1/espaceperso/fichesanitaires", ct.UpdateFichesanitaire)
-	e.PUT("/api/v1/espaceperso/fichesanitaires", ct.UploadVaccin)
-	e.DELETE("/api/v1/espaceperso/fichesanitaires", ct.DeleteVaccin)
-
 	e.PUT("/api/v1/espaceperso/fichesanitaires/transfert", ct.TransfertFicheSanitaire)
 
 	e.POST("/api/v1/espaceperso/events/accept-place-liberee", ct.AcceptePlaceLiberee)

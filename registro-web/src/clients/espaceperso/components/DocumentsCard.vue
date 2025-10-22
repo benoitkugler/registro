@@ -6,6 +6,7 @@
     <template #append> </template>
     <v-card-text v-if="data != null">
       <v-list>
+        <!-- A lire -->
         <v-list-subheader>À lire</v-list-subheader>
         <v-list-item v-if="!data.FilesToRead?.length">
           <i>Aucun document à lire.</i>
@@ -37,16 +38,34 @@
             </template>
           </v-list-item>
         </template>
+        <!-- A fournir -->
         <v-list-subheader>À fournir</v-list-subheader>
-        <v-list-item v-if="!data.FilesToUpload?.length">
+        <v-list-item
+          v-if="!(data.FilesToUpload?.length || data.Fiches?.length)"
+        >
           <i>Aucun document à fournir.</i>
+        </v-list-item>
+        <!-- fiches sanitaires -->
+        <v-list-item
+          v-for="fiche in data.Fiches"
+          title="Fiche sanitaire"
+          :subtitle="fiche.Personne"
+        >
+          <template #append>
+            <v-btn size="small" @click="ficheToEdit = fiche">
+              <template #prepend>
+                <v-icon>mdi-pencil</v-icon>
+              </template>
+              Remplir</v-btn
+            >
+          </template>
         </v-list-item>
         <template v-for="personne in data.FilesToUpload">
           <FilesDemande
             :demande="demande.Demande"
             :files="demande.Uploaded || []"
+            :subtitle="personne.Personne"
             :inUpload="false"
-            :title="`Document pour ${personne.Personne}`"
             :optionnelle="null"
             :showUploadText="true"
             v-for="demande in personne.Demandes"
@@ -55,6 +74,29 @@
             "
             @delete="deleteDocument"
           >
+            <template
+              #prepend
+              v-if="demande.Demande.Categorie == Categorie.Vaccins"
+            >
+              <v-btn icon size="x-small" flat class="mr-2">
+                <v-icon>mdi-help-circle-outline</v-icon>
+                <v-menu activator="parent">
+                  <v-card max-width="400px">
+                    <v-card-text>
+                      Merci de joindre le scan des pages « vaccinations » du
+                      carnet de santé du participant. <br />
+                      Seul le DTPolio est obligatoire pour être accueilli en
+                      séjour de vacances.
+                      <br />
+                      <i>
+                        Si le participant n’a pas les vaccins obligatoires,
+                        joindre un certificat médical de contre-indication.
+                      </i>
+                    </v-card-text>
+                  </v-card>
+                </v-menu>
+              </v-btn>
+            </template>
             <template #prepend v-if="demande.Demande.IdFile.Valid">
               <v-tooltip content-class="pa-1">
                 <template #activator="{ props: tooltipProps }">
@@ -82,13 +124,30 @@
       </v-list>
     </v-card-text>
     <v-skeleton-loader v-else></v-skeleton-loader>
+
+    <!-- fiche sanitaire -->
+    <v-dialog
+      :model-value="ficheToEdit != null"
+      @update:model-value="ficheToEdit = null"
+      max-width="800px"
+    >
+      <FichesanitaireForm
+        v-if="ficheToEdit"
+        :fiche="ficheToEdit"
+        @save="saveFichesanitaire"
+        @transfert="transfertFichesanitaire"
+      ></FichesanitaireForm>
+    </v-dialog>
   </v-card>
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import {
+  Categorie,
   type Documents,
+  type Fichesanitaire,
+  type FichesanitaireExt,
   type IdDemande,
   type IdPersonne,
   type PublicFile,
@@ -96,6 +155,7 @@ import {
 import { controller } from "../logic/logic";
 import type { Int } from "@/urls";
 import { endpoints } from "@/utils";
+import FichesanitaireForm from "./FichesanitaireForm.vue";
 const props = defineProps<{
   token: string;
 }>();
@@ -111,7 +171,8 @@ async function fetchData() {
   const res = await controller.LoadDocuments({ token: props.token });
   if (res === undefined) return;
   data.value = res;
-  emit("updateNotifs", res.ToReadOrFillCount);
+  const totalCount = res.ToReadCount + res.ToFillCount + res.FichesToFillCount;
+  emit("updateNotifs", totalCount as Int);
 }
 
 async function uploadDocument(
@@ -127,7 +188,6 @@ async function uploadDocument(
   if (res === undefined) return;
   controller.showMessage("Document téléversé avec succès. Merci !");
   await fetchData();
-  emit("updateNotifs", data.value!.ToReadOrFillCount);
 }
 
 async function deleteDocument(file: PublicFile) {
@@ -135,6 +195,28 @@ async function deleteDocument(file: PublicFile) {
   if (res === undefined) return;
   controller.showMessage("Document supprimé avec succès.");
   await fetchData();
-  emit("updateNotifs", data.value!.ToReadOrFillCount);
+}
+
+const ficheToEdit = ref<FichesanitaireExt | null>(null);
+
+async function saveFichesanitaire(fiche: Fichesanitaire) {
+  ficheToEdit.value = null;
+  const res = await controller.UpdateFichesanitaire({
+    Token: props.token,
+    Fichesanitaire: fiche,
+  });
+  if (res === undefined) return;
+  controller.showMessage("La fiche sanitaire a bien été enregistrée. Merci !");
+  fetchData();
+}
+
+async function transfertFichesanitaire(fiche: Fichesanitaire) {
+  ficheToEdit.value = null;
+  const res = await controller.TransfertFicheSanitaire({
+    token: props.token,
+    idPersonne: fiche.IdPersonne,
+  });
+  if (res === undefined) return;
+  controller.showMessage("Mail de transfert envoyé avec succès.");
 }
 </script>

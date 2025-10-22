@@ -2,7 +2,6 @@ package main
 
 import (
 	"registro/controllers/directeurs"
-	"registro/controllers/espaceperso"
 	"registro/controllers/files"
 
 	"github.com/labstack/echo/v4"
@@ -10,7 +9,7 @@ import (
 
 //go:generate ../../../go/src/github.com/benoitkugler/gomacro/cmd/gomacro --url-only routes_misc.go typescript/api:../registro-web/src/urls.ts
 
-func setupRoutesMisc(e *echo.Echo, dir *directeurs.Controller, fs *files.Controller, ep *espaceperso.Controller) {
+func setupRoutesMisc(e *echo.Echo, dir *directeurs.Controller, fs *files.Controller) {
 	// Directeurs
 
 	e.GET("/api/v1/directeurs/equipiers/files", dir.EquipiersDownloadFiles, dir.JWTMiddlewareForQuery())
@@ -22,10 +21,6 @@ func setupRoutesMisc(e *echo.Echo, dir *directeurs.Controller, fs *files.Control
 	// Documents générés
 
 	e.GET("/api/v1/document-camp", fs.RenderDocumentCamp)
-
-	// Espace perso
-	e.GET("/api/v1/espaceperso/download/attestation", ep.DownloadAttestationPresence)
-	e.GET("/api/v1/espaceperso/download/facture", ep.DownloadFacture)
 
 	// every endpoint expected a key=<idCrypted> query param
 	e.GET("/api/v1/documents", fs.LoadDocument)

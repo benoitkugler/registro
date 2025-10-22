@@ -24,7 +24,6 @@ export interface ChequeSettings {
 export interface Data {
   Dossier: DossierExt;
   DocumentsToReadOrFillCount: Int;
-  FichesanitaireToFillCount: Int;
   AssoTitle: string;
   MailCentre: string;
   IsPaiementOpen: boolean;
@@ -47,7 +46,10 @@ export interface DemandesPersonne {
 export interface Documents {
   FilesToRead: FilesCamp[] | null;
   FilesToUpload: DemandesPersonne[] | null;
-  ToReadOrFillCount: Int;
+  Fiches: FichesanitaireExt[] | null;
+  ToReadCount: Int;
+  ToFillCount: Int;
+  FichesToFillCount: Int;
 }
 // registro/controllers/espaceperso.FichesanitaireExt
 export interface FichesanitaireExt {
@@ -57,11 +59,6 @@ export interface FichesanitaireExt {
   Fichesanitaire: Fichesanitaire;
   ResponsableNom: string;
   ResponsableTels: Tels;
-}
-// registro/controllers/espaceperso.Fichesanitaires
-export interface Fichesanitaires {
-  Fiches: FichesanitaireExt[] | null;
-  ToFillCount: Int;
 }
 // registro/controllers/espaceperso.FilesCamp
 export interface FilesCamp {
@@ -728,8 +725,8 @@ export interface Fichesanitaire {
   DifficultesSante: string;
   AllergiesAlimentaires: string;
   TraitementMedical: string;
-  AutreContact: NomTel;
   Medecin: NomTel;
+  AutreContact: NomTel;
   Modified: Time;
   Owners: Mails;
 }
@@ -849,6 +846,22 @@ export abstract class AbstractAPI {
     return { Authorization: "Bearer " + this.authToken };
   }
 
+  /** Returns an URL */
+  DownloadAttestationPresence(token: string) {
+    return (
+      this.baseURL +
+      "/api/v1/espaceperso/download/attestation" +
+      `?token=${token}`
+    );
+  }
+
+  /** Returns an URL */
+  DownloadFacture(token: string) {
+    return (
+      this.baseURL + "/api/v1/espaceperso/download/facture" + `?token=${token}`
+    );
+  }
+
   /** Load performs the request and handles the error */
   async Load(params: { token: string }) {
     const fullUrl = this.baseURL + "/api/v1/espaceperso";
@@ -937,69 +950,12 @@ export abstract class AbstractAPI {
     }
   }
 
-  /** LoadFichesanitaires performs the request and handles the error */
-  async LoadFichesanitaires(params: { token: string }) {
-    const fullUrl = this.baseURL + "/api/v1/espaceperso/fichesanitaires";
-    this.startRequest();
-    try {
-      const rep: AxiosResponse<Fichesanitaires> = await Axios.get(fullUrl, {
-        headers: this.getHeaders(),
-        params: { token: params["token"] },
-      });
-      return rep.data;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
   /** UpdateFichesanitaire performs the request and handles the error */
   async UpdateFichesanitaire(params: UpdateFichesanitaireIn) {
     const fullUrl = this.baseURL + "/api/v1/espaceperso/fichesanitaires";
     this.startRequest();
     try {
       await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-      return true;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  /** UploadVaccin performs the request and handles the error */
-  async UploadVaccin(
-    file: File,
-    params: { token: string; idPersonne: IdPersonne },
-  ) {
-    const fullUrl = this.baseURL + "/api/v1/espaceperso/fichesanitaires";
-    this.startRequest();
-    try {
-      const formData = new FormData();
-      formData.append("file", file, file.name);
-      const rep: AxiosResponse<PublicFile> = await Axios.put(
-        fullUrl,
-        formData,
-        {
-          headers: this.getHeaders(),
-          params: {
-            token: params["token"],
-            idPersonne: String(params["idPersonne"]),
-          },
-        },
-      );
-      return rep.data;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  /** DeleteVaccin performs the request and handles the error */
-  async DeleteVaccin(params: { key: string }) {
-    const fullUrl = this.baseURL + "/api/v1/espaceperso/fichesanitaires";
-    this.startRequest();
-    try {
-      await Axios.delete(fullUrl, {
-        headers: this.getHeaders(),
-        params: { key: params["key"] },
-      });
       return true;
     } catch (error) {
       this.handleError(error);

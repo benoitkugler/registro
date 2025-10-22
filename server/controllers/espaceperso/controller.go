@@ -64,8 +64,7 @@ func (ct *Controller) Load(c echo.Context) error {
 
 type Data struct {
 	Dossier                    logic.DossierExt
-	DocumentsToReadOrFillCount int // number to read or fill
-	FichesanitaireToFillCount  int
+	DocumentsToReadOrFillCount int // number to read or fill (including fiche sanitaires and vaccins)
 	AssoTitle                  string
 	MailCentre                 string
 	IsPaiementOpen             bool
@@ -93,15 +92,10 @@ func (ct *Controller) load(id ds.IdDossier) (Data, error) {
 	if err != nil {
 		return Data{}, err
 	}
-	fiches, err := ct.loadFichesanitaires(id)
-	if err != nil {
-		return Data{}, err
-	}
 	_, campInscritsStarted := dossier.ParticipantsExtReal()
 	return Data{
 		dossier.Publish(ct.key),
-		documents.ToReadOrFillCount,
-		fiches.ToFillCount,
+		documents.totalCount(),
 		ct.asso.Title,
 		ct.asso.ContactMail,
 		dossier.IsPaiementOpen(),

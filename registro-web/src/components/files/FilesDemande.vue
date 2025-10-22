@@ -1,7 +1,7 @@
 <template>
   <FilesRow
     :title="title"
-    :subtitle="props.demande.Description"
+    :subtitle="props.subtitle"
     :max-docs="props.demande.MaxDocs"
     :files="props.files"
     :in-upload="props.inUpload"
@@ -50,7 +50,7 @@ const props = defineProps<{
   inUpload: boolean;
   optionnelle: boolean | null;
   showUploadText?: boolean;
-  title?: string;
+  subtitle?: string;
 }>();
 
 const emit = defineEmits<{
@@ -59,10 +59,8 @@ const emit = defineEmits<{
 }>();
 
 const title = computed(() =>
-  props.title
-    ? props.title
-    : props.demande.Categorie == Categorie.NoBuiltin
-    ? "Document à fournir"
+  props.demande.Categorie == Categorie.NoBuiltin
+    ? props.demande.Description
     : CategorieLabels[props.demande.Categorie]
 );
 </script>

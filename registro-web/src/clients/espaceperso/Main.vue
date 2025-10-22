@@ -31,13 +31,13 @@
           subtitle="Télécharger au format .pdf"
           prepend-icon="mdi-file-document-check"
           link
-          :href="endpoints.DownloadAttestationPresence(token)"
+          :href="controller.DownloadAttestationPresence(token)"
         ></v-list-item>
         <v-list-item
           title="Facture"
           subtitle="Télécharger au format .pdf"
           prepend-icon="mdi-invoice-list"
-          :href="endpoints.DownloadFacture(token)"
+          :href="controller.DownloadFacture(token)"
         ></v-list-item>
       </v-list>
     </v-menu>
@@ -49,52 +49,22 @@
       <!-- participants  et finances -->
       <v-col align-self="center" cols="5">
         <v-card subtitle="Participants">
+          <!-- boutons Documents -->
           <template #append>
-            <v-btn size="small" class="mr-1">
+            <v-btn size="small" class="mr-1" @click="showDocuments = true">
               <template #prepend>
                 <v-icon>mdi-folder</v-icon>
               </template>
+
               <v-badge
-                :color="allDocumentsToFillCount ? 'pink' : 'transparent'"
-                :content="allDocumentsToFillCount || ''"
+                :color="
+                  data.DocumentsToReadOrFillCount ? 'pink' : 'transparent'
+                "
+                :content="data.DocumentsToReadOrFillCount || ''"
                 floating
               >
                 Documents
               </v-badge>
-
-              <v-menu activator="parent">
-                <v-list>
-                  <v-list-item
-                    title="Documents du séjour"
-                    subtitle="Lettre du directeur, ..."
-                    prepend-icon="mdi-mail"
-                    @click="showDocuments = true"
-                  >
-                    <template #append v-if="data.DocumentsToReadOrFillCount">
-                      <v-badge
-                        color="pink"
-                        :content="data.DocumentsToReadOrFillCount"
-                        inline
-                      >
-                      </v-badge>
-                    </template>
-                  </v-list-item>
-                  <v-list-item
-                    title="Fiches sanitaires"
-                    prepend-icon="mdi-pill"
-                    @click="showFichesantaires = true"
-                  >
-                    <template #append v-if="data.FichesanitaireToFillCount">
-                      <v-badge
-                        color="pink"
-                        :content="data.FichesanitaireToFillCount"
-                        inline
-                      >
-                      </v-badge>
-                    </template>
-                  </v-list-item>
-                </v-list>
-              </v-menu>
             </v-btn>
 
             <!-- TODO -->
@@ -248,14 +218,6 @@
     <JoomeoCard :token="token"></JoomeoCard>
   </v-dialog>
 
-  <v-dialog v-model="showFichesantaires">
-    <FichessanitairesCard
-      :token="token"
-      @close="showFichesantaires = false"
-      @update-notifs="v => data!.FichesanitaireToFillCount = v"
-    ></FichessanitairesCard>
-  </v-dialog>
-
   <v-dialog v-model="showDocuments" max-width="800px">
     <DocumentsCard
       :token="token"
@@ -330,17 +292,10 @@ import {
   type PlaceLiberee,
   type SendMessageIn,
 } from "./logic/api";
-import {
-  buildPseudoEvents,
-  Camps,
-  endpoints,
-  Formatters,
-  Personnes,
-} from "@/utils";
+import { buildPseudoEvents, Camps, Formatters, Personnes } from "@/utils";
 import ParticipantsEditCard from "./components/ParticipantsEditCard.vue";
 import FinancesCard from "./components/FinancesCard.vue";
 import JoomeoCard from "./components/JoomeoCard.vue";
-import FichessanitairesCard from "./components/FichessanitairesCard.vue";
 import SondagesCard from "./components/SondagesCard.vue";
 import DocumentsCard from "./components/DocumentsCard.vue";
 import FinancesReglementCard from "./components/FinancesReglementCard.vue";
@@ -383,13 +338,6 @@ const events = computed(() =>
   data.value == null
     ? []
     : buildPseudoEvents(data.value.Dossier, Acteur.Espaceperso)
-);
-
-const allDocumentsToFillCount = computed(() =>
-  data.value
-    ? data.value.DocumentsToReadOrFillCount +
-      data.value.FichesanitaireToFillCount
-    : 0
 );
 
 function handleFromEvent(fromIdEvent: IdEvent) {
@@ -461,8 +409,6 @@ async function updateParticipants(params: Participant[]) {
 const showSondages = ref<IdCamp | null>(null);
 
 const showPhotos = ref(false);
-
-const showFichesantaires = ref(false);
 
 const showDocuments = ref(false);
 

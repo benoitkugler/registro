@@ -7,8 +7,6 @@ import (
 	"strings"
 	"time"
 
-	filesAPI "registro/controllers/files"
-	fsAPI "registro/controllers/files"
 	"registro/controllers/services"
 	"registro/crypto"
 	"registro/logic"
@@ -22,19 +20,13 @@ import (
 
 // fiches sanitaires
 
-type Fichesanitaires struct {
-	Fiches      []FichesanitaireExt
-	ToFillCount int
-}
-
-func (fs *Fichesanitaires) setToFillCount() {
-	count := 0
-	for _, fiche := range fs.Fiches {
-		if fiche.IsLocked || fiche.State != pr.UpToDate {
-			count++
-		}
+// only asks for fiche sanitaires and vaccins for majeur
+func asksFichesanitaire(dossier logic.Dossier, personne pr.Personne) bool {
+	camp, ok := dossier.FirstCampFor(personne.Id)
+	if !ok {
+		return false
 	}
-	fs.ToFillCount = count
+	return camp.AgeDebutCamp(personne.DateNaissance) < 18
 }
 
 type FichesanitaireExt struct {
@@ -45,39 +37,13 @@ type FichesanitaireExt struct {
 
 	ResponsableNom  string
 	ResponsableTels pr.Tels
-
-	// VaccinsDemande fs.Demande
-	// VaccinsFiles   []logic.PublicFile
 }
 
-func (ct *Controller) LoadFichesanitaires(c echo.Context) error {
-	token := c.QueryParam("token")
-	id, err := crypto.DecryptID[ds.IdDossier](ct.key, token)
-	if err != nil {
-		return err
-	}
-	out, err := ct.loadFichesanitaires(id)
-	if err != nil {
-		return err
-	}
-	return c.JSON(200, out)
-}
-
-func (ct *Controller) loadFichesanitaires(id ds.IdDossier) (out Fichesanitaires, _ error) {
-	dossier, err := logic.LoadDossier(ct.db, id)
-	if err != nil {
-		return out, err
-	}
+func loadFichesanitaires(db ds.DB, dossier logic.Dossier) (out []FichesanitaireExt, _ error) {
 	responsable := dossier.Responsable()
 	idPersonnes := dossier.Participants.IdPersonnes()
 
-	// // load existing vaccins
-	// vaccins, vaccinDemande, err := fsAPI.LoadVaccins(ct.db, ct.key, idPersonnes)
-	// if err != nil {
-	// 	return out, err
-	// }
-
-	fiches, err := pr.SelectFichesanitairesByIdPersonnes(ct.db, idPersonnes...)
+	fiches, err := pr.SelectFichesanitairesByIdPersonnes(db, idPersonnes...)
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
@@ -87,18 +53,14 @@ func (ct *Controller) loadFichesanitaires(id ds.IdDossier) (out Fichesanitaires,
 		if pers.IsTemp { // wait for the validation
 			continue
 		}
-		camp, ok := dossier.FirstCampFor(pers.Id)
-		if !ok {
-			continue
-		}
-		if camp.AgeDebutCamp(pers.DateNaissance) >= 18 {
+		if !asksFichesanitaire(dossier, pers) {
 			continue
 		}
 
 		fiche := fichesByPersonne[pers.Id]
 		fiche.IdPersonne = pers.Id // init ID for empty fiche
 		fsExt := FichesanitaireExt{
-			pers.PrenomNOM(),
+			pers.PrenomN(),
 			isFichesanitaireLocked(responsable.Mail, fiche.Owners),
 			fiche.State(dossier.Dossier.MomentInscription),
 			fiche,
@@ -112,9 +74,8 @@ func (ct *Controller) loadFichesanitaires(id ds.IdDossier) (out Fichesanitaires,
 				Modified:   fiche.Modified,
 			}
 		}
-		out.Fiches = append(out.Fiches, fsExt)
+		out = append(out, fsExt)
 	}
-	out.setToFillCount()
 	return out, nil
 }
 
@@ -187,63 +148,6 @@ func (ct *Controller) updateFichesanitaire(args UpdateFichesanitaireIn) error {
 		err = args.Fichesanitaire.Insert(tx)
 		return err
 	})
-}
-
-func (ct *Controller) UploadVaccin(c echo.Context) error {
-	token := c.QueryParam("token")
-	idDossier, err := crypto.DecryptID[ds.IdDossier](ct.key, token)
-	if err != nil {
-		return err
-	}
-	idPersonne, err := utils.QueryParamInt[pr.IdPersonne](c, "idPersonne")
-	if err != nil {
-		return err
-	}
-	header, err := c.FormFile("file")
-	if err != nil {
-		return err
-	}
-	content, name, err := fsAPI.ReadUpload(header)
-	if err != nil {
-		return err
-	}
-	out, err := ct.uploadVaccin(idDossier, idPersonne, content, name)
-	if err != nil {
-		return err
-	}
-	return c.JSON(200, out)
-}
-
-func (ct *Controller) uploadVaccin(idDossier ds.IdDossier, idPersonne pr.IdPersonne, content []byte, filename string) (logic.PublicFile, error) {
-	vaccinDemande, err := fsAPI.DemandeVaccin(ct.db)
-	if err != nil {
-		return logic.PublicFile{}, err
-	}
-
-	dossier, err := logic.LoadDossier(ct.db, idDossier)
-	if err != nil {
-		return logic.PublicFile{}, err
-	}
-	// check Id is valid
-	if !slices.Contains(dossier.Participants.IdPersonnes(), idPersonne) {
-		return logic.PublicFile{}, errors.New("access forbidden")
-	}
-
-	file, err := filesAPI.SaveFileFor(ct.files, ct.db, idPersonne, vaccinDemande.Id, content, filename)
-	if err != nil {
-		return logic.PublicFile{}, err
-	}
-
-	return logic.NewPublicFile(ct.key, file), nil
-}
-
-func (ct *Controller) DeleteVaccin(c echo.Context) error {
-	key := c.QueryParam("key")
-	err := fsAPI.Delete(ct.db, ct.key, ct.files, key)
-	if err != nil {
-		return err
-	}
-	return c.NoContent(200)
 }
 
 // TransfertFicheSanitaire envoie un mail de demande de transfert

@@ -583,6 +583,7 @@ export interface Participant {
   OptionPrix: OptionPrixParticipant;
   Commentaire: string;
   Navette: Navette;
+  CharteAccepted: boolean;
 }
 // registro/sql/camps.ParticipantCamp
 export interface ParticipantCamp {

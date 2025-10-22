@@ -18,12 +18,18 @@ import (
 )
 
 type Documents struct {
-	FilesToRead       []FilesCamp
-	FilesToUpload     []DemandesPersonne
-	ToReadOrFillCount int
+	FilesToRead   []FilesCamp
+	FilesToUpload []DemandesPersonne // including vaccins
+	Fiches        []FichesanitaireExt
+
+	ToReadCount, ToFillCount, FichesToFillCount int
 }
 
-func (docs *Documents) setToReadOrFillCount(lastLoaded time.Time, events logic.Events) {
+func (docs *Documents) totalCount() int {
+	return docs.ToReadCount + docs.ToFillCount + docs.FichesToFillCount
+}
+
+func (docs *Documents) setCounts(lastLoaded time.Time, events logic.Events) {
 	toFill := 0
 	for _, personne := range docs.FilesToUpload {
 		for _, demande := range personne.Demandes {
@@ -51,7 +57,15 @@ func (docs *Documents) setToReadOrFillCount(lastLoaded time.Time, events logic.E
 		}
 	}
 
-	docs.ToReadOrFillCount = toRead + toFill
+	// fiches sanitaires
+	fichesCount := 0
+	for _, fiche := range docs.Fiches {
+		if fiche.IsLocked || fiche.State != pr.UpToDate {
+			fichesCount++
+		}
+	}
+
+	docs.ToReadCount, docs.ToFillCount, docs.FichesToFillCount = toRead, toFill, fichesCount
 }
 
 type FilesCamp struct {
@@ -159,7 +173,14 @@ func loadDocuments(db ds.DB, key crypto.Encrypter, dossier logic.Dossier) (Docum
 		return Documents{}, utils.SQLError(err)
 	}
 	demandesByCamp := links2.ByIdCamp()
-	personnesFiles, demandes, err := filesAPI.LoadFilesPersonnes(db, key, links2.IdDemandes(), dossier.Participants.IdPersonnes()...)
+	// always asks vaccins
+	demandeVaccin, err := filesAPI.DemandeVaccin(db)
+	if err != nil {
+		return Documents{}, err
+	}
+
+	idsDemandes := append(links2.IdDemandes(), demandeVaccin.Id)
+	personnesFiles, demandes, err := filesAPI.LoadFilesPersonnes(db, key, idsDemandes, dossier.Participants.IdPersonnes()...)
 	if err != nil {
 		return Documents{}, err
 	}
@@ -172,20 +193,29 @@ func loadDocuments(db ds.DB, key crypto.Encrypter, dossier logic.Dossier) (Docum
 	for _, personne := range dossier.Personnes()[1:] {
 		item := DemandesPersonne{IdPersonne: personne.Id, Personne: personne.PrenomN()}
 		for _, part := range byPersonne[personne.Id] {
-			if part.Statut != cps.Inscrit {
+			// wait for the validation
+			if personne.IsTemp || part.Statut != cps.Inscrit {
 				continue
 			}
+
 			// add demandes from the camp
 			for _, link := range demandesByCamp[part.IdCamp] {
 				demande := demandes[link.IdDemande]
-				demandeF := DemandePersonne{
+				dp := DemandePersonne{
 					Demande:  demande,
 					Uploaded: personnesFiles[demande.Id][personne.Id],
 				}
 				if fi := demande.IdFile; fi.Valid {
-					demandeF.DemandeFile = logic.NewPublicFile(key, demandesFiles[fi.Id])
+					dp.DemandeFile = logic.NewPublicFile(key, demandesFiles[fi.Id])
 				}
-				item.Demandes = append(item.Demandes, demandeF)
+				item.Demandes = append(item.Demandes, dp)
+			}
+
+			if asksFichesanitaire(dossier, personne) {
+				item.Demandes = append(item.Demandes, DemandePersonne{
+					Demande:  demandeVaccin,
+					Uploaded: personnesFiles[demandeVaccin.Id][personne.Id],
+				})
 			}
 		}
 		// do not include empty lists
@@ -194,7 +224,12 @@ func loadDocuments(db ds.DB, key crypto.Encrypter, dossier logic.Dossier) (Docum
 		}
 	}
 
-	out.setToReadOrFillCount(dossier.Dossier.LastLoadDocuments, dossier.Events)
+	out.Fiches, err = loadFichesanitaires(db, dossier)
+	if err != nil {
+		return Documents{}, err
+	}
+
+	out.setCounts(dossier.Dossier.LastLoadDocuments, dossier.Events)
 	return out, nil
 }
 
