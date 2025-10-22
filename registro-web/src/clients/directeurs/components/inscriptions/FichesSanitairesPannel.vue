@@ -46,7 +46,7 @@
             </v-chip>
           </td>
           <td class="px-2">
-            <v-menu v-if="allergies(participant.Fiche) != null">
+            <!-- <v-menu v-if="allergies(participant.Fiche) != null">
               <template #activator="{ props: menuProps }">
                 <v-chip v-bind="menuProps" prepend-icon="mdi-alert">
                   {{ allergies(participant.Fiche) }}
@@ -62,7 +62,7 @@
                   </div>
                 </v-card-text>
               </v-card>
-            </v-menu>
+            </v-menu> -->
           </td>
           <td class="px-2">
             <v-menu>
@@ -152,14 +152,14 @@ function vaccinsLabel(l: PublicFile[] | null) {
   }
 }
 
-function allergies(fiche: Fichesanitaire): string | null {
-  const chunks: string[] = [];
-  if (fiche.Allergies.Alimentaires) chunks.push("alimentaires");
-  if (fiche.Allergies.Asthme) chunks.push("asthme");
-  if (fiche.Allergies.Medicamenteuses) chunks.push("médicamenteuses");
-  if (fiche.Allergies.Autres) chunks.push("autres");
-  return chunks.length ? `Allergies : ${chunks.join(", ")}` : null;
-}
+// function allergies(fiche: Fichesanitaire): string | null {
+//   const chunks: string[] = [];
+//   if (fiche.Allergies.Alimentaires) chunks.push("alimentaires");
+//   if (fiche.Allergies.Asthme) chunks.push("asthme");
+//   if (fiche.Allergies.Medicamenteuses) chunks.push("médicamenteuses");
+//   if (fiche.Allergies.Autres) chunks.push("autres");
+//   return chunks.length ? `Allergies : ${chunks.join(", ")}` : null;
+// }
 
 async function downloadOneFiche(idParticipant: IdParticipant) {
   const res = await controller.ParticipantsDownloadFicheSanitaire({
