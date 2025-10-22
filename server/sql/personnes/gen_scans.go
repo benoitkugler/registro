@@ -33,8 +33,8 @@ func scanOneFichesanitaire(row scanner) (Fichesanitaire, error) {
 		&item.DifficultesSante,
 		&item.AllergiesAlimentaires,
 		&item.TraitementMedical,
-		&item.AutreContact,
 		&item.Medecin,
+		&item.AutreContact,
 		&item.Modified,
 		&item.Owners,
 	)
@@ -45,7 +45,7 @@ func ScanFichesanitaire(row *sql.Row) (Fichesanitaire, error) { return scanOneFi
 
 // SelectAll returns all the items in the fichesanitaires table.
 func SelectAllFichesanitaires(db DB) (Fichesanitaires, error) {
-	rows, err := db.Query("SELECT idpersonne, difficultessante, allergiesalimentaires, traitementmedical, autrecontact, medecin, modified, owners FROM fichesanitaires")
+	rows, err := db.Query("SELECT idpersonne, difficultessante, allergiesalimentaires, traitementmedical, medecin, autrecontact, modified, owners FROM fichesanitaires")
 	if err != nil {
 		return nil, err
 	}
@@ -81,11 +81,11 @@ func ScanFichesanitaires(rs *sql.Rows) (Fichesanitaires, error) {
 
 func (item Fichesanitaire) Insert(db DB) error {
 	_, err := db.Exec(`INSERT INTO fichesanitaires (
-			idpersonne, difficultessante, allergiesalimentaires, traitementmedical, autrecontact, medecin, modified, owners
+			idpersonne, difficultessante, allergiesalimentaires, traitementmedical, medecin, autrecontact, modified, owners
 			) VALUES (
 			$1, $2, $3, $4, $5, $6, $7, $8
 			);
-			`, item.IdPersonne, item.DifficultesSante, item.AllergiesAlimentaires, item.TraitementMedical, item.AutreContact, item.Medecin, item.Modified, item.Owners)
+			`, item.IdPersonne, item.DifficultesSante, item.AllergiesAlimentaires, item.TraitementMedical, item.Medecin, item.AutreContact, item.Modified, item.Owners)
 	if err != nil {
 		return err
 	}
@@ -104,8 +104,8 @@ func InsertManyFichesanitaires(tx *sql.Tx, items ...Fichesanitaire) error {
 		"difficultessante",
 		"allergiesalimentaires",
 		"traitementmedical",
-		"autrecontact",
 		"medecin",
+		"autrecontact",
 		"modified",
 		"owners",
 	))
@@ -114,7 +114,7 @@ func InsertManyFichesanitaires(tx *sql.Tx, items ...Fichesanitaire) error {
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdPersonne, item.DifficultesSante, item.AllergiesAlimentaires, item.TraitementMedical, item.AutreContact, item.Medecin, item.Modified, item.Owners)
+		_, err = stmt.Exec(item.IdPersonne, item.DifficultesSante, item.AllergiesAlimentaires, item.TraitementMedical, item.Medecin, item.AutreContact, item.Modified, item.Owners)
 		if err != nil {
 			return err
 		}
@@ -159,7 +159,7 @@ func (items Fichesanitaires) IdPersonnes() []IdPersonne {
 
 // SelectFichesanitaireByIdPersonne return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectFichesanitaireByIdPersonne(tx DB, idPersonne IdPersonne) (item Fichesanitaire, found bool, err error) {
-	row := tx.QueryRow("SELECT idpersonne, difficultessante, allergiesalimentaires, traitementmedical, autrecontact, medecin, modified, owners FROM fichesanitaires WHERE idpersonne = $1", idPersonne)
+	row := tx.QueryRow("SELECT idpersonne, difficultessante, allergiesalimentaires, traitementmedical, medecin, autrecontact, modified, owners FROM fichesanitaires WHERE idpersonne = $1", idPersonne)
 	item, err = ScanFichesanitaire(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
@@ -168,7 +168,7 @@ func SelectFichesanitaireByIdPersonne(tx DB, idPersonne IdPersonne) (item Fiches
 }
 
 func SelectFichesanitairesByIdPersonnes(tx DB, idPersonnes_ ...IdPersonne) (Fichesanitaires, error) {
-	rows, err := tx.Query("SELECT idpersonne, difficultessante, allergiesalimentaires, traitementmedical, autrecontact, medecin, modified, owners FROM fichesanitaires WHERE idpersonne = ANY($1)", IdPersonneArrayToPQ(idPersonnes_))
+	rows, err := tx.Query("SELECT idpersonne, difficultessante, allergiesalimentaires, traitementmedical, medecin, autrecontact, modified, owners FROM fichesanitaires WHERE idpersonne = ANY($1)", IdPersonneArrayToPQ(idPersonnes_))
 	if err != nil {
 		return nil, err
 	}
@@ -176,7 +176,7 @@ func SelectFichesanitairesByIdPersonnes(tx DB, idPersonnes_ ...IdPersonne) (Fich
 }
 
 func DeleteFichesanitairesByIdPersonnes(tx DB, idPersonnes_ ...IdPersonne) (Fichesanitaires, error) {
-	rows, err := tx.Query("DELETE FROM fichesanitaires WHERE idpersonne = ANY($1) RETURNING idpersonne, difficultessante, allergiesalimentaires, traitementmedical, autrecontact, medecin, modified, owners", IdPersonneArrayToPQ(idPersonnes_))
+	rows, err := tx.Query("DELETE FROM fichesanitaires WHERE idpersonne = ANY($1) RETURNING idpersonne, difficultessante, allergiesalimentaires, traitementmedical, medecin, autrecontact, modified, owners", IdPersonneArrayToPQ(idPersonnes_))
 	if err != nil {
 		return nil, err
 	}

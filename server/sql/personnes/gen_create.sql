@@ -20,8 +20,8 @@ CREATE TABLE fichesanitaires (
     DifficultesSante text NOT NULL,
     AllergiesAlimentaires text NOT NULL,
     TraitementMedical text NOT NULL,
-    AutreContact jsonb NOT NULL,
     Medecin jsonb NOT NULL,
+    AutreContact jsonb NOT NULL,
     Modified timestamp(0) with time zone NOT NULL,
     Owners text[],
     guard boolean NOT NULL
