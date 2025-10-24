@@ -127,7 +127,7 @@
 
     <v-dialog v-model="showUploadToDownload" max-width="600px">
       <v-card
-        title="Téléverser un document"
+        title="Charger un document"
         subtitle="Ce document sera distribué sur l'espace personnel des familles."
       >
         <v-card-text>
@@ -142,7 +142,7 @@
             color="green"
             :disabled="fileToDownload == null"
             @click="addToDownload"
-            >Téléverser</v-btn
+            >Charger</v-btn
           >
         </v-card-actions>
       </v-card>

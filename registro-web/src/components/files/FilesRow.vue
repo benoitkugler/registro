@@ -33,7 +33,7 @@
               >
               </v-icon>
             </template>
-            Téléverser un document
+            Charger un document
           </v-btn>
           <!-- icon mode -->
           <v-btn
@@ -60,7 +60,7 @@
 
     <!-- upload -->
     <v-dialog v-model="showUpload" max-width="600px">
-      <v-card title="Téléverser un document">
+      <v-card title="Charger un document">
         <v-card-text>
           <FileInput @update="(f) => (toUpload = f)" ref="input"></FileInput>
         </v-card-text>
@@ -72,7 +72,7 @@
               emit('upload', toUpload!);
               showUpload = false;
             "
-            >Téléverser</v-btn
+            >Charger</v-btn
           >
         </v-card-actions>
       </v-card>

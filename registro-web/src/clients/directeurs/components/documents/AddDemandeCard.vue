@@ -164,9 +164,7 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn :disabled="!fileToUpload" @click="uploadFile"
-            >Téléverser</v-btn
-          >
+          <v-btn :disabled="!fileToUpload" @click="uploadFile">Charger</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
