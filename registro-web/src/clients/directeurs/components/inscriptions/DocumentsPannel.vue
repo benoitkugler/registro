@@ -190,6 +190,8 @@ async function loadDocuments() {
 }
 
 const demandes = computed(() =>
+  // since Vaccins is the only builtin, it has a smaller Id
+  // and will appear first
   Object.values(data.value?.Demandes || {})
     .sort((a, b) => a.Id - b.Id)
     .map((d) => ({

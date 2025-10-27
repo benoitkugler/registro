@@ -92,7 +92,7 @@ func (ct *Controller) load(id cps.IdEquipier) (EquipierExt, error) {
 		demandes[i] = DemandeEquipier{
 			Demande:     demandesM[link.IdDemande],
 			Optionnelle: link.Optionnelle,
-			Files:       files[link.IdDemande][equipier.IdPersonne],
+			Files:       files[equipier.IdPersonne][link.IdDemande],
 		}
 	}
 

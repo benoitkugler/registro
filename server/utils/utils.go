@@ -138,6 +138,12 @@ func (s Set[T]) Has(key T) bool { _, ok := s[key]; return ok }
 
 func (s Set[T]) Add(key T) { s[key] = struct{}{} }
 
+func (s Set[T]) AddAll(keys []T) {
+	for _, key := range keys {
+		s.Add(key)
+	}
+}
+
 func (s Set[T]) Delete(key T) { delete(s, key) }
 
 func (s Set[T]) Keys() []T { return MapKeys(s) }

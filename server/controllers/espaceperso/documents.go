@@ -203,7 +203,7 @@ func loadDocuments(db ds.DB, key crypto.Encrypter, dossier logic.Dossier) (Docum
 				demande := demandes[link.IdDemande]
 				dp := DemandePersonne{
 					Demande:  demande,
-					Uploaded: personnesFiles[demande.Id][personne.Id],
+					Uploaded: personnesFiles[personne.Id][demande.Id],
 				}
 				if fi := demande.IdFile; fi.Valid {
 					dp.DemandeFile = logic.NewPublicFile(key, demandesFiles[fi.Id])
@@ -214,7 +214,7 @@ func loadDocuments(db ds.DB, key crypto.Encrypter, dossier logic.Dossier) (Docum
 			if asksFichesanitaire(dossier, personne) {
 				item.Demandes = append(item.Demandes, DemandePersonne{
 					Demande:  demandeVaccin,
-					Uploaded: personnesFiles[demandeVaccin.Id][personne.Id],
+					Uploaded: personnesFiles[personne.Id][demandeVaccin.Id],
 				})
 			}
 		}

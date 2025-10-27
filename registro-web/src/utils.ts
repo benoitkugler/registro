@@ -423,6 +423,10 @@ export namespace Formatters {
     }
     return `${(size / 1000).toFixed(1)} KB`;
   }
+
+  export function pourcent(val: number, max: number) {
+    return (max == 0 ? 0 : (100 * val) / max).toFixed(0);
+  }
 }
 
 export type PseudoEvent =

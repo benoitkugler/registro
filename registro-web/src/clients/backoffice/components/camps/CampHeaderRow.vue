@@ -17,7 +17,7 @@
         {{ Camps.formatPlage(camp.Camp.Camp) }}</v-col
       >
       <v-col cols="2" align-self="center">
-        <v-tooltip width="600" location="left" content-class="pa-0">
+        <v-tooltip width="450px" location="left" content-class="pa-0">
           <template #activator="{ props: innerProps }">
             <v-progress-linear
               class="bg-white border-md border-primary"
@@ -37,9 +37,49 @@
                   {{ allAttente }})</span
                 >
               </strong>
+              <v-icon class="ml-2">mdi-account-multiple</v-icon>
             </v-progress-linear>
           </template>
           <CampStats :stats="props.camp.Stats"></CampStats>
+        </v-tooltip>
+      </v-col>
+      <v-col cols="1" align-self="center" class="px-2">
+        <v-tooltip width="600" location="left" content-class="pa-0">
+          <template #activator="{ props: innerProps }">
+            <v-progress-linear
+              class="bg-white border-md border-primary"
+              v-bind="innerProps"
+              :max="100"
+              :model-value="fileUploadProgress"
+              height="36"
+              rounded
+              color="primary"
+            >
+              <strong>{{ fileUploadProgress }} % </strong>
+              <v-icon class="ml-2">mdi-file-upload</v-icon>
+            </v-progress-linear>
+          </template>
+          <v-card title="Pièces justificatives">
+            <v-card-text>
+              <v-list>
+                <v-list-item
+                  v-for="demande in props.camp.ParticipantsFiles"
+                  :title="demande.Title"
+                >
+                  <template #append>
+                    {{ demande.UploadedCount }} /
+                    {{ demande.InscritsCount }} ({{
+                      Formatters.pourcent(
+                        demande.UploadedCount,
+                        demande.InscritsCount
+                      )
+                    }}
+                    %)
+                  </template>
+                </v-list-item>
+              </v-list>
+            </v-card-text>
+          </v-card>
         </v-tooltip>
       </v-col>
       <v-col cols="1"></v-col>
@@ -158,9 +198,10 @@ import type {
   CampHeader,
   Camp,
   IdPersonne,
+  DemandeStat,
 } from "@/clients/backoffice/logic/api";
 import CampStats from "./CampStats.vue";
-import { Camps } from "@/utils";
+import { Camps, Formatters } from "@/utils";
 import { controller } from "../../logic/logic";
 const props = defineProps<{
   camp: CampHeader;
@@ -208,4 +249,15 @@ const periodeColor = computed(() => {
 
 const showAddDirecteur = ref(false);
 const idDirecteur = ref(0 as IdPersonne);
+
+const fileUploadProgress = computed(() => {
+  const files = props.camp.ParticipantsFiles || [];
+  if (files.length == 0) return 0;
+  let p = 0;
+  for (const file of files) {
+    if (file.InscritsCount == 0) continue;
+    p += file.UploadedCount / file.InscritsCount;
+  }
+  return Math.round((p / files.length) * 100);
+});
 </script>

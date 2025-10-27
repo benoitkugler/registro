@@ -65,48 +65,77 @@ func (stats *StatistiquesInscrits) add(p ParticipantPersonne) {
 	}
 }
 
-// CampLoader permet d'accéder à diverses
+type CampsData struct {
+	Camps        Camps
+	participants map[IdCamp]Participants // covering [camps]
+	personnes    pr.Personnes            // covering [camps]
+}
+
+// LoadCamps loads the given camps and their participants,
+// and wraps the error.
+func LoadCamps(db DB, ids []IdCamp) (CampsData, error) {
+	camps, err := SelectCamps(db, ids...)
+	if err != nil {
+		return CampsData{}, utils.SQLError(err)
+	}
+	participants, err := SelectParticipantsByIdCamps(db, ids...)
+	if err != nil {
+		return CampsData{}, utils.SQLError(err)
+	}
+	byCamp := participants.ByIdCamp()
+	personnes, err := pr.SelectPersonnes(db, participants.IdPersonnes()...)
+	if err != nil {
+		return CampsData{}, utils.SQLError(err)
+	}
+	return CampsData{camps, byCamp, personnes}, nil
+}
+
+func (cps CampsData) For(id IdCamp) CampData {
+	return CampData{cps.Camps[id], cps.participants[id], cps.personnes}
+}
+
+func (cps CampsData) IdDossiers() []ds.IdDossier {
+	s := utils.NewSet[ds.IdDossier]()
+	for _, ps := range cps.participants {
+		s.AddAll(ps.IdDossiers())
+	}
+	return s.Keys()
+}
+
+// Personnes returns the [Personne]s for all [Participant]s
+func (cps CampsData) Personnes(onlyInscrits bool) pr.Personnes {
+	out := make(pr.Personnes)
+	for _, ps := range cps.participants {
+		for _, p := range ps {
+			if onlyInscrits && p.Statut != Inscrit {
+				continue
+			}
+			out[p.IdPersonne] = cps.personnes[p.IdPersonne]
+		}
+	}
+	return out
+}
+
+// CampData permet d'accéder à diverses
 // propriété d'un séjour nécessitant la liste des inscrits.
-type CampLoader struct {
+type CampData struct {
 	Camp         Camp
 	participants Participants // liste (exacte) des participants du séjour
 	// Doit contenir au moins les participants
 	personnes pr.Personnes
 }
 
-// LoadCampPersonnes is a convenient wrapper around [LoadCampsPersonnes] for
+// LoadCampPersonnes is a convenient wrapper around [LoadCamps] for
 // a single camp.
-func LoadCampPersonnes(db DB, id IdCamp) (CampLoader, error) {
-	out, err := LoadCampsPersonnes(db, id)
+func LoadCampPersonnes(db DB, id IdCamp) (CampData, error) {
+	out, err := LoadCamps(db, []IdCamp{id})
 	if err != nil {
-		return CampLoader{}, err
+		return CampData{}, err
 	}
-	return out[0], nil
+	return out.For(id), nil
 }
 
-// LoadCampsPersonnes returns the [Camp]s and [Participant]s, and wraps the error.
-func LoadCampsPersonnes(db DB, ids ...IdCamp) ([]CampLoader, error) {
-	camps, err := SelectCamps(db, ids...)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-	participants, err := SelectParticipantsByIdCamps(db, ids...)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-	byCamp := participants.ByIdCamp()
-	personnes, err := pr.SelectPersonnes(db, participants.IdPersonnes()...)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-	out := make([]CampLoader, len(ids))
-	for index, id := range ids {
-		out[index] = CampLoader{camps[id], byCamp[id], personnes}
-	}
-	return out, nil
-}
-
-func (cd CampLoader) Participants(onlyInscrits bool) []ParticipantPersonne {
+func (cd CampData) Participants(onlyInscrits bool) []ParticipantPersonne {
 	out := make([]ParticipantPersonne, 0, len(cd.participants))
 	for _, participant := range cd.participants {
 		if onlyInscrits && participant.Statut != Inscrit {
@@ -118,12 +147,12 @@ func (cd CampLoader) Participants(onlyInscrits bool) []ParticipantPersonne {
 	return out
 }
 
-func (cd CampLoader) IdDossiers() []ds.IdDossier {
+func (cd CampData) IdDossiers() []ds.IdDossier {
 	return cd.participants.IdDossiers()
 }
 
 // Personnes returns the [Personne]s for all [Participant]s
-func (cd CampLoader) Personnes(onlyInscrits bool) pr.Personnes {
+func (cd CampData) Personnes(onlyInscrits bool) pr.Personnes {
 	out := make(pr.Personnes)
 	for _, p := range cd.participants {
 		if onlyInscrits && p.Statut != Inscrit {
@@ -134,7 +163,7 @@ func (cd CampLoader) Personnes(onlyInscrits bool) pr.Personnes {
 	return out
 }
 
-func (cd CampLoader) Stats() StatistiquesInscrits {
+func (cd CampData) Stats() StatistiquesInscrits {
 	var stats StatistiquesInscrits
 	for _, p := range cd.Participants(false) {
 		stats.add(p)
@@ -189,7 +218,7 @@ func (s StatutCauses) Hint() StatutParticipant {
 
 // Status détermine la validité de l'inscription des personnes
 // données par [participants], renvoyant une liste de la même longueur
-func (cd CampLoader) Status(participants []pr.Personne) []StatutCauses {
+func (cd CampData) Status(participants []pr.Personne) []StatutCauses {
 	stats := cd.Stats()
 
 	restePlace := cd.Camp.restePlace(stats, participants)

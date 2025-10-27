@@ -7,7 +7,7 @@ import (
 	"log"
 	"time"
 
-	filesAPI "registro/controllers/files"
+	fsAPI "registro/controllers/files"
 	"registro/logic"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
@@ -32,10 +32,11 @@ func (ct *Controller) loadTaux() (ds.Tauxs, error) {
 }
 
 type CampHeader struct {
-	Camp         cps.CampExt
-	Taux         ds.Taux
-	Stats        cps.StatistiquesInscrits
-	HasDirecteur bool
+	Camp              cps.CampExt
+	Taux              ds.Taux
+	Stats             cps.StatistiquesInscrits
+	ParticipantsFiles []fsAPI.DemandeStat
+	HasDirecteur      bool
 }
 
 func (ct *Controller) CampsGet(c echo.Context) error {
@@ -51,24 +52,32 @@ func (ct *Controller) getCamps() ([]CampHeader, error) {
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
+	ids := camps.IDs()
 	taux, err := ds.SelectTauxs(ct.db, camps.IdTauxs()...)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
-	loaders, err := cps.LoadCampsPersonnes(ct.db, camps.IDs()...)
+	loaders, err := cps.LoadCamps(ct.db, ids)
 	if err != nil {
 		return nil, err
 	}
 
-	directeurs, err := loadDirecteurs(ct.db, camps.IDs())
+	directeurs, err := loadDirecteurs(ct.db, ids)
 	if err != nil {
 		return nil, err
 	}
 
-	out := make([]CampHeader, len(loaders))
-	for i, loader := range loaders {
+	filesLoader, err := fsAPI.LoadParticipantsFiles(ct.db, ct.key, ids)
+	if err != nil {
+		return nil, err
+	}
+
+	out := make([]CampHeader, len(ids))
+	for i, id := range ids {
+		loader := loaders.For(id)
+		files := filesLoader.For(id)
 		_, hasDirecteur := directeurs[loader.Camp.Id]
-		out[i] = CampHeader{loader.Camp.Ext(), taux[loader.Camp.IdTaux], loader.Stats(), hasDirecteur}
+		out[i] = CampHeader{loader.Camp.Ext(), taux[loader.Camp.IdTaux], loader.Stats(), files.Stats(), hasDirecteur}
 	}
 	return out, nil
 }
@@ -114,7 +123,7 @@ func (ct *Controller) createManyCamp(args CampsCreateManyIn) (out []CampHeader, 
 			if err != nil {
 				return err
 			}
-			out = append(out, CampHeader{camp.Ext(), args.Taux, cps.StatistiquesInscrits{}, false})
+			out = append(out, CampHeader{camp.Ext(), args.Taux, cps.StatistiquesInscrits{}, nil, false})
 		}
 		return nil
 	})
@@ -170,7 +179,7 @@ func (ct *Controller) createCamp() (CampHeader, error) {
 	if err != nil {
 		return CampHeader{}, utils.SQLError(err)
 	}
-	return CampHeader{camp.Ext(), taux, cps.StatistiquesInscrits{}, false}, nil
+	return CampHeader{camp.Ext(), taux, cps.StatistiquesInscrits{}, nil, false}, nil
 }
 
 func (ct *Controller) CampsUpdate(c echo.Context) error {
@@ -381,7 +390,7 @@ func (ct *Controller) CampsDocuments(c echo.Context) error {
 type FilesCamp struct {
 	ToShow cps.DocumentsToShow
 
-	Generated       []filesAPI.GeneratedFile
+	Generated       []fsAPI.GeneratedFile
 	ToRead          []logic.PublicFile
 	ToUploadModeles []logic.PublicFile
 }
@@ -407,15 +416,15 @@ func (ct *Controller) getCampDocument(id cps.IdCamp) (FilesCamp, error) {
 	}
 
 	// generated files
-	doc1, err := filesAPI.CampDocument(ct.key, camp, filesAPI.ListeVetements)
+	doc1, err := fsAPI.CampDocument(ct.key, camp, fsAPI.ListeVetements)
 	if err != nil {
 		return FilesCamp{}, err
 	}
-	doc2, err := filesAPI.CampDocument(ct.key, camp, filesAPI.ListeParticipants)
+	doc2, err := fsAPI.CampDocument(ct.key, camp, fsAPI.ListeParticipants)
 	if err != nil {
 		return FilesCamp{}, err
 	}
-	out.Generated = []filesAPI.GeneratedFile{doc1, doc2}
+	out.Generated = []fsAPI.GeneratedFile{doc1, doc2}
 
 	links2, err := fs.SelectDemandeCampsByIdCamps(ct.db, id)
 	if err != nil {

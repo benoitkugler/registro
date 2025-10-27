@@ -14,12 +14,16 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"slices"
 	"strconv"
+	"strings"
 
 	"registro/assets"
 	"registro/config"
 	"registro/crypto"
 	"registro/logic"
+	cps "registro/sql/camps"
+	ds "registro/sql/dossiers"
 	fs "registro/sql/files"
 	pr "registro/sql/personnes"
 	"registro/utils"
@@ -184,20 +188,7 @@ func DemandeVaccin(db fs.DB) (fs.Demande, error) {
 	return fs.Demande{}, errors.New("missing Demande for categorie <Vaccins>")
 }
 
-func LoadVaccins(db fs.DB, key crypto.Encrypter, personnes []pr.IdPersonne) (map[pr.IdPersonne][]logic.PublicFile, fs.Demande, error) {
-	vaccinDemande, err := DemandeVaccin(db)
-	if err != nil {
-		return nil, fs.Demande{}, err
-	}
-
-	files, _, err := LoadFilesPersonnes(db, key, []fs.IdDemande{vaccinDemande.Id}, personnes...)
-	if err != nil {
-		return nil, fs.Demande{}, err
-	}
-	return files[vaccinDemande.Id], vaccinDemande, nil
-}
-
-func LoadFilesPersonnes(db fs.DB, key crypto.Encrypter, demandes []fs.IdDemande, personnes ...pr.IdPersonne) (map[fs.IdDemande]map[pr.IdPersonne][]logic.PublicFile, fs.Demandes,
+func LoadFilesPersonnes(db fs.DB, key crypto.Encrypter, demandes []fs.IdDemande, personnes ...pr.IdPersonne) (map[pr.IdPersonne]map[fs.IdDemande][]logic.PublicFile, fs.Demandes,
 	error,
 ) {
 	demandesM, err := fs.SelectDemandes(db, demandes...)
@@ -212,20 +203,21 @@ func LoadFilesPersonnes(db fs.DB, key crypto.Encrypter, demandes []fs.IdDemande,
 	if err != nil {
 		return nil, nil, utils.SQLError(err)
 	}
-	byDemande := tmp.ByIdDemande()
+	byPersonne := tmp.ByIdPersonne()
 
-	out := make(map[fs.IdDemande]map[pr.IdPersonne][]logic.PublicFile)
-	for _, idDemande := range demandes {
-		links := byDemande[idDemande].ByIdPersonne()
-		demandes := make(map[pr.IdPersonne][]logic.PublicFile, len(links))
-		for idPersonne, innerLinks := range links {
-			files := make([]logic.PublicFile, len(innerLinks))
-			for i, file := range innerLinks {
+	out := make(map[pr.IdPersonne]map[fs.IdDemande][]logic.PublicFile)
+	for idPersonne, links := range byPersonne {
+		byDemande := links.ByIdDemande()
+		demandesM := make(map[fs.IdDemande][]logic.PublicFile, len(links))
+		for _, idDemande := range demandes {
+			filesLink := byDemande[idDemande]
+			files := make([]logic.PublicFile, len(filesLink))
+			for i, file := range filesLink {
 				files[i] = logic.NewPublicFile(key, allFiles[file.IdFile])
 			}
-			demandes[idPersonne] = files
+			demandesM[idDemande] = files
 		}
-		out[idDemande] = demandes
+		out[idPersonne] = demandesM
 	}
 	return out, demandesM, nil
 }
@@ -248,4 +240,133 @@ func SaveFileFor(files fs.FileSystem, db *sql.DB, idPersonne pr.IdPersonne, idDe
 		return nil
 	})
 	return file, err
+}
+
+// documents
+
+type ParticipantsFilesLoader struct {
+	camps    cps.CampsData
+	dossiers ds.Dossiers
+
+	demandes       fs.Demandes
+	idVaccin       fs.IdDemande
+	demandesByCamp map[cps.IdCamp]fs.DemandeCamps
+
+	fiches map[pr.IdPersonne]pr.Fichesanitaire
+	files  map[pr.IdPersonne]map[fs.IdDemande][]logic.PublicFile
+}
+
+func LoadParticipantsFiles(db fs.DB, key crypto.Encrypter, ids []cps.IdCamp) (ParticipantsFilesLoader, error) {
+	camps, err := cps.LoadCamps(db, ids)
+	if err != nil {
+		return ParticipantsFilesLoader{}, err
+	}
+
+	dossiers, err := ds.SelectDossiers(db, camps.IdDossiers()...)
+	if err != nil {
+		return ParticipantsFilesLoader{}, utils.SQLError(err)
+	}
+
+	// demandes
+	// always include vaccin
+	vaccinDemande, err := DemandeVaccin(db)
+	if err != nil {
+		return ParticipantsFilesLoader{}, err
+	}
+	tmp, err := fs.SelectDemandeCampsByIdCamps(db, ids...)
+	if err != nil {
+		return ParticipantsFilesLoader{}, utils.SQLError(err)
+	}
+	idDemandes := append(tmp.IdDemandes(), vaccinDemande.Id)
+
+	// personnes et fichiers
+	personnes := camps.Personnes(true)
+	tmp2, err := pr.SelectFichesanitairesByIdPersonnes(db, personnes.IDs()...)
+	if err != nil {
+		return ParticipantsFilesLoader{}, utils.SQLError(err)
+	}
+	fiches := tmp2.ByIdPersonne()
+
+	files, demandes, err := LoadFilesPersonnes(db, key, idDemandes, personnes.IDs()...)
+	if err != nil {
+		return ParticipantsFilesLoader{}, err
+	}
+
+	return ParticipantsFilesLoader{camps, dossiers, demandes, vaccinDemande.Id, tmp.ByIdCamp(), fiches, files}, nil
+}
+
+type ParticipantFiles struct {
+	Id             cps.IdParticipant
+	Personne       string
+	Fichesanitaire pr.FichesanitaireState
+	Files          map[fs.IdDemande][]logic.PublicFile
+}
+
+// ParticipantsFiles is a 2D array participants as rows
+// and [Demande]s as columns
+type ParticipantsFiles struct {
+	// contains Vaccins, and a column for Fiche sanitaire should be added
+	Demandes     fs.Demandes
+	Participants []ParticipantFiles
+}
+
+func (ld ParticipantsFilesLoader) For(id cps.IdCamp) ParticipantsFiles {
+	idDemandes := append(ld.demandesByCamp[id].IdDemandes(), ld.idVaccin)
+	demandes := make(fs.Demandes)
+	for _, id := range idDemandes {
+		demandes[id] = ld.demandes[id]
+	}
+	camp := ld.camps.For(id)
+
+	out := ParticipantsFiles{Demandes: demandes}
+	for _, participant := range camp.Participants(true) {
+		personne, dossier := participant.Personne, ld.dossiers[participant.Participant.IdDossier]
+		filesM := make(map[fs.IdDemande][]logic.PublicFile)
+		for _, demande := range idDemandes {
+			filesM[demande] = ld.files[personne.Id][demande]
+		}
+		out.Participants = append(out.Participants, ParticipantFiles{
+			Id:             participant.Participant.Id,
+			Personne:       personne.NOMPrenom(),
+			Fichesanitaire: ld.fiches[personne.Id].State(dossier.MomentInscription),
+			Files:          filesM,
+		})
+	}
+
+	slices.SortFunc(out.Participants, func(a, b ParticipantFiles) int { return strings.Compare(a.Personne, b.Personne) })
+
+	return out
+}
+
+type DemandeStat struct {
+	Title         string
+	UploadedCount int
+	InscritsCount int
+}
+
+// Stats returns a summary of the files uploaded
+// for each [Demande] and Fiche Sanitaire
+func (files ParticipantsFiles) Stats() (out []DemandeStat) {
+	inscritsCount := len(files.Participants)
+
+	// fiche sanitaire
+	uploadedCount := 0
+	for _, participant := range files.Participants {
+		if hasFiche := participant.Fichesanitaire == pr.UpToDate; hasFiche {
+			uploadedCount += 1
+		}
+	}
+	out = append(out, DemandeStat{Title: "Fiches sanitaires", UploadedCount: uploadedCount, InscritsCount: inscritsCount})
+
+	for _, demande := range files.Demandes {
+		uploadedCount := 0
+		for _, participant := range files.Participants {
+			if hasFile := len(participant.Files[demande.Id]) > 0; hasFile {
+				uploadedCount += 1
+			}
+		}
+		out = append(out, DemandeStat{Title: demande.Title(), UploadedCount: uploadedCount, InscritsCount: inscritsCount})
+	}
+
+	return out
 }

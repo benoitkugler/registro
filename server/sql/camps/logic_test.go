@@ -61,7 +61,7 @@ func TestCampLoader_Stats(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		cd := CampLoader{
+		cd := CampData{
 			Camp:         Camp{},
 			participants: tt.Participants,
 			personnes:    tt.Personnes,
@@ -150,7 +150,7 @@ func TestCampLoader_Status(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		cd := CampLoader{
+		cd := CampData{
 			Camp:         tt.camp,
 			participants: participants,
 			personnes:    personnes,

@@ -105,7 +105,7 @@ type FicheSanitaireExt struct {
 	Personne      string
 	State         pr.FichesanitaireState
 	Fiche         pr.Fichesanitaire
-	Vaccins       []logic.PublicFile
+	// Vaccins       []logic.PublicFile
 }
 
 func (ct *Controller) loadFichesSanitaires(user cps.IdCamp) ([]FicheSanitaireExt, error) {
@@ -127,11 +127,7 @@ func (ct *Controller) loadFichesSanitaires(user cps.IdCamp) ([]FicheSanitaireExt
 		return nil, utils.SQLError(err)
 	}
 	fiches := tmp.ByIdPersonne()
-	// load the vaccins
-	vaccins, _, err := fsAPI.LoadVaccins(ct.db, ct.key, pIds)
-	if err != nil {
-		return nil, err
-	}
+
 	out := make([]FicheSanitaireExt, 0, len(personnes))
 	for _, participant := range participants {
 		personne := personnes[participant.IdPersonne]
@@ -142,7 +138,6 @@ func (ct *Controller) loadFichesSanitaires(user cps.IdCamp) ([]FicheSanitaireExt
 			personne.NOMPrenom(),
 			fiche.State(dossier.MomentInscription),
 			fiche,
-			vaccins[personne.Id],
 		})
 	}
 

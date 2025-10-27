@@ -1,58 +1,95 @@
 <template>
-  <v-card title="Statistiques">
+  <v-card title="Statut des inscriptions">
     <v-card-text>
-      <v-row>
-        <v-col cols="5">
-          Demandes d'inscriptions : {{ props.stats.Inscriptions }}
-        </v-col>
-        <v-col class="text-right">
-          Dont Filles : {{ props.stats.InscriptionsFilles }}
-          {{
-            pourcentS(props.stats.InscriptionsFilles, props.stats.Inscriptions)
-          }}, Suisses : {{ props.stats.InscriptionsSuisses }}
-          {{
-            pourcentS(props.stats.InscriptionsSuisses, props.stats.Inscriptions)
-          }}
-        </v-col>
-      </v-row>
-      <v-row>
-        <v-col cols="4">
-          Confirmées : {{ props.stats.Valides }}
-          {{ pourcentS(props.stats.Valides, props.stats.Inscriptions) }}
-        </v-col>
-        <v-col class="text-right">
-          Dont Filles : {{ props.stats.ValidesFilles }}
-          {{ pourcentS(props.stats.ValidesFilles, props.stats.Valides) }} ,
-          Suisses : {{ props.stats.ValidesSuisses }}
-          {{ pourcentS(props.stats.ValidesSuisses, props.stats.Valides) }}
-        </v-col>
-      </v-row>
-      <v-row>
-        <v-col>
-          A statuer : {{ props.stats.AStatuer }}
-          {{ pourcentS(props.stats.AStatuer, props.stats.Inscriptions) }}
-        </v-col>
-        <v-col cols="5" class="text-center">
-          Demandes d'exception : {{ props.stats.Exceptions }}
-          {{ pourcentS(props.stats.Exceptions, props.stats.Inscriptions) }}
-        </v-col>
-        <v-col class="text-right">
-          Refus : {{ props.stats.Refus }}
-          {{ pourcentS(props.stats.Refus, props.stats.Inscriptions) }}
-        </v-col>
-      </v-row>
+      <v-list density="compact">
+        <v-list-item title="Demandes d'inscriptions">
+          <template #append>
+            {{ props.stats.Inscriptions }}
+          </template>
+        </v-list-item>
+        <v-list-item
+          title="Filles"
+          subtitle="Parmi toutes les demandes d'inscription"
+        >
+          <template #append>
+            {{ props.stats.InscriptionsFilles }}
+            {{
+              pourcentS(
+                props.stats.InscriptionsFilles,
+                props.stats.Inscriptions
+              )
+            }}
+          </template>
+        </v-list-item>
+        <v-list-item
+          title="Suisses"
+          subtitle="Parmi toutes les demandes d'inscription"
+        >
+          <template #append>
+            {{ props.stats.InscriptionsSuisses }}
+            {{
+              pourcentS(
+                props.stats.InscriptionsSuisses,
+                props.stats.Inscriptions
+              )
+            }}
+          </template>
+        </v-list-item>
+        <v-list-item title="Inscriptions confirmées">
+          <template #append>
+            {{ props.stats.Valides }}
+            {{ pourcentS(props.stats.Valides, props.stats.Inscriptions) }}
+          </template>
+        </v-list-item>
+        <v-list-item
+          title="Filles"
+          subtitle="Parmi les inscriptions confirmées"
+        >
+          <template #append>
+            {{ props.stats.ValidesFilles }}
+            {{ pourcentS(props.stats.ValidesFilles, props.stats.Valides) }}
+          </template>
+        </v-list-item>
+        <v-list-item
+          title="Suisses"
+          subtitle="Parmi les inscriptions confirmées"
+        >
+          <template #append>
+            {{ props.stats.ValidesSuisses }}
+            {{ pourcentS(props.stats.ValidesSuisses, props.stats.Valides) }}
+          </template>
+        </v-list-item>
+        <v-list-item title="A statuer">
+          <template #append>
+            {{ props.stats.AStatuer }}
+            {{ pourcentS(props.stats.AStatuer, props.stats.Inscriptions) }}
+          </template>
+        </v-list-item>
+        <v-list-item title="Demandes d'exception">
+          <template #append>
+            {{ props.stats.Exceptions }}
+            {{ pourcentS(props.stats.Exceptions, props.stats.Inscriptions) }}
+          </template>
+        </v-list-item>
+        <v-list-item title="Refus">
+          <template #append>
+            {{ props.stats.Refus }}
+            {{ pourcentS(props.stats.Refus, props.stats.Inscriptions) }}
+          </template>
+        </v-list-item>
+      </v-list>
     </v-card-text>
   </v-card>
 </template>
 
 <script setup lang="ts">
 import type { StatistiquesInscrits } from "@/clients/backoffice/logic/api";
+import { Formatters } from "@/utils";
 const props = defineProps<{
   stats: StatistiquesInscrits;
 }>();
 
 function pourcentS(val: number, max: number) {
-  const p = (max == 0 ? 0 : (100 * val) / max).toFixed(0);
-  return `(${p} %)`;
+  return `(${Formatters.pourcent(val, max)} %)`;
 }
 </script>

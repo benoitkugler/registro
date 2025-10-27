@@ -35,6 +35,7 @@ export interface CampHeader {
   Camp: CampExt;
   Taux: Taux;
   Stats: StatistiquesInscrits;
+  ParticipantsFiles: DemandeStat[] | null;
   HasDirecteur: boolean;
 }
 // registro/controllers/backoffice.CampJoomeo
@@ -209,6 +210,12 @@ export interface SendDocumentsCampPreview {
 export interface SendProgress {
   Current: Int;
   Total: Int;
+}
+// registro/controllers/files.DemandeStat
+export interface DemandeStat {
+  Title: string;
+  UploadedCount: Int;
+  InscritsCount: Int;
 }
 // registro/controllers/files.GeneratedFile
 export interface GeneratedFile {

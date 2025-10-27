@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"slices"
-	"strings"
 
 	filesAPI "registro/controllers/files"
 	fsAPI "registro/controllers/files"
@@ -446,21 +445,6 @@ func (ct *Controller) DocumentsDeleteDemandeFile(c echo.Context) error {
 
 // download API
 
-type ParticipantDocuments struct {
-	Id             cps.IdParticipant
-	Personne       string
-	Fichesanitaire pr.FichesanitaireState
-	Files          map[fs.IdDemande][]logic.PublicFile
-}
-
-// ParticipantsDocuments is a 2D array participants as rows
-// and [Demande]s as columns
-type ParticipantsDocuments struct {
-	// conatins Vaccins, and a column for fiche sanitaire should be added
-	Demandes     fs.Demandes
-	Participants []ParticipantDocuments
-}
-
 func (ct *Controller) ParticipantsLoadFiles(c echo.Context) error {
 	user := JWTUser(c)
 	out, err := ct.loadParticipantsFiles(user)
@@ -470,60 +454,12 @@ func (ct *Controller) ParticipantsLoadFiles(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) loadParticipantsFiles(id cps.IdCamp) (ParticipantsDocuments, error) {
-	// demandes
-	// always include vaccin
-	vaccinDemande, err := fsAPI.DemandeVaccin(ct.db)
+func (ct *Controller) loadParticipantsFiles(id cps.IdCamp) (fsAPI.ParticipantsFiles, error) {
+	loader, err := fsAPI.LoadParticipantsFiles(ct.db, ct.key, []cps.IdCamp{id})
 	if err != nil {
-		return ParticipantsDocuments{}, err
+		return fsAPI.ParticipantsFiles{}, err
 	}
-	tmp, err := fs.SelectDemandeCampsByIdCamps(ct.db, id)
-	if err != nil {
-		return ParticipantsDocuments{}, utils.SQLError(err)
-	}
-	idDemandes := append(tmp.IdDemandes(), vaccinDemande.Id)
-
-	// personnes et fichiers
-	camp, err := cps.LoadCampPersonnes(ct.db, id)
-	if err != nil {
-		return ParticipantsDocuments{}, err
-	}
-	personnes := camp.Personnes(true)
-
-	dossiers, err := ds.SelectDossiers(ct.db, camp.IdDossiers()...)
-	if err != nil {
-		return ParticipantsDocuments{}, utils.SQLError(err)
-	}
-
-	tmp2, err := pr.SelectFichesanitairesByIdPersonnes(ct.db, personnes.IDs()...)
-	if err != nil {
-		return ParticipantsDocuments{}, utils.SQLError(err)
-	}
-	fiches := tmp2.ByIdPersonne()
-
-	files, demandes, err := fsAPI.LoadFilesPersonnes(ct.db, ct.key, idDemandes, personnes.IDs()...)
-	if err != nil {
-		return ParticipantsDocuments{}, err
-	}
-
-	out := ParticipantsDocuments{Demandes: demandes}
-	for _, participant := range camp.Participants(true) {
-		personne, dossier := participant.Personne, dossiers[participant.Participant.IdDossier]
-		filesM := make(map[fs.IdDemande][]logic.PublicFile)
-		for _, demande := range idDemandes {
-			filesM[demande] = files[demande][personne.Id]
-		}
-		out.Participants = append(out.Participants, ParticipantDocuments{
-			Id:             participant.Participant.Id,
-			Personne:       personne.NOMPrenom(),
-			Fichesanitaire: fiches[personne.Id].State(dossier.MomentInscription),
-			Files:          filesM,
-		})
-	}
-
-	slices.SortFunc(out.Participants, func(a, b ParticipantDocuments) int { return strings.Compare(a.Personne, b.Personne) })
-
-	return out, nil
+	return loader.For(id), nil
 }
 
 // DocumentsStreamFiles télécharge tous les fichiers pour une [Demande],

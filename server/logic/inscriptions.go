@@ -54,7 +54,7 @@ func LoadInscriptions(db ds.DB, byPass StatutBypassRights, ids ...ds.IdDossier) 
 		return nil, err
 	}
 
-	camps, err := cps.LoadCampsPersonnes(db, loaders.camps.IDs()...)
+	camps, err := cps.LoadCamps(db, loaders.camps.IDs())
 	if err != nil {
 		return nil, err
 	}
@@ -156,16 +156,18 @@ type StatutHints = map[cps.IdParticipant]StatutExt
 // StatutHints renvoie le statut qu'il faudrait appliquer
 // au participant du dossier.
 // [camps] doit contenir au moins tous les séjours du dossier.
-func (dossier Dossier) StatutHints(camps []cps.CampLoader, bypass StatutBypassRights) StatutHints {
+func (dossier Dossier) StatutHints(camps cps.CampsData, bypass StatutBypassRights) StatutHints {
 	// le status est calculé camp par camp
 	partsByCamp := dossier.Participants.ByIdCamp()
 
 	out := make(StatutHints)
-	for _, camp := range camps {
-		participantsL, ok := partsByCamp[camp.Camp.Id]
+	for idCamp := range camps.Camps {
+		participantsL, ok := partsByCamp[idCamp]
 		if !ok { // ignore other camps
 			continue
 		}
+		camp := camps.For(idCamp)
+
 		incommingPa := utils.MapValues(participantsL)
 		incommingPe := dossier.PersonnesFor(incommingPa)
 
@@ -245,7 +247,7 @@ func HintValideInscription(db cps.DB, byPass StatutBypassRights, id ds.IdDossier
 		return nil, err
 	}
 	// on calcule le statut des participants (requiert les participants et personnes déjà inscrites)
-	camps, err := cps.LoadCampsPersonnes(db, loader.Camps().IDs()...)
+	camps, err := cps.LoadCamps(db, loader.Camps().IDs())
 	if err != nil {
 		return nil, err
 	}
@@ -276,7 +278,7 @@ func ValideInscription(db *sql.DB, key crypto.Encrypter, smtp config.SMTP, asso 
 	dossier := loader.Dossier
 
 	// on calcule le statut des participants (requiert les participants et personnes déjà inscrites)
-	camps, err := cps.LoadCampsPersonnes(db, loader.Camps().IDs()...)
+	camps, err := cps.LoadCamps(db, loader.Camps().IDs())
 	if err != nil {
 		return err
 	}
