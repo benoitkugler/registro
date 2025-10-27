@@ -4,7 +4,8 @@ DROP TYPE IF EXISTS DocumentsToShow;
 CREATE TYPE DocumentsToShow AS (
     LettreDirecteur boolean,
     ListeVetements boolean,
-    ListeParticipants boolean
+    ListeParticipants boolean,
+    CharteParticipant boolean
 );
 
 DROP TYPE IF EXISTS PresenceOffsets;
@@ -102,8 +103,7 @@ CREATE TABLE participants (
     QuotientFamilial integer NOT NULL,
     OptionPrix jsonb NOT NULL,
     Commentaire text NOT NULL,
-    Navette smallint CHECK (Navette IN (0, 1, 2, 3)) NOT NULL,
-    CharteAccepted boolean NOT NULL
+    Navette smallint CHECK (Navette IN (0, 1, 2, 3)) NOT NULL
 );
 
 CREATE TABLE sondages (

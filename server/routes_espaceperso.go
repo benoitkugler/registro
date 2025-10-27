@@ -22,9 +22,6 @@ func setupRoutesEspaceperso(e *echo.Echo, ct *espaceperso.Controller) {
 
 	e.GET("/api/v1/espaceperso/joomeo", ct.LoadJoomeo)
 
-	e.POST("/api/v1/espaceperso/fichesanitaires", ct.UpdateFichesanitaire)
-	e.PUT("/api/v1/espaceperso/fichesanitaires/transfert", ct.TransfertFicheSanitaire)
-
 	e.POST("/api/v1/espaceperso/events/accept-place-liberee", ct.AcceptePlaceLiberee)
 
 	// Sondages
@@ -35,4 +32,8 @@ func setupRoutesEspaceperso(e *echo.Echo, ct *espaceperso.Controller) {
 	e.GET("/api/v1/espaceperso/documents", ct.LoadDocuments)
 	e.POST("/api/v1/espaceperso/documents", ct.UploadDocument)
 	e.DELETE("/api/v1/espaceperso/documents", ct.DeleteDocument)
+	e.POST("/api/v1/espaceperso/documents/charte", ct.AccepteCharte)
+
+	e.POST("/api/v1/espaceperso/fichesanitaires", ct.UpdateFichesanitaire)
+	e.PUT("/api/v1/espaceperso/fichesanitaires/transfert", ct.TransfertFicheSanitaire)
 }

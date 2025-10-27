@@ -17,16 +17,19 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+type Charte struct {
+	Id       pr.IdPersonne
+	Personne string
+	Accepted bool
+}
+
 type Documents struct {
 	FilesToRead   []FilesCamp
 	FilesToUpload []DemandesPersonne // including vaccins
 	Fiches        []FichesanitaireExt
+	Chartes       []Charte
 
-	ToReadCount, ToFillCount, FichesToFillCount int
-}
-
-func (docs *Documents) totalCount() int {
-	return docs.ToReadCount + docs.ToFillCount + docs.FichesToFillCount
+	NewCount int
 }
 
 func (docs *Documents) setCounts(lastLoaded time.Time, events logic.Events) {
@@ -57,6 +60,14 @@ func (docs *Documents) setCounts(lastLoaded time.Time, events logic.Events) {
 		}
 	}
 
+	// chartes
+	chartesCount := 0
+	for _, charte := range docs.Chartes {
+		if !charte.Accepted {
+			chartesCount++
+		}
+	}
+
 	// fiches sanitaires
 	fichesCount := 0
 	for _, fiche := range docs.Fiches {
@@ -65,7 +76,7 @@ func (docs *Documents) setCounts(lastLoaded time.Time, events logic.Events) {
 		}
 	}
 
-	docs.ToReadCount, docs.ToFillCount, docs.FichesToFillCount = toRead, toFill, fichesCount
+	docs.NewCount = toRead + toFill + fichesCount + chartesCount
 }
 
 type FilesCamp struct {
@@ -137,6 +148,8 @@ func loadDocuments(db ds.DB, key crypto.Encrypter, dossier logic.Dossier) (Docum
 
 	var out Documents
 	for _, camp := range camps {
+		// TODO: Only ask for documents is the camp is marked as Ready
+
 		item := FilesCamp{idCamp: camp.Id, Camp: camp.Label()}
 		// other files
 		for _, link := range byCamp[camp.Id] {
@@ -229,6 +242,27 @@ func loadDocuments(db ds.DB, key crypto.Encrypter, dossier logic.Dossier) (Docum
 		return Documents{}, err
 	}
 
+	// chartes
+	for _, personne := range dossier.Personnes()[1:] {
+		// only ask for inscrits older than 12,
+		// with camp asking for charte
+		showCharte := false
+		for _, camp := range dossier.CampsFor(personne.Id) {
+			if camp.DocumentsReady && camp.DocumentsToShow.CharteParticipant && camp.AgeDebutCamp(personne.DateNaissance) >= 12 {
+				showCharte = true
+			}
+		}
+		if !showCharte {
+			continue
+		}
+
+		out.Chartes = append(out.Chartes, Charte{
+			Id:       personne.Id,
+			Personne: personne.PrenomN(),
+			Accepted: personne.CharteAccepted.After(dossier.Dossier.MomentInscription),
+		})
+	}
+
 	out.setCounts(dossier.Dossier.LastLoadDocuments, dossier.Events)
 	return out, nil
 }
@@ -287,4 +321,42 @@ func (ct *Controller) DeleteDocument(c echo.Context) error {
 		return err
 	}
 	return c.NoContent(200)
+}
+
+func (ct *Controller) AccepteCharte(c echo.Context) error {
+	token := c.QueryParam("token")
+	idDossier, err := crypto.DecryptID[ds.IdDossier](ct.key, token)
+	if err != nil {
+		return errors.New("Lien invalide.")
+	}
+	idPersonne, err := utils.QueryParamInt[pr.IdPersonne](c, "idPersonne")
+	if err != nil {
+		return err
+	}
+	err = ct.accepteCharte(idDossier, idPersonne)
+	if err != nil {
+		return err
+	}
+	return c.NoContent(200)
+}
+
+func (ct *Controller) accepteCharte(idDossier ds.IdDossier, idPersonne pr.IdPersonne) error {
+	dossier, err := logic.LoadDossier(ct.db, idDossier)
+	if err != nil {
+		return err
+	}
+	// check Id is valid
+	if !slices.Contains(dossier.Participants.IdPersonnes(), idPersonne) {
+		return errors.New("access forbidden")
+	}
+	personne, err := pr.SelectPersonne(ct.db, idPersonne)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	personne.CharteAccepted = time.Now()
+	_, err = personne.Update(ct.db)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	return nil
 }

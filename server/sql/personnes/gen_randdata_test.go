@@ -89,6 +89,7 @@ func randPersonne() Personne {
 	s.Diplome = randDiplome()
 	s.Approfondissement = randApprofondissement()
 	s.Publicite = randPublicite()
+	s.CharteAccepted = randtTime()
 	s.IsTemp = randbool()
 
 	return s

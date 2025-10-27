@@ -28,7 +28,8 @@ DROP TYPE IF EXISTS DocumentsToShow;
 CREATE TYPE DocumentsToShow AS (
     LettreDirecteur boolean,
     ListeVetements boolean,
-    ListeParticipants boolean
+    ListeParticipants boolean,
+    CharteParticipant boolean
 );
 
 DROP TYPE IF EXISTS PresenceOffsets;
@@ -73,6 +74,7 @@ CREATE TABLE personnes (
     Diplome smallint CHECK (Diplome IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19)) NOT NULL,
     Approfondissement smallint CHECK (Approfondissement IN (0, 1, 2, 3, 4, 5)) NOT NULL,
     Publicite Publicite NOT NULL,
+    CharteAccepted timestamp(0) with time zone NOT NULL,
     IsTemp boolean NOT NULL
 );
 
@@ -196,8 +198,7 @@ CREATE TABLE participants (
     QuotientFamilial integer NOT NULL,
     OptionPrix jsonb NOT NULL,
     Commentaire text NOT NULL,
-    Navette smallint CHECK (Navette IN (0, 1, 2, 3)) NOT NULL,
-    CharteAccepted boolean NOT NULL
+    Navette smallint CHECK (Navette IN (0, 1, 2, 3)) NOT NULL
 );
 
 CREATE TABLE sondages (

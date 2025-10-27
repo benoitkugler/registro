@@ -448,12 +448,13 @@ type ReponseSondage struct {
 	MessageResponsable string
 }
 
-// DocumentsToShow which register which auto-generated documents
-// to show on the Espace perso
+// DocumentsToShow registers which 'builtin' documents
+// should be shown on the Espace perso
 type DocumentsToShow struct {
 	LettreDirecteur   bool
 	ListeVetements    bool
 	ListeParticipants bool
+	CharteParticipant bool
 }
 
 // Meta is a list of (untyped) key/value pairs.

@@ -116,7 +116,6 @@ export interface FicheSanitaireExt {
   Personne: string;
   State: FichesanitaireState;
   Fiche: Fichesanitaire;
-  Vaccins: PublicFile[] | null;
 }
 // registro/controllers/directeurs.Joomeo
 export interface Joomeo {
@@ -148,22 +147,22 @@ export interface Messages {
   Dossiers: Record<IdDossier, DossierPersonnes> | null;
   NewMessagesCount: Int;
 }
-// registro/controllers/directeurs.ParticipantDocuments
-export interface ParticipantDocuments {
+// registro/controllers/directeurs.ParticipantsOut
+export interface ParticipantsOut {
+  Participants: ParticipantExt[] | null;
+  Dossiers: Record<IdDossier, DossierHeader> | null;
+}
+// registro/controllers/files.ParticipantFiles
+export interface ParticipantFiles {
   Id: IdParticipant;
   Personne: string;
   Fichesanitaire: FichesanitaireState;
   Files: Record<IdDemande, PublicFile[] | null> | null;
 }
-// registro/controllers/directeurs.ParticipantsDocuments
-export interface ParticipantsDocuments {
+// registro/controllers/files.ParticipantsFiles
+export interface ParticipantsFiles {
   Demandes: Demandes;
-  Participants: ParticipantDocuments[] | null;
-}
-// registro/controllers/directeurs.ParticipantsOut
-export interface ParticipantsOut {
-  Participants: ParticipantExt[] | null;
-  Dossiers: Record<IdDossier, DossierHeader> | null;
+  Participants: ParticipantFiles[] | null;
 }
 // registro/joomeo.AccessRules
 export interface AccessRules {
@@ -320,6 +319,7 @@ export interface DocumentsToShow {
   LettreDirecteur: boolean;
   ListeVetements: boolean;
   ListeParticipants: boolean;
+  CharteParticipant: boolean;
 }
 // registro/sql/camps.Equipier
 export interface Equipier {
@@ -426,7 +426,6 @@ export interface Participant {
   OptionPrix: OptionPrixParticipant;
   Commentaire: string;
   Navette: Navette;
-  CharteAccepted: boolean;
 }
 // registro/sql/camps.ParticipantCamp
 export interface ParticipantCamp {
@@ -818,6 +817,7 @@ export interface Personne {
   Diplome: Diplome;
   Approfondissement: Approfondissement;
   Publicite: Publicite;
+  CharteAccepted: Time;
   IsTemp: boolean;
 }
 // registro/sql/personnes.Publicite
@@ -1109,10 +1109,9 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseURL + "/api/v1/directeurs/participants/files";
     this.startRequest();
     try {
-      const rep: AxiosResponse<ParticipantsDocuments> = await Axios.get(
-        fullUrl,
-        { headers: this.getHeaders() },
-      );
+      const rep: AxiosResponse<ParticipantsFiles> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+      });
       return rep.data;
     } catch (error) {
       this.handleError(error);

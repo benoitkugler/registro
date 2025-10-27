@@ -146,6 +146,10 @@ func defaultCamp(idTaux ds.IdTaux) cps.Camp {
 		Places: 40, AgeMin: 6, AgeMax: 12,
 		Password: utils.RandPassword(6),
 		Statut:   cps.VisibleFerme,
+		DocumentsToShow: cps.DocumentsToShow{
+			LettreDirecteur: true,
+			ListeVetements:  true,
+		},
 	}
 }
 

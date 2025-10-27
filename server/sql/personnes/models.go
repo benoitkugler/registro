@@ -19,6 +19,8 @@ type Personne struct {
 	// TODO: https://github.com/benoitkugler/registro/issues/11
 	Publicite Publicite
 
+	CharteAccepted time.Time // last time a participant has accepted the asso charte
+
 	// IsTemp is `true` for non verified profils,
 	// which may require to be merged to an existant one
 	IsTemp bool

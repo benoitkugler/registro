@@ -208,6 +208,7 @@ func scanOnePersonne(row scanner) (Personne, error) {
 		&item.Diplome,
 		&item.Approfondissement,
 		&item.Publicite,
+		&item.CharteAccepted,
 		&item.IsTemp,
 	)
 	return item, err
@@ -217,7 +218,7 @@ func ScanPersonne(row *sql.Row) (Personne, error) { return scanOnePersonne(row) 
 
 // SelectAll returns all the items in the personnes table.
 func SelectAllPersonnes(db DB) (Personnes, error) {
-	rows, err := db.Query("SELECT id, nom, prenom, sexe, datenaissance, villenaissance, departementnaissance, nationnalite, tels, mail, adresse, codepostal, ville, pays, securitesociale, nomjeunefille, profession, etudiant, fonctionnaire, diplome, approfondissement, publicite, istemp FROM personnes")
+	rows, err := db.Query("SELECT id, nom, prenom, sexe, datenaissance, villenaissance, departementnaissance, nationnalite, tels, mail, adresse, codepostal, ville, pays, securitesociale, nomjeunefille, profession, etudiant, fonctionnaire, diplome, approfondissement, publicite, charteaccepted, istemp FROM personnes")
 	if err != nil {
 		return nil, err
 	}
@@ -226,13 +227,13 @@ func SelectAllPersonnes(db DB) (Personnes, error) {
 
 // SelectPersonne returns the entry matching 'id'.
 func SelectPersonne(tx DB, id IdPersonne) (Personne, error) {
-	row := tx.QueryRow("SELECT id, nom, prenom, sexe, datenaissance, villenaissance, departementnaissance, nationnalite, tels, mail, adresse, codepostal, ville, pays, securitesociale, nomjeunefille, profession, etudiant, fonctionnaire, diplome, approfondissement, publicite, istemp FROM personnes WHERE id = $1", id)
+	row := tx.QueryRow("SELECT id, nom, prenom, sexe, datenaissance, villenaissance, departementnaissance, nationnalite, tels, mail, adresse, codepostal, ville, pays, securitesociale, nomjeunefille, profession, etudiant, fonctionnaire, diplome, approfondissement, publicite, charteaccepted, istemp FROM personnes WHERE id = $1", id)
 	return ScanPersonne(row)
 }
 
 // SelectPersonnes returns the entry matching the given 'ids'.
 func SelectPersonnes(tx DB, ids ...IdPersonne) (Personnes, error) {
-	rows, err := tx.Query("SELECT id, nom, prenom, sexe, datenaissance, villenaissance, departementnaissance, nationnalite, tels, mail, adresse, codepostal, ville, pays, securitesociale, nomjeunefille, profession, etudiant, fonctionnaire, diplome, approfondissement, publicite, istemp FROM personnes WHERE id = ANY($1)", IdPersonneArrayToPQ(ids))
+	rows, err := tx.Query("SELECT id, nom, prenom, sexe, datenaissance, villenaissance, departementnaissance, nationnalite, tels, mail, adresse, codepostal, ville, pays, securitesociale, nomjeunefille, profession, etudiant, fonctionnaire, diplome, approfondissement, publicite, charteaccepted, istemp FROM personnes WHERE id = ANY($1)", IdPersonneArrayToPQ(ids))
 	if err != nil {
 		return nil, err
 	}
@@ -277,28 +278,28 @@ func ScanPersonnes(rs *sql.Rows) (Personnes, error) {
 // Insert one Personne in the database and returns the item with id filled.
 func (item Personne) Insert(tx DB) (out Personne, err error) {
 	row := tx.QueryRow(`INSERT INTO personnes (
-		nom, prenom, sexe, datenaissance, villenaissance, departementnaissance, nationnalite, tels, mail, adresse, codepostal, ville, pays, securitesociale, nomjeunefille, profession, etudiant, fonctionnaire, diplome, approfondissement, publicite, istemp
+		nom, prenom, sexe, datenaissance, villenaissance, departementnaissance, nationnalite, tels, mail, adresse, codepostal, ville, pays, securitesociale, nomjeunefille, profession, etudiant, fonctionnaire, diplome, approfondissement, publicite, charteaccepted, istemp
 		) VALUES (
-		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22
-		) RETURNING id, nom, prenom, sexe, datenaissance, villenaissance, departementnaissance, nationnalite, tels, mail, adresse, codepostal, ville, pays, securitesociale, nomjeunefille, profession, etudiant, fonctionnaire, diplome, approfondissement, publicite, istemp;
-		`, item.Nom, item.Prenom, item.Sexe, item.DateNaissance, item.VilleNaissance, item.DepartementNaissance, item.Nationnalite, item.Tels, item.Mail, item.Adresse, item.CodePostal, item.Ville, item.Pays, item.SecuriteSociale, item.NomJeuneFille, item.Profession, item.Etudiant, item.Fonctionnaire, item.Diplome, item.Approfondissement, item.Publicite, item.IsTemp)
+		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23
+		) RETURNING id, nom, prenom, sexe, datenaissance, villenaissance, departementnaissance, nationnalite, tels, mail, adresse, codepostal, ville, pays, securitesociale, nomjeunefille, profession, etudiant, fonctionnaire, diplome, approfondissement, publicite, charteaccepted, istemp;
+		`, item.Nom, item.Prenom, item.Sexe, item.DateNaissance, item.VilleNaissance, item.DepartementNaissance, item.Nationnalite, item.Tels, item.Mail, item.Adresse, item.CodePostal, item.Ville, item.Pays, item.SecuriteSociale, item.NomJeuneFille, item.Profession, item.Etudiant, item.Fonctionnaire, item.Diplome, item.Approfondissement, item.Publicite, item.CharteAccepted, item.IsTemp)
 	return ScanPersonne(row)
 }
 
 // Update Personne in the database and returns the new version.
 func (item Personne) Update(tx DB) (out Personne, err error) {
 	row := tx.QueryRow(`UPDATE personnes SET (
-		nom, prenom, sexe, datenaissance, villenaissance, departementnaissance, nationnalite, tels, mail, adresse, codepostal, ville, pays, securitesociale, nomjeunefille, profession, etudiant, fonctionnaire, diplome, approfondissement, publicite, istemp
+		nom, prenom, sexe, datenaissance, villenaissance, departementnaissance, nationnalite, tels, mail, adresse, codepostal, ville, pays, securitesociale, nomjeunefille, profession, etudiant, fonctionnaire, diplome, approfondissement, publicite, charteaccepted, istemp
 		) = (
-		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22
-		) WHERE id = $23 RETURNING id, nom, prenom, sexe, datenaissance, villenaissance, departementnaissance, nationnalite, tels, mail, adresse, codepostal, ville, pays, securitesociale, nomjeunefille, profession, etudiant, fonctionnaire, diplome, approfondissement, publicite, istemp;
-		`, item.Nom, item.Prenom, item.Sexe, item.DateNaissance, item.VilleNaissance, item.DepartementNaissance, item.Nationnalite, item.Tels, item.Mail, item.Adresse, item.CodePostal, item.Ville, item.Pays, item.SecuriteSociale, item.NomJeuneFille, item.Profession, item.Etudiant, item.Fonctionnaire, item.Diplome, item.Approfondissement, item.Publicite, item.IsTemp, item.Id)
+		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23
+		) WHERE id = $24 RETURNING id, nom, prenom, sexe, datenaissance, villenaissance, departementnaissance, nationnalite, tels, mail, adresse, codepostal, ville, pays, securitesociale, nomjeunefille, profession, etudiant, fonctionnaire, diplome, approfondissement, publicite, charteaccepted, istemp;
+		`, item.Nom, item.Prenom, item.Sexe, item.DateNaissance, item.VilleNaissance, item.DepartementNaissance, item.Nationnalite, item.Tels, item.Mail, item.Adresse, item.CodePostal, item.Ville, item.Pays, item.SecuriteSociale, item.NomJeuneFille, item.Profession, item.Etudiant, item.Fonctionnaire, item.Diplome, item.Approfondissement, item.Publicite, item.CharteAccepted, item.IsTemp, item.Id)
 	return ScanPersonne(row)
 }
 
 // Deletes the Personne and returns the item
 func DeletePersonneById(tx DB, id IdPersonne) (Personne, error) {
-	row := tx.QueryRow("DELETE FROM personnes WHERE id = $1 RETURNING id, nom, prenom, sexe, datenaissance, villenaissance, departementnaissance, nationnalite, tels, mail, adresse, codepostal, ville, pays, securitesociale, nomjeunefille, profession, etudiant, fonctionnaire, diplome, approfondissement, publicite, istemp;", id)
+	row := tx.QueryRow("DELETE FROM personnes WHERE id = $1 RETURNING id, nom, prenom, sexe, datenaissance, villenaissance, departementnaissance, nationnalite, tels, mail, adresse, codepostal, ville, pays, securitesociale, nomjeunefille, profession, etudiant, fonctionnaire, diplome, approfondissement, publicite, charteaccepted, istemp;", id)
 	return ScanPersonne(row)
 }
 
@@ -313,7 +314,7 @@ func DeletePersonnesByIDs(tx DB, ids ...IdPersonne) ([]IdPersonne, error) {
 
 // SelectPersonneByIdAndIsTemp return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectPersonneByIdAndIsTemp(tx DB, id IdPersonne, isTemp bool) (item Personne, found bool, err error) {
-	row := tx.QueryRow("SELECT id, nom, prenom, sexe, datenaissance, villenaissance, departementnaissance, nationnalite, tels, mail, adresse, codepostal, ville, pays, securitesociale, nomjeunefille, profession, etudiant, fonctionnaire, diplome, approfondissement, publicite, istemp FROM personnes WHERE Id = $1 AND IsTemp = $2", id, isTemp)
+	row := tx.QueryRow("SELECT id, nom, prenom, sexe, datenaissance, villenaissance, departementnaissance, nationnalite, tels, mail, adresse, codepostal, ville, pays, securitesociale, nomjeunefille, profession, etudiant, fonctionnaire, diplome, approfondissement, publicite, charteaccepted, istemp FROM personnes WHERE Id = $1 AND IsTemp = $2", id, isTemp)
 	item, err = ScanPersonne(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil

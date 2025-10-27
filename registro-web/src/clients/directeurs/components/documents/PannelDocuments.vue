@@ -50,6 +50,18 @@
           </template>
         </v-list-item>
         <v-list-item
+          title="Charte"
+          subtitle="Contrat moral à accepter pour les participants agés de 12 ans ou plus"
+        >
+          <template #append>
+            <v-switch
+              color="primary"
+              hide-details
+              :model-value="data.ToShow.CharteParticipant"
+              @update:model-value="(b) => updateToShow('CharteParticipant', b!)"
+            ></v-switch> </template
+        ></v-list-item>
+        <v-list-item
           title="Liste des participants"
           subtitle="Permet par exemple d'organiser un co-voiturage"
         >

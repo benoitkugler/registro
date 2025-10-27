@@ -180,16 +180,23 @@ func (de *Dossier) campsInscrits(onlyInscrits bool) cps.Camps {
 	return out
 }
 
-// FirstCampFor returns the first camp (defined by [DateDebut]) that [personne]
-// will attend.
-// It return false if [personne] is in waiting list for every camp.
-func (de *Dossier) FirstCampFor(personne pr.IdPersonne) (cps.Camp, bool) {
+// CampsFor returns the camps where [personne] is Inscrit,
+// or nil.
+func (de *Dossier) CampsFor(personne pr.IdPersonne) []cps.Camp {
 	var camps []cps.Camp
 	for _, participant := range de.Participants {
 		if participant.IdPersonne == personne && participant.Statut == cps.Inscrit {
 			camps = append(camps, de.camps[participant.IdCamp])
 		}
 	}
+	return camps
+}
+
+// FirstCampFor returns the first camp (defined by [DateDebut]) that [personne]
+// will attend.
+// It return false if [personne] is in waiting list for every camp.
+func (de *Dossier) FirstCampFor(personne pr.IdPersonne) (cps.Camp, bool) {
+	camps := de.CampsFor(personne)
 	if len(camps) == 0 {
 		return cps.Camp{}, false
 	}

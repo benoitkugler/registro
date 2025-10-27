@@ -50,6 +50,7 @@ CREATE TABLE personnes (
     Diplome smallint CHECK (Diplome IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19)) NOT NULL,
     Approfondissement smallint CHECK (Approfondissement IN (0, 1, 2, 3, 4, 5)) NOT NULL,
     Publicite Publicite NOT NULL,
+    CharteAccepted timestamp(0) with time zone NOT NULL,
     IsTemp boolean NOT NULL
 );
 

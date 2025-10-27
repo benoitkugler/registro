@@ -68,6 +68,7 @@ func randDocumentsToShow() DocumentsToShow {
 	s.LettreDirecteur = randbool()
 	s.ListeVetements = randbool()
 	s.ListeParticipants = randbool()
+	s.CharteParticipant = randbool()
 
 	return s
 }
@@ -239,7 +240,6 @@ func randParticipant() Participant {
 	s.OptionPrix = randOptionPrixParticipant()
 	s.Commentaire = randstring()
 	s.Navette = randNavette()
-	s.CharteAccepted = randbool()
 
 	return s
 }

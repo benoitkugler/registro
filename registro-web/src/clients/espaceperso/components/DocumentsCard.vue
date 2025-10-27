@@ -3,7 +3,12 @@
     title="Documents des séjours"
     subtitle="Vous retrouvez ici les documents des séjours auxquels vous participez, à lire ou remplir."
   >
-    <template #append> </template>
+    <template #append v-if="data">
+      <v-chip v-if="data.NewCount == 0" color="green" append-icon="mdi-check">
+        A jour</v-chip
+      >
+      <v-badge inline :content="data.NewCount" color="pink" v-else></v-badge>
+    </template>
     <v-card-text v-if="data != null">
       <v-list>
         <!-- A lire -->
@@ -45,6 +50,29 @@
         >
           <i>Aucun document à fournir.</i>
         </v-list-item>
+        <!-- chartes -->
+        <v-list-item
+          v-for="charte in data.Chartes"
+          title="Charte"
+          :subtitle="charte.Personne"
+        >
+          <template #append>
+            <v-chip
+              v-if="charte.Accepted"
+              color="green"
+              @click="charteToShow = charte.Id"
+              append-icon="mdi-check"
+            >
+              Acceptée
+            </v-chip>
+            <v-btn size="small" @click="charteToShow = charte.Id" v-else>
+              <template #prepend>
+                <v-icon>mdi-pencil</v-icon>
+              </template>
+              Signer</v-btn
+            >
+          </template>
+        </v-list-item>
         <!-- fiches sanitaires -->
         <v-list-item
           v-for="fiche in data.Fiches"
@@ -52,7 +80,15 @@
           :subtitle="fiche.Personne"
         >
           <template #append>
-            <v-btn size="small" @click="ficheToEdit = fiche">
+            <v-chip
+              v-if="fiche.State == FichesanitaireState.UpToDate"
+              @click="ficheToEdit = fiche"
+              color="green"
+              append-icon="mdi-check"
+            >
+              Remplie
+            </v-chip>
+            <v-btn size="small" @click="ficheToEdit = fiche" v-else>
               <template #prepend>
                 <v-icon>mdi-pencil</v-icon>
               </template>
@@ -125,6 +161,15 @@
     </v-card-text>
     <v-skeleton-loader v-else></v-skeleton-loader>
 
+    <!-- charte -->
+    <v-dialog
+      :model-value="charteToShow != null"
+      @update:model-value="charteToShow = null"
+      max-width="800px"
+    >
+      <CharteCard v-if="charteToShow" @accept="acceptCharte"></CharteCard>
+    </v-dialog>
+
     <!-- fiche sanitaire -->
     <v-dialog
       :model-value="ficheToEdit != null"
@@ -145,6 +190,7 @@
 import { onMounted, ref } from "vue";
 import {
   Categorie,
+  FichesanitaireState,
   type Documents,
   type Fichesanitaire,
   type FichesanitaireExt,
@@ -156,6 +202,7 @@ import { controller } from "../logic/logic";
 import type { Int } from "@/urls";
 import { endpoints } from "@/utils";
 import FichesanitaireForm from "./FichesanitaireForm.vue";
+import CharteCard from "./CharteCard.vue";
 const props = defineProps<{
   token: string;
 }>();
@@ -171,8 +218,7 @@ async function fetchData() {
   const res = await controller.LoadDocuments({ token: props.token });
   if (res === undefined) return;
   data.value = res;
-  const totalCount = res.ToReadCount + res.ToFillCount + res.FichesToFillCount;
-  emit("updateNotifs", totalCount as Int);
+  emit("updateNotifs", res.NewCount);
 }
 
 async function uploadDocument(
@@ -218,5 +264,19 @@ async function transfertFichesanitaire(fiche: Fichesanitaire) {
   });
   if (res === undefined) return;
   controller.showMessage("Mail de transfert envoyé avec succès.");
+}
+
+const charteToShow = ref<IdPersonne | null>(null);
+async function acceptCharte() {
+  const id = charteToShow.value;
+  if (id == null) return;
+  charteToShow.value = null;
+  const res = await controller.AccepteCharte({
+    token: props.token,
+    idPersonne: id,
+  });
+  if (res === undefined) return;
+  controller.showMessage("La charte a bien été acceptée. Merci !");
+  fetchData();
 }
 </script>

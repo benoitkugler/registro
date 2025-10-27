@@ -3,6 +3,7 @@ package espaceperso
 import (
 	"os"
 	"testing"
+	"time"
 
 	"registro/config"
 	"registro/crypto"
@@ -10,6 +11,7 @@ import (
 	ds "registro/sql/dossiers"
 	fs "registro/sql/files"
 	pr "registro/sql/personnes"
+	"registro/sql/shared"
 	tu "registro/utils/testutils"
 )
 
@@ -19,9 +21,9 @@ func TestDocuments(t *testing.T) {
 		"../../migrations/init.sql")
 	defer db.Remove()
 
-	pe1, err := pr.Personne{}.Insert(db)
+	pe1, err := pr.Personne{Etatcivil: pr.Etatcivil{DateNaissance: shared.NewDateFrom(tu.DateFor(13))}}.Insert(db)
 	tu.AssertNoErr(t, err)
-	pe2, err := pr.Personne{}.Insert(db)
+	pe2, err := pr.Personne{Etatcivil: pr.Etatcivil{DateNaissance: shared.NewDateFrom(tu.DateFor(8))}}.Insert(db)
 	tu.AssertNoErr(t, err)
 	pe3, err := pr.Personne{}.Insert(db)
 	tu.AssertNoErr(t, err)
@@ -31,7 +33,11 @@ func TestDocuments(t *testing.T) {
 	dossier, err := ds.Dossier{IdTaux: 1, IdResponsable: pe1.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	camp, err := cps.Camp{IdTaux: 1, DocumentsToShow: cps.DocumentsToShow{ListeVetements: true}}.Insert(db)
+	camp, err := cps.Camp{
+		IdTaux: 1, DateDebut: shared.NewDateFrom(time.Now()),
+		DocumentsReady:  true,
+		DocumentsToShow: cps.DocumentsToShow{ListeVetements: true, CharteParticipant: true},
+	}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	d1, err := fs.Demande{MaxDocs: 1}.Insert(db)
@@ -55,7 +61,9 @@ func TestDocuments(t *testing.T) {
 	tu.Assert(t, len(docs.FilesToRead[0].Files) == 0 && len(docs.FilesToRead[0].Generated) == 1)
 	tu.Assert(t, len(docs.FilesToUpload) == 2)
 	tu.Assert(t, len(docs.FilesToUpload[0].Demandes[0].Uploaded) == 0)
-	tu.Assert(t, docs.ToReadCount == 0 && docs.ToFillCount == 4)
+	tu.Assert(t, len(docs.Chartes) == 1)
+	tu.Assert(t, len(docs.Fiches) == 2)
+	tu.Assert(t, docs.NewCount == 0+4+2+1)
 
 	_, err = ct.uploadDocument(dossier.Id, d1.Id, pe4.Id, tu.PngData, "test.png")
 	tu.AssertErr(t, err)
@@ -63,8 +71,11 @@ func TestDocuments(t *testing.T) {
 	_, err = ct.uploadDocument(dossier.Id, d1.Id, pe1.Id, tu.PngData, "test.png")
 	tu.AssertNoErr(t, err)
 
+	err = ct.accepteCharte(dossier.Id, pe1.Id)
+	tu.AssertNoErr(t, err)
+
 	docs, err = ct.markAndloadDocuments(dossier.Id)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(docs.FilesToUpload[0].Demandes[0].Uploaded) == 1)
-	tu.Assert(t, docs.ToReadCount == 0 && docs.ToFillCount == 3)
+	tu.Assert(t, docs.NewCount == 3+1+1)
 }

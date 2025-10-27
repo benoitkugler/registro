@@ -18,7 +18,7 @@ func Test_inscriptions(t *testing.T) {
 		"../../migrations/init.sql")
 	defer db.Remove()
 
-	forAge7 := shared.NewDateFrom(time.Now().Add(-time.Hour * 24 * 365 * 7))
+	forAge7 := shared.NewDateFrom(tu.DateFor(7))
 
 	pe1, err := pr.Personne{IsTemp: false, Etatcivil: pr.Etatcivil{Nom: "test", DateNaissance: forAge7}}.Insert(db)
 	tu.AssertNoErr(t, err)

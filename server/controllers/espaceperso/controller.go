@@ -95,7 +95,7 @@ func (ct *Controller) load(id ds.IdDossier) (Data, error) {
 	_, campInscritsStarted := dossier.ParticipantsExtReal()
 	return Data{
 		dossier.Publish(ct.key),
-		documents.totalCount(),
+		documents.NewCount,
 		ct.asso.Title,
 		ct.asso.ContactMail,
 		dossier.IsPaiementOpen(),

@@ -20,6 +20,12 @@ export interface ChequeSettings {
   Ordre: string;
   Adresse: Ar2_string;
 }
+// registro/controllers/espaceperso.Charte
+export interface Charte {
+  Id: IdPersonne;
+  Personne: string;
+  Accepted: boolean;
+}
 // registro/controllers/espaceperso.Data
 export interface Data {
   Dossier: DossierExt;
@@ -47,9 +53,8 @@ export interface Documents {
   FilesToRead: FilesCamp[] | null;
   FilesToUpload: DemandesPersonne[] | null;
   Fiches: FichesanitaireExt[] | null;
-  ToReadCount: Int;
-  ToFillCount: Int;
-  FichesToFillCount: Int;
+  Chartes: Charte[] | null;
+  NewCount: Int;
 }
 // registro/controllers/espaceperso.FichesanitaireExt
 export interface FichesanitaireExt {
@@ -289,6 +294,7 @@ export interface DocumentsToShow {
   LettreDirecteur: boolean;
   ListeVetements: boolean;
   ListeParticipants: boolean;
+  CharteParticipant: boolean;
 }
 export type IdAide = Int & { __opaque_int__: "IdAide" };
 export type IdCamp = Int & { __opaque_int__: "IdCamp" };
@@ -364,7 +370,6 @@ export interface Participant {
   OptionPrix: OptionPrixParticipant;
   Commentaire: string;
   Navette: Navette;
-  CharteAccepted: boolean;
 }
 // registro/sql/camps.ParticipantCamp
 export interface ParticipantCamp {
@@ -783,6 +788,7 @@ export interface Personne {
   Diplome: Diplome;
   Approfondissement: Approfondissement;
   Publicite: Publicite;
+  CharteAccepted: Time;
   IsTemp: boolean;
 }
 // registro/sql/personnes.Publicite
@@ -950,40 +956,6 @@ export abstract class AbstractAPI {
     }
   }
 
-  /** UpdateFichesanitaire performs the request and handles the error */
-  async UpdateFichesanitaire(params: UpdateFichesanitaireIn) {
-    const fullUrl = this.baseURL + "/api/v1/espaceperso/fichesanitaires";
-    this.startRequest();
-    try {
-      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-      return true;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  /** TransfertFicheSanitaire performs the request and handles the error */
-  async TransfertFicheSanitaire(params: {
-    token: string;
-    idPersonne: IdPersonne;
-  }) {
-    const fullUrl =
-      this.baseURL + "/api/v1/espaceperso/fichesanitaires/transfert";
-    this.startRequest();
-    try {
-      await Axios.put(fullUrl, null, {
-        headers: this.getHeaders(),
-        params: {
-          token: params["token"],
-          idPersonne: String(params["idPersonne"]),
-        },
-      });
-      return true;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
   /** AcceptePlaceLiberee performs the request and handles the error */
   async AcceptePlaceLiberee(params: { token: string; idEvent: IdEvent }) {
     const fullUrl =
@@ -1078,6 +1050,58 @@ export abstract class AbstractAPI {
       await Axios.delete(fullUrl, {
         headers: this.getHeaders(),
         params: { key: params["key"] },
+      });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** AccepteCharte performs the request and handles the error */
+  async AccepteCharte(params: { token: string; idPersonne: IdPersonne }) {
+    const fullUrl = this.baseURL + "/api/v1/espaceperso/documents/charte";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, null, {
+        headers: this.getHeaders(),
+        params: {
+          token: params["token"],
+          idPersonne: String(params["idPersonne"]),
+        },
+      });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** UpdateFichesanitaire performs the request and handles the error */
+  async UpdateFichesanitaire(params: UpdateFichesanitaireIn) {
+    const fullUrl = this.baseURL + "/api/v1/espaceperso/fichesanitaires";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** TransfertFicheSanitaire performs the request and handles the error */
+  async TransfertFicheSanitaire(params: {
+    token: string;
+    idPersonne: IdPersonne;
+  }) {
+    const fullUrl =
+      this.baseURL + "/api/v1/espaceperso/fichesanitaires/transfert";
+    this.startRequest();
+    try {
+      await Axios.put(fullUrl, null, {
+        headers: this.getHeaders(),
+        params: {
+          token: params["token"],
+          idPersonne: String(params["idPersonne"]),
+        },
       });
       return true;
     } catch (error) {
