@@ -212,6 +212,10 @@ func setupClientApps(e *echo.Echo) {
 	e.GET(inscriptions.EndpointInscription, serve("static/inscription/index.html"), middleware.Gzip(), noCache)
 	e.GET(inscriptions.EndpointInscription+"/*", serve("static/inscription/index.html"), middleware.Gzip(), noCache)
 
+	// services also contains the index page and the CGUs
+	e.GET("/", serve("static/services/index.html"), middleware.Gzip(), noCache)
+	e.GET("/cgu", serve("static/services/index.html"), middleware.Gzip(), noCache)
+	e.GET("/cgu/*", serve("static/services/index.html"), middleware.Gzip(), noCache)
 	e.GET("/services", serve("static/services/index.html"), middleware.Gzip(), noCache)
 	e.GET("/services/*", serve("static/services/index.html"), middleware.Gzip(), noCache)
 

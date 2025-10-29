@@ -1,46 +1,26 @@
 <template>
   <v-app>
     <v-main>
-      <v-app-bar rounded elevation="4" color="secondary">
-        <v-app-bar-title>
-          <v-row>
-            <v-col align-self="center" cols="auto">
-              <v-img width="60" :src="logo" />
-            </v-col>
-            <v-col align-self="center"> Portail </v-col>
-          </v-row>
-        </v-app-bar-title>
-      </v-app-bar>
-
-      <v-container class="fill-height">
-        <v-responsive>
-          <v-skeleton-loader v-if="isLoading"></v-skeleton-loader>
-          <v-alert
-            v-else-if="service == Service.TransfertFicheSanitaire"
-            title="Partage de fiche sanitaire"
-            type="success"
-          >
-            L'accès à la fiche a bien été mis à jour. <br />
-
-            <small class="text-muted"
-              >Vous pouvez quitter cette page et actualiser votre espace de
-              suivi pour y accéder.</small
-            >
-          </v-alert>
-        </v-responsive>
-      </v-container>
+      <router-view />
 
       <v-snackbar
         style="z-index: 10000"
         app
-        :model-value="message != ''"
-        @update:model-value="message = ''"
-        :timeout="4000"
-        :color="messageColor"
+        :model-value="message.text != ''"
+        @update:model-value="message.text = ''"
+        :timeout="message.timeout"
+        :color="message.color"
         location="bottom left"
         close-on-content-click
       >
-        {{ message }}
+        {{ message.text }}
+        <v-btn
+          v-if="message.action"
+          @click="message.action.action()"
+          class="ml-2"
+        >
+          {{ message.action.title }}
+        </v-btn>
       </v-snackbar>
 
       <v-snackbar
@@ -58,12 +38,16 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref } from "vue";
+import { reactive, ref } from "vue";
 import { controller } from "./logic/logic";
-import { Service } from "./logic/types";
+import type { Action } from "@/utils";
 
-const message = ref("");
-const messageColor = ref("secondary");
+const message = reactive({
+  text: "",
+  color: "secondary",
+  action: undefined as Action | undefined,
+  timeout: 4000,
+});
 
 const errorKind = ref("");
 const errorHtml = ref("");
@@ -73,36 +57,12 @@ controller.onError = (s, m) => {
   errorHtml.value = m;
 };
 
-controller.showMessage = (s, color) => {
-  message.value = s;
-  messageColor.value = color || "success";
+controller.showMessage = (s, color, action) => {
+  message.text = s;
+  message.color = color || "success";
+  message.action = action;
+  // reset the timeout by changing its value
+  message.timeout = 10_000;
+  message.timeout = 4000;
 };
-
-const logo = `${import.meta.env.BASE_URL}${import.meta.env.VITE_ASSO}/logo.png`;
-
-const isLoading = ref(true);
-const service = ref<Service>(1);
-
-onMounted(() => {
-  const query = new URLSearchParams(window.location.search);
-  const param = query.get("service") || "";
-  const v = Number(param) as Service;
-  switch (v) {
-    case Service.TransfertFicheSanitaire:
-      service.value = v;
-      const token = query.get("token") || "";
-      return valideTransfertFicheSanitaire(token);
-    default:
-      controller.onError(
-        "Service invalide",
-        `Le paramètre <i>service</i> a une valeur incorrecte : ${param}`
-      );
-  }
-});
-
-async function valideTransfertFicheSanitaire(token: string) {
-  const res = await controller.ValideTransfertFicheSanitaire({ token });
-  isLoading.value = false;
-  if (res === undefined) return;
-}
 </script>

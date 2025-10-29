@@ -9,12 +9,13 @@ import App from "./App.vue";
 
 // Plugins
 import vuetify from "@/vuetify";
+import router from "./plugins/router";
 
 // Composables
 import { createApp } from "vue";
 
 const app = createApp(App);
 
-app.use(vuetify);
+app.use(vuetify).use(router);
 
 app.mount("#app");

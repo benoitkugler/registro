@@ -11,11 +11,43 @@ import { dirname, resolve } from "node:path";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+// used in dev mode to support MPA
+function rewriteURL(url: string) {
+  for (const page of [
+    "/src/clients/backoffice/",
+    "/src/clients/directeurs/",
+    "/src/clients/equipier/",
+    "/src/clients/espaceperso/",
+    "/src/clients/inscription/",
+    "/src/clients/services/",
+  ]) {
+    // we only want to filter initial "url" request
+    // not the ones for files
+    if (url.startsWith(page) && !url.includes(".")) {
+      return page;
+    }
+  }
+}
+
 // https://vitejs.dev/config/
 export default defineConfig(({ command }) => ({
   base: command == "serve" ? "/" : "/static/",
   appType: "mpa",
   plugins: [
+    {
+      name: "rewrite-middleware",
+      apply: "serve",
+      configureServer(serve) {
+        serve.middlewares.use((req, res, next) => {
+          const rewrite = rewriteURL(req.url || "");
+          if (rewrite) {
+            req.url = rewrite;
+          }
+          next();
+        });
+      },
+    },
+
     Vue({
       template: { transformAssetUrls },
     }),

@@ -35,9 +35,6 @@
       </v-snackbar>
     </v-main>
   </v-app>
-
-  <!-- <router-view v-if="isLoggedIn" />
-      <v-skeleton-loader v-else type="card"></v-skeleton-loader> -->
 </template>
 
 <script lang="ts" setup>
