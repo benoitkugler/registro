@@ -23,18 +23,17 @@
       Une quelconque responsabilité de l’association ou de l’équipe du camp
       n’est pas engagée en cas de faute d’un tiers ou d’un participant.
       <br /><br />
+
       L’association ne peut être tenue pour responsable de la perte ou de la
       dégradation des affaires personnelles. Les détenteurs de portable,
       appareil photo numérique, instrument de musique etc. sont responsables en
       cas de perte, de vol ou de détérioration de ce matériel. <br /><br />
+
       Nous souhaitons que la vie en communauté se déroule sainement et
       agréablement pour chacun. Toutes situations mettant en danger l’intégrité
       d’un ou des participants entraîneront le renvoi de la personne impliquée.
       Le refus répété de suivre les règles de vie du camp, la consommation ou la
       détention de substances illicites entraîneront le renvoi. <br /><br />
-      L’association a pour but l’épanouissement physique et social des
-      participants ainsi que de leur permettre d’apprendre à connaître
-      Jésus-Christ.<br /><br />
     </v-card-text>
     <v-card-actions>
       <v-btn color="green" @click="emit('accept')" block variant="outlined">
