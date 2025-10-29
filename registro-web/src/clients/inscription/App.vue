@@ -175,20 +175,33 @@ async function onLoad() {
   //    - preselection : skip landing page and init
   //    - nothing : just show landing page
   const query = new URLSearchParams(window.location.search);
-  const preselected_ = isInt<IdCamp>(query.get("preselected"));
-  const preinscription = query.get("preinscription") || "";
+  const preselectedS = query.get("preselected") || "";
+  const preinscriptionS = query.get("preinscription") || "";
 
-  const calls = [
-    // in any case, we need open camps
-    fetchCamps(),
-  ];
-  if (preinscription || preselected_ != null) {
+  // in any case, we need open camps
+  await fetchCamps();
+
+  // validate preselected
+  const preselectedCamp = camps.value.find((c) => c.Slug == preselectedS);
+  const preselectedId =
+    preselectedCamp === undefined ? null : preselectedCamp.Id;
+
+  if (preinscriptionS || preselectedId != null) {
     // init inscription
-    calls.push(initInscription(preinscription, preselected_));
+    await initInscription(preinscriptionS, preselectedId);
   }
-  await Promise.all(calls);
+
   isLoading.value = false;
-  preselected.value = preselected_ || (0 as IdCamp);
+  preselected.value = preselectedId || (0 as IdCamp);
+}
+
+// camps ouverts aux inscriptions
+const camps = ref<CampExt[]>([]);
+async function fetchCamps() {
+  const res = await controller.GetCamps();
+  if (res === undefined) return;
+  // ignore camp WithoutInscription
+  camps.value = (res || []).filter((c) => !c.WithoutInscription);
 }
 
 async function initWithCamp(id: IdCamp) {
@@ -216,15 +229,6 @@ async function initInscription(
   data.value = res;
   showPreinscription.value =
     res.Settings.ShowInscriptionRapide && preinscription == "";
-}
-
-// camps ouverts aux inscriptions
-const camps = ref<CampExt[]>([]);
-async function fetchCamps() {
-  const res = await controller.GetCamps();
-  if (res === undefined) return;
-  // ignore camp WithoutInscription
-  camps.value = (res || []).filter((c) => !c.WithoutInscription);
 }
 
 // preinscription form

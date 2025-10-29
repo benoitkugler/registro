@@ -186,3 +186,20 @@ func TestAide_Resolve(t *testing.T) {
 		tu.Assert(t, ai.Resolve(tt.nbJours) == dossiers.Montant{Cent: tt.want})
 	}
 }
+
+func TestSlug(t *testing.T) {
+	for _, test := range []struct {
+		nom      string
+		annee    int
+		expected string
+	}{
+		{"C2", 2023, "c2-2023"},
+		{"MinI's", 2000, "minis-2000"},
+		{"La Bessone", 2000, "la-bessone-2000"},
+		{"Canoë", 2000, "canoe-2000"},
+		{"école", 2000, "ecole-2000"},
+	} {
+		camp := Camp{Nom: test.nom, DateDebut: shared.NewDate(test.annee, 1, 1)}
+		tu.Assert(t, camp.Slug() == test.expected)
+	}
+}

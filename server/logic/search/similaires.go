@@ -10,7 +10,6 @@ import (
 	"registro/utils"
 
 	"golang.org/x/text/runes"
-	"golang.org/x/text/unicode/norm"
 	"golang.org/x/text/unicode/rangetable"
 )
 
@@ -19,9 +18,7 @@ var alphaNum = rangetable.Merge(unicode.L, unicode.Digit)
 // normalize remove accents, white space and any non alphanumeric caracters
 func normalize(s string) string {
 	b := []byte(s)
-	b = norm.NFD.Bytes(b)
-	b = runes.Remove(runes.In(unicode.Mn)).Bytes(b)
-	b = norm.NFC.Bytes(b)
+	b = utils.RemoveAccents(b)
 	b = runes.Remove(runes.NotIn(alphaNum)).Bytes(b)
 	b = runes.Map(unicode.ToLower).Bytes(b)
 	return string(b)

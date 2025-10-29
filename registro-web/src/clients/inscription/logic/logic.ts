@@ -1,5 +1,5 @@
 import { baseURL, parseError } from "@/utils";
-import { AbstractAPI } from "./api";
+import { AbstractAPI, type CampExt } from "./api";
 
 class Controller extends AbstractAPI {
   constructor(

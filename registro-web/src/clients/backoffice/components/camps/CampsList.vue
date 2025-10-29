@@ -97,7 +97,7 @@
         :key="index"
         :camp="camp"
         @click="emit('show-participants', camp)"
-        @edit="toEdit = camp.Camp.Camp"
+        @edit="toEdit = camp"
         @edit-taux="toEditTaux = camp"
         @delete="deleteCamp(camp)"
         @show-documents="showDocumentsFor = camp"
@@ -119,7 +119,8 @@
   >
     <CampEdit
       v-if="toEdit != null"
-      :camp="toEdit"
+      :camp="toEdit.Camp.Camp"
+      :preselection-url="toEdit.URLPreselection"
       :meta-entries-hints="metaEntriesHints"
       @save="updateCamp"
     ></CampEdit>
@@ -325,7 +326,7 @@ async function create() {
 
   controller.showMessage("Camp ajouté avec succès.");
   campsData.set(res.Camp.Camp.Id, res);
-  toEdit.value = res.Camp.Camp;
+  toEdit.value = res;
 }
 
 const pageSize = 16;
@@ -334,7 +335,7 @@ const pagesCount = computed(() =>
 );
 const currentPage = ref(1); // 1-based
 
-const toEdit = ref<Camp | null>(null);
+const toEdit = ref<CampHeader | null>(null);
 async function updateCamp(camp: Camp) {
   toEdit.value = null;
   isLoading.value = true;

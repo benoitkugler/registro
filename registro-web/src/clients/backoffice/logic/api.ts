@@ -37,6 +37,7 @@ export interface CampHeader {
   Stats: StatistiquesInscrits;
   ParticipantsFiles: DemandeStat[] | null;
   HasDirecteur: boolean;
+  URLPreselection: string;
 }
 // registro/controllers/backoffice.CampJoomeo
 export interface CampJoomeo {
@@ -484,12 +485,14 @@ export interface Camp {
 export interface CampExt {
   Camp: Camp;
   IsTerminated: boolean;
+  Slug: string;
 }
 // registro/sql/camps.DocumentsToShow
 export interface DocumentsToShow {
   LettreDirecteur: boolean;
   ListeVetements: boolean;
   ListeParticipants: boolean;
+  CharteParticipant: boolean;
 }
 // registro/sql/camps.Equipier
 export interface Equipier {
@@ -590,7 +593,6 @@ export interface Participant {
   OptionPrix: OptionPrixParticipant;
   Commentaire: string;
   Navette: Navette;
-  CharteAccepted: boolean;
 }
 // registro/sql/camps.ParticipantCamp
 export interface ParticipantCamp {
@@ -947,6 +949,7 @@ export interface Personne {
   Diplome: Diplome;
   Approfondissement: Approfondissement;
   Publicite: Publicite;
+  CharteAccepted: Time;
   IsTemp: boolean;
 }
 // registro/sql/personnes.Publicite

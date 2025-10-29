@@ -10,9 +10,12 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"unicode"
 
 	"github.com/labstack/echo/v4"
 	"github.com/lib/pq"
+	"golang.org/x/text/runes"
+	"golang.org/x/text/unicode/norm"
 )
 
 var (
@@ -31,6 +34,13 @@ func RandString(n int, specialChars bool) string {
 		b[i] = props[rand.Intn(maxLength)]
 	}
 	return string(b)
+}
+
+func RemoveAccents(b []byte) []byte {
+	b = norm.NFD.Bytes(b)
+	b = runes.Remove(runes.In(unicode.Mn)).Bytes(b) // accents
+	b = norm.NFC.Bytes(b)
+	return b
 }
 
 // RandPassword returns a [a-z0-9] password

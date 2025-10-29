@@ -8,6 +8,7 @@ import (
 	"time"
 
 	fsAPI "registro/controllers/files"
+	"registro/controllers/inscriptions"
 	"registro/logic"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
@@ -37,17 +38,18 @@ type CampHeader struct {
 	Stats             cps.StatistiquesInscrits
 	ParticipantsFiles []fsAPI.DemandeStat
 	HasDirecteur      bool
+	URLPreselection   string
 }
 
 func (ct *Controller) CampsGet(c echo.Context) error {
-	out, err := ct.getCamps()
+	out, err := ct.getCamps(c.Request().Host)
 	if err != nil {
 		return err
 	}
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) getCamps() ([]CampHeader, error) {
+func (ct *Controller) getCamps(host string) ([]CampHeader, error) {
 	camps, err := cps.SelectAllCamps(ct.db)
 	if err != nil {
 		return nil, utils.SQLError(err)
@@ -77,7 +79,9 @@ func (ct *Controller) getCamps() ([]CampHeader, error) {
 		loader := loaders.For(id)
 		files := filesLoader.For(id)
 		_, hasDirecteur := directeurs[loader.Camp.Id]
-		out[i] = CampHeader{loader.Camp.Ext(), taux[loader.Camp.IdTaux], loader.Stats(), files.Stats(), hasDirecteur}
+		camp := loader.Camp.Ext()
+		preselection := utils.BuildUrl(host, inscriptions.EndpointInscription, utils.QP(inscriptions.PreselectionQueryParam, camp.Slug))
+		out[i] = CampHeader{camp, taux[loader.Camp.IdTaux], loader.Stats(), files.Stats(), hasDirecteur, preselection}
 	}
 	return out, nil
 }
@@ -123,7 +127,7 @@ func (ct *Controller) createManyCamp(args CampsCreateManyIn) (out []CampHeader, 
 			if err != nil {
 				return err
 			}
-			out = append(out, CampHeader{camp.Ext(), args.Taux, cps.StatistiquesInscrits{}, nil, false})
+			out = append(out, CampHeader{camp.Ext(), args.Taux, cps.StatistiquesInscrits{}, nil, false, ""})
 		}
 		return nil
 	})
@@ -183,7 +187,7 @@ func (ct *Controller) createCamp() (CampHeader, error) {
 	if err != nil {
 		return CampHeader{}, utils.SQLError(err)
 	}
-	return CampHeader{camp.Ext(), taux, cps.StatistiquesInscrits{}, nil, false}, nil
+	return CampHeader{camp.Ext(), taux, cps.StatistiquesInscrits{}, nil, false, ""}, nil
 }
 
 func (ct *Controller) CampsUpdate(c echo.Context) error {

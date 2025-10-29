@@ -27,7 +27,7 @@ func TestCRUD(t *testing.T) {
 	tu.AssertNoErr(t, err)
 
 	t.Run("camps", func(t *testing.T) {
-		camps, err := ct.getCamps()
+		camps, err := ct.getCamps("localhost")
 		tu.AssertNoErr(t, err)
 		tu.Assert(t, len(camps) == 0)
 
@@ -35,7 +35,7 @@ func TestCRUD(t *testing.T) {
 		tu.AssertNoErr(t, err)
 		tu.Assert(t, camp.Camp.Camp.Statut == cps.VisibleFerme)
 
-		camps, err = ct.getCamps()
+		camps, err = ct.getCamps("localhost")
 		tu.AssertNoErr(t, err)
 		tu.Assert(t, len(camps) == 1)
 

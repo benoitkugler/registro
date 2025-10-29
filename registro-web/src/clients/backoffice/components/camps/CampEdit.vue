@@ -97,7 +97,7 @@
         </v-card-text>
       </v-card>
 
-      <v-card class="my-2" subtitle="Visibilité">
+      <v-card class="my-2" subtitle="Visibilité et inscriptions">
         <v-card-text>
           <v-row>
             <v-col align-self="center">
@@ -203,6 +203,27 @@
               ></v-textarea>
             </v-col>
           </v-row>
+          <v-row>
+            <v-col>
+              <v-text-field
+                density="compact"
+                variant="outlined"
+                label="URL de préselection"
+                hint="Cette URL permet de sélectionner automatiquement le séjour sur le formulaire d'inscription."
+                persistent-hint
+                readonly
+                :model-value="props.preselectionUrl"
+              >
+                <template #append>
+                  <v-btn
+                    icon="mdi-content-copy"
+                    size="small"
+                    @click="copyPreselectionURL"
+                  ></v-btn>
+                </template>
+              </v-text-field>
+            </v-col>
+          </v-row>
         </v-card-text>
       </v-card>
 
@@ -245,11 +266,13 @@ import {
   StatutCampLabels,
   type Camp,
 } from "@/clients/backoffice/logic/api";
-import { Camps, copy, selectItems } from "@/utils";
+import { Camps, copy, copyToClipboard, selectItems } from "@/utils";
 import CampOptionsPrix from "./CampOptionsPrix.vue";
 import CampMetaEdit from "./CampMetaEdit.vue";
+import { controller } from "../../logic/logic";
 const props = defineProps<{
   camp: Camp;
+  preselectionUrl: string;
   metaEntriesHints: { keys: string[]; values: string[] };
 }>();
 const emit = defineEmits<{
@@ -291,5 +314,10 @@ function formatOption(inner: Camp) {
     chunks.push(OptionPrixKindLabels[inner.OptionPrix.Active]);
   }
   return chunks.join(", ");
+}
+
+async function copyPreselectionURL() {
+  await copyToClipboard(props.preselectionUrl);
+  controller.showMessage("URL copiée dans le presse-papier.");
 }
 </script>

@@ -38,7 +38,10 @@ import (
 
 const (
 	// EndpointInscription est envoyé par mail pour les pré-inscriptions
-	EndpointInscription = "/inscription"
+	// et utilisé pour les liens de pré-selection.
+	EndpointInscription    = "/inscription"
+	PreselectionQueryParam = "preselected"
+
 	// EndpointConfirmeInscription est envoyé par mail
 	EndpointConfirmeInscription = "/inscription/confirme"
 )
@@ -72,7 +75,9 @@ func (ct *Controller) InitInscription(c echo.Context) error {
 
 // CampExt is a public version of [cps.Camp]
 type CampExt struct {
-	Id          cps.IdCamp
+	Id   cps.IdCamp
+	Slug string
+
 	Nom         string
 	DateDebut   shared.Date
 	Duree       int // nombre de jours date et fin inclus
@@ -118,7 +123,9 @@ func newCampExt(camp cps.Camp, taux ds.Taux, direction []pr.Personne, participan
 		}
 	}
 	return CampExt{
-		Id:          camp.Id,
+		Id:   camp.Id,
+		Slug: camp.Slug(),
+
 		Nom:         camp.Nom,
 		DateDebut:   camp.DateDebut,
 		Duree:       camp.Duree,
@@ -171,12 +178,15 @@ func (ct *Controller) initInscription(preinscription string) (Data, error) {
 	}
 
 	return Data{
-		InitialInscription: initialInscription,
-		Settings:           ct.asso.ConfigInscription,
+		initialInscription,
+		ct.asso.ConfigInscription,
 	}, nil
 }
 
-// LoadCamps renvoie les camps visibles aux inscriptions et non terminés
+// LoadCamps renvoie les camps visibles aux inscriptions et non terminés.
+//
+// This method is used internally and also exposed as a public API,
+// for other frontends.
 func (ct *Controller) LoadCamps() (cps.Camps, []CampExt, error) {
 	camps, err := cps.SelectAllCamps(ct.db)
 	if err != nil {

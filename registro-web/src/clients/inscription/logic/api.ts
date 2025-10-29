@@ -23,6 +23,7 @@ export interface ConfigInscription {
 // registro/controllers/inscriptions.CampExt
 export interface CampExt {
   Id: IdCamp;
+  Slug: string;
   Nom: string;
   DateDebut: Date;
   Duree: Int;

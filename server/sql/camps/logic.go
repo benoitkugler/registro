@@ -3,14 +3,20 @@ package camps
 import (
 	"errors"
 	"fmt"
+	"net/url"
 	"slices"
+	"strings"
 	"time"
+	"unicode"
 
 	ds "registro/sql/dossiers"
 	pr "registro/sql/personnes"
 	"registro/sql/shared"
 	sh "registro/sql/shared"
 	"registro/utils"
+
+	"golang.org/x/text/runes"
+	"golang.org/x/text/unicode/rangetable"
 )
 
 type ParticipantCamp struct {
@@ -268,6 +274,18 @@ func (cp *Camp) IsAgeValide(dateNaissance sh.Date) (min, max bool) {
 	return min, max
 }
 
+var alphaNumSpace = rangetable.Merge(unicode.L, unicode.Digit, unicode.Zs)
+
+// Slug returns a URL compatible string used as ID
+func (cp *Camp) Slug() string {
+	b := utils.RemoveAccents([]byte(cp.Nom))
+	b = runes.Remove(runes.NotIn(alphaNumSpace)).Bytes(b)
+	name := strings.ReplaceAll(string(b), " ", "-")
+	name = strings.ToLower(name)
+	slug := fmt.Sprintf("%s-%d", name, cp.DateDebut.Time().Year())
+	return url.QueryEscape(slug)
+}
+
 // Check assure la validité de divers champs.
 func (c *Camp) Check() error {
 	if c.Duree < 1 {
@@ -311,10 +329,11 @@ type CampExt struct {
 	// IsTerminated is 'true' when the camp
 	// is over by (at least) 1 day, even if the 'Ouvert' tag is still on.
 	IsTerminated bool
+	Slug         string
 }
 
 func (cp Camp) Ext() CampExt {
-	return CampExt{cp, cp.IsPassedBy(1)}
+	return CampExt{cp, cp.IsPassedBy(1), cp.Slug()}
 }
 
 // TrouveGroupe cherche parmis les groupes possibles celui qui pourrait convenir.

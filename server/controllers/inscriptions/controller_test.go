@@ -2,6 +2,7 @@ package inscriptions
 
 import (
 	"database/sql"
+	"fmt"
 	"net/url"
 	"slices"
 	"testing"
@@ -53,6 +54,7 @@ func TestController_load(t *testing.T) {
 		tu.Assert(t, len(list) == 2)
 		tu.Assert(t, list[0].Id == c3.Id && list[1].Id == c5.Id)
 		tu.Assert(t, list[0].IsComplet)
+		tu.Assert(t, list[0].Slug == fmt.Sprintf("c3-%d", time.Now().Year()))
 		tu.Assert(t, !list[0].IsClosed && list[1].IsClosed)
 	})
 
