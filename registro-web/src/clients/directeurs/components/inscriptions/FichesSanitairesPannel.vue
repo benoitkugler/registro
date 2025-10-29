@@ -33,9 +33,8 @@
           <td class="py-2">{{ participant.Personne }}</td>
           <td class="px-2 text-center">
             <v-chip :color="color(participant)"
-              >{{ FichesanitaireStateLabels[participant.State] }} -
-              {{ vaccinsLabel(participant.Vaccins) }}</v-chip
-            >
+              >{{ FichesanitaireStateLabels[participant.State] }}
+            </v-chip>
           </td>
           <td class="px-2">
             <v-chip
@@ -81,22 +80,7 @@
                   @click="downloadOneFiche(participant.IdParticipant)"
                   :disabled="participant.State == FichesanitaireState.NoFiche"
                 ></v-list-item>
-                <v-list-item
-                  :title="`Vaccins`"
-                  subtitle="Télécharger au format .zip"
-                  prepend-icon="mdi-download"
-                  :disabled="!participant.Vaccins?.length"
-                >
-                  <template #append v-if="participant.Vaccins?.length">
-                    <v-badge
-                      inline
-                      :content="participant.Vaccins?.length"
-                    ></v-badge>
-                  </template>
-                </v-list-item>
                 <v-divider thickness="1"></v-divider>
-                <v-list-item title="Relancer par mail" prepend-icon="mdi-email">
-                </v-list-item>
               </v-list>
             </v-menu>
           </td>
@@ -138,7 +122,7 @@ function color(f: FicheSanitaireExt) {
     case FichesanitaireState.Outdated:
       return "orange";
     case FichesanitaireState.UpToDate:
-      return f.Vaccins?.length ? "green" : "orange";
+      return "green";
   }
 }
 

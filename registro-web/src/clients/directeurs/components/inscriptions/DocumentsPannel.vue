@@ -172,8 +172,8 @@ import {
   FichesanitaireState,
   FichesanitaireStateLabels,
   type IdParticipant,
-  type ParticipantDocuments,
-  type ParticipantsDocuments,
+  type ParticipantFiles,
+  type ParticipantsFiles,
 } from "../../logic/api";
 import { Formatters } from "@/utils";
 import FileCardReadonly from "@/components/files/FileCardReadonly.vue";
@@ -182,7 +182,7 @@ const props = defineProps<{}>();
 
 onMounted(loadDocuments);
 
-const data = ref<ParticipantsDocuments | null>(null);
+const data = ref<ParticipantsFiles | null>(null);
 async function loadDocuments() {
   const res = await controller.ParticipantsLoadFiles();
   if (res === undefined) return;
@@ -203,7 +203,7 @@ const demandes = computed(() =>
     }))
 );
 
-function isComplete(participant: ParticipantDocuments) {
+function isComplete(participant: ParticipantFiles) {
   const demandes = Object.values(data.value?.Demandes || {});
   if (!demandes) return false;
   return (
@@ -213,7 +213,7 @@ function isComplete(participant: ParticipantDocuments) {
 }
 
 const isSendingMailFor = reactive(new Set<IdParticipant>());
-async function relanceDocuments(participant: ParticipantDocuments) {
+async function relanceDocuments(participant: ParticipantFiles) {
   isSendingMailFor.add(participant.Id);
   const res = await controller.ParticipantsRelanceDocuments([participant.Id]);
   isSendingMailFor.delete(participant.Id);
