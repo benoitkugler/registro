@@ -33,14 +33,9 @@ func (ct *Controller) ParticipantsGet(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-type DossierHeader struct {
-	Responsable string
-	Reglement   logic.StatutPaiement
-}
-
 type ParticipantsOut struct {
 	Participants []logic.ParticipantExt
-	Dossiers     map[ds.IdDossier]DossierHeader
+	Dossiers     map[ds.IdDossier]logic.DossierReglement
 }
 
 func (ct *Controller) getParticipants(id cps.IdCamp) (ParticipantsOut, error) {
@@ -52,12 +47,12 @@ func (ct *Controller) getParticipants(id cps.IdCamp) (ParticipantsOut, error) {
 	if err != nil {
 		return ParticipantsOut{}, err
 	}
-	statuts := make(map[ds.IdDossier]DossierHeader)
+	reglements := make(map[ds.IdDossier]logic.DossierReglement)
 	for id := range dossiers {
 		dossier := finances.For(id)
-		statuts[id] = DossierHeader{dossier.Responsable().NOMPrenom(), dossier.Bilan().StatutPaiement()}
+		reglements[id] = dossier.Reglement()
 	}
-	return ParticipantsOut{participants, statuts}, nil
+	return ParticipantsOut{participants, reglements}, nil
 }
 
 // ParticipantsUpdate modifie les champs d'un participant.

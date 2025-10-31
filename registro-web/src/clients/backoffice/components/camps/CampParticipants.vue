@@ -20,6 +20,19 @@
         </template>
         Ajouter un participant</v-btn
       >
+      <v-divider thickness="1" class="mx-1"></v-divider>
+      <v-btn icon size="small" flat>
+        <v-icon>mdi-dots-vertical</v-icon>
+        <v-menu activator="parent">
+          <v-list>
+            <v-list-item
+              prepend-icon="mdi-currency-eur"
+              title="Suivi du règlement"
+              @click="showReglements = true"
+            ></v-list-item>
+          </v-list>
+        </v-menu>
+      </v-btn>
     </template>
     <v-card-text class="mt-4">
       <v-skeleton-loader type="table" v-if="isLoading"></v-skeleton-loader>
@@ -214,6 +227,11 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- règlement -->
+    <v-dialog v-model="showReglements" max-width="700px">
+      <ReglementsCard :data="data"></ReglementsCard>
+    </v-dialog>
   </v-card>
   <v-skeleton-loader v-else type="card"></v-skeleton-loader>
 </template>
@@ -225,7 +243,7 @@ import {
   StatutParticipant,
   StatutParticipantLabels,
   type CampItem,
-  type CampsLoadOut,
+  type CampLoadOut,
   type IdCamp,
   type IdDossier,
   type IdParticipant,
@@ -272,7 +290,7 @@ const participants = computed(() => {
   return out;
 });
 
-const data = ref<CampsLoadOut | null>(null);
+const data = ref<CampLoadOut | null>(null);
 async function loadCamp() {
   isLoading.value = true;
   const res = await controller.CampsLoad({ idCamp: props.id });
@@ -355,4 +373,6 @@ async function setPlaceLiberee() {
   const item = data.value.Participants?.find((p) => p.Participant.Id == id)!;
   item.Participant = res;
 }
+
+const showReglements = ref(false);
 </script>

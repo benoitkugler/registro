@@ -66,11 +66,6 @@ export interface DocumentsOut {
   HasLettre: boolean;
   AvailableDemandes: DemandeDirecteur[] | null;
 }
-// registro/controllers/directeurs.DossierHeader
-export interface DossierHeader {
-  Responsable: string;
-  Reglement: StatutPaiement;
-}
 // registro/controllers/directeurs.DossierPersonnes
 export interface DossierPersonnes {
   Responsable: string;
@@ -150,7 +145,7 @@ export interface Messages {
 // registro/controllers/directeurs.ParticipantsOut
 export interface ParticipantsOut {
   Participants: ParticipantExt[] | null;
-  Dossiers: Record<IdDossier, DossierHeader> | null;
+  Dossiers: Record<IdDossier, DossierReglement> | null;
 }
 // registro/controllers/files.ParticipantFiles
 export interface ParticipantFiles {
@@ -202,6 +197,11 @@ export interface CampItem {
   Id: IdCamp;
   Label: string;
   IsOld: boolean;
+}
+// registro/logic.DossierReglement
+export interface DossierReglement {
+  Responsable: string;
+  Reglement: StatutPaiement;
 }
 // registro/logic.EventExt[registro/logic.Message]
 export interface EventExt_Message {

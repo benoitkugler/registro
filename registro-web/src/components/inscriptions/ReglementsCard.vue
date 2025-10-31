@@ -34,9 +34,9 @@ import {
   StatutPaiement,
   StatutPaiementLabels,
   type ParticipantExt,
-  type ParticipantsOut,
-} from "../../logic/api";
+} from "@/clients/backoffice/logic/api";
 import { computed } from "vue";
+import type { ParticipantsOut } from "@/clients/directeurs/logic/api";
 
 const props = defineProps<{
   data: ParticipantsOut;

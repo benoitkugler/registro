@@ -17,9 +17,10 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type CampsLoadOut struct {
+type CampLoadOut struct {
 	Camp         cps.CampExt
 	Participants []logic.ParticipantExt
+	Dossiers     map[ds.IdDossier]logic.DossierReglement
 }
 
 func (ct *Controller) CampsLoad(c echo.Context) error {
@@ -34,12 +35,21 @@ func (ct *Controller) CampsLoad(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) getParticipants(id cps.IdCamp) (CampsLoadOut, error) {
-	participants, _, camp, err := logic.LoadParticipants(ct.db, id)
+func (ct *Controller) getParticipants(id cps.IdCamp) (CampLoadOut, error) {
+	participants, dossiers, camp, err := logic.LoadParticipants(ct.db, id)
 	if err != nil {
-		return CampsLoadOut{}, err
+		return CampLoadOut{}, err
 	}
-	return CampsLoadOut{Camp: camp, Participants: participants}, nil
+	finances, err := logic.LoadDossiersFinances(ct.db, dossiers.IDs()...)
+	if err != nil {
+		return CampLoadOut{}, err
+	}
+	reglements := make(map[ds.IdDossier]logic.DossierReglement)
+	for id := range dossiers {
+		dossier := finances.For(id)
+		reglements[id] = dossier.Reglement()
+	}
+	return CampLoadOut{camp, participants, reglements}, nil
 }
 
 type ParticipantsCreateIn struct {

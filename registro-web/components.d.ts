@@ -48,6 +48,7 @@ declare module 'vue' {
     ParticipantRow: typeof import('./src/components/inscriptions/ParticipantRow.vue')['default']
     ParticipantRowHeader: typeof import('./src/components/inscriptions/ParticipantRowHeader.vue')['default']
     PaysField: typeof import('./src/components/PaysField.vue')['default']
+    ReglementsCard: typeof import('./src/components/inscriptions/ReglementsCard.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SelectCamp: typeof import('./src/components/SelectCamp.vue')['default']

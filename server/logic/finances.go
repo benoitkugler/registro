@@ -339,3 +339,12 @@ func (p pc) prixBase() (cps.Montant, string) {
 
 	return prix, desc
 }
+
+type DossierReglement struct {
+	Responsable string
+	Reglement   StatutPaiement
+}
+
+func (de *DossierFinance) Reglement() DossierReglement {
+	return DossierReglement{de.Responsable().NOMPrenom(), de.Bilan().StatutPaiement()}
+}

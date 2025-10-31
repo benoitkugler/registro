@@ -128,7 +128,7 @@
 
     <!-- règlement -->
     <v-dialog v-model="showReglements" max-width="700px">
-      <ReglementCard :data="data"></ReglementCard>
+      <ReglementsCard :data="data"></ReglementsCard>
     </v-dialog>
   </v-card>
   <v-skeleton-loader v-else type="card"></v-skeleton-loader>
@@ -148,7 +148,6 @@ import FichesSanitairesPannel from "./FichesSanitairesPannel.vue";
 import DocumentsPannel from "./DocumentsPannel.vue";
 import MessagesPannel from "./MessagesPannel.vue";
 import StatistiquesCard from "./StatistiquesCard.vue";
-import ReglementCard from "./ReglementCard.vue";
 
 const props = defineProps<{}>();
 

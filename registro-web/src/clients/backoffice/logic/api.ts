@@ -46,15 +46,16 @@ export interface CampJoomeo {
   Album: Album;
   DirecteurPermission: ContactPermission;
 }
+// registro/controllers/backoffice.CampLoadOut
+export interface CampLoadOut {
+  Camp: CampExt;
+  Participants: ParticipantExt[] | null;
+  Dossiers: Record<IdDossier, DossierReglement> | null;
+}
 // registro/controllers/backoffice.CampsCreateManyIn
 export interface CampsCreateManyIn {
   Taux: Taux;
   Count: Int;
-}
-// registro/controllers/backoffice.CampsLoadOut
-export interface CampsLoadOut {
-  Camp: CampExt;
-  Participants: ParticipantExt[] | null;
 }
 // registro/controllers/backoffice.CampsSetTauxIn
 export interface CampsSetTauxIn {
@@ -306,6 +307,11 @@ export interface DossierExt {
   Events: Events;
   Paiements: Paiements;
   Bilan: BilanFinancesPub;
+}
+// registro/logic.DossierReglement
+export interface DossierReglement {
+  Responsable: string;
+  Reglement: StatutPaiement;
 }
 // registro/logic.Event
 export interface Event {
@@ -1165,7 +1171,7 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseURL + "/api/v1/backoffice/camps/load";
     this.startRequest();
     try {
-      const rep: AxiosResponse<CampsLoadOut> = await Axios.get(fullUrl, {
+      const rep: AxiosResponse<CampLoadOut> = await Axios.get(fullUrl, {
         headers: this.getHeaders(),
         params: { idCamp: String(params["idCamp"]) },
       });
