@@ -495,7 +495,7 @@ func (ct *Controller) selectFilesForDemande(idCamp cps.IdCamp, idDemande fs.IdDe
 	}
 
 	// personnes et fichiers
-	camp, err := cps.LoadCampPersonnes(ct.db, idCamp)
+	camp, err := cps.LoadCamp(ct.db, idCamp)
 	if err != nil {
 		return nil, "", err
 	}

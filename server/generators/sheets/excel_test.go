@@ -51,6 +51,18 @@ func TestCreateComplex(t *testing.T) {
 	tu.Write(t, "registro_SuiviFinancierCamp.xlsx", content)
 }
 
+func TestFormatTime(t *testing.T) {
+	for _, test := range []struct {
+		t        time.Time
+		expected string
+	}{
+		{time.Time{}, ""},
+		{time.Date(2000, time.January, 3, 1, 1, 12, 0, time.Local), "03/01/2000 01:01:12"},
+	} {
+		tu.Assert(t, formatTime(test.t) == test.expected)
+	}
+}
+
 func TestListeParticipants(t *testing.T) {
 	camp := cps.Camp{DateDebut: shared.NewDateFrom(time.Now())}
 	p1 := pr.Personne{Etatcivil: pr.Etatcivil{
@@ -75,23 +87,50 @@ func TestListeParticipants(t *testing.T) {
 		1: dossiers.Dossier{MomentInscription: time.Now(), IdResponsable: 2},
 	}}
 
-	content, err := ListeParticipants(camp, liste, dossiers, map[cps.IdParticipant]cps.Groupe{1: g1, 2: g2}, false)
+	content, err := ListeParticipantsCamp(camp, liste, dossiers, map[cps.IdParticipant]cps.Groupe{1: g1, 2: g2}, false)
 	tu.AssertNoErr(t, err)
-	tu.Write(t, "registro_ListeParticipants_1.xlsx", content)
+	tu.Write(t, "ListeParticipantsCamp_1.xlsx", content)
 
-	content, err = ListeParticipants(camp, liste, dossiers, map[cps.IdParticipant]cps.Groupe{1: g1, 2: g2}, true)
+	content, err = ListeParticipantsCamp(camp, liste, dossiers, map[cps.IdParticipant]cps.Groupe{1: g1, 2: g2}, true)
 	tu.AssertNoErr(t, err)
-	tu.Write(t, "registro_ListeParticipants_2.xlsx", content)
+	tu.Write(t, "ListeParticipantsCamp_2.xlsx", content)
 }
 
-func TestFormatTime(t *testing.T) {
-	for _, test := range []struct {
-		t        time.Time
-		expected string
-	}{
-		{time.Time{}, ""},
-		{time.Date(2000, time.January, 3, 1, 1, 12, 0, time.Local), "03/01/2000 01:01:12"},
-	} {
-		tu.Assert(t, formatTime(test.t) == test.expected)
+func TestListeParticipantsCamps(t *testing.T) {
+	camp := cps.Camp{Id: 123, Nom: "Mini's", DateDebut: shared.NewDateFrom(time.Now())}
+	p1 := pr.Personne{Etatcivil: pr.Etatcivil{
+		Nom: utils.RandString(12, false), Prenom: utils.RandString(12, false),
+		Sexe:          pr.Man,
+		DateNaissance: shared.NewDate(2000, time.August, 5),
+		Nationnalite:  pr.Nationnalite{IsSuisse: true},
+	}}
+	p2 := p1
+	p2.Nationnalite.IsSuisse = false
+	inscrit1 := cps.ParticipantCamp{
+		Camp: camp,
+		ParticipantPersonne: cps.ParticipantPersonne{
+			Participant: cps.Participant{Id: 1, IdDossier: 1, Commentaire: utils.RandString(10, true), Navette: cps.AllerRetour},
+			Personne:    p1,
+		},
 	}
+	inscrit2 := cps.ParticipantCamp{
+		Camp: camp,
+		ParticipantPersonne: cps.ParticipantPersonne{
+			Participant: cps.Participant{Id: 2, IdDossier: 2, Commentaire: utils.RandString(10, true)},
+			Personne:    p2,
+		},
+	}
+	liste := []cps.ParticipantCamp{inscrit1, inscrit2, inscrit1}
+	dossiers := logic.DossiersFinances{Dossiers: logic.Dossiers{Dossiers: dossiers.Dossiers{
+		1: dossiers.Dossier{Id: 1, MomentInscription: time.Now(), IdResponsable: 2},
+		2: dossiers.Dossier{Id: 2, MomentInscription: time.Now().Add(time.Hour), IdResponsable: 1},
+	}}}
+
+	content, err := ListeParticipantsCamps(liste, dossiers, false)
+	tu.AssertNoErr(t, err)
+	tu.Write(t, "ListeParticipantsCamps_1.xlsx", content)
+
+	content, err = ListeParticipantsCamps(liste, dossiers, true)
+	tu.AssertNoErr(t, err)
+	tu.Write(t, "ListeParticipantsCamps_2.xlsx", content)
 }

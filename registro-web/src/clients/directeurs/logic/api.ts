@@ -125,6 +125,10 @@ export interface JoomeoInviteIn {
   Mails: string[] | null;
   SendMail: boolean;
 }
+// registro/controllers/directeurs.LettreImageUploadOut
+export interface LettreImageUploadOut {
+  location: string;
+}
 // registro/controllers/directeurs.LettreOut
 export interface LettreOut {
   Lettre: Lettredirecteur;
@@ -920,7 +924,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  /** Returns an URL */
+  /** Returns an URL with method GET */
   DocumentsStreamFiles(idDemande: IdDemande, token: string) {
     return (
       this.baseURL +
@@ -929,13 +933,34 @@ export abstract class AbstractAPI {
     );
   }
 
-  /** Returns an URL */
+  /** Returns an URL with method GET */
   DocumentsDownloadFichesSanitaires(token: string) {
     return (
       this.baseURL +
       "/api/v1/directeurs/documents/download-fiches-sanitaires" +
       `?token=${token}`
     );
+  }
+
+  /** Returns an URL with method GET */
+  ParticipantsDownloadListe(token: string) {
+    return (
+      this.baseURL +
+      "/api/v1/directeurs/participants/download-liste" +
+      `?token=${token}`
+    );
+  }
+
+  /** Returns an URL with method GET */
+  EquipiersDownloadFiles(token: string) {
+    return (
+      this.baseURL + "/api/v1/directeurs/equipiers/files" + `?token=${token}`
+    );
+  }
+
+  /** Returns an URL with method POST */
+  LettreImageUpload(token: string) {
+    return this.baseURL + "/api/v1/directeurs/lettre-image" + `?token=${token}`;
   }
 
   /** SelectPersonne performs the request and handles the error */

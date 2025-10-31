@@ -211,7 +211,7 @@ type SendDocumentsCampPreview struct {
 }
 
 func (ct *Controller) previewSendDocumentsCamp(idCamp cps.IdCamp) (SendDocumentsCampPreview, error) {
-	camp, err := cps.LoadCampPersonnes(ct.db, idCamp)
+	camp, err := cps.LoadCamp(ct.db, idCamp)
 	if err != nil {
 		return SendDocumentsCampPreview{}, err
 	}
@@ -314,7 +314,7 @@ func (ct *Controller) EventsSendSondages(c echo.Context) error {
 }
 
 func (ct *Controller) sendSondages(host string, idCamp cps.IdCamp) (iter.Seq2[SendProgress, error], error) {
-	camp, err := cps.LoadCampPersonnes(ct.db, idCamp)
+	camp, err := cps.LoadCamp(ct.db, idCamp)
 	if err != nil {
 		return nil, err
 	}

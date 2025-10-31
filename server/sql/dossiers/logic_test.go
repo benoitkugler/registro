@@ -38,6 +38,37 @@ func TestMontantTaux_Add(t *testing.T) {
 	}
 }
 
+func TestMontantTaux_Sub(t *testing.T) {
+	tests := []struct {
+		taux  tableTaux
+		val   Montant
+		other Montant
+		want  Montant
+	}{
+		// trivial cases
+		{tableTaux{1000, 1000}, Montant{100, 0}, Montant{200, 0}, Montant{-100, 0}},
+		{tableTaux{1000, 1000}, Montant{100, 0}, Montant{200, 1}, Montant{-100, 0}},
+		{tableTaux{1000, 2000}, Montant{100, 0}, Montant{200, 0}, Montant{-100, 0}},
+		{tableTaux{1000, 2000}, Montant{100, 1}, Montant{200, 1}, Montant{-100, 1}},
+		// real conversion : 1CHF = 2€
+		{tableTaux{1000, 2000}, Montant{100, 0}, Montant{200, 1}, Montant{-300, 0}},
+		{tableTaux{1000, 2000}, Montant{100, 1}, Montant{200, 0}, Montant{0, 1}},
+		{tableTaux{1000, 2000}, Montant{100, 1}, Montant{200, 1}, Montant{-100, 1}},
+		// real conversion : 1CHF = 2€, avec virgules
+		{tableTaux{1000, 2000}, Montant{155, 0}, Montant{200, 1}, Montant{155 - 400, 0}},
+		{tableTaux{1000, 2000}, Montant{123, 1}, Montant{202, 0}, Montant{123 - 101, 1}},
+		{tableTaux{1000, 2000}, Montant{100, 1}, Montant{201, 0}, Montant{-1, 1}},
+	}
+	for _, tt := range tests {
+		m := &MontantTaux{
+			Montant: tt.val,
+			taux:    tt.taux,
+		}
+		m.Sub(tt.other)
+		tu.Assert(t, m.Montant == tt.want)
+	}
+}
+
 func TestMontant_String(t *testing.T) {
 	for _, test := range [...]struct {
 		m        Montant

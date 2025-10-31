@@ -27,7 +27,7 @@ func NewParticipantExt(participant cps.Participant, personne pr.Personne, camp c
 }
 
 func LoadParticipants(db cps.DB, id cps.IdCamp) ([]ParticipantExt, ds.Dossiers, cps.CampExt, error) {
-	camp, err := cps.LoadCampPersonnes(db, id)
+	camp, err := cps.LoadCamp(db, id)
 	if err != nil {
 		return nil, nil, cps.CampExt{}, err
 	}

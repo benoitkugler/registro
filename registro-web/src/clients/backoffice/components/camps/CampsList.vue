@@ -76,6 +76,19 @@
                   subtitle="sur plusieurs séjours"
                   prepend-icon="mdi-lock-open"
                 ></v-list-item>
+                <v-divider thickness="1"></v-divider>
+                <v-list-item
+                  prepend-icon="mdi-file-excel"
+                  title="Exporter"
+                  subtitle="Participants de l'année courante (format Excel)"
+                  link
+                  :href="
+                    controller.CampsDownloadParticipants(
+                      new Date().getFullYear() as Int,
+                      controller.authToken
+                    )
+                  "
+                ></v-list-item>
               </v-list>
             </v-menu>
           </v-btn>

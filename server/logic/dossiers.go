@@ -273,7 +273,7 @@ type BilanFinancesPub struct {
 }
 
 func (d DossierFinance) Publish(key crypto.Encrypter) DossierExt {
-	taux := d.taux
+	taux := d.Taux
 	b := d.Bilan()
 	inscrits := make(map[cps.IdParticipant]BilanParticipantPub, len(b.inscrits))
 	for k, v := range b.inscrits {
@@ -293,7 +293,7 @@ func (d DossierFinance) Publish(key crypto.Encrypter) DossierExt {
 		inscrits,
 		taux.Convertible(ds.Montant{Cent: b.demande, Currency: b.currency}).String(),
 		aides,
-		taux.Convertible(ds.Montant{Cent: b.recu, Currency: b.currency}).String(),
+		taux.Convertible(b.Recu()).String(),
 		taux.Convertible(b.ApresPaiement()).String(),
 		b.StatutPaiement(),
 		enAttente,

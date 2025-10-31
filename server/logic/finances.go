@@ -87,7 +87,7 @@ func (df DossiersFinances) For(id ds.IdDossier) DossierFinance {
 type DossierFinance struct {
 	Dossier
 
-	taux ds.Taux
+	Taux ds.Taux
 
 	aides      map[cps.IdParticipant]cps.Aides // exact list, including not validated
 	aidesFiles map[cps.IdAide]fs.File          // enough for [aides]
@@ -126,7 +126,8 @@ func (de *DossierFinance) IsPaiementOpen() bool {
 // Les aides en cours de validation sont ignorées.
 func (df DossierFinance) Bilan() BilanFinances {
 	inscrits := map[cps.IdParticipant]BilanParticipant{}
-	demande, recu, aides, demandeEnAttente := df.taux.Zero(), df.taux.Zero(), df.taux.Zero(), df.taux.Zero()
+	demande, aides, demandeEnAttente := df.Taux.Zero(), df.Taux.Zero(), df.Taux.Zero()
+	recu, fondsSoutien := df.Taux.Zero(), df.Taux.Zero()
 
 	for _, participant := range df.Participants {
 		camp := df.camps[participant.IdCamp]
@@ -138,20 +139,26 @@ func (df DossierFinance) Bilan() BilanFinances {
 		data := pc{participant, camp, df.aides[participant.Id], df.structures}
 		bilan := data.bilan()
 		inscrits[participant.Id] = bilan
-		demande.Add(bilan.net(df.taux))
-		aides.Add(bilan.totalAides(df.taux))
+		demande.Add(bilan.net(df.Taux))
+		aides.Add(bilan.totalAides(df.Taux))
 	}
 
 	for _, paiement := range df.paiements {
+		montant := paiement.Montant
 		if paiement.IsRemboursement {
-			recu.Sub(paiement.Montant)
-		} else {
-			recu.Add(paiement.Montant)
+			montant.Cent = -montant.Cent
+		}
+
+		recu.Add(montant)
+
+		isFondsSoutien := paiement.Payeur == ds.PayeurFondSoutien
+		if isFondsSoutien {
+			fondsSoutien.Add(montant)
 		}
 	}
 
-	// [demande], [demandeEnAttente], [recu] and [aides] have the same currency
-	return BilanFinances{inscrits, demande.Cent, demandeEnAttente.Cent, recu.Cent, aides.Cent, demande.Currency}
+	// [demande], [demandeEnAttente], [recu], [fondsSoutien] and [aides] have the same currency
+	return BilanFinances{inscrits, demande.Cent, demandeEnAttente.Cent, recu.Cent, fondsSoutien.Cent, aides.Cent, demande.Currency}
 }
 
 // BilanFinances résume l'état financier d'un dossier
@@ -164,9 +171,20 @@ type BilanFinances struct {
 	demandeEnAttente int // pour les participants en liste d'attente
 	recu             int // somme des paiements reçus
 
+	fondsSoutien int // part de [recu] payé par le fonds de soutien
+
 	aides int // total des aides
 
 	currency ds.Currency
+}
+
+func (b BilanFinances) Recu() ds.Montant {
+	return ds.Montant{Cent: b.recu, Currency: b.currency}
+}
+
+// FondsSoutien renvoie la part de [Recu] attribuée au fonds de soutien.
+func (b BilanFinances) FondsSoutien() ds.Montant {
+	return ds.Montant{Cent: b.fondsSoutien, Currency: b.currency}
 }
 
 func (b BilanFinances) IsAcquitte() bool { return b.demande <= b.recu }
@@ -184,6 +202,19 @@ const (
 	EnCours                           // En cours
 	Complet                           // Complet
 )
+
+func (sp StatutPaiement) String() string {
+	switch sp {
+	case NonCommence:
+		return "Non commencé"
+	case EnCours:
+		return "En cours"
+	case Complet:
+		return "Complet"
+	default:
+		return "<invalid statut>"
+	}
+}
 
 func (b BilanFinances) StatutPaiement() StatutPaiement {
 	if b.IsAcquitte() {

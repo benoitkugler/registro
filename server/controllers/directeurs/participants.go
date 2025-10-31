@@ -223,7 +223,7 @@ type DossierPersonnes struct {
 }
 
 func (ct *Controller) loadMessages(idCamp cps.IdCamp) (Messages, error) {
-	camp, err := cps.LoadCampPersonnes(ct.db, idCamp)
+	camp, err := cps.LoadCamp(ct.db, idCamp)
 	if err != nil {
 		return Messages{}, err
 	}
@@ -362,7 +362,7 @@ func (ct *Controller) createMessage(host string, idCamp cps.IdCamp, args CreateM
 
 func (ct *Controller) ParticipantsDownloadListe(c echo.Context) error {
 	user := JWTUser(c)
-	content, name, err := ct.renderListeParticipants(user)
+	content, name, err := ct.exportListeParticipants(user)
 	if err != nil {
 		return err
 	}
@@ -370,8 +370,8 @@ func (ct *Controller) ParticipantsDownloadListe(c echo.Context) error {
 	return c.Blob(200, mimeType, content)
 }
 
-func (ct *Controller) renderListeParticipants(user cps.IdCamp) ([]byte, string, error) {
-	camp, err := cps.LoadCampPersonnes(ct.db, user)
+func (ct *Controller) exportListeParticipants(user cps.IdCamp) ([]byte, string, error) {
+	camp, err := cps.LoadCamp(ct.db, user)
 	if err != nil {
 		return nil, "", err
 	}
@@ -392,7 +392,7 @@ func (ct *Controller) renderListeParticipants(user cps.IdCamp) ([]byte, string, 
 		return nil, "", err
 	}
 	showNationnaliteSuisse := ct.asso.AskNationnalite
-	content, err := sheets.ListeParticipants(camp.Camp, camp.Participants(true), dossiers, participantToGroupe, showNationnaliteSuisse)
+	content, err := sheets.ListeParticipantsCamp(camp.Camp, camp.Participants(true), dossiers, participantToGroupe, showNationnaliteSuisse)
 	if err != nil {
 		return nil, "", err
 	}

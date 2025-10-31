@@ -180,7 +180,7 @@ func TestController_paiements(t *testing.T) {
 
 	ct := Controller{db: db.DB, files: fs.NewFileSystem(t.TempDir())}
 
-	out, err := ct.createPaiement(dossier1.Id)
+	out, err := ct.createPaiement(false, dossier1.Id)
 	tu.AssertNoErr(t, err)
 
 	out.Montant.Currency = ds.FrancsSuisse
@@ -232,7 +232,7 @@ func TestController_mergeDossiers(t *testing.T) {
 	_, err = ct.createParticipant(ParticipantsCreateIn{IdDossier: d2.Id, IdPersonne: pe2.Id, IdCamp: camp1.Id})
 	tu.AssertNoErr(t, err)
 
-	_, err = ct.createPaiement(d2.Id)
+	_, err = ct.createPaiement(false, d2.Id)
 	tu.AssertNoErr(t, err)
 
 	_, err = events.Event{Kind: events.Message, IdDossier: d2.Id}.Insert(db)

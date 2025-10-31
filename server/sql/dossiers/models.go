@@ -82,7 +82,7 @@ type Paiement struct {
 	IsRemboursement bool
 
 	Montant Montant
-	Payeur  string
+	Payeur  string // Le fonds de soutient est identifié avec [PayeurFondSoutien]
 	Mode    ModePaiement
 	Time    time.Time
 	// Label peut stocker le numéro du chèque ou la banque

@@ -21,7 +21,7 @@ func TestDossierFinance_Bilan(t *testing.T) {
 		2: cps.Camp{Prix: chf(150)},
 	}
 	df := DossierFinance{
-		Dossier: Dossier{camps: camps}, taux: taux,
+		Dossier: Dossier{camps: camps}, Taux: taux,
 		paiements: ds.Paiements{
 			1: ds.Paiement{IsRemboursement: true, Montant: eur(100)},
 			2: ds.Paiement{IsRemboursement: false, Montant: eur(200)},
@@ -42,7 +42,7 @@ func TestDossierFinance_Bilan(t *testing.T) {
 			2: {chf(150), "", cps.Remises{}, nil},
 			3: {chf(150), "", cps.Remises{}, nil},
 		},
-		40000, 15000, 35000, 0, ds.FrancsSuisse,
+		40000, 15000, 35000, 0, 0, ds.FrancsSuisse,
 	}))
 
 	// avec aides
@@ -65,7 +65,7 @@ func TestDossierFinance_Bilan(t *testing.T) {
 			2: {chf(150), "", cps.Remises{}, nil},
 			3: {chf(150), "", cps.Remises{}, nil},
 		},
-		40000 - 1000 - 200*10, 15000, 35000, 1000 + 200*10, ds.FrancsSuisse,
+		40000 - 1000 - 200*10, 15000, 35000, 0, 1000 + 200*10, ds.FrancsSuisse,
 	}))
 
 	// avec remises
@@ -90,7 +90,7 @@ func TestDossierFinance_Bilan(t *testing.T) {
 			2: {chf(150), "", cps.Remises{}, nil},
 			3: {chf(150), "", cps.Remises{}, nil},
 		},
-		40000 - 500 - 1500, 15000, 35000, 0, ds.FrancsSuisse,
+		40000 - 500 - 1500, 15000, 35000, 0, 0, ds.FrancsSuisse,
 	}))
 
 	// avec remises et aides
@@ -114,7 +114,26 @@ func TestDossierFinance_Bilan(t *testing.T) {
 				ReducEnfants:   5,
 			}, []AideResolved{{"", eur(20)}}},
 		},
-		10000 - 1000 - 500 - 900, 0, 35000, 1000, ds.FrancsSuisse,
+		10000 - 1000 - 500 - 900, 0, 35000, 0, 1000, ds.FrancsSuisse,
+	}))
+
+	// avec fond soutien
+	df = DossierFinance{
+		Dossier: Dossier{camps: camps}, Taux: taux,
+		paiements: ds.Paiements{
+			1: ds.Paiement{IsRemboursement: true, Montant: eur(100), Payeur: ds.PayeurFondSoutien},
+			2: ds.Paiement{IsRemboursement: false, Montant: eur(200), Payeur: ds.PayeurFondSoutien},
+			3: ds.Paiement{IsRemboursement: false, Montant: chf(300)},
+		},
+	}
+	df.Participants = cps.Participants{
+		1: cps.Participant{Id: 1, IdCamp: 1, Statut: cps.Inscrit},
+	}
+	tu.Assert(t, reflect.DeepEqual(df.Bilan(), BilanFinances{
+		map[cps.IdParticipant]BilanParticipant{
+			1: {eur(200), "", cps.Remises{}, nil},
+		},
+		10000, 0, 35000, 5000, 0, ds.FrancsSuisse,
 	}))
 }
 

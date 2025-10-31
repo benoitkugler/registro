@@ -683,29 +683,37 @@ func (ct *Controller) deleteAide(id cps.IdAide) error {
 }
 
 func (ct *Controller) PaiementsCreate(c echo.Context) error {
+	_, isFondSoutien := JWTUser(c)
+
 	idDossier, err := utils.QueryParamInt[ds.IdDossier](c, "idDossier")
 	if err != nil {
 		return err
 	}
-	out, err := ct.createPaiement(idDossier)
+	out, err := ct.createPaiement(isFondSoutien, idDossier)
 	if err != nil {
 		return err
 	}
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) createPaiement(idDossier ds.IdDossier) (ds.Paiement, error) {
-	// by default, fill with the responsable
+func (ct *Controller) createPaiement(isFondSoutien bool, idDossier ds.IdDossier) (ds.Paiement, error) {
+	// by default, fill with the responsable ...
 	_, personne, err := dossierAndResp(ct.db, idDossier)
 	if err != nil {
 		return ds.Paiement{}, err
+	}
+	payeur := personne.NOMPrenom()
+	mode := ds.Cheque
+	if isFondSoutien {
+		payeur = ds.PayeurFondSoutien
+		mode = ds.Virement
 	}
 
 	out, err := ds.Paiement{
 		IdDossier: idDossier,
 		Time:      time.Now().Truncate(time.Second),
-		Mode:      ds.Cheque,
-		Payeur:    personne.NOMPrenom(),
+		Mode:      mode,
+		Payeur:    payeur,
 	}.Insert(ct.db)
 	if err != nil {
 		return out, utils.SQLError(err)

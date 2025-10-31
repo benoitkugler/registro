@@ -42,7 +42,7 @@ func mailsFor(m pr.Personnes) []string {
 }
 
 func (ct *Controller) loadJoomeo(id cps.IdCamp) (data Joomeo, err error) {
-	camp, err := cps.LoadCampPersonnes(ct.db, id)
+	camp, err := cps.LoadCamp(ct.db, id)
 	if err != nil {
 		return Joomeo{}, err
 	}

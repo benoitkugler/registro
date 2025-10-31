@@ -98,7 +98,7 @@ func renderListeVetements(db *sql.DB, asso config.Asso, id cps.IdCamp) ([]byte, 
 }
 
 func renderListeParticipants(db *sql.DB, asso config.Asso, id cps.IdCamp) ([]byte, string, error) {
-	camp, err := cps.LoadCampPersonnes(db, id)
+	camp, err := cps.LoadCamp(db, id)
 	if err != nil {
 		return nil, "", err
 	}

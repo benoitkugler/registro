@@ -51,3 +51,5 @@ func (c Currency) String() string {
 		return "<invalid currency>"
 	}
 }
+
+const PayeurFondSoutien = "Fonds de soutien"

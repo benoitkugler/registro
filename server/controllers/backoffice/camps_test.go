@@ -2,6 +2,7 @@ package backoffice
 
 import (
 	"testing"
+	"time"
 
 	"registro/config"
 	"registro/crypto"
@@ -9,7 +10,7 @@ import (
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
 	"registro/sql/files"
-	"registro/sql/personnes"
+	pr "registro/sql/personnes"
 	"registro/sql/shared"
 	tu "registro/utils/testutils"
 )
@@ -20,7 +21,7 @@ func TestCRUD(t *testing.T) {
 		"../../migrations/init.sql")
 	defer db.Remove()
 
-	pe, err := personnes.Personne{}.Insert(db)
+	pe, err := pr.Personne{}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	ct, err := NewController(db.DB, crypto.Encrypter{}, "", "", files.FileSystem{}, config.SMTP{}, config.Asso{}, config.Joomeo{}, config.Helloasso{})
@@ -81,4 +82,51 @@ func Test_lastTaux(t *testing.T) {
 	for _, tt := range tests {
 		tu.Assert(t, lastTaux(tt.camps) == tt.want)
 	}
+}
+
+func TestExportParticipants(t *testing.T) {
+	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
+		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",
+		"../../migrations/init.sql")
+	defer db.Remove()
+
+	ct, err := NewController(db.DB, crypto.Encrypter{}, "", "", files.FileSystem{}, config.SMTP{}, config.Asso{}, config.Joomeo{}, config.Helloasso{})
+	tu.AssertNoErr(t, err)
+
+	resp, err := pr.Personne{Etatcivil: pr.Etatcivil{Nom: "REspo", Prenom: "Sable"}}.Insert(db)
+	tu.AssertNoErr(t, err)
+	pe1, err := pr.Personne{Etatcivil: pr.Etatcivil{Nom: "REspo", Prenom: "Huge"}}.Insert(db)
+	tu.AssertNoErr(t, err)
+	pe2, err := pr.Personne{Etatcivil: pr.Etatcivil{Nom: "Autre", Prenom: "Hugette"}}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	camp1, err := ct.createCamp()
+	tu.AssertNoErr(t, err)
+	camp2, err := ct.createCamp()
+	tu.AssertNoErr(t, err)
+
+	dossier, err := ct.createDossier(resp.Id)
+	tu.AssertNoErr(t, err)
+	_, err = ct.createParticipant(ParticipantsCreateIn{IdDossier: dossier.Id, IdCamp: camp1.Camp.Camp.Id, IdPersonne: pe1.Id})
+	tu.AssertNoErr(t, err)
+	_, err = ct.createParticipant(ParticipantsCreateIn{IdDossier: dossier.Id, IdCamp: camp1.Camp.Camp.Id, IdPersonne: pe2.Id})
+	tu.AssertNoErr(t, err)
+	_, err = ct.createParticipant(ParticipantsCreateIn{IdDossier: dossier.Id, IdCamp: camp2.Camp.Camp.Id, IdPersonne: pe1.Id})
+	tu.AssertNoErr(t, err)
+
+	paiement1, err := ct.createPaiement(true, dossier.Id)
+	tu.AssertNoErr(t, err)
+	paiement1.Montant.Cent = 4568
+	_, err = paiement1.Update(ct.db)
+	tu.AssertNoErr(t, err)
+
+	paiement2, err := ct.createPaiement(false, dossier.Id)
+	tu.AssertNoErr(t, err)
+	paiement2.Montant.Cent = 4335
+	_, err = paiement2.Update(ct.db)
+	tu.AssertNoErr(t, err)
+
+	content, name, err := ct.exportListeParticipants(time.Now().Year())
+	tu.AssertNoErr(t, err)
+	tu.Write(t, name, content)
 }

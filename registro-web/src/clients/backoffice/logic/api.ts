@@ -1310,6 +1310,15 @@ export abstract class AbstractAPI {
     }
   }
 
+  /** Returns an URL with method GET */
+  CampsDownloadParticipants(year: Int, token: string) {
+    return (
+      this.baseURL +
+      "/api/v1/backoffice/camps/download-participants" +
+      `?year=${year}&token=${token}`
+    );
+  }
+
   /** CampsCreateEquipier performs the request and handles the error */
   async CampsCreateEquipier(params: CreateEquipierIn) {
     const fullUrl = this.baseURL + "/api/v1/backoffice/camps/equipiers";

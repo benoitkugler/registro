@@ -45,6 +45,8 @@ func setupRoutesBackoffice(e *echo.Echo, ct *backoffice.Controller) {
 	gr.PUT("/api/v1/backoffice/camps/joomeo", ct.CampsCreateAlbums)
 	gr.POST("/api/v1/backoffice/camps/joomeo", ct.CampsAddDirecteursToAlbums)
 
+	e.GET("/api/v1/backoffice/camps/download-participants", ct.CampsDownloadParticipants, ct.JWTMiddlewareForQuery()) // url-only
+
 	gr.PUT("/api/v1/backoffice/camps/equipiers", ct.CampsCreateEquipier)
 
 	// Onglet Inscriptions/Dossiers

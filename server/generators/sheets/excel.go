@@ -3,11 +3,13 @@ package sheets
 import (
 	"bytes"
 	"fmt"
+	"slices"
 	"strconv"
 	"time"
 
 	"registro/logic"
 	cps "registro/sql/camps"
+	"registro/utils"
 
 	"github.com/xuri/excelize/v2"
 )
@@ -270,11 +272,17 @@ type Cell struct {
 	NumFormat NumFormat
 }
 
-func (b *Builder) drawItems(liste [][]Cell, startingRow int, showLineNumbers bool, colLeftBorder int) error {
+func intCell[T ~int | ~int64](v T) Cell {
+	return Cell{ValueF: float32(v), NumFormat: Int}
+}
+
+func (b *Builder) drawItems(liste [][]Cell, startingRow int, showLineNumbers bool, separators []int) error {
 	var colOffset int // pour les numéros de lignes
 	if showLineNumbers {
 		colOffset = 1
 	}
+
+	seps := utils.NewSet(separators...)
 
 	for row, data := range liste {
 		currentRow := row + startingRow
@@ -284,7 +292,7 @@ func (b *Builder) drawItems(liste [][]Cell, startingRow int, showLineNumbers boo
 		for col, cell := range data {
 			currentCol := col + 1 + colOffset
 
-			style := newStyle(cell.Color, cell.Bold, false, colLeftBorder == currentCol, cell.NumFormat)
+			style := newStyle(cell.Color, cell.Bold, false, seps.Has(currentCol), cell.NumFormat)
 			b.SetStyle(currentRow, currentCol, style)
 			if cell.NumFormat != 0 {
 				b.SetCellF(currentRow, currentCol, cell.ValueF)
@@ -296,8 +304,7 @@ func (b *Builder) drawItems(liste [][]Cell, startingRow int, showLineNumbers boo
 	return nil
 }
 
-// if `colLeftBorder == -1`, aucune ligne verticale supplémentaire n'est tracée
-func renderListe(headers []string, liste [][]Cell, totals []oneTotal, showLineNumbers bool, colLeftBorder int) (*bytes.Buffer, error) {
+func renderListe(headers []string, liste [][]Cell, totals []oneTotal, showLineNumbers bool, separators ...int) (*bytes.Buffer, error) {
 	b := NewBuilder()
 	var colOffset int // pour les numéros de lignes
 	if showLineNumbers {
@@ -320,7 +327,7 @@ func renderListe(headers []string, liste [][]Cell, totals []oneTotal, showLineNu
 	}
 
 	// datas
-	if err := b.drawItems(liste, 2, showLineNumbers, colLeftBorder); err != nil {
+	if err := b.drawItems(liste, 2, showLineNumbers, separators); err != nil {
 		return nil, err
 	}
 
@@ -339,7 +346,7 @@ func renderListe(headers []string, liste [][]Cell, totals []oneTotal, showLineNu
 // CreateTable returns an Excel file for the basic data defined
 // by [headers] and [liste]
 func CreateTable(headers []string, liste [][]Cell) ([]byte, error) {
-	f, err := renderListe(headers, liste, nil, false, -1)
+	f, err := renderListe(headers, liste, nil, false)
 	if err != nil {
 		return nil, err
 	}
@@ -350,7 +357,7 @@ func CreateTableTotal(headers []string, liste [][]Cell, total string) ([]byte, e
 	totals := []oneTotal{
 		{"Total :", total},
 	}
-	f, err := renderListe(headers, liste, totals, true, -1)
+	f, err := renderListe(headers, liste, totals, true)
 	if err != nil {
 		return nil, err
 	}
@@ -364,6 +371,8 @@ func CreateTableTotal(headers []string, liste [][]Cell, total string) ([]byte, e
 //   - FinancesPPrixNet
 //   - FinancesPTotalAides
 //   - FinancesPEtatPaiement
+//
+// TODO: vérifier le lien avec [ListeParticipantsCamps]
 func SuiviFinancierCamp(liste [][]Cell, totalDemande,
 	totalAides string,
 ) ([]byte, error) {
@@ -378,7 +387,7 @@ func SuiviFinancierCamp(liste [][]Cell, totalDemande,
 		"Dont aides (€)",      // FinancesPTotalAides
 		"Etat du paiement",    // FinancesPEtatPaiement
 	}
-	f, err := renderListe(headers[:], liste, totals, false, -1)
+	f, err := renderListe(headers[:], liste, totals, false)
 	if err != nil {
 		return nil, err
 	}
@@ -400,8 +409,9 @@ func formatTime(t time.Time) string {
 	return fmt.Sprintf("%02d/%02d/%04d %02d:%02d:%02d", t.Day(), t.Month(), t.Year(), t.Hour(), t.Minute(), t.Second())
 }
 
-// ListeParticipants renvoie un document Excel
-func ListeParticipants(camp cps.Camp, inscrits []cps.ParticipantPersonne, dossiers logic.Dossiers, groupes map[cps.IdParticipant]cps.Groupe,
+// ListeParticipantsCamp renvoie un document Excel des inscrits
+// d'un séjour, à destination du directeur.
+func ListeParticipantsCamp(camp cps.Camp, inscrits []cps.ParticipantPersonne, dossiers logic.Dossiers, groupes map[cps.IdParticipant]cps.Groupe,
 	showNationnaliteSuisse bool,
 ) ([]byte, error) {
 	headersParticipant := [...]string{
@@ -432,7 +442,7 @@ func ListeParticipants(camp cps.Camp, inscrits []cps.ParticipantPersonne, dossie
 	}
 
 	headers := append(headersParticipant[:], headersResponsable[:]...)
-	colLine := len(headersParticipant) + 1
+	separator := len(headersParticipant) + 1
 
 	rows := make([][]Cell, len(inscrits))
 	for i, inscrit := range inscrits {
@@ -445,17 +455,17 @@ func ListeParticipants(camp cps.Camp, inscrits []cps.ParticipantPersonne, dossie
 		}
 		var row [len(headersParticipant) + len(headersResponsable)]Cell = [...]Cell{
 			// inscrit
-			{Value: formatTime(dossier.Dossier.MomentInscription)},                               // Inscription
-			{Value: inscrit.Personne.FNom()},                                                     // Nom
-			{Value: inscrit.Personne.FPrenom()},                                                  // Prénom
-			{Value: inscrit.Personne.Sexe.String()},                                              // Sexe
-			{Value: inscrit.Personne.DateNaissance.String()},                                     // Date de naissance
-			{ValueF: float32(camp.AgeDebutCamp(inscrit.Personne.DateNaissance)), NumFormat: Int}, // Age (début de camp)
-			{Value: inscrit.Personne.Mail},                                                       // Mail du participant
-			{Value: groupe.Nom, Color: groupe.Couleur},                                           // Groupe
-			{Value: inscrit.Participant.Navette.String()},                                        // Navette
-			{Value: inscrit.Participant.Commentaire},                                             // Commentaire
-			{Value: nationalite},                                                                 // Suisse ?
+			{Value: formatTime(dossier.Dossier.MomentInscription)},     // Inscription
+			{Value: inscrit.Personne.FNom()},                           // Nom
+			{Value: inscrit.Personne.FPrenom()},                        // Prénom
+			{Value: inscrit.Personne.Sexe.String()},                    // Sexe
+			{Value: inscrit.Personne.DateNaissance.String()},           // Date de naissance
+			intCell(camp.AgeDebutCamp(inscrit.Personne.DateNaissance)), // Age (début de camp)
+			{Value: inscrit.Personne.Mail},                             // Mail du participant
+			{Value: groupe.Nom, Color: groupe.Couleur},                 // Groupe
+			{Value: inscrit.Participant.Navette.String()},              // Navette
+			{Value: inscrit.Participant.Commentaire},                   // Commentaire
+			{Value: nationalite},                                       // Suisse ?
 			// responsable
 			{Value: responsable.NOMPrenom()},   // Responsable
 			{Value: responsable.Mail},          // Mail
@@ -468,7 +478,113 @@ func ListeParticipants(camp cps.Camp, inscrits []cps.ParticipantPersonne, dossie
 		rows[i] = row[:]
 	}
 
-	f, err := renderListe(headers, rows, nil, false, colLine)
+	f, err := renderListe(headers, rows, nil, false, separator)
+	if err != nil {
+		return nil, err
+	}
+	return f.Bytes(), nil
+}
+
+// ListeParticipantsCamps renvoie un document Excel des participants (éventuellemnt en liste d'attente)
+// de plusieurs séjours, à destination des comptables.
+func ListeParticipantsCamps(participants []cps.ParticipantCamp, dossiers logic.DossiersFinances, showNationnaliteSuisse bool) ([]byte, error) {
+	headersCamp := [...]string{
+		"ID Camp",
+		"Camp",
+	}
+	headersParticipant := [...]string{
+		"ID Inscrit",
+		"Statut",
+		"Nom",
+		"Prénom",
+		"Sexe",
+		"Date de naissance",
+		"", // hidden if showNationnaliteSuisse is false
+		"Mail (participant)",
+		"Tel. (participant)",
+		"Adresse",
+		"Code postal",
+		"Ville",
+		"Pays",
+	}
+	if showNationnaliteSuisse {
+		headersParticipant[6] = "Nationalité suisse"
+	}
+	headersResponsable := [...]string{
+		"Responsable",
+		"Mail",
+		"Tel.",
+		"Adresse",
+		"Code postal",
+		"Ville",
+		"Pays",
+	}
+	headersDossier := [...]string{
+		"ID Dossier",
+		"Moment d'inscription",
+		"Etat du règlement",
+		"Montant payé",
+		"Fonds de soutien",
+		"Remises (%)",
+		"Remises",
+	}
+
+	rows := make([][]Cell, len(participants))
+	for i, inscrit := range participants {
+		dossier := dossiers.For(inscrit.Participant.IdDossier)
+		responsable := dossier.Responsable()
+		bilan := dossier.Bilan()
+		taux := dossier.Taux
+		rem := inscrit.Participant.Remises
+
+		nationalite := ""
+		if showNationnaliteSuisse {
+			nationalite = formatBool(inscrit.Personne.Nationnalite.IsSuisse)
+		}
+		var row [len(headersCamp) + len(headersParticipant) + len(headersResponsable) + len(headersDossier)]Cell = [...]Cell{
+			// camp
+			intCell(inscrit.Camp.Id),      // ID Camp
+			{Value: inscrit.Camp.Label()}, // Camp
+			// inscrit
+			intCell(inscrit.Participant.Id),                  // ID Inscrit
+			{Value: inscrit.Participant.Statut.String()},     // Statut
+			{Value: inscrit.Personne.FNom()},                 // Nom
+			{Value: inscrit.Personne.FPrenom()},              // Prénom
+			{Value: inscrit.Personne.Sexe.String()},          // Sexe
+			{Value: inscrit.Personne.DateNaissance.String()}, // Date de naissance
+			{Value: nationalite},                             // Suisse ?
+			{Value: inscrit.Personne.Mail},                   // Mail
+			{Value: inscrit.Personne.Tels.String()},          // Tel.
+			{Value: inscrit.Personne.Adresse},                // Adresse
+			{Value: inscrit.Personne.CodePostal},             // Code postal
+			{Value: inscrit.Personne.Ville},                  // Ville
+			{Value: string(inscrit.Personne.Pays)},           // Pays
+			// responsable
+			{Value: responsable.NOMPrenom()},   // Responsable
+			{Value: responsable.Mail},          // Mail
+			{Value: responsable.Tels.String()}, // Tel.
+			{Value: responsable.Adresse},       // Adresse
+			{Value: responsable.CodePostal},    // Code postal
+			{Value: responsable.Ville},         // Ville
+			{Value: string(responsable.Pays)},  // Pays
+			// dossier
+			intCell(dossier.Dossier.Dossier.Id),                                             // ID Dossier
+			{Value: formatTime(dossier.Dossier.Dossier.MomentInscription)},                  // Inscription
+			{Value: bilan.StatutPaiement().String()},                                        // Etat du règlement
+			{Value: taux.Convertible(bilan.Recu()).String()},                                // Montant payé
+			{Value: taux.Convertible(bilan.FondsSoutien()).String()},                        // Fonds de soutien
+			{ValueF: float32(rem.ReducEnfants + rem.ReducEquipiers), NumFormat: Percentage}, // Remises (%)
+			{Value: taux.Convertible(rem.ReducSpeciale).String()},                           // Remises
+		}
+		rows[i] = row[:]
+	}
+
+	headers := slices.Concat(headersCamp[:], headersParticipant[:], headersResponsable[:], headersDossier[:])
+	sep1 := len(headersCamp) + 1
+	sep2 := sep1 + len(headersParticipant)
+	sep3 := sep2 + len(headersResponsable)
+
+	f, err := renderListe(headers, rows, nil, false, sep1, sep2, sep3)
 	if err != nil {
 		return nil, err
 	}

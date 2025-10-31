@@ -16,10 +16,12 @@ func setupRoutesDirecteurs(e *echo.Echo, ct *directeurs.Controller) {
 	// public image service, secured by key
 	e.GET(directeurs.EndpointLettreImages, ct.LettreImageGet) // ignore
 
+	// file download URLs (see also routes_misc.go)
 	e.GET("/api/v1/directeurs/documents/stream-files", ct.DocumentsStreamFiles, ct.JWTMiddlewareForQuery())                            // url-only
 	e.GET("/api/v1/directeurs/documents/download-fiches-sanitaires", ct.DocumentsDownloadFichesSanitaires, ct.JWTMiddlewareForQuery()) // url-only
-
-	// see also routes_misc.go
+	e.GET("/api/v1/directeurs/participants/download-liste", ct.ParticipantsDownloadListe, ct.JWTMiddlewareForQuery())                  // url-only
+	e.GET("/api/v1/directeurs/equipiers/files", ct.EquipiersDownloadFiles, ct.JWTMiddlewareForQuery())                                 // url-only
+	e.POST("/api/v1/directeurs/lettre-image", ct.LettreImageUpload, ct.JWTMiddlewareForQuery())                                        // url-only
 
 	gr := e.Group("", ct.JWTMiddleware())
 

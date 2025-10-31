@@ -42,7 +42,7 @@ func main() {
 
 	err := pdfcreator.Init(directories.Cache, directories.Assets)
 	check(err)
-	fmt.Println("Seting up pdfcreator -> OK.")
+	fmt.Println("Setting up pdfcreator -> OK.")
 
 	// TODO: setup APIS
 	helloasso := config.Helloasso{}
@@ -107,7 +107,7 @@ func main() {
 	setupRoutesInscription(e, inscriptionsCt)
 	setupRoutesEquipier(e, equipiersCt)
 	setupRoutesServices(e, espacepersoCt)
-	setupRoutesMisc(e, directeursCt, filesCt)
+	setupRoutesMisc(e, filesCt)
 	setupClientApps(e)
 
 	fmt.Println("Setup done. Starting...")

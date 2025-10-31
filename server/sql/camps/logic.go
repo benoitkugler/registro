@@ -131,9 +131,9 @@ type CampData struct {
 	personnes pr.Personnes
 }
 
-// LoadCampPersonnes is a convenient wrapper around [LoadCamps] for
+// LoadCamp is a convenient wrapper around [LoadCamps] for
 // a single camp.
-func LoadCampPersonnes(db DB, id IdCamp) (CampData, error) {
+func LoadCamp(db DB, id IdCamp) (CampData, error) {
 	out, err := LoadCamps(db, []IdCamp{id})
 	if err != nil {
 		return CampData{}, err

@@ -9,6 +9,7 @@ import (
 
 	fsAPI "registro/controllers/files"
 	"registro/controllers/inscriptions"
+	"registro/generators/sheets"
 	"registro/logic"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
@@ -150,6 +151,7 @@ func defaultCamp(idTaux ds.IdTaux) cps.Camp {
 		Places: 40, AgeMin: 6, AgeMax: 12,
 		Password: utils.RandPassword(6),
 		Statut:   cps.VisibleFerme,
+		Prix:     ds.NewEuros(100),
 		DocumentsToShow: cps.DocumentsToShow{
 			LettreDirecteur: true,
 			ListeVetements:  true,
@@ -505,4 +507,55 @@ func (ct *Controller) updateEquipier(args cps.Equipier) error {
 		return utils.SQLError(err)
 	}
 	return nil
+}
+
+func (ct *Controller) CampsDownloadParticipants(c echo.Context) error {
+	year, err := utils.QueryParamInt[int](c, "year")
+	if err != nil {
+		return err
+	}
+	content, name, err := ct.exportListeParticipants(year)
+	if err != nil {
+		return err
+	}
+	mimeType := fsAPI.SetBlobHeader(c, content, name)
+	return c.Blob(200, mimeType, content)
+}
+
+// export the [Inscrits] from the camp starting at the given year
+func (ct *Controller) exportListeParticipants(year int) ([]byte, string, error) {
+	// select the correct [Camp]s
+	camps, err := cps.SelectAllCamps(ct.db)
+	if err != nil {
+		return nil, "", utils.SQLError(err)
+	}
+	for _, camp := range camps {
+		if camp.DateDebut.Time().Year() != year {
+			delete(camps, camp.Id)
+		}
+	}
+
+	loader, err := cps.LoadCamps(ct.db, camps.IDs())
+	if err != nil {
+		return nil, "", err
+	}
+	// build inscrit liste
+	var inscrits []cps.ParticipantCamp
+	for _, camp := range loader.Camps {
+		for _, p := range loader.For(camp.Id).Participants(false) {
+			inscrits = append(inscrits, cps.ParticipantCamp{Camp: camp, ParticipantPersonne: p})
+		}
+	}
+
+	dossiers, err := logic.LoadDossiersFinances(ct.db, loader.IdDossiers()...)
+	if err != nil {
+		return nil, "", err
+	}
+	showNationnaliteSuisse := ct.asso.AskNationnalite
+	content, err := sheets.ListeParticipantsCamps(inscrits, dossiers, showNationnaliteSuisse)
+	if err != nil {
+		return nil, "", err
+	}
+	name := fmt.Sprintf("Participants %d.xlsx", year)
+	return content, name, nil
 }

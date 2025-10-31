@@ -103,11 +103,10 @@ func (m *MontantTaux) Add(other Montant) {
 	m.Montant.Cent += m.taux.convertTo(other, m.Montant.Currency).Cent
 }
 
-// Sub soustrait [other], en convertissant correctement l'unité si besoin.
-//
-// La fonction 'panic' si le taux de [m.Montant.Currency] vaut 0.
+// Sub ajoute l'opposé de [other] (cf [Add]).
 func (m *MontantTaux) Sub(other Montant) {
-	m.Montant.Cent -= m.taux.convertTo(other, m.Montant.Currency).Cent
+	other.Cent = -other.Cent
+	m.Add(other)
 }
 
 // String affiche le montant dans les unités pour
