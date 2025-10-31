@@ -46,7 +46,7 @@
               title="Exporter"
               subtitle="au format Excel"
               link
-              :href="endpoints.ParticipantsDownloadListe(controller.authToken)"
+              :href="controller.ParticipantsDownloadListe(controller.authToken)"
             ></v-list-item>
             <v-divider thickness="1"></v-divider>
 

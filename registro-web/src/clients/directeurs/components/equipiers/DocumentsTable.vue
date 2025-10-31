@@ -4,7 +4,7 @@
     subtitle="Demandes et fichiers déposés par l'équipe"
   >
     <template #append>
-      <v-btn :href="downloadURL">
+      <v-btn :href="controller.EquipiersDownloadFiles(controller.authToken)">
         <template #prepend>
           <v-icon>mdi-download</v-icon>
         </template>
@@ -92,8 +92,4 @@ async function updateState(
   controller.showMessage("Demande modifiée avec succès.");
   itemAt(idEquipier, idDemande).State = state;
 }
-
-const downloadURL = computed(() =>
-  endpoints.EquipiersDownloadFiles(controller.authToken)
-);
 </script>

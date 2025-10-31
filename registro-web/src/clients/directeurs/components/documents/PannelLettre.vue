@@ -156,7 +156,7 @@ const tinyMceOptions = computed<Partial<EditorOptions>>(() => {
     relative_urls: false,
     remove_script_host: false,
     image_description: false,
-    images_upload_url: endpoints.LettreImageUpload(controller.authToken),
+    images_upload_url: controller.LettreImageUpload(controller.authToken),
     automatic_uploads: true,
     formats: {
       imageMargin: { selector: "img", styles: { marginRight: "20px" } },
