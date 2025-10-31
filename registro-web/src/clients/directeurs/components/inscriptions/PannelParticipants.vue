@@ -18,19 +18,13 @@
         </template>
         Messages</v-btn
       >
-      <v-divider thickness="1" vertical class="mx-1"></v-divider>
       <v-btn @click="showDocuments = true" class="mx-1">
         <template #prepend>
           <v-icon>mdi-folder</v-icon>
         </template>
         Documents</v-btn
       >
-      <v-btn @click="showFichesSanitaires = true" class="mx-1">
-        <template #prepend>
-          <v-icon>mdi-pill</v-icon>
-        </template>
-        Fiches sanitaires</v-btn
-      >
+
       <v-divider thickness="1" vertical class="mx-1"></v-divider>
 
       <v-btn icon flat>
@@ -56,6 +50,12 @@
             ></v-list-item>
             <v-divider thickness="1"></v-divider>
 
+            <v-list-item
+              prepend-icon="mdi-pill"
+              title="Fiches sanitaires"
+              subtitle="Analyser le contenu des fiches sanitaires"
+              @click="showFichesSanitaires = true"
+            ></v-list-item>
             <v-list-item
               prepend-icon="mdi-currency-eur"
               title="Suivi du règlement"
