@@ -31,6 +31,7 @@
         'bg-green-lighten-4': isFromBackoffice,
         'bg-blue-lighten-4': !(isFromUs || isFromBackoffice),
       }"
+      style="font-size: smaller"
     >
       <pre>{{ props.message.Content.Message.Contenu }}</pre>
     </v-col>
