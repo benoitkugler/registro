@@ -1,4 +1,4 @@
-import{P as ot,d as ze,a1 as W,dC as st,aD as it,cz as q,c as N,by as Ve,cx as le,k as ct,R as at,aC as lt}from"./VSnackbar-DS0GooKO.js";/*!
+import{P as ot,d as ze,a1 as W,dC as st,aD as it,cz as q,c as N,bv as Ve,cx as le,k as ct,R as at,aC as lt}from"./VSnackbar-CoLoRMBr.js";/*!
   * vue-router v4.5.1
   * (c) 2025 Eduardo San Martin Morote
   * @license MIT
