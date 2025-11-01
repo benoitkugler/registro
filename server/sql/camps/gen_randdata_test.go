@@ -269,7 +269,7 @@ func randPrixQuotientFamilial() PrixQuotientFamilial {
 func randRemises() Remises {
 	var s Remises
 	s.ReducEquipiers = randint()
-	s.ReducEnfants = randint()
+	s.ReducInscrits = randint()
 	s.ReducSpeciale = randdos_Montant()
 
 	return s

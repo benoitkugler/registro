@@ -30,8 +30,8 @@ func cmpString[T interface{ ~string }](s1, s2 T) diff {
 	if s2 == "" {
 		return existantEmpty
 	}
-	ss1 := normalize(string(s1))
-	ss2 := normalize(string(s2))
+	ss1 := Normalize(string(s1))
+	ss2 := Normalize(string(s2))
 	if ss1 == ss2 {
 		return equal
 	}

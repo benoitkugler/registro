@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"registro/config"
 	filesAPI "registro/controllers/files"
 	"registro/logic"
 	"registro/logic/search"
@@ -889,4 +890,169 @@ func (ct *Controller) previewRelancePaiement(idCamp cps.IdCamp) ([]PreviewRelanc
 		}
 	}
 	return out, nil
+}
+
+func (ct *Controller) DossiersRemisesHint(c echo.Context) error {
+	currentYear := time.Now().Year()
+	out, err := estimeRemises(ct.db, ct.asso.RemisesHints, currentYear)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
+type InscritHeader struct {
+	Id       cps.IdParticipant
+	Personne string
+	Camp     string
+}
+
+type EquipierHeader struct {
+	Id       cps.IdEquipier
+	Personne string
+	Camp     string
+}
+
+type RemisesHint struct {
+	IdParticipant  cps.IdParticipant
+	Personne       string
+	Camp           string
+	Actual         cps.Remises
+	Hint           cps.Remises
+	AutresInscrits []InscritHeader
+	Equipiers      []EquipierHeader
+}
+
+func estimeRemises(db *sql.DB, hints config.RemisesHints, year int) ([]RemisesHint, error) {
+	camps, err := cps.SelectAllCamps(db)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	camps.RestrictByYear(year)
+
+	// load participants and dossiers
+	loader, err := cps.LoadCamps(db, camps.IDs())
+	if err != nil {
+		return nil, err
+	}
+	dossiers, err := logic.LoadDossiers(db, loader.IdDossiers()...)
+	if err != nil {
+		return nil, err
+	}
+
+	// load equipiers
+	equipiers, equipiersP, err := cps.LoadEquipiersByCamps(db, camps.IDs()...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+
+	// on identifie un inscrit membre de la même famille s'il a
+	// le même nom de famille et la même ville (au sens du responsable)
+	type famille struct {
+		nom, ville string // normalized
+	}
+	type inscritFamille struct {
+		inscrit  cps.Participant
+		personne string
+		camp     string
+		famille  famille
+	}
+
+	// to avoid quadratic complexity, build a crible
+	cribleEquipiers := make(map[famille][]EquipierHeader)
+	for _, equipier := range equipiers {
+		personne := equipiersP[equipier.IdPersonne]
+		// restrict to >= 18 ans to avoid brother
+		if personne.Age() < 18 {
+			continue
+		}
+		nom := search.Normalize(personne.Nom)
+		ville := search.Normalize(personne.Ville)
+		fam := famille{nom, ville}
+		eq := EquipierHeader{equipier.Id, personne.PrenomNOM(), camps[equipier.IdCamp].Label()}
+		cribleEquipiers[fam] = append(cribleEquipiers[fam], eq)
+	}
+	cribleInscrits := make(map[famille][]InscritHeader) // nombre d'inscrits
+	var inscritsFamille []inscritFamille                // avoid computing it twice
+	for _, camp := range camps {
+		campL := camp.Label()
+		inscrits := loader.For(camp.Id).Participants(true)
+		for _, inscrit := range inscrits {
+			personne := inscrit.Personne.PrenomNOM()
+			dossier := dossiers.For(inscrit.Participant.IdDossier)
+			nom := search.Normalize(inscrit.Personne.Nom)
+			ville := search.Normalize(dossier.Responsable().Ville)
+			fam := famille{nom, ville}
+			insc := InscritHeader{inscrit.Participant.Id, personne, campL}
+			cribleInscrits[fam] = append(cribleInscrits[fam], insc)
+			inscritsFamille = append(inscritsFamille, inscritFamille{inscrit.Participant, personne, campL, fam})
+		}
+	}
+
+	// eventually compute the remises
+	var out []RemisesHint
+	for _, inscrit := range inscritsFamille {
+		currentRemise := inscrit.inscrit.Remises
+		// skip already applicated remises
+		if hasRemise := currentRemise != (cps.Remises{}); hasRemise {
+			continue
+		}
+		hint := RemisesHint{
+			IdParticipant: inscrit.inscrit.Id, Personne: inscrit.personne,
+			Camp: inscrit.camp, Actual: currentRemise,
+		}
+		if autres := cribleInscrits[inscrit.famille]; len(autres) >= 2 {
+			hint.Hint.ReducInscrits = hints.AutreInscrit
+			hint.AutresInscrits = autres
+		}
+		if equipiers := cribleEquipiers[inscrit.famille]; len(equipiers) != 0 {
+			hint.Hint.ReducEquipiers = hints.ParentEquipier
+			hint.Equipiers = equipiers
+		}
+		if hint.Hint.ReducInscrits+hint.Hint.ReducEquipiers != 0 {
+			out = append(out, hint)
+		}
+	}
+
+	// out is already grouped by camp
+	slices.SortStableFunc(out, func(a, b RemisesHint) int { return int(a.IdParticipant - b.IdParticipant) })
+
+	return out, nil
+}
+
+func (ct *Controller) DossiersApplyRemisesHints(c echo.Context) error {
+	var args []RemisesHint
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+	err := ct.applyRemises(args)
+	if err != nil {
+		return err
+	}
+	return c.NoContent(200)
+}
+
+func (ct *Controller) applyRemises(args []RemisesHint) error {
+	ids := make([]cps.IdParticipant, len(args))
+	for i, arg := range args {
+		ids[i] = arg.IdParticipant
+	}
+	participants, err := cps.SelectParticipants(ct.db, ids...)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	return utils.InTx(ct.db, func(tx *sql.Tx) error {
+		for _, arg := range args {
+			participant := participants[arg.IdParticipant]
+			// only update the two fields we set in [estimeRemises]
+			participant.Remises.ReducInscrits = arg.Hint.ReducInscrits
+			participant.Remises.ReducEquipiers = arg.Hint.ReducEquipiers
+			_, err = participant.Update(tx)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }

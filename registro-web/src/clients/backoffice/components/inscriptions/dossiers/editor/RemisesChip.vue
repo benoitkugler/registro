@@ -4,15 +4,15 @@
       <v-card v-bind="menuProps" elevation="1" color="grey-lighten-2">
         <v-card-text class="py-1 px-1">
           <template v-if="!isActive"> Pas de remises </template>
-          <span class="mx-1" v-if="inner.ReducEnfants">
-            Enfants : {{ inner.ReducEnfants }}%
+          <span class="mx-1" v-if="inner.ReducInscrits">
+            Inscrits : {{ inner.ReducInscrits }}%
           </span>
           <span class="mx-1" v-if="inner.ReducEquipiers">
             Equipiers : {{ inner.ReducEquipiers }}%
           </span>
           <br
             v-if="
-              (inner.ReducEnfants || inner.ReducEquipiers) &&
+              (inner.ReducInscrits || inner.ReducEquipiers) &&
               inner.ReducSpeciale.Cent
             "
           />
@@ -27,8 +27,8 @@
         <v-row>
           <v-col>
             <IntField
-              v-model="inner.ReducEnfants"
-              label="Remise enfants"
+              v-model="inner.ReducInscrits"
+              label="Remise inscrits"
               hide-details
               suffix="%"
             ></IntField>
@@ -83,7 +83,7 @@ const emit = defineEmits<{
 
 const isActive = computed(
   () =>
-    inner.value.ReducEnfants != 0 ||
+    inner.value.ReducInscrits != 0 ||
     inner.value.ReducEquipiers != 0 ||
     inner.value.ReducSpeciale.Cent != 0
 );

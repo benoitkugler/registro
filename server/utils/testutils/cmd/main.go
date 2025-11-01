@@ -120,6 +120,20 @@ func createStructureaide(db *sql.DB) {
 	check(err)
 }
 
+func randPrenom() string {
+	choices := [...]string{
+		"Pierre", "Julie", "Marine", "Jean", "Camille", "Sarah",
+	}
+	return choices[rand.Intn(len(choices))]
+}
+
+func randVille() string {
+	choices := [...]string{
+		"Montélimar", "Valence", "Lyon",
+	}
+	return choices[rand.Intn(len(choices))]
+}
+
 func addInscriptions(db *sql.DB, smtp config.SMTP, asso config.Asso, count int) {
 	ct := api.NewController(db, crypto.Encrypter{}, smtp, asso)
 
@@ -132,9 +146,9 @@ func addInscriptions(db *sql.DB, smtp config.SMTP, asso config.Asso, count int) 
 	}
 	c1, c2 := campIds[0], campIds[1]
 	parts := []api.Participant{
-		{IdCamp: c1, DateNaissance: shared.NewDate(2015, 1, 1), Nom: "Muler", Prenom: "Pierre", Sexe: pr.Man},
-		{IdCamp: c1, DateNaissance: shared.NewDate(2000, 1, 1), Nom: "Martin", Prenom: "Julie", Sexe: pr.Woman},
-		{IdCamp: c2, DateNaissance: shared.NewDate(2000, 1, 1), Nom: "Martin", Prenom: "Julie", Sexe: pr.Woman},
+		{IdCamp: c1, DateNaissance: shared.NewDate(2015, 1, 1), Nom: "Muler", Prenom: randPrenom(), Sexe: pr.Man},
+		{IdCamp: c1, DateNaissance: shared.NewDate(2000, 1, 1), Nom: "Martin", Prenom: randPrenom(), Sexe: pr.Woman},
+		{IdCamp: c2, DateNaissance: shared.NewDate(2000, 1, 1), Nom: "Martin", Prenom: randPrenom(), Sexe: pr.Woman},
 	}
 	if count < len(parts) {
 		parts = parts[:count]
@@ -146,6 +160,7 @@ func addInscriptions(db *sql.DB, smtp config.SMTP, asso config.Asso, count int) 
 			DateNaissance: shared.NewDate(2000, 1, 1),
 			Sexe:          pr.Woman,
 			Tels:          pr.Tels{"0684084101", "+33689755468"},
+			Ville:         randVille(),
 		},
 		Participants: parts,
 		Message:      utils.RandString(30, true) + "\n" + utils.RandString(10, true),

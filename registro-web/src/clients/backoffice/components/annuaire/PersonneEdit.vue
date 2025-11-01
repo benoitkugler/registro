@@ -31,6 +31,35 @@
             ></DateNaissanceField>
           </v-col>
         </v-row>
+        <v-row>
+          <v-col>
+            <v-text-field
+              hide-details
+              label="Adresse"
+              density="compact"
+              variant="outlined"
+              v-model="inner.Adresse"
+            ></v-text-field>
+          </v-col>
+          <v-col>
+            <v-text-field
+              hide-details
+              label="Code postal"
+              density="compact"
+              variant="outlined"
+              v-model="inner.CodePostal"
+            ></v-text-field>
+          </v-col>
+          <v-col>
+            <v-text-field
+              hide-details
+              label="Ville"
+              density="compact"
+              variant="outlined"
+              v-model="inner.Ville"
+            ></v-text-field>
+          </v-col>
+        </v-row>
       </v-form>
     </v-card-text>
     <v-card-actions>

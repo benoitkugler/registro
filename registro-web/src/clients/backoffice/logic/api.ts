@@ -103,6 +103,12 @@ export interface DossiersMergeIn {
 export interface DossiersUpdateOut {
   Responsable: string;
 }
+// registro/controllers/backoffice.EquipierHeader
+export interface EquipierHeader {
+  Id: IdEquipier;
+  Personne: string;
+  Camp: string;
+}
 // registro/controllers/backoffice.EventsSendMessageIn
 export interface EventsSendMessageIn {
   IdDossier: IdDossier;
@@ -119,6 +125,12 @@ export interface FilesCamp {
 export interface InscriptionIdentifieIn {
   IdDossier: IdDossier;
   Target: IdentTarget;
+}
+// registro/controllers/backoffice.InscritHeader
+export interface InscritHeader {
+  Id: IdParticipant;
+  Personne: string;
+  Camp: string;
 }
 // registro/controllers/backoffice.LogginOut
 export interface LogginOut {
@@ -184,6 +196,16 @@ export const QueryReglementLabels: Record<QueryReglement, string> = {
 // registro/controllers/backoffice.RelancePaiementIn
 export interface RelancePaiementIn {
   IdDossiers: IdDossier[] | null;
+}
+// registro/controllers/backoffice.RemisesHint
+export interface RemisesHint {
+  IdParticipant: IdParticipant;
+  Personne: string;
+  Camp: string;
+  Actual: Remises;
+  Hint: Remises;
+  AutresInscrits: InscritHeader[] | null;
+  Equipiers: EquipierHeader[] | null;
 }
 // registro/controllers/backoffice.SearchDossierIn
 export interface SearchDossierIn {
@@ -623,7 +645,7 @@ export type PrixQuotientFamilial = Ar4_Int;
 // registro/sql/camps.Remises
 export interface Remises {
   ReducEquipiers: Int;
-  ReducEnfants: Int;
+  ReducInscrits: Int;
   ReducSpeciale: Montant;
 }
 // registro/sql/camps.Role
@@ -1487,6 +1509,33 @@ export abstract class AbstractAPI {
         headers: this.getHeaders(),
         params: { id: String(params["id"]) },
       });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** DossiersRemisesHint performs the request and handles the error */
+  async DossiersRemisesHint() {
+    const fullUrl = this.baseURL + "/api/v1/backoffice/dossiers/remises-hints";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<RemisesHint[] | null> = await Axios.get(
+        fullUrl,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** DossiersApplyRemisesHints performs the request and handles the error */
+  async DossiersApplyRemisesHints(params: RemisesHint[] | null) {
+    const fullUrl = this.baseURL + "/api/v1/backoffice/dossiers/remises-hints";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
       return true;
     } catch (error) {
       this.handleError(error);

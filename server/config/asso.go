@@ -23,6 +23,8 @@ type Asso struct {
 	bankNames, bankIBANs []string       // displayed in espace perso
 	ChequeSettings       ChequeSettings // nil for disabled
 
+	RemisesHints RemisesHints
+
 	ConfigInscription
 }
 
@@ -75,6 +77,11 @@ var acve = Asso{
 		Adresse: [2]string{"Centre d'inscriptions - Marie-Pierre Buffet", "27, impasse Vignon - 26150 Chamaloc"},
 	},
 
+	RemisesHints: RemisesHints{
+		ParentEquipier: 30,
+		AutreInscrit:   15,
+	},
+
 	ConfigInscription: ConfigInscription{
 		SupportBonsCAF: true, SupportANCV: true,
 		SupportPaiementEnLigne:    true,
@@ -112,6 +119,11 @@ var repere = Asso{
 
 	ChequeSettings: ChequeSettings{}, // disabled
 
+	RemisesHints: RemisesHints{
+		ParentEquipier: 50,
+		AutreInscrit:   10,
+	},
+
 	ConfigInscription: ConfigInscription{
 		SupportBonsCAF: false, SupportANCV: false,
 		SupportPaiementEnLigne:    false,
@@ -129,6 +141,11 @@ type ChequeSettings struct {
 	IsValid bool
 	Ordre   string
 	Adresse [2]string // nom - adresse
+}
+
+type RemisesHints struct {
+	ParentEquipier int // in %
+	AutreInscrit   int // in %
 }
 
 type MailsSettings struct {

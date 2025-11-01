@@ -324,6 +324,15 @@ func (c *Camp) Check() error {
 	return nil
 }
 
+// RestrictByYear remove camps with different year.
+func (cps Camps) RestrictByYear(year int) {
+	for _, camp := range cps {
+		if camp.DateDebut.Time().Year() != year {
+			delete(cps, camp.Id)
+		}
+	}
+}
+
 type CampExt struct {
 	Camp Camp
 	// IsTerminated is 'true' when the camp
@@ -348,6 +357,18 @@ func (gs Groupes) TrouveGroupe(dateNaissance shared.Date) (Groupe, bool) {
 	}
 	// on a trouvé aucun groupe
 	return Groupe{}, false
+}
+
+func LoadEquipiersByCamps(db DB, idCamps ...IdCamp) (Equipiers, pr.Personnes, error) {
+	equipiers, err := SelectEquipiersByIdCamps(db, idCamps...)
+	if err != nil {
+		return nil, nil, utils.SQLError(err)
+	}
+	personnes, err := pr.SelectPersonnes(db, equipiers.IdPersonnes()...)
+	if err != nil {
+		return nil, nil, utils.SQLError(err)
+	}
+	return equipiers, personnes, nil
 }
 
 // Directeur renvoie le directeur (unique par construction)

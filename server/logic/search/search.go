@@ -20,7 +20,7 @@ type Query struct {
 func NewQuery(pattern string) Query {
 	var out []string
 	for _, s := range strings.Fields(pattern) {
-		s = normalize(s)
+		s = Normalize(s)
 		if s == "" {
 			continue
 		}
@@ -33,7 +33,7 @@ func NewQuery(pattern string) Query {
 // that is if every chunk matches.
 func (qu Query) Match(v pr.Personne) bool {
 	str := v.NOMPrenom()
-	str = normalize(str)
+	str = Normalize(str)
 	for _, r := range qu.patterns {
 		if !strings.Contains(str, r) {
 			return false

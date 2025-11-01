@@ -22,7 +22,7 @@
     </v-list-item>
     <v-divider></v-divider>
     <v-list-item
-      prepend-icon="mdi-account"
+      prepend-icon="mdi-account-hard-hat"
       link
       :to="{ path: '/equipiers' }"
       color="primary"

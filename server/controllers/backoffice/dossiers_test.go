@@ -213,9 +213,9 @@ func TestController_mergeDossiers(t *testing.T) {
 
 	asso, smtp := loadEnv(t)
 
-	pe1, err := pr.Personne{IsTemp: false, Etatcivil: pr.Etatcivil{DateNaissance: shared.Date(time.Now())}}.Insert(db)
+	pe1, err := pr.Personne{Etatcivil: pr.Etatcivil{DateNaissance: shared.Date(time.Now())}}.Insert(db)
 	tu.AssertNoErr(t, err)
-	pe2, err := pr.Personne{IsTemp: false, Etatcivil: pr.Etatcivil{DateNaissance: shared.Date(time.Now())}}.Insert(db)
+	pe2, err := pr.Personne{Etatcivil: pr.Etatcivil{DateNaissance: shared.Date(time.Now())}}.Insert(db)
 	tu.AssertNoErr(t, err)
 	camp1, err := cps.Camp{IdTaux: 1, Places: 20, AgeMin: 6, AgeMax: 12}.Insert(db)
 	tu.AssertNoErr(t, err)
@@ -250,4 +250,81 @@ func TestQueryReglement(t *testing.T) {
 	tu.Assert(t, (Partiel | Zero).match(logic.EnCours))
 	tu.Assert(t, (Partiel | Zero).match(logic.NonCommence))
 	tu.Assert(t, !(Partiel | Zero).match(logic.Complet))
+}
+
+func TestEstimeRemises(t *testing.T) {
+	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
+		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",
+		"../../migrations/init.sql")
+	defer db.Remove()
+
+	pe1, err := pr.Personne{Etatcivil: pr.Etatcivil{Nom: "Kugler"}}.Insert(db)
+	tu.AssertNoErr(t, err)
+	pe2, err := pr.Personne{Etatcivil: pr.Etatcivil{Nom: "kugler"}}.Insert(db)
+	tu.AssertNoErr(t, err)
+	pe2bis, err := pr.Personne{Etatcivil: pr.Etatcivil{Nom: "kugler"}}.Insert(db)
+	tu.AssertNoErr(t, err)
+	pe3, err := pr.Personne{Etatcivil: pr.Etatcivil{Nom: "hug"}}.Insert(db)
+	tu.AssertNoErr(t, err)
+	pe3bis, err := pr.Personne{Etatcivil: pr.Etatcivil{Nom: "hug"}}.Insert(db)
+	tu.AssertNoErr(t, err)
+	eq, err := pr.Personne{Etatcivil: pr.Etatcivil{Nom: "hug", Ville: "v3", DateNaissance: shared.Date(tu.DateFor(20))}}.Insert(db)
+	tu.AssertNoErr(t, err)
+	pe5, err := pr.Personne{Etatcivil: pr.Etatcivil{Nom: "sansfamille"}}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	respo1, err := pr.Personne{Etatcivil: pr.Etatcivil{Ville: "Begude"}}.Insert(db)
+	tu.AssertNoErr(t, err)
+	respo2, err := pr.Personne{Etatcivil: pr.Etatcivil{Ville: "Lyon"}}.Insert(db)
+	tu.AssertNoErr(t, err)
+	respo3, err := pr.Personne{Etatcivil: pr.Etatcivil{Ville: "v3"}}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	ct := Controller{db: db.DB}
+
+	camp1, err := ct.createCamp()
+	tu.AssertNoErr(t, err)
+	idTaux := camp1.Taux.Id
+	idCamp := camp1.Camp.Camp.Id
+
+	d1, err := ct.createDossier(respo1.Id)
+	tu.AssertNoErr(t, err)
+	d2, err := ct.createDossier(respo2.Id)
+	tu.AssertNoErr(t, err)
+	d3, err := ct.createDossier(respo3.Id)
+	tu.AssertNoErr(t, err)
+
+	// famille 1
+	_, err = cps.Participant{IdDossier: d1.Id, IdPersonne: pe1.Id, IdCamp: idCamp, IdTaux: idTaux, Statut: cps.Inscrit}.Insert(db)
+	tu.AssertNoErr(t, err)
+	_, err = cps.Participant{IdDossier: d1.Id, IdPersonne: pe2.Id, IdCamp: idCamp, IdTaux: idTaux, Statut: cps.Inscrit}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	// famille 2
+	_, err = cps.Participant{IdDossier: d2.Id, IdPersonne: pe2bis.Id, IdCamp: idCamp, IdTaux: idTaux, Statut: cps.Inscrit}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	// famille 3
+	_, err = cps.Participant{IdDossier: d3.Id, IdPersonne: pe3.Id, IdCamp: idCamp, IdTaux: idTaux, Statut: cps.Inscrit}.Insert(db)
+	tu.AssertNoErr(t, err)
+	_, err = cps.Participant{IdDossier: d3.Id, IdPersonne: pe3bis.Id, IdCamp: idCamp, IdTaux: idTaux, Statut: cps.Inscrit}.Insert(db)
+	tu.AssertNoErr(t, err)
+	_, err = ct.createEquipier(CreateEquipierIn{IdPersonne: eq.Id, IdCamp: idCamp})
+	tu.AssertNoErr(t, err)
+
+	// autre
+	_, err = cps.Participant{IdDossier: d2.Id, IdPersonne: pe5.Id, IdCamp: idCamp, IdTaux: idTaux, Statut: cps.Inscrit}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	out, err := estimeRemises(ct.db, config.RemisesHints{ParentEquipier: 5, AutreInscrit: 6}, time.Now().Year())
+	tu.AssertNoErr(t, err)
+
+	tu.Assert(t, len(out) == 4)
+	tu.Assert(t, out[0].IdParticipant == 1 && out[0].Hint == cps.Remises{ReducInscrits: 6})
+	tu.Assert(t, out[1].IdParticipant == 2 && out[1].Hint == cps.Remises{ReducInscrits: 6})
+	tu.Assert(t, out[2].IdParticipant == 4 && out[2].Hint == cps.Remises{ReducEquipiers: 5, ReducInscrits: 6})
+	tu.Assert(t, out[3].IdParticipant == 5 && out[3].Hint == cps.Remises{ReducEquipiers: 5, ReducInscrits: 6})
+
+	err = ct.applyRemises(out[1:2])
+	tu.AssertNoErr(t, err)
 }

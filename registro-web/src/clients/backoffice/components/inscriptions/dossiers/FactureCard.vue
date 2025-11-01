@@ -128,7 +128,7 @@ const participants = computed(() =>
 
 function hasRemise(b: BilanParticipantPub) {
   return !!(
-    b.Remises.ReducEnfants ||
+    b.Remises.ReducInscrits ||
     b.Remises.ReducEquipiers ||
     b.Remises.ReducSpeciale.Cent
   );
@@ -136,7 +136,7 @@ function hasRemise(b: BilanParticipantPub) {
 
 function formatRemises(remises: Remises) {
   const chunks = [];
-  if (remises.ReducEnfants) chunks.push(`Enfants : ${remises.ReducEnfants}%`);
+  if (remises.ReducInscrits) chunks.push(`Enfants : ${remises.ReducInscrits}%`);
   if (remises.ReducEquipiers)
     chunks.push(`Enfants : ${remises.ReducEquipiers}%`);
   if (remises.ReducSpeciale.Cent)

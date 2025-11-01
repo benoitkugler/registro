@@ -77,7 +77,7 @@ func Test_normalize(t *testing.T) {
 		{"Jean-Pier re", "jeanpierre"},
 	}
 	for _, tt := range tests {
-		tu.Assert(t, normalize(tt.args) == tt.want)
+		tu.Assert(t, Normalize(tt.args) == tt.want)
 	}
 }
 

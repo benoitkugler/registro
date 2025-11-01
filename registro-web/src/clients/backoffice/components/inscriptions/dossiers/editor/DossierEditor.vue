@@ -26,7 +26,7 @@
           >
           </DossierEditCard>
         </v-col>
-        <v-divider thickness="4" vertical></v-divider>
+        <v-divider thickness="2" vertical></v-divider>
         <v-col v-if="!isLoading">
           <div class="my-1"></div>
           <DossierParticipantRow

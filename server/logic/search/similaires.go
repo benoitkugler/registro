@@ -15,8 +15,8 @@ import (
 
 var alphaNum = rangetable.Merge(unicode.L, unicode.Digit)
 
-// normalize remove accents, white space and any non alphanumeric caracters
-func normalize(s string) string {
+// Normalize remove accents, white space and any non alphanumeric caracters
+func Normalize(s string) string {
 	b := []byte(s)
 	b = utils.RemoveAccents(b)
 	b = runes.Remove(runes.NotIn(alphaNum)).Bytes(b)
@@ -63,15 +63,15 @@ func (ps *PatternsSimilarite) Personne() pr.Etatcivil {
 // using normalization.
 // [ps] should have been normalized beforehand.
 func (ps *PatternsSimilarite) match(candidate pr.Etatcivil) bool {
-	return ps.Nom == normalize(candidate.Nom) &&
-		ps.Prenom == normalize(candidate.Prenom) &&
+	return ps.Nom == Normalize(candidate.Nom) &&
+		ps.Prenom == Normalize(candidate.Prenom) &&
 		ps.Sexe == candidate.Sexe &&
 		ps.DateNaissance == candidate.DateNaissance
 }
 
 func (in *PatternsSimilarite) normalize() {
-	in.Nom = normalize(in.Nom)
-	in.Prenom = normalize(in.Prenom)
+	in.Nom = Normalize(in.Nom)
+	in.Prenom = Normalize(in.Prenom)
 }
 
 func (in PatternsSimilarite) scoreMax() (scoreMax int) {
@@ -94,7 +94,7 @@ func (in PatternsSimilarite) scoreMax() (scoreMax int) {
 // Renvoi false si une des deux chaines est vide.
 func isIn(full, substr string) bool {
 	return substr != "" && full != "" && strings.Contains(
-		normalize(full), substr)
+		Normalize(full), substr)
 }
 
 func comparaison(p pr.Personne, in PatternsSimilarite) (score int) {

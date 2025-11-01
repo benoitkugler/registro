@@ -249,11 +249,11 @@ func (bp BilanParticipant) publish(taux ds.Taux) BilanParticipantPub {
 // or an empty string
 func (bp BilanParticipantPub) RemisesHTML() template.HTML {
 	rem := bp.Remises
-	if rem.ReducEnfants == 0 && rem.ReducEquipiers == 0 && rem.ReducSpeciale.Cent == 0 {
+	if rem.ReducInscrits == 0 && rem.ReducEquipiers == 0 && rem.ReducSpeciale.Cent == 0 {
 		return ""
 	}
 	return template.HTML(fmt.Sprintf("<i>Remise nombre d'enfants : %d%%    Remise équipiers : %d%%    Remise spéciale : %s</i>",
-		rem.ReducEnfants, rem.ReducEquipiers, rem.ReducSpeciale))
+		rem.ReducInscrits, rem.ReducEquipiers, rem.ReducSpeciale))
 }
 
 type BilanFinancesPub struct {

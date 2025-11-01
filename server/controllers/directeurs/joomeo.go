@@ -63,11 +63,7 @@ func (ct *Controller) loadJoomeo(id cps.IdCamp) (data Joomeo, err error) {
 		return Joomeo{}, utils.SQLError(err)
 	}
 
-	equipiersL, err := cps.SelectEquipiersByIdCamps(ct.db, id)
-	if err != nil {
-		return Joomeo{}, utils.SQLError(err)
-	}
-	equipiers, err := pr.SelectPersonnes(ct.db, equipiersL.IdPersonnes()...)
+	_, equipiers, err := cps.LoadEquipiersByCamps(ct.db, id)
 	if err != nil {
 		return Joomeo{}, utils.SQLError(err)
 	}

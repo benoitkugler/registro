@@ -568,13 +568,13 @@ func ListeParticipantsCamps(participants []cps.ParticipantCamp, dossiers logic.D
 			{Value: responsable.Ville},         // Ville
 			{Value: string(responsable.Pays)},  // Pays
 			// dossier
-			intCell(dossier.Dossier.Dossier.Id),                                             // ID Dossier
-			{Value: formatTime(dossier.Dossier.Dossier.MomentInscription)},                  // Inscription
-			{Value: bilan.StatutPaiement().String()},                                        // Etat du règlement
-			{Value: taux.Convertible(bilan.Recu()).String()},                                // Montant payé
-			{Value: taux.Convertible(bilan.FondsSoutien()).String()},                        // Fonds de soutien
-			{ValueF: float32(rem.ReducEnfants + rem.ReducEquipiers), NumFormat: Percentage}, // Remises (%)
-			{Value: taux.Convertible(rem.ReducSpeciale).String()},                           // Remises
+			intCell(dossier.Dossier.Dossier.Id),                                              // ID Dossier
+			{Value: formatTime(dossier.Dossier.Dossier.MomentInscription)},                   // Inscription
+			{Value: bilan.StatutPaiement().String()},                                         // Etat du règlement
+			{Value: taux.Convertible(bilan.Recu()).String()},                                 // Montant payé
+			{Value: taux.Convertible(bilan.FondsSoutien()).String()},                         // Fonds de soutien
+			{ValueF: float32(rem.ReducInscrits + rem.ReducEquipiers), NumFormat: Percentage}, // Remises (%)
+			{Value: taux.Convertible(rem.ReducSpeciale).String()},                            // Remises
 		}
 		rows[i] = row[:]
 	}

@@ -452,11 +452,11 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('ReducEquipiers', 'ReducEnfants', 'ReducSpeciale'))
+            bool_and(key IN ('ReducEquipiers', 'ReducInscrits', 'ReducSpeciale'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_number (data -> 'ReducEquipiers')
-        AND gomacro_validate_json_number (data -> 'ReducEnfants')
+        AND gomacro_validate_json_number (data -> 'ReducInscrits')
         AND gomacro_validate_json_doss_Montant (data -> 'ReducSpeciale');
     RETURN is_valid;
 END;

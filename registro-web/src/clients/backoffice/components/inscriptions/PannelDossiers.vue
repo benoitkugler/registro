@@ -21,7 +21,13 @@
             </template>
             Actions
             <v-menu activator="parent">
-              <v-list>
+              <v-list density="compact">
+                <v-list-item
+                  title="Estimation des remises"
+                  prepend-icon="mdi-finance"
+                  @click="showRemisesHints = true"
+                ></v-list-item>
+                <v-divider></v-divider>
                 <v-list-item
                   title="Documents..."
                   subtitle="Paramétrer et envoyer les documents d'un séjour"
@@ -134,6 +140,11 @@
         :total="relancePaiementProgress.Total"
       ></RequestProgressCard>
     </v-dialog>
+
+    <!-- remises hints -->
+    <v-dialog v-model="showRemisesHints" max-width="800px">
+      <RemisesHintsCard></RemisesHintsCard>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -170,6 +181,7 @@ import SendRelancePaiementCard from "./dossiers/SendRelancePaiementCard.vue";
 import { readJSONStream } from "@/utils";
 import RequestProgressCard from "../RequestProgressCard.vue";
 import type { Int } from "@/urls";
+import RemisesHintsCard from "./dossiers/RemisesHintsCard.vue";
 
 const props = defineProps<{
   initialDossier?: IdDossier;
@@ -499,4 +511,6 @@ async function sendRelancePaiement(idCamp: IdCamp, idDossiers: IdDossier[]) {
   ensureDossier();
   controller.showMessage("Toutes les relances ont été envoyées avec succès.");
 }
+
+const showRemisesHints = ref(false);
 </script>

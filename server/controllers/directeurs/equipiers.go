@@ -64,14 +64,11 @@ func (ct *Controller) getEquipiers(host string, user cps.IdCamp) ([]EquipierExt,
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
-	equipiers, err := cps.SelectEquipiersByIdCamps(ct.db, user)
+	equipiers, personnes, err := cps.LoadEquipiersByCamps(ct.db, user)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
-	personnes, err := pr.SelectPersonnes(ct.db, equipiers.IdPersonnes()...)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
+
 	out := make([]EquipierExt, 0, len(equipiers))
 	for _, equipier := range equipiers {
 		out = append(out, newEquipierExt(ct.key, host, camp, equipier, personnes[equipier.IdPersonne]))
@@ -198,11 +195,7 @@ func (ct *Controller) inviteEquipiers(host string, args EquipiersInviteIn, user 
 	if err != nil {
 		return utils.SQLError(err)
 	}
-	equipiers, err := cps.SelectEquipiersByIdCamps(ct.db, user)
-	if err != nil {
-		return utils.SQLError(err)
-	}
-	personnes, err := pr.SelectPersonnes(ct.db, equipiers.IdPersonnes()...)
+	equipiers, personnes, err := cps.LoadEquipiersByCamps(ct.db, user)
 	if err != nil {
 		return utils.SQLError(err)
 	}
@@ -448,14 +441,11 @@ type fileAndPrefix struct {
 }
 
 func (ct *Controller) compileFilesEquipiers(user cps.IdCamp) ([]fileAndPrefix, error) {
-	equipiers, err := cps.SelectEquipiersByIdCamps(ct.db, user)
+	equipiers, personnes, err := cps.LoadEquipiersByCamps(ct.db, user)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
-	personnes, err := pr.SelectPersonnes(ct.db, equipiers.IdPersonnes()...)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
+
 	tmp1, err := fs.SelectDemandeEquipiersByIdEquipiers(ct.db, equipiers.IDs()...)
 	if err != nil {
 		return nil, utils.SQLError(err)

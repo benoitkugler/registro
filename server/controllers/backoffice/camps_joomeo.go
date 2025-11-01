@@ -13,15 +13,12 @@ import (
 )
 
 func loadDirecteurs(db cps.DB, camps []cps.IdCamp) (map[cps.IdCamp]pr.Personne, error) {
-	tmp, err := cps.SelectEquipiersByIdCamps(db, camps...)
+	tmp, personnes, err := cps.LoadEquipiersByCamps(db, camps...)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
 	equipiersByCamp := tmp.ByIdCamp()
-	personnes, err := pr.SelectPersonnes(db, tmp.IdPersonnes()...)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
+
 	out := map[cps.IdCamp]pr.Personne{}
 	for _, camp := range camps {
 		dir, ok := equipiersByCamp[camp].Directeur()

@@ -277,7 +277,7 @@ func (bp BilanParticipant) prixSansRemises(taux ds.Taux) cps.Montant {
 
 // Net renvoie le prix à payer après avoir déduit les aides extérieures et les remises
 func (bp BilanParticipant) net(taux ds.Taux) cps.Montant {
-	v1 := bp.prixSansRemises(taux).Remise(bp.Remises.ReducEnfants + bp.Remises.ReducEquipiers)
+	v1 := bp.prixSansRemises(taux).Remise(bp.Remises.ReducInscrits + bp.Remises.ReducEquipiers)
 	val := taux.Convertible(v1)
 	val.Sub(bp.Remises.ReducSpeciale)
 	if val.Montant.Cent < 0 {

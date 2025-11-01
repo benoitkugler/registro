@@ -529,11 +529,7 @@ func (ct *Controller) exportListeParticipants(year int) ([]byte, string, error) 
 	if err != nil {
 		return nil, "", utils.SQLError(err)
 	}
-	for _, camp := range camps {
-		if camp.DateDebut.Time().Year() != year {
-			delete(camps, camp.Id)
-		}
-	}
+	camps.RestrictByYear(year)
 
 	loader, err := cps.LoadCamps(ct.db, camps.IDs())
 	if err != nil {
