@@ -5,7 +5,7 @@
     <b>{{ props.equipier.Personne.Prenom }}</b
     >, et merci pour ton engagement !<br />
     Ce formulaire te permet de remplir directement les informations et documents
-    nécessaires à Jeunesse et Sport.
+    nécessaires.
     <br />
     Merci de vérifier que tout est à jour...
   </v-alert>
