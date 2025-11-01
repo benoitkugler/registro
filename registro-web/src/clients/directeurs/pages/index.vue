@@ -55,7 +55,10 @@ import type { CampItem, IdCamp } from "../logic/api";
 
 const router = useRouter();
 
-onMounted(loadCamps);
+onMounted(() => {
+  handleBackofficeLoggin();
+  loadCamps();
+});
 
 const camps = ref<CampItem[]>([]);
 async function loadCamps() {
@@ -64,27 +67,33 @@ async function loadCamps() {
   camps.value = res || [];
 }
 
-const selected = ref<IdCamp>(0 as IdCamp);
+async function handleBackofficeLoggin() {
+  await router.isReady();
+  const idCamp = router.currentRoute.value.query["idCamp"];
+  const token = router.currentRoute.value.query["backoffice-token"];
+  if (idCamp && token) {
+    logginTo(Number(idCamp) as IdCamp, token as string);
+  }
+}
 
-const showPassword = ref(false);
-const password = ref("");
 const errors = ref<string[]>([]);
-async function loggin() {
-  const item = camps.value.find((item) => item.Id == selected.value);
-  if (!item) return;
-
-  const res = await controller.Loggin({
-    password: password.value,
-    idCamp: selected.value,
-  });
+async function logginTo(idCamp: IdCamp, password: string) {
+  const res = await controller.Loggin({ password, idCamp });
   if (res === undefined) return;
 
   if (res.IsValid) {
-    controller.setCamp(item, res.ComptaURL, res.Token);
+    controller.setCamp(res.Camp, res.ComptaURL, res.Token);
     controller.showMessage("Bienvenue !");
     router.push({ path: "/inscriptions" });
   } else {
     errors.value = ["Mot de passe incorrect."];
   }
+}
+
+const selected = ref<IdCamp>(0 as IdCamp);
+const password = ref("");
+const showPassword = ref(false);
+function loggin() {
+  logginTo(selected.value, password.value);
 }
 </script>

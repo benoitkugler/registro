@@ -39,7 +39,9 @@ type CampHeader struct {
 	Stats             cps.StatistiquesInscrits
 	ParticipantsFiles []fsAPI.DemandeStat
 	HasDirecteur      bool
-	URLPreselection   string
+
+	URLPreselection string
+	URLDirecteur    string // with loggin access
 }
 
 func (ct *Controller) CampsGet(c echo.Context) error {
@@ -79,10 +81,11 @@ func (ct *Controller) getCamps(host string) ([]CampHeader, error) {
 	for i, id := range ids {
 		loader := loaders.For(id)
 		files := filesLoader.For(id)
-		_, hasDirecteur := directeurs[loader.Camp.Id]
+		_, hasDirecteur := directeurs[id]
 		camp := loader.Camp.Ext()
-		preselection := utils.BuildUrl(host, inscriptions.EndpointInscription, utils.QP(inscriptions.PreselectionQueryParam, camp.Slug))
-		out[i] = CampHeader{camp, taux[loader.Camp.IdTaux], loader.Stats(), files.Stats(), hasDirecteur, preselection}
+		preselectionURL := utils.BuildUrl(host, inscriptions.EndpointInscription, utils.QP(inscriptions.PreselectionQueryParam, camp.Slug))
+		directeurURL := directeurURL(ct.key, host, id)
+		out[i] = CampHeader{camp, taux[loader.Camp.IdTaux], loader.Stats(), files.Stats(), hasDirecteur, preselectionURL, directeurURL}
 	}
 	return out, nil
 }
@@ -107,14 +110,14 @@ func (ct *Controller) CampsCreateMany(c echo.Context) error {
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
-	out, err := ct.createManyCamp(args)
+	out, err := ct.createManyCamp(args, c.Request().Host)
 	if err != nil {
 		return err
 	}
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) createManyCamp(args CampsCreateManyIn) (out []CampHeader, _ error) {
+func (ct *Controller) createManyCamp(args CampsCreateManyIn, host string) (out []CampHeader, _ error) {
 	err := utils.InTx(ct.db, func(tx *sql.Tx) error {
 		var err error
 		args.Taux, err = ensureTaux(tx, args.Taux)
@@ -128,7 +131,8 @@ func (ct *Controller) createManyCamp(args CampsCreateManyIn) (out []CampHeader, 
 			if err != nil {
 				return err
 			}
-			out = append(out, CampHeader{camp.Ext(), args.Taux, cps.StatistiquesInscrits{}, nil, false, ""})
+			directeurURL := directeurURL(ct.key, host, camp.Id)
+			out = append(out, CampHeader{camp.Ext(), args.Taux, cps.StatistiquesInscrits{}, nil, false, "", directeurURL})
 		}
 		return nil
 	})
@@ -136,7 +140,7 @@ func (ct *Controller) createManyCamp(args CampsCreateManyIn) (out []CampHeader, 
 }
 
 func (ct *Controller) CampsCreate(c echo.Context) error {
-	out, err := ct.createCamp()
+	out, err := ct.createCamp(c.Request().Host)
 	if err != nil {
 		return err
 	}
@@ -174,7 +178,7 @@ func lastTaux(camps cps.Camps) ds.IdTaux {
 	return last.IdTaux
 }
 
-func (ct *Controller) createCamp() (CampHeader, error) {
+func (ct *Controller) createCamp(host string) (CampHeader, error) {
 	camps, err := cps.SelectAllCamps(ct.db)
 	if err != nil {
 		return CampHeader{}, utils.SQLError(err)
@@ -189,7 +193,8 @@ func (ct *Controller) createCamp() (CampHeader, error) {
 	if err != nil {
 		return CampHeader{}, utils.SQLError(err)
 	}
-	return CampHeader{camp.Ext(), taux, cps.StatistiquesInscrits{}, nil, false, ""}, nil
+	directeurURL := directeurURL(ct.key, host, camp.Id)
+	return CampHeader{camp.Ext(), taux, cps.StatistiquesInscrits{}, nil, false, "", directeurURL}, nil
 }
 
 func (ct *Controller) CampsUpdate(c echo.Context) error {

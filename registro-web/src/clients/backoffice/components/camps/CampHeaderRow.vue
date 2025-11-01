@@ -119,6 +119,13 @@
               :disabled="props.camp.HasDirecteur"
             ></v-list-item>
             <v-divider thickness="1"></v-divider>
+            <v-list-item
+              title="Se connecter à l'espace directeur"
+              prepend-icon="mdi-open-in-new"
+              :href="props.camp.URLDirecteur"
+              target="_blank"
+            ></v-list-item>
+            <v-divider thickness="1"></v-divider>
 
             <v-list-item
               title="Envoyer le sondage"

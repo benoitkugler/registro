@@ -15,6 +15,7 @@ import (
 	"registro/logic"
 	"registro/utils"
 
+	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
 	fs "registro/sql/files"
 	pr "registro/sql/personnes"
@@ -145,6 +146,17 @@ func (ct *Controller) loggin(password string) (LogginOut, error) {
 		return LogginOut{}, err
 	}
 	return LogginOut{IsValid: true, IsFondSoutien: isFondSoutien, Token: token}, nil
+}
+
+// Redirection to Directeur with quick loggin
+type BackofficeToDirecteurKey struct {
+	IdCamp cps.IdCamp
+	Time   time.Time
+}
+
+func directeurURL(key crypto.Encrypter, host string, id cps.IdCamp) string {
+	token, _ := key.EncryptJSON(BackofficeToDirecteurKey{id, time.Now()})
+	return utils.BuildUrl(host, "/directeurs", utils.QP("backoffice-token", token), utils.QPInt("idCamp", id))
 }
 
 // ---------------------------------- Shared API ----------------------------------

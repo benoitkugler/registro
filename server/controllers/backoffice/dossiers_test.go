@@ -282,7 +282,7 @@ func TestEstimeRemises(t *testing.T) {
 
 	ct := Controller{db: db.DB}
 
-	camp1, err := ct.createCamp()
+	camp1, err := ct.createCamp("localhost")
 	tu.AssertNoErr(t, err)
 	idTaux := camp1.Taux.Id
 	idCamp := camp1.Camp.Camp.Id

@@ -38,6 +38,7 @@ export interface CampHeader {
   ParticipantsFiles: DemandeStat[] | null;
   HasDirecteur: boolean;
   URLPreselection: string;
+  URLDirecteur: string;
 }
 // registro/controllers/backoffice.CampJoomeo
 export interface CampJoomeo {

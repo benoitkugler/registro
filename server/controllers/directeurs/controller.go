@@ -7,9 +7,11 @@ package directeurs
 
 import (
 	"database/sql"
+	"errors"
 	"time"
 
 	"registro/config"
+	"registro/controllers/backoffice"
 	"registro/crypto"
 	"registro/logic"
 	"registro/utils"
@@ -112,6 +114,7 @@ func JWTUser(c echo.Context) (idCamp cps.IdCamp) {
 type LogginOut struct {
 	IsValid bool
 
+	Camp      logic.CampItem
 	ComptaURL string
 	Token     string
 }
@@ -139,24 +142,44 @@ func (ct *Controller) loggin(host string, id cps.IdCamp, password string) (Loggi
 		return LogginOut{}, utils.SQLError(err)
 	}
 
-	// fetch the directeur
-	equipiers, err := cps.SelectEquipiersByIdCamps(ct.db, id)
-	if err != nil {
-		return LogginOut{}, utils.SQLError(err)
-	}
-	var directeurPassword string
-	directeur, hasDirecteur := equipiers.Directeur()
-	if hasDirecteur {
-		directeurPassword = ct.shortKey.ShortKey(directeur.IdPersonne)
-	}
-
-	// we support 3 authentication:
+	// we support 4 authentication modes:
 	//	- global password
 	//	- directeur password
 	//	- camp password
-	if password == ct.password ||
-		(hasDirecteur && password == directeurPassword) ||
-		password == camp.Password {
+	//	- temporary token, used when redirecting from backoffice to directeur
+
+	isAllowed := false
+
+	// first check for a token
+	var args backoffice.BackofficeToDirecteurKey
+	err = ct.key.DecryptJSON(password, &args)
+	if err == nil {
+		// check the validity
+		if time.Since(args.Time) > 24*time.Hour {
+			return LogginOut{}, errors.New("quick access token has expired")
+		}
+		if args.IdCamp != id {
+			return LogginOut{}, errors.New("quick access token idCamp mismatch")
+		}
+		isAllowed = true
+	} else {
+		// fetch the directeur
+		equipiers, err := cps.SelectEquipiersByIdCamps(ct.db, id)
+		if err != nil {
+			return LogginOut{}, utils.SQLError(err)
+		}
+		var directeurPassword string
+		directeur, hasDirecteur := equipiers.Directeur()
+		if hasDirecteur {
+			directeurPassword = ct.shortKey.ShortKey(directeur.IdPersonne)
+		}
+
+		isAllowed = password == ct.password ||
+			(hasDirecteur && password == directeurPassword) ||
+			password == camp.Password
+	}
+
+	if isAllowed {
 		token, err := ct.NewToken(id)
 		if err != nil {
 			return LogginOut{}, err
@@ -165,7 +188,8 @@ func (ct *Controller) loggin(host string, id cps.IdCamp, password string) (Loggi
 		if err != nil {
 			return LogginOut{}, err
 		}
-		return LogginOut{true, comptaURL, token}, nil
+		item := logic.NewCampItem(camp)
+		return LogginOut{true, item, comptaURL, token}, nil
 	}
 	return LogginOut{IsValid: false}, nil
 }

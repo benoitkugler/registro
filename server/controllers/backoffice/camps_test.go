@@ -32,7 +32,7 @@ func TestCRUD(t *testing.T) {
 		tu.AssertNoErr(t, err)
 		tu.Assert(t, len(camps) == 0)
 
-		camp, err := ct.createCamp()
+		camp, err := ct.createCamp("localhost")
 		tu.AssertNoErr(t, err)
 		tu.Assert(t, camp.Camp.Camp.Statut == cps.VisibleFerme)
 
@@ -51,7 +51,7 @@ func TestCRUD(t *testing.T) {
 	})
 
 	t.Run("equipiers", func(t *testing.T) {
-		camp, err := ct.createCamp()
+		camp, err := ct.createCamp("localhost")
 		tu.AssertNoErr(t, err)
 
 		_, err = ct.createEquipier(CreateEquipierIn{pe.Id, camp.Camp.Camp.Id, cps.Roles{cp.Direction}})
@@ -59,7 +59,7 @@ func TestCRUD(t *testing.T) {
 	})
 
 	t.Run("documents", func(t *testing.T) {
-		camp, err := ct.createCamp()
+		camp, err := ct.createCamp("localhost")
 		tu.AssertNoErr(t, err)
 
 		_, err = ct.getCampDocument(camp.Camp.Camp.Id)
@@ -100,9 +100,9 @@ func TestExportParticipants(t *testing.T) {
 	pe2, err := pr.Personne{Etatcivil: pr.Etatcivil{Nom: "Autre", Prenom: "Hugette"}}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	camp1, err := ct.createCamp()
+	camp1, err := ct.createCamp("localhost")
 	tu.AssertNoErr(t, err)
-	camp2, err := ct.createCamp()
+	camp2, err := ct.createCamp("localhost")
 	tu.AssertNoErr(t, err)
 
 	dossier, err := ct.createDossier(resp.Id)

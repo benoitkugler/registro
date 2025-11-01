@@ -34,11 +34,11 @@ func TestJoomeo(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(albums) == 0)
 
-	camp1, err := ct.createCamp()
+	camp1, err := ct.createCamp("localhost")
 	tu.AssertNoErr(t, err)
-	camp2, err := ct.createCamp()
+	camp2, err := ct.createCamp("localhost")
 	tu.AssertNoErr(t, err)
-	_, err = ct.createCamp()
+	_, err = ct.createCamp("localhost")
 	tu.AssertNoErr(t, err)
 	idCamp1, idCamp2 := camp1.Camp.Camp.Id, camp2.Camp.Camp.Id
 

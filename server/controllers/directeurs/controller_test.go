@@ -2,8 +2,10 @@ package directeurs
 
 import (
 	"testing"
+	"time"
 
 	"registro/config"
+	"registro/controllers/backoffice"
 	"registro/crypto"
 	cps "registro/sql/camps"
 	pr "registro/sql/personnes"
@@ -60,4 +62,13 @@ func TestLoggin(t *testing.T) {
 	out, err = ct.loggin("", camp.Id, ct.shortKey.ShortKey(directeur.Id))
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, out.IsValid)
+
+	token, err := ct.key.EncryptJSON(backoffice.BackofficeToDirecteurKey{IdCamp: camp.Id, Time: time.Now()})
+	tu.AssertNoErr(t, err)
+	out, err = ct.loggin("", camp.Id, token)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, out.IsValid)
+
+	out, err = ct.loggin("", camp.Id+1, token)
+	tu.AssertErr(t, err)
 }
