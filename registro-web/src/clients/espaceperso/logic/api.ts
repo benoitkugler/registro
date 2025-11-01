@@ -389,7 +389,7 @@ export type PrixQuotientFamilial = Ar4_Int;
 // registro/sql/camps.Remises
 export interface Remises {
   ReducEquipiers: Int;
-  ReducEnfants: Int;
+  ReducInscrits: Int;
   ReducSpeciale: Montant;
 }
 // registro/sql/camps.ReponseSondage
@@ -852,7 +852,7 @@ export abstract class AbstractAPI {
     return { Authorization: "Bearer " + this.authToken };
   }
 
-  /** Returns an URL */
+  /** Returns an URL with method GET */
   DownloadAttestationPresence(token: string) {
     return (
       this.baseURL +
@@ -861,7 +861,7 @@ export abstract class AbstractAPI {
     );
   }
 
-  /** Returns an URL */
+  /** Returns an URL with method GET */
   DownloadFacture(token: string) {
     return (
       this.baseURL + "/api/v1/espaceperso/download/facture" + `?token=${token}`

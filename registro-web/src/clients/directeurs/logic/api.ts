@@ -454,7 +454,7 @@ export type PrixQuotientFamilial = Ar4_Int;
 // registro/sql/camps.Remises
 export interface Remises {
   ReducEquipiers: Int;
-  ReducEnfants: Int;
+  ReducInscrits: Int;
   ReducSpeciale: Montant;
 }
 // registro/sql/camps.Role
