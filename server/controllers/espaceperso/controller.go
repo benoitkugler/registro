@@ -67,8 +67,9 @@ type Data struct {
 	DocumentsToReadOrFillCount int // number to read or fill (including fiche sanitaires and vaccins)
 	AssoTitle                  string
 	MailCentre                 string
-	IsPaiementOpen             bool
 	PaiementSettings           PaiementSettings
+
+	IsPaiementOpen bool
 	// EnableJustificatifs is true when all the camps have started (or ended)
 	EnableJustificatifs bool
 }
@@ -98,13 +99,13 @@ func (ct *Controller) load(id ds.IdDossier) (Data, error) {
 		documents.NewCount,
 		ct.asso.Title,
 		ct.asso.ContactMail,
-		dossier.IsPaiementOpen(),
 		PaiementSettings{
 			backoffice.OffuscateurVirements.Mask(id),
 			ct.asso.BankAccounts(),
 			ct.asso.SupportPaiementEnLigne,
 			ct.asso.ChequeSettings,
 		},
+		dossier.IsPaiementOpen(),
 		campInscritsStarted,
 	}, nil
 }

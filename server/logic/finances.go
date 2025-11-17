@@ -98,7 +98,6 @@ type DossierFinance struct {
 
 // IsPaiementOpen returns [true] if the Espace perso
 // should allow paiements
-// TODO : see https://github.com/benoitkugler/registro/issues/77
 func (de *DossierFinance) IsPaiementOpen() bool {
 	// every participant must have been validated
 	for _, part := range de.Participants {
