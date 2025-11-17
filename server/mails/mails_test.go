@@ -11,11 +11,11 @@ import (
 func loadEnv(t *testing.T) (config.Asso, config.SMTP) {
 	tu.LoadEnv(t, "../env.sh")
 
-	cfg, err := config.NewAsso()
+	asso, err := config.NewAsso()
 	tu.AssertNoErr(t, err)
 	creds, err := config.NewSMTP(false)
 	tu.AssertNoErr(t, err)
-	return cfg, creds
+	return asso, creds
 }
 
 func TestMailer(t *testing.T) {

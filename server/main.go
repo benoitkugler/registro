@@ -108,7 +108,7 @@ func main() {
 	setupRoutesEquipier(e, equipiersCt)
 	setupRoutesServices(e, espacepersoCt)
 	setupRoutesMisc(e, filesCt)
-	setupClientApps(e)
+	setupClientApps(e, asso.ID)
 
 	fmt.Println("Setup done. Starting...")
 
@@ -192,33 +192,34 @@ func cacheStatic(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
-func setupClientApps(e *echo.Echo) {
-	serve := func(path string) echo.HandlerFunc {
-		return func(c echo.Context) error { return c.File(path) }
+func setupClientApps(e *echo.Echo, asso string) {
+	// path must be relative to static/<asso>
+	serveStaticAsso := func(path string) echo.HandlerFunc {
+		return func(c echo.Context) error { return c.File("static/" + asso + path) }
 	}
 
-	e.GET("/backoffice", serve("static/backoffice/index.html"), middleware.Gzip(), noCache)
-	e.GET("/backoffice/*", serve("static/backoffice/index.html"), middleware.Gzip(), noCache)
+	e.GET("/backoffice", serveStaticAsso("/backoffice/index.html"), middleware.Gzip(), noCache)
+	e.GET("/backoffice/*", serveStaticAsso("/backoffice/index.html"), middleware.Gzip(), noCache)
 
-	e.GET("/directeurs", serve("static/directeurs/index.html"), middleware.Gzip(), noCache)
-	e.GET("/directeurs/*", serve("static/directeurs/index.html"), middleware.Gzip(), noCache)
+	e.GET("/directeurs", serveStaticAsso("/directeurs/index.html"), middleware.Gzip(), noCache)
+	e.GET("/directeurs/*", serveStaticAsso("/directeurs/index.html"), middleware.Gzip(), noCache)
 
-	e.GET(directeurs.EndpointEquipier, serve("static/equipier/index.html"), middleware.Gzip(), noCache, noIndex)
-	e.GET(directeurs.EndpointEquipier+"/*", serve("static/equipier/index.html"), middleware.Gzip(), noCache, noIndex)
+	e.GET(directeurs.EndpointEquipier, serveStaticAsso("/equipier/index.html"), middleware.Gzip(), noCache, noIndex)
+	e.GET(directeurs.EndpointEquipier+"/*", serveStaticAsso("/equipier/index.html"), middleware.Gzip(), noCache, noIndex)
 
-	e.GET(logic.EndpointEspacePerso, serve("static/espaceperso/index.html"), middleware.Gzip(), noCache, noIndex)
-	e.GET(logic.EndpointEspacePerso+"/*", serve("static/espaceperso/index.html"), middleware.Gzip(), noCache, noIndex)
+	e.GET(logic.EndpointEspacePerso, serveStaticAsso("/espaceperso/index.html"), middleware.Gzip(), noCache, noIndex)
+	e.GET(logic.EndpointEspacePerso+"/*", serveStaticAsso("/espaceperso/index.html"), middleware.Gzip(), noCache, noIndex)
 
-	e.GET(inscriptions.EndpointInscription, serve("static/inscription/index.html"), middleware.Gzip(), noCache)
-	e.GET(inscriptions.EndpointInscription+"/*", serve("static/inscription/index.html"), middleware.Gzip(), noCache)
+	e.GET(inscriptions.EndpointInscription, serveStaticAsso("/inscription/index.html"), middleware.Gzip(), noCache)
+	e.GET(inscriptions.EndpointInscription+"/*", serveStaticAsso("/inscription/index.html"), middleware.Gzip(), noCache)
 
 	// services also contains the index page and the CGUs
-	e.GET("/", serve("static/services/index.html"), middleware.Gzip(), noCache)
-	e.GET("/cgu", serve("static/services/index.html"), middleware.Gzip(), noCache)
-	e.GET("/cgu/*", serve("static/services/index.html"), middleware.Gzip(), noCache)
-	e.GET("/services", serve("static/services/index.html"), middleware.Gzip(), noCache)
-	e.GET("/services/*", serve("static/services/index.html"), middleware.Gzip(), noCache)
+	e.GET("/", serveStaticAsso("/services/index.html"), middleware.Gzip(), noCache)
+	e.GET("/cgu", serveStaticAsso("/services/index.html"), middleware.Gzip(), noCache)
+	e.GET("/cgu/*", serveStaticAsso("/services/index.html"), middleware.Gzip(), noCache)
+	e.GET("/services", serveStaticAsso("/services/index.html"), middleware.Gzip(), noCache)
+	e.GET("/services/*", serveStaticAsso("/services/index.html"), middleware.Gzip(), noCache)
 
 	// global static files used by frontend apps
-	e.Group("/static", middleware.Gzip(), cacheStatic).Static("/*", "static")
+	e.Group("/static", middleware.Gzip(), cacheStatic).Static("/*", "static/"+asso)
 }

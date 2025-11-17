@@ -9,6 +9,8 @@ import (
 )
 
 type Asso struct {
+	ID string
+
 	Title, Infos string // used in documents footer
 
 	Icon                         string       // included as image src attribute
@@ -50,6 +52,8 @@ type ConfigInscription struct {
 }
 
 var acve = Asso{
+	ID: "acve",
+
 	Title: "ACVE",
 	Infos: "Association loi 1901 - N° Siret: 781 875 851 00037 - Jeunesse et Sport : 026ORG0163",
 
@@ -96,6 +100,8 @@ var acve = Asso{
 }
 
 var repere = Asso{
+	ID: "repere",
+
 	Title: "Repère",
 	Infos: "2025",
 
@@ -164,6 +170,7 @@ type MailsSettings struct {
 // The ASSO_BANK_IBAN env is also read
 func NewAsso() (Asso, error) {
 	var out Asso
+
 	switch asso := os.Getenv("ASSO"); asso {
 	case "acve":
 		out = acve

@@ -1,13 +1,18 @@
 # Build script for web app
 
-echo "Building app" &&
-bun run build &&
-echo "Copying files" &&
-rm -rf ../server/static/* &&
-cp -r dist/assets ../server/static &&
-# one folder per supported association
-cp -r dist/acve ../server/static &&
-cp -r dist/repere ../server/static &&
-cd dist/src/clients/ && 
-cp -r * ../../../../server/static &&
-echo "Done."
+# We build one version of the app for every asso
+for asso in acve repere
+do
+    echo "Building app for $asso..." &&
+    bun run vite build --mode $asso &&
+    echo "Copying files..." &&
+    rm -rf ../server/static/$asso/* &&
+    cp -r dist/assets ../server/static/$asso &&
+    # only copy the asso specific folder
+    cp -r dist/$asso ../server/static/$asso &&
+    cd dist/src/clients/ && 
+    cp -r * ../../../../server/static/$asso &&
+    cd ../../.. &&
+    echo "Done.";
+done
+

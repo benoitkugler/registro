@@ -18,7 +18,7 @@ import (
 	tu "registro/utils/testutils"
 )
 
-var cfg config.Asso
+var asso config.Asso
 
 func init() {
 	err := Init(os.TempDir(), "../../assets")
@@ -28,7 +28,7 @@ func init() {
 
 	os.Setenv("ASSO", "acve")
 	os.Setenv("ASSO_BANK_IBAN", "iban1,iban2")
-	cfg, err = config.NewAsso()
+	asso, err = config.NewAsso()
 	if err != nil {
 		panic(err)
 	}
@@ -92,7 +92,7 @@ func TestEmptyFicheSanitair(t *testing.T) {
 		{},
 	}
 	ti := time.Now()
-	content, err := CreateFicheSanitaires(cfg, data)
+	content, err := CreateFicheSanitaires(asso, data)
 	fmt.Println(time.Since(ti))
 	tu.AssertNoErr(t, err)
 	tu.Write(t, "FicheSanitairesEmpty.pdf", content)
@@ -102,7 +102,7 @@ func TestFicheSanitaire(t *testing.T) {
 	data := randFicheSanitaires()
 
 	ti := time.Now()
-	content, err := CreateFicheSanitaires(cfg, data)
+	content, err := CreateFicheSanitaires(asso, data)
 	fmt.Println(time.Since(ti))
 	tu.AssertNoErr(t, err)
 	tu.Write(t, "FicheSanitaires.pdf", content)
@@ -111,7 +111,7 @@ func TestFicheSanitaire(t *testing.T) {
 func BenchmarkFS(b *testing.B) {
 	pages := randFicheSanitaires()
 	for i := 0; i < b.N; i++ {
-		_, _ = CreateFicheSanitaires(cfg, pages)
+		_, _ = CreateFicheSanitaires(asso, pages)
 	}
 }
 
@@ -132,7 +132,7 @@ func TestListeParticipants(t *testing.T) {
 	data := randParticipants()
 
 	ti := time.Now()
-	content, err := CreateListeParticipants(cfg, data, "VIvie la vie 2024")
+	content, err := CreateListeParticipants(asso, data, "VIvie la vie 2024")
 	fmt.Println(time.Since(ti))
 	tu.AssertNoErr(t, err)
 	tu.Write(t, "ListeParticipants.pdf", content)
@@ -154,7 +154,7 @@ func TestListeVetements(t *testing.T) {
 	data := randVetements()
 
 	ti := time.Now()
-	content, err := CreateListeVetements(cfg, camps.ListeVetements{
+	content, err := CreateListeVetements(asso, camps.ListeVetements{
 		Vetements:  data,
 		Complement: "Il n'ya <b> pas</b> de service de lingerie.",
 	}, "VIvie la vie 2024")
@@ -176,7 +176,7 @@ func TestAttestationPresence(t *testing.T) {
 	}
 
 	ti := time.Now()
-	content, err := CreateAttestationPresence(cfg, Destinataire{
+	content, err := CreateAttestationPresence(asso, Destinataire{
 		NomPrenom:  "Kugler benoit",
 		Adresse:    "200, Route de Dieulefit",
 		CodePostal: "07568",
@@ -205,7 +205,7 @@ func TestFacture(t *testing.T) {
 	}
 
 	ti := time.Now()
-	content, err := CreateFacture(cfg, Destinataire{
+	content, err := CreateFacture(asso, Destinataire{
 		NomPrenom:  "Kugler benoit",
 		Adresse:    "200, Route de Dieulefit",
 		CodePostal: "07568",
@@ -267,7 +267,7 @@ const lettre1 = `
 
 func TestLettreDirecteur(t *testing.T) {
 	ti := time.Now()
-	content, err := CreateLettreDirecteur(cfg, camps.Lettredirecteur{
+	content, err := CreateLettreDirecteur(asso, camps.Lettredirecteur{
 		// UseCoordCentre: ,
 		Html:               lettre1,
 		ShowAdressePostale: true,
@@ -285,7 +285,7 @@ func TestLettreDirecteur(t *testing.T) {
 	tu.Write(t, "LettreDirecteur_1.pdf", content)
 
 	ti = time.Now()
-	content, err = CreateLettreDirecteur(cfg, camps.Lettredirecteur{
+	content, err = CreateLettreDirecteur(asso, camps.Lettredirecteur{
 		UseCoordCentre:     true,
 		Html:               lettre1,
 		ShowAdressePostale: true,
