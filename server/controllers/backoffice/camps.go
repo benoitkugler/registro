@@ -552,8 +552,21 @@ func (ct *Controller) exportListeParticipants(year int) ([]byte, string, error) 
 	if err != nil {
 		return nil, "", err
 	}
+
+	// load equipiers
+	equipiers, equipiersP, err := cps.LoadEquipiersByCamps(ct.db, camps.IDs()...)
+	if err != nil {
+		return nil, "", utils.SQLError(err)
+	}
+
+	remisesHintsL := estimeRemises(loader, dossiers.Dossiers, equipiers, equipiersP, ct.asso.RemisesHints)
+	remisesHints := map[cps.IdParticipant]cps.Remises{}
+	for _, p := range remisesHintsL {
+		remisesHints[p.IdParticipant] = p.Hint
+	}
+
 	showNationnaliteSuisse := ct.asso.AskNationnalite
-	content, err := sheets.ListeParticipantsCamps(inscrits, dossiers, showNationnaliteSuisse)
+	content, err := sheets.ListeParticipantsCamps(inscrits, dossiers, remisesHints, showNationnaliteSuisse)
 	if err != nil {
 		return nil, "", err
 	}

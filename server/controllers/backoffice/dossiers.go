@@ -901,7 +901,7 @@ func (ct *Controller) DossiersRemisesHint(c echo.Context) error {
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
-	out, err := estimeRemises(ct.db, ct.asso.RemisesHints, args.IdCamps)
+	out, err := ct.estimeRemises(ct.db, args.IdCamps)
 	if err != nil {
 		return err
 	}
@@ -925,29 +925,13 @@ type RemisesHint struct {
 	Personne       string
 	Camp           string
 	Actual         cps.Remises
-	Hint           cps.Remises
+	Hint           cps.Remises // ReducSpeciale is ignored
 	AutresInscrits []InscritHeader
 	Equipiers      []EquipierHeader
 }
 
-func estimeRemises(db *sql.DB, hints config.RemisesHints, ids []cps.IdCamp) ([]RemisesHint, error) {
-	// load participants and dossiers
-	loader, err := cps.LoadCamps(db, ids)
-	if err != nil {
-		return nil, err
-	}
+func estimeRemises(loader cps.CampsData, dossiers logic.Dossiers, equipiers cps.Equipiers, equipiersPersonnes pr.Personnes, hints config.RemisesHints) []RemisesHint {
 	camps := loader.Camps
-
-	dossiers, err := logic.LoadDossiers(db, loader.IdDossiers()...)
-	if err != nil {
-		return nil, err
-	}
-
-	// load equipiers
-	equipiers, equipiersP, err := cps.LoadEquipiersByCamps(db, ids...)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
 
 	// on identifie un inscrit membre de la même famille s'il a
 	// le même nom de famille et la même ville (au sens du responsable)
@@ -964,7 +948,7 @@ func estimeRemises(db *sql.DB, hints config.RemisesHints, ids []cps.IdCamp) ([]R
 	// to avoid quadratic complexity, build a crible
 	cribleEquipiers := make(map[famille][]EquipierHeader)
 	for _, equipier := range equipiers {
-		personne := equipiersP[equipier.IdPersonne]
+		personne := equipiersPersonnes[equipier.IdPersonne]
 		// restrict to >= 18 ans to avoid brother
 		if personne.Age() < 18 {
 			continue
@@ -1020,7 +1004,29 @@ func estimeRemises(db *sql.DB, hints config.RemisesHints, ids []cps.IdCamp) ([]R
 	// out is already grouped by camp
 	slices.SortStableFunc(out, func(a, b RemisesHint) int { return int(a.IdParticipant - b.IdParticipant) })
 
-	return out, nil
+	return out
+}
+
+func (ct *Controller) estimeRemises(db *sql.DB, ids []cps.IdCamp) ([]RemisesHint, error) {
+	// load participants and dossiers
+	loader, err := cps.LoadCamps(db, ids)
+	if err != nil {
+		return nil, err
+	}
+
+	dossiers, err := logic.LoadDossiers(db, loader.IdDossiers()...)
+	if err != nil {
+		return nil, err
+	}
+
+	// load equipiers
+	equipiers, equipiersP, err := cps.LoadEquipiersByCamps(db, ids...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+
+	hints := ct.asso.RemisesHints
+	return estimeRemises(loader, dossiers, equipiers, equipiersP, hints), nil
 }
 
 func (ct *Controller) DossiersApplyRemisesHints(c echo.Context) error {

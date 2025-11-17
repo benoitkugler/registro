@@ -487,7 +487,12 @@ func ListeParticipantsCamp(camp cps.Camp, inscrits []cps.ParticipantPersonne, do
 
 // ListeParticipantsCamps renvoie un document Excel des participants (éventuellemnt en liste d'attente)
 // de plusieurs séjours, à destination des comptables.
-func ListeParticipantsCamps(participants []cps.ParticipantCamp, dossiers logic.DossiersFinances, showNationnaliteSuisse bool) ([]byte, error) {
+//
+// Le champ ReducSpeciale des remises est ignoré.
+func ListeParticipantsCamps(participants []cps.ParticipantCamp, dossiers logic.DossiersFinances,
+	remisesHints map[cps.IdParticipant]cps.Remises,
+	showNationnaliteSuisse bool,
+) ([]byte, error) {
 	headersCamp := [...]string{
 		"ID Camp",
 		"Camp",
@@ -527,6 +532,8 @@ func ListeParticipantsCamps(participants []cps.ParticipantCamp, dossiers logic.D
 		"Fonds de soutien",
 		"Remises (%)",
 		"Remises",
+		"Remise famille probable",
+		"Remise équpiers probable",
 	}
 
 	rows := make([][]Cell, len(participants))
@@ -541,6 +548,9 @@ func ListeParticipantsCamps(participants []cps.ParticipantCamp, dossiers logic.D
 		if showNationnaliteSuisse {
 			nationalite = formatBool(inscrit.Personne.Nationnalite.IsSuisse)
 		}
+		hints := remisesHints[inscrit.Participant.Id]
+		remiseFamilleProbable := hints.ReducInscrits != 0
+		remiseEquipiersProbable := hints.ReducEquipiers != 0
 		var row [len(headersCamp) + len(headersParticipant) + len(headersResponsable) + len(headersDossier)]Cell = [...]Cell{
 			// camp
 			intCell(inscrit.Camp.Id),      // ID Camp
@@ -575,6 +585,8 @@ func ListeParticipantsCamps(participants []cps.ParticipantCamp, dossiers logic.D
 			{Value: taux.Convertible(bilan.FondsSoutien()).String()},                         // Fonds de soutien
 			{ValueF: float32(rem.ReducInscrits + rem.ReducEquipiers), NumFormat: Percentage}, // Remises (%)
 			{Value: taux.Convertible(rem.ReducSpeciale).String()},                            // Remises
+			{Value: formatBool(remiseFamilleProbable)},                                       // Remise famille probable
+			{Value: formatBool(remiseEquipiersProbable)},                                     // Remise équipiers probable
 		}
 		rows[i] = row[:]
 	}
