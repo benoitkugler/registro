@@ -9,10 +9,8 @@
           !props.isPaiementOpen ||
           props.dossier.Bilan.Statut == StatutPaiement.Complet
         "
+        prepend-icon="mdi-cash-plus"
       >
-        <template #prepend>
-          <v-icon>mdi-cash-plus</v-icon>
-        </template>
         Régler
       </v-btn>
       <v-btn

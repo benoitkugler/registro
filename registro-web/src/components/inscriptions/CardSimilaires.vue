@@ -74,10 +74,12 @@
         }}
       </v-btn>
       <v-spacer></v-spacer>
-      <v-btn variant="elevated" elevation="1" @click="toNewProfile()">
-        <template #prepend>
-          <v-icon>mdi-plus</v-icon>
-        </template>
+      <v-btn
+        variant="elevated"
+        elevation="1"
+        @click="toNewProfile()"
+        prepend-icon="mdi-plus"
+      >
         Créer un nouveau profil</v-btn
       >
     </v-card-actions>

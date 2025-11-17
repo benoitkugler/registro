@@ -23,10 +23,12 @@
         <v-col align-self="center" cols="auto">
           <v-menu>
             <template #activator="{ props: innerProps }">
-              <v-btn v-bind="innerProps" color="success" :disabled="isLoading">
-                <template #prepend>
-                  <v-icon>mdi-plus</v-icon>
-                </template>
+              <v-btn
+                v-bind="innerProps"
+                color="success"
+                :disabled="isLoading"
+                prepend-icon="mdi-plus"
+              >
                 Créer un séjour
               </v-btn>
             </template>
@@ -264,7 +266,7 @@ import CampHeaderRow from "./CampHeaderRow.vue";
 import { Camps, normalize, readJSONStream } from "@/utils";
 import CampsSelector from "../CampsSelector.vue";
 import DocumentsCard from "./DocumentsCard.vue";
-import RequestProgressCard from "../RequestProgressCard.vue";
+import RequestProgressCard from "@/components/RequestProgressCard.vue";
 import JoomeoPannel from "./JoomeoPannel.vue";
 
 const emit = defineEmits<{

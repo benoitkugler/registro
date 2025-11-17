@@ -3,6 +3,7 @@
 import type { AxiosResponse } from "axios";
 import Axios from "axios";
 
+import type { JSONStreamResponse } from "@/utils";
 export type Ar4_Int = [Int, Int, Int, Int];
 
 // AAAA-MM-YY date format
@@ -22,6 +23,11 @@ export interface NullBool {
 export interface InscriptionIdentifieIn {
   IdDossier: IdDossier;
   Target: IdentTarget;
+}
+// registro/controllers/backoffice.SendProgress
+export interface SendProgress {
+  Current: Int;
+  Total: Int;
 }
 // registro/controllers/directeurs.CreateMessageIn
 export interface CreateMessageIn {
@@ -161,6 +167,7 @@ export interface ParticipantFiles {
 }
 // registro/controllers/files.ParticipantsFiles
 export interface ParticipantsFiles {
+  DocumentsReady: boolean;
   Demandes: Demandes;
   Participants: ParticipantFiles[] | null;
 }
@@ -814,7 +821,6 @@ export interface Personne {
   CodePostal: string;
   Ville: string;
   Pays: Pays;
-  SecuriteSociale: string;
   NomJeuneFille: string;
   Profession: string;
   Etudiant: boolean;
@@ -1525,6 +1531,37 @@ export abstract class AbstractAPI {
         params: { idDemande: String(params["idDemande"]) },
       });
       return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** DocumentsUnlock performs the request and handles the error */
+  async DocumentsUnlock() {
+    const fullUrl = this.baseURL + "/api/v1/directeurs/documents/unlock";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, null, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** DocumentsUnlockAndSend return a streaming Response (JSON line format) */
+  async DocumentsUnlockAndSend() {
+    const fullUrl = this.baseURL + "/api/v1/directeurs/documents/unlock-send";
+    this.startRequest();
+    try {
+      const response = await fetch(fullUrl, {
+        method: "POST",
+        headers: {
+          ...this.getHeaders(),
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      });
+      return response as JSONStreamResponse<SendProgress>;
     } catch (error) {
       this.handleError(error);
     }

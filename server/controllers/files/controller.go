@@ -128,10 +128,10 @@ func StreamZip(resp http.ResponseWriter, archiveName string, files iter.Seq2[Zip
 }
 
 // Delete removes the file identified by the crypted ID [key]
-func Delete(db *sql.DB, enc crypto.Encrypter, files fs.FileSystem, key string) error {
+func Delete(db *sql.DB, enc crypto.Encrypter, files fs.FileSystem, key string) (fs.IdFile, error) {
 	id, err := crypto.DecryptID[fs.IdFile](enc, key)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	err = utils.InTx(db, func(tx *sql.Tx) error {
 		_, err = fs.DeleteFileById(tx, id)
@@ -145,9 +145,9 @@ func Delete(db *sql.DB, enc crypto.Encrypter, files fs.FileSystem, key string) e
 		return nil
 	})
 	if err != nil {
-		return err
+		return id, err
 	}
-	return nil
+	return id, nil
 }
 
 // ReadUpload checks the file size and reads its content.
@@ -305,6 +305,8 @@ type ParticipantFiles struct {
 // ParticipantsFiles is a 2D array participants as rows
 // and [Demande]s as columns
 type ParticipantsFiles struct {
+	DocumentsReady bool // copied from Camp
+
 	// contains Vaccins, and a column for Fiche sanitaire should be added
 	Demandes     fs.Demandes
 	Participants []ParticipantFiles
@@ -318,7 +320,7 @@ func (ld ParticipantsFilesLoader) For(id cps.IdCamp) ParticipantsFiles {
 	}
 	camp := ld.camps.For(id)
 
-	out := ParticipantsFiles{Demandes: demandes}
+	out := ParticipantsFiles{DocumentsReady: camp.Camp.DocumentsReady, Demandes: demandes}
 	for _, participant := range camp.Participants(true) {
 		personne, dossier := participant.Personne, ld.dossiers[participant.Participant.IdDossier]
 		filesM := make(map[fs.IdDemande][]logic.PublicFile)

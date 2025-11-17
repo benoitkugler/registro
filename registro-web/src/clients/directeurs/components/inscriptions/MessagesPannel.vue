@@ -2,18 +2,8 @@
   <v-card v-if="data != null" title="Messages des familles">
     <template #append>
       <v-btn-toggle color="secondary" class="mx-1" v-model="mode" rounded>
-        <v-btn size="small">
-          <template #prepend>
-            <v-icon>mdi-clock</v-icon>
-          </template>
-          Trier par date</v-btn
-        >
-        <v-btn size="small">
-          <template #append>
-            <v-icon>mdi-account</v-icon>
-          </template>
-          Trier par inscrit</v-btn
-        >
+        <v-btn size="small" prepend-icon="mdi-clock"> Trier par date</v-btn>
+        <v-btn size="small" append-icon="mdi-account"> Trier par inscrit</v-btn>
       </v-btn-toggle>
 
       <v-divider vertical thickness="1" class="mx-1"> </v-divider>
@@ -48,10 +38,11 @@
         class="my-2"
       >
         <template #append>
-          <v-btn size="small" @click="createMessageTo = dossier.IdDossier">
-            <template #prepend>
-              <v-icon icon="mdi-reply"></v-icon>
-            </template>
+          <v-btn
+            size="small"
+            @click="createMessageTo = dossier.IdDossier"
+            prepend-icon="mdi-reply"
+          >
             Répondre</v-btn
           >
         </template>
@@ -88,10 +79,11 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn :disabled="!newMessage.length" @click="sendMessage">
-            <template #prepend>
-              <v-icon>mdi-send</v-icon>
-            </template>
+          <v-btn
+            :disabled="!newMessage.length"
+            @click="sendMessage"
+            prepend-icon="mdi-send"
+          >
             Envoyer</v-btn
           >
         </v-card-actions>

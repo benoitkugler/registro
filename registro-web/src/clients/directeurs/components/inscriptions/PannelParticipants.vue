@@ -12,16 +12,14 @@
       Participants
     </template>
     <template #append>
-      <v-btn @click="showMessages = true" class="mx-1">
-        <template #prepend>
-          <v-icon>mdi-email</v-icon>
-        </template>
+      <v-btn @click="showMessages = true" class="mx-1" prepend-icon="mdi-email">
         Messages</v-btn
       >
-      <v-btn @click="showDocuments = true" class="mx-1">
-        <template #prepend>
-          <v-icon>mdi-folder</v-icon>
-        </template>
+      <v-btn
+        @click="showDocuments = true"
+        class="mx-1"
+        prepend-icon="mdi-folder"
+      >
         Documents</v-btn
       >
 
@@ -143,7 +141,7 @@ import {
   type ParticipantExt,
   type ParticipantsOut,
 } from "../../logic/api";
-import { endpoints, Participants } from "@/utils";
+import { Participants } from "@/utils";
 import FichesSanitairesPannel from "./FichesSanitairesPannel.vue";
 import DocumentsPannel from "./DocumentsPannel.vue";
 import MessagesPannel from "./MessagesPannel.vue";

@@ -163,8 +163,10 @@
     >
       <v-card title="Ajouter une aide extérieure">
         <template #append>
-          <v-btn @click="showStructureaides = true">
-            <v-icon>mdi-view-list</v-icon>
+          <v-btn
+            @click="showStructureaides = true"
+            prepend-icon="mdi-view-list"
+          >
             Structures</v-btn
           >
         </template>

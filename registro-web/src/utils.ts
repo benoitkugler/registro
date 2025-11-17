@@ -20,7 +20,12 @@ import {
   type Montant,
   type PrixQuotientFamilial,
 } from "./clients/backoffice/logic/api";
-import { FichesanitaireState } from "./clients/directeurs/logic/api";
+import {
+  Categorie,
+  CategorieLabels,
+  FichesanitaireState,
+  type Demande,
+} from "./clients/directeurs/logic/api";
 import type { Date_, Int } from "./clients/inscription/logic/api";
 import { addDays, isDateZero } from "./components/date";
 import { Endpoints } from "./urls";
@@ -426,6 +431,12 @@ export namespace Formatters {
 
   export function pourcent(val: number, max: number) {
     return (max == 0 ? 0 : (100 * val) / max).toFixed(0);
+  }
+
+  export function demande(demande: Demande) {
+    return demande.Categorie == Categorie.NoBuiltin
+      ? demande.Description
+      : CategorieLabels[demande.Categorie];
   }
 }
 

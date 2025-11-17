@@ -1,27 +1,19 @@
 <template>
   <NavBar title="Espace de suivi de votre inscription">
-    <v-btn @click="showSondages = 0 as IdCamp">
-      <template #prepend>
-        <v-icon>mdi-comment-quote</v-icon>
-      </template>
+    <v-btn @click="showSondages = 0 as IdCamp" prepend-icon="mdi-comment-quote">
       Avis
     </v-btn>
-    <v-btn @click="showPhotos = true">
-      <template #prepend>
-        <v-icon>mdi-image-album</v-icon>
-      </template>
+    <v-btn @click="showPhotos = true" prepend-icon="mdi-image-album">
       Album photos
     </v-btn>
     <v-menu>
       <template #activator="{ props: menuProps }">
         <v-btn
+          v-if="data"
           v-bind="menuProps"
           :disabled="!data.EnableJustificatifs"
-          v-if="data"
+          prepend-icon="mdi-download"
         >
-          <template #prepend>
-            <v-icon>mdi-download</v-icon>
-          </template>
           Justificatifs
         </v-btn>
       </template>
@@ -51,11 +43,12 @@
         <v-card subtitle="Participants">
           <!-- boutons Documents -->
           <template #append>
-            <v-btn size="small" class="mr-1" @click="showDocuments = true">
-              <template #prepend>
-                <v-icon>mdi-folder</v-icon>
-              </template>
-
+            <v-btn
+              size="small"
+              class="mr-1"
+              @click="showDocuments = true"
+              prepend-icon="mdi-folder"
+            >
               <v-badge
                 :color="
                   data.DocumentsToReadOrFillCount ? 'pink' : 'transparent'
@@ -127,10 +120,8 @@
           <template #append>
             <v-btn
               @click="showCreateMessage = { content: '', toFondSoutien: false }"
+              prepend-icon="mdi-email"
             >
-              <template #prepend>
-                <v-icon>mdi-email</v-icon>
-              </template>
               Nous écrire</v-btn
             >
           </template>
@@ -193,10 +184,8 @@
         <v-btn
           :disabled="!showCreateMessage.content.length"
           @click="sendMessage"
+          prepend-icon="mdi-send"
         >
-          <template #prepend>
-            <v-icon>mdi-send</v-icon>
-          </template>
           Envoyer</v-btn
         >
       </v-card-actions>

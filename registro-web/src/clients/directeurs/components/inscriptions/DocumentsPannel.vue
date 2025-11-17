@@ -12,16 +12,11 @@
           showRelanceConfirmation = true;
         "
         :disabled="isSendingMailFor.size != 0"
+        prepend-icon="mdi-email-arrow-right"
       >
-        <template #prepend>
-          <v-icon>mdi-email-arrow-right</v-icon>
-        </template>
         Relancer...</v-btn
       >
-      <v-btn>
-        <template #prepend>
-          <v-icon>mdi-download</v-icon>
-        </template>
+      <v-btn prepend-icon="mdi-download">
         Télécharger...
         <v-menu activator="parent">
           <v-list>
@@ -52,7 +47,16 @@
       </v-btn>
     </template>
     <v-card-text>
-      <v-table>
+      <v-alert type="warning" v-if="!data.DocumentsReady">
+        Les documents sont encore verrouillés et masqués aux participants.
+        <template #append>
+          <v-btn prepend-icon="mdi-cog" :to="{ path: '/documents' }">
+            Configurer
+          </v-btn>
+        </template>
+      </v-alert>
+
+      <v-table class="mt-4">
         <tr>
           <th class="text-left">Participant</th>
           <th>Fiche sanitaire</th>

@@ -36,10 +36,11 @@
       "
     >
       <v-spacer></v-spacer>
-      <v-btn size="small" @click="emit('replyFondSoutien')">
-        <template #prepend>
-          <v-icon>mdi-reply</v-icon>
-        </template>
+      <v-btn
+        size="small"
+        @click="emit('replyFondSoutien')"
+        prepend-icon="mdi-reply"
+      >
         Répondre au fonds de soutien
       </v-btn>
     </v-row>

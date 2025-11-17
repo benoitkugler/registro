@@ -7,6 +7,8 @@ import (
 	"iter"
 	"time"
 
+	"registro/config"
+	"registro/crypto"
 	"registro/logic"
 	"registro/mails"
 	cps "registro/sql/camps"
@@ -252,17 +254,18 @@ func (ct *Controller) EventsSendDocumentsCamp(c echo.Context) error {
 	return utils.StreamJSON(c.Response(), it)
 }
 
-func (ct *Controller) sendDocumentsCamp(host string, args SendDocumentsCampIn) (iter.Seq2[SendProgress, error], error) {
-	camp, err := cps.SelectCamp(ct.db, args.IdCamp)
+// SendDocumentsCamp is also used by the "directeur" controller
+func SendDocumentsCamp(db *sql.DB, key crypto.Encrypter, asso config.Asso, smtp config.SMTP, host string, args SendDocumentsCampIn) (iter.Seq2[SendProgress, error], error) {
+	camp, err := cps.SelectCamp(db, args.IdCamp)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
-	dossiers, err := logic.LoadDossiers(ct.db, args.IdDossiers...)
+	dossiers, err := logic.LoadDossiers(db, args.IdDossiers...)
 	if err != nil {
 		return nil, err
 	}
 	ids := dossiers.Dossiers.IDs() // ensure unicity
-	pool, err := mails.NewPool(ct.smtp, ct.asso.MailsSettings, nil)
+	pool, err := mails.NewPool(smtp, asso.MailsSettings, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -274,7 +277,7 @@ func (ct *Controller) sendDocumentsCamp(host string, args SendDocumentsCampIn) (
 			dossier := dossiers.For(idDossier)
 			responsable := dossier.Responsable()
 
-			err = utils.InTx(ct.db, func(tx *sql.Tx) error {
+			err = utils.InTx(db, func(tx *sql.Tx) error {
 				event, err := evs.Event{IdDossier: idDossier, Kind: evs.CampDocs, Created: time.Now()}.Insert(tx)
 				if err != nil {
 					return err
@@ -283,8 +286,8 @@ func (ct *Controller) sendDocumentsCamp(host string, args SendDocumentsCampIn) (
 				if err != nil {
 					return err
 				}
-				url := logic.EspacePersoURL(ct.key, host, idDossier, utils.QPInt("idEvent", event.Id))
-				body, err := mails.NotifieDocumentsCamp(ct.asso, mails.NewContact(&responsable), camp.Label(), url)
+				url := logic.EspacePersoURL(key, host, idDossier, utils.QPInt("idEvent", event.Id))
+				body, err := mails.NotifieDocumentsCamp(asso, mails.NewContact(&responsable), camp.Label(), url)
 				if err != nil {
 					return err
 				}
@@ -299,6 +302,10 @@ func (ct *Controller) sendDocumentsCamp(host string, args SendDocumentsCampIn) (
 			}
 		}
 	}, nil
+}
+
+func (ct *Controller) sendDocumentsCamp(host string, args SendDocumentsCampIn) (iter.Seq2[SendProgress, error], error) {
+	return SendDocumentsCamp(ct.db, ct.key, ct.asso, ct.smtp, host, args)
 }
 
 func (ct *Controller) EventsSendSondages(c echo.Context) error {

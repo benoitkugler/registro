@@ -26,10 +26,8 @@
           @click="emit('transfert', props.fiche.Fichesanitaire)"
           block
           class="mt-4"
+          prepend-icon="mdi-lock-open"
         >
-          <template #prepend>
-            <v-icon>mdi-lock-open</v-icon>
-          </template>
           Demander le transfert de la fiche sanitaire
         </v-btn>
       </v-alert>
@@ -188,10 +186,12 @@
             faire sortir le participant de l’hôpital après une hospitalisation.
           </v-card-text>
           <v-card-actions>
-            <v-btn block color="success" @click="emit('save', inner)">
-              <template #prepend>
-                <v-icon>mdi-content-save</v-icon>
-              </template>
+            <v-btn
+              block
+              color="success"
+              @click="emit('save', inner)"
+              prepend-icon="mdi-content-save"
+            >
               Enregistrer la fiche sanitaire de {{ props.fiche.Personne }}
             </v-btn>
           </v-card-actions>

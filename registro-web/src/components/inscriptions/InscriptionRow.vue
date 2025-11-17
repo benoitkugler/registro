@@ -17,10 +17,8 @@
         v-else
         :disabled="!allIdentified || !props.inscription.Participants?.length"
         @click="emit('valide')"
+        prepend-icon="mdi-check-all"
       >
-        <template #prepend>
-          <v-icon>mdi-check-all</v-icon>
-        </template>
         Tout valider</v-btn
       >
       <v-menu v-if="!props.hideDelete">

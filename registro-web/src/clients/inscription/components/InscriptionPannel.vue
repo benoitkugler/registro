@@ -73,10 +73,8 @@
             variant="outlined"
             @click="validInscription"
             :disabled="!isInscValid || isLoading"
+            prepend-icon="mdi-check"
           >
-            <template #prepend>
-              <v-icon>mdi-check</v-icon>
-            </template>
             <template v-if="smAndUp"> Valider mon inscription </template>
             <template v-else> Valider </template>
           </v-btn>

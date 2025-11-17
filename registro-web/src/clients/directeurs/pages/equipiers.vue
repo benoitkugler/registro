@@ -1,9 +1,6 @@
 <template>
   <NavBar :title="`${controller.camp?.Label} - Equipiers`">
-    <v-btn @click="showDocuments = true">
-      <template #prepend>
-        <v-icon>mdi-file</v-icon>
-      </template>
+    <v-btn @click="showDocuments = true" prepend-icon="mdi-file">
       Documents
     </v-btn>
   </NavBar>
@@ -20,10 +17,11 @@
     </template>
 
     <template #append>
-      <v-btn color="green" @click="showCreateEquipier = true">
-        <template #prepend>
-          <v-icon>mdi-plus</v-icon>
-        </template>
+      <v-btn
+        color="green"
+        @click="showCreateEquipier = true"
+        prepend-icon="mdi-plus"
+      >
         Ajouter un équipier</v-btn
       >
       <v-menu>

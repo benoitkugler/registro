@@ -1,9 +1,6 @@
 <template>
   <NavBar title="Gestion des séjours">
-    <v-btn v-if="current !== null" @click="goBack">
-      <template #prepend>
-        <v-icon>mdi-view-list</v-icon>
-      </template>
+    <v-btn v-if="current !== null" @click="goBack" prepend-icon="mdi-view-list">
       Retour à la liste</v-btn
     >
   </NavBar>

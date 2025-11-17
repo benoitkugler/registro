@@ -15,10 +15,7 @@
             <v-icon color="green">mdi-plus</v-icon>
           </v-btn>
           <v-divider thickness="1" vertical class="mx-2"></v-divider>
-          <v-btn size="small">
-            <template #prepend>
-              <v-icon>mdi-send-circle-outline</v-icon>
-            </template>
+          <v-btn size="small" prepend-icon="mdi-send-circle-outline">
             Actions
             <v-menu activator="parent">
               <v-list density="compact">
@@ -179,7 +176,7 @@ import { watch } from "vue";
 import SendDocumentsCampCard from "./dossiers/SendDocumentsCampCard.vue";
 import SendRelancePaiementCard from "./dossiers/SendRelancePaiementCard.vue";
 import { readJSONStream } from "@/utils";
-import RequestProgressCard from "../RequestProgressCard.vue";
+import RequestProgressCard from "../../../../components/RequestProgressCard.vue";
 import type { Int } from "@/urls";
 import RemisesHintsCard from "./dossiers/RemisesHintsCard.vue";
 

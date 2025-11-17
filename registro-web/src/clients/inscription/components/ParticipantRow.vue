@@ -84,11 +84,13 @@
     </v-card-text>
     <v-card-actions>
       <v-spacer></v-spacer>
-      <v-btn color="red" @click="emit('delete')" variant="outlined">
-        <template #prepend>
-          <v-icon>mdi-delete</v-icon>
-          Enlever ce participant
-        </template>
+      <v-btn
+        color="red"
+        @click="emit('delete')"
+        variant="outlined"
+        prepend-icon="mdi-delete"
+      >
+        Enlever ce participant
       </v-btn>
     </v-card-actions>
   </v-card>

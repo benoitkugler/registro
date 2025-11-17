@@ -1,10 +1,18 @@
 <template>
   <v-card
     title="Documents du séjour"
-    subtitle="Choisir les documents à lire ou remplir par les familles"
+    subtitle="Choisir les documents à lire ou remplir par les familles."
     class="ma-2 mx-auto"
     max-width="800px"
   >
+    <template #append v-if="data">
+      <v-chip v-if="data.Ready" prepend-icon="mdi-lock-open" color="success">
+        Documents visibles
+      </v-chip>
+      <v-btn v-else @click="showSendDialog = true" prepend-icon="mdi-lock-open">
+        Envoyer</v-btn
+      >
+    </template>
     <v-skeleton-loader v-if="data == null"></v-skeleton-loader>
     <v-card-text v-else>
       <v-alert type="info" closable>
@@ -126,7 +134,7 @@
         </v-list-item>
         <v-list-item
           v-for="demande in data.CampDemandes"
-          :title="demande.Demande.Description"
+          :title="Formatters.demande(demande.Demande)"
         >
           <template #append>
             <v-btn icon size="x-small" @click="unapplyDemande(demande.Demande)">
@@ -192,22 +200,63 @@
       @deleted="onDeleteDemande"
     ></AddDemandeCard>
   </v-dialog>
+
+  <!-- envoie documents -->
+  <v-dialog v-model="showSendDialog" max-width="800px">
+    <v-card title="Confirmer l'envoi des documents">
+      <v-card-text>
+        Les documents suivants seront disponibles sur l'espace de suivi, et un
+        mail de notification sera envoyé.
+
+        <div class="mt-2 text-center">
+          <v-chip v-for="doc in allDocumentsToShow" class="mx-1">
+            {{ doc }}</v-chip
+          >
+        </div>
+      </v-card-text>
+      <v-card-actions>
+        <v-btn @click="unlockDocuments" prepend-icon="mdi-lock-open">
+          Débloquer sans envoi de mail
+        </v-btn>
+        <v-spacer></v-spacer>
+        <v-btn
+          @click="unlockAndSendDocuments"
+          prepend-icon="mdi-email-arrow-right"
+        >
+          Débloquer et notifier</v-btn
+        >
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
+  <!-- progress monitor -->
+  <v-dialog :model-value="sendingProgress != null" persistent max-width="600px">
+    <RequestProgressCard
+      v-if="sendingProgress"
+      title="Envoi du sondage en cours"
+      :current="sendingProgress.Current"
+      :total="sendingProgress.Total"
+    ></RequestProgressCard>
+  </v-dialog>
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { controller } from "../../logic/logic";
 import type {
   Demande,
   DemandeDirecteur,
   DocumentsOut,
   DocumentsToShow,
-  IdDemande,
   PublicFile,
+  SendProgress,
 } from "../../logic/api";
 import type { DocumentsTab } from "../../plugins/router";
 import FileInput from "@/components/files/FileInput.vue";
 import AddDemandeCard from "./AddDemandeCard.vue";
+import { Formatters, readJSONStream } from "@/utils";
+import type { Int } from "@/urls";
+import RequestProgressCard from "@/components/RequestProgressCard.vue";
 
 const props = defineProps<{}>();
 
@@ -313,5 +362,52 @@ async function unapplyDemande(demande: Demande) {
   data.value.CampDemandes = (data.value?.CampDemandes || []).filter(
     (d) => d.Demande.Id != demande.Id
   );
+}
+
+const showSendDialog = ref(false);
+const allDocumentsToShow = computed(() => {
+  const d = data.value;
+  if (!d) return [];
+
+  const out: string[] = [];
+  if (d.ToShow.LettreDirecteur) out.push("Lettre aux familles");
+  if (d.ToShow.ListeVetements) out.push("Liste de vêtements");
+  if (d.ToShow.CharteParticipant) out.push("Charte");
+  if (d.ToShow.ListeParticipants) out.push("Liste des participants");
+  d.FilesToDownload?.forEach((doc) => out.push(doc.NomClient));
+  d.CampDemandes?.forEach((doc) => out.push(Formatters.demande(doc.Demande)));
+  return out;
+});
+
+async function unlockDocuments() {
+  showSendDialog.value = false;
+  const res = await controller.DocumentsUnlock();
+  if (res === undefined) return;
+  controller.showMessage("Documents débloqués avec succès.");
+  if (data.value) data.value.Ready = true;
+}
+
+const sendingProgress = ref<SendProgress | null>(null);
+async function unlockAndSendDocuments() {
+  // start with initial 0 progress
+  sendingProgress.value = {
+    Current: 0 as Int,
+    Total: 10 as Int, // just a guess
+  };
+  const res = await controller.DocumentsUnlockAndSend();
+  if (res === undefined) {
+    showSendDialog.value = false;
+    sendingProgress.value = null;
+    return;
+  }
+  await readJSONStream(
+    res,
+    (v) => (sendingProgress.value = v),
+    (err) => controller.onError("Envoi d'une notification", err)
+  );
+  sendingProgress.value = null;
+  showSendDialog.value = false;
+  if (data.value) data.value.Ready = true;
+  controller.showMessage("Notifications envoyées avec succès.");
 }
 </script>

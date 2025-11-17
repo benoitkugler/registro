@@ -145,7 +145,7 @@ func NotifieFacture(asso config.Asso, contact Contact, lienEspacePerso string) (
 	return render(notifieFactureT, args)
 }
 
-func NotifieDocumentsCamp(asso config.Asso, contact Contact, campLabel string, lienEspacePerso string) (string, error) {
+func NotifieDocumentsCamp(asso config.Asso, contact Contact, campLabel string, espacePersoURL string) (string, error) {
 	args := struct {
 		champsCommuns
 		CampLabel              string
@@ -153,16 +153,40 @@ func NotifieDocumentsCamp(asso config.Asso, contact Contact, campLabel string, l
 		EspacePersoButtonLabel string
 	}{
 		champsCommuns: champsCommuns{
-			Title:       "Documents du séjour",
+			Title:       "Documents à remplir",
 			Salutations: contact.Salutations(),
 			Asso:        asso,
 			Signature:   mailAuto,
 		},
 		CampLabel:              campLabel,
-		EspacePersoURL:         lienEspacePerso,
-		EspacePersoButtonLabel: "MON ESPACE",
+		EspacePersoURL:         espacePersoURL,
+		EspacePersoButtonLabel: "COMPLÉTER LES DOCUMENTS",
 	}
 	return render(notifieDocumentsCampT, args)
+}
+
+func RelanceDocuments(cfg config.Asso, contact Contact, campLabel, prenom, espacePersoURL string) (string, error) {
+	args := struct {
+		champsCommuns
+		Contact                Contact
+		Camp                   string
+		Prenom                 string
+		EspacePersoURL         string
+		EspacePersoButtonLabel string
+	}{
+		champsCommuns: champsCommuns{
+			Title:       "Documents à remplir",
+			Salutations: contact.Salutations(),
+			Asso:        cfg,
+			Signature:   cfg.MailsSettings.SignatureMailCentre + "<br/><br/>" + mailAuto,
+		},
+		Contact:                contact,
+		Camp:                   campLabel,
+		Prenom:                 prenom,
+		EspacePersoURL:         espacePersoURL,
+		EspacePersoButtonLabel: "COMPLÉTER LES DOCUMENTS",
+	}
+	return render(relanceDocumentsT, args)
 }
 
 func NotifieSondage(asso config.Asso, contact Contact, campLabel string, lienEspacePerso string) (string, error) {
@@ -381,30 +405,6 @@ func NotifiePlaceLiberee(cfg config.Asso, contact Contact, camp string, lienEspa
 		EspacePersoButtonLabel: "MON ESPACE",
 	}
 	return render(notifiePlaceLibereeT, args)
-}
-
-func RelanceDocuments(cfg config.Asso, contact Contact, camp, prenom, espacePersoURL string) (string, error) {
-	args := struct {
-		champsCommuns
-		Contact                Contact
-		Camp                   string
-		Prenom                 string
-		EspacePersoURL         string
-		EspacePersoButtonLabel string
-	}{
-		champsCommuns: champsCommuns{
-			Title:       "Documents à remplir",
-			Salutations: contact.Salutations(),
-			Asso:        cfg,
-			Signature:   cfg.MailsSettings.SignatureMailCentre + "<br/><br/>" + mailAuto,
-		},
-		Contact:                contact,
-		Camp:                   camp,
-		Prenom:                 prenom,
-		EspacePersoURL:         espacePersoURL,
-		EspacePersoButtonLabel: "COMPLÉTER LES DOCUMENTS",
-	}
-	return render(relanceDocumentsT, args)
 }
 
 // func NewRenvoieLienJoomeo(lien, login, password string) (string, error) {

@@ -4,10 +4,10 @@
     subtitle="Demandes et fichiers déposés par l'équipe"
   >
     <template #append>
-      <v-btn :href="controller.EquipiersDownloadFiles(controller.authToken)">
-        <template #prepend>
-          <v-icon>mdi-download</v-icon>
-        </template>
+      <v-btn
+        :href="controller.EquipiersDownloadFiles(controller.authToken)"
+        prepend-icon="mdi-download"
+      >
         Télécharger</v-btn
       >
     </template>

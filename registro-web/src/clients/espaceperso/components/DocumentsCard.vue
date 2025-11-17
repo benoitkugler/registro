@@ -65,10 +65,12 @@
             >
               Acceptée
             </v-chip>
-            <v-btn size="small" @click="charteToShow = charte.Id" v-else>
-              <template #prepend>
-                <v-icon>mdi-pencil</v-icon>
-              </template>
+            <v-btn
+              size="small"
+              @click="charteToShow = charte.Id"
+              prepend-icon="mdi-pencil"
+              v-else
+            >
               Signer</v-btn
             >
           </template>
@@ -88,10 +90,12 @@
             >
               Remplie
             </v-chip>
-            <v-btn size="small" @click="ficheToEdit = fiche" v-else>
-              <template #prepend>
-                <v-icon>mdi-pencil</v-icon>
-              </template>
+            <v-btn
+              size="small"
+              @click="ficheToEdit = fiche"
+              prepend-icon="mdi-pencil"
+              v-else
+            >
               Remplir</v-btn
             >
           </template>
@@ -141,10 +145,8 @@
                     :href="endpoints.LoadDocument(demande.DemandeFile.Key)"
                     class="mr-2"
                     size="small"
+                    prepend-icon="mdi-download"
                   >
-                    <template #prepend>
-                      <v-icon>mdi-download</v-icon>
-                    </template>
                     Modèle</v-btn
                   >
                 </template>

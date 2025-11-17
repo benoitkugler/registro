@@ -279,7 +279,7 @@ func (ct *Controller) uploadDocument(idEquipier cps.IdEquipier, idDemande fs.IdD
 
 func (ct *Controller) DeleteDocument(c echo.Context) error {
 	key := c.QueryParam("key")
-	err := filesAPI.Delete(ct.db, ct.key, ct.files, key)
+	_, err := filesAPI.Delete(ct.db, ct.key, ct.files, key)
 	if err != nil {
 		return err
 	}

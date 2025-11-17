@@ -4,20 +4,19 @@
     subtitle="Merci de préciser les participants à inscrire."
   >
     <template #append v-if="!isStart">
-      <v-btn color="green" @click="addParticipant">
-        <template #prepend>
-          <v-icon>mdi-plus</v-icon>
-        </template>
+      <v-btn color="green" @click="addParticipant" prepend-icon="mdi-plus">
         Ajouter un participant</v-btn
       >
     </template>
     <v-card-text v-if="isStart">
       <v-row class="my-4" no-gutters>
         <v-col align-self="center" class="text-center">
-          <v-btn size="large" class="text-none" @click="startWith('own')">
-            <template #append>
-              <v-icon>mdi-account</v-icon>
-            </template>
+          <v-btn
+            size="large"
+            class="text-none"
+            @click="startWith('own')"
+            prepend-icon="mdi-account"
+          >
             Je m'inscris comme participant.
           </v-btn>
         </v-col>
@@ -25,10 +24,12 @@
           <v-divider vertical thickness="4" class="py-4">ou</v-divider>
         </v-col>
         <v-col align-self="center" class="text-center">
-          <v-btn size="large" class="text-none" @click="startWith('one')">
-            <template #append>
-              <v-icon>mdi-account-child</v-icon>
-            </template>
+          <v-btn
+            size="large"
+            class="text-none"
+            @click="startWith('one')"
+            append-icon="mdi-account-child"
+          >
             J'inscris un participant.
           </v-btn>
         </v-col>

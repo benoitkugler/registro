@@ -36,10 +36,13 @@
       détention de substances illicites entraîneront le renvoi. <br /><br />
     </v-card-text>
     <v-card-actions>
-      <v-btn color="green" @click="emit('accept')" block variant="outlined">
-        <template #prepend>
-          <v-icon>mdi-check</v-icon>
-        </template>
+      <v-btn
+        color="green"
+        @click="emit('accept')"
+        block
+        variant="outlined"
+        prepend-icon="mdi-check"
+      >
         J'ai pris connaissance et accepte le cadre du camp
       </v-btn>
     </v-card-actions>

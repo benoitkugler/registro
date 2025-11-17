@@ -40,10 +40,8 @@
               link
               target="_blank"
               class="mx-1"
+              prepend-icon="mdi-open-in-new"
             >
-              <template #prepend>
-                <v-icon> mdi-open-in-new </v-icon>
-              </template>
               Accéder à Joomeo</v-btn
             >
           </v-col>

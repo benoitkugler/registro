@@ -72,7 +72,7 @@ func TestDocuments(t *testing.T) {
 		tu.Assert(t, len(docs.FilesToDownload) == 2)
 		tu.Assert(t, docs.ToShow.LettreDirecteur)
 
-		err = filesAPI.Delete(ct.db, ct.key, ct.files, file1.Key)
+		_, err = filesAPI.Delete(ct.db, ct.key, ct.files, file1.Key)
 		tu.AssertNoErr(t, err)
 
 		docs, err = ct.getDocuments(camp.Id)

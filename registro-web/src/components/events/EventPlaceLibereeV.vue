@@ -18,10 +18,8 @@
           color="green"
           v-if="props.user == Acteur.Espaceperso && !props.content.Accepted"
           @click="emit('acceptPlaceLiberee')"
+          prepend-icon="mdi-check"
         >
-          <template #prepend>
-            <v-icon>mdi-check</v-icon>
-          </template>
           Accepter la place</v-btn
         >
         <v-chip v-if="props.content.Accepted" prepend-icon="mdi-check">

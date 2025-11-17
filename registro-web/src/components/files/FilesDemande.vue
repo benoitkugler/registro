@@ -42,6 +42,7 @@ import {
   type Demande,
   type PublicFile,
 } from "@/clients/equipier/logic/api";
+import { Formatters } from "@/utils";
 import { computed } from "vue";
 
 const props = defineProps<{
@@ -58,11 +59,7 @@ const emit = defineEmits<{
   (e: "delete", file: PublicFile): void;
 }>();
 
-const title = computed(() =>
-  props.demande.Categorie == Categorie.NoBuiltin
-    ? props.demande.Description
-    : CategorieLabels[props.demande.Categorie]
-);
+const title = computed(() => Formatters.demande(props.demande));
 </script>
 
 <style scoped></style>

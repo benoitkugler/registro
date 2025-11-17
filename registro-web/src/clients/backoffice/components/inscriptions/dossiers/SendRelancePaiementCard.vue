@@ -82,10 +82,8 @@
       <v-btn
         :disabled="!idCamp || !selected.length"
         @click="emit('send', idCamp, selected)"
+        prepend-icon="mdi-send"
       >
-        <template #append>
-          <v-icon>mdi-send</v-icon>
-        </template>
         Envoyer
       </v-btn>
     </v-card-actions>

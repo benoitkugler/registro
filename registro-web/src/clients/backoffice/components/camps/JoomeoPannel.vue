@@ -14,10 +14,8 @@
         :disabled="!enableAddDirecteurs"
         @click="addDirecteurs"
         class="ml-2"
+        prepend-icon="mdi-account-eye"
       >
-        <template #prepend>
-          <v-icon>mdi-account-eye</v-icon>
-        </template>
         Ajouter les directeurs</v-btn
       >
     </template>

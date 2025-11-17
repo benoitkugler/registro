@@ -14,10 +14,8 @@
             IdPersonne: 0 as IdPersonne,
           }
         "
+        prepend-icon="mdi-plus"
       >
-        <template #prepend>
-          <v-icon>mdi-plus</v-icon>
-        </template>
         Ajouter un participant</v-btn
       >
       <v-divider thickness="1" class="mx-1"></v-divider>

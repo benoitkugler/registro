@@ -9,10 +9,8 @@
           campsToSelect = selectedCamps;
           showCampsSelection = true;
         "
+        prepend-icon="mdi-cog"
       >
-        <template #prepend>
-          <v-icon>mdi-cog</v-icon>
-        </template>
         Séjours
       </v-btn>
       <v-divider vertical thickness="1" class="mx-2"></v-divider>

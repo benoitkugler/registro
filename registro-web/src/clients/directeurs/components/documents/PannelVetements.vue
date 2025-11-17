@@ -24,10 +24,12 @@
         </v-list>
       </v-menu>
       <v-divider vertical thickness="2" class="mx-1"> </v-divider>
-      <v-btn size="small" class="mx-1" @click="showComplement = true">
-        <template #prepend>
-          <v-icon>mdi-text-box-edit</v-icon>
-        </template>
+      <v-btn
+        size="small"
+        class="mx-1"
+        @click="showComplement = true"
+        prepend-icon="mdi-text-box-edit"
+      >
         Texte
       </v-btn>
       <v-divider vertical thickness="2" class="mx-1"> </v-divider>

@@ -4,8 +4,10 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"iter"
 	"slices"
 
+	"registro/controllers/backoffice"
 	filesAPI "registro/controllers/files"
 	fsAPI "registro/controllers/files"
 	"registro/generators/pdfcreator"
@@ -193,7 +195,7 @@ func (ct *Controller) uploadToDownload(idCamp cps.IdCamp, content []byte, filena
 
 func (ct *Controller) DocumentsDeleteToDownload(c echo.Context) error {
 	key := c.QueryParam("key")
-	err := filesAPI.Delete(ct.db, ct.key, ct.files, key)
+	_, err := filesAPI.Delete(ct.db, ct.key, ct.files, key)
 	if err != nil {
 		return err
 	}
@@ -436,7 +438,7 @@ func (ct *Controller) uploadDemandeFile(user cps.IdCamp, idDemande fs.IdDemande,
 
 func (ct *Controller) DocumentsDeleteDemandeFile(c echo.Context) error {
 	key := c.QueryParam("key")
-	err := filesAPI.Delete(ct.db, ct.key, ct.files, key)
+	_, err := filesAPI.Delete(ct.db, ct.key, ct.files, key)
 	if err != nil {
 		return err
 	}
@@ -618,4 +620,55 @@ func (ct *Controller) relanceDocuments(host string, idParticipants []cps.IdParti
 		}
 	}
 	return nil
+}
+
+// Send API
+
+func (ct *Controller) DocumentsUnlock(c echo.Context) error {
+	user := JWTUser(c)
+
+	camp, err := cps.SelectCamp(ct.db, user)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	// always unlock
+	camp.DocumentsReady = true
+	_, err = camp.Update(ct.db)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	return c.NoContent(200)
+}
+
+func (ct *Controller) DocumentsUnlockAndSend(c echo.Context) error {
+	user := JWTUser(c)
+	it, err := ct.unlockAndSendDocuments(c.Request().Host, user)
+	if err != nil {
+		return err
+	}
+	return utils.StreamJSON(c.Response(), it)
+}
+
+func (ct *Controller) unlockAndSendDocuments(host string, idCamp cps.IdCamp) (iter.Seq2[backoffice.SendProgress, error], error) {
+	// send to every dossier with an inscrit
+	camp, err := cps.LoadCamp(ct.db, idCamp)
+	if err != nil {
+		return nil, err
+	}
+
+	// unlock
+	camp.Camp.DocumentsReady = true
+	_, err = camp.Camp.Update(ct.db)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+
+	dossiers := utils.NewSet[ds.IdDossier]()
+	for _, part := range camp.Participants(true) {
+		dossiers.Add(part.Participant.IdDossier)
+	}
+	idDossiers := dossiers.Keys()
+
+	return backoffice.SendDocumentsCamp(ct.db, ct.key, ct.asso, ct.smtp, host, backoffice.SendDocumentsCampIn{IdCamp: idCamp, IdDossiers: idDossiers})
 }

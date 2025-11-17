@@ -42,10 +42,11 @@
     </v-card-text>
     <v-card-actions>
       <v-spacer></v-spacer>
-      <v-btn @click="emit('save', inner)" color="green">
-        <template #prepend>
-          <v-icon>mdi-content-save-cog</v-icon>
-        </template>
+      <v-btn
+        @click="emit('save', inner)"
+        color="green"
+        prepend-icon="mdi-content-save-cog"
+      >
         Enregistrer</v-btn
       >
     </v-card-actions>

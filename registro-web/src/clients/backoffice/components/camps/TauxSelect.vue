@@ -54,10 +54,7 @@
       <v-divider thickness="2" vertical class="py-4">ou</v-divider>
     </v-col>
     <v-col align-self="center" cols="auto">
-      <v-btn @click="onSwitch">
-        <template #prepend>
-          <v-icon>mdi-toggle-switch</v-icon>
-        </template>
+      <v-btn @click="onSwitch" prepend-icon="mdi-toggle-switch">
         {{ modelValue.Id > 0 ? "Créer un taux" : "Utiliser un taux" }}
       </v-btn>
     </v-col>

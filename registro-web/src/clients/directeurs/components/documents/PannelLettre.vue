@@ -8,10 +8,7 @@
     max-width="800px"
   >
     <template #append>
-      <v-btn class="mx-2" @click="showOptions = true">
-        <template #prepend>
-          <v-icon>mdi-cog</v-icon>
-        </template>
+      <v-btn class="mx-2" @click="showOptions = true" prepend-icon="mdi-cog">
         Options</v-btn
       >
       <v-divider thickness="2" vertical></v-divider>

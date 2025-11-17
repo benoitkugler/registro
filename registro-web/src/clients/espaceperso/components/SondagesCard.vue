@@ -129,10 +129,8 @@
                 variant="outlined"
                 color="success"
                 @click="updateSondage(camp.Sondage)"
+                prepend-icon="mdi-content-save"
               >
-                <template #prepend>
-                  <v-icon>mdi-content-save</v-icon>
-                </template>
                 Enregistrer mon retour pour le séjour {{ camp.Camp }}</v-btn
               >
             </v-card-actions>
