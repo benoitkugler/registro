@@ -116,7 +116,7 @@
         @show-documents="showDocumentsFor = camp"
         @send-sondage="sendSondage(camp.Camp.Camp.Id)"
         @add-directeur="
-          (idPersonne) => addDirecteur(idPersonne, camp.Camp.Camp.Id)
+          (idPersonne: IdPersonne) => addDirecteur(idPersonne, camp.Camp.Camp.Id)
         "
       ></CampHeaderRow>
 
@@ -262,7 +262,7 @@ import CampEdit from "./CampEdit.vue";
 import TauxSelect from "./TauxSelect.vue";
 import CampHeaderRow from "./CampHeaderRow.vue";
 import { Camps, normalize, readJSONStream } from "@/utils";
-import CampsSelector from "./CampsSelector.vue";
+import CampsSelector from "../CampsSelector.vue";
 import DocumentsCard from "./DocumentsCard.vue";
 import RequestProgressCard from "../RequestProgressCard.vue";
 import JoomeoPannel from "./JoomeoPannel.vue";

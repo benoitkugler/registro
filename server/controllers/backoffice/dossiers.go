@@ -892,9 +892,16 @@ func (ct *Controller) previewRelancePaiement(idCamp cps.IdCamp) ([]PreviewRelanc
 	return out, nil
 }
 
+type RemisesHintIn struct {
+	IdCamps []cps.IdCamp
+}
+
 func (ct *Controller) DossiersRemisesHint(c echo.Context) error {
-	currentYear := time.Now().Year()
-	out, err := estimeRemises(ct.db, ct.asso.RemisesHints, currentYear)
+	var args RemisesHintIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+	out, err := estimeRemises(ct.db, ct.asso.RemisesHints, args.IdCamps)
 	if err != nil {
 		return err
 	}
@@ -923,25 +930,21 @@ type RemisesHint struct {
 	Equipiers      []EquipierHeader
 }
 
-func estimeRemises(db *sql.DB, hints config.RemisesHints, year int) ([]RemisesHint, error) {
-	camps, err := cps.SelectAllCamps(db)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-	camps.RestrictByYear(year)
-
+func estimeRemises(db *sql.DB, hints config.RemisesHints, ids []cps.IdCamp) ([]RemisesHint, error) {
 	// load participants and dossiers
-	loader, err := cps.LoadCamps(db, camps.IDs())
+	loader, err := cps.LoadCamps(db, ids)
 	if err != nil {
 		return nil, err
 	}
+	camps := loader.Camps
+
 	dossiers, err := logic.LoadDossiers(db, loader.IdDossiers()...)
 	if err != nil {
 		return nil, err
 	}
 
 	// load equipiers
-	equipiers, equipiersP, err := cps.LoadEquipiersByCamps(db, camps.IDs()...)
+	equipiers, equipiersP, err := cps.LoadEquipiersByCamps(db, ids...)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}

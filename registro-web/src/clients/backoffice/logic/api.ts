@@ -208,6 +208,10 @@ export interface RemisesHint {
   AutresInscrits: InscritHeader[] | null;
   Equipiers: EquipierHeader[] | null;
 }
+// registro/controllers/backoffice.RemisesHintIn
+export interface RemisesHintIn {
+  IdCamps: IdCamp[] | null;
+}
 // registro/controllers/backoffice.SearchDossierIn
 export interface SearchDossierIn {
   Pattern: string;
@@ -970,7 +974,6 @@ export interface Personne {
   CodePostal: string;
   Ville: string;
   Pays: Pays;
-  SecuriteSociale: string;
   NomJeuneFille: string;
   Profession: string;
   Etudiant: boolean;
@@ -1517,12 +1520,13 @@ export abstract class AbstractAPI {
   }
 
   /** DossiersRemisesHint performs the request and handles the error */
-  async DossiersRemisesHint() {
+  async DossiersRemisesHint(params: RemisesHintIn) {
     const fullUrl = this.baseURL + "/api/v1/backoffice/dossiers/remises-hints";
     this.startRequest();
     try {
-      const rep: AxiosResponse<RemisesHint[] | null> = await Axios.get(
+      const rep: AxiosResponse<RemisesHint[] | null> = await Axios.put(
         fullUrl,
+        params,
         { headers: this.getHeaders() },
       );
       return rep.data;

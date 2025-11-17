@@ -1,9 +1,21 @@
 <template>
   <v-card
     title="Estimer les remises"
-    subtitle="Seuls les séjours de cette année et les nouvelles remises sont affichés."
+    subtitle="Seules les nouvelles remises sont affichées."
   >
     <template #append>
+      <v-btn
+        @click="
+          campsToSelect = selectedCamps;
+          showCampsSelection = true;
+        "
+      >
+        <template #prepend>
+          <v-icon>mdi-cog</v-icon>
+        </template>
+        Séjours
+      </v-btn>
+      <v-divider vertical thickness="1" class="mx-2"></v-divider>
       <v-btn :disabled="!selected.length" @click="applyHints"
         >Appliquer les remises</v-btn
       >
@@ -76,21 +88,61 @@
         </v-list-item>
       </v-list>
     </v-card-text>
+
+    <v-dialog v-model="showCampsSelection" max-width="600px">
+      <v-card title="Choix des séjours">
+        <v-card-text>
+          <CampsSelector
+            :all-camps="props.allCamps"
+            v-model="campsToSelect"
+          ></CampsSelector>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            @click="
+              selectedCamps = campsToSelect;
+              showCampsSelection = false;
+              fetchHints();
+            "
+            >Appliquer</v-btn
+          >
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-card>
 </template>
 
 <script setup lang="ts">
-import type { RemisesHint } from "@/clients/backoffice/logic/api";
+import type {
+  CampItem,
+  IdCamp,
+  RemisesHint,
+} from "@/clients/backoffice/logic/api";
 import { controller } from "@/clients/backoffice/logic/logic";
 import { onMounted, ref } from "vue";
+import CampsSelector from "../../CampsSelector.vue";
 
-const props = defineProps<{}>();
+const props = defineProps<{
+  allCamps: CampItem[];
+}>();
 
-onMounted(fetchHints);
+onMounted(() => {
+  // init with recent camps
+  selectedCamps.value = props.allCamps.filter((c) => !c.IsOld).map((c) => c.Id);
+  fetchHints();
+});
+
+const campsToSelect = ref<IdCamp[]>([]);
+const showCampsSelection = ref(false);
+
+const selectedCamps = ref<IdCamp[]>([]);
 
 const data = ref<RemisesHint[] | null>(null);
 async function fetchHints() {
-  const res = await controller.DossiersRemisesHint();
+  const res = await controller.DossiersRemisesHint({
+    IdCamps: selectedCamps.value,
+  });
   if (res === undefined) return;
   data.value = res || [];
 }

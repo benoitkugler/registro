@@ -143,7 +143,7 @@
 
     <!-- remises hints -->
     <v-dialog v-model="showRemisesHints" max-width="800px">
-      <RemisesHintsCard></RemisesHintsCard>
+      <RemisesHintsCard :all-camps="allCamps"></RemisesHintsCard>
     </v-dialog>
   </v-row>
 </template>

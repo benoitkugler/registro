@@ -316,7 +316,7 @@ func TestEstimeRemises(t *testing.T) {
 	_, err = cps.Participant{IdDossier: d2.Id, IdPersonne: pe5.Id, IdCamp: idCamp, IdTaux: idTaux, Statut: cps.Inscrit}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	out, err := estimeRemises(ct.db, config.RemisesHints{ParentEquipier: 5, AutreInscrit: 6}, time.Now().Year())
+	out, err := estimeRemises(ct.db, config.RemisesHints{ParentEquipier: 5, AutreInscrit: 6}, []cps.IdCamp{idCamp})
 	tu.AssertNoErr(t, err)
 
 	tu.Assert(t, len(out) == 4)

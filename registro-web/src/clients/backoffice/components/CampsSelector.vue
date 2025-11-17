@@ -14,7 +14,6 @@ import { computed } from "vue";
 const props = defineProps<{
   allCamps: CampItem[];
 }>();
-const emit = defineEmits<{}>();
 const model = defineModel<IdCamp[]>({ required: true });
 
 const items = computed(() =>
