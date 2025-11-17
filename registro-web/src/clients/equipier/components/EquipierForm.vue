@@ -91,19 +91,15 @@
             ></v-text-field>
           </v-col>
           <v-col md="4" sm="6">
-            <v-combobox
-              variant="outlined"
-              density="compact"
-              v-model="inner.DepartementNaissance"
+            <DepartementField
               label="Département de naissance"
-              hint="Pays de naissance si hors de France"
+              v-model="inner.DepartementNaissance"
               :rules="[
                 FormRules.required(
                   'Ton département (ou pays) est requis par Jeunesse et Sport.'
                 ),
               ]"
-              :items="Departements"
-            ></v-combobox>
+            ></DepartementField>
           </v-col>
         </v-row>
         <v-row>

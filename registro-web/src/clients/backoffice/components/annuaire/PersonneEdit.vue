@@ -22,13 +22,33 @@
               v-model="inner.Prenom"
             ></v-text-field>
           </v-col>
-          <v-col>
+          <v-col cols="3">
             <SexeField v-model="inner.Sexe"></SexeField>
           </v-col>
+        </v-row>
+        <v-row>
           <v-col>
             <DateNaissanceField
               v-model="inner.DateNaissance"
             ></DateNaissanceField>
+          </v-col>
+          <v-col>
+            <v-text-field
+              hide-details
+              label="Ville de naissance"
+              density="compact"
+              variant="outlined"
+              v-model="inner.VilleNaissance"
+            ></v-text-field>
+          </v-col>
+          <v-col>
+            <DepartementField
+              label="Département de naissance"
+              v-model="inner.DepartementNaissance"
+            ></DepartementField>
+          </v-col>
+          <v-col>
+            <NationaliteField v-model="inner.Nationnalite"></NationaliteField>
           </v-col>
         </v-row>
         <v-row>
@@ -59,6 +79,27 @@
               v-model="inner.Ville"
             ></v-text-field>
           </v-col>
+          <v-col>
+            <PaysField v-model="inner.Pays"></PaysField>
+          </v-col>
+        </v-row>
+        <v-row>
+          <v-col>
+            <v-text-field
+              hide-details
+              label="Mail"
+              density="compact"
+              variant="outlined"
+              v-model="inner.Mail"
+            ></v-text-field>
+          </v-col>
+          <v-col>
+            <StringList
+              label="Téléphone"
+              v-model="inner.Tels"
+              :formatter="Formatters.tel"
+            ></StringList>
+          </v-col>
         </v-row>
       </v-form>
     </v-card-text>
@@ -74,7 +115,8 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
 import { type Personne } from "@/clients/backoffice/logic/api";
-import { copy } from "@/utils";
+import { copy, Formatters } from "@/utils";
+import StringList from "@/components/StringList.vue";
 const props = defineProps<{
   personne: Personne;
 }>();

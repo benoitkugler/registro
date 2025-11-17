@@ -4,8 +4,8 @@
     variant="outlined"
     density="compact"
     :readonly="props.readonly"
-    hint="Cochez si vous avez la nationalité suisse."
-    persistent-hint
+    :hint="props.hint"
+    :persistent-hint="!!props.hint"
     :model-value="modelValue.IsSuisse"
     @update:model-value="(b) => (modelValue.IsSuisse = b || false)"
   ></v-checkbox>
@@ -14,6 +14,7 @@
 <script setup lang="ts">
 import type { Nationnalite } from "@/clients/inscription/logic/api";
 const props = defineProps<{
+  hint?: string;
   readonly?: boolean;
 }>();
 

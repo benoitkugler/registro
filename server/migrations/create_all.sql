@@ -66,7 +66,6 @@ CREATE TABLE personnes (
     CodePostal text NOT NULL,
     Ville text NOT NULL,
     Pays text NOT NULL,
-    SecuriteSociale text NOT NULL,
     NomJeuneFille text NOT NULL,
     Profession text NOT NULL,
     Etudiant boolean NOT NULL,

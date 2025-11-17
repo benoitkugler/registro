@@ -81,7 +81,6 @@ func randPersonne() Personne {
 	s.CodePostal = randstring()
 	s.Ville = randstring()
 	s.Pays = randPays()
-	s.SecuriteSociale = randstring()
 	s.NomJeuneFille = randstring()
 	s.Profession = randstring()
 	s.Etudiant = randbool()

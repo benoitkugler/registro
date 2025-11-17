@@ -42,6 +42,7 @@
             <v-col>
               <NationaliteField
                 v-model="participant.Nationnalite"
+                hint="Cochez si vous avez la nationalité suisse."
               ></NationaliteField>
             </v-col>
           </v-row>

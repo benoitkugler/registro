@@ -60,8 +60,6 @@ type Etatcivil struct {
 	Ville      string
 	Pays       Pays
 
-	SecuriteSociale string
-
 	NomJeuneFille     string            // used for equipiers
 	Profession        string            // used for equipiers
 	Etudiant          bool              // used for equipiers

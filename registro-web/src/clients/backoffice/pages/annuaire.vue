@@ -1,7 +1,7 @@
 <template>
-  <NavBar title="Annuaire : personnes et organismes"> TODO </NavBar>
+  <NavBar title="Annuaire : personnes et organismes"> </NavBar>
 
-  <v-card class="ma-2">
+  <v-card class="my-2 mx-auto" max-width="600px">
     <template #append>
       <v-btn color="green" @click="create">Créer un nouveau profil</v-btn>
     </template>
@@ -42,7 +42,7 @@
         toEdit = null;
         goToPersonne(undefined);
       "
-      max-width="800px"
+      max-width="1000px"
     >
       <PersonneEdit :personne="toEdit" @save="updatePersonne"></PersonneEdit>
     </v-dialog>

@@ -68,14 +68,13 @@ func randFicheSanitaire() FicheSanitaire {
 		DateNaissance: shared.NewDateFrom(time.Now()),
 	}
 	resp := pr.Etatcivil{
-		Nom:             utils.RandString(25, true),
-		Prenom:          utils.RandString(25, true),
-		SecuriteSociale: utils.RandString(25, true),
-		Adresse:         "lskkd \n lsmdksmd smdl",
-		CodePostal:      utils.RandString(5, true),
-		Ville:           utils.RandString(15, true),
-		Pays:            pr.Pays(utils.RandString(2, false)),
-		Tels:            []string{"7987987979", "897779897998789"},
+		Nom:        utils.RandString(25, true),
+		Prenom:     utils.RandString(25, true),
+		Adresse:    "lskkd \n lsmdksmd smdl",
+		CodePostal: utils.RandString(5, true),
+		Ville:      utils.RandString(15, true),
+		Pays:       pr.Pays(utils.RandString(2, false)),
+		Tels:       []string{"7987987979", "897779897998789"},
 	}
 	return FicheSanitaire{pers, fs, resp}
 }

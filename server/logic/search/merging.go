@@ -195,7 +195,6 @@ func Merge(entrant pr.Etatcivil, existant pr.Etatcivil) (merged pr.Etatcivil, co
 	merged.CodePostal, conflicts.CodePostal = choose(entrant.CodePostal, existant.CodePostal)
 	merged.Ville, conflicts.Ville = choose(entrant.Ville, existant.Ville)
 	merged.Pays, conflicts.Pays = choose(entrant.Pays, existant.Pays)
-	merged.SecuriteSociale, conflicts.SecuriteSociale = choose(entrant.SecuriteSociale, existant.SecuriteSociale)
 	merged.NomJeuneFille, conflicts.NomJeuneFille = choose(entrant.NomJeuneFille, existant.NomJeuneFille)
 	merged.Profession, conflicts.Profession = choose(entrant.Profession, existant.Profession)
 	merged.Etudiant, conflicts.Etudiant = choose(entrant.Etudiant, existant.Etudiant)
