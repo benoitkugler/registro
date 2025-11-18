@@ -9,7 +9,12 @@
       <v-chip v-if="data.Ready" prepend-icon="mdi-lock-open" color="success">
         Documents visibles
       </v-chip>
-      <v-btn v-else @click="showSendDialog = true" prepend-icon="mdi-lock-open">
+      <v-btn
+        v-else
+        @click="showSendDialog = true"
+        prepend-icon="mdi-lock-open"
+        :disabled="!allDocumentsToShow.length"
+      >
         Envoyer</v-btn
       >
     </template>
