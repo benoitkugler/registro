@@ -82,24 +82,6 @@
       </v-stepper-actions>
     </template>
   </v-stepper>
-
-  <!-- confirmation après API call -->
-  <v-dialog v-model="showInscriptionSaved" max-width="600px">
-    <v-card title="Confirmation">
-      <v-card-text>
-        Merci pour votre demande d'inscription ! <br />
-        <br />
-        Par mesure de sécurité, nous devons vérifier votre adresse mail. Un mail
-        de confirmation a été envoyé à <b>{{ inner.Responsable.Mail }}</b> :
-        veuillez valider votre demande en suivant le lien que vous y trouverez.
-        <br />
-        <br />
-        <div class="text-grey font-italic">
-          Vous pouvez désormais quitter cette page.
-        </div>
-      </v-card-text>
-    </v-card>
-  </v-dialog>
 </template>
 
 <script lang="ts" setup>
@@ -108,7 +90,13 @@ import Step1 from "./Step1.vue";
 import Step2 from "./Step2.vue";
 import Step3 from "./Step3.vue";
 import Step4 from "./Step4.vue";
-import { Sexe, type CampExt, type Data, type IdCamp } from "../logic/api";
+import {
+  Sexe,
+  type CampExt,
+  type Data,
+  type IdCamp,
+  type Inscription,
+} from "../logic/api";
 import { ageFrom, isDateZero } from "@/components/date";
 import { copy } from "@/utils";
 import { controller } from "../logic/logic";
@@ -118,6 +106,10 @@ const props = defineProps<{
   camps: CampExt[];
   preselected: IdCamp;
   data: Data;
+}>();
+
+const emit = defineEmits<{
+  (e: "done", insc: Inscription): void;
 }>();
 
 const { smAndUp } = useDisplay();
@@ -191,13 +183,12 @@ const isInscValid = computed(() => {
 });
 
 const isLoading = ref(false);
-const showInscriptionSaved = ref(false);
 async function validInscription() {
   isLoading.value = true;
   const out = await controller.SaveInscription(inner);
   isLoading.value = false;
   if (out === undefined) return;
 
-  showInscriptionSaved.value = true;
+  emit("done", inner);
 }
 </script>

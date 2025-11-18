@@ -86,10 +86,29 @@
         style="min-height: 92%"
         v-else-if="data != null"
       >
+        <!-- confirmation après API call; hiding the form -->
+        <v-card v-if="showInscriptionSaved != null" title="Confirmation">
+          <v-card-text>
+            Merci pour votre demande d'inscription ! <br />
+            <br />
+            Par mesure de sécurité, nous devons vérifier votre adresse mail. Un
+            mail de confirmation a été envoyé à
+            <b>{{ showInscriptionSaved.Responsable.Mail }}</b> : veuillez
+            valider votre demande en suivant le lien que vous y trouverez.
+            <br />
+            <br />
+            <div class="text-grey font-italic">
+              Vous pouvez désormais quitter cette page.
+            </div>
+          </v-card-text>
+        </v-card>
+
         <InscriptionPannel
+          v-else
           :camps="camps"
           :preselected="preselected"
           :data="data"
+          @done="(insc) => (showInscriptionSaved = insc)"
         ></InscriptionPannel>
       </v-container>
       <v-container class="fill-height" fluid v-else>
@@ -137,9 +156,8 @@
 import { onMounted, ref } from "vue";
 import { controller } from "./logic/logic";
 import InscriptionPannel from "./components/InscriptionPannel.vue";
-import type { CampExt, Data, IdCamp } from "./logic/api";
+import type { CampExt, Data, IdCamp, Inscription } from "./logic/api";
 import { useDisplay } from "vuetify";
-import { isInt } from "@/utils";
 import CampsList from "./components/CampsList.vue";
 
 const message = ref("");
@@ -240,4 +258,6 @@ async function searchHistory() {
   if (res === undefined) return;
   mailFound.value = res.MailFound;
 }
+
+const showInscriptionSaved = ref<Inscription | null>(null);
 </script>
