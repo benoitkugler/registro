@@ -559,7 +559,7 @@ func (ct *Controller) exportListeParticipants(year int) ([]byte, string, error) 
 		return nil, "", utils.SQLError(err)
 	}
 
-	remisesHintsL := estimeRemises(loader, dossiers.Dossiers, equipiers, equipiersP, ct.asso.RemisesHints)
+	remisesHintsL := estimeRemises(loader, dossiers.Dossiers, equipiers, equipiersP, ct.asso.RemisesHints, false)
 	remisesHints := map[cps.IdParticipant]cps.Remises{}
 	for _, p := range remisesHintsL {
 		remisesHints[p.IdParticipant] = p.Hint

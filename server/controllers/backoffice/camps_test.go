@@ -97,7 +97,9 @@ func TestExportParticipants(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	pe1, err := pr.Personne{Etatcivil: pr.Etatcivil{Nom: "REspo", Prenom: "Huge"}}.Insert(db)
 	tu.AssertNoErr(t, err)
-	pe2, err := pr.Personne{Etatcivil: pr.Etatcivil{Nom: "Autre", Prenom: "Hugette"}}.Insert(db)
+	pe2, err := pr.Personne{Etatcivil: pr.Etatcivil{Nom: "REspo", Prenom: "Hugette"}}.Insert(db)
+	tu.AssertNoErr(t, err)
+	pe3, err := pr.Personne{Etatcivil: pr.Etatcivil{Nom: "Autre", Prenom: "Hugette"}}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	camp1, err := ct.createCamp("localhost")
@@ -112,6 +114,8 @@ func TestExportParticipants(t *testing.T) {
 	_, err = ct.createParticipant(ParticipantsCreateIn{IdDossier: dossier.Id, IdCamp: camp1.Camp.Camp.Id, IdPersonne: pe2.Id})
 	tu.AssertNoErr(t, err)
 	_, err = ct.createParticipant(ParticipantsCreateIn{IdDossier: dossier.Id, IdCamp: camp2.Camp.Camp.Id, IdPersonne: pe1.Id})
+	tu.AssertNoErr(t, err)
+	_, err = ct.createParticipant(ParticipantsCreateIn{IdDossier: dossier.Id, IdCamp: camp2.Camp.Camp.Id, IdPersonne: pe3.Id})
 	tu.AssertNoErr(t, err)
 
 	paiement1, err := ct.createPaiement(true, dossier.Id)

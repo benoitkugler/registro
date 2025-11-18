@@ -930,7 +930,10 @@ type RemisesHint struct {
 	Equipiers      []EquipierHeader
 }
 
-func estimeRemises(loader cps.CampsData, dossiers logic.Dossiers, equipiers cps.Equipiers, equipiersPersonnes pr.Personnes, hints config.RemisesHints) []RemisesHint {
+// skipExisting wheter or not we return the participant with non zero Remises
+func estimeRemises(loader cps.CampsData, dossiers logic.Dossiers, equipiers cps.Equipiers, equipiersPersonnes pr.Personnes, hints config.RemisesHints,
+	skipExisting bool,
+) []RemisesHint {
 	camps := loader.Camps
 
 	// on identifie un inscrit membre de la même famille s'il a
@@ -981,7 +984,7 @@ func estimeRemises(loader cps.CampsData, dossiers logic.Dossiers, equipiers cps.
 	for _, inscrit := range inscritsFamille {
 		currentRemise := inscrit.inscrit.Remises
 		// skip already applicated remises
-		if hasRemise := currentRemise != (cps.Remises{}); hasRemise {
+		if hasRemise := currentRemise != (cps.Remises{}); skipExisting && hasRemise {
 			continue
 		}
 		hint := RemisesHint{
@@ -1026,7 +1029,7 @@ func (ct *Controller) estimeRemises(db *sql.DB, ids []cps.IdCamp) ([]RemisesHint
 	}
 
 	hints := ct.asso.RemisesHints
-	return estimeRemises(loader, dossiers, equipiers, equipiersP, hints), nil
+	return estimeRemises(loader, dossiers, equipiers, equipiersP, hints, true), nil
 }
 
 func (ct *Controller) DossiersApplyRemisesHints(c echo.Context) error {
