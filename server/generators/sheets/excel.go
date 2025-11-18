@@ -59,6 +59,7 @@ const (
 	Int
 	Euros
 	FrancsSuisse
+	// Percentage expects a "ratio" value, typically in [0;1]
 	Percentage
 )
 
@@ -549,8 +550,8 @@ func ListeParticipantsCamps(participants []cps.ParticipantCamp, dossiers logic.D
 			nationalite = formatBool(inscrit.Personne.Nationnalite.IsSuisse)
 		}
 		hints := remisesHints[inscrit.Participant.Id]
-		remiseFamilleProbable := hints.ReducInscrits != 0
-		remiseEquipiersProbable := hints.ReducEquipiers != 0
+		remiseFamilleProbable := hints.Famille != 0
+		remiseEquipiersProbable := hints.Equipiers != 0
 		var row [len(headersCamp) + len(headersParticipant) + len(headersResponsable) + len(headersDossier)]Cell = [...]Cell{
 			// camp
 			intCell(inscrit.Camp.Id),      // ID Camp
@@ -578,15 +579,15 @@ func ListeParticipantsCamps(participants []cps.ParticipantCamp, dossiers logic.D
 			{Value: responsable.Ville},         // Ville
 			{Value: string(responsable.Pays)},  // Pays
 			// dossier
-			intCell(dossier.Dossier.Dossier.Id),                                              // ID Dossier
-			{Value: formatTime(dossier.Dossier.Dossier.MomentInscription)},                   // Inscription
-			{Value: bilan.StatutPaiement().String()},                                         // Etat du règlement
-			{Value: taux.Convertible(bilan.Recu()).String()},                                 // Montant payé
-			{Value: taux.Convertible(bilan.FondsSoutien()).String()},                         // Fonds de soutien
-			{ValueF: float32(rem.ReducInscrits + rem.ReducEquipiers), NumFormat: Percentage}, // Remises (%)
-			{Value: taux.Convertible(rem.ReducSpeciale).String()},                            // Remises
-			{Value: formatBool(remiseFamilleProbable)},                                       // Remise famille probable
-			{Value: formatBool(remiseEquipiersProbable)},                                     // Remise équipiers probable
+			intCell(dossier.Dossier.Dossier.Id),                            // ID Dossier
+			{Value: formatTime(dossier.Dossier.Dossier.MomentInscription)}, // Inscription
+			{Value: bilan.StatutPaiement().String()},                       // Etat du règlement
+			{Value: taux.Convertible(bilan.Recu()).String()},               // Montant payé
+			{Value: taux.Convertible(bilan.FondsSoutien()).String()},       // Fonds de soutien
+			{ValueF: float32(rem.Famille + rem.Equipiers), NumFormat: Int}, // Remises (%)
+			{Value: taux.Convertible(rem.Speciale).String()},               // Remises
+			{Value: formatBool(remiseFamilleProbable)},                     // Remise famille probable
+			{Value: formatBool(remiseEquipiersProbable)},                   // Remise équipiers probable
 		}
 		rows[i] = row[:]
 	}

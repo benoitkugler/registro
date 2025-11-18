@@ -107,7 +107,7 @@ func TestListeParticipantsCamps(t *testing.T) {
 	p2 := p1
 	p2.Nationnalite.IsSuisse = false
 	pa1 := cps.Participant{Id: 1, IdDossier: 1, Commentaire: utils.RandString(10, true), Navette: cps.AllerRetour}
-	pa2 := cps.Participant{Id: 2, IdDossier: 2, Commentaire: utils.RandString(10, true)}
+	pa2 := cps.Participant{Id: 2, IdDossier: 2, Commentaire: utils.RandString(10, true), Remises: cps.Remises{Famille: 30}}
 	inscrit1 := cps.ParticipantCamp{
 		Camp: camp,
 		ParticipantPersonne: cps.ParticipantPersonne{
@@ -127,15 +127,15 @@ func TestListeParticipantsCamps(t *testing.T) {
 		1: dossiers.Dossier{Id: 1, MomentInscription: time.Now(), IdResponsable: 2},
 		2: dossiers.Dossier{Id: 2, MomentInscription: time.Now().Add(time.Hour), IdResponsable: 1},
 	}}}
-	remises := map[cps.IdParticipant]cps.Remises{
-		pa1.Id: {ReducEquipiers: 10, ReducInscrits: 5},
+	remisesHints := map[cps.IdParticipant]cps.Remises{
+		pa1.Id: {Equipiers: 10, Famille: 5},
 	}
 
-	content, err := ListeParticipantsCamps(liste, dossiers, remises, false)
+	content, err := ListeParticipantsCamps(liste, dossiers, remisesHints, false)
 	tu.AssertNoErr(t, err)
 	tu.Write(t, "ListeParticipantsCamps_1.xlsx", content)
 
-	content, err = ListeParticipantsCamps(liste, dossiers, remises, true)
+	content, err = ListeParticipantsCamps(liste, dossiers, remisesHints, true)
 	tu.AssertNoErr(t, err)
 	tu.Write(t, "ListeParticipantsCamps_2.xlsx", content)
 }
