@@ -321,10 +321,10 @@ func TestEstimeRemises(t *testing.T) {
 	tu.AssertNoErr(t, err)
 
 	tu.Assert(t, len(out) == 4)
-	tu.Assert(t, out[0].IdParticipant == 1 && out[0].Hint == cps.Remises{ReducInscrits: 6})
-	tu.Assert(t, out[1].IdParticipant == 2 && out[1].Hint == cps.Remises{ReducInscrits: 6})
-	tu.Assert(t, out[2].IdParticipant == 4 && out[2].Hint == cps.Remises{ReducEquipiers: 5, ReducInscrits: 6})
-	tu.Assert(t, out[3].IdParticipant == 5 && out[3].Hint == cps.Remises{ReducEquipiers: 5, ReducInscrits: 6})
+	tu.Assert(t, out[0].IdParticipant == 1 && out[0].Hint == cps.Remises{Famille: 6})
+	tu.Assert(t, out[1].IdParticipant == 2 && out[1].Hint == cps.Remises{Famille: 6})
+	tu.Assert(t, out[2].IdParticipant == 4 && out[2].Hint == cps.Remises{Equipiers: 5, Famille: 6})
+	tu.Assert(t, out[3].IdParticipant == 5 && out[3].Hint == cps.Remises{Equipiers: 5, Famille: 6})
 
 	err = ct.applyRemises(out[1:2])
 	tu.AssertNoErr(t, err)

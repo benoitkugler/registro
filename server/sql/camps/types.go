@@ -113,9 +113,9 @@ func (b Navette) String() string {
 
 // Remises altère le prix payé par un participant
 type Remises struct {
-	ReducEquipiers int // en %
-	ReducInscrits  int // en %
-	ReducSpeciale  Montant
+	Equipiers int // en %
+	Famille   int // en %
+	Speciale  Montant
 }
 
 // Jours stocke les indexes (0-based) des jours de présence

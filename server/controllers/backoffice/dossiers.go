@@ -989,14 +989,14 @@ func estimeRemises(loader cps.CampsData, dossiers logic.Dossiers, equipiers cps.
 			Camp: inscrit.camp, Actual: currentRemise,
 		}
 		if autres := cribleInscrits[inscrit.famille]; len(autres) >= 2 {
-			hint.Hint.ReducInscrits = hints.AutreInscrit
+			hint.Hint.Famille = hints.AutreInscrit
 			hint.AutresInscrits = autres
 		}
 		if equipiers := cribleEquipiers[inscrit.famille]; len(equipiers) != 0 {
-			hint.Hint.ReducEquipiers = hints.ParentEquipier
+			hint.Hint.Equipiers = hints.ParentEquipier
 			hint.Equipiers = equipiers
 		}
-		if hint.Hint.ReducInscrits+hint.Hint.ReducEquipiers != 0 {
+		if hint.Hint.Famille+hint.Hint.Equipiers != 0 {
 			out = append(out, hint)
 		}
 	}
@@ -1055,8 +1055,8 @@ func (ct *Controller) applyRemises(args []RemisesHint) error {
 		for _, arg := range args {
 			participant := participants[arg.IdParticipant]
 			// only update the two fields we set in [estimeRemises]
-			participant.Remises.ReducInscrits = arg.Hint.ReducInscrits
-			participant.Remises.ReducEquipiers = arg.Hint.ReducEquipiers
+			participant.Remises.Famille = arg.Hint.Famille
+			participant.Remises.Equipiers = arg.Hint.Equipiers
 			_, err = participant.Update(tx)
 			if err != nil {
 				return err

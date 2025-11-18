@@ -222,7 +222,7 @@ func TestFacture(t *testing.T) {
 			}}},
 			2: {
 				BilanParticipant: logic.BilanParticipant{
-					Remises: camps.Remises{ReducEquipiers: 45, ReducSpeciale: ds.NewFrancsuisses(20)},
+					Remises: camps.Remises{Equipiers: 45, Speciale: ds.NewFrancsuisses(20)},
 				},
 				Net: ds.NewEuros(54.4).String(),
 			},

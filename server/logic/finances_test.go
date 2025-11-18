@@ -71,9 +71,9 @@ func TestDossierFinance_Bilan(t *testing.T) {
 	// avec remises
 	df.Participants = cps.Participants{
 		1: cps.Participant{Id: 1, IdCamp: 1, Statut: cps.Inscrit, Remises: cps.Remises{
-			ReducSpeciale:  eur(10),
-			ReducEquipiers: 10,
-			ReducInscrits:  5,
+			Speciale:  eur(10),
+			Equipiers: 10,
+			Famille:   5,
 		}},
 		2: cps.Participant{Id: 2, IdCamp: 2, Statut: cps.Inscrit},
 		3: cps.Participant{Id: 3, IdCamp: 2, Statut: cps.Inscrit},
@@ -83,9 +83,9 @@ func TestDossierFinance_Bilan(t *testing.T) {
 	tu.Assert(t, reflect.DeepEqual(df.Bilan(), BilanFinances{
 		map[cps.IdParticipant]BilanParticipant{
 			1: {eur(200), "", cps.Remises{
-				ReducSpeciale:  eur(10),
-				ReducEquipiers: 10,
-				ReducInscrits:  5,
+				Speciale:  eur(10),
+				Equipiers: 10,
+				Famille:   5,
 			}, nil},
 			2: {chf(150), "", cps.Remises{}, nil},
 			3: {chf(150), "", cps.Remises{}, nil},
@@ -96,9 +96,9 @@ func TestDossierFinance_Bilan(t *testing.T) {
 	// avec remises et aides
 	df.Participants = cps.Participants{
 		1: cps.Participant{Id: 1, IdCamp: 1, Statut: cps.Inscrit, Remises: cps.Remises{
-			ReducSpeciale:  eur(10),
-			ReducEquipiers: 5,
-			ReducInscrits:  5,
+			Speciale:  eur(10),
+			Equipiers: 5,
+			Famille:   5,
 		}},
 	}
 	df.aides = map[cps.IdParticipant]cps.Aides{
@@ -109,9 +109,9 @@ func TestDossierFinance_Bilan(t *testing.T) {
 	tu.Assert(t, reflect.DeepEqual(df.Bilan(), BilanFinances{
 		map[cps.IdParticipant]BilanParticipant{
 			1: {eur(200), "", cps.Remises{
-				ReducSpeciale:  eur(10),
-				ReducEquipiers: 5,
-				ReducInscrits:  5,
+				Speciale:  eur(10),
+				Equipiers: 5,
+				Famille:   5,
 			}, []AideResolved{{"", eur(20)}}},
 		},
 		10000 - 1000 - 500 - 900, 0, 35000, 0, 1000, ds.FrancsSuisse,
