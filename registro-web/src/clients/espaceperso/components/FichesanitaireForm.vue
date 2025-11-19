@@ -3,8 +3,16 @@
     :title="`Fiche sanitaire de ${props.fiche.Personne}`"
     :subtitle="subtitle"
   >
-    <template #append v-if="props.fiche.State == FichesanitaireState.UpToDate">
-      <v-chip color="green" prepend-icon="mdi-check"> Fiche à jour </v-chip>
+    <template #append>
+      <v-chip
+        v-if="props.fiche.State == FichesanitaireState.UpToDate"
+        color="green"
+        prepend-icon="mdi-check"
+      >
+        Fiche à jour
+      </v-chip>
+
+      <v-btn icon="mdi-close" flat @click="emit('close')"></v-btn>
     </template>
     <v-card-text>
       <v-alert v-if="props.fiche.IsLocked">
@@ -94,7 +102,7 @@
         <v-card title="Médecin traitant" class="my-2">
           <v-card-text>
             <v-row>
-              <v-col>
+              <v-col cols="12" sm="6">
                 <v-text-field
                   variant="outlined"
                   density="compact"
@@ -103,7 +111,7 @@
                   hide-details
                 ></v-text-field>
               </v-col>
-              <v-col>
+              <v-col cols="12" sm="6">
                 <v-text-field
                   variant="outlined"
                   density="compact"
@@ -121,7 +129,7 @@
         <v-card title="Contacts" class="my-2">
           <v-card-text>
             <v-row>
-              <v-col>
+              <v-col cols="12" sm="6">
                 <v-text-field
                   variant="outlined"
                   density="compact"
@@ -131,7 +139,7 @@
                   label="Responsable légal"
                 ></v-text-field>
               </v-col>
-              <v-col>
+              <v-col cols="12" sm="6">
                 <v-text-field
                   variant="outlined"
                   density="compact"
@@ -144,7 +152,7 @@
             </v-row>
             <v-divider thickness="2" class="my-4"></v-divider>
             <v-row>
-              <v-col>
+              <v-col cols="12" sm="6">
                 <v-text-field
                   variant="outlined"
                   density="compact"
@@ -155,7 +163,7 @@
                   persistent-hint
                 ></v-text-field>
               </v-col>
-              <v-col>
+              <v-col cols="12" sm="6">
                 <v-text-field
                   variant="outlined"
                   density="compact"
@@ -192,7 +200,11 @@
               @click="emit('save', inner)"
               prepend-icon="mdi-content-save"
             >
-              Enregistrer la fiche sanitaire de {{ props.fiche.Personne }}
+              {{
+                smAndDown
+                  ? "Enregistrer la fiche sanitaire"
+                  : `Enregistrer la fiche sanitaire de ${props.fiche.Personne}`
+              }}
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -209,14 +221,18 @@ import {
   type FichesanitaireExt,
 } from "../logic/api";
 import { computed, reactive } from "vue";
+import { useDisplay } from "vuetify";
 const props = defineProps<{
   fiche: FichesanitaireExt;
 }>();
 
 const emit = defineEmits<{
+  (e: "close"): void;
   (e: "save", fs: Fichesanitaire): void;
   (e: "transfert", fs: Fichesanitaire): void;
 }>();
+
+const { smAndDown } = useDisplay();
 
 const inner = reactive(copy(props.fiche.Fichesanitaire));
 

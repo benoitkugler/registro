@@ -21,7 +21,7 @@
               {{ Camps.label(participant.Camp) }}
             </v-chip>
           </v-col>
-          <v-col cols="7"
+          <v-col xs="12" md="7"
             >Nous sommes ravis de vous confirmer
             {{
               inscrits.length == 1
@@ -51,7 +51,7 @@
               {{ Camps.label(participant.Camp) }}
             </v-chip>
           </v-col>
-          <v-col cols="7"
+          <v-col xs="12" md="7"
             >Malheureusement, nous avons dû placer
             {{ attente.length == 1 ? "cette demande" : "ces demandes" }}
             en liste d'attente. Nous reviendrons vers vous si une place se
@@ -75,7 +75,7 @@
               {{ Camps.label(participant.Camp) }}
             </v-chip>
           </v-col>
-          <v-col cols="7">
+          <v-col xs="12" md="7">
             Nous n'avons pas encore statué pour
             {{ aStatuer.length == 1 ? "cette demande" : "ces demandes" }}
             et nous reviendrons vers vous au plus vite.
@@ -83,6 +83,10 @@
         </v-row>
       </v-alert>
     </v-card-text>
+    <v-card-actions>
+      <v-spacer></v-spacer>
+      <v-btn prepend-icon="mdi-check" @click="emit('done')">Continuer</v-btn>
+    </v-card-actions>
   </v-card>
 </template>
 
@@ -93,6 +97,10 @@ import { Camps, Formatters } from "@/utils";
 
 const props = defineProps<{
   dossier: DossierExt;
+}>();
+
+const emit = defineEmits<{
+  (e: "done"): void;
 }>();
 
 const inscrits = computed(() =>

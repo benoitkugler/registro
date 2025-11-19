@@ -111,6 +111,7 @@ func openSondages(db *sql.DB) {
 			check(err)
 		}
 	}
+	fmt.Println("Done.")
 }
 
 func createStructureaide(db *sql.DB) {

@@ -3,7 +3,7 @@
     <v-col cols="12">
       {{ props.label }}
     </v-col>
-    <v-col cols="12">
+    <v-col cols="12" class="text-center mt-1">
       <v-rating
         hover
         color="primary"

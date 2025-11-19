@@ -68,6 +68,7 @@ type Data struct {
 	AssoTitle                  string
 	MailCentre                 string
 	PaiementSettings           PaiementSettings
+	SupportsAidesExt           bool
 
 	IsPaiementOpen bool
 	// EnableJustificatifs is true when all the camps have started (or ended)
@@ -105,6 +106,7 @@ func (ct *Controller) load(id ds.IdDossier) (Data, error) {
 			ct.asso.SupportPaiementEnLigne,
 			ct.asso.ChequeSettings,
 		},
+		ct.asso.SupportBonsCAF,
 		dossier.IsPaiementOpen(),
 		campInscritsStarted,
 	}, nil

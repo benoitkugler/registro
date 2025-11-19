@@ -1,23 +1,22 @@
 <template>
   <v-skeleton-loader
     class="mx-auto"
-    width="600px"
+    width="400px"
     type="card"
     v-if="data == null"
   ></v-skeleton-loader>
   <v-card
     v-else-if="data.Loggin"
-    class="mx-auto"
     title="Identifiants et albums Joomeo"
     subtitle="Retrouvez les photos prises dans nos séjours."
-    min-width="600px"
+    min-width="300"
   >
     <v-card-text>
       <v-row>
-        <v-col>
+        <v-col cols="12" sm="6">
           Identifiant : <b>{{ data.Loggin }} </b>
         </v-col>
-        <v-col>
+        <v-col cols="12" sm="6">
           Mot de passe : <b> {{ data.Password }}</b>
         </v-col>
       </v-row>

@@ -32,8 +32,9 @@ export interface Data {
   DocumentsToReadOrFillCount: Int;
   AssoTitle: string;
   MailCentre: string;
-  IsPaiementOpen: boolean;
   PaiementSettings: PaiementSettings;
+  SupportsAidesExt: boolean;
+  IsPaiementOpen: boolean;
   EnableJustificatifs: boolean;
 }
 // registro/controllers/espaceperso.DemandePersonne
@@ -388,9 +389,9 @@ export interface PrixParStatut {
 export type PrixQuotientFamilial = Ar4_Int;
 // registro/sql/camps.Remises
 export interface Remises {
-  ReducEquipiers: Int;
-  ReducInscrits: Int;
-  ReducSpeciale: Montant;
+  Equipiers: Int;
+  Famille: Int;
+  Speciale: Montant;
 }
 // registro/sql/camps.ReponseSondage
 export interface ReponseSondage {
@@ -780,7 +781,6 @@ export interface Personne {
   CodePostal: string;
   Ville: string;
   Pays: Pays;
-  SecuriteSociale: string;
   NomJeuneFille: string;
   Profession: string;
   Etudiant: boolean;

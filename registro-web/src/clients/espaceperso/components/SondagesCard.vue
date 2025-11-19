@@ -3,9 +3,11 @@
   <v-card
     v-else-if="data != null"
     title="Enquête de satisfaction"
-    :width="data?.length ? undefined : '600px'"
     class="mx-auto"
   >
+    <template #append>
+      <v-btn icon="mdi-close" flat @click="emit('close')"></v-btn>
+    </template>
     <v-card-text>
       <v-alert v-if="data.length" color="secondary" icon="mdi-comment-quote">
         Afin d'améliorer nos prestations, nous avons à cœur de vous laisser la
@@ -34,21 +36,21 @@
           <v-card subtitle="Vos impressions sur le séjour">
             <v-card-text>
               <v-row>
-                <v-col cols="6">
+                <v-col cols="12" md="6">
                   <v-row>
-                    <v-col>
+                    <v-col cols="12" sm="6" md="4">
                       <RatingField
                         label="Informations avant le séjour"
                         v-model="camp.Sondage.InfosAvantSejour"
                       ></RatingField
                     ></v-col>
-                    <v-col>
+                    <v-col cols="12" sm="6" md="4">
                       <RatingField
                         label="Informations pendant le séjour"
                         v-model="camp.Sondage.InfosPendantSejour"
                       ></RatingField
                     ></v-col>
-                    <v-col>
+                    <v-col cols="12" sm="6" md="4">
                       <RatingField
                         label="L'hébergement"
                         v-model="camp.Sondage.Hebergement"
@@ -57,19 +59,19 @@
                   </v-row>
 
                   <v-row>
-                    <v-col>
+                    <v-col cols="12" sm="6" md="4">
                       <RatingField
                         label="Les activités"
                         v-model="camp.Sondage.Activites"
                       ></RatingField
                     ></v-col>
-                    <v-col>
+                    <v-col cols="12" sm="6" md="4">
                       <RatingField
                         label="Le thème"
                         v-model="camp.Sondage.Theme"
                       ></RatingField
                     ></v-col>
-                    <v-col>
+                    <v-col cols="12" sm="6" md="4">
                       <RatingField
                         label="La nourriture"
                         v-model="camp.Sondage.Nourriture"
@@ -77,19 +79,19 @@
                     ></v-col>
                   </v-row>
                   <v-row>
-                    <v-col>
+                    <v-col cols="12" sm="6" md="4">
                       <RatingField
                         label="L'hygiène corporelle et vestimentaire"
                         v-model="camp.Sondage.Hygiene"
                       ></RatingField
                     ></v-col>
-                    <v-col>
+                    <v-col cols="12" sm="6" md="4">
                       <RatingField
                         label="L'ambiance du groupe"
                         v-model="camp.Sondage.Ambiance"
                       ></RatingField
                     ></v-col>
-                    <v-col>
+                    <v-col cols="12" sm="6" md="4">
                       <RatingField
                         label="Le ressenti global de votre enfant"
                         v-model="camp.Sondage.Ressenti"
@@ -97,7 +99,7 @@
                     ></v-col>
                   </v-row>
                 </v-col>
-                <v-col cols="6">
+                <v-col cols="12" md="6">
                   <v-row>
                     <v-col cols="12">
                       <v-textarea
@@ -131,7 +133,7 @@
                 @click="updateSondage(camp.Sondage)"
                 prepend-icon="mdi-content-save"
               >
-                Enregistrer mon retour pour le séjour {{ camp.Camp }}</v-btn
+                Enregistrer mon retour</v-btn
               >
             </v-card-actions>
           </v-card>
@@ -151,6 +153,10 @@ import { isDateZero } from "@/components/date";
 const props = defineProps<{
   token: string;
   initialCamp: IdCamp; // optional, may be 0
+}>();
+
+const emit = defineEmits<{
+  (e: "close"): void;
 }>();
 
 onMounted(fetchData);

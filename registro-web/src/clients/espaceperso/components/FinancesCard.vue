@@ -17,6 +17,7 @@
         size="small"
         :disabled="!props.dossier.Participants?.length"
         @click="showCreateAide = true"
+        v-if="props.supportsAidesExt"
       >
         <template #prepend>
           <v-icon color="green">mdi-plus</v-icon>
@@ -135,6 +136,7 @@ import { Formatters } from "@/utils";
 const props = defineProps<{
   token: string;
   dossier: DossierExt;
+  supportsAidesExt: boolean;
   isPaiementOpen: boolean;
 }>();
 

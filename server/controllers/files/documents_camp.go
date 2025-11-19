@@ -31,7 +31,7 @@ type generatedFileKey struct {
 
 type GeneratedFile struct {
 	NomClient string
-	Key       string // crypted camp ID and Kind
+	Key       string // crypted generatedFileKey : camp ID and Kind
 }
 
 // CampDocument returns a key identifying generated documents
@@ -42,9 +42,9 @@ func CampDocument(key crypto.Encrypter, camp cps.Camp, kind GenDocumentKind) (ou
 	}
 	switch kind {
 	case ListeVetements:
-		out.NomClient = fmt.Sprintf("Liste de vêtements %s.pdf", camp.Label())
+		out.NomClient = "Liste de vêtements.pdf"
 	case ListeParticipants:
-		out.NomClient = fmt.Sprintf("Liste des participants %s.pdf", camp.Label())
+		out.NomClient = "Liste des participants.pdf"
 	}
 	return out, nil
 }

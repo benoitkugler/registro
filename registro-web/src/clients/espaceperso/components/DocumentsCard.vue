@@ -87,6 +87,7 @@
               @click="ficheToEdit = fiche"
               color="green"
               append-icon="mdi-check"
+              elevation="1"
             >
               Remplie
             </v-chip>
@@ -107,7 +108,7 @@
             :subtitle="personne.Personne"
             :inUpload="false"
             :optionnelle="null"
-            :showUploadText="true"
+            :showUploadText="!xs"
             v-for="demande in personne.Demandes"
             @upload="
               (f) => uploadDocument(personne.IdPersonne, demande.Demande.Id, f)
@@ -118,7 +119,7 @@
               #prepend
               v-if="demande.Demande.Categorie == Categorie.Vaccins"
             >
-              <v-btn icon size="x-small" flat class="mr-2">
+              <v-btn icon size="x-small" class="mr-2">
                 <v-icon>mdi-help-circle-outline</v-icon>
                 <v-menu activator="parent">
                   <v-card max-width="400px">
@@ -181,6 +182,7 @@
       <FichesanitaireForm
         v-if="ficheToEdit"
         :fiche="ficheToEdit"
+        @close="ficheToEdit = null"
         @save="saveFichesanitaire"
         @transfert="transfertFichesanitaire"
       ></FichesanitaireForm>
@@ -205,6 +207,7 @@ import type { Int } from "@/urls";
 import { endpoints } from "@/utils";
 import FichesanitaireForm from "./FichesanitaireForm.vue";
 import CharteCard from "./CharteCard.vue";
+import { useDisplay } from "vuetify";
 const props = defineProps<{
   token: string;
 }>();
@@ -212,6 +215,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: "updateNotifs", toReadOrFill: Int): void;
 }>();
+
+const { xs } = useDisplay();
 
 onMounted(fetchData);
 

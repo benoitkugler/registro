@@ -1,14 +1,23 @@
 <template>
   <NavBar title="Espace de suivi de votre inscription">
-    <v-btn @click="showSondages = 0 as IdCamp" prepend-icon="mdi-comment-quote">
+    <v-btn
+      :size="smAndDown ? 'small' : undefined"
+      @click="showSondages = 0 as IdCamp"
+      prepend-icon="mdi-comment-quote"
+    >
       Avis
     </v-btn>
-    <v-btn @click="showPhotos = true" prepend-icon="mdi-image-album">
-      Album photos
+    <v-btn
+      :size="smAndDown ? 'small' : undefined"
+      @click="showPhotos = true"
+      prepend-icon="mdi-image-album"
+    >
+      Photos
     </v-btn>
     <v-menu>
       <template #activator="{ props: menuProps }">
         <v-btn
+          :size="smAndDown ? 'small' : undefined"
           v-if="data"
           v-bind="menuProps"
           :disabled="!data.EnableJustificatifs"
@@ -38,8 +47,45 @@
   <v-skeleton-loader type="card" v-if="data == null"></v-skeleton-loader>
   <v-container class="fill-height" fluid v-else>
     <v-row>
+      <!-- fil des messages -->
+      <v-col align-self="center" xs="12">
+        <v-card
+          :subtitle="
+            smAndDown ? 'Fil de suivi' : 'Fil de suivi de votre inscription'
+          "
+        >
+          <template #append>
+            <v-btn
+              @click="showCreateMessage = { content: '', toFondSoutien: false }"
+              prepend-icon="mdi-email"
+              :size="smAndDown ? 'small' : undefined"
+            >
+              Nous écrire</v-btn
+            >
+          </template>
+          <v-card-text>
+            <div class="overflow-y-auto" style="max-height: 75vh">
+              <v-timeline side="end" class="mt-4" density="compact">
+                <EventSwitch
+                  v-for="event in events"
+                  :event="event"
+                  @go-to-sondage="(id) => (showSondages = id)"
+                  @go-to-documents="showDocuments = true"
+                  @go-to-validation="showValidation = true"
+                  @accept-place-liberee="(id) => handleFromEvent(id)"
+                  @reply-fond-soutien="
+                    showCreateMessage = { content: '', toFondSoutien: true }
+                  "
+                >
+                </EventSwitch>
+              </v-timeline>
+            </div>
+          </v-card-text>
+        </v-card>
+      </v-col>
+
       <!-- participants  et finances -->
-      <v-col align-self="center" cols="5">
+      <v-col align-self="center" xs="12" md="5">
         <v-card subtitle="Participants">
           <!-- boutons Documents -->
           <template #append>
@@ -107,43 +153,12 @@
         <FinancesCard
           :token="token"
           :dossier="data.Dossier"
+          :supports-aides-ext="data.SupportsAidesExt"
           :is-paiement-open="data.IsPaiementOpen"
           :settings="data.PaiementSettings"
           @refresh="fetchData"
           @show-reglement="showReglement = true"
         ></FinancesCard>
-      </v-col>
-
-      <!-- fil des messages -->
-      <v-col align-self="center">
-        <v-card subtitle="Fil de suivi de votre inscription">
-          <template #append>
-            <v-btn
-              @click="showCreateMessage = { content: '', toFondSoutien: false }"
-              prepend-icon="mdi-email"
-            >
-              Nous écrire</v-btn
-            >
-          </template>
-          <v-card-text>
-            <div class="overflow-y-auto" style="max-height: 75vh">
-              <v-timeline side="end" class="mt-4" density="compact">
-                <EventSwitch
-                  v-for="event in events"
-                  :event="event"
-                  @go-to-sondage="(id) => (showSondages = id)"
-                  @go-to-documents="showDocuments = true"
-                  @go-to-validation="showValidation = true"
-                  @accept-place-liberee="(id) => handleFromEvent(id)"
-                  @reply-fond-soutien="
-                    showCreateMessage = { content: '', toFondSoutien: true }
-                  "
-                >
-                </EventSwitch>
-              </v-timeline>
-            </div>
-          </v-card-text>
-        </v-card>
       </v-col>
     </v-row>
 
@@ -199,6 +214,7 @@
     <SondagesCard
       :token="token"
       :initial-camp="showSondages"
+      @close="showSondages = null"
       v-if="showSondages != null"
     ></SondagesCard>
   </v-dialog>
@@ -230,12 +246,17 @@
       v-if="data"
       :asso-title="data.AssoTitle"
       :mail-centre="data.MailCentre"
+      @done="showPresentation = false"
     ></PresentationCard>
   </v-dialog>
 
-  <!-- présentation initiale -->
+  <!-- validation d'une inscription -->
   <v-dialog v-model="showValidation" max-width="800px">
-    <ValidationInscriptionCard v-if="data" :dossier="data.Dossier">
+    <ValidationInscriptionCard
+      v-if="data"
+      :dossier="data.Dossier"
+      @done="showValidation = false"
+    >
     </ValidationInscriptionCard>
   </v-dialog>
 
@@ -290,6 +311,9 @@ import DocumentsCard from "./components/DocumentsCard.vue";
 import FinancesReglementCard from "./components/FinancesReglementCard.vue";
 import PresentationCard from "./components/PresentationCard.vue";
 import ValidationInscriptionCard from "./components/ValidationInscriptionCard.vue";
+import { useDisplay } from "vuetify";
+
+const { smAndDown } = useDisplay();
 
 // id token
 const token = ref("");

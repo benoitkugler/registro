@@ -4,7 +4,7 @@
       Le montant à régler est de
       <b> {{ props.dossier.Bilan.Restant }} </b>.
       <v-row class="mt-4">
-        <v-col align-self="start" cols="4">
+        <v-col align-self="start" cols="12" md="4">
           <v-list class="py-0" selectable v-model:selected="mode">
             <v-list-item
               rounded
@@ -41,7 +41,7 @@
             </v-list-item>
           </v-list>
         </v-col>
-        <v-col align-self="start" cols="8">
+        <v-col align-self="start" cols="12" md="8">
           <v-card :title="ModePaiementLabels[mode]">
             <v-card-text v-if="mode == ModePaiement.EnLigne">
               TODO: see https://github.com/benoitkugler/registro/issues/76
