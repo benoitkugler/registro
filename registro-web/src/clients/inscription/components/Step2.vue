@@ -9,10 +9,11 @@
       >
     </template>
     <v-card-text v-if="isStart">
-      <v-row class="my-4" no-gutters>
-        <v-col align-self="center" class="text-center">
+      <v-row class="my-4" no-gutters justify="space-evenly">
+        <v-col align-self="center" class="text-center" cols="12" md="5">
           <v-btn
-            size="large"
+            :size="smAndDown ? 'small' : 'large'"
+            block
             class="text-none"
             @click="startWith('own')"
             prepend-icon="mdi-account"
@@ -20,12 +21,15 @@
             Je m'inscris comme participant.
           </v-btn>
         </v-col>
-        <v-col align-self="center" cols="auto">
-          <v-divider vertical thickness="4" class="py-4">ou</v-divider>
+        <v-col align-self="center" cols="12" md="auto">
+          <v-divider :vertical="!smAndDown" thickness="4" class="my-4"
+            >ou</v-divider
+          >
         </v-col>
-        <v-col align-self="center" class="text-center">
+        <v-col align-self="center" class="text-center" cols="12" md="5">
           <v-btn
-            size="large"
+            :size="smAndDown ? 'small' : 'large'"
+            block
             class="text-none"
             @click="startWith('one')"
             append-icon="mdi-account-child"
@@ -50,7 +54,7 @@
 </template>
 
 <script lang="ts" setup>
-import { nextTick, onMounted, useTemplateRef } from "vue";
+import { nextTick, useTemplateRef } from "vue";
 import {
   Sexe,
   type CampExt,
@@ -64,6 +68,7 @@ import {
 } from "../logic/api";
 import ParticipantRow from "./ParticipantRow.vue";
 import { ref } from "vue";
+import { useDisplay } from "vuetify";
 
 const props = defineProps<{
   camps: CampExt[];
@@ -71,6 +76,8 @@ const props = defineProps<{
   preselected: IdCamp;
   settings: ConfigInscription;
 }>();
+
+const { smAndDown } = useDisplay();
 
 const participants = defineModel<Participant[]>({ required: true });
 
