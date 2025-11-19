@@ -40,15 +40,16 @@ func (a *Asso) BankAccounts() [][2]string {
 }
 
 type ConfigInscription struct {
-	SupportBonsCAF, SupportANCV bool // if true, displayed in inscription form
-	SupportPaiementEnLigne      bool // if true, displayed in inscription and activated on espaceperso
-	EmailRetraitMedia           string
-	ShowFondSoutien             bool // if true, displayed in inscription form
-	ShowCharteConduite          bool // if true, displayed in inscription form
-	AskNationnalite             bool // if true, displayed for participants in inscription form
-	ShowInscriptionRapide       bool // if true, displays a bar in inscription form
-	ShowAutorisationVehicules   bool // if true, displays an autorisation checkbox in inscription form
-	ShowAnnulationConditions    bool // if true, displays a warning in inscription form (step 3)
+	SupportBonsCAF            bool // if true, displayed in inscription form and activates Aides on espaceperso
+	SupportANCV               bool // if true, displayed in inscription form
+	SupportPaiementEnLigne    bool // if true, displayed in inscription and activated on espaceperso
+	EmailRetraitMedia         string
+	ShowFondSoutien           bool // if true, displayed in inscription form
+	ShowCharteConduite        bool // if true, displayed in inscription form
+	AskNationnalite           bool // if true, displayed for participants in inscription form
+	ShowInscriptionRapide     bool // if true, displays a bar in inscription form
+	ShowAutorisationVehicules bool // if true, displays an autorisation checkbox in inscription form
+	ShowAnnulationConditions  bool // if true, displays a warning in inscription form (step 3)
 }
 
 var acve = Asso{
@@ -121,7 +122,7 @@ var repere = Asso{
 		SignatureMailCentre: "L'équipe Repère",
 	},
 
-	bankNames: []string{"Crédit Mutuel (FR)", "Crédit mutual (CHF)"},
+	bankNames: []string{"Crédit Mutuel (EUR)", "Crédit mutual (CHF)"},
 
 	ChequeSettings: ChequeSettings{}, // disabled
 
