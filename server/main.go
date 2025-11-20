@@ -33,10 +33,19 @@ func main() {
 	flag.Parse()
 	isDev := *devPtr
 
-	asso, keys, dbCreds, smtp, joomeo, directories := loadEnvs(isDev)
-	encrypter := crypto.NewEncrypter(keys.EncryptKey)
+	asso, keys, dbCreds, smtp, directories := loadEnvs(isDev)
+
+	// Optionnal support for Joomeo
+	var joomeo config.Joomeo
+	if config.HasJoomeo() {
+		var err error
+		joomeo, err = config.NewJoomeo()
+		check(err)
+	}
+
 	fmt.Println("Loading env. -> OK.")
 	fmt.Println("\tASSO:", asso.Title)
+	fmt.Println("\tJOOMEO API KEY:", joomeo.ApiKey)
 	fmt.Println("\tFILES_DIR:", directories.Files)
 	fmt.Println("\tASSETS_DIR:", directories.Assets)
 	fmt.Println("\tCACHE_DIR:", directories.Cache)
@@ -45,7 +54,7 @@ func main() {
 	check(err)
 	fmt.Println("Setting up pdfcreator -> OK.")
 
-	// TODO: setup APIS
+	// TODO: setup Dons, OnlinePaiement APIS
 	helloasso := config.Helloasso{}
 
 	fmt.Println("Connecting to DB", dbCreds.Name, "at", dbCreds.Host, "...")
@@ -62,6 +71,8 @@ func main() {
 		err = echo.NewHTTPError(400, err.Error())
 		e.DefaultHTTPErrorHandler(err, c)
 	}
+
+	encrypter := crypto.NewEncrypter(keys.EncryptKey)
 
 	backofficeCt, err := backoffice.NewController(db, encrypter, keys.Backoffice, keys.FondSoutien, fs, smtp, asso, joomeo, helloasso)
 	check(err)
@@ -119,7 +130,7 @@ func main() {
 	e.Logger.Fatal(e.Start(adress))
 }
 
-func loadEnvs(devMode bool) (config.Asso, config.Keys, config.DB, config.SMTP, config.Joomeo, config.Directories) {
+func loadEnvs(devMode bool) (config.Asso, config.Keys, config.DB, config.SMTP, config.Directories) {
 	asso, err := config.NewAsso()
 	check(err)
 
@@ -132,13 +143,10 @@ func loadEnvs(devMode bool) (config.Asso, config.Keys, config.DB, config.SMTP, c
 	smtp, err := config.NewSMTP(!devMode)
 	check(err)
 
-	joomeo, err := config.NewJoomeo()
-	check(err)
-
 	dirs, err := config.NewDirectories()
 	check(err)
 
-	return asso, keys, db, smtp, joomeo, dirs
+	return asso, keys, db, smtp, dirs
 }
 
 func getAdress(devMode bool) string {

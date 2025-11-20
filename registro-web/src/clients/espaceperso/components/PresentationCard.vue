@@ -26,12 +26,13 @@
           append-icon="mdi-mail"
         >
         </v-list-item>
-        <v-list-item
+        <!-- Disable Joomeo for now -->
+        <!-- <v-list-item
           title="Album photo"
           subtitle="Accès vers une plateforme dédiée aux photos de vos séjours."
           append-icon="mdi-image-album"
         >
-        </v-list-item>
+        </v-list-item> -->
         <v-list-item
           title="Justificatifs"
           subtitle="Téléchargement d'une attestation de présence ou d'une facture acquittée."

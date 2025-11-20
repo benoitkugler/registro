@@ -7,13 +7,14 @@
     >
       Avis
     </v-btn>
-    <v-btn
+    <!-- Disable Joomeo for now -->
+    <!-- <v-btn
       :size="smAndDown ? 'small' : undefined"
       @click="showPhotos = true"
       prepend-icon="mdi-image-album"
     >
       Photos
-    </v-btn>
+    </v-btn> -->
     <v-menu>
       <template #activator="{ props: menuProps }">
         <v-btn

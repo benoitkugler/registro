@@ -66,12 +66,13 @@
                   </template>
                 </v-list-item>
                 <v-divider thickness="1"></v-divider>
-                <v-list-item
+                <!-- Disabled Joomeo for now -->
+                <!-- <v-list-item
                   @click="showJoomeo = true"
                   title="Configurer les albums Joomeo..."
                   prepend-icon="mdi-image-album"
-                ></v-list-item>
-                <v-divider thickness="1"></v-divider>
+                ></v-list-item> -->
+                <!-- <v-divider thickness="1"></v-divider> -->
                 <v-list-item
                   @click="startOpenInsc"
                   title="Ouvrir les inscriptions..."

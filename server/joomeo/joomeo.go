@@ -111,7 +111,7 @@ func NewApi(credences config.Joomeo) (*Api, error) {
 		Login:    credences.Login,
 		Password: credences.Password,
 	}, map[string]string{
-		"X-API-KEY":      credences.Apikey,
+		"X-API-KEY":      credences.ApiKey,
 		"X-PAYLOAD-TYPE": "manager",
 	})
 	if err != nil {
@@ -139,7 +139,7 @@ func NewApi(credences config.Joomeo) (*Api, error) {
 	}
 
 	return &Api{
-		apiKey:          credences.Apikey,
+		apiKey:          credences.ApiKey,
 		rootFolderLabel: credences.RootFolder,
 		sessionid:       out.Sessionid,
 		spaceName:       out.SpaceName,

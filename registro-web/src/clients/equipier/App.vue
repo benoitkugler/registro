@@ -87,7 +87,8 @@ onMounted(() => {
   const query = new URLSearchParams(window.location.search);
   token.value = query.get("token") || "";
   fetchData();
-  fetchJoomeo(); // separate request to avoid blocking to long
+  //   disabled Joomeo for now
+  //   fetchJoomeo(); // separate request to avoid blocking to long
 });
 
 async function fetchData() {
