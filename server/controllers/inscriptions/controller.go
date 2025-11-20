@@ -343,46 +343,34 @@ type candidatsPreinscription struct {
 }
 
 // chercheMail renvoie les personnes ayant le mail fourni. Ignore les personnes temporaires.
-func (ct *Controller) chercheMail(mail string) (out candidatsPreinscription, _ error) {
-	mail = strings.TrimSpace(mail)
-	if len(mail) <= 1 { // no mail
-		return out, nil
-	}
-	respoPs, err := pr.SelectByMail(ct.db, mail)
+func (ct *Controller) chercheMail(mail string) (candidatsPreinscription, error) {
+	dossiers, responsables, err := logic.LoadByMail(ct.db, mail)
 	if err != nil {
-		return out, utils.SQLError(err)
+		return candidatsPreinscription{}, err
 	}
-	respoPs.RemoveTemp()
 
-	ids := make(utils.Set[pr.IdPersonne])
-	for id, pers := range respoPs {
-		// ajoute seulement les personnes majeurs, afin d'éviter les
-		// confusions dans le cas ou un enfant a la même adresse que ses parents
-		if pers.Age() < 18 {
-			continue
-		}
-
-		ids.Add(id)
+	out := candidatsPreinscription{
+		responsables:    make([]pr.Personne, 0, len(responsables)),
+		idsParticipants: make(utils.Set[pr.IdPersonne]),
+	}
+	for _, pers := range responsables {
 		out.responsables = append(out.responsables, pers)
 	}
 	sort.Slice(out.responsables, func(i int, j int) bool {
 		return out.responsables[i].NOMPrenom() < out.responsables[j].NOMPrenom()
 	})
 
-	dossiers, err := ds.SelectDossiersByIdResponsables(ct.db, ids.Keys()...)
-	if err != nil {
-		return out, utils.SQLError(err)
+	for _, dossier := range dossiers.Dossiers {
+		loader := dossiers.For(dossier.Id)
+		for _, personne := range loader.Personnes()[1:] {
+			if personne.IsTemp {
+				continue
+			}
+			out.idsParticipants.Add(personne.Id)
+		}
+
 	}
-	participants, err := cps.SelectParticipantsByIdDossiers(ct.db, dossiers.IDs()...)
-	if err != nil {
-		return out, utils.SQLError(err)
-	}
-	partPs, err := pr.SelectPersonnes(ct.db, participants.IdPersonnes()...)
-	if err != nil {
-		return out, utils.SQLError(err)
-	}
-	partPs.RemoveTemp()
-	out.idsParticipants = utils.NewSet(partPs.IDs()...)
+
 	return out, nil
 }
 

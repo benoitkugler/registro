@@ -280,6 +280,10 @@ export namespace Personnes {
     return `${pr.Nom.toUpperCase()} ${pr.Prenom}`;
   }
 
+  export function prenomN(pr: Personne) {
+    return `${pr.Prenom} ${pr.Nom.substring(0, 1).toUpperCase()}`;
+  }
+
   export function match(pr: Personne, normalizedPattern: string) {
     if (normalizedPattern == "") return true;
     const str = normalize(pr.Nom + pr.Prenom);

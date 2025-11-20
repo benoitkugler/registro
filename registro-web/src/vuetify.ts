@@ -20,12 +20,12 @@ const colorScheme =
     ? {
         primary: "#c8db30",
         secondary: "#b8dbf1",
-        accent: "#b8dbf1",
+        accent: "#ffd100",
       }
     : {
         primary: "#2b678a",
         secondary: "#2eaadc",
-        accent: "#2eaadc",
+        accent: "#fff604",
       };
 
 // https://vuetifyjs.com/en/introduction/why-vuetify/#feature-guides

@@ -5,8 +5,10 @@ import (
 	"testing"
 	"time"
 
+	"registro/sql/camps"
 	"registro/sql/dossiers"
 	pr "registro/sql/personnes"
+	"registro/sql/shared"
 	tu "registro/utils/testutils"
 )
 
@@ -207,6 +209,38 @@ func TestRelanceDocuments(t *testing.T) {
 	tu.Write(t, "RelanceDocuments.html", []byte(html))
 }
 
+func TestRenvoieEspacePersoURL(t *testing.T) {
+	cfg, _ := loadEnv(t)
+	html, err := RenvoieEspacePersoURL(cfg, "smsld@free.fr", []ResumeDossier{
+		{
+			Responsable: "lkd  kmsslkd" + " ddd zz",
+			URL:         "http://free.fr",
+			CampsMap: camps.Camps{
+				1: {Nom: "C2", DateDebut: shared.NewDateFrom(time.Now())},
+				2: {Nom: "C2", DateDebut: shared.NewDateFrom(time.Now())},
+			},
+		},
+		{
+			Responsable: "lkdkmslkd" + " dAadd",
+			URL:         "http://free.fr",
+			CampsMap: camps.Camps{
+				1: {Nom: "C2", DateDebut: shared.NewDateFrom(time.Now())},
+			},
+		},
+		{
+			Responsable: "lkd-kmslkd" + " ddd",
+			URL:         "http://free.fr",
+			CampsMap: camps.Camps{
+				1: {Nom: "C2", DateDebut: shared.NewDateFrom(time.Now())},
+				2: {Nom: "C2", DateDebut: shared.NewDateFrom(time.Now())},
+				3: {Nom: "C2", DateDebut: shared.NewDateFrom(time.Now())},
+			},
+		},
+	})
+	tu.AssertNoErr(t, err)
+	tu.Write(t, "RenvoieEspacePersoURL.html", []byte(html))
+}
+
 // func TestPrein(t *testing.T) {
 // 	html, err := NewPreinscription("smsld@free.fr", []TargetRespo{
 // 		{NomPrenom: "lkdkmslkd", Lien: "http://free.fr"},
@@ -217,41 +251,6 @@ func TestRelanceDocuments(t *testing.T) {
 // 		t.Fatal(err)
 // 	}
 // 	if err := ioutil.WriteFile(PATH+"local/mail1_preinscription.html", []byte(html), 0o666); err != nil {
-// 		t.Fatal(err)
-// 	}
-// }
-
-// func TestRenvoieLien(t *testing.T) {
-// 	html, err := NewRenvoieEspacePersoURL("smsld@free.fr", []ResumeDossier{
-// 		{
-// 			Responsable: rd.BasePersonne{Nom: "lkd  kmsslkd", Prenom: "ddd zz"},
-// 			Lien:        "http://free.fr",
-// 			CampsMap: rd.Camps{
-// 				1: {Nom: "C2", DateDebut: rd.Date(time.Now())},
-// 				2: {Nom: "C2", DateDebut: rd.Date(time.Now())},
-// 			},
-// 		},
-// 		{
-// 			Responsable: rd.BasePersonne{Nom: "lkdkmslkd", Prenom: "dAadd"},
-// 			Lien:        "http://free.fr",
-// 			CampsMap: rd.Camps{
-// 				1: {Nom: "C2", DateDebut: rd.Date(time.Now())},
-// 			},
-// 		},
-// 		{
-// 			Responsable: rd.BasePersonne{Nom: "lkd-kmslkd", Prenom: "ddd"},
-// 			Lien:        "http://free.fr",
-// 			CampsMap: rd.Camps{
-// 				1: {Nom: "C2", DateDebut: rd.Date(time.Now())},
-// 				2: {Nom: "C2", DateDebut: rd.Date(time.Now())},
-// 				3: {Nom: "C2", DateDebut: rd.Date(time.Now())},
-// 			},
-// 		},
-// 	})
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-// 	if err := ioutil.WriteFile(PATH+"local/mail1_renvoie_lien.html", []byte(html), 0o666); err != nil {
 // 		t.Fatal(err)
 // 	}
 // }

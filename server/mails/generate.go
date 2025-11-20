@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"registro/config"
+	"registro/sql/camps"
 	"registro/sql/dossiers"
 	pr "registro/sql/personnes"
 )
@@ -30,6 +31,7 @@ var (
 	notifieModificationOptionsT *template.Template
 	transfertFicheSanitaireT    *template.Template
 	relanceDocumentsT           *template.Template
+	renvoieEspacePersoURLT      *template.Template
 )
 
 func init() {
@@ -47,6 +49,7 @@ func init() {
 	notifieModificationOptionsT = parseTemplate("templates/notifieModificationOptions.html")
 	transfertFicheSanitaireT = parseTemplate("templates/transfertFicheSanitaire.html")
 	relanceDocumentsT = parseTemplate("templates/relanceDocuments.html")
+	renvoieEspacePersoURLT = parseTemplate("templates/renvoieEspacePersoURL.html")
 }
 
 func parseTemplate(templateFile string) *template.Template {
@@ -407,6 +410,44 @@ func NotifiePlaceLiberee(cfg config.Asso, contact Contact, camp string, lienEspa
 	return render(notifiePlaceLibereeT, args)
 }
 
+type ResumeDossier struct {
+	Responsable string
+	URL         template.HTML
+	CampsMap    camps.Camps
+}
+
+func (r ResumeDossier) Camps() string {
+	var tmp []string
+	for _, camp := range r.CampsMap {
+		tmp = append(tmp, camp.Label())
+	}
+	return strings.Join(tmp, ", ")
+}
+
+type paramsRenvoieEspacePersoURL struct {
+	champsCommuns
+	Mail     string
+	Dossiers []ResumeDossier
+}
+
+func RenvoieEspacePersoURL(cfg config.Asso, mail string, dossiers []ResumeDossier) (string, error) {
+	args := struct {
+		champsCommuns
+		Mail     string
+		Dossiers []ResumeDossier
+	}{
+		champsCommuns: champsCommuns{
+			Title:       "Lien de suivi",
+			Salutations: Contact{}.Salutations(),
+			Asso:        cfg,
+			Signature:   cfg.MailsSettings.SignatureMailCentre + "<br/><br/>" + mailAuto,
+		},
+		Mail:     mail,
+		Dossiers: dossiers,
+	}
+	return render(renvoieEspacePersoURLT, args)
+}
+
 // func NewRenvoieLienJoomeo(lien, login, password string) (string, error) {
 // 	commun := newChampCommuns(Contact{}, "Espace photo")
 // 	commun.SignatureMail = "<i>Ps : Ceci est un mail automatique, merci de ne pas y répondre.</i>"
@@ -498,26 +539,6 @@ func NotifiePlaceLiberee(cfg config.Asso, contact Contact, camp string, lienEspa
 // 	Responsable  Responsable
 // 	InfoLines    []string
 // 	LabelCamp    string
-// }
-
-// type ResumeDossier struct {
-// 	Responsable rd.BasePersonne
-// 	Lien        string
-// 	CampsMap    rd.Camps
-// }
-
-// func (r ResumeDossier) Camps() string {
-// 	var tmp []string
-// 	for _, camp := range r.CampsMap {
-// 		tmp = append(tmp, camp.Label().String())
-// 	}
-// 	return strings.Join(tmp, ", ")
-// }
-
-// type paramsRenvoieEspacePersoURL struct {
-// 	champsCommuns
-// 	Mail     string
-// 	Dossiers []ResumeDossier
 // }
 
 // type paramsRenvoieLienJoomeo struct {

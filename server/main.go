@@ -17,6 +17,7 @@ import (
 	"registro/controllers/espaceperso"
 	fsAPI "registro/controllers/files"
 	"registro/controllers/inscriptions"
+	"registro/controllers/services"
 	"registro/crypto"
 	"registro/generators/pdfcreator"
 	"registro/logic"
@@ -74,6 +75,8 @@ func main() {
 
 	equipiersCt := equipiers.NewController(db, encrypter, fs, joomeo)
 
+	servicesCt := services.NewController(db, encrypter, smtp, asso)
+
 	filesCt := fsAPI.NewController(db, encrypter, fs, asso)
 
 	if isDev {
@@ -106,7 +109,7 @@ func main() {
 	setupRoutesEspaceperso(e, espacepersoCt)
 	setupRoutesInscription(e, inscriptionsCt)
 	setupRoutesEquipier(e, equipiersCt)
-	setupRoutesServices(e, espacepersoCt)
+	setupRoutesServices(e, servicesCt, espacepersoCt)
 	setupRoutesMisc(e, filesCt)
 	setupClientApps(e, asso.ID)
 

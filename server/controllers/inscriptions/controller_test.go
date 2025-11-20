@@ -108,6 +108,7 @@ func TestController_chercheMail(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	_, err = cps.Participant{IdCamp: camp.Id, IdDossier: dossier.Id, IdTaux: 1, IdPersonne: p3.Id}.Insert(ct.db)
 	tu.AssertNoErr(t, err)
+
 	out, err := ct.chercheMail("xx@free.fr ")
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(out.responsables) == 1)

@@ -1,0 +1,16 @@
+{{ define "content" }}
+<p>
+    Votre adresse mail <b>{{ .Mail }}</b> est bien présente dans nos données. 
+    Voici les liens vers les espaces de suivi des inscriptions qui y sont rattachées.
+    <ul>
+        {{ range .Dossiers }}
+        <li>
+            <a href="{{ .URL }}">Responsable {{ .Responsable }}</a> ({{ .Camps }})
+        </li>
+        {{ end }}
+    </ul>
+</p>
+<p>
+    Bonne visite !
+</p>
+{{ end }}

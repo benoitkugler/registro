@@ -3,6 +3,12 @@
 import type { AxiosResponse } from "axios";
 import Axios from "axios";
 
+export type Int = number & { __opaque__: "Int" };
+// registro/controllers/services.SearchMailOut
+export interface SearchMailOut {
+  Found: Int;
+}
+
 /** AbstractAPI provides auto-generated API calls and should be used 
 		as base class for an app controller.
 	*/
@@ -31,6 +37,21 @@ export abstract class AbstractAPI {
         params: { token: params["token"] },
       });
       return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** SearchMail performs the request and handles the error */
+  async SearchMail(params: { mail: string }) {
+    const fullUrl = this.baseURL + "/api/v1/services/search-mail";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<SearchMailOut> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { mail: params["mail"] },
+      });
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
