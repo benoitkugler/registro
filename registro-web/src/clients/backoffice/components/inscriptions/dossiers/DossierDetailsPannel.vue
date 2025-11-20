@@ -1,13 +1,19 @@
 <template>
-  <v-card
-    :title="`Dossier de ${props.dossier.Dossier.Responsable}`"
-    class="ml-2"
-  >
+  <v-card class="ml-2">
+    <template #title>
+      Responsable
+      <a
+        href="/annuaire"
+        @click.prevent="goToPersonne(props.dossier.Dossier.IdResponsable)"
+        >{{ props.dossier.Dossier.Responsable }}</a
+      >
+    </template>
     <template #subtitle>
+      Participants
       <span class="mr-1" v-for="p in props.dossier.Dossier.Participants">
         <a href="/camps" @click.prevent="goToParticipant(p.Participant)">
-          {{ Personnes.label(p.Personne) }}
-        </a>
+          {{ Personnes.prenomN(p.Personne) }}</a
+        >
       </span>
     </template>
 
@@ -344,7 +350,10 @@ import {
 import FactureCard from "./FactureCard.vue";
 import PaiementEditCard from "./PaiementEditCard.vue";
 import { controller } from "@/clients/backoffice/logic/logic";
-import { goToParticipant } from "@/clients/backoffice/plugins/router";
+import {
+  goToParticipant,
+  goToPersonne,
+} from "@/clients/backoffice/plugins/router";
 import MergeCard from "../MergeCard.vue";
 import DossierEditor from "./editor/DossierEditor.vue";
 

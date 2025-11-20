@@ -327,6 +327,7 @@ export interface CampItem {
 // registro/logic.DossierExt
 export interface DossierExt {
   Dossier: Dossier;
+  IdResponsable: IdPersonne;
   Responsable: string;
   Participants: ParticipantCamp[] | null;
   Aides: Record<IdParticipant, Aides> | null;

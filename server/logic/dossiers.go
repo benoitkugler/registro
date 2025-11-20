@@ -218,11 +218,12 @@ func (de *Dossier) LastEventTime() time.Time {
 // DossierExt is the public version of a [Dossier],
 // with all information resolved.
 type DossierExt struct {
-	Dossier      ds.Dossier
-	Responsable  string
-	Participants []cps.ParticipantCamp
-	Aides        map[cps.IdParticipant]cps.Aides
-	AidesFiles   map[cps.IdAide]PublicFile // optionnel
+	Dossier       ds.Dossier
+	IdResponsable pr.IdPersonne
+	Responsable   string
+	Participants  []cps.ParticipantCamp
+	Aides         map[cps.IdParticipant]cps.Aides
+	AidesFiles    map[cps.IdAide]PublicFile // optionnel
 
 	Events    Events
 	Paiements ds.Paiements
@@ -307,5 +308,35 @@ func (d DossierFinance) Publish(key crypto.Encrypter) DossierExt {
 			}
 		}
 	}
-	return DossierExt{d.Dossier.Dossier, d.Responsable().PrenomNOM(), d.ParticipantsExt(), d.aides, aideFiles, d.Events, d.paiements, bilan}
+	return DossierExt{d.Dossier.Dossier, d.Responsable().Id, d.Responsable().PrenomNOM(), d.ParticipantsExt(), d.aides, aideFiles, d.Events, d.paiements, bilan}
+}
+
+// LoadByMail renvoie les dossiers dont le responsable a le mail fourni. Ignore les responsables temporaires.
+// Renvoie aussi les responsables en question
+func LoadByMail(db ds.DB, mail string) (Dossiers, pr.Personnes, error) {
+	mail = strings.TrimSpace(mail)
+	if len(mail) == 0 { // return early to avoid matching against empty profiles
+		return Dossiers{}, nil, nil
+	}
+	responsables, err := pr.SelectByMail(db, mail)
+	if err != nil {
+		return Dossiers{}, nil, utils.SQLError(err)
+	}
+	responsables.RemoveTemp()
+
+	dossiers, err := ds.SelectDossiersByIdResponsables(db, responsables.IDs()...)
+	if err != nil {
+		return Dossiers{}, nil, utils.SQLError(err)
+	}
+
+	// restrict to actual responsables
+	s := utils.NewSet(dossiers.IdResponsables()...)
+	for id := range responsables {
+		if !s.Has(id) {
+			delete(responsables, id)
+		}
+	}
+
+	out, err := LoadDossiers(db, dossiers.IDs()...)
+	return out, responsables, err
 }
