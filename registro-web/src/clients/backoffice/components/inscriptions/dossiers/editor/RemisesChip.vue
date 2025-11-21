@@ -4,20 +4,17 @@
       <v-card v-bind="menuProps" elevation="1" color="grey-lighten-2">
         <v-card-text class="py-1 px-1">
           <template v-if="!isActive"> Pas de remises </template>
-          <span class="mx-1" v-if="inner.ReducInscrits">
-            Inscrits : {{ inner.ReducInscrits }}%
+          <span class="mx-1" v-if="inner.Famille">
+            Inscrits : {{ inner.Famille }}%
           </span>
-          <span class="mx-1" v-if="inner.ReducEquipiers">
-            Equipiers : {{ inner.ReducEquipiers }}%
+          <span class="mx-1" v-if="inner.Equipiers">
+            Equipiers : {{ inner.Equipiers }}%
           </span>
           <br
-            v-if="
-              (inner.ReducInscrits || inner.ReducEquipiers) &&
-              inner.ReducSpeciale.Cent
-            "
+            v-if="(inner.Famille || inner.Equipiers) && inner.Speciale.Cent"
           />
-          <span class="mx-1" v-if="inner.ReducSpeciale.Cent">
-            Remise : {{ Formatters.montant(inner.ReducSpeciale) }}
+          <span class="mx-1" v-if="inner.Speciale.Cent">
+            Remise : {{ Formatters.montant(inner.Speciale) }}
           </span>
         </v-card-text>
       </v-card>
@@ -27,7 +24,7 @@
         <v-row>
           <v-col>
             <IntField
-              v-model="inner.ReducInscrits"
+              v-model="inner.Famille"
               label="Remise inscrits"
               hide-details
               suffix="%"
@@ -35,7 +32,7 @@
           </v-col>
           <v-col>
             <IntField
-              v-model="inner.ReducEquipiers"
+              v-model="inner.Equipiers"
               label="Remise équipiers"
               hide-details
               suffix="%"
@@ -47,7 +44,7 @@
           <v-col>
             <MontantField
               class="mt-2"
-              v-model="inner.ReducSpeciale"
+              v-model="inner.Speciale"
               label="Remise spéciale"
               hide-details
             ></MontantField>
@@ -83,9 +80,9 @@ const emit = defineEmits<{
 
 const isActive = computed(
   () =>
-    inner.value.ReducInscrits != 0 ||
-    inner.value.ReducEquipiers != 0 ||
-    inner.value.ReducSpeciale.Cent != 0
+    inner.value.Famille != 0 ||
+    inner.value.Equipiers != 0 ||
+    inner.value.Speciale.Cent != 0
 );
 
 const inner = ref(copy(props.remises));

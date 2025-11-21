@@ -461,9 +461,9 @@ export interface PrixParStatut {
 export type PrixQuotientFamilial = Ar4_Int;
 // registro/sql/camps.Remises
 export interface Remises {
-  ReducEquipiers: Int;
-  ReducInscrits: Int;
-  ReducSpeciale: Montant;
+  Equipiers: Int;
+  Famille: Int;
+  Speciale: Montant;
 }
 // registro/sql/camps.Role
 export const Role = {

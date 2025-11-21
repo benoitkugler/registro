@@ -261,7 +261,6 @@ export interface Etatcivil {
   CodePostal: string;
   Ville: string;
   Pays: Pays;
-  SecuriteSociale: string;
   NomJeuneFille: string;
   Profession: string;
   Etudiant: boolean;

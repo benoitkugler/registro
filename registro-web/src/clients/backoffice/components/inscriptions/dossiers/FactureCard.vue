@@ -128,19 +128,18 @@ const participants = computed(() =>
 
 function hasRemise(b: BilanParticipantPub) {
   return !!(
-    b.Remises.ReducInscrits ||
-    b.Remises.ReducEquipiers ||
-    b.Remises.ReducSpeciale.Cent
+    b.Remises.Famille ||
+    b.Remises.Equipiers ||
+    b.Remises.Speciale.Cent
   );
 }
 
 function formatRemises(remises: Remises) {
   const chunks = [];
-  if (remises.ReducInscrits) chunks.push(`Enfants : ${remises.ReducInscrits}%`);
-  if (remises.ReducEquipiers)
-    chunks.push(`Enfants : ${remises.ReducEquipiers}%`);
-  if (remises.ReducSpeciale.Cent)
-    chunks.push(`Remise : ${Formatters.montant(remises.ReducSpeciale)}`);
+  if (remises.Famille) chunks.push(`Enfants : ${remises.Famille}%`);
+  if (remises.Equipiers) chunks.push(`Enfants : ${remises.Equipiers}%`);
+  if (remises.Speciale.Cent)
+    chunks.push(`Remise : ${Formatters.montant(remises.Speciale)}`);
   return chunks.join("  ;  ");
 }
 

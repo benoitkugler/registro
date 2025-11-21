@@ -489,7 +489,7 @@ func ListeParticipantsCamp(camp cps.Camp, inscrits []cps.ParticipantPersonne, do
 // ListeParticipantsCamps renvoie un document Excel des participants (éventuellemnt en liste d'attente)
 // de plusieurs séjours, à destination des comptables.
 //
-// Le champ ReducSpeciale des remises est ignoré.
+// Le champ [Speciale] des remises est ignoré.
 func ListeParticipantsCamps(participants []cps.ParticipantCamp, dossiers logic.DossiersFinances,
 	remisesHints map[cps.IdParticipant]cps.Remises,
 	showNationnaliteSuisse bool,

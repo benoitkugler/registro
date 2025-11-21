@@ -925,7 +925,7 @@ type RemisesHint struct {
 	Personne       string
 	Camp           string
 	Actual         cps.Remises
-	Hint           cps.Remises // ReducSpeciale is ignored
+	Hint           cps.Remises // Hint.Speciale is ignored
 	AutresInscrits []InscritHeader
 	Equipiers      []EquipierHeader
 }
