@@ -107,12 +107,14 @@ var repere = Asso{
 	Infos: "2025",
 
 	ContactNom:  "Repère - Centre d'inscriptions",
-	ContactTel:  "",
+	ContactTel:  "+41 79 334 15 04",
 	ContactMail: "webmaster@lerepere.ch",
 
 	Icon:           "logo_repere.png",
-	ColorPrimary:   "#2b678a",
-	ColorSecondary: "#2ebfdc",
+	//adapté pour l'ancien site web ColorPrimary:   "#2b678a",
+	//adapté pour l'ancien site web ColorSecondary: "#2ebfdc",
+	ColorPrimary:   "#3f4e30",
+	ColorSecondary: "#bdd4e8",
 
 	MailsSettings: MailsSettings{
 		AssoName:            "Repère",
