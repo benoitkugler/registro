@@ -8,13 +8,17 @@ import (
 
 type Directories struct {
 	Files  string // storage for user files
-	Assets string // readonly directory to be used in templates
+	Assets string // readonly directory to be used in HTML templates
 	Cache  string // storage for font cache
+	Media  string // OPTIONAL external directory exposed as static files
 }
 
-func loadEnvDir(varname string) (string, error) {
+func loadEnvDir(varname string, optional bool) (string, error) {
 	dirName := os.Getenv(varname)
 	if dirName == "" {
+		if optional {
+			return "", nil
+		}
 		return "", fmt.Errorf("missing env. %s", varname)
 	}
 	dirName, err := filepath.Abs(dirName)
@@ -33,17 +37,21 @@ func loadEnvDir(varname string) (string, error) {
 }
 
 func NewDirectories() (Directories, error) {
-	files, err := loadEnvDir("FILES_DIR")
+	files, err := loadEnvDir("FILES_DIR", false)
 	if err != nil {
 		return Directories{}, err
 	}
-	assets, err := loadEnvDir("ASSETS_DIR")
+	assets, err := loadEnvDir("ASSETS_DIR", false)
 	if err != nil {
 		return Directories{}, err
 	}
-	cache, err := loadEnvDir("CACHE_DIR")
+	cache, err := loadEnvDir("CACHE_DIR", false)
 	if err != nil {
 		return Directories{}, err
 	}
-	return Directories{files, assets, cache}, nil
+	media, err := loadEnvDir("MEDIA_DIR", true)
+	if err != nil {
+		return Directories{}, err
+	}
+	return Directories{files, assets, cache, media}, nil
 }

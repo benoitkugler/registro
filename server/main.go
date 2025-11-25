@@ -49,6 +49,7 @@ func main() {
 	fmt.Println("\tFILES_DIR:", directories.Files)
 	fmt.Println("\tASSETS_DIR:", directories.Assets)
 	fmt.Println("\tCACHE_DIR:", directories.Cache)
+	fmt.Println("\tMEDIA_DIR:", directories.Media)
 
 	err := pdfcreator.Init(directories.Cache, directories.Assets)
 	check(err)
@@ -123,6 +124,10 @@ func main() {
 	setupRoutesServices(e, servicesCt, espacepersoCt)
 	setupRoutesMisc(e, filesCt)
 	setupClientApps(e, asso.ID)
+
+	if directories.Media != "" {
+		e.Group("/media", cacheStatic).Static("/*", directories.Media)
+	}
 
 	fmt.Println("Setup done. Starting...")
 
