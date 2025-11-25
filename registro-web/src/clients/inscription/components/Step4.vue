@@ -1,12 +1,58 @@
 <template>
+  <v-card class="my-2 border-secondary border-lg" title="Message">
+    <v-card-text>
+      <v-textarea
+        variant="outlined"
+        v-model="message"
+        label="Une question, un souhait ... ?"
+        rows="3"
+      ></v-textarea>
+    </v-card-text>
+  </v-card>
+
+  <v-card
+    class="my-2 border-secondary border-lg"
+    title="Fonds de soutien"
+    v-if="settings.ShowFondSoutien"
+  >
+    <v-card-text>
+      <v-checkbox
+        color="primary"
+        v-model="fondSoutien"
+        label="Je souhaite être contacté par le fonds de soutien pour éviter que le prix du séjour ne soit un obstacle à l'inscription."
+        hide-details
+      >
+      </v-checkbox>
+    </v-card-text>
+  </v-card>
+
+  <v-card
+    class="mt-1 mb-3 border-secondary border-lg"
+    title="Contacts additionnels"
+    :subtitle="
+      smAndUp
+        ? `Adresses mails mises en copies des courriels concernant votre inscription.`
+        : `Adresses en copies des courriels.`
+    "
+  >
+    <v-card-text>
+      <StringList
+        label="Mails"
+        v-model="mails"
+        :rule="FormRules.validMails()"
+      ></StringList>
+    </v-card-text>
+  </v-card>
+
   <v-card class="my-1 border-secondary border-lg" title="Autorisations">
     <v-card-text>
       <v-checkbox
-        readonly
-        :model-value="true"
+        density="comfortable"
+        class="mb-2"
+        v-model="autorisationVehicules"
         color="primary"
-        hide-details
         v-if="props.settings.ShowAutorisationVehicules"
+        :rules="[FormRules.required('Merci de donner votre autorisation')]"
       >
         <template #label>
           Pour chaque participant dont j'ai la responsabilité, j'autorise le
@@ -14,14 +60,25 @@
         </template>
       </v-checkbox>
 
-      <v-checkbox readonly :model-value="true" color="primary" hide-details>
+      <v-checkbox
+        density="comfortable"
+        class="mb-2"
+        v-model="autorisationSoin"
+        color="primary"
+        :rules="[FormRules.required('Merci de donner votre autorisation')]"
+      >
         <template #label>
           En cas de nécessité , j'autorise l'appel aux soins légaux de médecine
           et de chirurgie et je m'engage à rembourser les frais avancés.
         </template>
       </v-checkbox>
 
-      <v-checkbox readonly :model-value="true" color="primary" hide-details>
+      <v-checkbox
+        density="comfortable"
+        v-model="autorisationPhoto"
+        color="primary"
+        :rules="[FormRules.required('Merci de donner votre autorisation')]"
+      >
         <template #label>
           <div>
             Dans le cadre des activités de l'association, des photographies ou
@@ -77,55 +134,10 @@
 
       <v-checkbox
         label="J'accepte la charte"
-        hide-details
         color="primary"
         v-model="isCharteOK"
+        :rules="[FormRules.required(`Merci d'accepter la charte.`)]"
       ></v-checkbox>
-    </v-card-text>
-  </v-card>
-
-  <v-card class="my-2 border-secondary border-lg" title="Message">
-    <v-card-text>
-      <v-textarea
-        variant="outlined"
-        v-model="message"
-        label="Une question, un souhait ... ?"
-        rows="3"
-      ></v-textarea>
-    </v-card-text>
-  </v-card>
-
-  <v-card
-    class="my-2 border-secondary border-lg"
-    title="Fonds de soutien"
-    v-if="settings.ShowFondSoutien"
-  >
-    <v-card-text>
-      <v-checkbox
-        color="primary"
-        v-model="fondSoutien"
-        label="Je souhaite être contacté par le fonds de soutien pour éviter que le prix du séjour ne soit un obstacle à l'inscription."
-        hide-details
-      >
-      </v-checkbox>
-    </v-card-text>
-  </v-card>
-
-  <v-card
-    class="mt-1 mb-3 border-secondary border-lg"
-    title="Contacts additionnels"
-    :subtitle="
-      smAndUp
-        ? `Adresses mails mises en copies des courriels concernant votre inscription.`
-        : `Adresses en copies des courriels.`
-    "
-  >
-    <v-card-text>
-      <StringList
-        label="Mails"
-        v-model="mails"
-        :rule="FormRules.validMails()"
-      ></StringList>
     </v-card-text>
   </v-card>
 </template>
@@ -162,4 +174,14 @@ const isCharteOK = defineModel<boolean>("charte", {
 const hrefRetraitMedia = computed(
   () => `mailto:${props.settings.EmailRetraitMedia}`
 );
+
+const autorisationVehicules = defineModel<boolean>("autorisationVehicules", {
+  required: true,
+});
+const autorisationSoin = defineModel<boolean>("autorisationSoin", {
+  required: true,
+});
+const autorisationPhoto = defineModel<boolean>("autorisationPhoto", {
+  required: true,
+});
 </script>
