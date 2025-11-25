@@ -23,8 +23,8 @@ const colorScheme =
         accent: "#ffd100",
       }
     : {
-        primary: "#2b678a",
-        secondary: "#2eaadc",
+        primary: "#3f4e30",
+        secondary: "#bdd4e8",
         accent: "#fff604",
       };
 
