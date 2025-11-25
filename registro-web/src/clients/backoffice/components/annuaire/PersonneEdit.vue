@@ -97,7 +97,9 @@
             <StringList
               label="Téléphone"
               v-model="inner.Tels"
-              :formatter="Formatters.tel"
+              :formatter="
+                inner.Pays == 'CH' ? Formatters.telCh : Formatters.telFr
+              "
             ></StringList>
           </v-col>
         </v-row>

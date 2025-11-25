@@ -346,11 +346,28 @@ export namespace Formatters {
     return s;
   }
 
-  export function tel(tel: string) {
+  export function telCh(tel: string) {
+    tel = tel.replace(reSepTel, "");
+    if (tel.length < 10) {
+      return tel;
+    }
+    const start = tel.length - 10; // 10 derniers chiffres
+    const chunks = [
+      tel.substring(0, start),
+      tel.substring(start, start + 3),
+      tel.substring(start + 3, start + 6),
+      tel.substring(start + 6, start + 8),
+      tel.substring(start + 8, start + 10),
+    ];
+    return chunks.join(" ");
+  }
+
+  export function telFr(tel: string) {
     tel = tel.replace(reSepTel, "");
     if (tel.length < 10) {
       return splitBySize2(tel).join(" ");
-    } // numéro incomplet, on insert des espaces
+    }
+    // numéro incomplet, on insert des espaces
     const start = tel.length - 8; // 8 derniers chiffres
     const chunks = [tel.substring(0, start)];
     for (let i = 0; i < 4; i++) {
@@ -360,7 +377,7 @@ export namespace Formatters {
   }
 
   export function tels(tels: Tels) {
-    return (tels || []).map(tel).join("; ");
+    return (tels || []).map(telFr).join("; ");
   }
 
   export function sexeIcon(s: Sexe) {

@@ -120,7 +120,9 @@
           <v-col md="8" sm="6">
             <StringList
               v-model="inner.Tels"
-              :formatter="Formatters.tel"
+              :formatter="
+                inner.Pays == 'CH' ? Formatters.telCh : Formatters.telFr
+              "
               label="Téléphones"
             ></StringList>
           </v-col>

@@ -22,7 +22,11 @@ const props = defineProps<{
 
 const modelValue = defineModel<Pays>({ required: true });
 
-const PAYS: { [key: Pays]: string } = {
+const PAYS1: { [key: Pays]: string } = {
+  CH: "Suisse",
+  FR: "France",
+};
+const PAYS2: { [key: Pays]: string } = {
   BV: "Bouvet",
   LK: "Sri Lanka",
   UY: "Uruguay",
@@ -242,7 +246,6 @@ const PAYS: { [key: Pays]: string } = {
   TJ: "Tadjikistan",
   VN: "Viet Nam",
   AT: "Autriche",
-  FR: "France",
   NU: "Niue",
   JE: "Jersey",
   SH: "Sainte-Hélène, Ascension et Tristan da Cunha",
@@ -267,14 +270,13 @@ const PAYS: { [key: Pays]: string } = {
   LY: "Libye",
   EE: "Estonie",
   SE: "Suède",
-  CH: "Suisse",
   NZ: "Nouvelle-Zélande",
   BI: "Burundi",
   CD: "Congo",
   NP: "Népal",
 };
 
-const items = selectItems(PAYS, true);
+const items = selectItems(PAYS1, true).concat(selectItems(PAYS2, true));
 </script>
 
 <style scoped></style>

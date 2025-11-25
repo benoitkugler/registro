@@ -47,35 +47,6 @@
         </v-row>
 
         <v-row>
-          <v-col md="6" cols="12">
-            <v-text-field
-              variant="outlined"
-              density="compact"
-              v-model="respo.Mail"
-              label="Adresse mail"
-              type="email"
-              :rules="[
-                FormRules.required(
-                  'Une adresse mail est nécessaire pour recevoir les informations sur le suivi de votre inscription.'
-                ),
-              ]"
-            ></v-text-field>
-          </v-col>
-          <v-col md="6" cols="12">
-            <StringList
-              v-model="respo.Tels"
-              :formatter="Formatters.tel"
-              label="Téléphones"
-              :rule="
-                FormRules.noEmptyList(
-                  `Merci de fournir un numéro en cas d'urgence.`
-                )
-              "
-            ></StringList>
-          </v-col>
-        </v-row>
-
-        <v-row>
           <v-col md="4" sm="8" cols="12">
             <v-textarea
               variant="outlined"
@@ -119,6 +90,37 @@
           </v-col>
           <v-col md="3" sm="6" cols="12">
             <PaysField v-model="respo.Pays"></PaysField>
+          </v-col>
+        </v-row>
+
+        <v-row>
+          <v-col md="6" cols="12">
+            <v-text-field
+              variant="outlined"
+              density="compact"
+              v-model="respo.Mail"
+              label="Adresse mail"
+              type="email"
+              :rules="[
+                FormRules.required(
+                  'Une adresse mail est nécessaire pour recevoir les informations sur le suivi de votre inscription.'
+                ),
+              ]"
+            ></v-text-field>
+          </v-col>
+          <v-col md="6" cols="12">
+            <StringList
+              v-model="respo.Tels"
+              :formatter="
+                respo.Pays == 'CH' ? Formatters.telCh : Formatters.telFr
+              "
+              label="Téléphones"
+              :rule="
+                FormRules.noEmptyList(
+                  `Merci de fournir un numéro en cas d'urgence.`
+                )
+              "
+            ></StringList>
           </v-col>
         </v-row>
       </v-form>

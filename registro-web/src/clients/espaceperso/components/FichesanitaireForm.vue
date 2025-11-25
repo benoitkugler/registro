@@ -116,7 +116,7 @@
                   variant="outlined"
                   density="compact"
                   label="Téléphone"
-                  :model-value="Formatters.tel(inner.Medecin.Tel)"
+                  :model-value="Formatters.telFr(inner.Medecin.Tel)"
                   @update:model-value="(s) => (inner.Medecin.Tel = s)"
                   hide-details
                 ></v-text-field>
@@ -168,7 +168,7 @@
                   variant="outlined"
                   density="compact"
                   label="Téléphone du contact"
-                  :model-value="Formatters.tel(inner.AutreContact.Tel)"
+                  :model-value="Formatters.telFr(inner.AutreContact.Tel)"
                   @update:model-value="(s) => (inner.AutreContact.Tel = s)"
                 ></v-text-field>
               </v-col>
