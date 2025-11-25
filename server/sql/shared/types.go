@@ -100,6 +100,9 @@ func (d Date) Age(now time.Time) int {
 // has his birthday during [pl]
 func (pl Plage) HasBirthday(d Date) bool {
 	ti := d.Time()
+	if ti.IsZero() {
+		return false
+	}
 	from, to := pl.From.Time(), pl.toT()
 	if to.Year() > from.Year() { // 2000 -> 2001 : adjust the comparison
 		return avantNoYear(from, ti) || avantNoYear(ti, to)

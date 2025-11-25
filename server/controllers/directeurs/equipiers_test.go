@@ -15,33 +15,6 @@ import (
 	tu "registro/utils/testutils"
 )
 
-// import (
-// 	"fmt"
-// 	"testing"
-// 	"time"
-
-// 	rd "github.com/benoitkugler/goACVE/server/core/rawdata"
-// 	"github.com/benoitkugler/goACVE/server/core/rawdata/matching"
-// )
-
-// func TestRecherche(t *testing.T) {
-// 	// Comparaison
-// 	ti := time.Now()
-// 	_, err := rd.SelectAllPersonnes(ct.DB)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-// 	fmt.Println("Full personnes :", time.Since(ti))
-
-// 	ti = time.Now()
-// 	out, err := ct.chercheSimilaires(matching.PatternsSimilarite{Nom: "be"})
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-// 	fmt.Println("Only similaires fields :", time.Since(ti))
-// 	fmt.Println(len(out))
-// }
-
 func TestEquipiers(t *testing.T) {
 	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
 		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",
@@ -61,12 +34,13 @@ func TestEquipiers(t *testing.T) {
 	tu.AssertNoErr(t, err)
 
 	t.Run("create", func(t *testing.T) {
-		_, err = ct.createEquipier("", EquipiersCreateIn{
+		out, err := ct.createEquipier("", EquipiersCreateIn{
 			CreatePersonne: false,
 			IdPersonne:     pe1.Id,
 			Roles:          cps.Roles{cps.Direction},
 		}, camp.Id)
 		tu.AssertNoErr(t, err)
+		tu.Assert(t, !out.HasBirthday)
 
 		_, err = ct.createEquipier("", EquipiersCreateIn{
 			CreatePersonne: false,
