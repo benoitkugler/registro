@@ -19,32 +19,27 @@ func devCreds(t *testing.T) config.Immich {
 func Test(t *testing.T) {
 	api := NewApi(devCreds(t))
 
-	var albumL []album
+	var albumL []Album
 	err := api.request(http.MethodGet, "/albums", nil, nil, &albumL)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(albumL) == 0)
 
-	var alb album
-	err = api.request(http.MethodPost, "/albums", nil, map[string]string{"albumName": "TEST Album", "description": "Des souvenirs !"}, &alb)
+	alb1, err := api.CreateAlbum("Test - 2025")
 	tu.AssertNoErr(t, err)
 
-	var sharedLinkL []sharedLink
-	err = api.request(http.MethodGet, "/shared-links", map[string]string{"albumId": string(alb.Id)}, nil, &sharedLinkL)
+	albC, err := api.LoadAlbum(alb1.Id)
 	tu.AssertNoErr(t, err)
-	tu.Assert(t, len(sharedLinkL) == 0)
+	tu.Assert(t, alb1.AlbumName == albC.AlbumName)
 
-	var createdLink sharedLink
-	err = api.request(http.MethodPost, "/shared-links", nil, map[string]any{
-		"albumId":       alb.Id,
-		"type":          "ALBUM",
-		"allowDownload": true,
-		"allowUpload":   false,
-		"description":   "Lien de lecture",
-	}, &createdLink)
+	alb2, err := api.CreateAlbum("Test - 2026")
 	tu.AssertNoErr(t, err)
 
-	fmt.Println(createdLink)
+	list, err := api.LoadAlbums([]AlbumID{alb1.Id, alb2.Id})
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(list) == 2)
 
-	err = api.request(http.MethodDelete, fmt.Sprintf("/albums/%s", alb.Id), nil, nil, nil)
+	err = api.request(http.MethodDelete, fmt.Sprintf("/albums/%s", alb1.Id), nil, nil, nil)
+	tu.AssertNoErr(t, err)
+	err = api.request(http.MethodDelete, fmt.Sprintf("/albums/%s", alb2.Id), nil, nil, nil)
 	tu.AssertNoErr(t, err)
 }

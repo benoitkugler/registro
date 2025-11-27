@@ -6,7 +6,8 @@ import (
 )
 
 type Immich struct {
-	BaseURL string // Api URL containing scheme and host
+	// URL containing scheme and host, without path
+	BaseURL string
 	ApiKey  string
 }
 
