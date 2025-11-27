@@ -5,6 +5,27 @@ import (
 	"os"
 )
 
+type Immich struct {
+	BaseURL string // Api URL containing scheme and host
+	ApiKey  string
+}
+
+// NewImmich uses env variables to build Immich credentials :
+// IMMICH_BASE_URL, IMMICH_API_KEY
+func NewImmich() (out Immich, err error) {
+	out.BaseURL = os.Getenv("IMMICH_BASE_URL")
+	if out.BaseURL == "" {
+		return Immich{}, errors.New("missing env IMMICH_BASE_URL")
+	}
+
+	out.ApiKey = os.Getenv("IMMICH_API_KEY")
+	if out.ApiKey == "" {
+		return Immich{}, errors.New("missing env IMMICH_API_KEY")
+	}
+
+	return out, nil
+}
+
 type Joomeo struct {
 	ApiKey, Login, Password string
 	// the Joomeo top-level folder Label to use
