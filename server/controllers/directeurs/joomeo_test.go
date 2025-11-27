@@ -39,7 +39,7 @@ func TestJoomeo(t *testing.T) {
 
 	album, err := api.CreateAlbum(sejoursFolder, "__TEST")
 	tu.AssertNoErr(t, err)
-	camp.JoomeoID = album.Id
+	camp.AlbumID = album.Id
 	_, err = camp.Update(ct.db)
 	tu.AssertNoErr(t, err)
 

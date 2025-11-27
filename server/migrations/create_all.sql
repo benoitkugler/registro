@@ -143,7 +143,7 @@ CREATE TABLE camps (
     DocumentsReady boolean NOT NULL,
     DocumentsToShow DocumentsToShow NOT NULL,
     Vetements jsonb NOT NULL,
-    JoomeoID text NOT NULL,
+    AlbumID text NOT NULL,
     Meta jsonb NOT NULL
 );
 

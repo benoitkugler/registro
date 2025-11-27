@@ -57,7 +57,7 @@ func randCamp() Camp {
 	s.DocumentsReady = randbool()
 	s.DocumentsToShow = randDocumentsToShow()
 	s.Vetements = randListeVetements()
-	s.JoomeoID = randstring()
+	s.AlbumID = randstring()
 	s.Meta = randMeta()
 
 	return s
