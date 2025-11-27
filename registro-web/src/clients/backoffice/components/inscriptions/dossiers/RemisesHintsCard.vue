@@ -41,12 +41,12 @@
             <v-row style="width: 200px">
               <v-col cols="6">
                 <v-chip
-                  v-if="participant.Hint.ReducInscrits"
+                  v-if="participant.Hint.Famille"
                   prepend-icon="mdi-account-multiple"
                   class="mx-1"
                   elevation="1"
                 >
-                  {{ participant.Hint.ReducInscrits }} %
+                  {{ participant.Hint.Famille }} %
                   <v-tooltip activator="parent" content-class="ma-0 pa-0">
                     <v-card subtitle="Autres inscrits de la même famille">
                       <v-card-text>
@@ -62,12 +62,12 @@
               </v-col>
               <v-col cols="6">
                 <v-chip
-                  v-if="participant.Hint.ReducEquipiers"
+                  v-if="participant.Hint.Equipiers"
                   prepend-icon="mdi-account-hard-hat"
                   class="mx-1"
                   elevation="1"
                 >
-                  {{ participant.Hint.ReducEquipiers }} %
+                  {{ participant.Hint.Equipiers }} %
                   <v-tooltip activator="parent" content-class="ma-0 pa-0">
                     <v-card subtitle="Equipiers de la même famille">
                       <v-card-text>
