@@ -24,7 +24,7 @@ func TestCRUD(t *testing.T) {
 	pe, err := pr.Personne{}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	ct, err := NewController(db.DB, crypto.Encrypter{}, "", "", files.FileSystem{}, config.SMTP{}, config.Asso{}, config.Joomeo{}, config.Helloasso{})
+	ct, err := NewController(db.DB, crypto.Encrypter{}, "", "", files.FileSystem{}, config.SMTP{}, config.Asso{}, config.Immich{}, config.Helloasso{})
 	tu.AssertNoErr(t, err)
 
 	t.Run("camps", func(t *testing.T) {
@@ -90,7 +90,7 @@ func TestExportParticipants(t *testing.T) {
 		"../../migrations/init.sql")
 	defer db.Remove()
 
-	ct, err := NewController(db.DB, crypto.Encrypter{}, "", "", files.FileSystem{}, config.SMTP{}, config.Asso{}, config.Joomeo{}, config.Helloasso{})
+	ct, err := NewController(db.DB, crypto.Encrypter{}, "", "", files.FileSystem{}, config.SMTP{}, config.Asso{}, config.Immich{}, config.Helloasso{})
 	tu.AssertNoErr(t, err)
 
 	resp, err := pr.Personne{Etatcivil: pr.Etatcivil{Nom: "REspo", Prenom: "Sable"}}.Insert(db)

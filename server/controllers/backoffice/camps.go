@@ -90,6 +90,23 @@ func (ct *Controller) getCamps(host string) ([]CampHeader, error) {
 	return out, nil
 }
 
+func loadDirecteurs(db cps.DB, camps []cps.IdCamp) (map[cps.IdCamp]pr.Personne, error) {
+	tmp, personnes, err := cps.LoadEquipiersByCamps(db, camps...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	equipiersByCamp := tmp.ByIdCamp()
+
+	out := map[cps.IdCamp]pr.Personne{}
+	for _, camp := range camps {
+		dir, ok := equipiersByCamp[camp].Directeur()
+		if ok {
+			out[camp] = personnes[dir.IdPersonne]
+		}
+	}
+	return out, nil
+}
+
 func ensureTaux(tx *sql.Tx, taux ds.Taux) (ds.Taux, error) {
 	if taux.Id <= 0 { // create a new Taux
 		return taux.Insert(tx)

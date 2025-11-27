@@ -214,7 +214,7 @@ func (api *Api) LoadAlbum(id AlbumID) (AlbumAndLinks, error) {
 
 // LoadAlbums is the same as [LoadAlbum], but is optimized
 // for many albums.
-func (api *Api) LoadAlbums(ids []AlbumID) ([]AlbumAndLinks, error) {
+func (api *Api) LoadAlbums(ids []AlbumID) (map[AlbumID]AlbumAndLinks, error) {
 	var albumL []Album
 	err := api.request(http.MethodGet, "/albums", map[string]string{
 		"withoutAssets": "true",
@@ -237,8 +237,8 @@ func (api *Api) LoadAlbums(ids []AlbumID) ([]AlbumAndLinks, error) {
 		linksById[link.Album.Id] = append(linksById[link.Album.Id], link)
 	}
 
-	out := make([]AlbumAndLinks, len(ids))
-	for index, id := range ids {
+	out := make(map[AlbumID]AlbumAndLinks, len(ids))
+	for _, id := range ids {
 		alb, hasAlbum := albumsById[id]
 		if !hasAlbum {
 			return nil, fmt.Errorf("internal error: missing Album for id %s", id)
@@ -247,7 +247,7 @@ func (api *Api) LoadAlbums(ids []AlbumID) ([]AlbumAndLinks, error) {
 		if err != nil {
 			return nil, err
 		}
-		out[index] = AlbumAndLinks{
+		out[id] = AlbumAndLinks{
 			Album:        alb,
 			EquipiersURL: api.shareURL(upload.Key),
 			InscritsURL:  api.shareURL(download.Key),
@@ -255,4 +255,9 @@ func (api *Api) LoadAlbums(ids []AlbumID) ([]AlbumAndLinks, error) {
 	}
 
 	return out, nil
+}
+
+func (api *Api) DeleteAlbum(id AlbumID) error {
+	err := api.request(http.MethodDelete, fmt.Sprintf("/albums/%s", id), nil, nil, nil)
+	return err
 }

@@ -1,7 +1,6 @@
 package immich
 
 import (
-	"fmt"
 	"net/http"
 	"testing"
 
@@ -34,12 +33,12 @@ func Test(t *testing.T) {
 	alb2, err := api.CreateAlbum("Test - 2026")
 	tu.AssertNoErr(t, err)
 
-	list, err := api.LoadAlbums([]AlbumID{alb1.Id, alb2.Id})
+	albumsMap, err := api.LoadAlbums([]AlbumID{alb1.Id, alb2.Id})
 	tu.AssertNoErr(t, err)
-	tu.Assert(t, len(list) == 2)
+	tu.Assert(t, len(albumsMap) == 2)
 
-	err = api.request(http.MethodDelete, fmt.Sprintf("/albums/%s", alb1.Id), nil, nil, nil)
+	err = api.DeleteAlbum(alb1.Id)
 	tu.AssertNoErr(t, err)
-	err = api.request(http.MethodDelete, fmt.Sprintf("/albums/%s", alb2.Id), nil, nil, nil)
+	err = api.DeleteAlbum(alb2.Id)
 	tu.AssertNoErr(t, err)
 }

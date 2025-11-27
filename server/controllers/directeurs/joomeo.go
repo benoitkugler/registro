@@ -47,7 +47,7 @@ func (ct *Controller) loadJoomeo(id cps.IdCamp) (data Joomeo, err error) {
 		return Joomeo{}, err
 	}
 
-	if camp.Camp.JoomeoID == "" {
+	if camp.Camp.AlbumID == "" {
 		return Joomeo{}, nil
 	}
 
@@ -76,7 +76,7 @@ func (ct *Controller) loadJoomeo(id cps.IdCamp) (data Joomeo, err error) {
 	}
 	defer api.Close()
 
-	album, err := api.LoadAlbum(camp.Camp.JoomeoID)
+	album, err := api.LoadAlbum(camp.Camp.AlbumID)
 	if err != nil {
 		return Joomeo{}, err
 	}
@@ -108,7 +108,7 @@ func (ct *Controller) invite(idCamp cps.IdCamp, args JoomeoInviteIn) ([]joomeo.C
 		return nil, utils.SQLError(err)
 	}
 
-	if camp.JoomeoID == "" {
+	if camp.AlbumID == "" {
 		return nil, errors.New("internal error: no Joomeo album")
 	}
 	api, err := joomeo.NewApi(ct.joomeo)
@@ -117,12 +117,12 @@ func (ct *Controller) invite(idCamp cps.IdCamp, args JoomeoInviteIn) ([]joomeo.C
 	}
 	defer api.Close()
 
-	err = api.AddContacts(camp.Label(), camp.JoomeoID, args.Mails, args.SendMail)
+	err = api.AddContacts(camp.Label(), camp.AlbumID, args.Mails, args.SendMail)
 	if err != nil {
 		return nil, err
 	}
 
-	album, err := api.LoadAlbum(camp.JoomeoID)
+	album, err := api.LoadAlbum(camp.AlbumID)
 	if err != nil {
 		return nil, err
 	}
@@ -148,7 +148,7 @@ func (ct *Controller) removeContact(idCamp cps.IdCamp, joomeoId string) error {
 		return utils.SQLError(err)
 	}
 
-	if camp.JoomeoID == "" {
+	if camp.AlbumID == "" {
 		return errors.New("internal error: no Joomeo album")
 	}
 	api, err := joomeo.NewApi(ct.joomeo)
@@ -157,7 +157,7 @@ func (ct *Controller) removeContact(idCamp cps.IdCamp, joomeoId string) error {
 	}
 	defer api.Close()
 
-	err = api.UnlinkContact(camp.JoomeoID, joomeoId)
+	err = api.UnlinkContact(camp.AlbumID, joomeoId)
 	return err
 }
 
@@ -177,7 +177,7 @@ func (ct *Controller) setUploader(idCamp cps.IdCamp, contactId string) (joomeo.C
 		return joomeo.ContactPermission{}, utils.SQLError(err)
 	}
 
-	if camp.JoomeoID == "" {
+	if camp.AlbumID == "" {
 		return joomeo.ContactPermission{}, errors.New("internal error: no Joomeo album")
 	}
 	api, err := joomeo.NewApi(ct.joomeo)
@@ -186,5 +186,5 @@ func (ct *Controller) setUploader(idCamp cps.IdCamp, contactId string) (joomeo.C
 	}
 	defer api.Close()
 
-	return api.SetContactUploader(camp.JoomeoID, contactId)
+	return api.SetContactUploader(camp.AlbumID, contactId)
 }
