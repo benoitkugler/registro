@@ -27,11 +27,11 @@ const (
 	BafdEquiv          // Equivalent BAFD
 	BafaEquiv          // Equivalent BAFA
 	CertMedicalCuisine // Certificat médical cuisine
-	Scolarite          // Certificat de scolarité
 	Autre              // Autre
 
-	nbCategorieEquipier
 )
+
+const nbCategorieEquipier = int(Autre) + 1
 
 func (c Categorie) String() string {
 	switch c {
@@ -59,8 +59,6 @@ func (c Categorie) String() string {
 		return "Equivalent BAFA"
 	case CertMedicalCuisine:
 		return "Certificat médical cuisine"
-	case Scolarite:
-		return "Certificat de scolarité"
 	case Autre:
 		return "Autre"
 	default:
@@ -109,16 +107,16 @@ func (ds Demandes) builtins() (out [nbCategorieEquipier]Demande, err error) {
 var demandesDefaut = [cp.NbRoles][]Categorie{
 	cp.Direction:     {CarteId, Permis, SB, Bafa, Bafd, CarteVitale, Vaccins, BafdEquiv},
 	cp.Adjoint:       {CarteId, Permis, SB, CarteVitale, Vaccins},
-	cp.Animation:     {CarteId, Permis, SB, Bafa, BafaEquiv, CarteVitale, Vaccins, Scolarite},
-	cp.Menage:        {CarteId, CarteVitale, Vaccins, Scolarite},
-	cp.Cuisine:       {CarteId, CarteVitale, Vaccins, Haccp, CertMedicalCuisine, Scolarite},
+	cp.Animation:     {CarteId, Permis, SB, Bafa, BafaEquiv, CarteVitale, Vaccins},
+	cp.Menage:        {CarteId, CarteVitale, Vaccins},
+	cp.Cuisine:       {CarteId, CarteVitale, Vaccins, Haccp, CertMedicalCuisine},
 	cp.Intendance:    {CarteId, CarteVitale, Vaccins, Haccp},
 	cp.Infirmerie:    {CarteId, Secourisme, CarteVitale, Vaccins},
-	cp.AideAnimation: {CarteId, CarteVitale, Vaccins, Scolarite},
+	cp.AideAnimation: {CarteId, CarteVitale, Vaccins},
 	cp.Lingerie:      {CarteId, CarteVitale, Vaccins},
 	cp.Chauffeur:     {CarteId, CarteVitale, Vaccins},
 	cp.Factotum:      {CarteId, CarteVitale, Vaccins},
-	cp.Babysiter:     {CarteId, CarteVitale, Vaccins, Scolarite},
+	cp.Babysiter:     {CarteId, CarteVitale, Vaccins},
 }
 
 func isDemandeOpt(cat Categorie, roles cp.Roles) bool {

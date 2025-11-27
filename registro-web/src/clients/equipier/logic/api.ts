@@ -138,9 +138,7 @@ export const Categorie = {
   BafdEquiv: 10,
   BafaEquiv: 11,
   CertMedicalCuisine: 12,
-  Scolarite: 13,
-  Autre: 14,
-  nbCategorieEquipier: 15,
+  Autre: 13,
 } as const;
 export type Categorie = (typeof Categorie)[keyof typeof Categorie];
 
@@ -158,9 +156,7 @@ export const CategorieLabels: Record<Categorie, string> = {
   [Categorie.BafdEquiv]: "Equivalent BAFD",
   [Categorie.BafaEquiv]: "Equivalent BAFA",
   [Categorie.CertMedicalCuisine]: "Certificat médical cuisine",
-  [Categorie.Scolarite]: "Certificat de scolarité",
   [Categorie.Autre]: "Autre",
-  [Categorie.nbCategorieEquipier]: "",
 };
 
 // registro/sql/files.Demande

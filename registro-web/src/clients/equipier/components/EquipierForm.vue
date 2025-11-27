@@ -191,7 +191,7 @@
           </v-col>
         </v-row>
         <v-row>
-          <v-col>
+          <!-- <v-col>
             <v-text-field
               variant="outlined"
               density="compact"
@@ -199,11 +199,11 @@
               label="Sécurité sociale"
               :rules="[
                 FormRules.required(
-                  `Ton numéro de Sécurité Sociale est requis par Jeunesse et Sport.`
+                  `Ton numéro de Sécurité Sociale est requis par l'Ursaf.`
                 ),
               ]"
             ></v-text-field>
-          </v-col>
+          </v-col> -->
           <v-col>
             <v-checkbox
               density="compact"
@@ -418,18 +418,20 @@ const showCharteDialog = ref(false);
 const isFormValid = computed(
   () =>
     !!(
-      inner.value.Nom &&
-      inner.value.Prenom &&
-      inner.value.Sexe != Sexe.NoSexe &&
-      !isDateZero(inner.value.DateNaissance) &&
-      inner.value.VilleNaissance &&
-      inner.value.DepartementNaissance &&
-      inner.value.Mail &&
-      inner.value.Adresse &&
-      inner.value.CodePostal &&
+      (
+        inner.value.Nom &&
+        inner.value.Prenom &&
+        inner.value.Sexe != Sexe.NoSexe &&
+        !isDateZero(inner.value.DateNaissance) &&
+        inner.value.VilleNaissance &&
+        inner.value.DepartementNaissance &&
+        inner.value.Mail &&
+        inner.value.Adresse &&
+        inner.value.CodePostal &&
+        inner.value.Profession
+      )
       //   inner.value.Pays &&
-      inner.value.Profession &&
-      inner.value.SecuriteSociale
+      //   inner.value.SecuriteSociale
     )
 );
 async function save() {

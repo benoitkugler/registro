@@ -121,12 +121,12 @@ type conflicts struct {
 	CodePostal           bool
 	Ville                bool
 	Pays                 bool
-	SecuriteSociale      bool
 	Profession           bool
 	Etudiant             bool
 	Fonctionnaire        bool
 	Diplome              bool
 	Approfondissement    bool
+	// SecuriteSociale      bool
 }
 
 type fields interface {
@@ -201,6 +201,7 @@ func Merge(entrant pr.Etatcivil, existant pr.Etatcivil) (merged pr.Etatcivil, co
 	merged.Fonctionnaire, conflicts.Fonctionnaire = choose(entrant.Fonctionnaire, existant.Fonctionnaire)
 	merged.Diplome, conflicts.Diplome = choose(entrant.Diplome, existant.Diplome)
 	merged.Approfondissement, conflicts.Approfondissement = choose(entrant.Approfondissement, existant.Approfondissement)
+	// merged.SecuriteSociale, conflicts.SecuriteSociale = choose(entrant.SecuriteSociale, existant.SecuriteSociale)
 
 	return merged, conflicts
 }

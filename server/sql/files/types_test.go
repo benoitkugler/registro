@@ -33,7 +33,7 @@ func TestBuiltins(t *testing.T) {
 }
 
 func TestBuiltins_Defaut(t *testing.T) {
-	b := Builtins{{Id: 0}, {Id: 1}, {Id: 2}, {Id: 3}, {Id: 4}, {Id: 5}, {Id: 6}, {Id: 7}, {Id: 8}, {Id: 9}, {Id: 10}, {Id: 11}, {Id: 12}, {Id: 13}, {Id: 14}}
+	b := Builtins{{Id: 0}, {Id: 1}, {Id: 2}, {Id: 3}, {Id: 4}, {Id: 5}, {Id: 6}, {Id: 7}, {Id: 8}, {Id: 9}, {Id: 10}, {Id: 11}, {Id: 12}, {Id: 13}}
 	tests := []struct {
 		equipier cp.Equipier
 		want     DemandeEquipiers
