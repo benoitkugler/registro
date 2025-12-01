@@ -175,6 +175,7 @@ func TestPlage_HasBirthday(t *testing.T) {
 		{fields{NewDate(2010, time.December, 20), 20}, NewDate(2001, time.January, 1), true},
 		{fields{NewDate(2010, time.January, 20), 20}, NewDate(2005, time.February, 1), true},
 		{fields{NewDate(2010, time.December, 20), 5}, NewDate(2001, time.January, 1), false},
+		{fields{NewDate(2010, time.December, 20), 5}, NewDateFrom(time.Time{}), false},
 	}
 	for _, tt := range tests {
 		pl := Plage{
