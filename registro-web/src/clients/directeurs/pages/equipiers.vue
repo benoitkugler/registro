@@ -54,7 +54,7 @@
         >
           <template #append>
             <v-row>
-              <v-col cols="2" align-self="center">
+              <v-col v-if="equipier.HasBirthday" cols="2" align-self="center">
                 <v-tooltip
                   :text="`${equipier.Personne} a son anniveraire pendant le séjour !`"
                 >
