@@ -112,13 +112,13 @@
             </v-col>
             <v-col align-self="center">
               <v-switch
-                label="Camp sans inscription"
-                v-model="inner.WithoutInscription"
+                label="Inscription externe"
+                v-model="inner.InscriptionExterne"
                 color="primary"
                 density="compact"
                 persistent-hint
                 :hint="
-                  inner.WithoutInscription
+                  inner.InscriptionExterne
                     ? `Camp externe, uniquement visible sur l'API publique.`
                     : ``
                 "

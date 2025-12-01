@@ -218,8 +218,8 @@ const camps = ref<CampExt[]>([]);
 async function fetchCamps() {
   const res = await controller.GetCamps();
   if (res === undefined) return;
-  // ignore camp WithoutInscription
-  camps.value = (res || []).filter((c) => !c.WithoutInscription);
+  // ignore camp InscriptionExterne
+  camps.value = (res || []).filter((c) => !c.InscriptionExterne);
 }
 
 async function initWithCamp(id: IdCamp) {

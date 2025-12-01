@@ -49,10 +49,10 @@ type Camp struct {
 	AgeMax          int  // inclusif
 	NeedEquilibreGF bool // si 'true', prend en compte le nombre de garçons et filles
 
-	// WithoutInscription vaut 'true' pour des camps "externalisés" :
-	// ce sont des séjours définis dans la base et exporté
-	// via l'API publique, mais cachés (peut importe [Statut]) sur la page d'inscription.
-	WithoutInscription bool
+	// InscriptionExterne vaut 'true' pour des camps "externalisés" :
+	// ce sont des séjours définis dans la base et exportés
+	// via l'API publique, mais ignorés (peut importe [Statut]) sur la page d'inscription.
+	InscriptionExterne bool
 	Statut             StatutCamp // ouvert aux inscriptions ou non
 
 	Prix                   Montant
