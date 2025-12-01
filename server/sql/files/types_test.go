@@ -27,7 +27,6 @@ func TestBuiltins(t *testing.T) {
 		11: {Id: 11, Categorie: 11},
 		12: {Id: 12, Categorie: 12},
 		13: {Id: 13, Categorie: 13},
-		14: {Id: 14, Categorie: 14},
 	}.builtins()
 	tu.AssertNoErr(t, err)
 }
