@@ -35,11 +35,10 @@ export interface EquipierExt {
   Camp: Camp;
   Demandes: DemandeEquipier[] | null;
 }
-// registro/controllers/equipier.Joomeo
-export interface Joomeo {
-  SpaceURL: string;
-  Login: string;
-  Password: string;
+// registro/controllers/equipier.Photos
+export interface Photos {
+  HasAlbum: boolean;
+  URL: string;
 }
 // registro/controllers/equipier.UpdateIn
 export interface UpdateIn {
@@ -332,12 +331,12 @@ export abstract class AbstractAPI {
     }
   }
 
-  /** LoadJoomeo performs the request and handles the error */
-  async LoadJoomeo(params: { token: string }) {
-    const fullUrl = this.baseURL + "/api/v1/equipier/joomeo";
+  /** LoadPhotos performs the request and handles the error */
+  async LoadPhotos(params: { token: string }) {
+    const fullUrl = this.baseURL + "/api/v1/equipier/photos";
     this.startRequest();
     try {
-      const rep: AxiosResponse<Joomeo> = await Axios.get(fullUrl, {
+      const rep: AxiosResponse<Photos> = await Axios.get(fullUrl, {
         headers: this.getHeaders(),
         params: { token: params["token"] },
       });

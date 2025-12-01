@@ -72,19 +72,18 @@ export interface FilesCamp {
   Generated: GeneratedFile[] | null;
   Files: PublicFile[] | null;
 }
-// registro/controllers/espaceperso.Joomeo
-export interface Joomeo {
-  SpaceURL: string;
-  Loggin: string;
-  Password: string;
-  Albums: string[] | null;
-}
 // registro/controllers/espaceperso.PaiementSettings
 export interface PaiementSettings {
   VirementCode: string;
   BankAccounts: Ar2_string[] | null;
   SupportPaiementEnLigne: boolean;
   Cheques: ChequeSettings;
+}
+// registro/controllers/espaceperso.PhotoAlbum
+export interface PhotoAlbum {
+  IdCamp: IdCamp;
+  Label: string;
+  URL: string;
 }
 // registro/controllers/espaceperso.SendMessageIn
 export interface SendMessageIn {
@@ -288,7 +287,7 @@ export interface Camp {
   DocumentsReady: boolean;
   DocumentsToShow: DocumentsToShow;
   Vetements: ListeVetements;
-  JoomeoID: string;
+  AlbumID: string;
   Meta: Meta;
 }
 // registro/sql/camps.DocumentsToShow
@@ -938,12 +937,12 @@ export abstract class AbstractAPI {
     }
   }
 
-  /** LoadJoomeo performs the request and handles the error */
-  async LoadJoomeo(params: { token: string }) {
-    const fullUrl = this.baseURL + "/api/v1/espaceperso/joomeo";
+  /** LoadPhotos performs the request and handles the error */
+  async LoadPhotos(params: { token: string }) {
+    const fullUrl = this.baseURL + "/api/v1/espaceperso/photos";
     this.startRequest();
     try {
-      const rep: AxiosResponse<Joomeo> = await Axios.get(fullUrl, {
+      const rep: AxiosResponse<PhotoAlbum[] | null> = await Axios.get(fullUrl, {
         headers: this.getHeaders(),
         params: { token: params["token"] },
       });

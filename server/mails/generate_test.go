@@ -241,6 +241,18 @@ func TestRenvoieEspacePersoURL(t *testing.T) {
 	tu.Write(t, "RenvoieEspacePersoURL.html", []byte(html))
 }
 
+func TestSendPhotosLink(t *testing.T) {
+	cfg, _ := loadEnv(t)
+
+	html, err := SendPhotosLinkInscrits(cfg, Contact{Prenom: "Benoit", Sexe: pr.Woman}, "Vive la vie - 2056", "http://localhost/test?placelib=45")
+	tu.AssertNoErr(t, err)
+	tu.Write(t, "SendPhotosLinkInscrits.html", []byte(html))
+
+	html, err = SendPhotosLinkEquipiers(cfg, Contact{Prenom: "Benoit", Sexe: pr.Woman}, "Vive la vie - 2056", "http://localhost/test?placelib=45")
+	tu.AssertNoErr(t, err)
+	tu.Write(t, "SendPhotosLinkEquipiers.html", []byte(html))
+}
+
 // func TestPrein(t *testing.T) {
 // 	html, err := NewPreinscription("smsld@free.fr", []TargetRespo{
 // 		{NomPrenom: "lkdkmslkd", Lien: "http://free.fr"},

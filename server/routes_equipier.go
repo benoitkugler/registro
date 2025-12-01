@@ -11,7 +11,7 @@ import (
 func setupRoutesEquipier(e *echo.Echo, ct *equipier.Controller) {
 	// JSON API
 	e.GET("/api/v1/equipier", ct.Load)
-	e.GET("/api/v1/equipier/joomeo", ct.LoadJoomeo)
+	e.GET("/api/v1/equipier/photos", ct.LoadPhotos)
 	e.POST("/api/v1/equipier", ct.Update)
 	e.POST("/api/v1/equipier/charte", ct.UpdateCharte)
 	e.PUT("/api/v1/equipier/upload", ct.UploadDocument)

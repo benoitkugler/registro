@@ -32,6 +32,8 @@ var (
 	transfertFicheSanitaireT    *template.Template
 	relanceDocumentsT           *template.Template
 	renvoieEspacePersoURLT      *template.Template
+	sendPhotosLinkInscritsT     *template.Template
+	sendPhotosLinkEquipiersT    *template.Template
 )
 
 func init() {
@@ -50,6 +52,8 @@ func init() {
 	transfertFicheSanitaireT = parseTemplate("templates/transfertFicheSanitaire.html")
 	relanceDocumentsT = parseTemplate("templates/relanceDocuments.html")
 	renvoieEspacePersoURLT = parseTemplate("templates/renvoieEspacePersoURL.html")
+	sendPhotosLinkInscritsT = parseTemplate("templates/sendPhotosLinkInscrits.html")
+	sendPhotosLinkEquipiersT = parseTemplate("templates/sendPhotosLinkEquipiers.html")
 }
 
 func parseTemplate(templateFile string) *template.Template {
@@ -424,12 +428,6 @@ func (r ResumeDossier) Camps() string {
 	return strings.Join(tmp, ", ")
 }
 
-type paramsRenvoieEspacePersoURL struct {
-	champsCommuns
-	Mail     string
-	Dossiers []ResumeDossier
-}
-
 func RenvoieEspacePersoURL(cfg config.Asso, mail string, dossiers []ResumeDossier) (string, error) {
 	args := struct {
 		champsCommuns
@@ -446,6 +444,48 @@ func RenvoieEspacePersoURL(cfg config.Asso, mail string, dossiers []ResumeDossie
 		Dossiers: dossiers,
 	}
 	return render(renvoieEspacePersoURLT, args)
+}
+
+func SendPhotosLinkInscrits(cfg config.Asso, contact Contact, campLabel, albumURL string) (string, error) {
+	args := struct {
+		champsCommuns
+		Camp                   string
+		Dossiers               []ResumeDossier
+		EspacePersoURL         string
+		EspacePersoButtonLabel string
+	}{
+		champsCommuns: champsCommuns{
+			Title:       "Album photos",
+			Salutations: contact.Salutations(),
+			Asso:        cfg,
+			Signature:   cfg.MailsSettings.SignatureMailCentre + "<br/>",
+		},
+		Camp:                   campLabel,
+		EspacePersoURL:         albumURL,
+		EspacePersoButtonLabel: "Album photos",
+	}
+	return render(sendPhotosLinkInscritsT, args)
+}
+
+func SendPhotosLinkEquipiers(cfg config.Asso, contact Contact, campLabel, albumURL string) (string, error) {
+	args := struct {
+		champsCommuns
+		Camp                   string
+		Dossiers               []ResumeDossier
+		EspacePersoURL         string
+		EspacePersoButtonLabel string
+	}{
+		champsCommuns: champsCommuns{
+			Title:       "Album photos",
+			Salutations: contact.Salutations(),
+			Asso:        cfg,
+			Signature:   cfg.MailsSettings.SignatureMailCentre + "<br/>",
+		},
+		Camp:                   campLabel,
+		EspacePersoURL:         albumURL,
+		EspacePersoButtonLabel: "Album photos",
+	}
+	return render(sendPhotosLinkEquipiersT, args)
 }
 
 // func NewRenvoieLienJoomeo(lien, login, password string) (string, error) {

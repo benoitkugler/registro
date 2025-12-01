@@ -43,7 +43,6 @@ func setupRoutesBackoffice(e *echo.Echo, ct *backoffice.Controller) {
 
 	gr.GET("/api/v1/backoffice/camps/joomeo", ct.CampsLoadAlbums)
 	gr.PUT("/api/v1/backoffice/camps/joomeo", ct.CampsCreateAlbums)
-	gr.POST("/api/v1/backoffice/camps/joomeo", ct.CampsAddDirecteursToAlbums)
 
 	e.GET("/api/v1/backoffice/camps/download-participants", ct.CampsDownloadParticipants, ct.JWTMiddlewareForQuery()) // url-only
 

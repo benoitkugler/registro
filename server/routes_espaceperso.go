@@ -20,7 +20,7 @@ func setupRoutesEspaceperso(e *echo.Echo, ct *espaceperso.Controller) {
 	e.POST("/api/v1/espaceperso/aide", ct.CreateAide)
 	e.GET("/api/v1/espaceperso/structureaides", ct.GetStructureaides)
 
-	e.GET("/api/v1/espaceperso/joomeo", ct.LoadJoomeo)
+	e.GET("/api/v1/espaceperso/photos", ct.LoadPhotos)
 
 	e.POST("/api/v1/espaceperso/events/accept-place-liberee", ct.AcceptePlaceLiberee)
 

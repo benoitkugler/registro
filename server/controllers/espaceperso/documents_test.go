@@ -53,7 +53,7 @@ func TestDocuments(t *testing.T) {
 	_, err = cps.Participant{IdTaux: 1, IdCamp: camp.Id, IdPersonne: pe3.Id, IdDossier: dossier.Id, Statut: cps.AStatuer}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	ct := NewController(db.DB, crypto.Encrypter{}, config.SMTP{}, config.Asso{}, fs.NewFileSystem(os.TempDir()), config.Joomeo{})
+	ct := NewController(db.DB, crypto.Encrypter{}, config.SMTP{}, config.Asso{}, fs.NewFileSystem(os.TempDir()), config.Immich{})
 
 	docs, err := ct.markAndloadDocuments(dossier.Id)
 	tu.AssertNoErr(t, err)

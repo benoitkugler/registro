@@ -5,6 +5,7 @@ import (
 	"os"
 )
 
+// See https://api.immich.app
 type Immich struct {
 	// URL containing scheme and host, without path
 	BaseURL string
@@ -22,42 +23,6 @@ func NewImmich() (out Immich, err error) {
 	out.ApiKey = os.Getenv("IMMICH_API_KEY")
 	if out.ApiKey == "" {
 		return Immich{}, errors.New("missing env IMMICH_API_KEY")
-	}
-
-	return out, nil
-}
-
-type Joomeo struct {
-	ApiKey, Login, Password string
-	// the Joomeo top-level folder Label to use
-	// to store sejours albums
-	RootFolder string
-}
-
-func HasJoomeo() bool {
-	return os.Getenv("JOOMEO_APIKEY") != ""
-}
-
-// NewJoomeo uses env variables to build Joomeo credentials :
-// JOOMEO_APIKEY, JOOMEO_LOGIN, JOOMEO_PASSWORD, JOOMEO_ROOT_FOLDER
-func NewJoomeo() (out Joomeo, err error) {
-	out.ApiKey = os.Getenv("JOOMEO_APIKEY")
-	if out.ApiKey == "" {
-		return Joomeo{}, errors.New("missing env JOOMEO_APIKEY")
-	}
-
-	out.Login = os.Getenv("JOOMEO_LOGIN")
-	if out.Login == "" {
-		return Joomeo{}, errors.New("missing env JOOMEO_LOGIN")
-	}
-
-	out.Password = os.Getenv("JOOMEO_PASSWORD")
-	if out.Password == "" {
-		return Joomeo{}, errors.New("missing env JOOMEO_PASSWORD")
-	}
-	out.RootFolder = os.Getenv("JOOMEO_ROOT_FOLDER")
-	if out.RootFolder == "" {
-		return Joomeo{}, errors.New("missing env JOOMEO_ROOT_FOLDER")
 	}
 
 	return out, nil
