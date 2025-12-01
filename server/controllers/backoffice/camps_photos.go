@@ -1,6 +1,8 @@
 package backoffice
 
 import (
+	"database/sql"
+	"errors"
 	"fmt"
 	"slices"
 
@@ -13,11 +15,20 @@ import (
 
 // CampsLoadAlbums charge la liste des albums.
 func (ct *Controller) CampsLoadAlbums(c echo.Context) error {
-	out, err := ct.loadAlbums()
+	albums, err := ct.loadAlbums()
 	if err != nil {
 		return err
 	}
+	out := CampPhotos{
+		HostURL: ct.immich.BaseURL,
+		Camps:   albums,
+	}
 	return c.JSON(200, out)
+}
+
+type CampPhotos struct {
+	HostURL string
+	Camps   []CampAlbum
 }
 
 type CampAlbum struct {
@@ -111,4 +122,39 @@ func (ct *Controller) createAlbums(args CreateAlbumsIn) (map[cps.IdCamp]immich.A
 	}
 
 	return out, nil
+}
+
+func (ct *Controller) CampsDeleteAlbum(c echo.Context) error {
+	idCamp, err := utils.QueryParamInt[cps.IdCamp](c, "idCamp")
+	if err != nil {
+		return err
+	}
+	err = ct.deleteAlbum(idCamp)
+	if err != nil {
+		return err
+	}
+	return c.NoContent(200)
+}
+
+func (ct *Controller) deleteAlbum(idCamp cps.IdCamp) error {
+	camp, err := cps.SelectCamp(ct.db, idCamp)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	albumId := camp.AlbumID
+	if albumId == "" {
+		return errors.New("internal error: camp without album")
+	}
+	return utils.InTx(ct.db, func(tx *sql.Tx) error {
+		camp.AlbumID = ""
+		_, err = camp.Update(tx)
+		if err != nil {
+			return err
+		}
+		err = immich.NewApi(ct.immich).DeleteAlbum(immich.AlbumID(albumId))
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 }

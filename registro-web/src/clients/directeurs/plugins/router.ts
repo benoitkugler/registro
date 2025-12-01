@@ -4,14 +4,14 @@ import Index from "../pages/index.vue";
 import Inscriptions from "../pages/inscriptions.vue";
 import Equipiers from "../pages/equipiers.vue";
 import Documents from "../pages/documents.vue";
-import Joomeo from "../pages/joomeo.vue";
+import Photos from "../pages/photos.vue";
 
 const routes = [
   { path: "/", component: Index },
   { path: "/inscriptions", component: Inscriptions },
   { path: "/equipiers", component: Equipiers },
   { path: "/documents", component: Documents },
-  { path: "/joomeo", component: Joomeo },
+  { path: "/photos", component: Photos },
 ];
 
 // TODO: check that

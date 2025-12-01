@@ -46,6 +46,11 @@ export interface CampLoadOut {
   Participants: ParticipantExt[] | null;
   Dossiers: Record<IdDossier, DossierReglement> | null;
 }
+// registro/controllers/backoffice.CampPhotos
+export interface CampPhotos {
+  HostURL: string;
+  Camps: CampAlbum[] | null;
+}
 // registro/controllers/backoffice.CampsCreateManyIn
 export interface CampsCreateManyIn {
   Taux: Taux;
@@ -1268,10 +1273,10 @@ export abstract class AbstractAPI {
 
   /** CampsLoadAlbums performs the request and handles the error */
   async CampsLoadAlbums() {
-    const fullUrl = this.baseURL + "/api/v1/backoffice/camps/joomeo";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/camps/photos";
     this.startRequest();
     try {
-      const rep: AxiosResponse<CampAlbum[] | null> = await Axios.get(fullUrl, {
+      const rep: AxiosResponse<CampPhotos> = await Axios.get(fullUrl, {
         headers: this.getHeaders(),
       });
       return rep.data;
@@ -1282,12 +1287,27 @@ export abstract class AbstractAPI {
 
   /** CampsCreateAlbums performs the request and handles the error */
   async CampsCreateAlbums(params: CreateAlbumsIn) {
-    const fullUrl = this.baseURL + "/api/v1/backoffice/camps/joomeo";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/camps/photos";
     this.startRequest();
     try {
       const rep: AxiosResponse<Record<IdCamp, AlbumAndLinks> | null> =
         await Axios.put(fullUrl, params, { headers: this.getHeaders() });
       return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** CampsDeleteAlbum performs the request and handles the error */
+  async CampsDeleteAlbum(params: { idCamp: IdCamp }) {
+    const fullUrl = this.baseURL + "/api/v1/backoffice/camps/photos";
+    this.startRequest();
+    try {
+      await Axios.delete(fullUrl, {
+        headers: this.getHeaders(),
+        params: { idCamp: String(params["idCamp"]) },
+      });
+      return true;
     } catch (error) {
       this.handleError(error);
     }

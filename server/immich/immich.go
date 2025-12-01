@@ -127,7 +127,7 @@ func (api *Api) CreateAlbum(campLabel string) (AlbumAndLinks, error) {
 	var alb Album
 	err := api.request(http.MethodPost, "/albums", nil, map[string]string{
 		"albumName":   campLabel,
-		"description": "Créé par Registro",
+		"description": "Des souvenirs à partager !",
 	}, &alb)
 	if err != nil {
 		return AlbumAndLinks{}, err

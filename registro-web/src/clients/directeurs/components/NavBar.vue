@@ -33,10 +33,10 @@
     <v-list-item
       prepend-icon="mdi-image-album"
       link
-      :to="{ path: '/joomeo' }"
+      :to="{ path: '/photos' }"
       color="primary"
     >
-      Album Joomeo
+      Album photos
     </v-list-item>
 
     <v-divider></v-divider>

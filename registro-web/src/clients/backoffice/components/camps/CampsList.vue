@@ -66,13 +66,12 @@
                   </template>
                 </v-list-item>
                 <v-divider thickness="1"></v-divider>
-                <!-- Disabled Joomeo for now -->
-                <!-- <v-list-item
-                  @click="showJoomeo = true"
-                  title="Configurer les albums Joomeo..."
+                <v-list-item
+                  @click="showPhotos = true"
+                  title="Configurer les albums photos..."
                   prepend-icon="mdi-image-album"
-                ></v-list-item> -->
-                <!-- <v-divider thickness="1"></v-divider> -->
+                ></v-list-item>
+                <v-divider thickness="1"></v-divider>
                 <v-list-item
                   @click="startOpenInsc"
                   title="Ouvrir les inscriptions..."
@@ -241,8 +240,8 @@
     ></RequestProgressCard>
   </v-dialog>
 
-  <v-dialog v-model="showJoomeo">
-    <JoomeoPannel></JoomeoPannel>
+  <v-dialog v-model="showPhotos" max-width="800px">
+    <AlbumsPhotosPannel></AlbumsPhotosPannel>
   </v-dialog>
 </template>
 
@@ -268,7 +267,7 @@ import { Camps, normalize, readJSONStream } from "@/utils";
 import CampsSelector from "../CampsSelector.vue";
 import DocumentsCard from "./DocumentsCard.vue";
 import RequestProgressCard from "@/components/RequestProgressCard.vue";
-import JoomeoPannel from "./JoomeoPannel.vue";
+import AlbumsPhotosPannel from "./AlbumsPhotosPannel.vue";
 
 const emit = defineEmits<{
   (e: "show-participants", camp: CampHeader): void;
@@ -482,5 +481,5 @@ async function addDirecteur(idPersonne: IdPersonne, idCamp: IdCamp) {
   controller.showMessage("Directeur ajouté avec succès.");
 }
 
-const showJoomeo = ref(false);
+const showPhotos = ref(false);
 </script>
