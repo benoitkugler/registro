@@ -7,14 +7,13 @@
     >
       Avis
     </v-btn>
-    <!-- Disable Joomeo for now -->
-    <!-- <v-btn
+    <v-btn
       :size="smAndDown ? 'small' : undefined"
       @click="showPhotos = true"
       prepend-icon="mdi-image-album"
     >
       Photos
-    </v-btn> -->
+    </v-btn>
     <v-menu>
       <template #activator="{ props: menuProps }">
         <v-btn
@@ -220,8 +219,8 @@
     ></SondagesCard>
   </v-dialog>
 
-  <v-dialog v-model="showPhotos">
-    <JoomeoCard :token="token"></JoomeoCard>
+  <v-dialog v-model="showPhotos" max-width="600px">
+    <PhotosCard :token="token"></PhotosCard>
   </v-dialog>
 
   <v-dialog v-model="showDocuments" max-width="800px">
@@ -306,7 +305,7 @@ import {
 import { buildPseudoEvents, Camps, Formatters, Personnes } from "@/utils";
 import ParticipantsEditCard from "./components/ParticipantsEditCard.vue";
 import FinancesCard from "./components/FinancesCard.vue";
-import JoomeoCard from "./components/JoomeoCard.vue";
+import PhotosCard from "./components/PhotosCard.vue";
 import SondagesCard from "./components/SondagesCard.vue";
 import DocumentsCard from "./components/DocumentsCard.vue";
 import FinancesReglementCard from "./components/FinancesReglementCard.vue";

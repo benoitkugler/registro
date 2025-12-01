@@ -33,19 +33,10 @@ func main() {
 	flag.Parse()
 	isDev := *devPtr
 
-	asso, keys, dbCreds, smtp, directories := loadEnvs(isDev)
-
-	// Optionnal support for Joomeo
-	var joomeo config.Joomeo
-	if config.HasJoomeo() {
-		var err error
-		joomeo, err = config.NewJoomeo()
-		check(err)
-	}
+	asso, keys, dbCreds, smtp, directories, immich := loadEnvs(isDev)
 
 	fmt.Println("Loading env. -> OK.")
 	fmt.Println("\tASSO:", asso.Title)
-	fmt.Println("\tJOOMEO API KEY:", joomeo.ApiKey)
 	fmt.Println("\tFILES_DIR:", directories.Files)
 	fmt.Println("\tASSETS_DIR:", directories.Assets)
 	fmt.Println("\tCACHE_DIR:", directories.Cache)
@@ -75,17 +66,17 @@ func main() {
 
 	encrypter := crypto.NewEncrypter(keys.EncryptKey)
 
-	backofficeCt, err := backoffice.NewController(db, encrypter, keys.Backoffice, keys.FondSoutien, fs, smtp, asso, joomeo, helloasso)
+	backofficeCt, err := backoffice.NewController(db, encrypter, keys.Backoffice, keys.FondSoutien, fs, smtp, asso, immich, helloasso)
 	check(err)
 
-	directeursCt, err := directeurs.NewController(db, keys.EncryptKey, keys.Directeurs, fs, smtp, asso, joomeo)
+	directeursCt, err := directeurs.NewController(db, keys.EncryptKey, keys.Directeurs, fs, smtp, asso, immich)
 	check(err)
 
-	espacepersoCt := espaceperso.NewController(db, encrypter, smtp, asso, fs, joomeo)
+	espacepersoCt := espaceperso.NewController(db, encrypter, smtp, asso, fs, immich)
 
 	inscriptionsCt := inscriptions.NewController(db, encrypter, smtp, asso)
 
-	equipiersCt := equipiers.NewController(db, encrypter, fs, joomeo)
+	equipiersCt := equipiers.NewController(db, encrypter, fs, immich)
 
 	servicesCt := services.NewController(db, encrypter, smtp, asso)
 
@@ -135,7 +126,7 @@ func main() {
 	e.Logger.Fatal(e.Start(adress))
 }
 
-func loadEnvs(devMode bool) (config.Asso, config.Keys, config.DB, config.SMTP, config.Directories) {
+func loadEnvs(devMode bool) (config.Asso, config.Keys, config.DB, config.SMTP, config.Directories, config.Immich) {
 	asso, err := config.NewAsso()
 	check(err)
 
@@ -151,7 +142,10 @@ func loadEnvs(devMode bool) (config.Asso, config.Keys, config.DB, config.SMTP, c
 	dirs, err := config.NewDirectories()
 	check(err)
 
-	return asso, keys, db, smtp, dirs
+	immich, err := config.NewImmich()
+	check(err)
+
+	return asso, keys, db, smtp, dirs, immich
 }
 
 func getAdress(devMode bool) string {

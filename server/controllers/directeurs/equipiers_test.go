@@ -22,7 +22,7 @@ func TestEquipiers(t *testing.T) {
 	defer db.Remove()
 
 	asso, smtp := loadEnv(t)
-	ct, err := NewController(db.DB, "", "", fs.FileSystem{}, smtp, asso, config.Joomeo{})
+	ct, err := NewController(db.DB, "", "", fs.FileSystem{}, smtp, asso, config.Immich{})
 	tu.AssertNoErr(t, err)
 
 	camp, err := cps.Camp{IdTaux: 1}.Insert(db)

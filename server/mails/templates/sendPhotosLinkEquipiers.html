@@ -1,0 +1,18 @@
+{{ define "content" }}
+<table>
+  <tr>
+    <td>
+      Voici le lien de l'album dédié aux souvenirs du séjour {{ .Camp }}. <br />
+    </td>
+  </tr>
+  <tr>
+    <td>{{ template "espacePersoButton" . }}</td>
+  </tr>
+  <tr>
+    <td>Tu peux aussi retrouver ce lien de connexion sur ta page Équipier.</td>
+  </tr>
+  <tr>
+    <td>Bon visionnage !</td>
+  </tr>
+</table>
+{{ end }}

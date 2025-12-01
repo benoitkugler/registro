@@ -14,7 +14,7 @@ import (
 	fsAPI "registro/controllers/files"
 	"registro/crypto"
 	"registro/generators/pdfcreator"
-	"registro/joomeo"
+	"registro/immich"
 	"registro/logic"
 	"registro/mails"
 	cps "registro/sql/camps"
@@ -39,13 +39,13 @@ type Controller struct {
 	smtp   config.SMTP
 	asso   config.Asso
 	files  fs.FileSystem
-	joomeo config.Joomeo
+	immich config.Immich
 }
 
 func NewController(db *sql.DB, key crypto.Encrypter, smtp config.SMTP, asso config.Asso, fs fs.FileSystem,
-	joomeo config.Joomeo,
+	immich config.Immich,
 ) *Controller {
-	return &Controller{db, key, smtp, asso, fs, joomeo}
+	return &Controller{db, key, smtp, asso, fs, immich}
 }
 
 func (ct *Controller) Load(c echo.Context) error {
@@ -317,53 +317,59 @@ func (ct *Controller) createAide(id ds.IdDossier, args cps.Aide, fileContent []b
 	})
 }
 
-type Joomeo struct {
-	SpaceURL string
-	Loggin   string   // may be empty
-	Password string   // may be empty
-	Albums   []string // may be empty
+type PhotoAlbum struct {
+	IdCamp cps.IdCamp
+	Label  string
+	URL    string
 }
 
-func (ct *Controller) LoadJoomeo(c echo.Context) error {
+func (ct *Controller) LoadPhotos(c echo.Context) error {
 	token := c.QueryParam("token")
 	id, err := crypto.DecryptID[ds.IdDossier](ct.key, token)
 	if err != nil {
 		return err
 	}
-	out, err := ct.loadJoomeo(id)
+	out, err := ct.loadPhotos(id)
 	if err != nil {
 		return err
 	}
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) loadJoomeo(id ds.IdDossier) (Joomeo, error) {
-	dossier, err := ds.SelectDossier(ct.db, id)
+func (ct *Controller) loadPhotos(id ds.IdDossier) ([]PhotoAlbum, error) {
+	dossier, err := logic.LoadDossier(ct.db, id)
 	if err != nil {
-		return Joomeo{}, utils.SQLError(err)
-	}
-	responsable, err := pr.SelectPersonne(ct.db, dossier.IdResponsable)
-	if err != nil {
-		return Joomeo{}, utils.SQLError(err)
+		return nil, utils.SQLError(err)
 	}
 
-	api, err := joomeo.NewApi(ct.joomeo)
-	if err != nil {
-		return Joomeo{}, err
+	camps := dossier.CampsInscrits()
+	var ids []immich.AlbumID
+	for _, camp := range camps {
+		if camp.AlbumID == "" {
+			continue
+		}
+		ids = append(ids, immich.AlbumID(camp.AlbumID))
 	}
-	defer api.Close()
-
-	contact, albums, err := api.GetContactByMail(responsable.Mail)
-	if err != nil {
-		return Joomeo{}, err
+	if len(ids) == 0 {
+		return nil, nil
 	}
 
-	return Joomeo{
-		SpaceURL: api.SpaceURL(),
-		Loggin:   contact.Login,
-		Password: contact.Password,
-		Albums:   albums,
-	}, nil
+	albums, err := immich.NewApi(ct.immich).LoadAlbums(ids)
+	if err != nil {
+		return nil, err
+	}
+
+	var out []PhotoAlbum
+	for id, camp := range camps {
+		if camp.AlbumID == "" {
+			continue
+		}
+		album := albums[immich.AlbumID(camp.AlbumID)]
+		out = append(out, PhotoAlbum{IdCamp: id, Label: album.AlbumName, URL: album.InscritsURL})
+	}
+	slices.SortFunc(out, func(a, b PhotoAlbum) int { return int(a.IdCamp - b.IdCamp) })
+
+	return out, nil
 }
 
 // Sondages

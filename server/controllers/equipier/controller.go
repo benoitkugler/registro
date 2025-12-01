@@ -3,12 +3,11 @@ package equipier
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 
 	"registro/config"
 	filesAPI "registro/controllers/files"
 	"registro/crypto"
-	"registro/joomeo"
+	"registro/immich"
 	"registro/logic"
 	cps "registro/sql/camps"
 	fs "registro/sql/files"
@@ -24,11 +23,11 @@ type Controller struct {
 
 	key    crypto.Encrypter
 	files  fs.FileSystem
-	joomeo config.Joomeo
+	immich config.Immich
 }
 
-func NewController(db *sql.DB, key crypto.Encrypter, files fs.FileSystem, joomeo config.Joomeo) *Controller {
-	return &Controller{db, key, files, joomeo}
+func NewController(db *sql.DB, key crypto.Encrypter, files fs.FileSystem, immich config.Immich) *Controller {
+	return &Controller{db, key, files, immich}
 }
 
 func (ct *Controller) Load(c echo.Context) error {
@@ -100,49 +99,47 @@ func (ct *Controller) load(id cps.IdEquipier) (EquipierExt, error) {
 	return out, nil
 }
 
-// LoadJoomeo loads the Joomeo data,
+// LoadPhotos loads the album photos data,
 // which may be quite slow
-func (ct *Controller) LoadJoomeo(c echo.Context) error {
+func (ct *Controller) LoadPhotos(c echo.Context) error {
 	token := c.QueryParam("token")
 	id, err := crypto.DecryptID[cps.IdEquipier](ct.key, token)
 	if err != nil {
 		return errors.New("Lien invalide.")
 	}
-	out, err := ct.loadJoomeo(id)
+	out, err := ct.loadPhotos(id)
 	if err != nil {
 		return err
 	}
 	return c.JSON(200, out)
 }
 
-type Joomeo struct {
-	SpaceURL string
-	Login    string
-	Password string
+type Photos struct {
+	HasAlbum bool
+	URL      string
 }
 
-func (ct *Controller) loadJoomeo(id cps.IdEquipier) (Joomeo, error) {
+func (ct *Controller) loadPhotos(id cps.IdEquipier) (Photos, error) {
 	equipier, err := cps.SelectEquipier(ct.db, id)
 	if err != nil {
-		return Joomeo{}, utils.SQLError(err)
+		return Photos{}, utils.SQLError(err)
 	}
-	personne, err := pr.SelectPersonne(ct.db, equipier.IdPersonne)
+	camp, err := cps.SelectCamp(ct.db, equipier.IdCamp)
 	if err != nil {
-		return Joomeo{}, utils.SQLError(err)
+		return Photos{}, utils.SQLError(err)
+	}
+	if camp.AlbumID == "" {
+		return Photos{}, nil
 	}
 
-	api, err := joomeo.NewApi(ct.joomeo)
-	if err != nil {
-		return Joomeo{}, err
-	}
-	defer api.Close()
+	api := immich.NewApi(ct.immich)
 
-	contact, _, err := api.GetContactByMail(personne.Mail)
+	album, err := api.LoadAlbum(immich.AlbumID(camp.AlbumID))
 	if err != nil {
-		return Joomeo{}, fmt.Errorf("accès Joomeo: %s", err)
+		return Photos{}, err
 	}
 
-	return Joomeo{api.SpaceURL(), contact.Login, contact.Password}, nil
+	return Photos{HasAlbum: true, URL: album.EquipiersURL}, nil
 }
 
 type UpdateIn struct {

@@ -6,6 +6,7 @@ import (
 	"net/http"
 )
 
+// returns on first error
 func StreamJSON[T any](resp http.ResponseWriter, items iter.Seq2[T, error]) error {
 	resp.Header().Set("Content-Type", "application/json")
 	resp.WriteHeader(http.StatusOK)

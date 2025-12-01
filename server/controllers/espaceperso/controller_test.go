@@ -8,6 +8,7 @@ import (
 	"registro/config"
 	"registro/crypto"
 	"registro/generators/pdfcreator"
+	"registro/immich"
 	"registro/logic"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
@@ -39,42 +40,60 @@ func Test_createAide(t *testing.T) {
 	st, err := cps.Structureaide{}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	ct := NewController(db.DB, crypto.Encrypter{}, config.SMTP{}, config.Asso{}, fs.NewFileSystem(os.TempDir()), config.Joomeo{})
+	ct := NewController(db.DB, crypto.Encrypter{}, config.SMTP{}, config.Asso{}, fs.NewFileSystem(os.TempDir()), config.Immich{})
 
 	err = ct.createAide(dossier.Id, cps.Aide{IdStructureaide: st.Id, IdParticipant: pa.Id, Valeur: ds.NewEuros(456.4)}, tu.PngData, "test.png")
 	tu.AssertNoErr(t, err)
 }
 
-func TestJoomeo(t *testing.T) {
+func TestPhotos(t *testing.T) {
 	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
 		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",
 		"../../migrations/init.sql")
 	defer db.Remove()
 
-	// this email is used on the DEV joomeo account
-	pe, err := pr.Personne{Etatcivil: pr.Etatcivil{Mail: "x.ben.x@free.fr"}}.Insert(db)
+	pe, err := pr.Personne{}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	pe2, err := pr.Personne{Etatcivil: pr.Etatcivil{Mail: "xxxxx@free.fr"}}.Insert(db)
+	pe2, err := pr.Personne{}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	dossier, err := ds.Dossier{IdTaux: 1, IdResponsable: pe.Id}.Insert(db)
+	dossier1, err := ds.Dossier{IdTaux: 1, IdResponsable: pe.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
 	dossier2, err := ds.Dossier{IdTaux: 1, IdResponsable: pe2.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
 
+	camp1, err := cps.Camp{IdTaux: 1}.Insert(db)
+	tu.AssertNoErr(t, err)
+	camp2, err := cps.Camp{IdTaux: 1}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	_, err = cps.Participant{IdCamp: camp1.Id, IdDossier: dossier1.Id, IdPersonne: pe.Id, IdTaux: 1, Statut: cps.Inscrit}.Insert(db)
+	tu.AssertNoErr(t, err)
+	_, err = cps.Participant{IdCamp: camp2.Id, IdDossier: dossier2.Id, IdPersonne: pe.Id, IdTaux: 1, Statut: cps.Inscrit}.Insert(db)
+	tu.AssertNoErr(t, err)
+
 	tu.LoadEnv(t, "../../env.sh")
-	joomeo, err := config.NewJoomeo()
+	photos, err := config.NewImmich()
 	tu.AssertNoErr(t, err)
-	ct := NewController(db.DB, crypto.Encrypter{}, config.SMTP{}, config.Asso{}, fs.NewFileSystem(os.TempDir()), joomeo)
+	ct := NewController(db.DB, crypto.Encrypter{}, config.SMTP{}, config.Asso{}, fs.NewFileSystem(os.TempDir()), photos)
 
-	data, err := ct.loadJoomeo(dossier.Id)
+	api := immich.NewApi(ct.immich)
+	album, err := api.CreateAlbum("__TEST")
 	tu.AssertNoErr(t, err)
-	tu.Assert(t, data.Loggin != "" && data.Password != "")
+	defer api.DeleteAlbum(album.Id)
 
-	data, err = ct.loadJoomeo(dossier2.Id)
+	camp1.AlbumID = string(album.Id)
+	_, err = camp1.Update(ct.db)
 	tu.AssertNoErr(t, err)
-	tu.Assert(t, data.Loggin == "" && data.Password == "")
+
+	data, err := ct.loadPhotos(dossier1.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(data) == 1)
+
+	data, err = ct.loadPhotos(dossier2.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(data) == 0)
 }
 
 func Test_loadFichesanitaires(t *testing.T) {

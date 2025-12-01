@@ -118,19 +118,6 @@ export interface FicheSanitaireExt {
   State: FichesanitaireState;
   Fiche: Fichesanitaire;
 }
-// registro/controllers/directeurs.Joomeo
-export interface Joomeo {
-  SpaceURL: string;
-  Album: Album;
-  MailsResponsables: string[] | null;
-  MailsInscrits: string[] | null;
-  MailsEquipiers: string[] | null;
-}
-// registro/controllers/directeurs.JoomeoInviteIn
-export interface JoomeoInviteIn {
-  Mails: string[] | null;
-  SendMail: boolean;
-}
 // registro/controllers/directeurs.LettreImageUploadOut
 export interface LettreImageUploadOut {
   location: string;
@@ -158,6 +145,11 @@ export interface ParticipantsOut {
   Participants: ParticipantExt[] | null;
   Dossiers: Record<IdDossier, DossierReglement> | null;
 }
+// registro/controllers/directeurs.Photos
+export interface Photos {
+  HasAlbum: boolean;
+  Album: AlbumAndLinks;
+}
 // registro/controllers/files.ParticipantFiles
 export interface ParticipantFiles {
   Id: IdParticipant;
@@ -171,39 +163,18 @@ export interface ParticipantsFiles {
   Demandes: Demandes;
   Participants: ParticipantFiles[] | null;
 }
-// registro/joomeo.AccessRules
-export interface AccessRules {
-  allowCreateAlbum: boolean;
-  allowDeleteAlbum: boolean;
-  allowDeleteFile: boolean;
-  allowEditFileCaption: boolean;
-  allowUpdateAlbum: boolean;
+// registro/immich.AlbumAndLinks
+export interface AlbumAndLinks {
+  albumName: string;
+  assetCount: Int;
+  createdAt: Time;
+  Id: AlbumID;
+  order: string;
+  EquipiersURL: string;
+  InscritsURL: string;
 }
-// registro/joomeo.Album
-export interface Album {
-  Id: string;
-  Label: string;
-  Date: Time;
-  FilesCount: Int;
-  Contacts: ContactPermission[] | null;
-}
-// registro/joomeo.AlbumAccessRules
-export interface AlbumAccessRules {
-  allowDownload: boolean;
-  allowUpload: boolean;
-  allowPrintOrder: boolean;
-  allowComments: boolean;
-}
-// registro/joomeo.ContactPermission
-export interface ContactPermission {
-  contactid: string;
-  email: string;
-  login: string;
-  password: string;
-  accessRules: AccessRules;
-  type: Int;
-  albumAccessRules: AlbumAccessRules;
-}
+// registro/immich.AlbumID
+export type AlbumID = string;
 // registro/logic.CampItem
 export interface CampItem {
   Id: IdCamp;
@@ -323,7 +294,7 @@ export interface Camp {
   DocumentsReady: boolean;
   DocumentsToShow: DocumentsToShow;
   Vetements: ListeVetements;
-  JoomeoID: string;
+  AlbumID: string;
   Meta: Meta;
 }
 // registro/sql/camps.DocumentsToShow
@@ -1563,12 +1534,12 @@ export abstract class AbstractAPI {
     }
   }
 
-  /** JoomeoLoad performs the request and handles the error */
-  async JoomeoLoad() {
-    const fullUrl = this.baseURL + "/api/v1/directeurs/joomeo";
+  /** PhotosLoad performs the request and handles the error */
+  async PhotosLoad() {
+    const fullUrl = this.baseURL + "/api/v1/directeurs/photos";
     this.startRequest();
     try {
-      const rep: AxiosResponse<Joomeo> = await Axios.get(fullUrl, {
+      const rep: AxiosResponse<Photos> = await Axios.get(fullUrl, {
         headers: this.getHeaders(),
       });
       return rep.data;
@@ -1577,51 +1548,20 @@ export abstract class AbstractAPI {
     }
   }
 
-  /** JoomeoInvite performs the request and handles the error */
-  async JoomeoInvite(params: JoomeoInviteIn) {
-    const fullUrl = this.baseURL + "/api/v1/directeurs/joomeo";
+  /** PhotosInvite return a streaming Response (JSON line format) */
+  async PhotosInvite() {
+    const fullUrl = this.baseURL + "/api/v1/directeurs/photos";
     this.startRequest();
     try {
-      const rep: AxiosResponse<ContactPermission[] | null> = await Axios.put(
-        fullUrl,
-        params,
-        { headers: this.getHeaders() },
-      );
-      return rep.data;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  /** JoomeoSetUploader performs the request and handles the error */
-  async JoomeoSetUploader(params: { joomeoId: string }) {
-    const fullUrl = this.baseURL + "/api/v1/directeurs/joomeo";
-    this.startRequest();
-    try {
-      const rep: AxiosResponse<ContactPermission> = await Axios.post(
-        fullUrl,
-        null,
-        {
-          headers: this.getHeaders(),
-          params: { joomeoId: params["joomeoId"] },
+      const response = await fetch(fullUrl, {
+        method: "PUT",
+        headers: {
+          ...this.getHeaders(),
+          Accept: "application/json",
+          "Content-Type": "application/json",
         },
-      );
-      return rep.data;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  /** JoomeoUnlinkContact performs the request and handles the error */
-  async JoomeoUnlinkContact(params: { joomeoId: string }) {
-    const fullUrl = this.baseURL + "/api/v1/directeurs/joomeo";
-    this.startRequest();
-    try {
-      await Axios.delete(fullUrl, {
-        headers: this.getHeaders(),
-        params: { joomeoId: params["joomeoId"] },
       });
-      return true;
+      return response as JSONStreamResponse<SendProgress>;
     } catch (error) {
       this.handleError(error);
     }

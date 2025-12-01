@@ -11,18 +11,20 @@
   </v-alert>
 
   <!-- joomeo -->
-  <v-alert v-if="props.joomeo != null" class="my-2" icon="mdi-panorama-variant">
-    <v-row>
-      <v-col align-self="center" cols="4">
-        Tu peux retrouver les
-        <a :href="props.joomeo.SpaceURL">photos du séjour sur Joomeo</a>, en
-        utilisant ces identifiants :
-      </v-col>
-      <v-col align-self="center" cols="4" class="text-center">
-        Identifiant : <b>{{ props.joomeo.Login }}</b>
-      </v-col>
-      <v-col align-self="center" cols="4" class="text-center">
-        Mot de passe : <b>{{ props.joomeo.Password }}</b>
+  <v-alert
+    v-if="props.album?.HasAlbum"
+    class="my-2"
+    icon="mdi-panorama-variant"
+  >
+    <v-row no-gutters>
+      <v-col align-self="center"> Lien vers les photos du séjour </v-col>
+      <v-col align-self="center" class="text-right">
+        <v-btn
+          :href="props.album.URL"
+          target="_blank"
+          prepend-icon="mdi-open-in-new"
+          >Album photos</v-btn
+        >
       </v-col>
     </v-row>
   </v-alert>
@@ -333,19 +335,18 @@ import {
   Sexe,
   type EquipierExt,
   type IdDemande,
-  type Joomeo,
+  type Photos,
   type PublicFile,
 } from "../logic/api";
-import { Camps, copy, Departements, Formatters, FormRules } from "@/utils";
+import { Camps, copy, Formatters, FormRules } from "@/utils";
 import { controller } from "../logic/logic";
 import { isDateZero } from "@/components/date";
 import CharteEquipier from "./CharteEquipier.vue";
-import { fa } from "vuetify/locale";
 
 const props = defineProps<{
   token: string;
   equipier: EquipierExt;
-  joomeo: Joomeo | null;
+  album: Photos | null;
 }>();
 
 const inner = ref(copy(props.equipier.Personne));

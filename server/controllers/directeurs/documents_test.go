@@ -54,7 +54,7 @@ func TestDocuments(t *testing.T) {
 	pa2, err := cps.Participant{IdPersonne: pe2.Id, IdCamp: camp.Id, IdDossier: dossier.Id, IdTaux: 1, Statut: cps.Inscrit}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	ct, err := NewController(db.DB, "", "", files.NewFileSystem(os.TempDir()), smtp, asso, config.Joomeo{})
+	ct, err := NewController(db.DB, "", "", files.NewFileSystem(os.TempDir()), smtp, asso, config.Immich{})
 	tu.AssertNoErr(t, err)
 
 	t.Run("files to download", func(t *testing.T) {

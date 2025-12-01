@@ -21,7 +21,7 @@
         <EquipierForm
           :token="token"
           :equipier="data"
-          :joomeo="joomeo"
+          :album="joomeo"
         ></EquipierForm>
       </v-container>
 
@@ -55,7 +55,7 @@
 <script lang="ts" setup>
 import { onMounted, ref } from "vue";
 import { controller } from "./logic/logic";
-import type { EquipierExt, Joomeo } from "./logic/api";
+import type { EquipierExt, Photos } from "./logic/api";
 import EquipierForm from "./components/EquipierForm.vue";
 import { Camps } from "@/utils";
 
@@ -87,8 +87,7 @@ onMounted(() => {
   const query = new URLSearchParams(window.location.search);
   token.value = query.get("token") || "";
   fetchData();
-  //   disabled Joomeo for now
-  //   fetchJoomeo(); // separate request to avoid blocking to long
+  fetchPhotos(); // separate request to avoid blocking too long
 });
 
 async function fetchData() {
@@ -97,9 +96,9 @@ async function fetchData() {
   data.value = res;
 }
 
-const joomeo = ref<Joomeo | null>(null);
-async function fetchJoomeo() {
-  const res = await controller.LoadJoomeo({ token: token.value });
+const joomeo = ref<Photos | null>(null);
+async function fetchPhotos() {
+  const res = await controller.LoadPhotos({ token: token.value });
   if (res === undefined) return;
   joomeo.value = res;
 }

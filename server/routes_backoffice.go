@@ -41,9 +41,9 @@ func setupRoutesBackoffice(e *echo.Echo, ct *backoffice.Controller) {
 	gr.POST("/api/v1/backoffice/participants/move", ct.ParticipantsMove)
 	gr.POST("/api/v1/backoffice/participants/place-liberee", ct.ParticipantsSetPlaceLiberee)
 
-	gr.GET("/api/v1/backoffice/camps/joomeo", ct.CampsLoadAlbums)
-	gr.PUT("/api/v1/backoffice/camps/joomeo", ct.CampsCreateAlbums)
-	gr.POST("/api/v1/backoffice/camps/joomeo", ct.CampsAddDirecteursToAlbums)
+	gr.GET("/api/v1/backoffice/camps/photos", ct.CampsLoadAlbums)
+	gr.PUT("/api/v1/backoffice/camps/photos", ct.CampsCreateAlbums)
+	gr.DELETE("/api/v1/backoffice/camps/photos", ct.CampsDeleteAlbum)
 
 	e.GET("/api/v1/backoffice/camps/download-participants", ct.CampsDownloadParticipants, ct.JWTMiddlewareForQuery()) // url-only
 

@@ -32,7 +32,7 @@ type Controller struct {
 	files     fs.FileSystem
 	smtp      config.SMTP
 	asso      config.Asso
-	joomeo    config.Joomeo
+	immich    config.Immich
 	helloasso config.Helloasso
 
 	password            string // backoffice client key
@@ -41,7 +41,7 @@ type Controller struct {
 	builtins fs.Builtins
 }
 
-func NewController(db *sql.DB, key crypto.Encrypter, password, passwordFondsoutien string, files fs.FileSystem, smtp config.SMTP, asso config.Asso, joomeo config.Joomeo, helloasso config.Helloasso) (*Controller, error) {
+func NewController(db *sql.DB, key crypto.Encrypter, password, passwordFondsoutien string, files fs.FileSystem, smtp config.SMTP, asso config.Asso, immich config.Immich, helloasso config.Helloasso) (*Controller, error) {
 	builtins, err := fs.LoadBuiltins(db)
 	if err != nil {
 		return nil, err
@@ -52,7 +52,7 @@ func NewController(db *sql.DB, key crypto.Encrypter, password, passwordFondsouti
 		files,
 		smtp,
 		asso,
-		joomeo,
+		immich,
 		helloasso,
 		password,
 		passwordFondsoutien,

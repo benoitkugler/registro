@@ -20,15 +20,15 @@ export interface NullBool {
   Bool: boolean;
   Valid: boolean;
 }
-// registro/controllers/backoffice.AddDirecteursToAlbumsIn
-export interface AddDirecteursToAlbumsIn {
-  IdCamps: IdCamp[] | null;
-  SendMail: boolean;
-}
 // registro/controllers/backoffice.AidesCreateIn
 export interface AidesCreateIn {
   IdParticipant: IdParticipant;
   IdStructure: IdStructureaide;
+}
+// registro/controllers/backoffice.CampAlbum
+export interface CampAlbum {
+  Camp: Camp;
+  Album: AlbumAndLinks;
 }
 // registro/controllers/backoffice.CampHeader
 export interface CampHeader {
@@ -40,18 +40,16 @@ export interface CampHeader {
   URLPreselection: string;
   URLDirecteur: string;
 }
-// registro/controllers/backoffice.CampJoomeo
-export interface CampJoomeo {
-  Camp: Camp;
-  HasDirecteur: boolean;
-  Album: Album;
-  DirecteurPermission: ContactPermission;
-}
 // registro/controllers/backoffice.CampLoadOut
 export interface CampLoadOut {
   Camp: CampExt;
   Participants: ParticipantExt[] | null;
   Dossiers: Record<IdDossier, DossierReglement> | null;
+}
+// registro/controllers/backoffice.CampPhotos
+export interface CampPhotos {
+  HostURL: string;
+  Camps: CampAlbum[] | null;
 }
 // registro/controllers/backoffice.CampsCreateManyIn
 export interface CampsCreateManyIn {
@@ -251,39 +249,18 @@ export interface GeneratedFile {
   NomClient: string;
   Key: string;
 }
-// registro/joomeo.AccessRules
-export interface AccessRules {
-  allowCreateAlbum: boolean;
-  allowDeleteAlbum: boolean;
-  allowDeleteFile: boolean;
-  allowEditFileCaption: boolean;
-  allowUpdateAlbum: boolean;
+// registro/immich.AlbumAndLinks
+export interface AlbumAndLinks {
+  albumName: string;
+  assetCount: Int;
+  createdAt: Time;
+  Id: AlbumID;
+  order: string;
+  EquipiersURL: string;
+  InscritsURL: string;
 }
-// registro/joomeo.Album
-export interface Album {
-  Id: string;
-  Label: string;
-  Date: Time;
-  FilesCount: Int;
-  Contacts: ContactPermission[] | null;
-}
-// registro/joomeo.AlbumAccessRules
-export interface AlbumAccessRules {
-  allowDownload: boolean;
-  allowUpload: boolean;
-  allowPrintOrder: boolean;
-  allowComments: boolean;
-}
-// registro/joomeo.ContactPermission
-export interface ContactPermission {
-  contactid: string;
-  email: string;
-  login: string;
-  password: string;
-  accessRules: AccessRules;
-  type: Int;
-  albumAccessRules: AlbumAccessRules;
-}
+// registro/immich.AlbumID
+export type AlbumID = string;
 // registro/logic.AideResolved
 export interface AideResolved {
   Structure: string;
@@ -512,7 +489,7 @@ export interface Camp {
   DocumentsReady: boolean;
   DocumentsToShow: DocumentsToShow;
   Vetements: ListeVetements;
-  JoomeoID: string;
+  AlbumID: string;
   Meta: Meta;
 }
 // registro/sql/camps.CampExt
@@ -1296,10 +1273,10 @@ export abstract class AbstractAPI {
 
   /** CampsLoadAlbums performs the request and handles the error */
   async CampsLoadAlbums() {
-    const fullUrl = this.baseURL + "/api/v1/backoffice/camps/joomeo";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/camps/photos";
     this.startRequest();
     try {
-      const rep: AxiosResponse<CampJoomeo[] | null> = await Axios.get(fullUrl, {
+      const rep: AxiosResponse<CampPhotos> = await Axios.get(fullUrl, {
         headers: this.getHeaders(),
       });
       return rep.data;
@@ -1310,28 +1287,27 @@ export abstract class AbstractAPI {
 
   /** CampsCreateAlbums performs the request and handles the error */
   async CampsCreateAlbums(params: CreateAlbumsIn) {
-    const fullUrl = this.baseURL + "/api/v1/backoffice/camps/joomeo";
+    const fullUrl = this.baseURL + "/api/v1/backoffice/camps/photos";
     this.startRequest();
     try {
-      const rep: AxiosResponse<Record<IdCamp, Album> | null> = await Axios.put(
-        fullUrl,
-        params,
-        { headers: this.getHeaders() },
-      );
+      const rep: AxiosResponse<Record<IdCamp, AlbumAndLinks> | null> =
+        await Axios.put(fullUrl, params, { headers: this.getHeaders() });
       return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  /** CampsAddDirecteursToAlbums performs the request and handles the error */
-  async CampsAddDirecteursToAlbums(params: AddDirecteursToAlbumsIn) {
-    const fullUrl = this.baseURL + "/api/v1/backoffice/camps/joomeo";
+  /** CampsDeleteAlbum performs the request and handles the error */
+  async CampsDeleteAlbum(params: { idCamp: IdCamp }) {
+    const fullUrl = this.baseURL + "/api/v1/backoffice/camps/photos";
     this.startRequest();
     try {
-      const rep: AxiosResponse<Record<IdCamp, ContactPermission> | null> =
-        await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-      return rep.data;
+      await Axios.delete(fullUrl, {
+        headers: this.getHeaders(),
+        params: { idCamp: String(params["idCamp"]) },
+      });
+      return true;
     } catch (error) {
       this.handleError(error);
     }

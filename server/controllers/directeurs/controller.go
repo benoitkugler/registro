@@ -34,14 +34,14 @@ type Controller struct {
 	files  fs.FileSystem
 	smtp   config.SMTP
 	asso   config.Asso
-	joomeo config.Joomeo
+	immich config.Immich
 
 	password string // global password
 
 	builtins fs.Builtins
 }
 
-func NewController(db *sql.DB, encryptKey, password string, files fs.FileSystem, smtp config.SMTP, asso config.Asso, joomeo config.Joomeo) (*Controller, error) {
+func NewController(db *sql.DB, encryptKey, password string, files fs.FileSystem, smtp config.SMTP, asso config.Asso, joomeo config.Immich) (*Controller, error) {
 	builtins, err := fs.LoadBuiltins(db)
 	if err != nil {
 		return nil, err

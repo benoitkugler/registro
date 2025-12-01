@@ -83,9 +83,7 @@ func setupRoutesDirecteurs(e *echo.Echo, ct *directeurs.Controller) {
 	gr.POST("/api/v1/directeurs/documents/unlock", ct.DocumentsUnlock)
 	gr.POST("/api/v1/directeurs/documents/unlock-send", ct.DocumentsUnlockAndSend)
 
-	// Joomeo
-	gr.GET("/api/v1/directeurs/joomeo", ct.JoomeoLoad)
-	gr.PUT("/api/v1/directeurs/joomeo", ct.JoomeoInvite)
-	gr.POST("/api/v1/directeurs/joomeo", ct.JoomeoSetUploader)
-	gr.DELETE("/api/v1/directeurs/joomeo", ct.JoomeoUnlinkContact)
+	// Photos
+	gr.GET("/api/v1/directeurs/photos", ct.PhotosLoad)
+	gr.PUT("/api/v1/directeurs/photos", ct.PhotosInvite)
 }
