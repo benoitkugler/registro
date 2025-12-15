@@ -144,11 +144,18 @@ export interface Messages {
 export interface ParticipantsOut {
   Participants: ParticipantExt[] | null;
   Dossiers: Record<IdDossier, DossierReglement> | null;
+  Groupes: Groupes;
+  ParticipantsToGroupe: Record<IdParticipant, GroupeParticipant> | null;
 }
 // registro/controllers/directeurs.Photos
 export interface Photos {
   HasAlbum: boolean;
   Album: AlbumAndLinks;
+}
+// registro/controllers/directeurs.UpdatePlagesIn
+export interface UpdatePlagesIn {
+  Plages: Record<IdGroupe, Plage> | null;
+  OverrideManuel: boolean;
 }
 // registro/controllers/files.ParticipantFiles
 export interface ParticipantFiles {
@@ -329,8 +336,26 @@ export const FormStatusEquipierLabels: Record<FormStatusEquipier, string> = {
   [FormStatusEquipier.Answered]: "Répondu",
 };
 
+// registro/sql/camps.Groupe
+export interface Groupe {
+  Id: IdGroupe;
+  IdCamp: IdCamp;
+  Nom: string;
+  Couleur: string;
+  Plage: Plage;
+}
+// registro/sql/camps.GroupeParticipant
+export interface GroupeParticipant {
+  IdParticipant: IdParticipant;
+  IdGroupe: IdGroupe;
+  IdCamp: IdCamp;
+  Manuel: boolean;
+}
+// registro/sql/camps.Groupes
+export type Groupes = Record<IdGroupe, Groupe> | null;
 export type IdCamp = Int & { __opaque_int__: "IdCamp" };
 export type IdEquipier = Int & { __opaque_int__: "IdEquipier" };
+export type IdGroupe = Int & { __opaque_int__: "IdGroupe" };
 export type IdParticipant = Int & { __opaque_int__: "IdParticipant" };
 // registro/sql/camps.Jours
 export type Jours = Int[] | null;
@@ -846,6 +871,11 @@ export interface OptID_IdPersonne {
   Id: IdPersonne;
   Valid: boolean;
 }
+// registro/sql/shared.Plage
+export interface Plage {
+  From: Date;
+  Duree: Int;
+}
 
 /** AbstractAPI provides auto-generated API calls and should be used 
 		as base class for an app controller.
@@ -1124,6 +1154,81 @@ export abstract class AbstractAPI {
     this.startRequest();
     try {
       await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** GroupeCreate performs the request and handles the error */
+  async GroupeCreate() {
+    const fullUrl = this.baseURL + "/api/v1/directeurs/participants/groupe";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<Groupe> = await Axios.put(fullUrl, null, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** GroupeUpdate performs the request and handles the error */
+  async GroupeUpdate(params: Groupe) {
+    const fullUrl = this.baseURL + "/api/v1/directeurs/participants/groupe";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** GroupeDelete performs the request and handles the error */
+  async GroupeDelete(params: { id: IdGroupe }) {
+    const fullUrl = this.baseURL + "/api/v1/directeurs/participants/groupe";
+    this.startRequest();
+    try {
+      await Axios.delete(fullUrl, {
+        headers: this.getHeaders(),
+        params: { id: String(params["id"]) },
+      });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** GroupeUpdatePlages performs the request and handles the error */
+  async GroupeUpdatePlages(params: UpdatePlagesIn) {
+    const fullUrl =
+      this.baseURL + "/api/v1/directeurs/participants/groupe-plages";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** ParticipantSetGroupe performs the request and handles the error */
+  async ParticipantSetGroupe(params: {
+    idParticipant: IdParticipant;
+    idGroupe: IdGroupe;
+  }) {
+    const fullUrl = this.baseURL + "/api/v1/directeurs/participants/set-groupe";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, null, {
+        headers: this.getHeaders(),
+        params: {
+          idParticipant: String(params["idParticipant"]),
+          idGroupe: String(params["idGroupe"]),
+        },
+      });
       return true;
     } catch (error) {
       this.handleError(error);

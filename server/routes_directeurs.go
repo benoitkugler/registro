@@ -46,6 +46,12 @@ func setupRoutesDirecteurs(e *echo.Echo, ct *directeurs.Controller) {
 	gr.GET("/api/v1/directeurs/participants/files", ct.ParticipantsLoadFiles)
 	gr.POST("/api/v1/directeurs/participants/relance-documents", ct.ParticipantsRelanceDocuments)
 
+	gr.PUT("/api/v1/directeurs/participants/groupe", ct.GroupeCreate)
+	gr.POST("/api/v1/directeurs/participants/groupe", ct.GroupeUpdate)
+	gr.DELETE("/api/v1/directeurs/participants/groupe", ct.GroupeDelete)
+	gr.POST("/api/v1/directeurs/participants/groupe-plages", ct.GroupeUpdatePlages)
+	gr.POST("/api/v1/directeurs/participants/set-groupe", ct.ParticipantSetGroupe)
+
 	// Messages
 	gr.GET("/api/v1/directeurs/participants/messages", ct.ParticipantsMessagesLoad)
 	gr.PUT("/api/v1/directeurs/participants/messages", ct.ParticipantsMessagesCreate)

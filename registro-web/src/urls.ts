@@ -6,7 +6,7 @@ export type Int = number & { __opaque__: "Int" };
 export class Endpoints {
   constructor(private baseURL: string) {}
 
-  /** Returns an URL */
+  /** Returns an URL with method GET */
   RenderDocumentCamp(documentToken: string, isMiniature: boolean) {
     return (
       this.baseURL +
@@ -15,12 +15,12 @@ export class Endpoints {
     );
   }
 
-  /** Returns an URL */
+  /** Returns an URL with method GET */
   LoadDocument(key: string) {
     return this.baseURL + "/api/v1/documents" + `?key=${key}`;
   }
 
-  /** Returns an URL */
+  /** Returns an URL with method GET */
   LoadMiniature(key: string) {
     return this.baseURL + "/api/v1/documents/miniature" + `?key=${key}`;
   }

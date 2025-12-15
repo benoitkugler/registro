@@ -141,13 +141,12 @@ type Groupe struct {
 	Id     IdGroupe
 	IdCamp IdCamp `gomacro-sql-on-delete:"CASCADE"`
 
-	// TODO: check that
-	// un nom vide indique un groupe par défaut
 	Nom string
-	// indication: ignorée forcément pour un groupe par défaut
-	Plage sh.Plage
-	// Hex color, optionnelle
+	// Color, optionnelle, au format #RRGGBB
 	Couleur string
+	// Plage est utilisée pour calculer automatiquement
+	// l'affectation des incrits.
+	Plage sh.Plage
 }
 
 // GroupeParticipant défini le contenu des groupes

@@ -17,6 +17,7 @@ import (
 	ds "registro/sql/dossiers"
 	evs "registro/sql/events"
 	pr "registro/sql/personnes"
+	"registro/sql/shared"
 	"registro/utils"
 
 	"github.com/labstack/echo/v4"
@@ -36,6 +37,9 @@ func (ct *Controller) ParticipantsGet(c echo.Context) error {
 type ParticipantsOut struct {
 	Participants []logic.ParticipantExt
 	Dossiers     map[ds.IdDossier]logic.DossierReglement
+
+	Groupes              cps.Groupes
+	ParticipantsToGroupe map[cps.IdParticipant]cps.GroupeParticipant
 }
 
 func (ct *Controller) getParticipants(id cps.IdCamp) (ParticipantsOut, error) {
@@ -52,7 +56,15 @@ func (ct *Controller) getParticipants(id cps.IdCamp) (ParticipantsOut, error) {
 		dossier := finances.For(id)
 		reglements[id] = dossier.Reglement()
 	}
-	return ParticipantsOut{participants, reglements}, nil
+	groupes, err := cps.SelectGroupesByIdCamps(ct.db, id)
+	if err != nil {
+		return ParticipantsOut{}, utils.SQLError(err)
+	}
+	participantsGroupes, err := cps.SelectGroupeParticipantsByIdCamps(ct.db, id)
+	if err != nil {
+		return ParticipantsOut{}, utils.SQLError(err)
+	}
+	return ParticipantsOut{participants, reglements, groupes, participantsGroupes.ByIdParticipant()}, nil
 }
 
 // ParticipantsUpdate modifie les champs d'un participant.
@@ -398,4 +410,186 @@ func (ct *Controller) exportListeParticipants(user cps.IdCamp) ([]byte, string, 
 	}
 	name := fmt.Sprintf("Participants %s.xlsx", camp.Camp.Label())
 	return content, name, nil
+}
+
+func (ct *Controller) GroupeCreate(c echo.Context) error {
+	user := JWTUser(c)
+	out, err := ct.createGroupe(user)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) createGroupe(user cps.IdCamp) (cps.Groupe, error) {
+	out, err := cps.Groupe{IdCamp: user, Nom: "Groupe " + utils.RandString(6, false)}.Insert(ct.db)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+	return out, nil
+}
+
+// GroupeUpdate does not update [Plage], see [GroupeUpdatePlages]
+func (ct *Controller) GroupeUpdate(c echo.Context) error {
+	user := JWTUser(c)
+	var args cps.Groupe
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+	err := ct.updateGroupe(user, args)
+	if err != nil {
+		return err
+	}
+	return c.NoContent(200)
+}
+
+func (ct *Controller) updateGroupe(user cps.IdCamp, args cps.Groupe) error {
+	current, err := cps.SelectGroupe(ct.db, args.Id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	if current.IdCamp != user {
+		return errors.New("access forbidden")
+	}
+	current.Nom = args.Nom
+	current.Couleur = args.Couleur
+	_, err = current.Update(ct.db)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	return nil
+}
+
+func (ct *Controller) GroupeDelete(c echo.Context) error {
+	user := JWTUser(c)
+	id, err := utils.QueryParamInt[cps.IdGroupe](c, "id")
+	if err != nil {
+		return err
+	}
+	err = ct.deleteGroupe(user, id)
+	if err != nil {
+		return err
+	}
+	return c.NoContent(200)
+}
+
+func (ct *Controller) deleteGroupe(user cps.IdCamp, id cps.IdGroupe) error {
+	groupe, err := cps.SelectGroupe(ct.db, id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	if groupe.IdCamp != user {
+		return errors.New("access forbidden")
+	}
+	_, err = cps.DeleteGroupeById(ct.db, id) // links cascade
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	return nil
+}
+
+type UpdatePlagesIn struct {
+	Plages map[cps.IdGroupe]shared.Plage
+	// if OverrideManuel is true, even the participant
+	// with a manually affected groupe are updated.
+	OverrideManuel bool
+}
+
+// GroupeUpdatePlages modifie les plages de tous les groupes donnés,
+// et met à jour les affectations des inscrits.
+func (ct *Controller) GroupeUpdatePlages(c echo.Context) error {
+	user := JWTUser(c)
+	var args UpdatePlagesIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+	err := ct.updateGroupesPlages(user, args)
+	if err != nil {
+		return err
+	}
+	return c.NoContent(200)
+}
+
+func (ct *Controller) updateGroupesPlages(idCamp cps.IdCamp, args UpdatePlagesIn) error {
+	// affectations courantes
+	camp, err := cps.LoadCamp(ct.db, idCamp)
+	if err != nil {
+		return err
+	}
+	links, err := cps.SelectGroupeParticipantsByIdCamps(ct.db, idCamp)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	byParticipant := links.ByIdParticipant()
+
+	return utils.InTx(ct.db, func(tx *sql.Tx) error {
+		for idGroupe, plage := range args.Plages {
+			current, err := cps.SelectGroupe(ct.db, idGroupe)
+			if err != nil {
+				return err
+			}
+			if current.IdCamp != idCamp {
+				return errors.New("access forbidden")
+			}
+			current.Plage = plage
+			_, err = current.Update(tx)
+			if err != nil {
+				return err
+			}
+		}
+
+		groupes, err := cps.SelectGroupesByIdCamps(tx, idCamp)
+		if err != nil {
+			return err
+		}
+
+		// compute the new affectations
+		var newLinks cps.GroupeParticipants
+		for _, participant := range camp.Participants(true) {
+			// should we skip updating ?
+			if current := byParticipant[participant.Participant.Id]; current.Manuel && !args.OverrideManuel {
+				newLinks = append(newLinks, current)
+			} else if newGroupe, ok := groupes.TrouveGroupe(participant.Personne.DateNaissance); ok {
+				newLinks = append(newLinks, cps.GroupeParticipant{IdParticipant: participant.Participant.Id, IdGroupe: newGroupe.Id, IdCamp: idCamp})
+			}
+		}
+
+		_, err = cps.DeleteGroupeParticipantsByIdCamps(ct.db, idCamp)
+		if err != nil {
+			return err
+		}
+		err = cps.InsertManyGroupeParticipants(tx, newLinks...)
+		return err
+	})
+}
+
+func (ct *Controller) ParticipantSetGroupe(c echo.Context) error {
+	user := JWTUser(c)
+	idParticipant, err := utils.QueryParamInt[cps.IdParticipant](c, "idParticipant")
+	if err != nil {
+		return err
+	}
+	idGroupe, err := utils.QueryParamInt[cps.IdGroupe](c, "idGroupe") // <= 0 to remove the groupe
+	if err != nil {
+		return err
+	}
+	err = ct.setParticipantGroupe(user, idParticipant, idGroupe)
+	if err != nil {
+		return err
+	}
+	return c.NoContent(200)
+}
+
+func (ct *Controller) setParticipantGroupe(user cps.IdCamp, idParticipant cps.IdParticipant, idGroupe cps.IdGroupe) error {
+	return utils.InTx(ct.db, func(tx *sql.Tx) error {
+		_, err := cps.DeleteGroupeParticipantsByIdParticipants(ct.db, idParticipant)
+		if err != nil {
+			return err
+		}
+		if idGroupe > 0 {
+			err = cps.GroupeParticipant{IdCamp: user, IdParticipant: idParticipant, IdGroupe: idGroupe, Manuel: true}.Insert(ct.db)
+			return err
+		}
+		return nil
+	})
 }
