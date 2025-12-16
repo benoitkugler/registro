@@ -345,16 +345,21 @@ func (cp Camp) Ext() CampExt {
 	return CampExt{cp, cp.IsPassedBy(1), cp.Slug()}
 }
 
-// TrouveGroupe cherche parmis les groupes possibles celui qui pourrait convenir.
-// Normalement, les groupes respectent un invariant de continuité sur les plages,
-// imposé par le frontend.
-// Si plusieurs pourraient convenir, un seul est renvoyé, de façon arbitraire.
+// TrouveGroupe renvoie le groupe dans lequel [dateNaissance] est,
+// ou [false] si [dateNaissance] est avant le premier groupe.
 func (gs Groupes) TrouveGroupe(dateNaissance shared.Date) (Groupe, bool) {
-	for _, g := range gs {
-		if g.Plage.Contains(dateNaissance) {
-			return g, true
+	// sort by date
+	sorted := utils.MapValues(gs)
+	slices.SortFunc(sorted, func(a, b Groupe) int { return a.Fin.Time().Compare(b.Fin.Time()) })
+
+	// exemple : 2000 ; 2002 ; 2005
+	// now return the first groupe with dateNaissance <= Fin
+	for _, groupe := range sorted {
+		if !(groupe.Fin.Time().Before(dateNaissance.Time())) {
+			return groupe, true
 		}
 	}
+
 	// on a trouvé aucun groupe
 	return Groupe{}, false
 }

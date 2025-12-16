@@ -161,8 +161,8 @@ CREATE TABLE groupes (
     Id serial PRIMARY KEY,
     IdCamp integer NOT NULL,
     Nom text NOT NULL,
-    Plage jsonb NOT NULL,
-    Couleur text NOT NULL
+    Couleur text NOT NULL,
+    Fin date NOT NULL
 );
 
 CREATE TABLE groupe_participants (
@@ -732,28 +732,6 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION gomacro_validate_json_shar_Plage (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean;
-BEGIN
-    IF jsonb_typeof(data) != 'object' THEN
-        RETURN FALSE;
-    END IF;
-    is_valid := (
-        SELECT
-            bool_and(key IN ('From', 'Duree'))
-        FROM
-            jsonb_each(data))
-        AND gomacro_validate_json_string (data -> 'From')
-        AND gomacro_validate_json_number (data -> 'Duree');
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
 CREATE OR REPLACE FUNCTION gomacro_validate_json_string (data jsonb)
     RETURNS boolean
     AS $$
@@ -1010,9 +988,6 @@ ALTER TABLE participants
 
 ALTER TABLE camps
     ADD CONSTRAINT Meta_gomacro CHECK (gomacro_validate_json_map_string (Meta));
-
-ALTER TABLE groupes
-    ADD CONSTRAINT Plage_gomacro CHECK (gomacro_validate_json_shar_Plage (Plage));
 
 ALTER TABLE demandes
     ADD CONSTRAINT constraint_categorie CHECK (Categorie = 0 OR IdDirecteur IS NULL);

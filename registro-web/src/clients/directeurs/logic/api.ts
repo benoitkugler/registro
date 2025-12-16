@@ -152,9 +152,9 @@ export interface Photos {
   HasAlbum: boolean;
   Album: AlbumAndLinks;
 }
-// registro/controllers/directeurs.UpdatePlagesIn
-export interface UpdatePlagesIn {
-  Plages: Record<IdGroupe, Plage> | null;
+// registro/controllers/directeurs.UpdateFinsIn
+export interface UpdateFinsIn {
+  Fins: Record<IdGroupe, Date> | null;
   OverrideManuel: boolean;
 }
 // registro/controllers/files.ParticipantFiles
@@ -342,7 +342,7 @@ export interface Groupe {
   IdCamp: IdCamp;
   Nom: string;
   Couleur: string;
-  Plage: Plage;
+  Fin: Date;
 }
 // registro/sql/camps.GroupeParticipant
 export interface GroupeParticipant {
@@ -871,11 +871,6 @@ export interface OptID_IdPersonne {
   Id: IdPersonne;
   Valid: boolean;
 }
-// registro/sql/shared.Plage
-export interface Plage {
-  From: Date;
-  Duree: Int;
-}
 
 /** AbstractAPI provides auto-generated API calls and should be used 
 		as base class for an app controller.
@@ -1202,7 +1197,7 @@ export abstract class AbstractAPI {
   }
 
   /** GroupeUpdatePlages performs the request and handles the error */
-  async GroupeUpdatePlages(params: UpdatePlagesIn) {
+  async GroupeUpdatePlages(params: UpdateFinsIn) {
     const fullUrl =
       this.baseURL + "/api/v1/directeurs/participants/groupe-plages";
     this.startRequest();

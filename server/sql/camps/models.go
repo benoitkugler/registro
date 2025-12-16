@@ -144,9 +144,9 @@ type Groupe struct {
 	Nom string
 	// Color, optionnelle, au format #RRGGBB
 	Couleur string
-	// Plage est utilisée pour calculer automatiquement
+	// Fin est utilisé pour calculer automatiquement
 	// l'affectation des incrits.
-	Plage sh.Plage
+	Fin sh.Date
 }
 
 // GroupeParticipant défini le contenu des groupes

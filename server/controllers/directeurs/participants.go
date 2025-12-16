@@ -421,8 +421,19 @@ func (ct *Controller) GroupeCreate(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) createGroupe(user cps.IdCamp) (cps.Groupe, error) {
-	out, err := cps.Groupe{IdCamp: user, Nom: "Groupe " + utils.RandString(6, false)}.Insert(ct.db)
+func (ct *Controller) createGroupe(idCamp cps.IdCamp) (cps.Groupe, error) {
+	// for a better UX, choose a decent default Fin
+	camp, err := cps.SelectCamp(ct.db, idCamp)
+	if err != nil {
+		return cps.Groupe{}, utils.SQLError(err)
+	}
+	ageMoyen := (camp.AgeMax + camp.AgeMin) / 2
+	if ageMoyen == 0 {
+		ageMoyen = 10
+	}
+	fin := camp.DateDebut.AddDays(-ageMoyen * 365)
+
+	out, err := cps.Groupe{IdCamp: idCamp, Nom: "Groupe " + utils.RandString(6, false), Fin: fin}.Insert(ct.db)
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
@@ -488,8 +499,8 @@ func (ct *Controller) deleteGroupe(user cps.IdCamp, id cps.IdGroupe) error {
 	return nil
 }
 
-type UpdatePlagesIn struct {
-	Plages map[cps.IdGroupe]shared.Plage
+type UpdateFinsIn struct {
+	Fins map[cps.IdGroupe]shared.Date
 	// if OverrideManuel is true, even the participant
 	// with a manually affected groupe are updated.
 	OverrideManuel bool
@@ -499,7 +510,7 @@ type UpdatePlagesIn struct {
 // et met à jour les affectations des inscrits.
 func (ct *Controller) GroupeUpdatePlages(c echo.Context) error {
 	user := JWTUser(c)
-	var args UpdatePlagesIn
+	var args UpdateFinsIn
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
@@ -510,7 +521,7 @@ func (ct *Controller) GroupeUpdatePlages(c echo.Context) error {
 	return c.NoContent(200)
 }
 
-func (ct *Controller) updateGroupesPlages(idCamp cps.IdCamp, args UpdatePlagesIn) error {
+func (ct *Controller) updateGroupesPlages(idCamp cps.IdCamp, args UpdateFinsIn) error {
 	// affectations courantes
 	camp, err := cps.LoadCamp(ct.db, idCamp)
 	if err != nil {
@@ -523,7 +534,7 @@ func (ct *Controller) updateGroupesPlages(idCamp cps.IdCamp, args UpdatePlagesIn
 	byParticipant := links.ByIdParticipant()
 
 	return utils.InTx(ct.db, func(tx *sql.Tx) error {
-		for idGroupe, plage := range args.Plages {
+		for idGroupe, fin := range args.Fins {
 			current, err := cps.SelectGroupe(ct.db, idGroupe)
 			if err != nil {
 				return err
@@ -531,7 +542,7 @@ func (ct *Controller) updateGroupesPlages(idCamp cps.IdCamp, args UpdatePlagesIn
 			if current.IdCamp != idCamp {
 				return errors.New("access forbidden")
 			}
-			current.Plage = plage
+			current.Fin = fin
 			_, err = current.Update(tx)
 			if err != nil {
 				return err

@@ -614,8 +614,8 @@ func scanOneGroupe(row scanner) (Groupe, error) {
 		&item.Id,
 		&item.IdCamp,
 		&item.Nom,
-		&item.Plage,
 		&item.Couleur,
+		&item.Fin,
 	)
 	return item, err
 }
@@ -624,7 +624,7 @@ func ScanGroupe(row *sql.Row) (Groupe, error) { return scanOneGroupe(row) }
 
 // SelectAll returns all the items in the groupes table.
 func SelectAllGroupes(db DB) (Groupes, error) {
-	rows, err := db.Query("SELECT id, idcamp, nom, plage, couleur FROM groupes")
+	rows, err := db.Query("SELECT id, idcamp, nom, couleur, fin FROM groupes")
 	if err != nil {
 		return nil, err
 	}
@@ -633,13 +633,13 @@ func SelectAllGroupes(db DB) (Groupes, error) {
 
 // SelectGroupe returns the entry matching 'id'.
 func SelectGroupe(tx DB, id IdGroupe) (Groupe, error) {
-	row := tx.QueryRow("SELECT id, idcamp, nom, plage, couleur FROM groupes WHERE id = $1", id)
+	row := tx.QueryRow("SELECT id, idcamp, nom, couleur, fin FROM groupes WHERE id = $1", id)
 	return ScanGroupe(row)
 }
 
 // SelectGroupes returns the entry matching the given 'ids'.
 func SelectGroupes(tx DB, ids ...IdGroupe) (Groupes, error) {
-	rows, err := tx.Query("SELECT id, idcamp, nom, plage, couleur FROM groupes WHERE id = ANY($1)", IdGroupeArrayToPQ(ids))
+	rows, err := tx.Query("SELECT id, idcamp, nom, couleur, fin FROM groupes WHERE id = ANY($1)", IdGroupeArrayToPQ(ids))
 	if err != nil {
 		return nil, err
 	}
@@ -684,28 +684,28 @@ func ScanGroupes(rs *sql.Rows) (Groupes, error) {
 // Insert one Groupe in the database and returns the item with id filled.
 func (item Groupe) Insert(tx DB) (out Groupe, err error) {
 	row := tx.QueryRow(`INSERT INTO groupes (
-		idcamp, nom, plage, couleur
+		idcamp, nom, couleur, fin
 		) VALUES (
 		$1, $2, $3, $4
-		) RETURNING id, idcamp, nom, plage, couleur;
-		`, item.IdCamp, item.Nom, item.Plage, item.Couleur)
+		) RETURNING id, idcamp, nom, couleur, fin;
+		`, item.IdCamp, item.Nom, item.Couleur, item.Fin)
 	return ScanGroupe(row)
 }
 
 // Update Groupe in the database and returns the new version.
 func (item Groupe) Update(tx DB) (out Groupe, err error) {
 	row := tx.QueryRow(`UPDATE groupes SET (
-		idcamp, nom, plage, couleur
+		idcamp, nom, couleur, fin
 		) = (
 		$1, $2, $3, $4
-		) WHERE id = $5 RETURNING id, idcamp, nom, plage, couleur;
-		`, item.IdCamp, item.Nom, item.Plage, item.Couleur, item.Id)
+		) WHERE id = $5 RETURNING id, idcamp, nom, couleur, fin;
+		`, item.IdCamp, item.Nom, item.Couleur, item.Fin, item.Id)
 	return ScanGroupe(row)
 }
 
 // Deletes the Groupe and returns the item
 func DeleteGroupeById(tx DB, id IdGroupe) (Groupe, error) {
-	row := tx.QueryRow("DELETE FROM groupes WHERE id = $1 RETURNING id, idcamp, nom, plage, couleur;", id)
+	row := tx.QueryRow("DELETE FROM groupes WHERE id = $1 RETURNING id, idcamp, nom, couleur, fin;", id)
 	return ScanGroupe(row)
 }
 
@@ -744,7 +744,7 @@ func (items Groupes) IdCamps() []IdCamp {
 }
 
 func SelectGroupesByIdCamps(tx DB, idCamps_ ...IdCamp) (Groupes, error) {
-	rows, err := tx.Query("SELECT id, idcamp, nom, plage, couleur FROM groupes WHERE idcamp = ANY($1)", IdCampArrayToPQ(idCamps_))
+	rows, err := tx.Query("SELECT id, idcamp, nom, couleur, fin FROM groupes WHERE idcamp = ANY($1)", IdCampArrayToPQ(idCamps_))
 	if err != nil {
 		return nil, err
 	}
@@ -994,7 +994,7 @@ func SelectGroupeParticipantByIdParticipantAndIdCamp(tx DB, idParticipant IdPart
 
 // SelectGroupeByIdCampAndNom return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectGroupeByIdCampAndNom(tx DB, idCamp IdCamp, nom string) (item Groupe, found bool, err error) {
-	row := tx.QueryRow("SELECT id, idcamp, nom, plage, couleur FROM groupes WHERE IdCamp = $1 AND Nom = $2", idCamp, nom)
+	row := tx.QueryRow("SELECT id, idcamp, nom, couleur, fin FROM groupes WHERE IdCamp = $1 AND Nom = $2", idCamp, nom)
 	item, err = ScanGroupe(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
@@ -1004,7 +1004,7 @@ func SelectGroupeByIdCampAndNom(tx DB, idCamp IdCamp, nom string) (item Groupe, 
 
 // SelectGroupeByIdAndIdCamp return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectGroupeByIdAndIdCamp(tx DB, id IdGroupe, idCamp IdCamp) (item Groupe, found bool, err error) {
-	row := tx.QueryRow("SELECT id, idcamp, nom, plage, couleur FROM groupes WHERE Id = $1 AND IdCamp = $2", id, idCamp)
+	row := tx.QueryRow("SELECT id, idcamp, nom, couleur, fin FROM groupes WHERE Id = $1 AND IdCamp = $2", id, idCamp)
 	item, err = ScanGroupe(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
