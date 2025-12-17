@@ -118,6 +118,11 @@ export interface FicheSanitaireExt {
   State: FichesanitaireState;
   Fiche: Fichesanitaire;
 }
+// registro/controllers/directeurs.GroupesOut
+export interface GroupesOut {
+  Groupes: Groupes;
+  ParticipantsToGroupe: Record<IdParticipant, GroupeParticipant> | null;
+}
 // registro/controllers/directeurs.LettreImageUploadOut
 export interface LettreImageUploadOut {
   location: string;
@@ -144,8 +149,6 @@ export interface Messages {
 export interface ParticipantsOut {
   Participants: ParticipantExt[] | null;
   Dossiers: Record<IdDossier, DossierReglement> | null;
-  Groupes: Groupes;
-  ParticipantsToGroupe: Record<IdParticipant, GroupeParticipant> | null;
 }
 // registro/controllers/directeurs.Photos
 export interface Photos {
@@ -1150,6 +1153,20 @@ export abstract class AbstractAPI {
     try {
       await Axios.post(fullUrl, params, { headers: this.getHeaders() });
       return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** GroupesGet performs the request and handles the error */
+  async GroupesGet() {
+    const fullUrl = this.baseURL + "/api/v1/directeurs/participants/groupes";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<GroupesOut> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }

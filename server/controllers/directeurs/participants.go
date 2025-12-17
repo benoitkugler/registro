@@ -37,9 +37,6 @@ func (ct *Controller) ParticipantsGet(c echo.Context) error {
 type ParticipantsOut struct {
 	Participants []logic.ParticipantExt
 	Dossiers     map[ds.IdDossier]logic.DossierReglement
-
-	Groupes              cps.Groupes
-	ParticipantsToGroupe map[cps.IdParticipant]cps.GroupeParticipant
 }
 
 func (ct *Controller) getParticipants(id cps.IdCamp) (ParticipantsOut, error) {
@@ -56,15 +53,8 @@ func (ct *Controller) getParticipants(id cps.IdCamp) (ParticipantsOut, error) {
 		dossier := finances.For(id)
 		reglements[id] = dossier.Reglement()
 	}
-	groupes, err := cps.SelectGroupesByIdCamps(ct.db, id)
-	if err != nil {
-		return ParticipantsOut{}, utils.SQLError(err)
-	}
-	participantsGroupes, err := cps.SelectGroupeParticipantsByIdCamps(ct.db, id)
-	if err != nil {
-		return ParticipantsOut{}, utils.SQLError(err)
-	}
-	return ParticipantsOut{participants, reglements, groupes, participantsGroupes.ByIdParticipant()}, nil
+
+	return ParticipantsOut{participants, reglements}, nil
 }
 
 // ParticipantsUpdate modifie les champs d'un participant.
@@ -410,6 +400,32 @@ func (ct *Controller) exportListeParticipants(user cps.IdCamp) ([]byte, string, 
 	}
 	name := fmt.Sprintf("Participants %s.xlsx", camp.Camp.Label())
 	return content, name, nil
+}
+
+type GroupesOut struct {
+	Groupes              cps.Groupes
+	ParticipantsToGroupe map[cps.IdParticipant]cps.GroupeParticipant
+}
+
+func (ct *Controller) GroupesGet(c echo.Context) error {
+	user := JWTUser(c)
+	out, err := ct.getGroupes(user)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) getGroupes(id cps.IdCamp) (GroupesOut, error) {
+	groupes, err := cps.SelectGroupesByIdCamps(ct.db, id)
+	if err != nil {
+		return GroupesOut{}, utils.SQLError(err)
+	}
+	participantsGroupes, err := cps.SelectGroupeParticipantsByIdCamps(ct.db, id)
+	if err != nil {
+		return GroupesOut{}, utils.SQLError(err)
+	}
+	return GroupesOut{groupes, participantsGroupes.ByIdParticipant()}, nil
 }
 
 func (ct *Controller) GroupeCreate(c echo.Context) error {

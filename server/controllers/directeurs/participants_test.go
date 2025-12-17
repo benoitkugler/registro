@@ -130,7 +130,7 @@ func TestGroupes(t *testing.T) {
 
 	ct := Controller{db: db.DB}
 
-	out, err := ct.getParticipants(camp.Id)
+	out, err := ct.getGroupes(camp.Id)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(out.Groupes) == 0 && len(out.ParticipantsToGroupe) == 0)
 
@@ -155,7 +155,7 @@ func TestGroupes(t *testing.T) {
 	}, false})
 	tu.AssertNoErr(t, err)
 
-	out, err = ct.getParticipants(camp.Id)
+	out, err = ct.getGroupes(camp.Id)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(out.Groupes) == 3 && len(out.ParticipantsToGroupe) == 3)
 	tu.Assert(t, out.ParticipantsToGroupe[pa1.Id].IdGroupe == groupe1.Id)
@@ -167,7 +167,7 @@ func TestGroupes(t *testing.T) {
 	}, true})
 	tu.AssertNoErr(t, err)
 
-	out, err = ct.getParticipants(camp.Id)
+	out, err = ct.getGroupes(camp.Id)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, out.ParticipantsToGroupe[pa1.Id].IdGroupe == groupe3.Id)
 	tu.Assert(t, out.ParticipantsToGroupe[pa2.Id].IdGroupe == groupe3.Id)
@@ -175,7 +175,7 @@ func TestGroupes(t *testing.T) {
 	err = ct.setParticipantGroupe(camp.Id, pa2.Id, 0)
 	tu.AssertNoErr(t, err)
 
-	out, err = ct.getParticipants(camp.Id)
+	out, err = ct.getGroupes(camp.Id)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, out.ParticipantsToGroupe[pa2.Id].IdGroupe == 0)
 
