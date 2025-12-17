@@ -1,7 +1,7 @@
 <template>
   <v-card
     title="Modifier les plages"
-    subtitle="Vous pouvez ajuster la plage de date de naissance de chaque groupe."
+    subtitle="Vous pouvez ajuster la date de fin de la plage de chaque groupe."
   >
     <v-card-text>
       <v-alert v-if="sizes.isMissing" type="warning">
