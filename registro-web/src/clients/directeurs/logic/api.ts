@@ -122,6 +122,8 @@ export interface FicheSanitaireExt {
 export interface GroupesOut {
   Groupes: Groupes;
   ParticipantsToGroupe: Record<IdParticipant, GroupeParticipant> | null;
+  MinHint: Date;
+  MaxHint: Date;
 }
 // registro/controllers/directeurs.LettreImageUploadOut
 export interface LettreImageUploadOut {

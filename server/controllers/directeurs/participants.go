@@ -17,7 +17,7 @@ import (
 	ds "registro/sql/dossiers"
 	evs "registro/sql/events"
 	pr "registro/sql/personnes"
-	"registro/sql/shared"
+	sh "registro/sql/shared"
 	"registro/utils"
 
 	"github.com/labstack/echo/v4"
@@ -405,6 +405,7 @@ func (ct *Controller) exportListeParticipants(user cps.IdCamp) ([]byte, string, 
 type GroupesOut struct {
 	Groupes              cps.Groupes
 	ParticipantsToGroupe map[cps.IdParticipant]cps.GroupeParticipant
+	MinHint, MaxHint     sh.Date
 }
 
 func (ct *Controller) GroupesGet(c echo.Context) error {
@@ -417,6 +418,10 @@ func (ct *Controller) GroupesGet(c echo.Context) error {
 }
 
 func (ct *Controller) getGroupes(id cps.IdCamp) (GroupesOut, error) {
+	camp, err := cps.LoadCamp(ct.db, id)
+	if err != nil {
+		return GroupesOut{}, err
+	}
 	groupes, err := cps.SelectGroupesByIdCamps(ct.db, id)
 	if err != nil {
 		return GroupesOut{}, utils.SQLError(err)
@@ -425,7 +430,61 @@ func (ct *Controller) getGroupes(id cps.IdCamp) (GroupesOut, error) {
 	if err != nil {
 		return GroupesOut{}, utils.SQLError(err)
 	}
-	return GroupesOut{groupes, participantsGroupes.ByIdParticipant()}, nil
+	min, _, max := groupesRangeHint(camp, groupes)
+
+	return GroupesOut{groupes, participantsGroupes.ByIdParticipant(), min, max}, nil
+}
+
+func groupesRangeHint(camp cps.CampData, groupes cps.Groupes) (min, toCreate, max sh.Date) {
+	inscrits := camp.Participants(true)
+
+	if len(inscrits) == 0 { // default to the Camp age range
+		ageMin := camp.Camp.AgeMin
+		ageMax := camp.Camp.AgeMax
+		if ageMin <= 0 {
+			ageMin = 6
+		}
+		if ageMax <= 0 {
+			ageMax = 18
+		}
+		ageMiddle := (ageMin + ageMax) / 2
+
+		max = camp.Camp.DateDebut.AddDays(-ageMin * 365)
+		min = camp.Camp.DateDebut.AddDays(-ageMax * 365)
+		toCreate = camp.Camp.DateDebut.AddDays(-ageMiddle * 365)
+	} else {
+		// use inscrits
+		minT := inscrits[0].Personne.DateNaissance.Time()
+		maxT := minT
+		for _, inscrit := range inscrits {
+			d := inscrit.Personne.DateNaissance.Time()
+			if d.Before(minT) {
+				minT = d
+			}
+			if maxT.Before(d) {
+				maxT = d
+			}
+		}
+		middleT := minT.Add(maxT.Sub(minT) / 2)
+		min, toCreate, max = sh.NewDateFrom(minT), sh.NewDateFrom(middleT), sh.NewDateFrom(maxT)
+	}
+
+	// always includes already defined groupes
+	for _, g := range groupes {
+		minToCreate := g.Fin.AddDays(365)
+		fin := g.Fin.Time()
+		if fin.Before(min.Time()) {
+			min = g.Fin
+		}
+		if max.Time().Before(fin) {
+			max = g.Fin
+		}
+		if toCreate.Time().Before(minToCreate.Time()) {
+			toCreate = minToCreate
+		}
+	}
+
+	return
 }
 
 func (ct *Controller) GroupeCreate(c echo.Context) error {
@@ -439,17 +498,17 @@ func (ct *Controller) GroupeCreate(c echo.Context) error {
 
 func (ct *Controller) createGroupe(idCamp cps.IdCamp) (cps.Groupe, error) {
 	// for a better UX, choose a decent default Fin
-	camp, err := cps.SelectCamp(ct.db, idCamp)
+	camp, err := cps.LoadCamp(ct.db, idCamp)
+	if err != nil {
+		return cps.Groupe{}, err
+	}
+	groupes, err := cps.SelectGroupesByIdCamps(ct.db, idCamp)
 	if err != nil {
 		return cps.Groupe{}, utils.SQLError(err)
 	}
-	ageMoyen := (camp.AgeMax + camp.AgeMin) / 2
-	if ageMoyen == 0 {
-		ageMoyen = 10
-	}
-	fin := camp.DateDebut.AddDays(-ageMoyen * 365)
+	_, middle, _ := groupesRangeHint(camp, groupes)
 
-	out, err := cps.Groupe{IdCamp: idCamp, Nom: "Groupe " + utils.RandString(6, false), Fin: fin}.Insert(ct.db)
+	out, err := cps.Groupe{IdCamp: idCamp, Nom: "Groupe " + utils.RandString(6, false), Fin: middle}.Insert(ct.db)
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
@@ -516,7 +575,7 @@ func (ct *Controller) deleteGroupe(user cps.IdCamp, id cps.IdGroupe) error {
 }
 
 type UpdateFinsIn struct {
-	Fins map[cps.IdGroupe]shared.Date
+	Fins map[cps.IdGroupe]sh.Date
 	// if OverrideManuel is true, even the participant
 	// with a manually affected groupe are updated.
 	OverrideManuel bool

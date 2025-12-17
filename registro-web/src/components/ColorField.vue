@@ -1,6 +1,6 @@
 <template>
   <v-row>
-    <v-col align-self="center">
+    <v-col align-self="center" class="ml-2">
       {{ props.label }}
     </v-col>
     <v-col align-self="center" cols="auto">
@@ -15,9 +15,9 @@
               @update:model-value="onInput"
               flat
               :swatches="swatches"
-              show-swatches
-              hide-canvas
-              hide-sliders
+              :show-swatches="showSwatches"
+              :hide-canvas="showSwatches"
+              :hide-sliders="showSwatches"
               mode="hex"
             />
           </v-card-text>
@@ -50,6 +50,8 @@ const swatches = computed(() => {
   }
   return out;
 });
+
+const showSwatches = computed(() => props.swatches.length != 0);
 </script>
 
 <style scoped></style>
