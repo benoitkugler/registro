@@ -6,10 +6,10 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-//go:generate ../../../go/src/github.com/benoitkugler/gomacro/cmd/gomacro -http-api=/api routes_inscription.go typescript/api:../registro-web/src/clients/inscription/logic/api.ts
+//go:generate ../../../go/src/github.com/benoitkugler/gomacro/cmd/gomacro  routes_inscription.go typescript/api:../registro-web/src/clients/inscription/logic/api.ts
 
 func setupRoutesInscription(e *echo.Echo, ct *inscriptions.Controller) {
-	e.GET(inscriptions.EndpointConfirmeInscription, ct.ConfirmeInscription)
+	e.GET(inscriptions.EndpointConfirmeInscription, ct.ConfirmeInscription) // ignore
 
 	// JSON API
 	e.GET("/api/v1/inscription/camps", ct.GetCamps)

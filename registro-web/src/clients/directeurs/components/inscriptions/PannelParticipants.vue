@@ -22,6 +22,13 @@
       >
         Documents</v-btn
       >
+      <v-btn
+        @click="showGroupes = true"
+        class="mx-1"
+        prepend-icon="mdi-account-group"
+      >
+        Groupes</v-btn
+      >
 
       <v-divider thickness="1" vertical class="mx-1"></v-divider>
 
@@ -66,7 +73,13 @@
     <v-card-text class="mt-4">
       <v-skeleton-loader type="table" v-if="isLoading"></v-skeleton-loader>
       <div v-else>
-        <ParticipantRowHeader></ParticipantRowHeader>
+        <ParticipantRowHeader>
+          <template #append v-if="hasGroupes">
+            <v-col class="font-weight-bold text-center" align-self="center"
+              >Groupe</v-col
+            >
+          </template>
+        </ParticipantRowHeader>
 
         <div class="text-center font-italic mt-4" v-if="!participants.length">
           Aucun participant n'est encore inscrit sur ce séjour.
@@ -74,15 +87,50 @@
 
         <ParticipantRow
           v-for="(p, index) in participants"
-          :participant="p"
+          :participant="p.participant"
           :index="index"
+          :groupe="p.groupe"
         >
+          <template #append v-if="hasGroupes">
+            <v-col align-self="center" class="text-center">
+              <v-chip
+                :color="p.groupe ? p.groupe.Couleur : ''"
+                label
+                elevation="1"
+              >
+                {{ p.groupe ? p.groupe.Nom : "Aucun groupe" }}
+                <v-menu activator="parent">
+                  <v-list density="compact">
+                    <v-list-item
+                      v-for="groupe in Object.values(groupes.Groupes || {})"
+                      :title="groupe.Nom"
+                      @click.once="
+                        setParticipantGroupe(p.participant, groupe.Id)
+                      "
+                    >
+                      <template #prepend>
+                        <v-badge :color="groupe.Couleur" inline></v-badge>
+                      </template>
+                    </v-list-item>
+                    <v-divider></v-divider>
+                    <v-list-item
+                      title="Retirer"
+                      @click.once="
+                        setParticipantGroupe(p.participant, -1 as IdGroupe)
+                      "
+                      prepend-icon="mdi-close"
+                    ></v-list-item>
+                  </v-list>
+                </v-menu>
+              </v-chip>
+            </v-col>
+          </template>
           <template #actions>
             <v-list density="comfortable">
               <v-list-item
                 title="Modifier"
                 prepend-icon="mdi-pencil"
-                @click="toEdit = p"
+                @click="toEdit = p.participant"
               ></v-list-item>
             </v-list>
           </template>
@@ -128,6 +176,15 @@
     <v-dialog v-model="showReglements" max-width="700px">
       <ReglementsCard :data="data"></ReglementsCard>
     </v-dialog>
+
+    <!-- groupes -->
+    <v-dialog v-model="showGroupes" max-width="700px">
+      <GroupesPannel
+        :groupes="groupes"
+        :participants="data.Participants || []"
+        @refresh="loadGroupes"
+      ></GroupesPannel>
+    </v-dialog>
   </v-card>
   <v-skeleton-loader v-else type="card"></v-skeleton-loader>
 </template>
@@ -137,6 +194,11 @@ import { ref, onMounted, computed } from "vue";
 import { controller } from "../../logic/logic";
 import {
   type CampItem,
+  type Date_,
+  type Groupe,
+  type GroupeParticipant,
+  type GroupesOut,
+  type IdGroupe,
   type Participant,
   type ParticipantExt,
   type ParticipantsOut,
@@ -146,10 +208,12 @@ import FichesSanitairesPannel from "./FichesSanitairesPannel.vue";
 import DocumentsPannel from "./DocumentsPannel.vue";
 import MessagesPannel from "./MessagesPannel.vue";
 import StatistiquesCard from "./StatistiquesCard.vue";
+import GroupesPannel from "./GroupesPannel.vue";
 
 const props = defineProps<{}>();
 
 onMounted(() => {
+  loadGroupes();
   loadParticipants();
   fetchCamps();
 });
@@ -165,13 +229,30 @@ async function fetchCamps() {
   camps.value = res || [];
 }
 
-// with sort
+// with sort and groupe
 const sortByTime = ref(false);
 const participants = computed(() => {
-  const out = (data.value?.Participants || []).map((p) => p);
-  out.sort((a, b) => Participants.cmp(a, b, sortByTime.value));
+  const d = data.value;
+  const g = groupes.value;
+  if (!d) return [];
+  const out = (d.Participants || []).map((p) => {
+    const link: GroupeParticipant | undefined = (g.ParticipantsToGroupe || {})[
+      p.Participant.Id
+    ];
+    return {
+      participant: p,
+      groupe: link ? (g.Groupes || {})[link.IdGroupe] : null,
+    };
+  });
+
+  out.sort((a, b) =>
+    Participants.cmp(a.participant, b.participant, sortByTime.value)
+  );
   return out;
 });
+const hasGroupes = computed(
+  () => Object.values(groupes.value.Groupes || {}).length != 0
+);
 
 const data = ref<ParticipantsOut | null>(null);
 async function loadParticipants() {
@@ -180,6 +261,18 @@ async function loadParticipants() {
   isLoading.value = false;
   if (res === undefined) return;
   data.value = res;
+}
+
+const groupes = ref<GroupesOut>({
+  Groupes: {},
+  ParticipantsToGroupe: {},
+  MinHint: "" as Date_,
+  MaxHint: "" as Date_,
+});
+async function loadGroupes() {
+  const res = await controller.GroupesGet();
+  if (res === undefined) return;
+  groupes.value = res;
 }
 
 const toEdit = ref<ParticipantExt | null>(null);
@@ -193,6 +286,19 @@ async function updateParticipant(p: Participant) {
   loadParticipants();
 }
 
+async function setParticipantGroupe(
+  participant: ParticipantExt,
+  idGroupe: IdGroupe
+) {
+  const res = await controller.ParticipantSetGroupe({
+    idParticipant: participant.Participant.Id,
+    idGroupe,
+  });
+  if (res === undefined) return;
+  controller.showMessage("Groupe attribué avec succès.");
+  loadGroupes();
+}
+
 const showFichesSanitaires = ref(false);
 
 const showDocuments = ref(false);
@@ -200,4 +306,6 @@ const showDocuments = ref(false);
 const showMessages = ref(false);
 
 const showReglements = ref(false);
+
+const showGroupes = ref(false);
 </script>

@@ -216,10 +216,7 @@ func TestController_confirmeInscription(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	camp2, err := cps.Camp{IdTaux: 1, DateDebut: shared.NewDateFrom(time.Now()), Duree: 3, Statut: cps.Ouvert}.Insert(db)
 	tu.AssertNoErr(t, err)
-	_, err = cps.Groupe{IdCamp: camp.Id, Plage: shared.Plage{
-		From:  shared.NewDateFrom(time.Now().Add(-50 * 24 * time.Hour)),
-		Duree: 100,
-	}}.Insert(db)
+	_, err = cps.Groupe{IdCamp: camp.Id, Fin: shared.NewDateFrom(time.Now().Add(-50 * 24 * time.Hour))}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	ct := NewController(db.DB, crypto.Encrypter{}, creds, cfg)

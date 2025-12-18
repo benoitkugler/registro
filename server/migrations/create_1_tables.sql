@@ -161,8 +161,8 @@ CREATE TABLE groupes (
     Id serial PRIMARY KEY,
     IdCamp integer NOT NULL,
     Nom text NOT NULL,
-    Plage jsonb NOT NULL,
-    Couleur text NOT NULL
+    Couleur text NOT NULL,
+    Fin date NOT NULL
 );
 
 CREATE TABLE groupe_participants (

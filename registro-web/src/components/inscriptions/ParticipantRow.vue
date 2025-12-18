@@ -1,6 +1,6 @@
 <template>
   <v-row no-gutters :class="cl">
-    <v-col align-self="center" cols="3">
+    <v-col align-self="center" cols="2">
       <v-list-item
         :title="Personnes.NOMPrenom(props.participant.Personne)"
         class="px-0"
@@ -69,13 +69,14 @@
           : NavetteLabels[props.participant.Participant.Navette]
       }}
     </v-col>
-    <v-col align-self="center">
+    <v-col align-self="center" cols="2">
       {{ props.participant.Participant.Commentaire }}
     </v-col>
-    <v-spacer></v-spacer>
-    <v-col cols="2" align-self="center">
+    <v-col cols="2" align-self="center" class="text-center">
       {{ Formatters.time(props.participant.MomentInscription) }}
     </v-col>
+    <slot name="append"></slot>
+    <v-spacer v-if="$slots['append'] === undefined"></v-spacer>
     <v-col align-self="center" cols="auto">
       <v-menu>
         <template #activator="{ props: menuProps }">
@@ -83,6 +84,7 @@
             v-bind="menuProps"
             icon="mdi-dots-vertical"
             size="x-small"
+            class="mx-1"
           ></v-btn>
         </template>
 

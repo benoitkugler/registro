@@ -17,6 +17,7 @@ import (
 	ds "registro/sql/dossiers"
 	evs "registro/sql/events"
 	pr "registro/sql/personnes"
+	sh "registro/sql/shared"
 	"registro/utils"
 
 	"github.com/labstack/echo/v4"
@@ -52,6 +53,7 @@ func (ct *Controller) getParticipants(id cps.IdCamp) (ParticipantsOut, error) {
 		dossier := finances.For(id)
 		reglements[id] = dossier.Reglement()
 	}
+
 	return ParticipantsOut{participants, reglements}, nil
 }
 
@@ -398,4 +400,287 @@ func (ct *Controller) exportListeParticipants(user cps.IdCamp) ([]byte, string, 
 	}
 	name := fmt.Sprintf("Participants %s.xlsx", camp.Camp.Label())
 	return content, name, nil
+}
+
+type GroupesOut struct {
+	Groupes              cps.Groupes
+	ParticipantsToGroupe map[cps.IdParticipant]cps.GroupeParticipant
+	MinHint, MaxHint     sh.Date
+}
+
+func (ct *Controller) GroupesGet(c echo.Context) error {
+	user := JWTUser(c)
+	out, err := ct.getGroupes(user)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) getGroupes(id cps.IdCamp) (GroupesOut, error) {
+	camp, err := cps.LoadCamp(ct.db, id)
+	if err != nil {
+		return GroupesOut{}, err
+	}
+	groupes, err := cps.SelectGroupesByIdCamps(ct.db, id)
+	if err != nil {
+		return GroupesOut{}, utils.SQLError(err)
+	}
+	participantsGroupes, err := cps.SelectGroupeParticipantsByIdCamps(ct.db, id)
+	if err != nil {
+		return GroupesOut{}, utils.SQLError(err)
+	}
+	min, _, max := groupesRangeHint(camp, groupes)
+
+	return GroupesOut{groupes, participantsGroupes.ByIdParticipant(), min, max}, nil
+}
+
+func groupesRangeHint(camp cps.CampData, groupes cps.Groupes) (min, toCreate, max sh.Date) {
+	inscrits := camp.Participants(true)
+
+	if len(inscrits) == 0 { // default to the Camp age range
+		ageMin := camp.Camp.AgeMin
+		ageMax := camp.Camp.AgeMax
+		if ageMin <= 0 {
+			ageMin = 6
+		}
+		if ageMax <= 0 {
+			ageMax = 18
+		}
+		ageMiddle := (ageMin + ageMax) / 2
+
+		max = camp.Camp.DateDebut.AddDays(-ageMin * 365)
+		min = camp.Camp.DateDebut.AddDays(-ageMax * 365)
+		toCreate = camp.Camp.DateDebut.AddDays(-ageMiddle * 365)
+	} else {
+		// use inscrits
+		minT := inscrits[0].Personne.DateNaissance.Time()
+		maxT := minT
+		for _, inscrit := range inscrits {
+			d := inscrit.Personne.DateNaissance.Time()
+			if d.Before(minT) {
+				minT = d
+			}
+			if maxT.Before(d) {
+				maxT = d
+			}
+		}
+		middleT := minT.Add(maxT.Sub(minT) / 2)
+		min, toCreate, max = sh.NewDateFrom(minT), sh.NewDateFrom(middleT), sh.NewDateFrom(maxT)
+	}
+
+	// always includes already defined groupes
+	for _, g := range groupes {
+		minToCreate := g.Fin.AddDays(365)
+		fin := g.Fin.Time()
+		if fin.Before(min.Time()) {
+			min = g.Fin
+		}
+		if max.Time().Before(fin) {
+			max = g.Fin
+		}
+		if toCreate.Time().Before(minToCreate.Time()) {
+			toCreate = minToCreate
+		}
+	}
+
+	return
+}
+
+func (ct *Controller) GroupeCreate(c echo.Context) error {
+	user := JWTUser(c)
+	out, err := ct.createGroupe(user)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) createGroupe(idCamp cps.IdCamp) (cps.Groupe, error) {
+	// for a better UX, choose a decent default Fin
+	camp, err := cps.LoadCamp(ct.db, idCamp)
+	if err != nil {
+		return cps.Groupe{}, err
+	}
+	groupes, err := cps.SelectGroupesByIdCamps(ct.db, idCamp)
+	if err != nil {
+		return cps.Groupe{}, utils.SQLError(err)
+	}
+	_, middle, _ := groupesRangeHint(camp, groupes)
+
+	out, err := cps.Groupe{
+		IdCamp:  idCamp,
+		Nom:     "Groupe " + utils.RandString(6, false),
+		Couleur: utils.RandColor(),
+		Fin:     middle,
+	}.Insert(ct.db)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+	return out, nil
+}
+
+// GroupeUpdate does not update [Plage], see [GroupeUpdatePlages]
+func (ct *Controller) GroupeUpdate(c echo.Context) error {
+	user := JWTUser(c)
+	var args cps.Groupe
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+	err := ct.updateGroupe(user, args)
+	if err != nil {
+		return err
+	}
+	return c.NoContent(200)
+}
+
+func (ct *Controller) updateGroupe(user cps.IdCamp, args cps.Groupe) error {
+	current, err := cps.SelectGroupe(ct.db, args.Id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	if current.IdCamp != user {
+		return errors.New("access forbidden")
+	}
+	current.Nom = args.Nom
+	current.Couleur = args.Couleur
+	_, err = current.Update(ct.db)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	return nil
+}
+
+func (ct *Controller) GroupeDelete(c echo.Context) error {
+	user := JWTUser(c)
+	id, err := utils.QueryParamInt[cps.IdGroupe](c, "id")
+	if err != nil {
+		return err
+	}
+	err = ct.deleteGroupe(user, id)
+	if err != nil {
+		return err
+	}
+	return c.NoContent(200)
+}
+
+func (ct *Controller) deleteGroupe(user cps.IdCamp, id cps.IdGroupe) error {
+	groupe, err := cps.SelectGroupe(ct.db, id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	if groupe.IdCamp != user {
+		return errors.New("access forbidden")
+	}
+	_, err = cps.DeleteGroupeById(ct.db, id) // links cascade
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	return nil
+}
+
+type UpdateFinsIn struct {
+	Fins map[cps.IdGroupe]sh.Date
+	// if OverrideManuel is true, even the participant
+	// with a manually affected groupe are updated.
+	OverrideManuel bool
+}
+
+// GroupeUpdatePlages modifie les plages de tous les groupes donnés,
+// et met à jour les affectations des inscrits.
+func (ct *Controller) GroupeUpdatePlages(c echo.Context) error {
+	user := JWTUser(c)
+	var args UpdateFinsIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+	err := ct.updateGroupesPlages(user, args)
+	if err != nil {
+		return err
+	}
+	return c.NoContent(200)
+}
+
+func (ct *Controller) updateGroupesPlages(idCamp cps.IdCamp, args UpdateFinsIn) error {
+	// affectations courantes
+	camp, err := cps.LoadCamp(ct.db, idCamp)
+	if err != nil {
+		return err
+	}
+	links, err := cps.SelectGroupeParticipantsByIdCamps(ct.db, idCamp)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	byParticipant := links.ByIdParticipant()
+
+	return utils.InTx(ct.db, func(tx *sql.Tx) error {
+		for idGroupe, fin := range args.Fins {
+			current, err := cps.SelectGroupe(ct.db, idGroupe)
+			if err != nil {
+				return err
+			}
+			if current.IdCamp != idCamp {
+				return errors.New("access forbidden")
+			}
+			current.Fin = fin
+			_, err = current.Update(tx)
+			if err != nil {
+				return err
+			}
+		}
+
+		groupes, err := cps.SelectGroupesByIdCamps(tx, idCamp)
+		if err != nil {
+			return err
+		}
+
+		// compute the new affectations
+		var newLinks cps.GroupeParticipants
+		for _, participant := range camp.Participants(true) {
+			// should we skip updating ?
+			if current := byParticipant[participant.Participant.Id]; current.Manuel && !args.OverrideManuel {
+				newLinks = append(newLinks, current)
+			} else if newGroupe, ok := groupes.TrouveGroupe(participant.Personne.DateNaissance); ok {
+				newLinks = append(newLinks, cps.GroupeParticipant{IdParticipant: participant.Participant.Id, IdGroupe: newGroupe.Id, IdCamp: idCamp})
+			}
+		}
+
+		_, err = cps.DeleteGroupeParticipantsByIdCamps(ct.db, idCamp)
+		if err != nil {
+			return err
+		}
+		err = cps.InsertManyGroupeParticipants(tx, newLinks...)
+		return err
+	})
+}
+
+func (ct *Controller) ParticipantSetGroupe(c echo.Context) error {
+	user := JWTUser(c)
+	idParticipant, err := utils.QueryParamInt[cps.IdParticipant](c, "idParticipant")
+	if err != nil {
+		return err
+	}
+	idGroupe, err := utils.QueryParamInt[cps.IdGroupe](c, "idGroupe") // <= 0 to remove the groupe
+	if err != nil {
+		return err
+	}
+	err = ct.setParticipantGroupe(user, idParticipant, idGroupe)
+	if err != nil {
+		return err
+	}
+	return c.NoContent(200)
+}
+
+func (ct *Controller) setParticipantGroupe(user cps.IdCamp, idParticipant cps.IdParticipant, idGroupe cps.IdGroupe) error {
+	return utils.InTx(ct.db, func(tx *sql.Tx) error {
+		_, err := cps.DeleteGroupeParticipantsByIdParticipants(ct.db, idParticipant)
+		if err != nil {
+			return err
+		}
+		if idGroupe > 0 {
+			err = cps.GroupeParticipant{IdCamp: user, IdParticipant: idParticipant, IdGroupe: idGroupe, Manuel: true}.Insert(ct.db)
+			return err
+		}
+		return nil
+	})
 }

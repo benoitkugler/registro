@@ -8,7 +8,7 @@ import (
 
 	"registro/sql/dossiers"
 	pr "registro/sql/personnes"
-	"registro/sql/shared"
+	sh "registro/sql/shared"
 	tu "registro/utils/testutils"
 )
 
@@ -22,7 +22,7 @@ func pers(s pr.Sexe, n pr.Nationnalite) pr.Personne {
 
 func pers2(s pr.Sexe, age int) pr.Personne {
 	now := time.Now()
-	dateNaissace := shared.NewDate(now.Year()-age, now.Month(), now.Day())
+	dateNaissace := sh.NewDate(now.Year()-age, now.Month(), now.Day())
 	return pr.Personne{Etatcivil: pr.Etatcivil{Sexe: s, DateNaissance: dateNaissace}}
 }
 
@@ -73,8 +73,8 @@ func TestCampLoader_Stats(t *testing.T) {
 func TestCamp_isTerminated(t *testing.T) {
 	now := time.Now()
 	y, m, d := now.Year(), now.Month(), now.Day()
-	tu.Assert(t, (&Camp{DateDebut: shared.NewDate(y, m, d), Duree: 1}).IsPassedBy(1) == false)
-	tu.Assert(t, (&Camp{DateDebut: shared.NewDate(y, m, d-1), Duree: 1}).IsPassedBy(1) == true)
+	tu.Assert(t, (&Camp{DateDebut: sh.NewDate(y, m, d), Duree: 1}).IsPassedBy(1) == false)
+	tu.Assert(t, (&Camp{DateDebut: sh.NewDate(y, m, d-1), Duree: 1}).IsPassedBy(1) == true)
 }
 
 func TestCampLoader_Status(t *testing.T) {
@@ -83,14 +83,14 @@ func TestCampLoader_Status(t *testing.T) {
 		AgeMax:          12,
 		Places:          5,
 		NeedEquilibreGF: false,
-		DateDebut:       shared.NewDateFrom(time.Now()),
+		DateDebut:       sh.NewDateFrom(time.Now()),
 	}
 	campGF := Camp{
 		AgeMin:          6,
 		AgeMax:          12,
 		Places:          5,
 		NeedEquilibreGF: true,
-		DateDebut:       shared.NewDateFrom(time.Now()),
+		DateDebut:       sh.NewDateFrom(time.Now()),
 	}
 	personnes := pr.Personnes{1: pers(pr.Man, pr.Nationnalite{}), 2: pers(pr.Woman, pr.Nationnalite{})}
 	participants := Participants{
@@ -199,7 +199,61 @@ func TestSlug(t *testing.T) {
 		{"Canoë", 2000, "canoe-2000"},
 		{"école", 2000, "ecole-2000"},
 	} {
-		camp := Camp{Nom: test.nom, DateDebut: shared.NewDate(test.annee, 1, 1)}
+		camp := Camp{Nom: test.nom, DateDebut: sh.NewDate(test.annee, 1, 1)}
 		tu.Assert(t, camp.Slug() == test.expected)
+	}
+}
+
+func TestGroupes_TrouveGroupe(t *testing.T) {
+	tests := []struct {
+		groupes       Groupes
+		dateNaissance sh.Date
+		want          IdGroupe
+		want2         bool
+	}{
+		{
+			Groupes{},
+			sh.NewDate(2000, 1, 1),
+			0, false,
+		},
+		{
+			Groupes{1: {Id: 1, Fin: sh.NewDate(2000, 1, 1)}},
+			sh.NewDate(2001, 1, 1),
+			0, false,
+		},
+		{
+			Groupes{1: {Id: 1, Fin: sh.NewDate(2001, 1, 1)}},
+			sh.NewDate(2001, 1, 1),
+			1, true,
+		},
+		{
+			Groupes{1: {Id: 1, Fin: sh.NewDate(2001, 1, 1)}},
+			sh.NewDate(1999, 1, 1),
+			1, true,
+		},
+		{
+			Groupes{1: {Id: 1, Fin: sh.NewDate(2000, 1, 1)}, 2: {Id: 2, Fin: sh.NewDate(2002, 1, 1)}},
+			sh.NewDate(2000, 1, 1),
+			1, true,
+		},
+		{
+			Groupes{1: {Id: 1, Fin: sh.NewDate(2000, 1, 1)}, 2: {Id: 2, Fin: sh.NewDate(2002, 1, 1)}},
+			sh.NewDate(2001, 1, 1),
+			2, true,
+		},
+		{
+			Groupes{1: {Id: 1, Fin: sh.NewDate(2000, 1, 1)}, 2: {Id: 2, Fin: sh.NewDate(2002, 1, 1)}},
+			sh.NewDate(2002, 1, 1),
+			2, true,
+		},
+		{
+			Groupes{1: {Id: 1, Fin: sh.NewDate(2000, 1, 1)}, 2: {Id: 2, Fin: sh.NewDate(2002, 1, 1)}},
+			sh.NewDate(2002, 1, 2),
+			0, false,
+		},
+	}
+	for _, tt := range tests {
+		got, got2 := tt.groupes.TrouveGroupe(tt.dateNaissance)
+		tu.Assert(t, got.Id == tt.want && got2 == tt.want2)
 	}
 }

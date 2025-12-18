@@ -133,21 +133,6 @@ export abstract class AbstractAPI {
     return { Authorization: "Bearer " + this.authToken };
   }
 
-  /** ConfirmeInscription performs the request and handles the error */
-  async ConfirmeInscription(params: { "insc-token": string }) {
-    const fullUrl = this.baseURL + "/inscription/confirme";
-    this.startRequest();
-    try {
-      await Axios.get(fullUrl, {
-        headers: this.getHeaders(),
-        params: { "insc-token": params["insc-token"] },
-      });
-      return true;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
   /** GetCamps performs the request and handles the error */
   async GetCamps() {
     const fullUrl = this.baseURL + "/api/v1/inscription/camps";

@@ -156,9 +156,6 @@ ALTER TABLE participants
 ALTER TABLE camps
     ADD CONSTRAINT Meta_gomacro CHECK (gomacro_validate_json_map_string (Meta));
 
-ALTER TABLE groupes
-    ADD CONSTRAINT Plage_gomacro CHECK (gomacro_validate_json_shar_Plage (Plage));
-
 ALTER TABLE demandes
     ADD CONSTRAINT constraint_categorie CHECK (Categorie = 0 OR IdDirecteur IS NULL);
 

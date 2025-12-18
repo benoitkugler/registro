@@ -1,11 +1,11 @@
 <template>
-  <v-card title="Séjours" :subtitle="campsData.size">
+  <v-card title="Séjours" :subtitle="campsData.size" class="ma-2">
     <template #append>
       <v-row>
         <v-col align-self="center" style="width: 240px">
           <v-text-field
             label="Rechercher"
-            variant="filled"
+            variant="outlined"
             density="comfortable"
             hide-details
             prepend-inner-icon="mdi-magnify"

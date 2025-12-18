@@ -47,6 +47,12 @@ func RemoveAccents(b []byte) []byte {
 // with n chars.
 func RandPassword(n int) string { return RandString(n, false) }
 
+// RandColor returns a random hex color (#RRGGBB)
+func RandColor() string {
+	color := rand.Intn(0xFFFFFF + 1)
+	return fmt.Sprintf("#%06X", color)
+}
+
 // ParseInt parse [v] to an int
 func ParseInt[T interface{ ~int64 | int }](v string) (T, error) {
 	id, err := strconv.ParseInt(v, 10, 64)

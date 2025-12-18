@@ -97,8 +97,8 @@ func randGroupe() Groupe {
 	s.Id = randIdGroupe()
 	s.IdCamp = randIdCamp()
 	s.Nom = randstring()
-	s.Plage = randsha_Plage()
 	s.Couleur = randstring()
+	s.Fin = randsha_Date()
 
 	return s
 }
@@ -446,14 +446,6 @@ func randper_IdPersonne() personnes.IdPersonne {
 
 func randsha_Date() shared.Date {
 	return shared.Date(randtDate())
-}
-
-func randsha_Plage() shared.Plage {
-	var s shared.Plage
-	s.From = randsha_Date()
-	s.Duree = randint()
-
-	return s
 }
 
 func randsql_NullBool() sql.NullBool {
