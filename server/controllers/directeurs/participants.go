@@ -508,7 +508,12 @@ func (ct *Controller) createGroupe(idCamp cps.IdCamp) (cps.Groupe, error) {
 	}
 	_, middle, _ := groupesRangeHint(camp, groupes)
 
-	out, err := cps.Groupe{IdCamp: idCamp, Nom: "Groupe " + utils.RandString(6, false), Fin: middle}.Insert(ct.db)
+	out, err := cps.Groupe{
+		IdCamp:  idCamp,
+		Nom:     "Groupe " + utils.RandString(6, false),
+		Couleur: utils.RandColor(),
+		Fin:     middle,
+	}.Insert(ct.db)
 	if err != nil {
 		return out, utils.SQLError(err)
 	}

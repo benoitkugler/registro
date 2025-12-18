@@ -13,7 +13,7 @@
         <v-list-item
           v-for="groupe in Object.values(props.groupes.Groupes || {})"
           :title="groupe.Nom"
-          :subtitle="plages[groupe.Id]"
+          :subtitle="formatPlage(plages[groupe.Id])"
         >
           <template #prepend>
             <v-badge :color="groupe.Couleur" inline></v-badge>
@@ -112,7 +112,7 @@ import {
 } from "../../logic/api";
 import { computed, ref } from "vue";
 import { copy } from "@/utils";
-import { groupesPlages } from "./groupes";
+import { formatPlage, groupesPlages } from "./groupes";
 import GroupesPlagesEditPannel from "./GroupesPlagesEditPannel.vue";
 
 const props = defineProps<{
@@ -164,7 +164,7 @@ async function updatePlages(groupes: Groupes, erase: boolean) {
     OverrideManuel: erase,
   });
   if (res === undefined) return;
-  controller.showMessage("Dates de naissance modifiées avec succès.");
+  controller.showMessage("Plages modifiées avec succès.");
   emit("refresh");
 }
 </script>

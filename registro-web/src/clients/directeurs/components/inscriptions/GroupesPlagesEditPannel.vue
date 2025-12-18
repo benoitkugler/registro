@@ -12,7 +12,7 @@
         <v-list-item
           v-for="groupe in Object.values(inner)"
           :title="groupe.Nom"
-          :subtitle="plages[groupe.Id]"
+          :subtitle="formatPlage(plages[groupe.Id])"
         >
           <template #prepend>
             <v-badge inline :color="groupe.Couleur"></v-badge>
@@ -23,6 +23,7 @@
                 <GroupesDateSlider
                   :groupes="props.groupes"
                   v-model="groupe.Fin"
+                  :start="plages[groupe.Id][0]"
                 ></GroupesDateSlider>
               </v-col>
               <v-col align-self="center" cols="4">
@@ -72,7 +73,7 @@ import {
   type GroupesOut,
   type ParticipantExt,
 } from "../../logic/api";
-import { groupesPlages, groupesSizes } from "./groupes";
+import { formatPlage, groupesPlages, groupesSizes } from "./groupes";
 import { copy } from "@/utils";
 import GroupesDateSlider from "./GroupesDateSlider.vue";
 

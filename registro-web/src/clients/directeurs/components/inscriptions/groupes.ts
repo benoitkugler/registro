@@ -7,7 +7,7 @@ import {
   type IdGroupe,
   type ParticipantExt,
 } from "../../logic/api";
-import { addDays } from "@/components/date";
+import { addDays, isDateZero } from "@/components/date";
 import type { Int } from "@/urls";
 
 function sorted(groupes: Groupes) {
@@ -30,28 +30,40 @@ function trouveGroupe(sortedGroupes: Groupe[], dateNaissance: Date_) {
   return null;
 }
 
+/** Returns inclusive ranges.
+ * -infty is encoded as an empty string
+ */
 export function groupesPlages(groupes: Groupes) {
-  const out: Record<IdGroupe, string> = {};
+  const out: Record<IdGroupe, [Date_, Date_]> = {};
 
   const l = sorted(groupes);
   if (l.length == 0) return out;
 
-  const plages: string[] = Array.from({ length: l.length });
+  const plages: [Date_, Date_][] = Array.from({ length: l.length });
 
   // le premier groupe commence à -infty
-  plages[0] = `né avant le ${Formatters.dateNaissance(l[0].Fin)}`;
+  plages[0] = ["" as Date_, l[0].Fin];
 
   for (let index = 1; index < l.length; index++) {
     const element = l[index];
     const previous = l[index - 1];
     const start = addDays(previous.Fin, 1 as Int);
-    plages[index] = `né entre le ${Formatters.dateNaissance(
-      start
-    )} et le ${Formatters.dateNaissance(element.Fin)}`;
+    plages[index] = [start, element.Fin];
   }
 
   l.forEach((groupe, index) => (out[groupe.Id] = plages[index]));
   return out;
+}
+
+export function formatPlage(plage: [Date_, Date_]) {
+  const [start, end] = plage;
+  if (isDateZero(start)) {
+    return `né avant le ${Formatters.dateNaissance(end)}`;
+  }
+
+  return `né entre le ${Formatters.dateNaissance(
+    start
+  )} et le ${Formatters.dateNaissance(end)}`;
 }
 
 export function groupesSizes(groupes: Groupes, participants: ParticipantExt[]) {
