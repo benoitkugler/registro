@@ -28,7 +28,7 @@ type Dossiers struct {
 
 // LoadDossier is a convenient wrapper around [LoadDossiers]
 func LoadDossier(db ds.DB, id ds.IdDossier) (Dossier, error) {
-	ld, err := LoadDossiers(db, id)
+	ld, err := LoadDossiers(db, []ds.IdDossier{id})
 	if err != nil {
 		return Dossier{}, err
 	}
@@ -39,7 +39,7 @@ func LoadDossier(db ds.DB, id ds.IdDossier) (Dossier, error) {
 }
 
 // LoadDossiers wraps the SQL error
-func LoadDossiers(db ds.DB, ids ...ds.IdDossier) (Dossiers, error) {
+func LoadDossiers(db ds.DB, ids []ds.IdDossier) (Dossiers, error) {
 	dossiers, err := ds.SelectDossiers(db, ids...)
 	if err != nil {
 		return Dossiers{}, utils.SQLError(err)
@@ -337,6 +337,6 @@ func LoadByMail(db ds.DB, mail string) (Dossiers, pr.Personnes, error) {
 		}
 	}
 
-	out, err := LoadDossiers(db, dossiers.IDs()...)
+	out, err := LoadDossiers(db, dossiers.IDs())
 	return out, responsables, err
 }

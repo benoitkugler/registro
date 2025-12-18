@@ -1017,7 +1017,7 @@ func (ct *Controller) estimeRemises(db *sql.DB, ids []cps.IdCamp) ([]RemisesHint
 		return nil, err
 	}
 
-	dossiers, err := logic.LoadDossiers(db, loader.IdDossiers()...)
+	dossiers, err := logic.LoadDossiers(db, loader.IdDossiers())
 	if err != nil {
 		return nil, err
 	}

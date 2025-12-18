@@ -6,21 +6,24 @@
     <v-col cols="12" class="text-center mt-1">
       <v-rating
         hover
-        color="primary"
+        color="secondary"
         :length="4"
         v-model="model"
         size="32"
+        :readonly="props.readonly"
+        :half-increments="props.readonly"
       ></v-rating>
     </v-col>
   </v-row>
 </template>
 
-<script lang="ts" setup>
-import { Satisfaction } from "../logic/api";
+<script lang="ts" setup generic="T extends Satisfaction | number">
+import { Satisfaction } from "../clients/espaceperso/logic/api";
 
 const props = defineProps<{
   label: string;
+  readonly?: boolean;
 }>();
 
-const model = defineModel<Satisfaction>({ required: true });
+const model = defineModel<T>({ required: true });
 </script>

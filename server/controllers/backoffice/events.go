@@ -217,7 +217,7 @@ func (ct *Controller) previewSendDocumentsCamp(idCamp cps.IdCamp) (SendDocuments
 	if err != nil {
 		return SendDocumentsCampPreview{}, err
 	}
-	dossiers, err := logic.LoadDossiers(ct.db, camp.IdDossiers()...)
+	dossiers, err := logic.LoadDossiers(ct.db, camp.IdDossiers())
 	if err != nil {
 		return SendDocumentsCampPreview{}, err
 	}
@@ -260,7 +260,7 @@ func SendDocumentsCamp(db *sql.DB, key crypto.Encrypter, asso config.Asso, smtp 
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
-	dossiers, err := logic.LoadDossiers(db, args.IdDossiers...)
+	dossiers, err := logic.LoadDossiers(db, args.IdDossiers)
 	if err != nil {
 		return nil, err
 	}
@@ -325,7 +325,7 @@ func (ct *Controller) sendSondages(host string, idCamp cps.IdCamp) (iter.Seq2[Se
 	if err != nil {
 		return nil, err
 	}
-	dossiers, err := logic.LoadDossiers(ct.db, camp.IdDossiers()...)
+	dossiers, err := logic.LoadDossiers(ct.db, camp.IdDossiers())
 	if err != nil {
 		return nil, err
 	}
@@ -393,7 +393,7 @@ type SendProgress struct {
 }
 
 func (ct *Controller) sendRelancePaiement(host string, args RelancePaiementIn) (iter.Seq2[SendProgress, error], error) {
-	dossiers, err := logic.LoadDossiers(ct.db, args.IdDossiers...)
+	dossiers, err := logic.LoadDossiers(ct.db, args.IdDossiers)
 	if err != nil {
 		return nil, err
 	}

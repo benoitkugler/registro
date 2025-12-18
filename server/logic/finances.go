@@ -35,7 +35,7 @@ func LoadDossiersFinance(db ds.DB, id ds.IdDossier) (DossierFinance, error) {
 
 // LoadDossiersFinances wraps the SQL error
 func LoadDossiersFinances(db ds.DB, ids ...ds.IdDossier) (DossiersFinances, error) {
-	dossiers, err := LoadDossiers(db, ids...)
+	dossiers, err := LoadDossiers(db, ids)
 	if err != nil {
 		return DossiersFinances{}, err
 	}

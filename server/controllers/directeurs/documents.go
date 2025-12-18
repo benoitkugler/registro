@@ -588,7 +588,7 @@ func (ct *Controller) relanceDocuments(host string, idParticipants []cps.IdParti
 	if err != nil {
 		return utils.SQLError(err)
 	}
-	dossiers, err := logic.LoadDossiers(ct.db, participants.IdDossiers()...)
+	dossiers, err := logic.LoadDossiers(ct.db, participants.IdDossiers())
 	if err != nil {
 		return err
 	}

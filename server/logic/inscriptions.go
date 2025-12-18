@@ -49,7 +49,7 @@ func newInscription(de Dossier, statutHints StatutHints) Inscription {
 
 // LoadInscriptions sorts by time
 func LoadInscriptions(db ds.DB, byPass StatutBypassRights, ids ...ds.IdDossier) ([]Inscription, error) {
-	loaders, err := LoadDossiers(db, ids...)
+	loaders, err := LoadDossiers(db, ids)
 	if err != nil {
 		return nil, err
 	}

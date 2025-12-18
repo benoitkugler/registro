@@ -157,6 +157,30 @@ export interface Photos {
   HasAlbum: boolean;
   Album: AlbumAndLinks;
 }
+// registro/controllers/directeurs.SondageExt
+export interface SondageExt {
+  ResponsableNom: string;
+  ResponsableMail: string;
+  Participants: string[] | null;
+  Sondage: Sondage;
+}
+// registro/controllers/directeurs.SondageMoyennes
+export interface SondageMoyennes {
+  InfosAvantSejour: number;
+  InfosPendantSejour: number;
+  Hebergement: number;
+  Activites: number;
+  Theme: number;
+  Nourriture: number;
+  Hygiene: number;
+  Ambiance: number;
+  Ressenti: number;
+}
+// registro/controllers/directeurs.SondagesOut
+export interface SondagesOut {
+  Moyennes: SondageMoyennes;
+  Sondages: SondageExt[] | null;
+}
 // registro/controllers/directeurs.UpdateFinsIn
 export interface UpdateFinsIn {
   Fins: Record<IdGroupe, Date> | null;
@@ -362,6 +386,7 @@ export type IdCamp = Int & { __opaque_int__: "IdCamp" };
 export type IdEquipier = Int & { __opaque_int__: "IdEquipier" };
 export type IdGroupe = Int & { __opaque_int__: "IdGroupe" };
 export type IdParticipant = Int & { __opaque_int__: "IdParticipant" };
+export type IdSondage = Int & { __opaque_int__: "IdSondage" };
 // registro/sql/camps.Jours
 export type Jours = Int[] | null;
 // registro/sql/camps.Lettredirecteur
@@ -502,6 +527,42 @@ export const RoleLabels: Record<Role, string> = {
 
 // registro/sql/camps.Roles
 export type Roles = Role[] | null;
+// registro/sql/camps.Satisfaction
+export const Satisfaction = {
+  NoSatisfaction: 0,
+  Decevant: 1,
+  Moyen: 2,
+  Satisfaisant: 3,
+  Tressatisfaisant: 4,
+} as const;
+export type Satisfaction = (typeof Satisfaction)[keyof typeof Satisfaction];
+
+export const SatisfactionLabels: Record<Satisfaction, string> = {
+  [Satisfaction.NoSatisfaction]: "-",
+  [Satisfaction.Decevant]: "Décevant",
+  [Satisfaction.Moyen]: "Moyen",
+  [Satisfaction.Satisfaisant]: "Satisfaisant",
+  [Satisfaction.Tressatisfaisant]: "Très satisfaisant",
+};
+
+// registro/sql/camps.Sondage
+export interface Sondage {
+  Id: IdSondage;
+  IdCamp: IdCamp;
+  IdDossier: IdDossier;
+  Modified: Time;
+  InfosAvantSejour: Satisfaction;
+  InfosPendantSejour: Satisfaction;
+  Hebergement: Satisfaction;
+  Activites: Satisfaction;
+  Theme: Satisfaction;
+  Nourriture: Satisfaction;
+  Hygiene: Satisfaction;
+  Ambiance: Satisfaction;
+  Ressenti: Satisfaction;
+  MessageEnfant: string;
+  MessageResponsable: string;
+}
 // registro/sql/camps.StatutCamp
 export const StatutCamp = {
   Ferme: 0,
@@ -1681,6 +1742,20 @@ export abstract class AbstractAPI {
         },
       });
       return response as JSONStreamResponse<SendProgress>;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** SondagesGet performs the request and handles the error */
+  async SondagesGet() {
+    const fullUrl = this.baseURL + "/api/v1/directeurs/sondages";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<SondagesOut> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }

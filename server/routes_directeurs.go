@@ -93,4 +93,7 @@ func setupRoutesDirecteurs(e *echo.Echo, ct *directeurs.Controller) {
 	// Photos
 	gr.GET("/api/v1/directeurs/photos", ct.PhotosLoad)
 	gr.PUT("/api/v1/directeurs/photos", ct.PhotosInvite)
+
+	// Sondages
+	gr.GET("/api/v1/directeurs/sondages", ct.SondagesGet)
 }

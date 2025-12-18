@@ -40,6 +40,15 @@
     </v-list-item>
 
     <v-divider></v-divider>
+    <v-list-item
+      prepend-icon="mdi-comment-quote"
+      link
+      :to="{ path: '/avis' }"
+      color="primary"
+    >
+      Avis
+    </v-list-item>
+    <v-divider></v-divider>
     <!-- This is not ready just yet -->
     <!-- <v-list-item
       prepend-icon="mdi-credit-card-outline"

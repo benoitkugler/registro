@@ -229,7 +229,7 @@ func (ct *Controller) loadMessages(idCamp cps.IdCamp) (Messages, error) {
 	if err != nil {
 		return Messages{}, err
 	}
-	dossiers, err := logic.LoadDossiers(ct.db, camp.IdDossiers()...)
+	dossiers, err := logic.LoadDossiers(ct.db, camp.IdDossiers())
 	if err != nil {
 		return Messages{}, err
 	}
@@ -389,7 +389,7 @@ func (ct *Controller) exportListeParticipants(user cps.IdCamp) ([]byte, string, 
 	for _, link := range links {
 		participantToGroupe[link.IdParticipant] = groupes[link.IdGroupe]
 	}
-	dossiers, err := logic.LoadDossiers(ct.db, camp.IdDossiers()...)
+	dossiers, err := logic.LoadDossiers(ct.db, camp.IdDossiers())
 	if err != nil {
 		return nil, "", err
 	}

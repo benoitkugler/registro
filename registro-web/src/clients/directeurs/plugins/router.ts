@@ -5,6 +5,7 @@ import Inscriptions from "../pages/inscriptions.vue";
 import Equipiers from "../pages/equipiers.vue";
 import Documents from "../pages/documents.vue";
 import Photos from "../pages/photos.vue";
+import Avis from "../pages/avis.vue";
 
 const routes = [
   { path: "/", component: Index },
@@ -12,9 +13,9 @@ const routes = [
   { path: "/equipiers", component: Equipiers },
   { path: "/documents", component: Documents },
   { path: "/photos", component: Photos },
+  { path: "/avis", component: Avis },
 ];
 
-// TODO: check that
 const baseURL = import.meta.env.DEV ? "/src/clients/directeurs" : "/directeurs";
 
 const router = createRouter({
