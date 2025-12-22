@@ -2,3 +2,4 @@ server/env.sh
 registro.code-workspace
 registro-web/src/clients/backoffice/env.ts
 registro-web/src/clients/directeurs/env.ts
+server/migrations/fromACVEv1/passV1.go
