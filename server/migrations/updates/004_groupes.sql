@@ -1,3 +1,4 @@
+-- for v0.8.1
 BEGIN;
 ALTER TABLE groupes
     DROP COLUMN plage;
