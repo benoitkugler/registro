@@ -5,7 +5,7 @@ import {
   AbstractAPI,
   Acteur,
   type CampItem,
-  type EventExt_Message,
+  type EventExt_MessageEvt,
   type Lettredirecteur,
 } from "./api";
 import { Endpoints } from "@/urls";
@@ -61,14 +61,14 @@ export type LettreOptions = Pick<
   "UseCoordCentre" | "ShowAdressePostale" | "ColorCoord"
 >;
 
-export function isMessageFromUs(message: EventExt_Message) {
+export function isMessageFromUs(message: EventExt_MessageEvt) {
   return (
     message.Content.Message.Origine == Acteur.Directeur &&
     message.Content.Message.OrigineCamp.Id == controller.camp?.Id
   );
 }
 
-export function isMessageNew(message: EventExt_Message) {
+export function isMessageNew(message: EventExt_MessageEvt) {
   if (controller.camp == null) return false;
   // never mark our message as new
   if (isMessageFromUs(message)) return false;

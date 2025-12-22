@@ -238,6 +238,11 @@ export interface SendProgress {
   Current: Int;
   Total: Int;
 }
+// registro/controllers/backoffice.SondagesOut
+export interface SondagesOut {
+  Camps: Camp[] | null;
+  Sondages: Record<IdCamp, CampSondages> | null;
+}
 // registro/controllers/files.DemandeStat
 export interface DemandeStat {
   Title: string;
@@ -266,8 +271,8 @@ export interface AideResolved {
   Structure: string;
   Montant: Montant;
 }
-// registro/logic.Attestation
-export interface Attestation {
+// registro/logic.AttestationEvt
+export interface AttestationEvt {
   Distribution: Distribution;
   IsPresence: boolean;
 }
@@ -290,8 +295,8 @@ export interface BilanParticipantPub {
   AvecAides: string;
   Net: string;
 }
-// registro/logic.CampDocs
-export interface CampDocs {
+// registro/logic.CampDocsEvt
+export interface CampDocsEvt {
   IdCamp: IdCamp;
   CampLabel: string;
 }
@@ -300,6 +305,11 @@ export interface CampItem {
   Id: IdCamp;
   Label: string;
   IsOld: boolean;
+}
+// registro/logic.CampSondages
+export interface CampSondages {
+  Moyennes: SondageMoyennes;
+  Sondages: SondageExt[] | null;
 }
 // registro/logic.DossierExt
 export interface DossierExt {
@@ -326,33 +336,33 @@ export interface Event {
 }
 
 export const EventContentKind = {
-  Attestation: "Attestation",
-  CampDocs: "CampDocs",
-  Facture: "Facture",
-  Message: "Message",
-  PlaceLiberee: "PlaceLiberee",
-  Sondage: "Sondage",
-  Supprime: "Supprime",
-  Validation: "Validation",
+  AttestationEvt: "AttestationEvt",
+  CampDocsEvt: "CampDocsEvt",
+  FactureEvt: "FactureEvt",
+  MessageEvt: "MessageEvt",
+  PlaceLibereeEvt: "PlaceLibereeEvt",
+  SondageEvt: "SondageEvt",
+  SupprimeEvt: "SupprimeEvt",
+  ValidationEvt: "ValidationEvt",
 } as const;
 export type EventContentKind =
   (typeof EventContentKind)[keyof typeof EventContentKind];
 
 // registro/logic.EventContent
 export type EventContent =
-  | { Kind: "Attestation"; Data: Attestation }
-  | { Kind: "CampDocs"; Data: CampDocs }
-  | { Kind: "Facture"; Data: Facture }
-  | { Kind: "Message"; Data: Message }
-  | { Kind: "PlaceLiberee"; Data: PlaceLiberee }
-  | { Kind: "Sondage"; Data: Sondage }
-  | { Kind: "Supprime"; Data: Supprime }
-  | { Kind: "Validation"; Data: Validation };
+  | { Kind: "AttestationEvt"; Data: AttestationEvt }
+  | { Kind: "CampDocsEvt"; Data: CampDocsEvt }
+  | { Kind: "FactureEvt"; Data: FactureEvt }
+  | { Kind: "MessageEvt"; Data: MessageEvt }
+  | { Kind: "PlaceLibereeEvt"; Data: PlaceLibereeEvt }
+  | { Kind: "SondageEvt"; Data: SondageEvt }
+  | { Kind: "SupprimeEvt"; Data: SupprimeEvt }
+  | { Kind: "ValidationEvt"; Data: ValidationEvt };
 
 // registro/logic.Events
 export type Events = Event[] | null;
-// registro/logic.Facture
-export interface Facture {
+// registro/logic.FactureEvt
+export interface FactureEvt {
   IsRappel: boolean;
 }
 // registro/logic.IdentTarget
@@ -375,8 +385,8 @@ export interface InscriptionsValideIn {
   Statuts: Record<IdParticipant, StatutParticipant> | null;
   SendMail: boolean;
 }
-// registro/logic.Message
-export interface Message {
+// registro/logic.MessageEvt
+export interface MessageEvt {
   Message: EventMessage;
   OrigineCampLabel: string;
   VuParCampsIDs: IdCamp[] | null;
@@ -390,8 +400,8 @@ export interface ParticipantExt {
   HasBirthday: boolean;
   MomentInscription: Time;
 }
-// registro/logic.PlaceLiberee
-export interface PlaceLiberee {
+// registro/logic.PlaceLibereeEvt
+export interface PlaceLibereeEvt {
   Accepted: boolean;
   IdParticipant: IdParticipant;
   IdCamp: IdCamp;
@@ -406,10 +416,29 @@ export interface PublicFile {
   NomClient: string;
   Uploaded: Time;
 }
-// registro/logic.Sondage
-export interface Sondage {
+// registro/logic.SondageEvt
+export interface SondageEvt {
   IdCamp: IdCamp;
   CampLabel: string;
+}
+// registro/logic.SondageExt
+export interface SondageExt {
+  ResponsableNom: string;
+  ResponsableMail: string;
+  Participants: string[] | null;
+  Sondage: Sondage;
+}
+// registro/logic.SondageMoyennes
+export interface SondageMoyennes {
+  InfosAvantSejour: number;
+  InfosPendantSejour: number;
+  Hebergement: number;
+  Activites: number;
+  Theme: number;
+  Nourriture: number;
+  Hygiene: number;
+  Ambiance: number;
+  Ressenti: number;
 }
 // registro/logic.StatutExt
 export interface StatutExt {
@@ -433,10 +462,10 @@ export const StatutPaiementLabels: Record<StatutPaiement, string> = {
   [StatutPaiement.NonCommence]: "Non commencé",
 };
 
-// registro/logic.Supprime
-export type Supprime = Record<string, never>;
-// registro/logic.Validation
-export interface Validation {
+// registro/logic.SupprimeEvt
+export type SupprimeEvt = Record<string, never>;
+// registro/logic.ValidationEvt
+export interface ValidationEvt {
   ByCamp: string;
 }
 // registro/logic/search.PersonneHeader
@@ -534,6 +563,7 @@ export type IdAide = Int & { __opaque_int__: "IdAide" };
 export type IdCamp = Int & { __opaque_int__: "IdCamp" };
 export type IdEquipier = Int & { __opaque_int__: "IdEquipier" };
 export type IdParticipant = Int & { __opaque_int__: "IdParticipant" };
+export type IdSondage = Int & { __opaque_int__: "IdSondage" };
 export type IdStructureaide = Int & { __opaque_int__: "IdStructureaide" };
 // registro/sql/camps.Jours
 export type Jours = Int[] | null;
@@ -667,6 +697,42 @@ export const RoleLabels: Record<Role, string> = {
 
 // registro/sql/camps.Roles
 export type Roles = Role[] | null;
+// registro/sql/camps.Satisfaction
+export const Satisfaction = {
+  NoSatisfaction: 0,
+  Decevant: 1,
+  Moyen: 2,
+  Satisfaisant: 3,
+  Tressatisfaisant: 4,
+} as const;
+export type Satisfaction = (typeof Satisfaction)[keyof typeof Satisfaction];
+
+export const SatisfactionLabels: Record<Satisfaction, string> = {
+  [Satisfaction.NoSatisfaction]: "-",
+  [Satisfaction.Decevant]: "Décevant",
+  [Satisfaction.Moyen]: "Moyen",
+  [Satisfaction.Satisfaisant]: "Satisfaisant",
+  [Satisfaction.Tressatisfaisant]: "Très satisfaisant",
+};
+
+// registro/sql/camps.Sondage
+export interface Sondage {
+  Id: IdSondage;
+  IdCamp: IdCamp;
+  IdDossier: IdDossier;
+  Modified: Time;
+  InfosAvantSejour: Satisfaction;
+  InfosPendantSejour: Satisfaction;
+  Hebergement: Satisfaction;
+  Activites: Satisfaction;
+  Theme: Satisfaction;
+  Nourriture: Satisfaction;
+  Hygiene: Satisfaction;
+  Ambiance: Satisfaction;
+  Ressenti: Satisfaction;
+  MessageEnfant: string;
+  MessageResponsable: string;
+}
 // registro/sql/camps.StatistiquesInscrits
 export interface StatistiquesInscrits {
   Inscriptions: Int;
@@ -1193,6 +1259,21 @@ export abstract class AbstractAPI {
       const rep: AxiosResponse<FilesCamp> = await Axios.get(fullUrl, {
         headers: this.getHeaders(),
         params: { idCamp: String(params["idCamp"]) },
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** CampsLoadSondages performs the request and handles the error */
+  async CampsLoadSondages(params: { year: Int }) {
+    const fullUrl = this.baseURL + "/api/v1/backoffice/camps/sondages";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<SondagesOut> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { year: String(params["year"]) },
       });
       return rep.data;
     } catch (error) {

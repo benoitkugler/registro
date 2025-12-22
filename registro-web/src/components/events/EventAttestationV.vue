@@ -19,14 +19,14 @@
 <script setup lang="ts">
 import {
   type Event,
-  type Attestation,
+  type AttestationEvt,
   Distribution,
 } from "@/clients/backoffice/logic/api";
 import { computed } from "vue";
 
 const props = defineProps<{
   event: Event;
-  content: Attestation;
+  content: AttestationEvt;
 }>();
 
 const action = computed(() => {

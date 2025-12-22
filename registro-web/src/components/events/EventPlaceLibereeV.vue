@@ -34,12 +34,12 @@
 import {
   Acteur,
   type Event,
-  type PlaceLiberee,
+  type PlaceLibereeEvt,
 } from "@/clients/backoffice/logic/api";
 
 const props = defineProps<{
   event: Event;
-  content: PlaceLiberee;
+  content: PlaceLibereeEvt;
   user: Acteur;
 }>();
 

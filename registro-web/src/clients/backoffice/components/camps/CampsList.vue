@@ -80,6 +80,12 @@
                 ></v-list-item>
                 <v-divider thickness="1"></v-divider>
                 <v-list-item
+                  @click="showSondages = true"
+                  title="Avis sur les séjours..."
+                  prepend-icon="mdi-comment-quote"
+                ></v-list-item>
+                <v-divider thickness="1"></v-divider>
+                <v-list-item
                   prepend-icon="mdi-file-excel"
                   title="Exporter"
                   subtitle="Participants de l'année courante (format Excel)"
@@ -243,6 +249,13 @@
   <v-dialog v-model="showPhotos" max-width="800px">
     <AlbumsPhotosPannel></AlbumsPhotosPannel>
   </v-dialog>
+
+  <v-dialog v-model="showSondages" fullscreen>
+    <CampsSondagesPannel
+      :all-camps="Array.from(campsData.values())"
+      @close="showSondages = false"
+    ></CampsSondagesPannel>
+  </v-dialog>
 </template>
 
 <script lang="ts" setup>
@@ -268,6 +281,7 @@ import CampsSelector from "../CampsSelector.vue";
 import DocumentsCard from "./DocumentsCard.vue";
 import RequestProgressCard from "@/components/RequestProgressCard.vue";
 import AlbumsPhotosPannel from "./AlbumsPhotosPannel.vue";
+import CampsSondagesPannel from "./CampsSondagesPannel.vue";
 
 const emit = defineEmits<{
   (e: "show-participants", camp: CampHeader): void;
@@ -482,4 +496,6 @@ async function addDirecteur(idPersonne: IdPersonne, idCamp: IdCamp) {
 }
 
 const showPhotos = ref(false);
+
+const showSondages = ref(false);
 </script>

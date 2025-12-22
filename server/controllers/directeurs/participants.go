@@ -217,7 +217,7 @@ func (m *Messages) setNewMessagesCount(idCamp cps.IdCamp) {
 	m.NewMessagesCount = count
 }
 
-type MessageExt = logic.EventExt[logic.Message]
+type MessageExt = logic.EventExt[logic.MessageEvt]
 
 type DossierPersonnes struct {
 	Responsable  string
@@ -238,7 +238,7 @@ func (ct *Controller) loadMessages(idCamp cps.IdCamp) (Messages, error) {
 		dossier := dossiers.For(idDossier)
 
 		// hide fonds de soutien
-		for message := range logic.IterEventsBy[logic.Message](dossier.Events) {
+		for message := range logic.IterEventsBy[logic.MessageEvt](dossier.Events) {
 			if message.Content.Message.Origine == evs.FondSoutien || message.Content.Message.OnlyToFondSoutien {
 				continue
 			}
@@ -306,7 +306,7 @@ func loadMessage(db evs.DB, id evs.IdEvent) (MessageExt, error) {
 	if err != nil {
 		return MessageExt{}, err
 	}
-	m, ok := event.Content.(logic.Message)
+	m, ok := event.Content.(logic.MessageEvt)
 	if !ok { // should never happen since the event has Kind == Message
 		return MessageExt{}, errors.New("internal error : expected Message")
 	}

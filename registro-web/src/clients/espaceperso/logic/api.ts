@@ -123,8 +123,8 @@ export interface AideResolved {
   Structure: string;
   Montant: Montant;
 }
-// registro/logic.Attestation
-export interface Attestation {
+// registro/logic.AttestationEvt
+export interface AttestationEvt {
   Distribution: Distribution;
   IsPresence: boolean;
 }
@@ -147,8 +147,8 @@ export interface BilanParticipantPub {
   AvecAides: string;
   Net: string;
 }
-// registro/logic.CampDocs
-export interface CampDocs {
+// registro/logic.CampDocsEvt
+export interface CampDocsEvt {
   IdCamp: IdCamp;
   CampLabel: string;
 }
@@ -172,44 +172,44 @@ export interface Event {
 }
 
 export const EventContentKind = {
-  Attestation: "Attestation",
-  CampDocs: "CampDocs",
-  Facture: "Facture",
-  Message: "Message",
-  PlaceLiberee: "PlaceLiberee",
-  Sondage: "Sondage",
-  Supprime: "Supprime",
-  Validation: "Validation",
+  AttestationEvt: "AttestationEvt",
+  CampDocsEvt: "CampDocsEvt",
+  FactureEvt: "FactureEvt",
+  MessageEvt: "MessageEvt",
+  PlaceLibereeEvt: "PlaceLibereeEvt",
+  SondageEvt: "SondageEvt",
+  SupprimeEvt: "SupprimeEvt",
+  ValidationEvt: "ValidationEvt",
 } as const;
 export type EventContentKind =
   (typeof EventContentKind)[keyof typeof EventContentKind];
 
 // registro/logic.EventContent
 export type EventContent =
-  | { Kind: "Attestation"; Data: Attestation }
-  | { Kind: "CampDocs"; Data: CampDocs }
-  | { Kind: "Facture"; Data: Facture }
-  | { Kind: "Message"; Data: Message }
-  | { Kind: "PlaceLiberee"; Data: PlaceLiberee }
-  | { Kind: "Sondage"; Data: Sondage }
-  | { Kind: "Supprime"; Data: Supprime }
-  | { Kind: "Validation"; Data: Validation };
+  | { Kind: "AttestationEvt"; Data: AttestationEvt }
+  | { Kind: "CampDocsEvt"; Data: CampDocsEvt }
+  | { Kind: "FactureEvt"; Data: FactureEvt }
+  | { Kind: "MessageEvt"; Data: MessageEvt }
+  | { Kind: "PlaceLibereeEvt"; Data: PlaceLibereeEvt }
+  | { Kind: "SondageEvt"; Data: SondageEvt }
+  | { Kind: "SupprimeEvt"; Data: SupprimeEvt }
+  | { Kind: "ValidationEvt"; Data: ValidationEvt };
 
 // registro/logic.Events
 export type Events = Event[] | null;
-// registro/logic.Facture
-export interface Facture {
+// registro/logic.FactureEvt
+export interface FactureEvt {
   IsRappel: boolean;
 }
-// registro/logic.Message
-export interface Message {
+// registro/logic.MessageEvt
+export interface MessageEvt {
   Message: EventMessage;
   OrigineCampLabel: string;
   VuParCampsIDs: IdCamp[] | null;
   VuParCamps: string[] | null;
 }
-// registro/logic.PlaceLiberee
-export interface PlaceLiberee {
+// registro/logic.PlaceLibereeEvt
+export interface PlaceLibereeEvt {
   Accepted: boolean;
   IdParticipant: IdParticipant;
   IdCamp: IdCamp;
@@ -224,8 +224,8 @@ export interface PublicFile {
   NomClient: string;
   Uploaded: Time;
 }
-// registro/logic.Sondage
-export interface Sondage {
+// registro/logic.SondageEvt
+export interface SondageEvt {
   IdCamp: IdCamp;
   CampLabel: string;
 }
@@ -244,10 +244,10 @@ export const StatutPaiementLabels: Record<StatutPaiement, string> = {
   [StatutPaiement.NonCommence]: "Non commencé",
 };
 
-// registro/logic.Supprime
-export type Supprime = Record<string, never>;
-// registro/logic.Validation
-export interface Validation {
+// registro/logic.SupprimeEvt
+export type SupprimeEvt = Record<string, never>;
+// registro/logic.ValidationEvt
+export interface ValidationEvt {
   ByCamp: string;
 }
 // registro/sql/camps.Aide

@@ -30,12 +30,12 @@
 import {
   Acteur,
   type Event,
-  type Validation,
+  type ValidationEvt,
 } from "@/clients/backoffice/logic/api";
 
 const props = defineProps<{
   event: Event;
-  content: Validation;
+  content: ValidationEvt;
   user: Acteur;
 }>();
 

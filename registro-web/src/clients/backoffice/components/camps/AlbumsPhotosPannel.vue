@@ -118,9 +118,7 @@ import { Camps, Formatters, recordEntries } from "@/utils";
 import { controller } from "../../logic/logic";
 
 const props = defineProps<{}>();
-const emit = defineEmits<{
-  (e: "save", camp: Camp): void;
-}>();
+const emit = defineEmits<{}>();
 
 onMounted(loadAlbums);
 

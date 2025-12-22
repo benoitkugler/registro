@@ -299,7 +299,6 @@ import {
   type IdEvent,
   type Participant,
   type ParticipantCamp,
-  type PlaceLiberee,
   type SendMessageIn,
 } from "./logic/api";
 import { buildPseudoEvents, Camps, Formatters, Personnes } from "@/utils";
@@ -360,19 +359,19 @@ function handleFromEvent(fromIdEvent: IdEvent) {
   );
   if (!event) return;
   switch (event.Content.Kind) {
-    case EventContentKind.Validation:
+    case EventContentKind.ValidationEvt:
       showValidation.value = true;
       return;
-    case EventContentKind.Facture:
+    case EventContentKind.FactureEvt:
       showReglement.value = true;
       return;
-    case EventContentKind.PlaceLiberee:
+    case EventContentKind.PlaceLibereeEvt:
       showConfirmAccept.value = event as EventPlaceLiberee;
       return;
-    case EventContentKind.CampDocs:
+    case EventContentKind.CampDocsEvt:
       showDocuments.value = true;
       return;
-    case EventContentKind.Sondage:
+    case EventContentKind.SondageEvt:
       showSondages.value = event.Content.Data.IdCamp;
       return;
     default:
@@ -434,7 +433,7 @@ const showValidation = ref(false);
 const showPresentation = ref(false);
 
 type EventPlaceLiberee = Event & {
-  Content: { Kind: "PlaceLiberee"; Data: PlaceLiberee };
+  Content: { Kind: "PlaceLibereeEvt" };
 };
 
 const showConfirmAccept = ref<EventPlaceLiberee | null>(null);

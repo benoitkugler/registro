@@ -88,7 +88,7 @@ func (ct *Controller) deleteEvent(id evs.IdEvent) error {
 	}
 	raw := event.Raw()
 	// we only allow deleting Message send by the backoffice
-	message, ok := event.Content.(logic.Message)
+	message, ok := event.Content.(logic.MessageEvt)
 	if !ok {
 		return errors.New("invalid event Kind (expected Message)")
 	}

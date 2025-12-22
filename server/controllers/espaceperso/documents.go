@@ -44,7 +44,7 @@ func (docs *Documents) setCounts(lastLoaded time.Time, events logic.Events) {
 
 	// heuristic to count the documents to read
 	campsToRead := make(utils.Set[cps.IdCamp])
-	for content := range logic.IterEventsBy[logic.CampDocs](events) {
+	for content := range logic.IterEventsBy[logic.CampDocsEvt](events) {
 		sendAt := content.Event.Created
 		// check if the docs have been sent AFTER the last time the parent
 		// was here

@@ -24,12 +24,12 @@ import {
   Acteur,
   type Event,
   type IdCamp,
-  type Sondage,
+  type SondageEvt,
 } from "@/clients/backoffice/logic/api";
 
 const props = defineProps<{
   event: Event;
-  content: Sondage;
+  content: SondageEvt;
   user: Acteur;
 }>();
 

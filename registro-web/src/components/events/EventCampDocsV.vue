@@ -22,14 +22,14 @@
 <script setup lang="ts">
 import {
   type Event,
-  type CampDocs,
+  type CampDocsEvt,
   type IdCamp,
   Acteur,
 } from "@/clients/backoffice/logic/api";
 
 const props = defineProps<{
   event: Event;
-  content: CampDocs;
+  content: CampDocsEvt;
   user: Acteur;
 }>();
 

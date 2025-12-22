@@ -13,7 +13,7 @@
   <EventSupprimeV
     v-else-if="
       props.event.Kind == 'event' &&
-      props.event.Event.Content.Kind == EventContentKind.Supprime
+      props.event.Event.Content.Kind == EventContentKind.SupprimeEvt
     "
     :event="props.event.Event"
     :content="props.event.Event.Content.Data"
@@ -21,7 +21,7 @@
   <EventValidationV
     v-else-if="
       props.event.Kind == 'event' &&
-      props.event.Event.Content.Kind == EventContentKind.Validation
+      props.event.Event.Content.Kind == EventContentKind.ValidationEvt
     "
     :event="props.event.Event"
     :content="props.event.Event.Content.Data"
@@ -31,7 +31,7 @@
   <EventMessageV
     v-else-if="
       props.event.Kind == 'event' &&
-      props.event.Event.Content.Kind == EventContentKind.Message
+      props.event.Event.Content.Kind == EventContentKind.MessageEvt
     "
     :event="props.event.Event"
     :content="props.event.Event.Content.Data"
@@ -42,7 +42,7 @@
   <EventPlaceLibereeV
     v-else-if="
       props.event.Kind == 'event' &&
-      props.event.Event.Content.Kind == EventContentKind.PlaceLiberee
+      props.event.Event.Content.Kind == EventContentKind.PlaceLibereeEvt
     "
     :event="props.event.Event"
     :content="props.event.Event.Content.Data"
@@ -52,7 +52,7 @@
   <EventFactureV
     v-else-if="
       props.event.Kind == 'event' &&
-      props.event.Event.Content.Kind == EventContentKind.Facture
+      props.event.Event.Content.Kind == EventContentKind.FactureEvt
     "
     :event="props.event.Event"
     :content="props.event.Event.Content.Data"
@@ -60,7 +60,7 @@
   <EventCampDocsV
     v-else-if="
       props.event.Kind == 'event' &&
-      props.event.Event.Content.Kind == EventContentKind.CampDocs
+      props.event.Event.Content.Kind == EventContentKind.CampDocsEvt
     "
     :event="props.event.Event"
     :content="props.event.Event.Content.Data"
@@ -70,7 +70,7 @@
   <EventAttestationV
     v-else-if="
       props.event.Kind == 'event' &&
-      props.event.Event.Content.Kind == EventContentKind.Attestation
+      props.event.Event.Content.Kind == EventContentKind.AttestationEvt
     "
     :event="props.event.Event"
     :content="props.event.Event.Content.Data"
@@ -78,7 +78,7 @@
   <EventSondageV
     v-else-if="
       props.event.Kind == 'event' &&
-      props.event.Event.Content.Kind == EventContentKind.Sondage
+      props.event.Event.Content.Kind == EventContentKind.SondageEvt
     "
     :event="props.event.Event"
     :content="props.event.Event.Content.Data"

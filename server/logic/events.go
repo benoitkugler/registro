@@ -49,8 +49,8 @@ func IterEventsBy[T EventContent](evs Events) iter.Seq[EventExt[T]] {
 // UnreadMessagesFor returns the [Event]s with kind [evs.Message],
 // not yet seen by the backoffice or fonds de soutien.
 // Only message with specified target are considered.
-func (events Events) UnreadMessagesFor(isFondSoutien bool) (out []EventExt[Message]) {
-	for ev := range IterEventsBy[Message](events) {
+func (events Events) UnreadMessagesFor(isFondSoutien bool) (out []EventExt[MessageEvt]) {
+	for ev := range IterEventsBy[MessageEvt](events) {
 		if (isFondSoutien && ev.Content.Message.OnlyToFondSoutien && !ev.Content.Message.VuFondSoutien) ||
 			(ev.Content.Message.Origine != evs.Backoffice && !ev.Content.Message.VuBackoffice) {
 			out = append(out, ev)
@@ -62,7 +62,7 @@ func (events Events) UnreadMessagesFor(isFondSoutien bool) (out []EventExt[Messa
 // HasSendCampDocuments returns [true] is the documents for the
 // given camp has been sent (at least once)
 func (events Events) HasSendCampDocuments(idCamp cps.IdCamp) bool {
-	for camp := range IterEventsBy[CampDocs](events) {
+	for camp := range IterEventsBy[CampDocsEvt](events) {
 		if camp.Content.IdCamp == idCamp {
 			return true
 		}
@@ -86,43 +86,43 @@ type EventContent interface {
 	kind() evs.EventKind
 }
 
-func (Supprime) kind() evs.EventKind     { return evs.Supprime }
-func (Validation) kind() evs.EventKind   { return evs.Validation }
-func (Message) kind() evs.EventKind      { return evs.Message }
-func (Facture) kind() evs.EventKind      { return evs.Facture }
-func (CampDocs) kind() evs.EventKind     { return evs.CampDocs }
-func (PlaceLiberee) kind() evs.EventKind { return evs.PlaceLiberee }
-func (Attestation) kind() evs.EventKind  { return evs.Attestation }
-func (Sondage) kind() evs.EventKind      { return evs.Sondage }
+func (SupprimeEvt) kind() evs.EventKind     { return evs.Supprime }
+func (ValidationEvt) kind() evs.EventKind   { return evs.Validation }
+func (MessageEvt) kind() evs.EventKind      { return evs.Message }
+func (FactureEvt) kind() evs.EventKind      { return evs.Facture }
+func (CampDocsEvt) kind() evs.EventKind     { return evs.CampDocs }
+func (PlaceLibereeEvt) kind() evs.EventKind { return evs.PlaceLiberee }
+func (AttestationEvt) kind() evs.EventKind  { return evs.Attestation }
+func (SondageEvt) kind() evs.EventKind      { return evs.Sondage }
 
-type Supprime struct{}
+type SupprimeEvt struct{}
 
-type Validation struct {
+type ValidationEvt struct {
 	ByCamp string // optionnel
 }
 
-// m must have kind [Validation]
-func (ld *eventsContent) newValidation(ev evs.Event) Validation {
+// m must have kind [ValidationEvt]
+func (ld *eventsContent) newValidation(ev evs.Event) ValidationEvt {
 	m := ld.validations[ev.Id]
 	label := ""
 	if m.IdCamp.Valid {
 		camp := ld.camps[m.IdCamp.Id]
 		label = camp.Label()
 	}
-	return Validation{label}
+	return ValidationEvt{label}
 }
 
-type Message struct {
+type MessageEvt struct {
 	Message          evs.EventMessage
 	OrigineCampLabel string // optionnel
 	VuParCampsIDs    []cps.IdCamp
 	VuParCamps       []string // labels
 }
 
-// m must have kind [Message]
-func (ld *eventsContent) newMessage(ev evs.Event) Message {
+// m must have kind [MessageEvt]
+func (ld *eventsContent) newMessage(ev evs.Event) MessageEvt {
 	m := ld.messages[ev.Id]
-	out := Message{Message: m}
+	out := MessageEvt{Message: m}
 	if m.OrigineCamp.Valid {
 		out.OrigineCampLabel = ld.camps[m.OrigineCamp.Id].Label()
 	}
@@ -133,33 +133,33 @@ func (ld *eventsContent) newMessage(ev evs.Event) Message {
 	return out
 }
 
-type Facture struct {
+type FactureEvt struct {
 	IsRappel bool
 }
 
 // check is their is a previous facture sent
-func (ld *eventsContent) newFacture(ev evs.Event, all evs.Events) Facture {
+func (ld *eventsContent) newFacture(ev evs.Event, all evs.Events) FactureEvt {
 	for _, other := range all {
 		if other.Id != ev.Id && other.Kind == evs.Facture && other.Created.Before(ev.Created) {
-			return Facture{true}
+			return FactureEvt{true}
 		}
 	}
-	return Facture{false}
+	return FactureEvt{false}
 }
 
-type CampDocs struct {
+type CampDocsEvt struct {
 	IdCamp    cps.IdCamp
 	CampLabel string
 }
 
-// m must have kind [CampDocs]
-func (ld *eventsContent) newCampDocs(ev evs.Event) CampDocs {
+// m must have kind [CampDocsEvt]
+func (ld *eventsContent) newCampDocs(ev evs.Event) CampDocsEvt {
 	m := ld.campDocs[ev.Id]
 	camp := ld.camps[m.IdCamp]
-	return CampDocs{IdCamp: m.IdCamp, CampLabel: camp.Label()}
+	return CampDocsEvt{IdCamp: m.IdCamp, CampLabel: camp.Label()}
 }
 
-type PlaceLiberee struct {
+type PlaceLibereeEvt struct {
 	Accepted         bool
 	IdParticipant    cps.IdParticipant
 	IdCamp           cps.IdCamp
@@ -167,42 +167,42 @@ type PlaceLiberee struct {
 	CampLabel        string
 }
 
-// m must have kind [PlaceLiberee]
-func (ld *eventsContent) newPlaceLiberee(ev evs.Event) PlaceLiberee {
+// m must have kind [PlaceLibereeEvt]
+func (ld *eventsContent) newPlaceLiberee(ev evs.Event) PlaceLibereeEvt {
 	m := ld.placeLiberees[ev.Id]
 	participant := ld.participants[m.IdParticipant]
 	camp := ld.camps[participant.IdCamp]
 	pers := ld.personnes[participant.IdPersonne]
-	return PlaceLiberee{
+	return PlaceLibereeEvt{
 		m.Accepted,
 		m.IdParticipant, participant.IdCamp,
 		pers.PrenomN(), camp.Label(),
 	}
 }
 
-type Attestation struct {
+type AttestationEvt struct {
 	Distribution evs.Distribution
 	// IsPresence is true for 'Attestation de présence',
 	// false for 'Facture acquittée'.
 	IsPresence bool
 }
 
-// m must have kind [Attestation]
-func (ld *eventsContent) newAttestation(ev evs.Event) Attestation {
+// m must have kind [AttestationEvt]
+func (ld *eventsContent) newAttestation(ev evs.Event) AttestationEvt {
 	m := ld.attestations[ev.Id]
-	return Attestation{Distribution: m.Distribution, IsPresence: m.IsPresence}
+	return AttestationEvt{Distribution: m.Distribution, IsPresence: m.IsPresence}
 }
 
-type Sondage struct {
+type SondageEvt struct {
 	IdCamp    cps.IdCamp
 	CampLabel string
 }
 
-// m must have kind [Sondage]
-func (ld *eventsContent) newSondage(ev evs.Event) Sondage {
+// m must have kind [SondageEvt]
+func (ld *eventsContent) newSondage(ev evs.Event) SondageEvt {
 	m := ld.sondages[ev.Id]
 	camp := ld.camps[m.IdCamp]
-	return Sondage{IdCamp: m.IdCamp, CampLabel: camp.Label()}
+	return SondageEvt{IdCamp: m.IdCamp, CampLabel: camp.Label()}
 }
 
 type eventsContent struct {
@@ -298,7 +298,7 @@ func (ec *eventsContent) build(event evs.Event, dossierEvents evs.Events) Event 
 	out := Event{Id: event.Id, idDossier: event.IdDossier, Created: event.Created}
 	switch event.Kind {
 	case evs.Supprime:
-		out.Content = Supprime{}
+		out.Content = SupprimeEvt{}
 	case evs.Validation:
 		out.Content = ec.newValidation(event)
 	case evs.Message:

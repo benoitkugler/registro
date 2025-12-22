@@ -34,6 +34,8 @@ func setupRoutesBackoffice(e *echo.Echo, ct *backoffice.Controller) {
 	gr.GET("/api/v1/backoffice/camps/load", ct.CampsLoad)
 	gr.GET("/api/v1/backoffice/camps/documents", ct.CampsDocuments)
 
+	gr.GET("/api/v1/backoffice/camps/sondages", ct.CampsLoadSondages)
+
 	gr.PUT("/api/v1/backoffice/participants", ct.ParticipantsCreate)
 	gr.POST("/api/v1/backoffice/participants", ct.ParticipantsUpdate)
 	gr.DELETE("/api/v1/backoffice/participants", ct.ParticipantsDelete)

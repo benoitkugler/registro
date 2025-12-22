@@ -65,14 +65,14 @@
 import {
   Acteur,
   type Event,
-  type Message,
+  type MessageEvt,
 } from "@/clients/backoffice/logic/api";
 import EventItem from "./EventItem.vue";
 import { computed, ref } from "vue";
 
 const props = defineProps<{
   event: Event;
-  content: Message;
+  content: MessageEvt;
   user: Acteur;
 }>();
 

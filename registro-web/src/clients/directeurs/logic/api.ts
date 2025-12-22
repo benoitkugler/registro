@@ -143,7 +143,7 @@ export interface LogginOut {
 }
 // registro/controllers/directeurs.Messages
 export interface Messages {
-  Messages: EventExt_Message[] | null;
+  Messages: EventExt_MessageEvt[] | null;
   Dossiers: Record<IdDossier, DossierPersonnes> | null;
   NewMessagesCount: Int;
 }
@@ -156,30 +156,6 @@ export interface ParticipantsOut {
 export interface Photos {
   HasAlbum: boolean;
   Album: AlbumAndLinks;
-}
-// registro/controllers/directeurs.SondageExt
-export interface SondageExt {
-  ResponsableNom: string;
-  ResponsableMail: string;
-  Participants: string[] | null;
-  Sondage: Sondage;
-}
-// registro/controllers/directeurs.SondageMoyennes
-export interface SondageMoyennes {
-  InfosAvantSejour: number;
-  InfosPendantSejour: number;
-  Hebergement: number;
-  Activites: number;
-  Theme: number;
-  Nourriture: number;
-  Hygiene: number;
-  Ambiance: number;
-  Ressenti: number;
-}
-// registro/controllers/directeurs.SondagesOut
-export interface SondagesOut {
-  Moyennes: SondageMoyennes;
-  Sondages: SondageExt[] | null;
 }
 // registro/controllers/directeurs.UpdateFinsIn
 export interface UpdateFinsIn {
@@ -217,15 +193,20 @@ export interface CampItem {
   Label: string;
   IsOld: boolean;
 }
+// registro/logic.CampSondages
+export interface CampSondages {
+  Moyennes: SondageMoyennes;
+  Sondages: SondageExt[] | null;
+}
 // registro/logic.DossierReglement
 export interface DossierReglement {
   Responsable: string;
   Reglement: StatutPaiement;
 }
-// registro/logic.EventExt[registro/logic.Message]
-export interface EventExt_Message {
+// registro/logic.EventExt[registro/logic.MessageEvt]
+export interface EventExt_MessageEvt {
   Event: Event;
-  Content: Message;
+  Content: MessageEvt;
 }
 // registro/logic.IdentTarget
 export interface IdentTarget {
@@ -247,8 +228,8 @@ export interface InscriptionsValideIn {
   Statuts: Record<IdParticipant, StatutParticipant> | null;
   SendMail: boolean;
 }
-// registro/logic.Message
-export interface Message {
+// registro/logic.MessageEvt
+export interface MessageEvt {
   Message: EventMessage;
   OrigineCampLabel: string;
   VuParCampsIDs: IdCamp[] | null;
@@ -269,6 +250,25 @@ export interface PublicFile {
   Taille: Int;
   NomClient: string;
   Uploaded: Time;
+}
+// registro/logic.SondageExt
+export interface SondageExt {
+  ResponsableNom: string;
+  ResponsableMail: string;
+  Participants: string[] | null;
+  Sondage: Sondage;
+}
+// registro/logic.SondageMoyennes
+export interface SondageMoyennes {
+  InfosAvantSejour: number;
+  InfosPendantSejour: number;
+  Hebergement: number;
+  Activites: number;
+  Theme: number;
+  Nourriture: number;
+  Hygiene: number;
+  Ambiance: number;
+  Ressenti: number;
 }
 // registro/logic.StatutExt
 export interface StatutExt {
@@ -1329,7 +1329,7 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseURL + "/api/v1/directeurs/participants/messages";
     this.startRequest();
     try {
-      const rep: AxiosResponse<EventExt_Message> = await Axios.put(
+      const rep: AxiosResponse<EventExt_MessageEvt> = await Axios.put(
         fullUrl,
         params,
         { headers: this.getHeaders() },
@@ -1349,7 +1349,7 @@ export abstract class AbstractAPI {
       this.baseURL + "/api/v1/directeurs/participants/messages/seen";
     this.startRequest();
     try {
-      const rep: AxiosResponse<EventExt_Message> = await Axios.post(
+      const rep: AxiosResponse<EventExt_MessageEvt> = await Axios.post(
         fullUrl,
         null,
         {
@@ -1752,7 +1752,7 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseURL + "/api/v1/directeurs/sondages";
     this.startRequest();
     try {
-      const rep: AxiosResponse<SondagesOut> = await Axios.get(fullUrl, {
+      const rep: AxiosResponse<CampSondages> = await Axios.get(fullUrl, {
         headers: this.getHeaders(),
       });
       return rep.data;

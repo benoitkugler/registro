@@ -147,7 +147,7 @@
 import { onMounted, ref } from "vue";
 import { controller } from "../logic/logic";
 import { type IdCamp, type Sondage, type SondageExt } from "../logic/api";
-import RatingField from "../../../components/RatingField.vue";
+import RatingField from "../../../components/sondages/RatingField.vue";
 import { isDateZero } from "@/components/date";
 
 const props = defineProps<{

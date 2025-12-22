@@ -97,7 +97,7 @@
 import { ref, onMounted, computed } from "vue";
 import { controller, isMessageNew } from "../../logic/logic";
 import type {
-  EventExt_Message,
+  EventExt_MessageEvt,
   IdDossier,
   IdEvent,
   Messages,
@@ -118,7 +118,7 @@ const filteredMessages = computed(() =>
 );
 
 const byDossiers = computed(() => {
-  const out = new Map<IdDossier, EventExt_Message[]>();
+  const out = new Map<IdDossier, EventExt_MessageEvt[]>();
   for (const element of filteredMessages.value) {
     out.set(
       element.Event.IdDossier,

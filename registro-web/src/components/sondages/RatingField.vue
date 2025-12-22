@@ -5,7 +5,7 @@
     </v-col>
     <v-col cols="12" class="text-center mt-1">
       <v-rating
-        hover
+        :hover="!props.readonly"
         color="secondary"
         :length="4"
         v-model="model"
@@ -18,7 +18,7 @@
 </template>
 
 <script lang="ts" setup generic="T extends Satisfaction | number">
-import { Satisfaction } from "../clients/espaceperso/logic/api";
+import { Satisfaction } from "../../clients/espaceperso/logic/api";
 
 const props = defineProps<{
   label: string;

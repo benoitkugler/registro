@@ -145,7 +145,7 @@ func (ct *Controller) sendMessage(args SendMessageIn) (logic.Event, error) {
 	return logic.Event{
 		Id:      event.Id,
 		Created: event.Created,
-		Content: logic.Message{
+		Content: logic.MessageEvt{
 			Message: message,
 		},
 	}, nil
@@ -416,7 +416,7 @@ func (ct *Controller) loadSondages(id ds.IdDossier) ([]SondageExt, error) {
 		campsToAdd.Delete(sondage.IdCamp)
 	}
 	// 2 : complete with "open" camps
-	for event := range logic.IterEventsBy[logic.Sondage](dossier.Events) {
+	for event := range logic.IterEventsBy[logic.SondageEvt](dossier.Events) {
 		if !campsToAdd.Has(event.Content.IdCamp) { // already included
 			continue
 		}
@@ -596,7 +596,7 @@ func (ct *Controller) acceptePlaceLiberee(idDossier ds.IdDossier, idEvent evs.Id
 	if err != nil {
 		return err
 	}
-	pl, ok := event.Content.(logic.PlaceLiberee)
+	pl, ok := event.Content.(logic.PlaceLibereeEvt)
 	if !ok {
 		return errors.New("internal error: expected PlaceLiberee")
 	}

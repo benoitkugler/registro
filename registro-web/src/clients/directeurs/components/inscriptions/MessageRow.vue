@@ -48,12 +48,12 @@
 
 <script lang="ts" setup>
 import { Formatters } from "@/utils";
-import { Acteur, type EventExt_Message } from "../../logic/api";
+import { Acteur, type EventExt_MessageEvt } from "../../logic/api";
 import { isMessageFromUs, isMessageNew } from "../../logic/logic";
 import { computed } from "vue";
 
 const props = defineProps<{
-  message: EventExt_Message;
+  message: EventExt_MessageEvt;
   showReply: boolean;
 }>();
 

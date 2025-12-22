@@ -10,11 +10,11 @@
 </template>
 
 <script setup lang="ts">
-import { type Event, type Facture } from "@/clients/backoffice/logic/api";
+import { type Event, type FactureEvt } from "@/clients/backoffice/logic/api";
 
 const props = defineProps<{
   event: Event;
-  content: Facture;
+  content: FactureEvt;
 }>();
 </script>
 

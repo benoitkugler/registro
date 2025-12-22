@@ -492,7 +492,7 @@ export function buildPseudoEvents(dossier: DossierExt, user: Acteur) {
   // hide fonds de soutien
   const evList: PseudoEvent[] = (dossier.Events || [])
     .filter((ev) =>
-      ev.Content.Kind == EventContentKind.Message
+      ev.Content.Kind == EventContentKind.MessageEvt
         ? isMessageVisibleBy(ev.Content.Data.Message, user)
         : true
     )

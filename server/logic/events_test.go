@@ -9,15 +9,15 @@ import (
 
 func TestIterEvents(t *testing.T) {
 	l := Events{
-		{Content: Supprime{}},
-		{Content: Supprime{}},
-		{Content: Sondage{}},
-		{Content: Attestation{}},
-		{Content: Supprime{}},
-		{Content: Facture{}},
-		{Content: Supprime{}},
-		{Content: Facture{}},
+		{Content: SupprimeEvt{}},
+		{Content: SupprimeEvt{}},
+		{Content: SondageEvt{}},
+		{Content: AttestationEvt{}},
+		{Content: SupprimeEvt{}},
+		{Content: FactureEvt{}},
+		{Content: SupprimeEvt{}},
+		{Content: FactureEvt{}},
 	}
-	tu.Assert(t, len(slices.Collect(IterEventsBy[Supprime](l))) == 4)
-	tu.Assert(t, len(slices.Collect(IterEventsBy[Message](l))) == 0)
+	tu.Assert(t, len(slices.Collect(IterEventsBy[SupprimeEvt](l))) == 4)
+	tu.Assert(t, len(slices.Collect(IterEventsBy[MessageEvt](l))) == 0)
 }
