@@ -24,9 +24,15 @@ func TestFetchDons(t *testing.T) {
 	db := tu.NewTestDB(t, "../sql/personnes/gen_create.sql", "../sql/dossiers/gen_create.sql", "../sql/dons/gen_create.sql")
 	defer db.Remove()
 
-	l, err := ImportDonsHelloasso(devCreds(t), db)
+	l1, err := ImportDonsHelloasso(devCreds(t), db, true)
 	tu.AssertNoErr(t, err)
-	tu.Assert(t, len(l) != 0)
+	tu.Assert(t, len(l1) != 0)
+
+	l2, err := ImportDonsHelloasso(devCreds(t), db, false)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(l2) != 0)
+
+	tu.Assert(t, len(l1) < len(l2))
 }
 
 type formV5 struct {
@@ -72,7 +78,7 @@ func TestAPIV5(t *testing.T) {
 
 	var allPaiements []paiementHelloAsso
 	for _, form := range formsHelloAsso {
-		l, err := fetchAllFormPaiements(accesToken, form.formType, form.formSlug)
+		l, err := fetchAllFormPaiements(accesToken, form.formType, form.formSlug, false)
 		tu.AssertNoErr(t, err)
 		allPaiements = append(allPaiements, l...)
 	}
@@ -94,4 +100,15 @@ func TestAPIV5(t *testing.T) {
 func TestIDV5ToV3(t *testing.T) {
 	tu.Assert(t, idV5ToV3(23239900) == "000232399003")
 	tu.Assert(t, idV5ToV3(7382535) == "000073825353")
+
+	v, err := IdV3ToV5("000232399003")
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, v == 23239900)
+	v, err = IdV3ToV5("000073825353")
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, v == 7382535)
+	_, err = IdV3ToV5("000073825352")
+	tu.AssertErr(t, err)
+	_, err = IdV3ToV5("0000738.5353")
+	tu.AssertErr(t, err)
 }

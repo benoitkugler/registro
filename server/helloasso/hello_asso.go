@@ -52,15 +52,14 @@ func newDonFromPayment(payment paiementHelloAsso, affectation string) (DonDonate
 	if err != nil {
 		return DonDonateur{}, err
 	}
-	id := idV5ToV3(payment.Id)
 	don := dons.Don{
 		Valeur:       dossiers.Montant{Cent: payment.Amount, Currency: dossiers.Euros}, // TODO: currency
 		Date:         date,
 		ModePaiement: dossiers.Helloasso,
 		Affectation:  affectation,
-		Details:      id, // pourra être modifié
+		Details:      fmt.Sprintf("%d", payment.Id), // pourra être modifié
 
-		IdPaiementHelloasso: id,
+		IdPaiementHelloasso: payment.Id, // caché
 	}
 	// HelloAsso utilise le code ISO à 3 lettres
 	country, ok := paysCode3[payment.Payer.Country]
@@ -111,17 +110,17 @@ type formHelloAsso struct {
 }
 
 // fetch and process the paiements for one HelloAsso form
-func (form formHelloAsso) importDons(accesToken string, alreadyImported map[string]bool) ([]DonDonateur, error) {
-	paiements, err := fetchAllFormPaiements(accesToken, form.formType, form.formSlug)
+func (form formHelloAsso) importDons(accesToken string, alreadyImported map[int32]bool,
+	currentYearOnly bool,
+) ([]DonDonateur, error) {
+	paiements, err := fetchAllFormPaiements(accesToken, form.formType, form.formSlug, currentYearOnly)
 	if err != nil {
 		return nil, err
 	}
 
 	var out []DonDonateur
 	for _, paiement := range paiements {
-		idV3 := idV5ToV3(paiement.Id)
-
-		if alreadyImported[idV3] {
+		if alreadyImported[paiement.Id] {
 			continue
 		}
 
@@ -141,7 +140,7 @@ func (form formHelloAsso) importDons(accesToken string, alreadyImported map[stri
 
 // ImportDonsHelloasso cherche les nouveaux dons, utilisant [db]
 // pour ignorer les dons déjà importés.
-func ImportDonsHelloasso(creds config.Helloasso, db pr.DB) ([]DonDonateur, error) {
+func ImportDonsHelloasso(creds config.Helloasso, db pr.DB, currentYearOnly bool) ([]DonDonateur, error) {
 	accesToken, err := getAccessToken(creds)
 	if err != nil {
 		return nil, err
@@ -154,7 +153,7 @@ func ImportDonsHelloasso(creds config.Helloasso, db pr.DB) ([]DonDonateur, error
 
 	// on ne renvoie que les dons n'ayant pas encore été importés
 	// TODO: utiliser une date pour éviter de tout chercher
-	alreadyImported := map[string]bool{}
+	alreadyImported := map[int32]bool{}
 	for _, don := range dons {
 		if don.ModePaiement == dossiers.Helloasso {
 			alreadyImported[don.IdPaiementHelloasso] = true
@@ -163,7 +162,7 @@ func ImportDonsHelloasso(creds config.Helloasso, db pr.DB) ([]DonDonateur, error
 
 	var out []DonDonateur
 	for _, form := range formsHelloAsso {
-		l, err := form.importDons(accesToken, alreadyImported)
+		l, err := form.importDons(accesToken, alreadyImported, currentYearOnly)
 		if err != nil {
 			return nil, err
 		}
@@ -259,7 +258,7 @@ type paiementHelloAsso struct {
 		Email     string `json:"email"`
 	} `json:"payer"`
 	Date   string `json:"date"`
-	Id     int    `json:"id"`
+	Id     int32  `json:"id"`
 	Amount int    `json:"amount"` // Montant en centimes
 	Items  []struct {
 		Type   string `json:"type"`
@@ -272,16 +271,36 @@ func idV5ToV3(id int) string {
 	return fmt.Sprintf("%011d3", id)
 }
 
-func fetchAllFormPaiements(accesToken string, formType, formSlug string) ([]paiementHelloAsso, error) {
+// IdV3ToV5 should be used to migrate to the new API
+func IdV3ToV5(id string) (int32, error) {
+	if !strings.HasSuffix(id, "3") {
+		return 0, fmt.Errorf("unexpected id V3: %s", id)
+	}
+	v, err := strconv.Atoi(strings.TrimSuffix(id, "3"))
+	if err != nil {
+		return 0, err
+	}
+	return int32(v), nil
+}
+
+func fetchAllFormPaiements(accesToken string, formType, formSlug string, currentYearOnly bool) ([]paiementHelloAsso, error) {
 	const resultsPerPage = 100 // maximum allowed
 
 	var all []paiementHelloAsso
 	var continuationToken string
 
+	from := ""
+	if currentYearOnly {
+		from = shared.NewDate(time.Now().Year(), time.January, 1).Time().Format(time.RFC3339)
+	}
+
 	// start with empty continuation token
 	for { // fetch all pages
 		params := url.Values{}
 		params.Set("pageSize", strconv.Itoa(resultsPerPage))
+		if from != "" {
+			params.Set("from", from)
+		}
 		if continuationToken != "" {
 			params.Set("continuationToken", continuationToken)
 		}

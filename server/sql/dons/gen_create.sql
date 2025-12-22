@@ -7,7 +7,7 @@ CREATE TABLE dons (
     Affectation text NOT NULL,
     Details text NOT NULL,
     Remercie boolean NOT NULL,
-    IdPaiementHelloasso text NOT NULL
+    IdPaiementHelloasso integer NOT NULL
 );
 
 -- constraints

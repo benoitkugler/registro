@@ -19,7 +19,7 @@ type Don struct {
 	Remercie     bool   // `true` si le remerciement a été envoyé
 
 	// champ caché, optionnel
-	IdPaiementHelloasso string
+	IdPaiementHelloasso int32
 }
 
 // TODO: organismes et donateurs
