@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 	"time"
 
@@ -17,195 +16,56 @@ import (
 	"registro/sql/shared"
 )
 
-const (
-	dateLayoutHelloAsso = "2006-01-02T15:04:05-07:00" // format personnalisé imposé par HelloAsso
-	maxTry              = 3
-	retryDelayMax       = 10 // en seconds
-	typeDon             = "DONATION"
-	typeDonRecurrent    = "RECURRENT_DONATION"
+type Api struct {
+	config config.Helloasso
 
-	resultsPerPage = 1000000
-)
+	token string // see loadAccessToken
+}
 
-// PingHelloAsso effectue une requête de test
-// et renvoie l'éventuelle erreur.
-func PingHelloAsso(creds config.Helloasso) error {
-	_, err := getAccessToken(creds)
+func NewApi(config config.Helloasso) Api { return Api{config, ""} }
+
+func (api *Api) baseURL() string {
+	if api.config.Sandbox {
+		return "https://api.helloasso-sandbox.com"
+	}
+	return "https://api.helloasso.com"
+}
+
+// Ping effectue une requête de test et renvoie l'éventuelle erreur.
+func (api Api) Ping() error {
+	err := api.loadAccessToken()
 	return err
 }
 
-func parseDateHelloAsso(d string) (shared.Date, error) {
-	date, err := time.Parse(dateLayoutHelloAsso, d)
-	if err != nil {
-		return shared.Date{}, fmt.Errorf("format HelloAsso incorrect: %s", err)
-	}
-	return shared.NewDateFrom(date), nil
-}
-
-type DonDonateur struct {
-	Don      dons.Don
-	Donateur pr.Etatcivil
-}
-
-func newDonFromPayment(payment paiementHelloAsso, affectation string) (DonDonateur, error) {
-	date, err := parseDateHelloAsso(payment.Date)
-	if err != nil {
-		return DonDonateur{}, err
-	}
-	don := dons.Don{
-		Valeur:       dossiers.Montant{Cent: payment.Amount, Currency: dossiers.Euros}, // TODO: currency
-		Date:         date,
-		ModePaiement: dossiers.Helloasso,
-		Affectation:  affectation,
-		Details:      fmt.Sprintf("%d", payment.Id), // pourra être modifié
-
-		IdPaiementHelloasso: payment.Id, // caché
-	}
-	// HelloAsso utilise le code ISO à 3 lettres
-	country, ok := paysCode3[payment.Payer.Country]
-	if !ok {
-		country = pr.Pays(payment.Payer.Country)
-	}
-	donateur := pr.Etatcivil{
-		Prenom:     payment.Payer.FirstName,
-		Nom:        payment.Payer.LastName,
-		Adresse:    payment.Payer.Address,
-		CodePostal: payment.Payer.ZipCode,
-		Ville:      payment.Payer.City,
-		Pays:       country,
-		Mail:       payment.Payer.Email,
-	}
-	return DonDonateur{Don: don, Donateur: donateur}, nil
-}
-
-// TODO: use config
-// les formulaire de dons sont identifiés par les slugs suivant
-var formsHelloAsso = [...]formHelloAsso{
-	{ // soutien: dons généraux, réguliers
-		formSlug:    "1",
-		formType:    "Donation",
-		attribution: "",
-	},
-	{
-		formSlug:    "soutien-a-l-accueil-d-enfants-refugies-a-montmeyran-2024",
-		formType:    "CrowdFunding",
-		attribution: "Montmeyran 2024",
-	},
-	{
-		formSlug:    "soutien-chantier-humanitaire-en-bosnie-herzegovine-2024",
-		formType:    "CrowdFunding",
-		attribution: "Bosnie 2024",
-	},
-	{
-		formSlug:    "soutien-au-spectacle-musical-de-menditte",
-		formType:    "CrowdFunding",
-		attribution: "Menditte 2024",
-	},
-}
-
-type formHelloAsso struct {
-	formType    string
-	formSlug    string
-	attribution string
-}
-
-// fetch and process the paiements for one HelloAsso form
-func (form formHelloAsso) importDons(accesToken string, alreadyImported map[int32]bool,
-	currentYearOnly bool,
-) ([]DonDonateur, error) {
-	paiements, err := fetchAllFormPaiements(accesToken, form.formType, form.formSlug, currentYearOnly)
-	if err != nil {
-		return nil, err
-	}
-
-	var out []DonDonateur
-	for _, paiement := range paiements {
-		if alreadyImported[paiement.Id] {
-			continue
-		}
-
-		// only import proper paiements
-		if paiement.State != "Authorized" {
-			continue
-		}
-
-		item, err := newDonFromPayment(paiement, form.attribution)
-		if err != nil {
-			return nil, err
-		}
-		out = append(out, item)
-	}
-	return out, nil
-}
-
-// ImportDonsHelloasso cherche les nouveaux dons, utilisant [db]
-// pour ignorer les dons déjà importés.
-func ImportDonsHelloasso(creds config.Helloasso, db pr.DB, currentYearOnly bool) ([]DonDonateur, error) {
-	accesToken, err := getAccessToken(creds)
-	if err != nil {
-		return nil, err
-	}
-
-	dons, err := dons.SelectAllDons(db)
-	if err != nil {
-		return nil, err
-	}
-
-	// on ne renvoie que les dons n'ayant pas encore été importés
-	// TODO: utiliser une date pour éviter de tout chercher
-	alreadyImported := map[int32]bool{}
-	for _, don := range dons {
-		if don.ModePaiement == dossiers.Helloasso {
-			alreadyImported[don.IdPaiementHelloasso] = true
-		}
-	}
-
-	var out []DonDonateur
-	for _, form := range formsHelloAsso {
-		l, err := form.importDons(accesToken, alreadyImported, currentYearOnly)
-		if err != nil {
-			return nil, err
-		}
-		out = append(out, l...)
-	}
-
-	return out, nil
-}
-
-// -------------------------- API HelloAsso ----------------------------------------
-
-type helloAssoError struct {
-	Error            string `json:"error"`
-	ErrorDescription string `json:"error_description"`
-}
-
-func getAccessToken(pass config.Helloasso) (string, error) {
+func (api *Api) loadAccessToken() error {
 	params := url.Values{}
-	params.Set("client_id", pass.ID)
-	params.Set("client_secret", pass.Secret)
+	params.Set("client_id", api.config.ID)
+	params.Set("client_secret", api.config.Secret)
 	params.Set("grant_type", "client_credentials")
 
-	req, err := http.NewRequest(http.MethodPost, "https://api.helloasso.com/oauth2/token", strings.NewReader(params.Encode()))
+	req, err := http.NewRequest(http.MethodPost, api.baseURL()+"/oauth2/token", strings.NewReader(params.Encode()))
 	if err != nil {
-		return "", fmt.Errorf("internal error in HelloAsso request : %s", err)
+		return fmt.Errorf("internal error in HelloAsso request : %s", err)
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("La requête vers HelloAsso a échoué : %s", err)
+		return fmt.Errorf("La requête vers HelloAsso a échoué : %s", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode == 400 {
-		var payload helloAssoError
-		err = json.NewDecoder(resp.Body).Decode(&payload)
-		if err != nil {
-			return "", fmt.Errorf("La réponse d'HelloAsso est invalide : %s", err)
+		var errPayload struct {
+			Error            string `json:"error"`
+			ErrorDescription string `json:"error_description"`
 		}
-		return "", fmt.Errorf("Erreur renvoyée par HelloAsso : %s", payload.ErrorDescription)
+		if err = json.NewDecoder(resp.Body).Decode(&errPayload); err != nil {
+			return fmt.Errorf("La réponse d'HelloAsso est invalide : %s", err)
+		}
+		return fmt.Errorf("Erreur renvoyée par HelloAsso : %s", errPayload.ErrorDescription)
 	} else if resp.StatusCode != 200 {
-		return "", fmt.Errorf("internal error : invalid HelloAsso response status %s", resp.Status)
+		return fmt.Errorf("internal error : invalid HelloAsso response status %s", resp.Status)
 	}
 
 	var payload struct {
@@ -216,17 +76,20 @@ func getAccessToken(pass config.Helloasso) (string, error) {
 	}
 	err = json.NewDecoder(resp.Body).Decode(&payload)
 	if err != nil {
-		return "", fmt.Errorf("La réponse d'HelloAsso est invalide : %s", err)
+		return fmt.Errorf("La réponse d'HelloAsso est invalide : %s", err)
 	}
-	return payload.AccessToken, nil
+
+	api.token = payload.AccessToken
+
+	return nil
 }
 
-func getJSON(url, accesToken string, out interface{}) error {
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+func (api *Api) getJSON(endpoint string, out interface{}) error {
+	req, err := http.NewRequest(http.MethodGet, api.baseURL()+endpoint, nil)
 	if err != nil {
 		return fmt.Errorf("internal error in HelloAsso request : %s", err)
 	}
-	req.Header.Set("Authorization", "Bearer "+accesToken)
+	req.Header.Set("Authorization", "Bearer "+api.token)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -243,23 +106,79 @@ func getJSON(url, accesToken string, out interface{}) error {
 	return err
 }
 
-type pagination struct {
-	ContinuationToken string `json:"continuationToken"`
+// It returns [false] for other notifications.
+func (api *Api) HandleDonNotification(payload io.Reader) (DonDonateur, bool, error) {
+	notif, err := parseDonNotification(payload)
+	if err != nil {
+		return DonDonateur{}, false, err
+	}
+	if notif.State != "Authorized" {
+		return DonDonateur{}, false, nil
+	}
+
+	if err := api.loadAccessToken(); err != nil {
+		return DonDonateur{}, false, err
+	}
+	payment, err := api.loadPayment(notif.Id)
+	if err != nil {
+		return DonDonateur{}, false, err
+	}
+	out, err := newDonFromPayment(payment)
+	if err != nil {
+		return DonDonateur{}, false, err
+	}
+	return out, true, err
 }
 
-type paiementHelloAsso struct {
+func (api *Api) loadPayment(id int32) (paymentHelloAsso, error) {
+	var out paymentHelloAsso
+	err := api.getJSON(fmt.Sprintf("/v5/payments/%d", id), &out)
+	if err != nil {
+		return paymentHelloAsso{}, err
+	}
+	return out, nil
+}
+
+type donNotification struct {
+	Id    int32  `json:"id"`
+	State string `json:"state"`
+}
+
+func parseDonNotification(payload io.Reader) (donNotification, error) {
+	var n struct {
+		EventType string          `json:"eventType"`
+		Data      json.RawMessage `json:"data"`
+	}
+	if err := json.NewDecoder(payload).Decode(&n); err != nil {
+		return donNotification{}, err
+	}
+	if n.EventType != "Payment" {
+		return donNotification{}, nil
+	}
+	var payment donNotification
+	if err := json.Unmarshal(n.Data, &payment); err != nil {
+		return donNotification{}, err
+	}
+	return payment, nil
+}
+
+type paymentHelloAsso struct {
+	Order struct {
+		FormSlug string `json:"formSlug"`
+	} `json:"order"`
 	Payer struct {
-		FirstName string `json:"firstName"`
-		LastName  string `json:"lastName"`
-		Address   string `json:"address"`
-		ZipCode   string `json:"zipCode"`
-		City      string `json:"city"`
-		Country   string `json:"country"`
-		Email     string `json:"email"`
+		FirstName   string    `json:"firstName"`
+		LastName    string    `json:"lastName"`
+		Address     string    `json:"address"`
+		ZipCode     string    `json:"zipCode"`
+		City        string    `json:"city"`
+		Country     string    `json:"country"`
+		Email       string    `json:"email"`
+		DateOfBirth time.Time `json:"dateOfBirth"`
 	} `json:"payer"`
-	Date   string `json:"date"`
-	Id     int32  `json:"id"`
-	Amount int    `json:"amount"` // Montant en centimes
+	Date   time.Time `json:"date"`
+	Id     int32     `json:"id"`
+	Amount int       `json:"amount"` // Montant en centimes
 	Items  []struct {
 		Type   string `json:"type"`
 		Amount int    `json:"amount"`
@@ -267,316 +186,31 @@ type paiementHelloAsso struct {
 	State string `json:"state"`
 }
 
-func idV5ToV3(id int) string {
-	return fmt.Sprintf("%011d3", id)
+type DonDonateur struct {
+	Don      dons.Don
+	Donateur pr.Etatcivil
 }
 
-// IdV3ToV5 should be used to migrate to the new API
-func IdV3ToV5(id string) (int32, error) {
-	if !strings.HasSuffix(id, "3") {
-		return 0, fmt.Errorf("unexpected id V3: %s", id)
+func newDonFromPayment(payment paymentHelloAsso) (DonDonateur, error) {
+	don := dons.Don{
+		// Hello asso is a french service that only support Euros
+		Montant:      dossiers.Montant{Cent: payment.Amount, Currency: dossiers.Euros},
+		Date:         shared.NewDateFrom(payment.Date),
+		ModePaiement: dossiers.Helloasso,
+		Affectation:  payment.Order.FormSlug,
+		Details:      fmt.Sprintf("%d", payment.Id), // pourra être modifié
+
+		IdPaiementHelloasso: payment.Id, // caché
 	}
-	v, err := strconv.Atoi(strings.TrimSuffix(id, "3"))
-	if err != nil {
-		return 0, err
+	donateur := pr.Etatcivil{
+		Prenom:        payment.Payer.FirstName,
+		Nom:           payment.Payer.LastName,
+		Adresse:       payment.Payer.Address,
+		CodePostal:    payment.Payer.ZipCode,
+		Ville:         payment.Payer.City,
+		Pays:          newPays(payment.Payer.Country),
+		Mail:          payment.Payer.Email,
+		DateNaissance: shared.NewDateFrom(payment.Payer.DateOfBirth),
 	}
-	return int32(v), nil
-}
-
-func fetchAllFormPaiements(accesToken string, formType, formSlug string, currentYearOnly bool) ([]paiementHelloAsso, error) {
-	const resultsPerPage = 100 // maximum allowed
-
-	var all []paiementHelloAsso
-	var continuationToken string
-
-	from := ""
-	if currentYearOnly {
-		from = shared.NewDate(time.Now().Year(), time.January, 1).Time().Format(time.RFC3339)
-	}
-
-	// start with empty continuation token
-	for { // fetch all pages
-		params := url.Values{}
-		params.Set("pageSize", strconv.Itoa(resultsPerPage))
-		if from != "" {
-			params.Set("from", from)
-		}
-		if continuationToken != "" {
-			params.Set("continuationToken", continuationToken)
-		}
-
-		url := fmt.Sprintf("https://api.helloasso.com/v5/organizations/acve/forms/%s/%s/payments?%s",
-			formType, formSlug, params.Encode())
-		var out struct {
-			Data       []paiementHelloAsso `json:"data"`
-			Pagination pagination          `json:"pagination"`
-		}
-		err := getJSON(url, accesToken, &out)
-		if err != nil {
-			return nil, err
-		}
-
-		all = append(all, out.Data...)
-
-		if len(out.Data) == 0 || out.Pagination.ContinuationToken == continuationToken { // done
-			break
-		} else {
-			continuationToken = out.Pagination.ContinuationToken
-		}
-	}
-
-	return all, nil
-}
-
-// paysCode3 associe au code ISO à 3 lettres le pays (2 lettres).
-var paysCode3 = map[string]pr.Pays{
-	"BRB": "BB",
-	"BEN": "BJ",
-	"BRN": "BN",
-	"CHN": "CN",
-	"GTM": "GT",
-	"JOR": "JO",
-	"MNP": "MP",
-	"PCN": "PN",
-	"AUT": "AT",
-	"JPN": "JP",
-	"MAR": "MA",
-	"NPL": "NP",
-	"CCK": "CC",
-	"DJI": "DJ",
-	"NGA": "NG",
-	"SMR": "SM",
-	"MNE": "ME",
-	"PER": "PE",
-	"RUS": "RU",
-	"BGD": "BD",
-	"COD": "CD",
-	"IRL": "IE",
-	"LVA": "LV",
-	"DMA": "DM",
-	"OMN": "OM",
-	"JAM": "JM",
-	"PRT": "PT",
-	"TON": "TO",
-	"GNB": "GW",
-	"GUY": "GY",
-	"NRU": "NR",
-	"SWE": "SE",
-	"GGY": "GG",
-	"ROU": "RO",
-	"SJM": "SJ",
-	"MRT": "MR",
-	"HRV": "HR",
-	"ETH": "ET",
-	"GIB": "GI",
-	"GRC": "GR",
-	"COK": "CK",
-	"QAT": "QA",
-	"SEN": "SN",
-	"SDN": "SD",
-	"VIR": "VI",
-	"BMU": "BM",
-	"COL": "CO",
-	"HUN": "HU",
-	"MSR": "MS",
-	"NCL": "NC",
-	"VCT": "VC",
-	"BOL": "BO",
-	"BWA": "BW",
-	"FJI": "FJ",
-	"GRD": "GD",
-	"NIC": "NI",
-	"ASM": "AS",
-	"BTN": "BT",
-	"CHE": "CH",
-	"WLF": "WF",
-	"KHM": "KH",
-	"GEO": "GE",
-	"ZWE": "ZW",
-	"FRA": "FR",
-	"LIE": "LI",
-	"NIU": "NU",
-	"VGB": "VG",
-	"REU": "RE",
-	"SYR": "SY",
-	"UMI": "UM",
-	"AUS": "AU",
-	"ISL": "IS",
-	"IRN": "IR",
-	"MKD": "MK",
-	"KWT": "KW",
-	"LKA": "LK",
-	"AND": "AD",
-	"ARM": "AM",
-	"AZE": "AZ",
-	"BDI": "BI",
-	"ALA": "AX",
-	"BGR": "BG",
-	"HKG": "HK",
-	"TKL": "TK",
-	"MAF": "MF",
-	"SVN": "SI",
-	"SLB": "SB",
-	"TUV": "TV",
-	"AIA": "AI",
-	"FIN": "FI",
-	"MMR": "MM",
-	"PSE": "PS",
-	"KIR": "KI",
-	"VUT": "VU",
-	"CUB": "CU",
-	"LSO": "LS",
-	"PAN": "PA",
-	"BHR": "BH",
-	"LAO": "LA",
-	"LBN": "LB",
-	"LBY": "LY",
-	"BLZ": "BZ",
-	"BVT": "BV",
-	"HMD": "HM",
-	"HND": "HN",
-	"DZA": "DZ",
-	"DOM": "DO",
-	"TWN": "TW",
-	"CIV": "CI",
-	"LTU": "LT",
-	"NLD": "NL",
-	"ATA": "AQ",
-	"CPV": "CV",
-	"CRI": "CR",
-	"NOR": "NO",
-	"FSM": "FM",
-	"TLS": "TL",
-	"BHS": "BS",
-	"CUW": "CW",
-	"GAB": "GA",
-	"KGZ": "KG",
-	"NAM": "NA",
-	"ERI": "ER",
-	"IDN": "ID",
-	"MLT": "MT",
-	"MUS": "MU",
-	"GLP": "GP",
-	"MAC": "MO",
-	"MDG": "MG",
-	"UZB": "UZ",
-	"URY": "UY",
-	"YEM": "YE",
-	"ARG": "AR",
-	"MYT": "YT",
-	"STP": "ST",
-	"GBR": "GB",
-	"BES": "BQ",
-	"GNQ": "GQ",
-	"BRA": "BR",
-	"SUR": "SR",
-	"BIH": "BA",
-	"ESH": "EH",
-	"BLR": "BY",
-	"CAN": "CA",
-	"MOZ": "MZ",
-	"SPM": "PM",
-	"AGO": "AO",
-	"MYS": "MY",
-	"MCO": "MC",
-	"ESP": "ES",
-	"SVK": "SK",
-	"TZA": "TZ",
-	"TUR": "TR",
-	"TCA": "TC",
-	"ATF": "TF",
-	"GUM": "GU",
-	"MNG": "MN",
-	"RWA": "RW",
-	"MHL": "MH",
-	"MDA": "MD",
-	"UGA": "UG",
-	"CMR": "CM",
-	"VAT": "VA",
-	"TUN": "TN",
-	"ECU": "EC",
-	"KEN": "KE",
-	"SXM": "SX",
-	"SGS": "GS",
-	"ALB": "AL",
-	"LUX": "LU",
-	"KNA": "KN",
-	"NER": "NE",
-	"PAK": "PK",
-	"SOM": "SO",
-	"AFG": "AF",
-	"TCD": "TD",
-	"DEU": "DE",
-	"MLI": "ML",
-	"CHL": "CL",
-	"PLW": "PW",
-	"VEN": "VE",
-	"SGP": "SG",
-	"THA": "TH",
-	"BFA": "BF",
-	"COM": "KM",
-	"IMN": "IM",
-	"LCA": "LC",
-	"TTO": "TT",
-	"NFK": "NF",
-	"PRY": "PY",
-	"SHN": "SH",
-	"SSD": "SS",
-	"SLE": "SL",
-	"CYP": "CY",
-	"EGY": "EG",
-	"MTQ": "MQ",
-	"NZL": "NZ",
-	"SYC": "SC",
-	"TJK": "TJ",
-	"PYF": "PF",
-	"GMB": "GM",
-	"IRQ": "IQ",
-	"KAZ": "KZ",
-	"IOT": "IO",
-	"COG": "CG",
-	"WSM": "WS",
-	"UKR": "UA",
-	"CYM": "KY",
-	"CXR": "CX",
-	"PNG": "PG",
-	"BLM": "BL",
-	"CZE": "CZ",
-	"JEY": "JE",
-	"ARE": "AE",
-	"USA": "US",
-	"TKM": "TM",
-	"MWI": "MW",
-	"PHL": "PH",
-	"POL": "PL",
-	"ZAF": "ZA",
-	"SLV": "SV",
-	"HTI": "HT",
-	"KOR": "KR",
-	"LBR": "LR",
-	"ITA": "IT",
-	"MEX": "MX",
-	"ABW": "AW",
-	"EST": "EE",
-	"GIN": "GN",
-	"SAU": "SA",
-	"FRO": "FO",
-	"GUF": "GF",
-	"BEL": "BE",
-	"PRK": "KP",
-	"PRI": "PR",
-	"CAF": "CF",
-	"DNK": "DK",
-	"FLK": "FK",
-	"VNM": "VN",
-	"ZMB": "ZM",
-	"TGO": "TG",
-	"SWZ": "SZ",
-	"IND": "IN",
-	"MDV": "MV",
-	"SRB": "RS",
-	"ATG": "AG",
-	"GHA": "GH",
-	"GRL": "GL",
-	"ISR": "IL",
+	return DonDonateur{Don: don, Donateur: donateur}, nil
 }

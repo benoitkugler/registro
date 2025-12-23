@@ -25,7 +25,7 @@ func scanOneDon(row scanner) (Don, error) {
 	var item Don
 	err := row.Scan(
 		&item.Id,
-		&item.Valeur,
+		&item.Montant,
 		&item.ModePaiement,
 		&item.Date,
 		&item.Affectation,
@@ -40,7 +40,7 @@ func ScanDon(row *sql.Row) (Don, error) { return scanOneDon(row) }
 
 // SelectAll returns all the items in the dons table.
 func SelectAllDons(db DB) (Dons, error) {
-	rows, err := db.Query("SELECT id, valeur, modepaiement, date, affectation, details, remercie, idpaiementhelloasso FROM dons")
+	rows, err := db.Query("SELECT id, montant, modepaiement, date, affectation, details, remercie, idpaiementhelloasso FROM dons")
 	if err != nil {
 		return nil, err
 	}
@@ -49,13 +49,13 @@ func SelectAllDons(db DB) (Dons, error) {
 
 // SelectDon returns the entry matching 'id'.
 func SelectDon(tx DB, id IdDon) (Don, error) {
-	row := tx.QueryRow("SELECT id, valeur, modepaiement, date, affectation, details, remercie, idpaiementhelloasso FROM dons WHERE id = $1", id)
+	row := tx.QueryRow("SELECT id, montant, modepaiement, date, affectation, details, remercie, idpaiementhelloasso FROM dons WHERE id = $1", id)
 	return ScanDon(row)
 }
 
 // SelectDons returns the entry matching the given 'ids'.
 func SelectDons(tx DB, ids ...IdDon) (Dons, error) {
-	rows, err := tx.Query("SELECT id, valeur, modepaiement, date, affectation, details, remercie, idpaiementhelloasso FROM dons WHERE id = ANY($1)", IdDonArrayToPQ(ids))
+	rows, err := tx.Query("SELECT id, montant, modepaiement, date, affectation, details, remercie, idpaiementhelloasso FROM dons WHERE id = ANY($1)", IdDonArrayToPQ(ids))
 	if err != nil {
 		return nil, err
 	}
@@ -100,28 +100,28 @@ func ScanDons(rs *sql.Rows) (Dons, error) {
 // Insert one Don in the database and returns the item with id filled.
 func (item Don) Insert(tx DB) (out Don, err error) {
 	row := tx.QueryRow(`INSERT INTO dons (
-		valeur, modepaiement, date, affectation, details, remercie, idpaiementhelloasso
+		montant, modepaiement, date, affectation, details, remercie, idpaiementhelloasso
 		) VALUES (
 		$1, $2, $3, $4, $5, $6, $7
-		) RETURNING id, valeur, modepaiement, date, affectation, details, remercie, idpaiementhelloasso;
-		`, item.Valeur, item.ModePaiement, item.Date, item.Affectation, item.Details, item.Remercie, item.IdPaiementHelloasso)
+		) RETURNING id, montant, modepaiement, date, affectation, details, remercie, idpaiementhelloasso;
+		`, item.Montant, item.ModePaiement, item.Date, item.Affectation, item.Details, item.Remercie, item.IdPaiementHelloasso)
 	return ScanDon(row)
 }
 
 // Update Don in the database and returns the new version.
 func (item Don) Update(tx DB) (out Don, err error) {
 	row := tx.QueryRow(`UPDATE dons SET (
-		valeur, modepaiement, date, affectation, details, remercie, idpaiementhelloasso
+		montant, modepaiement, date, affectation, details, remercie, idpaiementhelloasso
 		) = (
 		$1, $2, $3, $4, $5, $6, $7
-		) WHERE id = $8 RETURNING id, valeur, modepaiement, date, affectation, details, remercie, idpaiementhelloasso;
-		`, item.Valeur, item.ModePaiement, item.Date, item.Affectation, item.Details, item.Remercie, item.IdPaiementHelloasso, item.Id)
+		) WHERE id = $8 RETURNING id, montant, modepaiement, date, affectation, details, remercie, idpaiementhelloasso;
+		`, item.Montant, item.ModePaiement, item.Date, item.Affectation, item.Details, item.Remercie, item.IdPaiementHelloasso, item.Id)
 	return ScanDon(row)
 }
 
 // Deletes the Don and returns the item
 func DeleteDonById(tx DB, id IdDon) (Don, error) {
-	row := tx.QueryRow("DELETE FROM dons WHERE id = $1 RETURNING id, valeur, modepaiement, date, affectation, details, remercie, idpaiementhelloasso;", id)
+	row := tx.QueryRow("DELETE FROM dons WHERE id = $1 RETURNING id, montant, modepaiement, date, affectation, details, remercie, idpaiementhelloasso;", id)
 	return ScanDon(row)
 }
 

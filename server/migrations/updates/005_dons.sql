@@ -1,5 +1,6 @@
 -- for v0.8.1
 BEGIN;
+ALTER TABLE dons RENAME Valeur TO Montant;
 ALTER TABLE dons
     DROP COLUMN IdPaiementHelloasso;
 ALTER TABLE dons

@@ -12,7 +12,7 @@ import (
 func randDon() Don {
 	var s Don
 	s.Id = randIdDon()
-	s.Valeur = randdos_Montant()
+	s.Montant = randdos_Montant()
 	s.ModePaiement = randdos_ModePaiement()
 	s.Date = randsha_Date()
 	s.Affectation = randstring()

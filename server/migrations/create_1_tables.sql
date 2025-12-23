@@ -353,7 +353,7 @@ CREATE TABLE event_validations (
 
 CREATE TABLE dons (
     Id serial PRIMARY KEY,
-    Valeur Montant NOT NULL,
+    Montant Montant NOT NULL,
     ModePaiement smallint CHECK (ModePaiement IN (0, 1, 2, 3, 4, 5)) NOT NULL,
     Date date NOT NULL,
     Affectation text NOT NULL,

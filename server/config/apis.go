@@ -51,13 +51,20 @@ func NewStripe() (Stripe, error) {
 }
 
 type Helloasso struct {
-	ID     string
-	Secret string
+	Slug    string // asso slug
+	Sandbox bool
+	ID      string
+	Secret  string
 }
 
 // NewHelloasso uses env variables to build Helloasso credentials :
-// HELLOASSO_ID, HELLOASSO_SECRET
+// HELLOASSO_SLUG, HELLOASSO_SANDBOX, HELLOASSO_ID, HELLOASSO_SECRET
 func NewHelloasso() (out Helloasso, err error) {
+	out.Slug = os.Getenv("HELLOASSO_SLUG")
+	if out.Slug == "" {
+		return Helloasso{}, errors.New("missing env HELLOASSO_SLUG")
+	}
+
 	out.ID = os.Getenv("HELLOASSO_ID")
 	if out.ID == "" {
 		return Helloasso{}, errors.New("missing env HELLOASSO_ID")
@@ -67,6 +74,12 @@ func NewHelloasso() (out Helloasso, err error) {
 	if out.Secret == "" {
 		return Helloasso{}, errors.New("missing env HELLOASSO_SECRET")
 	}
+
+	sandbox := os.Getenv("HELLOASSO_SANDBOX")
+	if sandbox == "" {
+		return Helloasso{}, errors.New("missing env HELLOASSO_SANDBOX")
+	}
+	out.Sandbox = sandbox == "TRUE"
 
 	return out, nil
 }

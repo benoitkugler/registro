@@ -11,7 +11,7 @@ type IdDon int64
 
 type Don struct {
 	Id           IdDon
-	Valeur       dossiers.Montant
+	Montant      dossiers.Montant
 	ModePaiement dossiers.ModePaiement
 	Date         shared.Date
 	Affectation  string // indicatif
