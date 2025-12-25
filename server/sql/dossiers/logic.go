@@ -30,12 +30,14 @@ func (m Montant) Remise(percent int) Montant {
 	return Montant{p, m.Currency}
 }
 
+func (m Montant) float() float64 { return float64(m.Cent) / 100 }
+
 func (m Montant) String() string {
 	var val string
 	if m.Cent%100 == 0 {
 		val = strconv.Itoa(m.Cent / 100)
 	} else {
-		val = fmt.Sprintf("%.02f", float64(m.Cent)/100)
+		val = fmt.Sprintf("%.02f", m.float())
 	}
 	switch m.Currency {
 	case FrancsSuisse:
@@ -109,6 +111,10 @@ func (m *MontantTaux) Sub(other Montant) {
 	m.Add(other)
 }
 
+func (m MontantTaux) Convert(newCurrency Currency) Montant {
+	return m.taux.convertTo(m.Montant, newCurrency)
+}
+
 // String affiche le montant dans les unités pour
 // lesquelles le taux n'est pas 0.
 func (m MontantTaux) String() string {
@@ -117,8 +123,7 @@ func (m MontantTaux) String() string {
 		if taux == 0 {
 			continue
 		}
-		c := Currency(currency)
-		chunks = append(chunks, m.taux.convertTo(m.Montant, c).String())
+		chunks = append(chunks, m.Convert(Currency(currency)).String())
 	}
 	return strings.Join(chunks, " ou ")
 }

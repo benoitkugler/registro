@@ -420,3 +420,9 @@ ALTER TABLE event_attestations
     ADD CHECK (guard = 6
     /* EventKind.Attestation */);
 
+ALTER TABLE dons
+    ADD FOREIGN KEY (IdPersonne) REFERENCES personnes;
+
+ALTER TABLE dons
+    ADD FOREIGN KEY (IdOrganisme) REFERENCES organismes;
+

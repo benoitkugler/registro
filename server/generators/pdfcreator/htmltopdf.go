@@ -42,8 +42,11 @@ func Init(fontCacheDir, root string) error {
 	return nil
 }
 
-// root is the folder containing 'assets/'
-func htmlToPDF(html, root string) ([]byte, error) {
+// HTMLToPDF converts the given [html] content to a PDF file.
+//
+// [root] is the folder containing 'assets/', which may be used by some
+// templates. It can be empty if no assets are required.
+func HTMLToPDF(html, root string) ([]byte, error) {
 	var dst bytes.Buffer
 	// required for image with width and height attributes
 	const presentationalHints = true
@@ -57,5 +60,5 @@ func templateToPDF(t *template.Template, args any) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("generating html: %s", err)
 	}
-	return htmlToPDF(html.String(), rootDir)
+	return HTMLToPDF(html.String(), rootDir)
 }
