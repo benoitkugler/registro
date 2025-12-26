@@ -151,6 +151,8 @@ func TestGroupes(t *testing.T) {
 	tu.AssertNoErr(t, err)
 
 	err = ct.updateGroupesPlages(camp.Id, UpdateFinsIn{map[cps.IdGroupe]shared.Date{
+		groupe1.Id: shared.NewDate(1990, time.January, 5),
+		groupe2.Id: shared.NewDate(1990, time.January, 5),
 		groupe3.Id: shared.NewDate(2003, time.January, 5),
 	}, false})
 	tu.AssertNoErr(t, err)
@@ -163,6 +165,8 @@ func TestGroupes(t *testing.T) {
 	tu.Assert(t, out.ParticipantsToGroupe[pa3.Id].IdGroupe == groupe3.Id)
 
 	err = ct.updateGroupesPlages(camp.Id, UpdateFinsIn{map[cps.IdGroupe]shared.Date{
+		groupe1.Id: shared.NewDate(1990, time.January, 5),
+		groupe2.Id: shared.NewDate(1990, time.January, 5),
 		groupe3.Id: shared.NewDate(2003, time.January, 5),
 	}, true})
 	tu.AssertNoErr(t, err)

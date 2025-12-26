@@ -645,7 +645,7 @@ func (ct *Controller) updateGroupesPlages(idCamp cps.IdCamp, args UpdateFinsIn) 
 			}
 		}
 
-		_, err = cps.DeleteGroupeParticipantsByIdCamps(ct.db, idCamp)
+		_, err = cps.DeleteGroupeParticipantsByIdCamps(tx, idCamp)
 		if err != nil {
 			return err
 		}
