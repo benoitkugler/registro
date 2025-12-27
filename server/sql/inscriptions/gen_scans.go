@@ -140,63 +140,6 @@ func DeleteInscriptionsByIDs(tx DB, ids ...IdInscription) ([]IdInscription, erro
 	return ScanIdInscriptionArray(rows)
 }
 
-// ByIdTaux returns a map with 'IdTaux' as keys.
-func (items Inscriptions) ByIdTaux() map[dossiers.IdTaux]Inscriptions {
-	out := make(map[dossiers.IdTaux]Inscriptions)
-	for _, target := range items {
-		dict := out[target.IdTaux]
-		if dict == nil {
-			dict = make(Inscriptions)
-		}
-		dict[target.Id] = target
-		out[target.IdTaux] = dict
-	}
-	return out
-}
-
-// IdTauxs returns the list of ids of IdTaux
-// contained in this table.
-// They are not garanteed to be distinct.
-func (items Inscriptions) IdTauxs() []dossiers.IdTaux {
-	out := make([]dossiers.IdTaux, 0, len(items))
-	for _, target := range items {
-		out = append(out, target.IdTaux)
-	}
-	return out
-}
-
-func SelectInscriptionsByIdTauxs(tx DB, idTauxs_ ...dossiers.IdTaux) (Inscriptions, error) {
-	rows, err := tx.Query("SELECT id, idtaux, responsable, message, copiesmails, partageadressesok, demandefondsoutien, dateheure, confirmedasdossier FROM inscriptions WHERE idtaux = ANY($1)", dossiers.IdTauxArrayToPQ(idTauxs_))
-	if err != nil {
-		return nil, err
-	}
-	return ScanInscriptions(rows)
-}
-
-func DeleteInscriptionsByIdTauxs(tx DB, idTauxs_ ...dossiers.IdTaux) ([]IdInscription, error) {
-	rows, err := tx.Query("DELETE FROM inscriptions WHERE idtaux = ANY($1) RETURNING id", dossiers.IdTauxArrayToPQ(idTauxs_))
-	if err != nil {
-		return nil, err
-	}
-	return ScanIdInscriptionArray(rows)
-}
-
-func SelectInscriptionsByConfirmedAsDossiers(tx DB, confirmedAsDossiers_ ...dossiers.IdDossier) (Inscriptions, error) {
-	rows, err := tx.Query("SELECT id, idtaux, responsable, message, copiesmails, partageadressesok, demandefondsoutien, dateheure, confirmedasdossier FROM inscriptions WHERE confirmedasdossier = ANY($1)", dossiers.IdDossierArrayToPQ(confirmedAsDossiers_))
-	if err != nil {
-		return nil, err
-	}
-	return ScanInscriptions(rows)
-}
-
-func DeleteInscriptionsByConfirmedAsDossiers(tx DB, confirmedAsDossiers_ ...dossiers.IdDossier) ([]IdInscription, error) {
-	rows, err := tx.Query("DELETE FROM inscriptions WHERE confirmedasdossier = ANY($1) RETURNING id", dossiers.IdDossierArrayToPQ(confirmedAsDossiers_))
-	if err != nil {
-		return nil, err
-	}
-	return ScanIdInscriptionArray(rows)
-}
-
 func scanOneInscriptionParticipant(row scanner) (InscriptionParticipant, error) {
 	var item InscriptionParticipant
 	err := row.Scan(
@@ -320,7 +263,7 @@ func (items InscriptionParticipants) ByIdInscription() map[IdInscription]Inscrip
 }
 
 // IdInscriptions returns the list of ids of IdInscription
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items InscriptionParticipants) IdInscriptions() []IdInscription {
 	out := make([]IdInscription, len(items))
@@ -356,7 +299,7 @@ func (items InscriptionParticipants) ByIdCamp() map[camps.IdCamp]InscriptionPart
 }
 
 // IdCamps returns the list of ids of IdCamp
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items InscriptionParticipants) IdCamps() []camps.IdCamp {
 	out := make([]camps.IdCamp, len(items))
@@ -392,7 +335,7 @@ func (items InscriptionParticipants) ByIdTaux() map[dossiers.IdTaux]InscriptionP
 }
 
 // IdTauxs returns the list of ids of IdTaux
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items InscriptionParticipants) IdTauxs() []dossiers.IdTaux {
 	out := make([]dossiers.IdTaux, len(items))
@@ -416,6 +359,63 @@ func DeleteInscriptionParticipantsByIdTauxs(tx DB, idTauxs_ ...dossiers.IdTaux) 
 		return nil, err
 	}
 	return ScanInscriptionParticipants(rows)
+}
+
+// ByIdTaux returns a map with 'IdTaux' as keys.
+func (items Inscriptions) ByIdTaux() map[dossiers.IdTaux]Inscriptions {
+	out := make(map[dossiers.IdTaux]Inscriptions)
+	for _, target := range items {
+		dict := out[target.IdTaux]
+		if dict == nil {
+			dict = make(Inscriptions)
+		}
+		dict[target.Id] = target
+		out[target.IdTaux] = dict
+	}
+	return out
+}
+
+// IdTauxs returns the list of ids of IdTaux
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items Inscriptions) IdTauxs() []dossiers.IdTaux {
+	out := make([]dossiers.IdTaux, 0, len(items))
+	for _, target := range items {
+		out = append(out, target.IdTaux)
+	}
+	return out
+}
+
+func SelectInscriptionsByIdTauxs(tx DB, idTauxs_ ...dossiers.IdTaux) (Inscriptions, error) {
+	rows, err := tx.Query("SELECT id, idtaux, responsable, message, copiesmails, partageadressesok, demandefondsoutien, dateheure, confirmedasdossier FROM inscriptions WHERE idtaux = ANY($1)", dossiers.IdTauxArrayToPQ(idTauxs_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanInscriptions(rows)
+}
+
+func DeleteInscriptionsByIdTauxs(tx DB, idTauxs_ ...dossiers.IdTaux) (Inscriptions, error) {
+	rows, err := tx.Query("DELETE FROM inscriptions WHERE idtaux = ANY($1) RETURNING id, idtaux, responsable, message, copiesmails, partageadressesok, demandefondsoutien, dateheure, confirmedasdossier", dossiers.IdTauxArrayToPQ(idTauxs_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanInscriptions(rows)
+}
+
+func SelectInscriptionsByConfirmedAsDossiers(tx DB, confirmedAsDossiers_ ...dossiers.IdDossier) (Inscriptions, error) {
+	rows, err := tx.Query("SELECT id, idtaux, responsable, message, copiesmails, partageadressesok, demandefondsoutien, dateheure, confirmedasdossier FROM inscriptions WHERE confirmedasdossier = ANY($1)", dossiers.IdDossierArrayToPQ(confirmedAsDossiers_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanInscriptions(rows)
+}
+
+func DeleteInscriptionsByConfirmedAsDossiers(tx DB, confirmedAsDossiers_ ...dossiers.IdDossier) (Inscriptions, error) {
+	rows, err := tx.Query("DELETE FROM inscriptions WHERE confirmedasdossier = ANY($1) RETURNING id, idtaux, responsable, message, copiesmails, partageadressesok, demandefondsoutien, dateheure, confirmedasdossier", dossiers.IdDossierArrayToPQ(confirmedAsDossiers_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanInscriptions(rows)
 }
 
 // SelectInscriptionByIdAndIdTaux return zero or one item, thanks to a UNIQUE SQL constraint.

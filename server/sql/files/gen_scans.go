@@ -135,38 +135,6 @@ func DeleteDemandesByIDs(tx DB, ids ...IdDemande) ([]IdDemande, error) {
 	return ScanIdDemandeArray(rows)
 }
 
-func SelectDemandesByIdFiles(tx DB, idFiles_ ...IdFile) (Demandes, error) {
-	rows, err := tx.Query("SELECT id, idfile, iddirecteur, categorie, description, maxdocs, joursvalide FROM demandes WHERE idfile = ANY($1)", IdFileArrayToPQ(idFiles_))
-	if err != nil {
-		return nil, err
-	}
-	return ScanDemandes(rows)
-}
-
-func DeleteDemandesByIdFiles(tx DB, idFiles_ ...IdFile) ([]IdDemande, error) {
-	rows, err := tx.Query("DELETE FROM demandes WHERE idfile = ANY($1) RETURNING id", IdFileArrayToPQ(idFiles_))
-	if err != nil {
-		return nil, err
-	}
-	return ScanIdDemandeArray(rows)
-}
-
-func SelectDemandesByIdDirecteurs(tx DB, idDirecteurs_ ...personnes.IdPersonne) (Demandes, error) {
-	rows, err := tx.Query("SELECT id, idfile, iddirecteur, categorie, description, maxdocs, joursvalide FROM demandes WHERE iddirecteur = ANY($1)", personnes.IdPersonneArrayToPQ(idDirecteurs_))
-	if err != nil {
-		return nil, err
-	}
-	return ScanDemandes(rows)
-}
-
-func DeleteDemandesByIdDirecteurs(tx DB, idDirecteurs_ ...personnes.IdPersonne) ([]IdDemande, error) {
-	rows, err := tx.Query("DELETE FROM demandes WHERE iddirecteur = ANY($1) RETURNING id", personnes.IdPersonneArrayToPQ(idDirecteurs_))
-	if err != nil {
-		return nil, err
-	}
-	return ScanIdDemandeArray(rows)
-}
-
 func scanOneDemandeCamp(row scanner) (DemandeCamp, error) {
 	var item DemandeCamp
 	err := row.Scan(
@@ -276,7 +244,7 @@ func (items DemandeCamps) ByIdCamp() map[camps.IdCamp]DemandeCamps {
 }
 
 // IdCamps returns the list of ids of IdCamp
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items DemandeCamps) IdCamps() []camps.IdCamp {
 	out := make([]camps.IdCamp, len(items))
@@ -312,7 +280,7 @@ func (items DemandeCamps) ByIdDemande() map[IdDemande]DemandeCamps {
 }
 
 // IdDemandes returns the list of ids of IdDemande
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items DemandeCamps) IdDemandes() []IdDemande {
 	out := make([]IdDemande, len(items))
@@ -449,6 +417,25 @@ func (item DemandeEquipier) Delete(tx DB) error {
 	return err
 }
 
+// SelectDemandeEquipiersByIdEquipierAndIdDemande selects the items matching the given fields.
+func SelectDemandeEquipiersByIdEquipierAndIdDemande(tx DB, idEquipier camps.IdEquipier, idDemande IdDemande) (item DemandeEquipiers, err error) {
+	rows, err := tx.Query("SELECT idequipier, iddemande, optionnelle FROM demande_equipiers WHERE IdEquipier = $1 AND IdDemande = $2", idEquipier, idDemande)
+	if err != nil {
+		return nil, err
+	}
+	return ScanDemandeEquipiers(rows)
+}
+
+// DeleteDemandeEquipiersByIdEquipierAndIdDemande deletes the item matching the given fields, returning
+// the deleted items.
+func DeleteDemandeEquipiersByIdEquipierAndIdDemande(tx DB, idEquipier camps.IdEquipier, idDemande IdDemande) (item DemandeEquipiers, err error) {
+	rows, err := tx.Query("DELETE FROM demande_equipiers WHERE IdEquipier = $1 AND IdDemande = $2 RETURNING idequipier, iddemande, optionnelle", idEquipier, idDemande)
+	if err != nil {
+		return nil, err
+	}
+	return ScanDemandeEquipiers(rows)
+}
+
 // ByIdEquipier returns a map with 'IdEquipier' as keys.
 func (items DemandeEquipiers) ByIdEquipier() map[camps.IdEquipier]DemandeEquipiers {
 	out := make(map[camps.IdEquipier]DemandeEquipiers)
@@ -459,7 +446,7 @@ func (items DemandeEquipiers) ByIdEquipier() map[camps.IdEquipier]DemandeEquipie
 }
 
 // IdEquipiers returns the list of ids of IdEquipier
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items DemandeEquipiers) IdEquipiers() []camps.IdEquipier {
 	out := make([]camps.IdEquipier, len(items))
@@ -495,7 +482,7 @@ func (items DemandeEquipiers) ByIdDemande() map[IdDemande]DemandeEquipiers {
 }
 
 // IdDemandes returns the list of ids of IdDemande
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items DemandeEquipiers) IdDemandes() []IdDemande {
 	out := make([]IdDemande, len(items))
@@ -521,25 +508,6 @@ func DeleteDemandeEquipiersByIdDemandes(tx DB, idDemandes_ ...IdDemande) (Demand
 	return ScanDemandeEquipiers(rows)
 }
 
-// SelectDemandeEquipiersByIdEquipierAndIdDemande selects the items matching the given fields.
-func SelectDemandeEquipiersByIdEquipierAndIdDemande(tx DB, idEquipier camps.IdEquipier, idDemande IdDemande) (item DemandeEquipiers, err error) {
-	rows, err := tx.Query("SELECT idequipier, iddemande, optionnelle FROM demande_equipiers WHERE IdEquipier = $1 AND IdDemande = $2", idEquipier, idDemande)
-	if err != nil {
-		return nil, err
-	}
-	return ScanDemandeEquipiers(rows)
-}
-
-// DeleteDemandeEquipiersByIdEquipierAndIdDemande deletes the item matching the given fields, returning
-// the deleted items.
-func DeleteDemandeEquipiersByIdEquipierAndIdDemande(tx DB, idEquipier camps.IdEquipier, idDemande IdDemande) (item DemandeEquipiers, err error) {
-	rows, err := tx.Query("DELETE FROM demande_equipiers WHERE IdEquipier = $1 AND IdDemande = $2 RETURNING idequipier, iddemande, optionnelle", idEquipier, idDemande)
-	if err != nil {
-		return nil, err
-	}
-	return ScanDemandeEquipiers(rows)
-}
-
 // SelectDemandeEquipierByIdEquipierAndIdDemande return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectDemandeEquipierByIdEquipierAndIdDemande(tx DB, idEquipier camps.IdEquipier, idDemande IdDemande) (item DemandeEquipier, found bool, err error) {
 	row := tx.QueryRow("SELECT idequipier, iddemande, optionnelle FROM demande_equipiers WHERE IdEquipier = $1 AND IdDemande = $2", idEquipier, idDemande)
@@ -548,6 +516,38 @@ func SelectDemandeEquipierByIdEquipierAndIdDemande(tx DB, idEquipier camps.IdEqu
 		return item, false, nil
 	}
 	return item, true, err
+}
+
+func SelectDemandesByIdFiles(tx DB, idFiles_ ...IdFile) (Demandes, error) {
+	rows, err := tx.Query("SELECT id, idfile, iddirecteur, categorie, description, maxdocs, joursvalide FROM demandes WHERE idfile = ANY($1)", IdFileArrayToPQ(idFiles_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanDemandes(rows)
+}
+
+func DeleteDemandesByIdFiles(tx DB, idFiles_ ...IdFile) (Demandes, error) {
+	rows, err := tx.Query("DELETE FROM demandes WHERE idfile = ANY($1) RETURNING id, idfile, iddirecteur, categorie, description, maxdocs, joursvalide", IdFileArrayToPQ(idFiles_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanDemandes(rows)
+}
+
+func SelectDemandesByIdDirecteurs(tx DB, idDirecteurs_ ...personnes.IdPersonne) (Demandes, error) {
+	rows, err := tx.Query("SELECT id, idfile, iddirecteur, categorie, description, maxdocs, joursvalide FROM demandes WHERE iddirecteur = ANY($1)", personnes.IdPersonneArrayToPQ(idDirecteurs_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanDemandes(rows)
+}
+
+func DeleteDemandesByIdDirecteurs(tx DB, idDirecteurs_ ...personnes.IdPersonne) (Demandes, error) {
+	rows, err := tx.Query("DELETE FROM demandes WHERE iddirecteur = ANY($1) RETURNING id, idfile, iddirecteur, categorie, description, maxdocs, joursvalide", personnes.IdPersonneArrayToPQ(idDirecteurs_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanDemandes(rows)
 }
 
 func scanOneFile(row scanner) (File, error) {
@@ -768,7 +768,7 @@ func (items FileAides) ByIdFile() map[IdFile]FileAide {
 }
 
 // IdFiles returns the list of ids of IdFile
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items FileAides) IdFiles() []IdFile {
 	out := make([]IdFile, len(items))
@@ -814,7 +814,7 @@ func (items FileAides) ByIdAide() map[camps.IdAide]FileAide {
 }
 
 // IdAides returns the list of ids of IdAide
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items FileAides) IdAides() []camps.IdAide {
 	out := make([]camps.IdAide, len(items))
@@ -961,7 +961,7 @@ func (items FileCamps) ByIdFile() map[IdFile]FileCamp {
 }
 
 // IdFiles returns the list of ids of IdFile
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items FileCamps) IdFiles() []IdFile {
 	out := make([]IdFile, len(items))
@@ -1007,7 +1007,7 @@ func (items FileCamps) ByIdCamp() map[camps.IdCamp]FileCamps {
 }
 
 // IdCamps returns the list of ids of IdCamp
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items FileCamps) IdCamps() []camps.IdCamp {
 	out := make([]camps.IdCamp, len(items))
@@ -1144,7 +1144,7 @@ func (items FilePersonnes) ByIdFile() map[IdFile]FilePersonne {
 }
 
 // IdFiles returns the list of ids of IdFile
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items FilePersonnes) IdFiles() []IdFile {
 	out := make([]IdFile, len(items))
@@ -1190,7 +1190,7 @@ func (items FilePersonnes) ByIdPersonne() map[personnes.IdPersonne]FilePersonnes
 }
 
 // IdPersonnes returns the list of ids of IdPersonne
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items FilePersonnes) IdPersonnes() []personnes.IdPersonne {
 	out := make([]personnes.IdPersonne, len(items))
@@ -1226,7 +1226,7 @@ func (items FilePersonnes) ByIdDemande() map[IdDemande]FilePersonnes {
 }
 
 // IdDemandes returns the list of ids of IdDemande
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items FilePersonnes) IdDemandes() []IdDemande {
 	out := make([]IdDemande, len(items))

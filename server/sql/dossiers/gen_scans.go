@@ -176,12 +176,12 @@ func SelectDossiersByIdTauxs(tx DB, idTauxs_ ...IdTaux) (Dossiers, error) {
 	return ScanDossiers(rows)
 }
 
-func DeleteDossiersByIdTauxs(tx DB, idTauxs_ ...IdTaux) ([]IdDossier, error) {
-	rows, err := tx.Query("DELETE FROM dossiers WHERE idtaux = ANY($1) RETURNING id", IdTauxArrayToPQ(idTauxs_))
+func DeleteDossiersByIdTauxs(tx DB, idTauxs_ ...IdTaux) (Dossiers, error) {
+	rows, err := tx.Query("DELETE FROM dossiers WHERE idtaux = ANY($1) RETURNING id, idtaux, idresponsable, copiesmails, partageadressesok, demandefondsoutien, isvalidated, momentinscription, lastloaddocuments, keyv1", IdTauxArrayToPQ(idTauxs_))
 	if err != nil {
 		return nil, err
 	}
-	return ScanIdDossierArray(rows)
+	return ScanDossiers(rows)
 }
 
 // ByIdResponsable returns a map with 'IdResponsable' as keys.
@@ -217,12 +217,12 @@ func SelectDossiersByIdResponsables(tx DB, idResponsables_ ...personnes.IdPerson
 	return ScanDossiers(rows)
 }
 
-func DeleteDossiersByIdResponsables(tx DB, idResponsables_ ...personnes.IdPersonne) ([]IdDossier, error) {
-	rows, err := tx.Query("DELETE FROM dossiers WHERE idresponsable = ANY($1) RETURNING id", personnes.IdPersonneArrayToPQ(idResponsables_))
+func DeleteDossiersByIdResponsables(tx DB, idResponsables_ ...personnes.IdPersonne) (Dossiers, error) {
+	rows, err := tx.Query("DELETE FROM dossiers WHERE idresponsable = ANY($1) RETURNING id, idtaux, idresponsable, copiesmails, partageadressesok, demandefondsoutien, isvalidated, momentinscription, lastloaddocuments, keyv1", personnes.IdPersonneArrayToPQ(idResponsables_))
 	if err != nil {
 		return nil, err
 	}
-	return ScanIdDossierArray(rows)
+	return ScanDossiers(rows)
 }
 
 // SelectDossierByIdAndIdTaux return zero or one item, thanks to a UNIQUE SQL constraint.
@@ -382,12 +382,12 @@ func SelectPaiementsByIdDossiers(tx DB, idDossiers_ ...IdDossier) (Paiements, er
 	return ScanPaiements(rows)
 }
 
-func DeletePaiementsByIdDossiers(tx DB, idDossiers_ ...IdDossier) ([]IdPaiement, error) {
-	rows, err := tx.Query("DELETE FROM paiements WHERE iddossier = ANY($1) RETURNING id", IdDossierArrayToPQ(idDossiers_))
+func DeletePaiementsByIdDossiers(tx DB, idDossiers_ ...IdDossier) (Paiements, error) {
+	rows, err := tx.Query("DELETE FROM paiements WHERE iddossier = ANY($1) RETURNING id, iddossier, isremboursement, montant, payeur, mode, time, label, details", IdDossierArrayToPQ(idDossiers_))
 	if err != nil {
 		return nil, err
 	}
-	return ScanIdPaiementArray(rows)
+	return ScanPaiements(rows)
 }
 
 func scanOneTaux(row scanner) (Taux, error) {
