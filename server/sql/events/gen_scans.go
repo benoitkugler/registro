@@ -132,47 +132,6 @@ func DeleteEventsByIDs(tx DB, ids ...IdEvent) ([]IdEvent, error) {
 	return ScanIdEventArray(rows)
 }
 
-// ByIdDossier returns a map with 'IdDossier' as keys.
-func (items Events) ByIdDossier() map[dossiers.IdDossier]Events {
-	out := make(map[dossiers.IdDossier]Events)
-	for _, target := range items {
-		dict := out[target.IdDossier]
-		if dict == nil {
-			dict = make(Events)
-		}
-		dict[target.Id] = target
-		out[target.IdDossier] = dict
-	}
-	return out
-}
-
-// IdDossiers returns the list of ids of IdDossier
-// contained in this table.
-// They are not garanteed to be distinct.
-func (items Events) IdDossiers() []dossiers.IdDossier {
-	out := make([]dossiers.IdDossier, 0, len(items))
-	for _, target := range items {
-		out = append(out, target.IdDossier)
-	}
-	return out
-}
-
-func SelectEventsByIdDossiers(tx DB, idDossiers_ ...dossiers.IdDossier) (Events, error) {
-	rows, err := tx.Query("SELECT id, iddossier, kind, created FROM events WHERE iddossier = ANY($1)", dossiers.IdDossierArrayToPQ(idDossiers_))
-	if err != nil {
-		return nil, err
-	}
-	return ScanEvents(rows)
-}
-
-func DeleteEventsByIdDossiers(tx DB, idDossiers_ ...dossiers.IdDossier) ([]IdEvent, error) {
-	rows, err := tx.Query("DELETE FROM events WHERE iddossier = ANY($1) RETURNING id", dossiers.IdDossierArrayToPQ(idDossiers_))
-	if err != nil {
-		return nil, err
-	}
-	return ScanIdEventArray(rows)
-}
-
 func scanOneEventAttestation(row scanner) (EventAttestation, error) {
 	var item EventAttestation
 	err := row.Scan(
@@ -286,7 +245,7 @@ func (items EventAttestations) ByIdEvent() map[IdEvent]EventAttestation {
 }
 
 // IdEvents returns the list of ids of IdEvent
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items EventAttestations) IdEvents() []IdEvent {
 	out := make([]IdEvent, len(items))
@@ -431,7 +390,7 @@ func (items EventCampDocss) ByIdEvent() map[IdEvent]EventCampDocs {
 }
 
 // IdEvents returns the list of ids of IdEvent
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items EventCampDocss) IdEvents() []IdEvent {
 	out := make([]IdEvent, len(items))
@@ -477,7 +436,7 @@ func (items EventCampDocss) ByIdCamp() map[camps.IdCamp]EventCampDocss {
 }
 
 // IdCamps returns the list of ids of IdCamp
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items EventCampDocss) IdCamps() []camps.IdCamp {
 	out := make([]camps.IdCamp, len(items))
@@ -614,68 +573,6 @@ func (item EventMessage) Delete(tx DB) error {
 	return err
 }
 
-// ByIdEvent returns a map with 'IdEvent' as keys.
-func (items EventMessages) ByIdEvent() map[IdEvent]EventMessage {
-	out := make(map[IdEvent]EventMessage, len(items))
-	for _, target := range items {
-		out[target.IdEvent] = target
-	}
-	return out
-}
-
-// IdEvents returns the list of ids of IdEvent
-// contained in this link table.
-// They are not garanteed to be distinct.
-func (items EventMessages) IdEvents() []IdEvent {
-	out := make([]IdEvent, len(items))
-	for index, target := range items {
-		out[index] = target.IdEvent
-	}
-	return out
-}
-
-// SelectEventMessageByIdEvent return zero or one item, thanks to a UNIQUE SQL constraint.
-func SelectEventMessageByIdEvent(tx DB, idEvent IdEvent) (item EventMessage, found bool, err error) {
-	row := tx.QueryRow("SELECT idevent, contenu, origine, originecamp, vubackoffice, vuespaceperso, vufondsoutien, onlytofondsoutien FROM event_messages WHERE idevent = $1", idEvent)
-	item, err = ScanEventMessage(row)
-	if err == sql.ErrNoRows {
-		return item, false, nil
-	}
-	return item, true, err
-}
-
-func SelectEventMessagesByIdEvents(tx DB, idEvents_ ...IdEvent) (EventMessages, error) {
-	rows, err := tx.Query("SELECT idevent, contenu, origine, originecamp, vubackoffice, vuespaceperso, vufondsoutien, onlytofondsoutien FROM event_messages WHERE idevent = ANY($1)", IdEventArrayToPQ(idEvents_))
-	if err != nil {
-		return nil, err
-	}
-	return ScanEventMessages(rows)
-}
-
-func DeleteEventMessagesByIdEvents(tx DB, idEvents_ ...IdEvent) (EventMessages, error) {
-	rows, err := tx.Query("DELETE FROM event_messages WHERE idevent = ANY($1) RETURNING idevent, contenu, origine, originecamp, vubackoffice, vuespaceperso, vufondsoutien, onlytofondsoutien", IdEventArrayToPQ(idEvents_))
-	if err != nil {
-		return nil, err
-	}
-	return ScanEventMessages(rows)
-}
-
-func SelectEventMessagesByOrigineCamps(tx DB, origineCamps_ ...camps.IdCamp) (EventMessages, error) {
-	rows, err := tx.Query("SELECT idevent, contenu, origine, originecamp, vubackoffice, vuespaceperso, vufondsoutien, onlytofondsoutien FROM event_messages WHERE originecamp = ANY($1)", camps.IdCampArrayToPQ(origineCamps_))
-	if err != nil {
-		return nil, err
-	}
-	return ScanEventMessages(rows)
-}
-
-func DeleteEventMessagesByOrigineCamps(tx DB, origineCamps_ ...camps.IdCamp) (EventMessages, error) {
-	rows, err := tx.Query("DELETE FROM event_messages WHERE originecamp = ANY($1) RETURNING idevent, contenu, origine, originecamp, vubackoffice, vuespaceperso, vufondsoutien, onlytofondsoutien", camps.IdCampArrayToPQ(origineCamps_))
-	if err != nil {
-		return nil, err
-	}
-	return ScanEventMessages(rows)
-}
-
 func scanOneEventMessageVu(row scanner) (EventMessageVu, error) {
 	var item EventMessageVu
 	err := row.Scan(
@@ -785,7 +682,7 @@ func (items EventMessageVus) ByIdEvent() map[IdEvent]EventMessageVus {
 }
 
 // IdEvents returns the list of ids of IdEvent
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items EventMessageVus) IdEvents() []IdEvent {
 	out := make([]IdEvent, len(items))
@@ -821,7 +718,7 @@ func (items EventMessageVus) ByIdCamp() map[camps.IdCamp]EventMessageVus {
 }
 
 // IdCamps returns the list of ids of IdCamp
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items EventMessageVus) IdCamps() []camps.IdCamp {
 	out := make([]camps.IdCamp, len(items))
@@ -855,6 +752,68 @@ func SelectEventMessageVuByIdEventAndIdCamp(tx DB, idEvent IdEvent, idCamp camps
 		return item, false, nil
 	}
 	return item, true, err
+}
+
+// ByIdEvent returns a map with 'IdEvent' as keys.
+func (items EventMessages) ByIdEvent() map[IdEvent]EventMessage {
+	out := make(map[IdEvent]EventMessage, len(items))
+	for _, target := range items {
+		out[target.IdEvent] = target
+	}
+	return out
+}
+
+// IdEvents returns the list of ids of IdEvent
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items EventMessages) IdEvents() []IdEvent {
+	out := make([]IdEvent, len(items))
+	for index, target := range items {
+		out[index] = target.IdEvent
+	}
+	return out
+}
+
+// SelectEventMessageByIdEvent return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectEventMessageByIdEvent(tx DB, idEvent IdEvent) (item EventMessage, found bool, err error) {
+	row := tx.QueryRow("SELECT idevent, contenu, origine, originecamp, vubackoffice, vuespaceperso, vufondsoutien, onlytofondsoutien FROM event_messages WHERE idevent = $1", idEvent)
+	item, err = ScanEventMessage(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
+}
+
+func SelectEventMessagesByIdEvents(tx DB, idEvents_ ...IdEvent) (EventMessages, error) {
+	rows, err := tx.Query("SELECT idevent, contenu, origine, originecamp, vubackoffice, vuespaceperso, vufondsoutien, onlytofondsoutien FROM event_messages WHERE idevent = ANY($1)", IdEventArrayToPQ(idEvents_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanEventMessages(rows)
+}
+
+func DeleteEventMessagesByIdEvents(tx DB, idEvents_ ...IdEvent) (EventMessages, error) {
+	rows, err := tx.Query("DELETE FROM event_messages WHERE idevent = ANY($1) RETURNING idevent, contenu, origine, originecamp, vubackoffice, vuespaceperso, vufondsoutien, onlytofondsoutien", IdEventArrayToPQ(idEvents_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanEventMessages(rows)
+}
+
+func SelectEventMessagesByOrigineCamps(tx DB, origineCamps_ ...camps.IdCamp) (EventMessages, error) {
+	rows, err := tx.Query("SELECT idevent, contenu, origine, originecamp, vubackoffice, vuespaceperso, vufondsoutien, onlytofondsoutien FROM event_messages WHERE originecamp = ANY($1)", camps.IdCampArrayToPQ(origineCamps_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanEventMessages(rows)
+}
+
+func DeleteEventMessagesByOrigineCamps(tx DB, origineCamps_ ...camps.IdCamp) (EventMessages, error) {
+	rows, err := tx.Query("DELETE FROM event_messages WHERE originecamp = ANY($1) RETURNING idevent, contenu, origine, originecamp, vubackoffice, vuespaceperso, vufondsoutien, onlytofondsoutien", camps.IdCampArrayToPQ(origineCamps_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanEventMessages(rows)
 }
 
 func scanOneEventPlaceLiberee(row scanner) (EventPlaceLiberee, error) {
@@ -970,7 +929,7 @@ func (items EventPlaceLiberees) ByIdEvent() map[IdEvent]EventPlaceLiberee {
 }
 
 // IdEvents returns the list of ids of IdEvent
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items EventPlaceLiberees) IdEvents() []IdEvent {
 	out := make([]IdEvent, len(items))
@@ -1016,7 +975,7 @@ func (items EventPlaceLiberees) ByIdParticipant() map[camps.IdParticipant]EventP
 }
 
 // IdParticipants returns the list of ids of IdParticipant
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items EventPlaceLiberees) IdParticipants() []camps.IdParticipant {
 	out := make([]camps.IdParticipant, len(items))
@@ -1151,7 +1110,7 @@ func (items EventSondages) ByIdEvent() map[IdEvent]EventSondage {
 }
 
 // IdEvents returns the list of ids of IdEvent
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items EventSondages) IdEvents() []IdEvent {
 	out := make([]IdEvent, len(items))
@@ -1197,7 +1156,7 @@ func (items EventSondages) ByIdCamp() map[camps.IdCamp]EventSondages {
 }
 
 // IdCamps returns the list of ids of IdCamp
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items EventSondages) IdCamps() []camps.IdCamp {
 	out := make([]camps.IdCamp, len(items))
@@ -1332,7 +1291,7 @@ func (items EventValidations) ByIdEvent() map[IdEvent]EventValidation {
 }
 
 // IdEvents returns the list of ids of IdEvent
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items EventValidations) IdEvents() []IdEvent {
 	out := make([]IdEvent, len(items))
@@ -1366,6 +1325,47 @@ func DeleteEventValidationsByIdEvents(tx DB, idEvents_ ...IdEvent) (EventValidat
 		return nil, err
 	}
 	return ScanEventValidations(rows)
+}
+
+// ByIdDossier returns a map with 'IdDossier' as keys.
+func (items Events) ByIdDossier() map[dossiers.IdDossier]Events {
+	out := make(map[dossiers.IdDossier]Events)
+	for _, target := range items {
+		dict := out[target.IdDossier]
+		if dict == nil {
+			dict = make(Events)
+		}
+		dict[target.Id] = target
+		out[target.IdDossier] = dict
+	}
+	return out
+}
+
+// IdDossiers returns the list of ids of IdDossier
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items Events) IdDossiers() []dossiers.IdDossier {
+	out := make([]dossiers.IdDossier, 0, len(items))
+	for _, target := range items {
+		out = append(out, target.IdDossier)
+	}
+	return out
+}
+
+func SelectEventsByIdDossiers(tx DB, idDossiers_ ...dossiers.IdDossier) (Events, error) {
+	rows, err := tx.Query("SELECT id, iddossier, kind, created FROM events WHERE iddossier = ANY($1)", dossiers.IdDossierArrayToPQ(idDossiers_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanEvents(rows)
+}
+
+func DeleteEventsByIdDossiers(tx DB, idDossiers_ ...dossiers.IdDossier) (Events, error) {
+	rows, err := tx.Query("DELETE FROM events WHERE iddossier = ANY($1) RETURNING id, iddossier, kind, created", dossiers.IdDossierArrayToPQ(idDossiers_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanEvents(rows)
 }
 
 // SelectEventByIdAndKind return zero or one item, thanks to a UNIQUE SQL constraint.

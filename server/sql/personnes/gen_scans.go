@@ -147,7 +147,7 @@ func (items Fichesanitaires) ByIdPersonne() map[IdPersonne]Fichesanitaire {
 }
 
 // IdPersonnes returns the list of ids of IdPersonne
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items Fichesanitaires) IdPersonnes() []IdPersonne {
 	out := make([]IdPersonne, len(items))
