@@ -13,6 +13,7 @@ import (
 	"registro/config"
 	"registro/controllers/backoffice"
 	"registro/controllers/directeurs"
+	"registro/controllers/dons"
 	equipiers "registro/controllers/equipier"
 	"registro/controllers/espaceperso"
 	fsAPI "registro/controllers/files"
@@ -53,7 +54,7 @@ func main() {
 		fmt.Println("Using model for recu fiscal:", path)
 	}
 
-	// TODO: setup Dons, OnlinePaiement APIS
+	// TODO: setup Helloasso, OnlinePaiement APIS
 	helloasso := config.Helloasso{}
 
 	fmt.Println("Connecting to DB", dbCreds.Name, "at", dbCreds.Host, "...")
@@ -76,14 +77,16 @@ func main() {
 	backofficeCt, err := backoffice.NewController(db, encrypter, keys.Backoffice, keys.FondSoutien, fs, smtp, asso, immich, helloasso)
 	check(err)
 
+	donsCt := dons.NewController(db, encrypter, keys.Dons, asso, smtp, helloasso)
+
 	directeursCt, err := directeurs.NewController(db, keys.EncryptKey, keys.Directeurs, fs, smtp, asso, immich)
 	check(err)
+
+	equipiersCt := equipiers.NewController(db, encrypter, fs, immich)
 
 	espacepersoCt := espaceperso.NewController(db, encrypter, smtp, asso, fs, immich)
 
 	inscriptionsCt := inscriptions.NewController(db, encrypter, smtp, asso)
-
-	equipiersCt := equipiers.NewController(db, encrypter, fs, immich)
 
 	servicesCt := services.NewController(db, encrypter, smtp, asso)
 
@@ -116,11 +119,12 @@ func main() {
 
 	setupRoutesBackoffice(e, backofficeCt)
 	setupRoutesDirecteurs(e, directeursCt)
+	setupRoutesDons(e, donsCt)
+	setupRoutesEquipier(e, equipiersCt)
 	setupRoutesEspaceperso(e, espacepersoCt)
 	setupRoutesInscription(e, inscriptionsCt)
-	setupRoutesEquipier(e, equipiersCt)
-	setupRoutesServices(e, servicesCt, espacepersoCt)
 	setupRoutesMisc(e, filesCt)
+	setupRoutesServices(e, servicesCt, espacepersoCt)
 	setupClientApps(e, asso.ID)
 
 	if directories.Media != "" {

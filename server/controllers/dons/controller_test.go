@@ -11,6 +11,17 @@ import (
 	tu "registro/utils/testutils"
 )
 
+func TestLoggin(t *testing.T) {
+	ct := Controller{password: "1234"}
+	out, err := ct.loggin("smldsmld")
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, out == LogginOut{})
+
+	out, err = ct.loggin("1234")
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, out.IsValid && len(out.Token) > 0)
+}
+
 func TestIdentifieDon(t *testing.T) {
 	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
 		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",
@@ -61,4 +72,8 @@ func TestCreateDon(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	_, err = ct.createDon(dons.Don{IdOrganisme: pe2.Id.Opt(), Montant: ds.NewFrancsuisses(50.1), ModePaiement: ds.Cheque})
 	tu.AssertNoErr(t, err)
+
+	out, err := ct.loadDons()
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(out) == 2)
 }

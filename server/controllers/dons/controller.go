@@ -7,9 +7,11 @@ import (
 	"log"
 	"slices"
 	"strings"
+	"time"
 
 	"registro/config"
 	"registro/controllers/files"
+	"registro/crypto"
 	"registro/helloasso"
 	"registro/logic"
 	"registro/logic/search"
@@ -21,15 +23,94 @@ import (
 	"registro/sql/shared"
 	"registro/utils"
 
+	"github.com/golang-jwt/jwt/v5"
+	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 )
 
 type Controller struct {
-	db   *sql.DB
-	asso config.Asso
-	smtp config.SMTP
+	db       *sql.DB
+	key      crypto.Encrypter
+	password string
+	asso     config.Asso
+	smtp     config.SMTP
 
 	helloasso config.Helloasso // optionnal
+}
+
+// [helloasso] is optionnal
+func NewController(db *sql.DB, key crypto.Encrypter, password string, asso config.Asso, smtp config.SMTP, helloasso config.Helloasso) *Controller {
+	return &Controller{db, key, password, asso, smtp, helloasso}
+}
+
+// customClaims are custom claims extending default ones.
+type customClaims struct {
+	jwt.RegisteredClaims
+}
+
+func (ct *Controller) JWTMiddleware() echo.MiddlewareFunc {
+	config := echojwt.Config{
+		SigningKey:    ct.key[:],
+		NewClaimsFunc: func(c echo.Context) jwt.Claims { return new(customClaims) },
+	}
+	return echojwt.WithConfig(config)
+}
+
+// expects the token to be in the `token` query parameters
+func (ct *Controller) JWTMiddlewareForQuery() echo.MiddlewareFunc {
+	config := echojwt.Config{
+		SigningKey:    ct.key[:],
+		NewClaimsFunc: func(c echo.Context) jwt.Claims { return new(customClaims) },
+		TokenLookup:   "query:token",
+	}
+	return echojwt.WithConfig(config)
+}
+
+const deltaToken = 3 * 24 * time.Hour
+
+// NewToken generate a connection token.
+//
+// It may also be used to setup a dev. token.
+func (ct *Controller) NewToken() (string, error) {
+	// Set custom claims
+	claims := &customClaims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(deltaToken)),
+		},
+	}
+
+	// Create token with claims
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	// Generate encoded token and send it as response.
+	return token.SignedString(ct.key[:])
+}
+
+type LogginOut struct {
+	IsValid bool
+	Token   string
+}
+
+// Loggin is called to enter the web app,
+// and returns a token if the password is valid.
+func (ct *Controller) Loggin(c echo.Context) error {
+	password := c.QueryParam("password")
+	out, err := ct.loggin(password)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) loggin(password string) (LogginOut, error) {
+	if password != ct.password {
+		return LogginOut{}, nil
+	}
+	token, err := ct.NewToken()
+	if err != nil {
+		return LogginOut{}, err
+	}
+	return LogginOut{IsValid: true, Token: token}, nil
 }
 
 // HandleDonHelloasso is the webhook trigerred by Helloasso
@@ -155,7 +236,26 @@ func (ct *Controller) loadDons() ([]DonExt, error) {
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
-	personnes, err := pr.SelectPersonnes(ct.db)
+	personnes, err := pr.SelectPersonnes(ct.db, dons.IdPersonnes()...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	organismes, err := dn.SelectOrganismes(ct.db, dons.IdOrganismes()...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	out := make([]DonExt, 0, len(dons))
+	for _, don := range dons {
+		var donateur string
+		if don.IdPersonne.Valid {
+			donateur = personnes[don.IdPersonne.Id].NOMPrenom()
+		} else {
+			donateur = organismes[don.IdOrganisme.Id].Nom
+		}
+		out = append(out, DonExt{Don: don, Donateur: donateur})
+	}
+	// sorting will be done on client
+	return out, nil
 }
 
 type PersonneD struct {
@@ -187,7 +287,7 @@ func (p PersonneD) personne() pr.Personne {
 	}}
 }
 
-func (ct *Controller) CreatePersonne(c echo.Context) error {
+func (ct *Controller) CreatePersonneDonateur(c echo.Context) error {
 	var args PersonneD
 	if err := c.Bind(&args); err != nil {
 		return err
