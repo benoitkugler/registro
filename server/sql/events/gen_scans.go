@@ -800,6 +800,19 @@ func DeleteEventMessagesByIdEvents(tx DB, idEvents_ ...IdEvent) (EventMessages, 
 	return ScanEventMessages(rows)
 }
 
+// OrigineCamps returns the list of non null OrigineCamp
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items EventMessages) OrigineCamps() []camps.IdCamp {
+	var out []camps.IdCamp
+	for _, target := range items {
+		if id := target.OrigineCamp; id.Valid {
+			out = append(out, id.Id)
+		}
+	}
+	return out
+}
+
 func SelectEventMessagesByOrigineCamps(tx DB, origineCamps_ ...camps.IdCamp) (EventMessages, error) {
 	rows, err := tx.Query("SELECT idevent, contenu, origine, originecamp, vubackoffice, vuespaceperso, vufondsoutien, onlytofondsoutien FROM event_messages WHERE originecamp = ANY($1)", camps.IdCampArrayToPQ(origineCamps_))
 	if err != nil {

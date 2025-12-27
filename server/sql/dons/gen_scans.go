@@ -136,6 +136,19 @@ func DeleteDonsByIDs(tx DB, ids ...IdDon) ([]IdDon, error) {
 	return ScanIdDonArray(rows)
 }
 
+// IdPersonnes returns the list of non null IdPersonne
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items Dons) IdPersonnes() []personnes.IdPersonne {
+	var out []personnes.IdPersonne
+	for _, target := range items {
+		if id := target.IdPersonne; id.Valid {
+			out = append(out, id.Id)
+		}
+	}
+	return out
+}
+
 func SelectDonsByIdPersonnes(tx DB, idPersonnes_ ...personnes.IdPersonne) (Dons, error) {
 	rows, err := tx.Query("SELECT id, idpersonne, idorganisme, montant, modepaiement, date, affectation, details, remercie FROM dons WHERE idpersonne = ANY($1)", personnes.IdPersonneArrayToPQ(idPersonnes_))
 	if err != nil {
@@ -144,12 +157,25 @@ func SelectDonsByIdPersonnes(tx DB, idPersonnes_ ...personnes.IdPersonne) (Dons,
 	return ScanDons(rows)
 }
 
-func DeleteDonsByIdPersonnes(tx DB, idPersonnes_ ...personnes.IdPersonne) ([]IdDon, error) {
-	rows, err := tx.Query("DELETE FROM dons WHERE idpersonne = ANY($1) RETURNING id", personnes.IdPersonneArrayToPQ(idPersonnes_))
+func DeleteDonsByIdPersonnes(tx DB, idPersonnes_ ...personnes.IdPersonne) (Dons, error) {
+	rows, err := tx.Query("DELETE FROM dons WHERE idpersonne = ANY($1) RETURNING id, idpersonne, idorganisme, montant, modepaiement, date, affectation, details, remercie", personnes.IdPersonneArrayToPQ(idPersonnes_))
 	if err != nil {
 		return nil, err
 	}
-	return ScanIdDonArray(rows)
+	return ScanDons(rows)
+}
+
+// IdOrganismes returns the list of non null IdOrganisme
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items Dons) IdOrganismes() []IdOrganisme {
+	var out []IdOrganisme
+	for _, target := range items {
+		if id := target.IdOrganisme; id.Valid {
+			out = append(out, id.Id)
+		}
+	}
+	return out
 }
 
 func SelectDonsByIdOrganismes(tx DB, idOrganismes_ ...IdOrganisme) (Dons, error) {
@@ -160,12 +186,12 @@ func SelectDonsByIdOrganismes(tx DB, idOrganismes_ ...IdOrganisme) (Dons, error)
 	return ScanDons(rows)
 }
 
-func DeleteDonsByIdOrganismes(tx DB, idOrganismes_ ...IdOrganisme) ([]IdDon, error) {
-	rows, err := tx.Query("DELETE FROM dons WHERE idorganisme = ANY($1) RETURNING id", IdOrganismeArrayToPQ(idOrganismes_))
+func DeleteDonsByIdOrganismes(tx DB, idOrganismes_ ...IdOrganisme) (Dons, error) {
+	rows, err := tx.Query("DELETE FROM dons WHERE idorganisme = ANY($1) RETURNING id, idpersonne, idorganisme, montant, modepaiement, date, affectation, details, remercie", IdOrganismeArrayToPQ(idOrganismes_))
 	if err != nil {
 		return nil, err
 	}
-	return ScanIdDonArray(rows)
+	return ScanDons(rows)
 }
 
 func scanOneOrganisme(row scanner) (Organisme, error) {
