@@ -8,8 +8,7 @@ CREATE TABLE dons (
     Date date NOT NULL,
     Affectation text NOT NULL,
     Details text NOT NULL,
-    Remercie boolean NOT NULL,
-    IdPaiementHelloasso integer NOT NULL
+    Remercie boolean NOT NULL
 );
 
 CREATE TABLE organismes (

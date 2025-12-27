@@ -31,9 +31,6 @@ type Don struct {
 	Details      string // détails additionels
 
 	Remercie bool // `true` si le remerciement a été envoyé
-
-	// champ caché, optionnel
-	IdPaiementHelloasso int32
 }
 
 // Organisme désigne un groupe de personne (typiquement une église),

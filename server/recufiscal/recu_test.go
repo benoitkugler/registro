@@ -19,8 +19,14 @@ import (
 
 var taux = ds.Taux{Euros: 1000}
 
+func init() {
+	if err := Init("templateRecuAcve.pdf"); err != nil {
+		panic(err)
+	}
+}
+
 func TestFieldLength(t *testing.T) {
-	field := docAcve.Catalog.AcroForm.Flatten()["z1"].Field
+	field := recuTemplate.Catalog.AcroForm.Flatten()["z1"].Field
 	tu.Assert(t, field.FT.(model.FormFieldText).MaxLen == nil)
 }
 

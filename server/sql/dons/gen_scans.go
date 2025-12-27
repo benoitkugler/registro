@@ -34,7 +34,6 @@ func scanOneDon(row scanner) (Don, error) {
 		&item.Affectation,
 		&item.Details,
 		&item.Remercie,
-		&item.IdPaiementHelloasso,
 	)
 	return item, err
 }
@@ -43,7 +42,7 @@ func ScanDon(row *sql.Row) (Don, error) { return scanOneDon(row) }
 
 // SelectAll returns all the items in the dons table.
 func SelectAllDons(db DB) (Dons, error) {
-	rows, err := db.Query("SELECT id, idpersonne, idorganisme, montant, modepaiement, date, affectation, details, remercie, idpaiementhelloasso FROM dons")
+	rows, err := db.Query("SELECT id, idpersonne, idorganisme, montant, modepaiement, date, affectation, details, remercie FROM dons")
 	if err != nil {
 		return nil, err
 	}
@@ -52,13 +51,13 @@ func SelectAllDons(db DB) (Dons, error) {
 
 // SelectDon returns the entry matching 'id'.
 func SelectDon(tx DB, id IdDon) (Don, error) {
-	row := tx.QueryRow("SELECT id, idpersonne, idorganisme, montant, modepaiement, date, affectation, details, remercie, idpaiementhelloasso FROM dons WHERE id = $1", id)
+	row := tx.QueryRow("SELECT id, idpersonne, idorganisme, montant, modepaiement, date, affectation, details, remercie FROM dons WHERE id = $1", id)
 	return ScanDon(row)
 }
 
 // SelectDons returns the entry matching the given 'ids'.
 func SelectDons(tx DB, ids ...IdDon) (Dons, error) {
-	rows, err := tx.Query("SELECT id, idpersonne, idorganisme, montant, modepaiement, date, affectation, details, remercie, idpaiementhelloasso FROM dons WHERE id = ANY($1)", IdDonArrayToPQ(ids))
+	rows, err := tx.Query("SELECT id, idpersonne, idorganisme, montant, modepaiement, date, affectation, details, remercie FROM dons WHERE id = ANY($1)", IdDonArrayToPQ(ids))
 	if err != nil {
 		return nil, err
 	}
@@ -103,28 +102,28 @@ func ScanDons(rs *sql.Rows) (Dons, error) {
 // Insert one Don in the database and returns the item with id filled.
 func (item Don) Insert(tx DB) (out Don, err error) {
 	row := tx.QueryRow(`INSERT INTO dons (
-		idpersonne, idorganisme, montant, modepaiement, date, affectation, details, remercie, idpaiementhelloasso
+		idpersonne, idorganisme, montant, modepaiement, date, affectation, details, remercie
 		) VALUES (
-		$1, $2, $3, $4, $5, $6, $7, $8, $9
-		) RETURNING id, idpersonne, idorganisme, montant, modepaiement, date, affectation, details, remercie, idpaiementhelloasso;
-		`, item.IdPersonne, item.IdOrganisme, item.Montant, item.ModePaiement, item.Date, item.Affectation, item.Details, item.Remercie, item.IdPaiementHelloasso)
+		$1, $2, $3, $4, $5, $6, $7, $8
+		) RETURNING id, idpersonne, idorganisme, montant, modepaiement, date, affectation, details, remercie;
+		`, item.IdPersonne, item.IdOrganisme, item.Montant, item.ModePaiement, item.Date, item.Affectation, item.Details, item.Remercie)
 	return ScanDon(row)
 }
 
 // Update Don in the database and returns the new version.
 func (item Don) Update(tx DB) (out Don, err error) {
 	row := tx.QueryRow(`UPDATE dons SET (
-		idpersonne, idorganisme, montant, modepaiement, date, affectation, details, remercie, idpaiementhelloasso
+		idpersonne, idorganisme, montant, modepaiement, date, affectation, details, remercie
 		) = (
-		$1, $2, $3, $4, $5, $6, $7, $8, $9
-		) WHERE id = $10 RETURNING id, idpersonne, idorganisme, montant, modepaiement, date, affectation, details, remercie, idpaiementhelloasso;
-		`, item.IdPersonne, item.IdOrganisme, item.Montant, item.ModePaiement, item.Date, item.Affectation, item.Details, item.Remercie, item.IdPaiementHelloasso, item.Id)
+		$1, $2, $3, $4, $5, $6, $7, $8
+		) WHERE id = $9 RETURNING id, idpersonne, idorganisme, montant, modepaiement, date, affectation, details, remercie;
+		`, item.IdPersonne, item.IdOrganisme, item.Montant, item.ModePaiement, item.Date, item.Affectation, item.Details, item.Remercie, item.Id)
 	return ScanDon(row)
 }
 
 // Deletes the Don and returns the item
 func DeleteDonById(tx DB, id IdDon) (Don, error) {
-	row := tx.QueryRow("DELETE FROM dons WHERE id = $1 RETURNING id, idpersonne, idorganisme, montant, modepaiement, date, affectation, details, remercie, idpaiementhelloasso;", id)
+	row := tx.QueryRow("DELETE FROM dons WHERE id = $1 RETURNING id, idpersonne, idorganisme, montant, modepaiement, date, affectation, details, remercie;", id)
 	return ScanDon(row)
 }
 
@@ -138,7 +137,7 @@ func DeleteDonsByIDs(tx DB, ids ...IdDon) ([]IdDon, error) {
 }
 
 func SelectDonsByIdPersonnes(tx DB, idPersonnes_ ...personnes.IdPersonne) (Dons, error) {
-	rows, err := tx.Query("SELECT id, idpersonne, idorganisme, montant, modepaiement, date, affectation, details, remercie, idpaiementhelloasso FROM dons WHERE idpersonne = ANY($1)", personnes.IdPersonneArrayToPQ(idPersonnes_))
+	rows, err := tx.Query("SELECT id, idpersonne, idorganisme, montant, modepaiement, date, affectation, details, remercie FROM dons WHERE idpersonne = ANY($1)", personnes.IdPersonneArrayToPQ(idPersonnes_))
 	if err != nil {
 		return nil, err
 	}
@@ -154,7 +153,7 @@ func DeleteDonsByIdPersonnes(tx DB, idPersonnes_ ...personnes.IdPersonne) ([]IdD
 }
 
 func SelectDonsByIdOrganismes(tx DB, idOrganismes_ ...IdOrganisme) (Dons, error) {
-	rows, err := tx.Query("SELECT id, idpersonne, idorganisme, montant, modepaiement, date, affectation, details, remercie, idpaiementhelloasso FROM dons WHERE idorganisme = ANY($1)", IdOrganismeArrayToPQ(idOrganismes_))
+	rows, err := tx.Query("SELECT id, idpersonne, idorganisme, montant, modepaiement, date, affectation, details, remercie FROM dons WHERE idorganisme = ANY($1)", IdOrganismeArrayToPQ(idOrganismes_))
 	if err != nil {
 		return nil, err
 	}

@@ -32,14 +32,16 @@ const (
 )
 
 // PatternsSimilarite exposes the fields used to search
-// existing profils
+// existing profils.
 type PatternsSimilarite struct {
 	Nom           string
 	Prenom        string
-	Sexe          pr.Sexe
 	DateNaissance shared.Date
+
+	Sexe pr.Sexe // if empty, the matching is done ignoring Sexe
 }
 
+// NewPatternsSimilarite selects the proper fields.
 func NewPatternsSimilarite(pr pr.Etatcivil) PatternsSimilarite {
 	return PatternsSimilarite{
 		Nom:           pr.Nom,
@@ -65,7 +67,7 @@ func (ps *PatternsSimilarite) Personne() pr.Etatcivil {
 func (ps *PatternsSimilarite) match(candidate pr.Etatcivil) bool {
 	return ps.Nom == Normalize(candidate.Nom) &&
 		ps.Prenom == Normalize(candidate.Prenom) &&
-		ps.Sexe == candidate.Sexe &&
+		(ps.Sexe == pr.NoSexe || ps.Sexe == candidate.Sexe) &&
 		ps.DateNaissance == candidate.DateNaissance
 }
 

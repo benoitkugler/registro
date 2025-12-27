@@ -21,7 +21,6 @@ func randDon() Don {
 	s.Affectation = randstring()
 	s.Details = randstring()
 	s.Remercie = randbool()
-	s.IdPaiementHelloasso = randint32()
 
 	return s
 }
@@ -74,10 +73,6 @@ func randdos_Montant() dossiers.Montant {
 
 func randint() int {
 	return int(rand.Intn(1000000))
-}
-
-func randint32() int32 {
-	return int32(rand.Intn(1000000))
 }
 
 func randint64() int64 {

@@ -21,6 +21,7 @@ import (
 	"registro/crypto"
 	"registro/generators/pdfcreator"
 	"registro/logic"
+	"registro/recufiscal"
 	cp "registro/sql/camps"
 	"registro/sql/files"
 
@@ -45,6 +46,12 @@ func main() {
 	err := pdfcreator.Init(directories.Cache, directories.Assets)
 	check(err)
 	fmt.Println("Setting up pdfcreator -> OK.")
+
+	if path := config.NewModeleRecuFiscal(); path != "" {
+		err = recufiscal.Init(path)
+		check(err)
+		fmt.Println("Using model for recu fiscal:", path)
+	}
 
 	// TODO: setup Dons, OnlinePaiement APIS
 	helloasso := config.Helloasso{}

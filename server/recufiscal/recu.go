@@ -3,6 +3,7 @@ package recufiscal
 import (
 	"bytes"
 	_ "embed"
+	"errors"
 	"fmt"
 	"sort"
 	"strconv"
@@ -20,24 +21,22 @@ import (
 	"github.com/benoitkugler/pdf/reader"
 )
 
-//go:embed templateRecuAcve.pdf
-var templateRecuAcve []byte
+var recuTemplate *model.Document
 
-var docAcve model.Document
-
-// load the PDF model
-func init() {
-	doc, _, err := reader.ParsePDFReader(bytes.NewReader(templateRecuAcve), reader.Options{})
+// Init loads the PDF template required to emit "recu fiscal"
+func Init(templatePath string) error {
+	doc, _, err := reader.ParsePDFFile(templatePath, reader.Options{})
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("loading PDF template: %s", err)
 	}
 	if L := len(doc.Catalog.AcroForm.Flatten()); L != 65 {
-		panic("corrupted model (unexpected number of form fields)")
+		return fmt.Errorf("loading PDF template: corrupted model (unexpected number of form fields)")
 	}
-	field := doc.Catalog.AcroForm.Flatten()["z1"].Field
-	field.FT = model.FormFieldText{} // remove max length limitation
+	field := doc.Catalog.AcroForm.Flatten()["z1"].Field // pointer
+	field.FT = model.FormFieldText{}                    // remove max length limitation
 
-	docAcve = doc
+	recuTemplate = &doc
+	return nil
 }
 
 type recuFiscal struct {
@@ -79,11 +78,15 @@ func selectForRecu(taux ds.Taux, dons dons.Dons, year int) map[pr.IdPersonne]rec
 }
 
 // Generate rassemble les dons (personnels, pour l'année donnée) et
-// renvoie une archive .zip contenant :
+// renvoie une archive .ZIP contenant :
 //   - les étiquettes,
 //   - les reçus fiscaux
-//   - les adresses mails dans un CSV
+//   - les adresses mails dans un fichier .CSV
 func Generate(db dons.DB, year int) ([]byte, error) {
+	if recuTemplate == nil { // better error than panic
+		return nil, errors.New("internal error: recu template was not initialized")
+	}
+
 	dons, err := dons.SelectAllDons(db)
 	if err != nil {
 		return nil, utils.SQLError(err)
@@ -241,7 +244,7 @@ func fillPdf(recu recuFiscal, donateur pr.Personne) ([]byte, error) {
 		pdfFields = append(pdfFields, formfill.FDFField{T: field.id, Values: formfill.Values{V: field.valeur}})
 	}
 
-	doc := docAcve.Clone()
+	doc := recuTemplate.Clone()
 	err := formfill.FillForm(&doc, formfill.FDFDict{Fields: pdfFields}, true)
 	if err != nil {
 		return nil, err

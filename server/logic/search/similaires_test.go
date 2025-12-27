@@ -116,25 +116,22 @@ func TestPatternsSimilarite_match(t *testing.T) {
 	}
 
 	tests := []struct {
-		fields    fields
+		fields    PatternsSimilarite
 		candidate pr.Etatcivil
 		want      bool
 	}{
-		{fields{"Benoit", "Kugler", pr.Man, d1}, c1, true},
-		{fields{"Benoit", "Kugler", pr.Man, d2}, c1, false},
-		{fields{"Benoît", "Kugler", pr.Man, d1}, c1, true},
-		{fields{"Benoît", "Kugler", pr.Man, d1}, c2, false},
-		{fields{"Léo", "Kugler", pr.Woman, d1}, c3, false},
-		{fields{"Dominique", "Kugler", pr.Woman, d1}, c4, true},
-		{fields{"Dominique", "Kugler", pr.Man, d1}, c4, false},
+		{PatternsSimilarite{"Benoit", "Kugler", d1, pr.Man}, c1, true},
+		{PatternsSimilarite{"Benoit", "Kugler", d2, pr.Man}, c1, false},
+		{PatternsSimilarite{"Benoît", "Kugler", d1, pr.Man}, c1, true},
+		{PatternsSimilarite{"Benoît", "Kugler", d1, pr.Man}, c2, false},
+		{PatternsSimilarite{"Léo", "Kugler", d1, pr.Woman}, c3, false},
+		{PatternsSimilarite{"Dominique", "Kugler", d1, pr.Woman}, c4, true},
+		{PatternsSimilarite{"Dominique", "Kugler", d1, pr.Man}, c4, false},
+		{PatternsSimilarite{"Dominique", "Kugler", d1, pr.Man}, c4, false},
+		{PatternsSimilarite{"Dominique", "Kugler", d1, pr.NoSexe}, c4, true}, // ignore sexe
 	}
 	for _, tt := range tests {
-		ps := &PatternsSimilarite{
-			Nom:           tt.fields.Nom,
-			Prenom:        tt.fields.Prenom,
-			Sexe:          tt.fields.Sexe,
-			DateNaissance: tt.fields.DateNaissance,
-		}
+		ps := tt.fields
 		ps.normalize()
 		tu.Assert(t, ps.match(tt.candidate) == tt.want)
 	}

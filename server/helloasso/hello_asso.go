@@ -199,8 +199,6 @@ func newDonFromPayment(payment paymentHelloAsso) (DonDonateur, error) {
 		ModePaiement: dossiers.Helloasso,
 		Affectation:  payment.Order.FormSlug,
 		Details:      fmt.Sprintf("%d", payment.Id), // pourra être modifié
-
-		IdPaiementHelloasso: payment.Id, // caché
 	}
 	donateur := pr.Etatcivil{
 		Prenom:        payment.Payer.FirstName,
