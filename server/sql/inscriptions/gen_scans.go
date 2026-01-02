@@ -7,7 +7,6 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
-
 	"registro/sql/camps"
 	"registro/sql/dossiers"
 
@@ -444,7 +443,7 @@ func SelectInscriptionByIdAndIdTaux(tx DB, id IdInscription, idTaux dossiers.IdT
 
 func loadJSON(out any, src any) error {
 	if src == nil {
-		return nil // zero value out
+		return nil //zero value out
 	}
 	bs, ok := src.([]byte)
 	if !ok {
