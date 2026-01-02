@@ -4,37 +4,40 @@
   <v-container class="fill-height">
     <v-card title="Connection" class="mx-auto" width="400px">
       <v-card-text>
-        <SelectCamp
-          label="Camp"
-          v-model="selected"
-          :camps="camps"
-          name="user"
-          default-style
-        ></SelectCamp>
+        <form>
+          <SelectCamp
+            label="Camp"
+            v-model="selected"
+            :camps="camps"
+            name="user"
+            default-style
+          ></SelectCamp>
 
-        <v-text-field
-          class="mt-2"
-          label="Mot de passe"
-          v-model="password"
-          @update:model-value="errors = []"
-          :error-messages="errors"
-          :type="showPassword ? undefined : 'password'"
-          name="password"
-          @keydown.enter.prevent="
-            () => (!selected || !password.length ? null : loggin())
-          "
-        >
-          <template #append-inner>
-            <v-btn
-              class="ml-2"
-              size="small"
-              :icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
-              flat
-              @click="showPassword = !showPassword"
-            >
-            </v-btn>
-          </template>
-        </v-text-field>
+          <v-text-field
+            class="mt-2"
+            label="Mot de passe"
+            v-model="password"
+            @update:model-value="errors = []"
+            :error-messages="errors"
+            :type="showPassword ? undefined : 'password'"
+            name="password"
+            @keydown.enter.prevent="
+              () => (!selected || !password.length ? null : loggin())
+            "
+            autocomplete="current-password"
+          >
+            <template #append-inner>
+              <v-btn
+                class="ml-2"
+                size="small"
+                :icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+                flat
+                @click="showPassword = !showPassword"
+              >
+              </v-btn>
+            </template>
+          </v-text-field>
+        </form>
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>

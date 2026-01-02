@@ -2,27 +2,30 @@
   <v-container class="fill-height">
     <v-card class="mx-auto" width="400px">
       <v-card-text>
-        <v-text-field
-          label="Clé de connection"
-          v-model="password"
-          :error-messages="errors"
-          :type="showPassword ? undefined : 'password'"
-          name="password"
-          @keydown.enter.prevent="
-            () => (password.length == 0 ? null : loggin())
-          "
-        >
-          <template #append-inner>
-            <v-btn
-              class="ml-2"
-              size="small"
-              :icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
-              flat
-              @click="showPassword = !showPassword"
-            >
-            </v-btn>
-          </template>
-        </v-text-field>
+        <form>
+          <v-text-field
+            label="Clé de connection"
+            v-model="password"
+            :error-messages="errors"
+            :type="showPassword ? undefined : 'password'"
+            name="password"
+            @keydown.enter.prevent="
+              () => (password.length == 0 ? null : loggin())
+            "
+            autocomplete="current-password"
+          >
+            <template #append-inner>
+              <v-btn
+                class="ml-2"
+                size="small"
+                :icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+                flat
+                @click="showPassword = !showPassword"
+              >
+              </v-btn>
+            </template>
+          </v-text-field>
+        </form>
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
