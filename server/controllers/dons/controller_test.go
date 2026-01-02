@@ -2,6 +2,7 @@ package dons
 
 import (
 	"testing"
+	"time"
 
 	"registro/config"
 	"registro/sql/dons"
@@ -54,7 +55,7 @@ func loadEnv(t *testing.T) (config.Asso, config.SMTP) {
 	return asso, smtp
 }
 
-func TestCreateDon(t *testing.T) {
+func TestDonsAPI(t *testing.T) {
 	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
 		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",
 		"../../migrations/init.sql")
@@ -68,12 +69,16 @@ func TestCreateDon(t *testing.T) {
 	asso, smtp := loadEnv(t)
 	ct := Controller{db: db.DB, asso: asso, smtp: smtp}
 
-	_, err = ct.createDon(dons.Don{IdPersonne: pe1.Id.Opt(), Montant: ds.NewEuros(50.1), ModePaiement: ds.Cheque})
+	_, err = ct.createDon(dons.Don{IdPersonne: pe1.Id.Opt(), Montant: ds.NewEuros(50.1), ModePaiement: ds.Cheque, Date: shared.NewDateFrom(time.Now())})
 	tu.AssertNoErr(t, err)
-	_, err = ct.createDon(dons.Don{IdOrganisme: pe2.Id.Opt(), Montant: ds.NewFrancsuisses(50.1), ModePaiement: ds.Cheque})
+	_, err = ct.createDon(dons.Don{IdOrganisme: pe2.Id.Opt(), Montant: ds.NewFrancsuisses(50.1), ModePaiement: ds.Cheque, Date: shared.NewDateFrom(time.Now())})
 	tu.AssertNoErr(t, err)
 
 	out, err := ct.loadDons()
 	tu.AssertNoErr(t, err)
-	tu.Assert(t, len(out) == 2)
+	tu.Assert(t, len(out.Dons) == 2)
+	tu.Assert(t, len(out.YearTotals) == 1)
+
+	excel, err := ct.exportDonsExcel(time.Now().Year())
+	tu.Write(t, "Dons.xlsx", excel)
 }

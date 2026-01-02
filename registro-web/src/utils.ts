@@ -2,6 +2,7 @@ import {
   Acteur,
   CurrencyLabels,
   EventContentKind,
+  ModePaiement,
   Sexe,
   StatutPaiement,
   StatutParticipant,
@@ -376,6 +377,23 @@ export namespace Formatters {
         return "mdi-gender-male";
       case Sexe.Woman:
         return "mdi-gender-female";
+    }
+  }
+
+  export function paiementIcon(p: ModePaiement) {
+    switch (p) {
+      case ModePaiement.Cheque:
+        return "mdi-checkbook";
+      case ModePaiement.EnLigne:
+        return "mdi-credit-card";
+      case ModePaiement.Virement:
+        return "mdi-bank";
+      case ModePaiement.Especes:
+        return "mdi-cash";
+      case ModePaiement.Ancv:
+        return "mdi-wallet-giftcard";
+      case ModePaiement.Helloasso:
+        return "mdi-credit-card";
     }
   }
 

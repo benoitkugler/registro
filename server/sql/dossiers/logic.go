@@ -128,6 +128,23 @@ func (m MontantTaux) String() string {
 	return strings.Join(chunks, " ou ")
 }
 
+// MultiCurrencies stock (en centimes) une somme composée de toutes les monnaies,
+// typiquement utile pour des totaux.
+type MultiCurrencies [nbCurrencies]int
+
+func (mc *MultiCurrencies) Add(v Montant) { mc[v.Currency] += v.Cent }
+
+func (mc MultiCurrencies) String() string {
+	chunks := make([]string, 0, len(mc))
+	for currency, cents := range mc {
+		if cents == 0 {
+			continue
+		}
+		chunks = append(chunks, Montant{cents, Currency(currency)}.String())
+	}
+	return strings.Join(chunks, " et ")
+}
+
 // DescriptionHTML renvoie une description au format HTML
 func (r Paiement) DescriptionHTML() template.HTML {
 	var payeur string

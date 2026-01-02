@@ -24,7 +24,7 @@ func Assert(t *testing.T, b bool) {
 	}
 }
 
-func AssertNoErr(t *testing.T, err error) {
+func AssertNoErr(t testing.TB, err error) {
 	t.Helper()
 	if err != nil {
 		t.Fatal(err)

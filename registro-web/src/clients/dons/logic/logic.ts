@@ -16,6 +16,10 @@ class Controller extends AbstractAPI {
   }
 
   protected startRequest(): void {}
+
+  setToken(token: string) {
+    this.authToken = token;
+  }
 }
 
 export const controller = new Controller(

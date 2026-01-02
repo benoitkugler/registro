@@ -16,6 +16,7 @@ function rewriteURL(url: string) {
   for (const page of [
     "/src/clients/backoffice/",
     "/src/clients/directeurs/",
+    "/src/clients/dons/",
     "/src/clients/equipier/",
     "/src/clients/espaceperso/",
     "/src/clients/inscription/",
@@ -89,6 +90,7 @@ export default defineConfig(({ command }) => ({
       input: {
         backoffice: resolve(__dirname, "src/clients/backoffice/index.html"),
         directeurs: resolve(__dirname, "src/clients/directeurs/index.html"),
+        dons: resolve(__dirname, "src/clients/dons/index.html"),
         equipier: resolve(__dirname, "src/clients/equipier/index.html"),
         espaceperso: resolve(__dirname, "src/clients/espaceperso/index.html"),
         inscription: resolve(__dirname, "src/clients/inscription/index.html"),

@@ -40,5 +40,5 @@ func genereEtiquettes(personnes []pr.Etatcivil) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return pdfcreator.HTMLToPDF(out.String(), "")
+	return pdfcreator.HTMLToPDF(out.String())
 }

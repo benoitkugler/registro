@@ -107,6 +107,6 @@ var SampleDBACVE = config.DB{
 	Host:     "localhost",
 	User:     "benoit",
 	Password: "dummy",
-	Name:     "tmp_acve",
+	Name:     "test",
 	Port:     5432,
 }

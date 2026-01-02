@@ -23,4 +23,5 @@ func setupRoutesDons(e *echo.Echo, ct *dons.Controller) {
 	gr.GET("/api/v1/dons/search-organismes", ct.SearchOrganismes)
 
 	e.GET("/api/v1/dons/download-recus-fiscaux", ct.DownloadRecusFiscaux, ct.JWTMiddlewareForQuery()) // url-only
+	e.GET("/api/v1/dons/download-dons", ct.DownloadDonsExcel, ct.JWTMiddlewareForQuery())             // url-only
 }

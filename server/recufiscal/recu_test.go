@@ -101,3 +101,21 @@ func TestGenerate(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	tu.Write(t, "recus.zip", archive)
 }
+
+func BenchmarkExportRecus(b *testing.B) {
+	db, err := tu.SampleDBACVE.ConnectPostgres()
+	tu.AssertNoErr(b, err)
+	defer db.Close()
+
+	err = Init("templateRecuAcve.pdf")
+	tu.AssertNoErr(b, err)
+	pdfcreator.Init(os.TempDir(), "")
+	tu.AssertNoErr(b, err)
+
+	recus, personnes, err := loadAndSelect(db, 2025)
+	tu.AssertNoErr(b, err)
+
+	for b.Loop() {
+		_, err = generate(recus, personnes)
+	}
+}

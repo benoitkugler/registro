@@ -7,11 +7,11 @@ import (
 	"log"
 	"slices"
 	"strings"
-	"time"
 
 	"registro/config"
 	"registro/controllers/files"
 	"registro/crypto"
+	"registro/generators/sheets"
 	"registro/helloasso"
 	"registro/logic"
 	"registro/logic/search"
@@ -23,8 +23,6 @@ import (
 	"registro/sql/shared"
 	"registro/utils"
 
-	"github.com/golang-jwt/jwt/v5"
-	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 )
 
@@ -41,76 +39,6 @@ type Controller struct {
 // [helloasso] is optionnal
 func NewController(db *sql.DB, key crypto.Encrypter, password string, asso config.Asso, smtp config.SMTP, helloasso config.Helloasso) *Controller {
 	return &Controller{db, key, password, asso, smtp, helloasso}
-}
-
-// customClaims are custom claims extending default ones.
-type customClaims struct {
-	jwt.RegisteredClaims
-}
-
-func (ct *Controller) JWTMiddleware() echo.MiddlewareFunc {
-	config := echojwt.Config{
-		SigningKey:    ct.key[:],
-		NewClaimsFunc: func(c echo.Context) jwt.Claims { return new(customClaims) },
-	}
-	return echojwt.WithConfig(config)
-}
-
-// expects the token to be in the `token` query parameters
-func (ct *Controller) JWTMiddlewareForQuery() echo.MiddlewareFunc {
-	config := echojwt.Config{
-		SigningKey:    ct.key[:],
-		NewClaimsFunc: func(c echo.Context) jwt.Claims { return new(customClaims) },
-		TokenLookup:   "query:token",
-	}
-	return echojwt.WithConfig(config)
-}
-
-const deltaToken = 3 * 24 * time.Hour
-
-// NewToken generate a connection token.
-//
-// It may also be used to setup a dev. token.
-func (ct *Controller) NewToken() (string, error) {
-	// Set custom claims
-	claims := &customClaims{
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(deltaToken)),
-		},
-	}
-
-	// Create token with claims
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
-	// Generate encoded token and send it as response.
-	return token.SignedString(ct.key[:])
-}
-
-type LogginOut struct {
-	IsValid bool
-	Token   string
-}
-
-// Loggin is called to enter the web app,
-// and returns a token if the password is valid.
-func (ct *Controller) Loggin(c echo.Context) error {
-	password := c.QueryParam("password")
-	out, err := ct.loggin(password)
-	if err != nil {
-		return err
-	}
-	return c.JSON(200, out)
-}
-
-func (ct *Controller) loggin(password string) (LogginOut, error) {
-	if password != ct.password {
-		return LogginOut{}, nil
-	}
-	token, err := ct.NewToken()
-	if err != nil {
-		return LogginOut{}, err
-	}
-	return LogginOut{IsValid: true, Token: token}, nil
 }
 
 // HandleDonHelloasso is the webhook trigerred by Helloasso
@@ -220,6 +148,7 @@ func (ct *Controller) searchOrganismes(pattern string) ([]OrganismeHeader, error
 
 type DonExt struct {
 	Don      dn.Don
+	Montant  string
 	Donateur string
 }
 
@@ -231,30 +160,65 @@ func (ct *Controller) LoadDons(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) loadDons() ([]DonExt, error) {
+type YearTotal struct{ Particuliers, Organismes string }
+
+type DonsOut struct {
+	Dons       []DonExt
+	YearTotals map[int]YearTotal
+}
+
+// sort by time
+func (ds DonsOut) byYear(year int) []DonExt {
+	var out []DonExt
+	for _, don := range ds.Dons {
+		if y := don.Don.Date.Time().Year(); y == year {
+			out = append(out, don)
+		}
+	}
+
+	slices.SortFunc(out, func(a, b DonExt) int { return a.Don.Date.Time().Compare(b.Don.Date.Time()) })
+
+	return out
+}
+
+func (ct *Controller) loadDons() (DonsOut, error) {
 	dons, err := dn.SelectAllDons(ct.db)
 	if err != nil {
-		return nil, utils.SQLError(err)
+		return DonsOut{}, utils.SQLError(err)
 	}
 	personnes, err := pr.SelectPersonnes(ct.db, dons.IdPersonnes()...)
 	if err != nil {
-		return nil, utils.SQLError(err)
+		return DonsOut{}, utils.SQLError(err)
 	}
 	organismes, err := dn.SelectOrganismes(ct.db, dons.IdOrganismes()...)
 	if err != nil {
-		return nil, utils.SQLError(err)
+		return DonsOut{}, utils.SQLError(err)
 	}
-	out := make([]DonExt, 0, len(dons))
+
+	totals := map[int][2]ds.MultiCurrencies{}
+	list := make([]DonExt, 0, len(dons))
 	for _, don := range dons {
+		year := don.Date.Time().Year()
+		total := totals[year]
+
 		var donateur string
 		if don.IdPersonne.Valid {
 			donateur = personnes[don.IdPersonne.Id].NOMPrenom()
+			total[0].Add(don.Montant)
 		} else {
 			donateur = organismes[don.IdOrganisme.Id].Nom
+			total[1].Add(don.Montant)
 		}
-		out = append(out, DonExt{Don: don, Donateur: donateur})
+
+		list = append(list, DonExt{don, don.Montant.String(), donateur})
+		totals[year] = total
 	}
 	// sorting will be done on client
+
+	out := DonsOut{Dons: list, YearTotals: make(map[int]YearTotal)}
+	for k, v := range totals {
+		out.YearTotals[k] = YearTotal{v[0].String(), v[1].String()}
+	}
 	return out, nil
 }
 
@@ -389,6 +353,40 @@ func (ct *Controller) DeleteDon(c echo.Context) error {
 		return utils.SQLError(err)
 	}
 	return c.NoContent(200)
+}
+
+func (ct *Controller) DownloadDonsExcel(c echo.Context) error {
+	year, err := utils.QueryParamInt[int](c, "year")
+	if err != nil {
+		return err
+	}
+	content, err := ct.exportDonsExcel(year)
+	if err != nil {
+		return err
+	}
+	mimeType := files.SetBlobHeader(c, content, fmt.Sprintf("Dons %d.xlsx", year))
+	return c.Blob(200, mimeType, content)
+}
+
+func (ct *Controller) exportDonsExcel(year int) ([]byte, error) {
+	data, err := ct.loadDons()
+	if err != nil {
+		return nil, err
+	}
+	dons := data.byYear(year)
+	l := make([][]sheets.Cell, len(dons))
+	for i, don := range dons {
+		l[i] = []sheets.Cell{
+			{ValueF: float32(don.Don.Id), NumFormat: sheets.Int},
+			{Value: don.Donateur},
+			{Value: don.Montant},
+			{Value: don.Don.ModePaiement.String()},
+			{Value: don.Don.Date.String()},
+			{Value: don.Don.Details},
+			{Value: don.Don.Affectation},
+		}
+	}
+	return sheets.CreateTable([]string{"ID", "Donateur", "Montant", "Mode", "Date", "Détails", "Affectation"}, l)
 }
 
 func (ct *Controller) DownloadRecusFiscaux(c echo.Context) error {

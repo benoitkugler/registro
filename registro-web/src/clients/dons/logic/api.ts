@@ -10,7 +10,13 @@ export type Int = number & { __opaque__: "Int" };
 // registro/controllers/dons.DonExt
 export interface DonExt {
   Don: Don;
+  Montant: string;
   Donateur: string;
+}
+// registro/controllers/dons.DonsOut
+export interface DonsOut {
+  Dons: DonExt[] | null;
+  YearTotals: Record<Int, YearTotal> | null;
 }
 // registro/controllers/dons.LogginOut
 export interface LogginOut {
@@ -21,6 +27,11 @@ export interface LogginOut {
 export interface OrganismeHeader {
   Id: IdOrganisme;
   Nom: string;
+}
+// registro/controllers/dons.YearTotal
+export interface YearTotal {
+  Particuliers: string;
+  Organismes: string;
 }
 // registro/logic/search.PersonneHeader
 export interface PersonneHeader {
@@ -146,7 +157,7 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseURL + "/api/v1/dons";
     this.startRequest();
     try {
-      const rep: AxiosResponse<DonExt[] | null> = await Axios.get(fullUrl, {
+      const rep: AxiosResponse<DonsOut> = await Axios.get(fullUrl, {
         headers: this.getHeaders(),
       });
       return rep.data;
@@ -231,6 +242,15 @@ export abstract class AbstractAPI {
     return (
       this.baseURL +
       "/api/v1/dons/download-recus-fiscaux" +
+      `?year=${year}&token=${token}`
+    );
+  }
+
+  /** Returns an URL with method GET */
+  DownloadDonsExcel(year: Int, token: string) {
+    return (
+      this.baseURL +
+      "/api/v1/dons/download-dons" +
       `?year=${year}&token=${token}`
     );
   }

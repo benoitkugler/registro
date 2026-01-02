@@ -161,3 +161,17 @@ func TestMontant_Remise(t *testing.T) {
 		tu.Assert(t, m.Remise(tt.percent) == Montant{Cent: tt.want})
 	}
 }
+
+func TestMultiCurrencies_String(t *testing.T) {
+	for _, test := range [...]struct {
+		m        MultiCurrencies
+		expected string
+	}{
+		{MultiCurrencies{}, ""},
+		{MultiCurrencies{0, 100}, "CHF 1"},
+		{MultiCurrencies{100, 0}, "1€"},
+		{MultiCurrencies{200, 300}, "2€ et CHF 3"},
+	} {
+		tu.Assert(t, test.m.String() == test.expected)
+	}
+}

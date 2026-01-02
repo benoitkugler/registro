@@ -7,22 +7,36 @@
             <v-col align-self="center" cols="auto">
               <v-img width="60" :src="logo" />
             </v-col>
-            <v-col align-self="center">
-              Formulaire équipier {{ data ? Camps.label(data.Camp) : "" }}
-            </v-col>
+            <v-col align-self="center"> Gestion des dons </v-col>
           </v-row>
         </v-app-bar-title>
+
+        <template #append v-if="isLoggedIn">
+          <v-btn
+            prepend-icon="mdi-download"
+            :href="
+              controller.DownloadDonsExcel(selectedYear, controller.authToken)
+            "
+            >Exporter</v-btn
+          >
+          <v-btn
+            prepend-icon="mdi-receipt-text"
+            :href="
+              controller.DownloadRecusFiscaux(
+                selectedYear,
+                controller.authToken
+              )
+            "
+            :disabled="downloadRecusStarted"
+            @click="onDownloadRecus"
+            >Télécharger les reçus fiscaux</v-btn
+          >
+        </template>
       </v-app-bar>
 
-      <v-container v-if="data == null">
-        <v-skeleton-loader type="card"></v-skeleton-loader>
-      </v-container>
-      <v-container class="py-2" style="min-height: 92%" v-else>
-        <EquipierForm
-          :token="token"
-          :equipier="data"
-          :album="joomeo"
-        ></EquipierForm>
+      <v-container class="fill-height">
+        <LogginPage v-if="!isLoggedIn" @enter="isLoggedIn = true"></LogginPage>
+        <DonsV v-else @update:selected-year="(v) => (selectedYear = v)"></DonsV>
       </v-container>
 
       <v-snackbar
@@ -53,8 +67,11 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref } from "vue";
+import { ref } from "vue";
 import { controller } from "./logic/logic";
+import LogginPage from "./components/LogginPage.vue";
+import DonsV from "./components/DonsV.vue";
+import type { Int } from "./logic/api";
 
 const message = ref("");
 const messageColor = ref("secondary");
@@ -74,14 +91,13 @@ controller.showMessage = (s, color) => {
 
 const logo = `${import.meta.env.BASE_URL}${import.meta.env.VITE_ASSO}/logo.png`;
 
-const data = ref<EquipierExt | null>(null);
+const isLoggedIn = ref(false);
 
-// id token
-const token = ref("");
+const selectedYear = ref(0 as Int);
 
-onMounted(() => {
-  // store ID token
-  const query = new URLSearchParams(window.location.search);
-  token.value = query.get("token") || "";
-});
+const downloadRecusStarted = ref(false);
+function onDownloadRecus() {
+  downloadRecusStarted.value = true;
+  setTimeout(() => (downloadRecusStarted.value = false), 3000);
+}
 </script>

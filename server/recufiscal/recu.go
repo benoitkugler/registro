@@ -49,9 +49,16 @@ type recuFiscal struct {
 	Date time.Time
 }
 
-// selectForRecu aggrège les dons, ignorant les dons collectifs.
-func selectForRecu(taux ds.Taux, dons dons.Dons, year int) map[pr.IdPersonne]recuFiscal {
-	out := map[pr.IdPersonne]recuFiscal{}
+func loadAndSelect(db dons.DB, year int) (map[pr.IdPersonne]recuFiscal, pr.Personnes, error) {
+	dons, err := dons.SelectAllDons(db)
+	if err != nil {
+		return nil, nil, utils.SQLError(err)
+	}
+
+	// selectForRecu aggrège les dons, ignorant les dons collectifs.
+	// TODO: support for custom taux
+	taux := ds.Taux{Euros: 1000}
+	selected := map[pr.IdPersonne]recuFiscal{}
 	for _, don := range dons {
 		// les dons collectifs ne sont pas concernés par les reçus fiscaux
 		if !don.IdPersonne.Valid {
@@ -61,7 +68,7 @@ func selectForRecu(taux ds.Taux, dons dons.Dons, year int) map[pr.IdPersonne]rec
 			continue
 		}
 
-		rf, ok := out[don.IdPersonne.Id]
+		rf, ok := selected[don.IdPersonne.Id]
 		if !ok {
 			rf.Montant = taux.Zero()
 		}
@@ -71,42 +78,25 @@ func selectForRecu(taux ds.Taux, dons dons.Dons, year int) map[pr.IdPersonne]rec
 		if d := don.Date.Time(); rf.Date.Before(d) {
 			rf.Date = d
 		}
-		out[don.IdPersonne.Id] = rf
+		selected[don.IdPersonne.Id] = rf
 	}
 
-	return out
-}
-
-// Generate rassemble les dons (personnels, pour l'année donnée) et
-// renvoie une archive .ZIP contenant :
-//   - les étiquettes,
-//   - les reçus fiscaux
-//   - les adresses mails dans un fichier .CSV
-func Generate(db dons.DB, year int) ([]byte, error) {
-	if recuTemplate == nil { // better error than panic
-		return nil, errors.New("internal error: recu template was not initialized")
-	}
-
-	dons, err := dons.SelectAllDons(db)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-
-	// TODO: support for custom taux
-	selected := selectForRecu(ds.Taux{Euros: 1000}, dons, year)
 	idDonateurs := utils.MapKeys(selected)
 
 	personnes, err := pr.SelectPersonnes(db, idDonateurs...)
 	if err != nil {
-		return nil, utils.SQLError(err)
+		return nil, nil, utils.SQLError(err)
 	}
+	return selected, personnes, nil
+}
 
+func generate(recus map[pr.IdPersonne]recuFiscal, personnes pr.Personnes) ([]byte, error) {
 	var archiveB bytes.Buffer
 	archive := utils.NewZip(&archiveB)
 
-	etiquettes := make([]pr.Etatcivil, 0, len(selected))
+	etiquettes := make([]pr.Etatcivil, 0, len(recus))
 
-	for idDonateur, r := range selected {
+	for idDonateur, r := range recus {
 		donateur := personnes[idDonateur]
 		donPDF, err := fillPdf(r, donateur)
 		if err != nil {
@@ -144,6 +134,24 @@ func Generate(db dons.DB, year int) ([]byte, error) {
 	}
 
 	return archiveB.Bytes(), nil
+}
+
+// Generate rassemble les dons (personnels, pour l'année donnée) et
+// renvoie une archive .ZIP contenant :
+//   - les étiquettes,
+//   - les reçus fiscaux
+//   - les adresses mails dans un fichier .CSV
+func Generate(db dons.DB, year int) ([]byte, error) {
+	if recuTemplate == nil { // better error than panic
+		return nil, errors.New("internal error: recu template was not initialized")
+	}
+
+	selected, personnes, err := loadAndSelect(db, year)
+	if err != nil {
+		return nil, err
+	}
+
+	return generate(selected, personnes)
 }
 
 // indique l'identifiant des champs présents dans le modèle.

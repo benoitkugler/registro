@@ -4,3 +4,4 @@ registro-web/src/clients/backoffice/env.ts
 registro-web/src/clients/directeurs/env.ts
 server/migrations/fromACVEv1/passV1.go
 server/recufiscal/templateRecuAcve.pdf
+server/migrations/fromACVEv1/env.sh

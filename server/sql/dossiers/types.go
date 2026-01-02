@@ -23,6 +23,25 @@ const (
 	Helloasso // Helloasso
 )
 
+func (mp ModePaiement) String() string {
+	switch mp {
+	case Cheque:
+		return "Chèque"
+	case EnLigne:
+		return "Carte bancaire (en ligne)"
+	case Virement:
+		return "Virement"
+	case Especes:
+		return "Espèces"
+	case Ancv:
+		return "ANCV"
+	case Helloasso:
+		return "Helloasso"
+	default:
+		return "unknown ModePaiement"
+	}
+}
+
 // Montant représente un prix (avec son unité).
 type Montant struct {
 	Cent     int
