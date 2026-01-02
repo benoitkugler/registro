@@ -11,11 +11,13 @@ type Keys struct {
 	EncryptKey  string // used for encryption key
 	Backoffice  string // password
 	FondSoutien string // password
-	Directeurs  string // global password
+	Directeurs  string // global password for all camps
+	Dons        string // password
 }
 
 // NewKeys uses env. variables to load the credentials :
-// SERVER_KEY, BACKOFFICE_PASSWORD, DIRECTEURS_PASSWORD
+// SERVER_KEY, BACKOFFICE_PASSWORD, FOND_SOUTIEN_PASSWORD, DIRECTEURS_PASSWORD
+// and DONS_PASSWORD
 func NewKeys() (keys Keys, _ error) {
 	keys.EncryptKey = os.Getenv("SERVER_KEY")
 	if keys.EncryptKey == "" {
@@ -32,6 +34,10 @@ func NewKeys() (keys Keys, _ error) {
 	keys.Directeurs = os.Getenv("DIRECTEURS_PASSWORD")
 	if keys.Directeurs == "" {
 		return keys, errors.New("missing env. DIRECTEURS_PASSWORD")
+	}
+	keys.Dons = os.Getenv("DONS_PASSWORD")
+	if keys.Dons == "" {
+		return keys, errors.New("missing env. DONS_PASSWORD")
 	}
 	return keys, nil
 }

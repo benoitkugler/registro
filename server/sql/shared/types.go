@@ -47,6 +47,7 @@ func (d Date) Time() time.Time {
 	return time.Date(ti.Year(), ti.Month(), ti.Day(), 0, 0, 0, 0, time.UTC)
 }
 
+// String returns the date with format DD/MM/AAAA
 func (d Date) String() string {
 	da := d.Time()
 	if da.IsZero() {

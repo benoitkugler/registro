@@ -356,11 +356,10 @@ func NotifieModificationOptions(cfg config.Asso, directeur pr.Etatcivil, camp st
 }
 
 // organisme est vide pour les dons particulier
-func NotifieDon(cfg config.Asso, contact Contact, montant dossiers.Montant, organisme string) (string, error) {
+func NotifieDon(cfg config.Asso, contact Contact, montant dossiers.Montant) (string, error) {
 	args := struct {
 		champsCommuns
-		Montant   string
-		Organisme string
+		Montant string
 	}{
 		champsCommuns: champsCommuns{
 			Title:       "Merci pour votre don !",
@@ -368,8 +367,7 @@ func NotifieDon(cfg config.Asso, contact Contact, montant dossiers.Montant, orga
 			Asso:        cfg,
 			Signature:   "L'équipe " + template.HTML(cfg.Title),
 		},
-		Montant:   montant.String(),
-		Organisme: organisme,
+		Montant: montant.String(),
 	}
 	return render(notifieDonT, args)
 }

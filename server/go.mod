@@ -1,8 +1,6 @@
 module registro
 
-go 1.24.0
-
-toolchain go1.24.1
+go 1.24.1
 
 require (
 	github.com/benoitkugler/go-weasyprint v0.0.13
@@ -24,6 +22,7 @@ require (
 
 require (
 	github.com/aymerick/douceur v0.2.0 // indirect
+	github.com/benoitkugler/num2words v1.0.1 // indirect
 	github.com/benoitkugler/pdf v0.0.14 // indirect
 	github.com/benoitkugler/pstokenizer v1.0.1 // indirect
 	github.com/benoitkugler/textlayout v0.3.1 // indirect

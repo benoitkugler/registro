@@ -15,7 +15,9 @@
               v-if="props.settings.SupportPaiementEnLigne"
             >
               <template #append>
-                <v-icon>mdi-credit-card</v-icon>
+                <v-icon
+                  :icon="Formatters.paiementIcon(ModePaiement.EnLigne)"
+                ></v-icon>
               </template>
             </v-list-item>
             <v-list-item
@@ -25,7 +27,9 @@
               :value="ModePaiement.Virement"
             >
               <template #append>
-                <v-icon>mdi-bank</v-icon>
+                <v-icon
+                  :icon="Formatters.paiementIcon(ModePaiement.Virement)"
+                ></v-icon>
               </template>
             </v-list-item>
             <v-list-item
@@ -36,7 +40,9 @@
               v-if="props.settings.Cheques.IsValid"
             >
               <template #append>
-                <v-icon>mdi-checkbook</v-icon>
+                <v-icon
+                  :icon="Formatters.paiementIcon(ModePaiement.Cheque)"
+                ></v-icon>
               </template>
             </v-list-item>
           </v-list>
@@ -121,7 +127,7 @@ import {
   type DossierExt,
   type PaiementSettings,
 } from "../logic/api";
-import { copyToClipboard } from "@/utils";
+import { copyToClipboard, Formatters } from "@/utils";
 import { controller } from "../logic/logic";
 const props = defineProps<{
   token: string;

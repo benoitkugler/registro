@@ -4,6 +4,7 @@ package dons
 
 import (
 	"database/sql"
+	"registro/sql/personnes"
 
 	"github.com/lib/pq"
 )
@@ -25,13 +26,14 @@ func scanOneDon(row scanner) (Don, error) {
 	var item Don
 	err := row.Scan(
 		&item.Id,
+		&item.IdPersonne,
+		&item.IdOrganisme,
 		&item.Montant,
 		&item.ModePaiement,
 		&item.Date,
 		&item.Affectation,
 		&item.Details,
 		&item.Remercie,
-		&item.IdPaiementHelloasso,
 	)
 	return item, err
 }
@@ -40,7 +42,7 @@ func ScanDon(row *sql.Row) (Don, error) { return scanOneDon(row) }
 
 // SelectAll returns all the items in the dons table.
 func SelectAllDons(db DB) (Dons, error) {
-	rows, err := db.Query("SELECT id, montant, modepaiement, date, affectation, details, remercie, idpaiementhelloasso FROM dons")
+	rows, err := db.Query("SELECT id, idpersonne, idorganisme, montant, modepaiement, date, affectation, details, remercie FROM dons")
 	if err != nil {
 		return nil, err
 	}
@@ -49,13 +51,13 @@ func SelectAllDons(db DB) (Dons, error) {
 
 // SelectDon returns the entry matching 'id'.
 func SelectDon(tx DB, id IdDon) (Don, error) {
-	row := tx.QueryRow("SELECT id, montant, modepaiement, date, affectation, details, remercie, idpaiementhelloasso FROM dons WHERE id = $1", id)
+	row := tx.QueryRow("SELECT id, idpersonne, idorganisme, montant, modepaiement, date, affectation, details, remercie FROM dons WHERE id = $1", id)
 	return ScanDon(row)
 }
 
 // SelectDons returns the entry matching the given 'ids'.
 func SelectDons(tx DB, ids ...IdDon) (Dons, error) {
-	rows, err := tx.Query("SELECT id, montant, modepaiement, date, affectation, details, remercie, idpaiementhelloasso FROM dons WHERE id = ANY($1)", IdDonArrayToPQ(ids))
+	rows, err := tx.Query("SELECT id, idpersonne, idorganisme, montant, modepaiement, date, affectation, details, remercie FROM dons WHERE id = ANY($1)", IdDonArrayToPQ(ids))
 	if err != nil {
 		return nil, err
 	}
@@ -100,28 +102,28 @@ func ScanDons(rs *sql.Rows) (Dons, error) {
 // Insert one Don in the database and returns the item with id filled.
 func (item Don) Insert(tx DB) (out Don, err error) {
 	row := tx.QueryRow(`INSERT INTO dons (
-		montant, modepaiement, date, affectation, details, remercie, idpaiementhelloasso
+		idpersonne, idorganisme, montant, modepaiement, date, affectation, details, remercie
 		) VALUES (
-		$1, $2, $3, $4, $5, $6, $7
-		) RETURNING id, montant, modepaiement, date, affectation, details, remercie, idpaiementhelloasso;
-		`, item.Montant, item.ModePaiement, item.Date, item.Affectation, item.Details, item.Remercie, item.IdPaiementHelloasso)
+		$1, $2, $3, $4, $5, $6, $7, $8
+		) RETURNING id, idpersonne, idorganisme, montant, modepaiement, date, affectation, details, remercie;
+		`, item.IdPersonne, item.IdOrganisme, item.Montant, item.ModePaiement, item.Date, item.Affectation, item.Details, item.Remercie)
 	return ScanDon(row)
 }
 
 // Update Don in the database and returns the new version.
 func (item Don) Update(tx DB) (out Don, err error) {
 	row := tx.QueryRow(`UPDATE dons SET (
-		montant, modepaiement, date, affectation, details, remercie, idpaiementhelloasso
+		idpersonne, idorganisme, montant, modepaiement, date, affectation, details, remercie
 		) = (
-		$1, $2, $3, $4, $5, $6, $7
-		) WHERE id = $8 RETURNING id, montant, modepaiement, date, affectation, details, remercie, idpaiementhelloasso;
-		`, item.Montant, item.ModePaiement, item.Date, item.Affectation, item.Details, item.Remercie, item.IdPaiementHelloasso, item.Id)
+		$1, $2, $3, $4, $5, $6, $7, $8
+		) WHERE id = $9 RETURNING id, idpersonne, idorganisme, montant, modepaiement, date, affectation, details, remercie;
+		`, item.IdPersonne, item.IdOrganisme, item.Montant, item.ModePaiement, item.Date, item.Affectation, item.Details, item.Remercie, item.Id)
 	return ScanDon(row)
 }
 
 // Deletes the Don and returns the item
 func DeleteDonById(tx DB, id IdDon) (Don, error) {
-	row := tx.QueryRow("DELETE FROM dons WHERE id = $1 RETURNING id, montant, modepaiement, date, affectation, details, remercie, idpaiementhelloasso;", id)
+	row := tx.QueryRow("DELETE FROM dons WHERE id = $1 RETURNING id, idpersonne, idorganisme, montant, modepaiement, date, affectation, details, remercie;", id)
 	return ScanDon(row)
 }
 
@@ -132,6 +134,176 @@ func DeleteDonsByIDs(tx DB, ids ...IdDon) ([]IdDon, error) {
 		return nil, err
 	}
 	return ScanIdDonArray(rows)
+}
+
+// IdPersonnes returns the list of non null IdPersonne
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items Dons) IdPersonnes() []personnes.IdPersonne {
+	var out []personnes.IdPersonne
+	for _, target := range items {
+		if id := target.IdPersonne; id.Valid {
+			out = append(out, id.Id)
+		}
+	}
+	return out
+}
+
+func SelectDonsByIdPersonnes(tx DB, idPersonnes_ ...personnes.IdPersonne) (Dons, error) {
+	rows, err := tx.Query("SELECT id, idpersonne, idorganisme, montant, modepaiement, date, affectation, details, remercie FROM dons WHERE idpersonne = ANY($1)", personnes.IdPersonneArrayToPQ(idPersonnes_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanDons(rows)
+}
+
+func DeleteDonsByIdPersonnes(tx DB, idPersonnes_ ...personnes.IdPersonne) (Dons, error) {
+	rows, err := tx.Query("DELETE FROM dons WHERE idpersonne = ANY($1) RETURNING id, idpersonne, idorganisme, montant, modepaiement, date, affectation, details, remercie", personnes.IdPersonneArrayToPQ(idPersonnes_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanDons(rows)
+}
+
+// IdOrganismes returns the list of non null IdOrganisme
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items Dons) IdOrganismes() []IdOrganisme {
+	var out []IdOrganisme
+	for _, target := range items {
+		if id := target.IdOrganisme; id.Valid {
+			out = append(out, id.Id)
+		}
+	}
+	return out
+}
+
+func SelectDonsByIdOrganismes(tx DB, idOrganismes_ ...IdOrganisme) (Dons, error) {
+	rows, err := tx.Query("SELECT id, idpersonne, idorganisme, montant, modepaiement, date, affectation, details, remercie FROM dons WHERE idorganisme = ANY($1)", IdOrganismeArrayToPQ(idOrganismes_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanDons(rows)
+}
+
+func DeleteDonsByIdOrganismes(tx DB, idOrganismes_ ...IdOrganisme) (Dons, error) {
+	rows, err := tx.Query("DELETE FROM dons WHERE idorganisme = ANY($1) RETURNING id, idpersonne, idorganisme, montant, modepaiement, date, affectation, details, remercie", IdOrganismeArrayToPQ(idOrganismes_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanDons(rows)
+}
+
+func scanOneOrganisme(row scanner) (Organisme, error) {
+	var item Organisme
+	err := row.Scan(
+		&item.Id,
+		&item.Nom,
+		&item.Mail,
+		&item.Adresse,
+		&item.CodePostal,
+		&item.Ville,
+		&item.Pays,
+	)
+	return item, err
+}
+
+func ScanOrganisme(row *sql.Row) (Organisme, error) { return scanOneOrganisme(row) }
+
+// SelectAll returns all the items in the organismes table.
+func SelectAllOrganismes(db DB) (Organismes, error) {
+	rows, err := db.Query("SELECT id, nom, mail, adresse, codepostal, ville, pays FROM organismes")
+	if err != nil {
+		return nil, err
+	}
+	return ScanOrganismes(rows)
+}
+
+// SelectOrganisme returns the entry matching 'id'.
+func SelectOrganisme(tx DB, id IdOrganisme) (Organisme, error) {
+	row := tx.QueryRow("SELECT id, nom, mail, adresse, codepostal, ville, pays FROM organismes WHERE id = $1", id)
+	return ScanOrganisme(row)
+}
+
+// SelectOrganismes returns the entry matching the given 'ids'.
+func SelectOrganismes(tx DB, ids ...IdOrganisme) (Organismes, error) {
+	rows, err := tx.Query("SELECT id, nom, mail, adresse, codepostal, ville, pays FROM organismes WHERE id = ANY($1)", IdOrganismeArrayToPQ(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanOrganismes(rows)
+}
+
+type Organismes map[IdOrganisme]Organisme
+
+func (m Organismes) IDs() []IdOrganisme {
+	out := make([]IdOrganisme, 0, len(m))
+	for i := range m {
+		out = append(out, i)
+	}
+	return out
+}
+
+func ScanOrganismes(rs *sql.Rows) (Organismes, error) {
+	var (
+		s   Organisme
+		err error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(Organismes, 16)
+	for rs.Next() {
+		s, err = scanOneOrganisme(rs)
+		if err != nil {
+			return nil, err
+		}
+		structs[s.Id] = s
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+// Insert one Organisme in the database and returns the item with id filled.
+func (item Organisme) Insert(tx DB) (out Organisme, err error) {
+	row := tx.QueryRow(`INSERT INTO organismes (
+		nom, mail, adresse, codepostal, ville, pays
+		) VALUES (
+		$1, $2, $3, $4, $5, $6
+		) RETURNING id, nom, mail, adresse, codepostal, ville, pays;
+		`, item.Nom, item.Mail, item.Adresse, item.CodePostal, item.Ville, item.Pays)
+	return ScanOrganisme(row)
+}
+
+// Update Organisme in the database and returns the new version.
+func (item Organisme) Update(tx DB) (out Organisme, err error) {
+	row := tx.QueryRow(`UPDATE organismes SET (
+		nom, mail, adresse, codepostal, ville, pays
+		) = (
+		$1, $2, $3, $4, $5, $6
+		) WHERE id = $7 RETURNING id, nom, mail, adresse, codepostal, ville, pays;
+		`, item.Nom, item.Mail, item.Adresse, item.CodePostal, item.Ville, item.Pays, item.Id)
+	return ScanOrganisme(row)
+}
+
+// Deletes the Organisme and returns the item
+func DeleteOrganismeById(tx DB, id IdOrganisme) (Organisme, error) {
+	row := tx.QueryRow("DELETE FROM organismes WHERE id = $1 RETURNING id, nom, mail, adresse, codepostal, ville, pays;", id)
+	return ScanOrganisme(row)
+}
+
+// Deletes the Organisme in the database and returns the ids.
+func DeleteOrganismesByIDs(tx DB, ids ...IdOrganisme) ([]IdOrganisme, error) {
+	rows, err := tx.Query("DELETE FROM organismes WHERE id = ANY($1) RETURNING id", IdOrganismeArrayToPQ(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIdOrganismeArray(rows)
 }
 
 func IdDonArrayToPQ(ids []IdDon) pq.Int64Array {
@@ -150,6 +322,33 @@ func ScanIdDonArray(rs *sql.Rows) ([]IdDon, error) {
 	var err error
 	for rs.Next() {
 		var s IdDon
+		if err = rs.Scan(&s); err != nil {
+			return nil, err
+		}
+		ints = append(ints, s)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return ints, nil
+}
+
+func IdOrganismeArrayToPQ(ids []IdOrganisme) pq.Int64Array {
+	out := make(pq.Int64Array, len(ids))
+	for i, v := range ids {
+		out[i] = int64(v)
+	}
+	return out
+}
+
+// ScanIdOrganismeArray scans the result of a query returning a
+// list of ID's.
+func ScanIdOrganismeArray(rs *sql.Rows) ([]IdOrganisme, error) {
+	defer rs.Close()
+	ints := make([]IdOrganisme, 0, 16)
+	var err error
+	for rs.Next() {
+		var s IdOrganisme
 		if err = rs.Scan(&s); err != nil {
 			return nil, err
 		}

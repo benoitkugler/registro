@@ -13,6 +13,7 @@ import (
 	"registro/config"
 	"registro/controllers/backoffice"
 	"registro/controllers/directeurs"
+	"registro/controllers/dons"
 	equipiers "registro/controllers/equipier"
 	"registro/controllers/espaceperso"
 	fsAPI "registro/controllers/files"
@@ -21,6 +22,7 @@ import (
 	"registro/crypto"
 	"registro/generators/pdfcreator"
 	"registro/logic"
+	"registro/recufiscal"
 	cp "registro/sql/camps"
 	"registro/sql/files"
 
@@ -46,7 +48,13 @@ func main() {
 	check(err)
 	fmt.Println("Setting up pdfcreator -> OK.")
 
-	// TODO: setup Dons, OnlinePaiement APIS
+	if path := config.NewModeleRecuFiscal(); path != "" {
+		err = recufiscal.Init(path)
+		check(err)
+		fmt.Println("Using model for recu fiscal:", path)
+	}
+
+	// TODO: setup Helloasso, OnlinePaiement APIS
 	helloasso := config.Helloasso{}
 
 	fmt.Println("Connecting to DB", dbCreds.Name, "at", dbCreds.Host, "...")
@@ -69,14 +77,16 @@ func main() {
 	backofficeCt, err := backoffice.NewController(db, encrypter, keys.Backoffice, keys.FondSoutien, fs, smtp, asso, immich, helloasso)
 	check(err)
 
+	donsCt := dons.NewController(db, encrypter, keys.Dons, asso, smtp, helloasso)
+
 	directeursCt, err := directeurs.NewController(db, keys.EncryptKey, keys.Directeurs, fs, smtp, asso, immich)
 	check(err)
+
+	equipiersCt := equipiers.NewController(db, encrypter, fs, immich)
 
 	espacepersoCt := espaceperso.NewController(db, encrypter, smtp, asso, fs, immich)
 
 	inscriptionsCt := inscriptions.NewController(db, encrypter, smtp, asso)
-
-	equipiersCt := equipiers.NewController(db, encrypter, fs, immich)
 
 	servicesCt := services.NewController(db, encrypter, smtp, asso)
 
@@ -109,11 +119,12 @@ func main() {
 
 	setupRoutesBackoffice(e, backofficeCt)
 	setupRoutesDirecteurs(e, directeursCt)
+	setupRoutesDons(e, donsCt)
+	setupRoutesEquipier(e, equipiersCt)
 	setupRoutesEspaceperso(e, espacepersoCt)
 	setupRoutesInscription(e, inscriptionsCt)
-	setupRoutesEquipier(e, equipiersCt)
-	setupRoutesServices(e, servicesCt, espacepersoCt)
 	setupRoutesMisc(e, filesCt)
+	setupRoutesServices(e, servicesCt, espacepersoCt)
 	setupClientApps(e, asso.ID)
 
 	if directories.Media != "" {

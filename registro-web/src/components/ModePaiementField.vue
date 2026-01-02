@@ -8,7 +8,16 @@
     :hide-details="props.hideDetails"
     v-model="modelValue"
     :rules="props.rules"
-  ></v-select>
+  >
+    <template #item="{ item, props: menuProps }">
+      <v-list-item
+        v-bind="menuProps"
+        :title="item.title"
+        :prepend-icon="Formatters.paiementIcon(item.raw.value)"
+      >
+      </v-list-item>
+    </template>
+  </v-select>
 </template>
 
 <script setup lang="ts">
@@ -16,7 +25,7 @@ import {
   ModePaiement,
   ModePaiementLabels,
 } from "@/clients/backoffice/logic/api";
-import { selectItems } from "@/utils";
+import { Formatters, selectItems } from "@/utils";
 const props = defineProps<{
   hideDetails?: boolean;
   readonly?: boolean;

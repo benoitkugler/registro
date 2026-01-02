@@ -42,12 +42,14 @@ func Init(fontCacheDir, root string) error {
 	return nil
 }
 
-// root is the folder containing 'assets/'
-func htmlToPDF(html, root string) ([]byte, error) {
+// HTMLToPDF converts the given [html] content to a PDF file.
+//
+// It is requireed to call [Init] beforehand.
+func HTMLToPDF(html string) ([]byte, error) {
 	var dst bytes.Buffer
 	// required for image with width and height attributes
 	const presentationalHints = true
-	err := goweasyprint.HtmlToPdfOptions(&dst, utils.InputString(html), root, nil, "", nil, presentationalHints, fc, 1, nil)
+	err := goweasyprint.HtmlToPdfOptions(&dst, utils.InputString(html), rootDir, nil, "", nil, presentationalHints, fc, 1, nil)
 	return dst.Bytes(), err
 }
 
@@ -57,5 +59,5 @@ func templateToPDF(t *template.Template, args any) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("generating html: %s", err)
 	}
-	return htmlToPDF(html.String(), rootDir)
+	return HTMLToPDF(html.String())
 }

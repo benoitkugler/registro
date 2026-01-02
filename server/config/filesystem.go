@@ -55,3 +55,8 @@ func NewDirectories() (Directories, error) {
 	}
 	return Directories{files, assets, cache, media}, nil
 }
+
+// NewModeleRecuFiscal returns env. MODELE_RECU_FISCAL: the path to a PDF file
+// containing editable form; or empty to disable
+// recu fiscal edition.
+func NewModeleRecuFiscal() string { return os.Getenv("MODELE_RECU_FISCAL") }

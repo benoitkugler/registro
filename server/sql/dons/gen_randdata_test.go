@@ -3,6 +3,7 @@ package dons
 import (
 	"math/rand"
 	"registro/sql/dossiers"
+	"registro/sql/personnes"
 	"registro/sql/shared"
 	"time"
 )
@@ -12,19 +13,37 @@ import (
 func randDon() Don {
 	var s Don
 	s.Id = randIdDon()
+	s.IdPersonne = randsha_OptID_per_IdPersonne()
+	s.IdOrganisme = randsha_OptID_IdOrganisme()
 	s.Montant = randdos_Montant()
 	s.ModePaiement = randdos_ModePaiement()
 	s.Date = randsha_Date()
 	s.Affectation = randstring()
 	s.Details = randstring()
 	s.Remercie = randbool()
-	s.IdPaiementHelloasso = randint32()
 
 	return s
 }
 
 func randIdDon() IdDon {
 	return IdDon(randint64())
+}
+
+func randIdOrganisme() IdOrganisme {
+	return IdOrganisme(randint64())
+}
+
+func randOrganisme() Organisme {
+	var s Organisme
+	s.Id = randIdOrganisme()
+	s.Nom = randstring()
+	s.Mail = randstring()
+	s.Adresse = randstring()
+	s.CodePostal = randstring()
+	s.Ville = randstring()
+	s.Pays = randper_Pays()
+
+	return s
 }
 
 func randbool() bool {
@@ -56,16 +75,36 @@ func randint() int {
 	return int(rand.Intn(1000000))
 }
 
-func randint32() int32 {
-	return int32(rand.Intn(1000000))
-}
-
 func randint64() int64 {
 	return int64(rand.Intn(1000000))
 }
 
+func randper_IdPersonne() personnes.IdPersonne {
+	return personnes.IdPersonne(randint64())
+}
+
+func randper_Pays() personnes.Pays {
+	return personnes.Pays(randstring())
+}
+
 func randsha_Date() shared.Date {
 	return shared.Date(randtDate())
+}
+
+func randsha_OptID_IdOrganisme() shared.OptID[IdOrganisme] {
+	var s shared.OptID[IdOrganisme]
+	s.Id = randIdOrganisme()
+	s.Valid = randbool()
+
+	return s
+}
+
+func randsha_OptID_per_IdPersonne() shared.OptID[personnes.IdPersonne] {
+	var s shared.OptID[personnes.IdPersonne]
+	s.Id = randper_IdPersonne()
+	s.Valid = randbool()
+
+	return s
 }
 
 var letterRunes2 = []rune("azertyuiopqsdfghjklmwxcvbn123456789é@!?&èïab ")

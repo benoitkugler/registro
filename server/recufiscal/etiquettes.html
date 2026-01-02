@@ -1,0 +1,44 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Etiquettes</title>
+    <style>
+      @page {
+        margin: 10px 2px;
+      }
+      table {
+        table-layout: fixed;
+      }
+      pre,
+      td {
+        font-family: Arial, Helvetica, sans-serif;
+      }
+      td {
+        border: 1px solid black;
+        font-size: 8pt;
+        width: 33%;
+        padding: 4px;
+      }
+      tr {
+        break-inside: avoid;
+      }
+    </style>
+  </head>
+  <body>
+    <table>
+      {{ range . }}
+      <tr>
+        {{ range . }}
+        <td>
+          {{ .Personne }} <br />
+          <pre>{{ .Adresse }}</pre>
+          <br />
+          {{ .CodePostal }} {{ .Ville }}
+        </td>
+        {{ end}}
+      </tr>
+      {{ end }}
+    </table>
+  </body>
+</html>

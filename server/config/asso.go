@@ -110,9 +110,9 @@ var repere = Asso{
 	ContactTel:  "+41 79 334 15 04",
 	ContactMail: "webmaster@lerepere.ch",
 
-	Icon:           "logo_repere.png",
-	//adapté pour l'ancien site web ColorPrimary:   "#2b678a",
-	//adapté pour l'ancien site web ColorSecondary: "#2ebfdc",
+	Icon: "logo_repere.png",
+	// adapté pour l'ancien site web ColorPrimary:   "#2b678a",
+	// adapté pour l'ancien site web ColorSecondary: "#2ebfdc",
 	ColorPrimary:   "#3f4e30",
 	ColorSecondary: "#bdd4e8",
 

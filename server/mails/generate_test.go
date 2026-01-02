@@ -101,11 +101,11 @@ func TestNotifieModificationOptions(t *testing.T) {
 func TestNotificationDon(t *testing.T) {
 	cfg, _ := loadEnv(t)
 
-	html, err := NotifieDon(cfg, Contact{Prenom: "Benoit", Sexe: pr.Woman}, dossiers.NewEuros(45.48), "")
+	html, err := NotifieDon(cfg, Contact{Prenom: "Benoit", Sexe: pr.Woman}, dossiers.NewEuros(45.48))
 	tu.AssertNoErr(t, err)
 	tu.Write(t, "NotifieDon1.html", []byte(html))
 
-	html, err = NotifieDon(cfg, Contact{Prenom: "Beno it", Sexe: pr.Man}, dossiers.NewEuros(45.48), "Eglise de Montmeyran")
+	html, err = NotifieDon(cfg, Contact{Prenom: "Eglise de Montmeyran"}, dossiers.NewEuros(45.48))
 	tu.AssertNoErr(t, err)
 	tu.Write(t, "NotifieDon2.html", []byte(html))
 }

@@ -4,6 +4,7 @@ package files
 
 import (
 	"database/sql"
+
 	"registro/sql/camps"
 	"registro/sql/personnes"
 
@@ -518,6 +519,19 @@ func SelectDemandeEquipierByIdEquipierAndIdDemande(tx DB, idEquipier camps.IdEqu
 	return item, true, err
 }
 
+// IdFiles returns the list of non null IdFile
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items Demandes) IdFiles() []IdFile {
+	var out []IdFile
+	for _, target := range items {
+		if id := target.IdFile; id.Valid {
+			out = append(out, id.Id)
+		}
+	}
+	return out
+}
+
 func SelectDemandesByIdFiles(tx DB, idFiles_ ...IdFile) (Demandes, error) {
 	rows, err := tx.Query("SELECT id, idfile, iddirecteur, categorie, description, maxdocs, joursvalide FROM demandes WHERE idfile = ANY($1)", IdFileArrayToPQ(idFiles_))
 	if err != nil {
@@ -532,6 +546,19 @@ func DeleteDemandesByIdFiles(tx DB, idFiles_ ...IdFile) (Demandes, error) {
 		return nil, err
 	}
 	return ScanDemandes(rows)
+}
+
+// IdDirecteurs returns the list of non null IdDirecteur
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items Demandes) IdDirecteurs() []personnes.IdPersonne {
+	var out []personnes.IdPersonne
+	for _, target := range items {
+		if id := target.IdDirecteur; id.Valid {
+			out = append(out, id.Id)
+		}
+	}
+	return out
 }
 
 func SelectDemandesByIdDirecteurs(tx DB, idDirecteurs_ ...personnes.IdPersonne) (Demandes, error) {

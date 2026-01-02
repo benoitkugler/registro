@@ -7,6 +7,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+
 	"registro/sql/camps"
 	"registro/sql/dossiers"
 
@@ -402,6 +403,19 @@ func DeleteInscriptionsByIdTauxs(tx DB, idTauxs_ ...dossiers.IdTaux) (Inscriptio
 	return ScanInscriptions(rows)
 }
 
+// ConfirmedAsDossiers returns the list of non null ConfirmedAsDossier
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items Inscriptions) ConfirmedAsDossiers() []dossiers.IdDossier {
+	var out []dossiers.IdDossier
+	for _, target := range items {
+		if id := target.ConfirmedAsDossier; id.Valid {
+			out = append(out, id.Id)
+		}
+	}
+	return out
+}
+
 func SelectInscriptionsByConfirmedAsDossiers(tx DB, confirmedAsDossiers_ ...dossiers.IdDossier) (Inscriptions, error) {
 	rows, err := tx.Query("SELECT id, idtaux, responsable, message, copiesmails, partageadressesok, demandefondsoutien, dateheure, confirmedasdossier FROM inscriptions WHERE confirmedasdossier = ANY($1)", dossiers.IdDossierArrayToPQ(confirmedAsDossiers_))
 	if err != nil {
@@ -430,7 +444,7 @@ func SelectInscriptionByIdAndIdTaux(tx DB, id IdInscription, idTaux dossiers.IdT
 
 func loadJSON(out any, src any) error {
 	if src == nil {
-		return nil //zero value out
+		return nil // zero value out
 	}
 	bs, ok := src.([]byte)
 	if !ok {
