@@ -118,13 +118,13 @@ var repere = Asso{
 
 	MailsSettings: MailsSettings{
 		AssoName:            "Repère",
-		Sauvegarde:          "",
+		Sauvegarde:          "backup@asso-repere.ch",
 		Unsubscribe:         "info@lerepere.ch",
 		ReplyTo:             "info@lerepere.ch",
 		SignatureMailCentre: "L'équipe Repère",
 	},
 
-	bankNames: []string{"Crédit Mutuel (EUR)", "Crédit mutual (CHF)"},
+	bankNames: []string{"Compte en euros (EUR)", "Compte en francs suisses (CHF)"},
 
 	ChequeSettings: ChequeSettings{}, // disabled
 
