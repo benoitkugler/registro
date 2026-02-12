@@ -72,3 +72,19 @@ export function idQuery(id: IdDossier): SearchDossierIn {
   empty.Pattern = `id:${id}`;
   return empty;
 }
+
+export namespace CachedTokens {
+  export function get() {
+    const cachedToken =
+      window.localStorage.getItem("cachedTokenBackoffice") || "";
+    return cachedToken;
+  }
+
+  export function set(token: string) {
+    window.localStorage.setItem("cachedTokenBackoffice", token);
+  }
+
+  export function clear() {
+    window.localStorage.removeItem("cachedTokenBackoffice");
+  }
+}

@@ -6,6 +6,7 @@ import {
   Acteur,
   type CampItem,
   type EventExt_MessageEvt,
+  type IdCamp,
   type Lettredirecteur,
 } from "./api";
 import { Endpoints } from "@/urls";
@@ -54,7 +55,7 @@ export const controller = new Controller(
   baseURL()
 );
 
-if (isDev) controller.setCamp(devCamp as CampItem, "test.fr", devToken);
+// if (isDev) controller.setCamp(devCamp as CampItem, "test.fr", devToken);
 
 export type LettreOptions = Pick<
   Lettredirecteur,
@@ -73,4 +74,23 @@ export function isMessageNew(message: EventExt_MessageEvt) {
   // never mark our message as new
   if (isMessageFromUs(message)) return false;
   return !(message.Content.VuParCampsIDs || []).includes(controller.camp.Id);
+}
+
+export namespace CachedTokens {
+  export function get() {
+    const cachedIdCamp = window.localStorage.getItem("cachedIdCamp") || "";
+    const cachedToken =
+      window.localStorage.getItem("cachedTokenDirecteurs") || "";
+    return { idCamp: Number(cachedIdCamp) as IdCamp, token: cachedToken };
+  }
+
+  export function set(idCamp: IdCamp, token: string) {
+    window.localStorage.setItem("cachedIdCamp", String(idCamp));
+    window.localStorage.setItem("cachedTokenDirecteurs", token);
+  }
+
+  export function clear() {
+    window.localStorage.removeItem("cachedIdCamp");
+    window.localStorage.removeItem("cachedTokenDirecteurs");
+  }
 }

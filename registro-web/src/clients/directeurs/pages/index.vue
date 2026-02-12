@@ -53,7 +53,7 @@
 import { useRouter } from "vue-router";
 import NavBar from "../components/NavBar.vue";
 import { onMounted, ref } from "vue";
-import { controller } from "../logic/logic";
+import { CachedTokens, controller } from "../logic/logic";
 import type { CampItem, IdCamp } from "../logic/api";
 
 const router = useRouter();
@@ -86,6 +86,10 @@ async function logginTo(idCamp: IdCamp, password: string) {
 
   if (res.IsValid) {
     controller.setCamp(res.Camp, res.ComptaURL, res.Token);
+
+    // cache the token for better reload experience
+    CachedTokens.set(idCamp, res.Token);
+
     controller.showMessage("Bienvenue !");
     router.push({ path: "/inscriptions" });
   } else {

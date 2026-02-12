@@ -107,6 +107,15 @@ func (ct *Controller) NewToken(isAdmin, isFondSoutien bool) (string, error) {
 	return token.SignedString(ct.key[:])
 }
 
+func (ct *Controller) verifyToken(token string) LogginOut {
+	meta, ok := crypto.VerifyJWT[customClaims](ct.key, token)
+	if !ok {
+		return LogginOut{IsValid: false} // not a valid token
+	}
+	// the token is valid here
+	return LogginOut{IsValid: true, IsFondSoutien: meta.IsFondSoutien, Token: token}
+}
+
 // JWTUser expects a JWT authentified request, and must
 // only be used in routes protected by [Controller.JWTMiddleware] or [Controller.JWTMiddlewareForQuery]
 func JWTUser(c echo.Context) (isAdmin, isFondSoutien bool) {
@@ -122,6 +131,8 @@ type LogginOut struct {
 
 // Loggin is called to enter the web app,
 // and returns a token if the password is valid.
+// If a valid token is used instead of the password, it is
+// accepted and return as is.
 func (ct *Controller) Loggin(c echo.Context) error {
 	password := c.QueryParam("password")
 	out, err := ct.loggin(password)
@@ -132,6 +143,12 @@ func (ct *Controller) Loggin(c echo.Context) error {
 }
 
 func (ct *Controller) loggin(password string) (LogginOut, error) {
+	// first try to interpret password as a cached token
+	out := ct.verifyToken(password)
+	if out.IsValid {
+		return out, nil
+	}
+
 	var isFondSoutien bool
 	switch password {
 	case ct.password:

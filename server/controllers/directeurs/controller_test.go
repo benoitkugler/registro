@@ -27,6 +27,9 @@ func TestToken(t *testing.T) {
 	token, err := ct.NewToken(25)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(token) > 10)
+
+	_, ok := crypto.VerifyJWT[customClaims](ct.key, token)
+	tu.Assert(t, ok)
 }
 
 func TestLoggin(t *testing.T) {
@@ -66,6 +69,12 @@ func TestLoggin(t *testing.T) {
 	token, err := ct.key.EncryptJSON(backoffice.BackofficeToDirecteurKey{IdCamp: camp.Id, Time: time.Now()})
 	tu.AssertNoErr(t, err)
 	out, err = ct.loggin("", camp.Id, token)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, out.IsValid)
+
+	tokenC, err := ct.NewToken(25)
+	tu.AssertNoErr(t, err)
+	out, err = ct.loggin("", camp.Id, tokenC)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, out.IsValid)
 

@@ -39,9 +39,10 @@
 
 <script lang="ts" setup>
 import { reactive, ref } from "vue";
-import { controller } from "./logic/logic";
+import { CachedTokens, controller } from "./logic/logic";
 import type { Action } from "@/utils";
 import { useRouter } from "vue-router";
+import type { IdCamp } from "./logic/api";
 
 const message = reactive({
   text: "",
@@ -71,7 +72,28 @@ controller.showMessage = (s, color, action) => {
 // redirect to the index page
 const router = useRouter();
 router.beforeEach(async (to, from) => {
-  if (!controller.hasToken() && to.path !== "/") {
+  if (controller.hasToken()) return;
+
+  // try do loggin from cached token
+  const { idCamp, token } = CachedTokens.get();
+  if (token) {
+    const res = await controller.Loggin({
+      idCamp: idCamp,
+      password: token,
+    });
+    if (res && res.IsValid) {
+      controller.setCamp(res.Camp, res.ComptaURL, res.Token);
+      controller.showMessage("Bienvenue !");
+      if (to.path == "/") {
+        // we are on the loggin page, dont stay here !
+        return { path: "/inscriptions" };
+      } else {
+        return; // do not redirect to login page
+      }
+    }
+  }
+
+  if (to.path !== "/") {
     // redirect the user to the login page
     return { path: "/" };
   }

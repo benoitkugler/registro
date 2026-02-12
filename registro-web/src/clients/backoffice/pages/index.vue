@@ -40,7 +40,7 @@
 <script lang="ts" setup>
 import { ref } from "vue";
 import NavBar from "../components/NavBar.vue";
-import { controller } from "../logic/logic";
+import { CachedTokens, controller } from "../logic/logic";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
@@ -54,6 +54,10 @@ async function loggin() {
 
   if (res.IsValid) {
     controller.setToken(res.Token, res.IsFondSoutien);
+
+    // cache the token for better reload experience
+    CachedTokens.set(res.Token);
+
     controller.showMessage("Bienvenue !");
     router.push({ path: "/inscriptions" });
   } else {

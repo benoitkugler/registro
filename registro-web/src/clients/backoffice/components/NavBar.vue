@@ -48,6 +48,7 @@
         link
         :to="{ path: '/' }"
         color="primary"
+        @click="CachedTokens.clear()"
       >
         Se déconnecter
       </v-list-item>
@@ -74,8 +75,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
-import { controller } from "../logic/logic";
+import { computed } from "vue";
+import { CachedTokens, controller } from "../logic/logic";
 
 const logo = `${import.meta.env.BASE_URL}${import.meta.env.VITE_ASSO}/logo.png`;
 

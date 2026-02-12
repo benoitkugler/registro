@@ -19,6 +19,8 @@ import (
 	fs "registro/sql/files"
 	in "registro/sql/inscriptions"
 	pr "registro/sql/personnes"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 // Encrypter is used to encrypt exposed data, such as document or
@@ -206,4 +208,20 @@ func decryptAES(key, data []byte) ([]byte, error) {
 	nonce, ciphertext := data[:nonceSize], data[nonceSize:]
 	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
 	return plaintext, err
+}
+
+type claims[T any] interface {
+	*T
+	jwt.Claims
+}
+
+func VerifyJWT[T any, C claims[T]](key Encrypter, token string) (T, bool) {
+	parsed, err := jwt.ParseWithClaims(token, C(new(T)), func(t *jwt.Token) (any, error) {
+		return key[:], nil
+	})
+	if err != nil {
+		return *new(T), false // not a valid token
+	}
+	meta := parsed.Claims.(C) // the token is valid here
+	return *meta, true
 }

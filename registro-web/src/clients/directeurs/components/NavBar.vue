@@ -67,6 +67,7 @@
       link
       :to="{ path: '/' }"
       color="primary"
+      @click="CachedTokens.clear()"
     >
       Se déconnecter
     </v-list-item>
@@ -97,7 +98,7 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import { controller } from "../logic/logic";
+import { CachedTokens } from "../logic/logic";
 
 const props = defineProps<{
   title: string;

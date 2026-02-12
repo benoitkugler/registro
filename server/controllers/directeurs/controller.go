@@ -142,18 +142,21 @@ func (ct *Controller) loggin(host string, id cps.IdCamp, password string) (Loggi
 		return LogginOut{}, utils.SQLError(err)
 	}
 
-	// we support 4 authentication modes:
+	// we support 5 authentication modes:
+	//	- temporary token, used when redirecting from backoffice to directeur
+	//	- cached token
 	//	- global password
 	//	- directeur password
 	//	- camp password
-	//	- temporary token, used when redirecting from backoffice to directeur
+
+	var args backoffice.BackofficeToDirecteurKey
 
 	isAllowed := false
 
-	// first check for a token
-	var args backoffice.BackofficeToDirecteurKey
-	err = ct.key.DecryptJSON(password, &args)
-	if err == nil {
+	// first check for tokens
+	if _, ok := crypto.VerifyJWT[customClaims](ct.key, password); ok {
+		isAllowed = true
+	} else if err = ct.key.DecryptJSON(password, &args); err == nil {
 		// check the validity
 		if time.Since(args.Time) > 24*time.Hour {
 			return LogginOut{}, errors.New("quick access token has expired")
