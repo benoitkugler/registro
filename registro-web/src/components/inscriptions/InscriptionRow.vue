@@ -49,7 +49,7 @@
     <v-card-text>
       <v-row>
         <v-col cols="7">
-          <v-row no-gutters class="my-0 py-1">
+          <v-row no-gutters class="my-0 py-1 font-italic">
             <InscriptionEtatcivilCols
               :api="props.api"
               :personne="props.inscription.Responsable"
@@ -57,13 +57,16 @@
               @identifie="(v) => emit('identifie', v)"
             ></InscriptionEtatcivilCols>
           </v-row>
-          <v-divider thickness="1"></v-divider>
+          <v-divider thickness="4" rounded></v-divider>
           <v-row
             no-gutters
             class="my-0 py-1"
             v-for="(part, i) in props.inscription.Participants"
             :key="i"
           >
+            <v-col cols="auto">
+              <div style="width: 12px"></div>
+            </v-col>
             <InscriptionEtatcivilCols
               :api="props.api"
               :personne="part.Personne"

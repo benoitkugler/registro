@@ -1,5 +1,5 @@
 <template>
-  <v-col align-self="center" cols="4">
+  <v-col align-self="center" cols="3">
     <v-tooltip>
       <template #activator="{ props: tooltipProps }">
         <!-- Personne temporaire : à gérer -->
