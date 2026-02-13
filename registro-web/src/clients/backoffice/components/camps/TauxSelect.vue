@@ -11,7 +11,23 @@
         :items="items"
         v-model="selected"
         @update:model-value="onSelect"
-      ></v-select>
+      >
+        <template #item="{ item, props: innerProps }">
+          <v-list-item
+            v-bind="innerProps"
+            :title="item.title"
+            :subtitle="item.raw.subtitle"
+          ></v-list-item>
+        </template>
+
+        <template #selection="{ item }">
+          <v-list-item
+            density="compact"
+            :title="item.title"
+            :subtitle="item.raw.subtitle"
+          ></v-list-item>
+        </template>
+      </v-select>
 
       <v-row v-else>
         <v-col cols="12">
@@ -68,6 +84,7 @@ import {
   CurrencyLabels,
   type IdTaux,
   type Taux,
+  type TauxExt,
 } from "@/clients/backoffice/logic/api";
 import { controller } from "@/clients/backoffice/logic/logic";
 import { copy, mapFromObject, round } from "@/utils";
@@ -81,12 +98,13 @@ const selected = ref<IdTaux | null>(null);
 const items = computed(() => {
   const out = Array.from(tauxMap.value.values()).map((t) => ({
     title: t.Label,
+    subtitle: t.Description,
     value: t.Id,
   }));
   out.sort((a, b) => a.title.localeCompare(b.title));
   return out;
 });
-const tauxMap = ref(new Map<IdTaux, Taux>());
+const tauxMap = ref(new Map<IdTaux, TauxExt>());
 async function fetch() {
   const res = await controller.CampsGetTaux();
   if (res === undefined) return;

@@ -98,6 +98,14 @@ func (t Taux) Zero() MontantTaux {
 	return MontantTaux{Montant{Currency: higherCurrency}, newTableTaux(t)}
 }
 
+// String renvoie une description des valeurs.
+func (t Taux) String() string {
+	if !t.Has(FrancsSuisse) {
+		return ""
+	}
+	return fmt.Sprintf("%s = %.03f€", Montant{100, FrancsSuisse}.String(), float64(t.FrancsSuisse)/1000)
+}
+
 // Add ajoute [other], en convertissant correctement l'unité si besoin.
 //
 // La fonction 'panic' si le taux de [m.Montant.Currency] vaut 0.

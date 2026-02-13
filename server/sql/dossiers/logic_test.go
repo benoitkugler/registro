@@ -1,11 +1,20 @@
 package dossiers
 
 import (
+	"fmt"
 	"math/rand"
 	"testing"
 
 	tu "registro/utils/testutils"
 )
+
+func TestTaux_String(t *testing.T) {
+	tu.Assert(t, Taux{Euros: 1000}.String() == "")
+	fmt.Println(Taux{Euros: 1000, FrancsSuisse: 800}.String())
+	fmt.Println(Taux{Euros: 1000, FrancsSuisse: 1106}.String())
+	// tu.Assert(t, Taux{Euros: 1000, FrancsSuisse: 800}.Zero().Currency == Euros)
+	// tu.Assert(t, Taux{Euros: 1000, FrancsSuisse: 1106}.Zero().Currency == FrancsSuisse)
+}
 
 func TestMontantTaux_Add(t *testing.T) {
 	tests := []struct {

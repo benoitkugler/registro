@@ -243,6 +243,14 @@ export interface SondagesOut {
   Camps: Camp[] | null;
   Sondages: Record<IdCamp, CampSondages> | null;
 }
+// registro/controllers/backoffice.TauxExt
+export interface TauxExt {
+  Id: IdTaux;
+  Label: string;
+  Euros: Int;
+  FrancsSuisse: Int;
+  Description: string;
+}
 // registro/controllers/files.DemandeStat
 export interface DemandeStat {
   Title: string;
@@ -877,8 +885,6 @@ export interface Taux {
   Euros: Int;
   FrancsSuisse: Int;
 }
-// registro/sql/dossiers.Tauxs
-export type Tauxs = Record<IdTaux, Taux> | null;
 // registro/sql/events.Acteur
 export const Acteur = {
   Espaceperso: 0,
@@ -1201,9 +1207,8 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseURL + "/api/v1/backoffice/camps-taux";
     this.startRequest();
     try {
-      const rep: AxiosResponse<Tauxs> = await Axios.get(fullUrl, {
-        headers: this.getHeaders(),
-      });
+      const rep: AxiosResponse<Record<IdTaux, TauxExt> | null> =
+        await Axios.get(fullUrl, { headers: this.getHeaders() });
       return rep.data;
     } catch (error) {
       this.handleError(error);

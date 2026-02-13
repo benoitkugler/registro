@@ -31,7 +31,7 @@ const colorScheme =
         text: "#bdd4e8",
 
         accent: "#ebba02",
-        "on-accent": "white",
+        "on-accent": "#ffffff",
       };
 
 // https://vuetifyjs.com/en/introduction/why-vuetify/#feature-guides

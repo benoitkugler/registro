@@ -21,6 +21,11 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+type TauxExt struct {
+	ds.Taux
+	Description string
+}
+
 func (ct *Controller) CampsGetTaux(c echo.Context) error {
 	out, err := ct.loadTaux()
 	if err != nil {
@@ -29,8 +34,16 @@ func (ct *Controller) CampsGetTaux(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) loadTaux() (ds.Tauxs, error) {
-	return ds.SelectAllTauxs(ct.db)
+func (ct *Controller) loadTaux() (map[ds.IdTaux]TauxExt, error) {
+	tauxs, err := ds.SelectAllTauxs(ct.db)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	out := make(map[ds.IdTaux]TauxExt)
+	for k, v := range tauxs {
+		out[k] = TauxExt{v, v.String()}
+	}
+	return out, nil
 }
 
 type CampHeader struct {
