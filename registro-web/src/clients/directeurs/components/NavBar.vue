@@ -1,5 +1,11 @@
 <template>
-  <v-navigation-drawer app v-model="showSideBar" expand-on-hover permanent rail>
+  <v-navigation-drawer
+    app
+    :model-value="!props.hideMenu"
+    expand-on-hover
+    permanent
+    rail
+  >
     <v-list-item
       prepend-icon="mdi-menu"
       title="Registro - Directeurs"
@@ -108,6 +114,4 @@ const props = defineProps<{
 const logo = `${import.meta.env.BASE_URL}${import.meta.env.VITE_ASSO}/logo.png`;
 
 const version = `v${VITE_APP_VERSION}`;
-
-const showSideBar = ref(false);
 </script>
