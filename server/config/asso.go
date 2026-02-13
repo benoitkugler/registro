@@ -13,8 +13,10 @@ type Asso struct {
 
 	Title, Infos string // used in documents footer
 
-	Icon                         string       // included as image src attribute
-	ColorPrimary, ColorSecondary template.CSS // included as background-color
+	Icon            string       // included as image src attribute
+	BackgroundColor template.CSS // included as background-color
+	TextColor       template.CSS // included as color, should have contrast with [BackgroundColor]
+	AccentColor     template.CSS // included as background-color for buttons
 
 	// Used as default right header.
 	// Also used in "Lettre aux parents" if UseCoordCentre is true, and as contact in espaceperso
@@ -62,9 +64,10 @@ var acve = Asso{
 	ContactTel:  "04 75 22 03 95",
 	ContactMail: "inscriptions@acve.asso.fr",
 
-	Icon:           "logo_acve.png",
-	ColorPrimary:   "#b8dbf1", // rgb(184, 219, 241)
-	ColorSecondary: "#feee00",
+	Icon:            "logo_acve.png",
+	BackgroundColor: "#b8dbf1", // rgb(184, 219, 241)
+	TextColor:       "#000000",
+	AccentColor:     "#feee00",
 
 	MailsSettings: MailsSettings{
 		AssoName:            "ACVE",
@@ -104,17 +107,17 @@ var repere = Asso{
 	ID: "repere",
 
 	Title: "Repère",
-	Infos: "2025",
+	Infos: "2026",
 
 	ContactNom:  "Repère - Centre d'inscriptions",
 	ContactTel:  "+41 79 334 15 04",
 	ContactMail: "webmaster@lerepere.ch",
 
 	Icon: "logo_repere.png",
-	// adapté pour l'ancien site web ColorPrimary:   "#2b678a",
-	// adapté pour l'ancien site web ColorSecondary: "#2ebfdc",
-	ColorPrimary:   "#3f4e30",
-	ColorSecondary: "#bdd4e8",
+	// couleurs extraites de https://asso-repere.ch
+	BackgroundColor: "#216442", // vert foncé
+	TextColor:       "#bdd4e8", // bleu clair
+	AccentColor:     "#ebba02", // jaune
 
 	MailsSettings: MailsSettings{
 		AssoName:            "Repère",

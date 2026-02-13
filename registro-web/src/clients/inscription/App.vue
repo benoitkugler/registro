@@ -5,7 +5,7 @@
         <v-app-bar-title>
           <v-row>
             <v-col align-self="center" cols="auto">
-              <v-img width="60" :src="logo" />
+              <v-img width="150" :src="logo" />
             </v-col>
             <v-col align-self="center"> Portail des inscriptions </v-col>
           </v-row>
@@ -115,11 +115,11 @@
         <CampsList :camps="camps" @goTo="initWithCamp"></CampsList>
       </v-container>
 
-      <v-footer color="secondary">
+      <v-footer color="primary">
         <v-row no-gutters class="my-1" justify="space-between">
           <v-col
             >{{ asso }} -
-            <a href="/cgu" class="text-black">Mentions légales et CGU</a></v-col
+            <a href="/cgu" class="text-text">Mentions légales et CGU</a></v-col
           >
           <v-col class="text-right">{{ version }}</v-col>
         </v-row>
@@ -161,7 +161,7 @@ import { useDisplay } from "vuetify";
 import CampsList from "./components/CampsList.vue";
 
 const message = ref("");
-const messageColor = ref("secondary");
+const messageColor = ref("primary");
 
 const errorKind = ref("");
 const errorHtml = ref("");

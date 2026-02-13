@@ -22,12 +22,9 @@
         margin-bottom: 2px;
       }
 
-      .color-asso {
-          background-color: {{ $.Asso.ColorPrimary }};
-      }
-
-      .color-secondary {
-          background-color: {{ $.Asso.ColorSecondary }};
+      .asso-primary-colors {
+          background-color: {{ $.Asso.BackgroundColor }};
+          color: {{ $.Asso.TextColor }};
       }
 
       .header {
@@ -76,7 +73,7 @@
       cellspacing="0"
       cellpadding="0"
     >
-      <tr class="header color-secondary">
+      <tr class="header asso-primary-colors">
         <td colspan="2" style="text-align: center; padding: 5px">
           {{ .Asso.Title }} - {{ .Title }}
         </td>
@@ -92,7 +89,7 @@
         <td colspan="2" style="padding: 10px">{{ .Signature }}</td>
       </tr>
 
-      <tr class="footer color-secondary">
+      <tr class="footer asso-primary-colors">
         <td style="padding: 5px">{{ .Asso.Title}}</td>
         <td style="padding: 5px; text-align: right">{{ .Asso.Infos }}</td>
       </tr>

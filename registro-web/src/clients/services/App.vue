@@ -44,7 +44,7 @@ import type { Action } from "@/utils";
 
 const message = reactive({
   text: "",
-  color: "secondary",
+  color: "primary",
   action: undefined as Action | undefined,
   timeout: 4000,
 });

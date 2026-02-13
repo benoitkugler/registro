@@ -5,7 +5,7 @@
         <v-app-bar-title>
           <v-row>
             <v-col align-self="center" cols="auto">
-              <v-img width="60" :src="logo" />
+              <v-img width="150" :src="logo" />
             </v-col>
             <v-col align-self="center"> Gestion des dons </v-col>
           </v-row>
@@ -74,7 +74,7 @@ import DonsV from "./components/DonsV.vue";
 import type { Int } from "./logic/api";
 
 const message = ref("");
-const messageColor = ref("secondary");
+const messageColor = ref("primary");
 
 const errorKind = ref("");
 const errorHtml = ref("");

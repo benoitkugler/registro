@@ -1,7 +1,7 @@
 <template>
   <v-card v-if="data != null" title="Messages des familles">
     <template #append>
-      <v-btn-toggle color="secondary" class="mx-1" v-model="mode" rounded>
+      <v-btn-toggle color="primary" class="mx-1" v-model="mode" rounded>
         <v-btn size="small" prepend-icon="mdi-clock"> Trier par date</v-btn>
         <v-btn size="small" append-icon="mdi-account"> Trier par inscrit</v-btn>
       </v-btn-toggle>

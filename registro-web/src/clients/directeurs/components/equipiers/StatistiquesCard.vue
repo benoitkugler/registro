@@ -4,7 +4,7 @@
       <v-row class="my-1" no-gutters justify="space-between">
         <v-col> Equipiers </v-col>
         <v-col cols="auto">
-          <v-badge color="secondary" inline :content="props.equipiers.length">
+          <v-badge color="primary" inline :content="props.equipiers.length">
           </v-badge>
         </v-col>
       </v-row>
@@ -12,7 +12,7 @@
         <v-col> Animateurs </v-col>
         <v-col cols="auto">
           <v-badge
-            color="secondary"
+            color="primary"
             inline
             :content="props.equipiers.filter((p) => p.IsAnimateur).length"
           >
@@ -23,7 +23,7 @@
         <v-col> Au pair </v-col>
         <v-col cols="auto">
           <v-badge
-            color="secondary"
+            color="primary"
             inline
             :content="props.equipiers.filter((p) => p.IsAuPair).length"
           >

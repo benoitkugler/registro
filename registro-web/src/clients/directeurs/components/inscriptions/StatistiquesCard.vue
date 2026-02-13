@@ -4,15 +4,14 @@
       <v-row class="my-1" no-gutters justify="space-between">
         <v-col> Inscrits </v-col>
         <v-col cols="auto">
-          <v-badge color="secondary" inline :content="inscrits.length">
-          </v-badge>
+          <v-badge color="primary" inline :content="inscrits.length"> </v-badge>
         </v-col>
       </v-row>
       <v-row class="my-1" no-gutters justify="space-between">
         <v-col> Garçons/Filles </v-col>
         <v-col cols="auto">
           <v-badge
-            color="secondary"
+            color="primary"
             inline
             :content="`${
               inscrits.filter((p) => p.Personne.Sexe == Sexe.Man).length

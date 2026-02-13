@@ -26,9 +26,13 @@
       </v-list>
     </v-card-text>
   </v-card>
-  <v-alert v-else class="mx-auto" type="info">
-    Il n'y a encore rien à voir. Repassez donc dans quelques jours !
-  </v-alert>
+  <v-card v-else title="Albums photos">
+    <v-card-text>
+      <v-alert class="mx-auto" type="info">
+        Il n'y a encore rien à voir. Repassez donc dans quelques jours !
+      </v-alert>
+    </v-card-text>
+  </v-card>
 </template>
 
 <script lang="ts" setup>

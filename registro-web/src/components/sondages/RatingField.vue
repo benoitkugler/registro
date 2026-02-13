@@ -6,7 +6,7 @@
     <v-col cols="12" class="text-center mt-1">
       <v-rating
         :hover="!props.readonly"
-        color="secondary"
+        color="primary"
         :length="4"
         v-model="model"
         size="32"

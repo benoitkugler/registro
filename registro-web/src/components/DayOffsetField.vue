@@ -7,7 +7,7 @@
     step="1"
     show-ticks
     thumb-label
-    color="secondary"
+    color="primary"
     hide-details
   >
     <template #append>

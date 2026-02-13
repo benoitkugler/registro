@@ -45,7 +45,7 @@ import { useRouter } from "vue-router";
 
 const message = reactive({
   text: "",
-  color: "secondary",
+  color: "accent",
   action: undefined as Action | undefined,
   timeout: 4000,
 });

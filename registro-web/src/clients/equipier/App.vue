@@ -5,7 +5,7 @@
         <v-app-bar-title>
           <v-row>
             <v-col align-self="center" cols="auto">
-              <v-img width="60" :src="logo" />
+              <v-img width="150" :src="logo" />
             </v-col>
             <v-col align-self="center">
               Formulaire équipier {{ data ? Camps.label(data.Camp) : "" }}
@@ -60,7 +60,7 @@ import EquipierForm from "./components/EquipierForm.vue";
 import { Camps } from "@/utils";
 
 const message = ref("");
-const messageColor = ref("secondary");
+const messageColor = ref("primary");
 
 const errorKind = ref("");
 const errorHtml = ref("");

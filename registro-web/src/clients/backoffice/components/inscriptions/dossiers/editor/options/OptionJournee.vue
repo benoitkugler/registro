@@ -7,7 +7,7 @@
 
       <v-btn-toggle
         class="overflow-x-auto"
-        color="secondary"
+        color="primary"
         multiple
         :model-value="!modelValue?.length ? allDays : modelValue"
         @update:model-value="(v) => (modelValue = v.length == allDays.length ? [] : v as Int[])"

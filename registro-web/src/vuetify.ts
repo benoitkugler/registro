@@ -19,13 +19,19 @@ const colorScheme =
   asso == "acve"
     ? {
         primary: "#c8db30",
-        secondary: "#b8dbf1",
+        "on-primary": "black",
+        text: "black",
+
         accent: "#ffd100",
+        "on-accent": "black",
       }
     : {
-        primary: "#3f4e30",
-        secondary: "#bdd4e8",
-        accent: "#fff604",
+        primary: "#216442",
+        "on-primary": "#bdd4e8",
+        text: "#bdd4e8",
+
+        accent: "#ebba02",
+        "on-accent": "white",
       };
 
 // https://vuetifyjs.com/en/introduction/why-vuetify/#feature-guides

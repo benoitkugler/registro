@@ -1,9 +1,9 @@
 <template>
-  <v-app-bar rounded elevation="4" color="secondary">
+  <v-app-bar rounded elevation="4" color="primary">
     <v-app-bar-title>
       <v-row>
         <v-col align-self="center" cols="auto">
-          <v-img :width="xs ? 42 : 60" :src="logo" />
+          <v-img :width="xs ? 80 : 150" :src="xs ? logoSmall : logo" />
         </v-col>
         <v-col align-self="center" v-if="!smAndDown">
           {{ props.title }}
@@ -27,6 +27,9 @@ const props = defineProps<{
 }>();
 
 const logo = `${import.meta.env.BASE_URL}${import.meta.env.VITE_ASSO}/logo.png`;
+const logoSmall = `${import.meta.env.BASE_URL}${
+  import.meta.env.VITE_ASSO
+}/logo-small.png`;
 
 const version = `v${VITE_APP_VERSION}`;
 

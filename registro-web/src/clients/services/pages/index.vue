@@ -2,11 +2,7 @@
   <NavBar :title="`Portail de gestion - Association ${asso}`"> </NavBar>
 
   <v-container class="fill-height flex-column justify-space-evenly">
-    <v-card
-      class="border-secondary border-lg"
-      title="Inscriptions"
-      width="100%"
-    >
+    <v-card class="border-primary border-lg" title="Inscriptions" width="100%">
       <v-card-text>
         <v-row>
           <v-col align-self="center">
@@ -38,7 +34,7 @@
               density="compact"
               variant="outlined"
               v-model="mail"
-              color="secondary"
+              color="primary"
             ></v-text-field>
           </v-col>
           <v-col align-self="center" cols="auto">
@@ -53,7 +49,7 @@
       </v-card-text>
     </v-card>
 
-    <v-card class="border-secondary border-lg" title="Directeurs" width="100%">
+    <v-card class="border-primary border-lg" title="Directeurs" width="100%">
       <v-card-text>
         <v-row>
           <v-col align-self="center">

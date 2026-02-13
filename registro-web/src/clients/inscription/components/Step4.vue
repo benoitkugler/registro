@@ -1,5 +1,5 @@
 <template>
-  <v-card class="my-2 border-secondary border-lg" title="Message">
+  <v-card class="my-2 border-primary border-lg" title="Message">
     <v-card-text>
       <v-textarea
         variant="outlined"
@@ -11,7 +11,7 @@
   </v-card>
 
   <v-card
-    class="my-2 border-secondary border-lg"
+    class="my-2 border-primary border-lg"
     title="Fonds de soutien"
     v-if="settings.ShowFondSoutien"
   >
@@ -27,7 +27,7 @@
   </v-card>
 
   <v-card
-    class="mt-1 mb-3 border-secondary border-lg"
+    class="mt-1 mb-3 border-primary border-lg"
     title="Contacts additionnels"
     :subtitle="
       smAndUp
@@ -44,7 +44,7 @@
     </v-card-text>
   </v-card>
 
-  <v-card class="my-1 border-secondary border-lg" title="Autorisations">
+  <v-card class="my-1 border-primary border-lg" title="Autorisations">
     <v-card-text>
       <v-checkbox
         density="comfortable"
@@ -112,7 +112,7 @@
 
   <v-card
     title="Charte"
-    class="my-2 border-secondary border-lg"
+    class="my-2 border-primary border-lg"
     v-if="props.settings.ShowCharteConduite"
   >
     <v-card-text style="line-height: 2em">

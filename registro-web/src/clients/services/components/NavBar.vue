@@ -1,9 +1,9 @@
 <template>
-  <v-app-bar rounded elevation="4" color="secondary">
+  <v-app-bar rounded elevation="4" color="primary">
     <v-app-bar-title>
       <v-row>
         <v-col align-self="center" cols="auto">
-          <v-img width="60" :src="logo" />
+          <v-img width="150" :src="logo" />
         </v-col>
         <v-col align-self="center"> {{ props.title }} </v-col>
       </v-row>

@@ -139,7 +139,7 @@
           <v-row no-gutters>
             <v-col cols="auto" class="px-2">
               <v-icon
-                :color="props.inscription.Message.length ? 'secondary' : 'grey'"
+                :color="props.inscription.Message.length ? 'primary' : 'grey'"
                 >mdi-message</v-icon
               >
             </v-col>

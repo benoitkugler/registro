@@ -99,7 +99,7 @@
               <v-badge
                 inline
                 :content="item.Quantite"
-                color="secondary"
+                color="primary"
               ></v-badge>
             </template>
             <template #append>

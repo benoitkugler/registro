@@ -46,7 +46,7 @@ import type { IdCamp } from "./logic/api";
 
 const message = reactive({
   text: "",
-  color: "secondary",
+  color: "accent",
   action: undefined as Action | undefined,
   timeout: 4000,
 });

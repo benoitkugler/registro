@@ -9,7 +9,7 @@
       <v-btn icon="mdi-close" flat @click="emit('close')"></v-btn>
     </template>
     <v-card-text>
-      <v-alert v-if="data.length" color="secondary" icon="mdi-comment-quote">
+      <v-alert v-if="data.length" color="primary" icon="mdi-comment-quote">
         Afin d'améliorer nos prestations, nous avons à cœur de vous laisser la
         parole. Vos suggestions, remarques et ressentis nous aiderons à
         améliorer nos séjours. Merci d'avance de ce temps que vous réserverez

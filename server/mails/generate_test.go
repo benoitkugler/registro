@@ -64,7 +64,7 @@ func TestNotifieSondage(t *testing.T) {
 }
 
 func TestInviteEquipier(t *testing.T) {
-	cfg, creds := loadEnv(t)
+	cfg, _ := loadEnv(t)
 
 	html, err := InviteEquipier(cfg,
 		fmt.Sprintf("C3 - %d", time.Now().Year()), "Vincent",
@@ -72,9 +72,6 @@ func TestInviteEquipier(t *testing.T) {
 	tu.AssertNoErr(t, err)
 
 	tu.Write(t, "InviteEquipier.html", []byte(html))
-
-	err = NewMailer(creds, cfg.MailsSettings).SendMail("", "Test", html, nil, nil)
-	tu.AssertNoErr(t, err)
 }
 
 func TestNotifieModificationOptions(t *testing.T) {
@@ -122,14 +119,11 @@ func TestPreinscription(t *testing.T) {
 }
 
 func TestValidationMailInscription(t *testing.T) {
-	cfg, creds := loadEnv(t)
+	cfg, _ := loadEnv(t)
 
 	html, err := ValidationMailInscription(cfg, Contact{Prenom: "Benoit", Sexe: pr.Woman}, "https://acve.fr/confirme?id='ee'")
 	tu.AssertNoErr(t, err)
 	tu.Write(t, "ConfirmeInscription.html", []byte(html))
-
-	err = NewMailer(creds, cfg.MailsSettings).SendMail("", "Vérification de l'adresse mail", html, nil, nil)
-	tu.AssertNoErr(t, err)
 }
 
 func TestConfirmationInscription(t *testing.T) {

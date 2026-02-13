@@ -19,8 +19,9 @@
         margin-bottom: 32px; /** incuding the footer */
       }
 
-      .color-asso {
-        background-color: {{ $.Asso.ColorPrimary }};
+      .asso-primary-colors {
+        background-color: {{ $.Asso.BackgroundColor }};
+        color: {{ $.Asso.TextColor }};
       }
     </style>
     <footer
@@ -32,7 +33,7 @@
         display: flex;
         justify-content: space-between;
       "
-      class="color-asso"
+      class="asso-primary-colors"
     >
       <div><b>{{ .Asso.Title }}</b></div>
       <div>{{ .Asso.Infos }}</div>
@@ -41,7 +42,8 @@
     {{ block "content" . }}
 
     <header
-      style="break-before: page; display: flex; justify-content: space-between"
+      style="break-before: page; display: flex; justify-content: space-between";
+      margin-bottom: 8px;
     >
       <div>
         <img src="{{ .Asso.Icon }}" height="80px" />
