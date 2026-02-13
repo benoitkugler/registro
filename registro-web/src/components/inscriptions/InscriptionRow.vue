@@ -56,12 +56,18 @@
               :acteur="acteur"
               @identifie="(v) => emit('identifie', v)"
             ></InscriptionEtatcivilCols>
+            <v-spacer></v-spacer>
+            <v-col cols="auto">
+              <v-chip v-if="hiddenParticipants" size="small">
+                + {{ hiddenParticipants }} inscrit(s) sur d'autres séjours
+              </v-chip>
+            </v-col>
           </v-row>
           <v-divider thickness="4" rounded></v-divider>
           <v-row
             no-gutters
             class="my-0 py-1"
-            v-for="(part, i) in props.inscription.Participants"
+            v-for="(part, i) in participantsToDisplay"
             :key="i"
           >
             <v-col cols="auto">
@@ -74,7 +80,9 @@
               @identifie="(v) => emit('identifie', v)"
             ></InscriptionEtatcivilCols>
             <v-col align-self="center" cols="3" class="text-center">
-              {{ Camps.label(part.Camp) }}
+              <template v-if="acteur == Acteur.Backoffice">
+                {{ Camps.label(part.Camp) }}
+              </template>
             </v-col>
             <v-spacer></v-spacer>
 
@@ -235,6 +243,20 @@ function isValidable(part: Participant) {
     allIdentified.value && (props.user === null || props.user == part.IdCamp)
   );
 }
+
+const participantsToDisplay = computed(() =>
+  props.user == null
+    ? props.inscription.Participants || []
+    : (props.inscription.Participants || []).filter(
+        (p) => p.Camp.Id == props.user
+      )
+);
+
+const hiddenParticipants = computed(
+  () =>
+    (props.inscription.Participants?.length || 0) -
+    participantsToDisplay.value.length
+);
 
 const toDelete = ref<ParticipantCamp | null>(null);
 </script>

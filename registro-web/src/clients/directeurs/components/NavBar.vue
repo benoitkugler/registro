@@ -1,6 +1,10 @@
 <template>
-  <v-navigation-drawer app v-model="showSideBar" temporary>
-    <v-list-item title="Registro - Portail des directeurs" :subtitle="version">
+  <v-navigation-drawer app v-model="showSideBar" expand-on-hover permanent rail>
+    <v-list-item
+      prepend-icon="mdi-menu"
+      title="Registro - Directeurs"
+      :subtitle="version"
+    >
     </v-list-item>
     <v-divider></v-divider>
 
@@ -74,10 +78,6 @@
   </v-navigation-drawer>
 
   <v-app-bar rounded elevation="4" color="primary">
-    <v-app-bar-nav-icon
-      v-if="!props.hideMenu"
-      @click="showSideBar = !showSideBar"
-    ></v-app-bar-nav-icon>
     <v-app-bar-title>
       <v-row>
         <v-col align-self="center" cols="auto">
