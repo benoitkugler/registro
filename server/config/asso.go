@@ -71,7 +71,6 @@ var acve = Asso{
 
 	MailsSettings: MailsSettings{
 		AssoName:            "ACVE",
-		Sauvegarde:          "acve@alwaysdata.net",
 		Unsubscribe:         "contact@acve.asso.fr",
 		ReplyTo:             "inscriptions@acve.asso.fr",
 		SignatureMailCentre: "Pour le centre d'inscriptions, <br /> Marie-Pierre BUFFET",
@@ -121,7 +120,6 @@ var repere = Asso{
 
 	MailsSettings: MailsSettings{
 		AssoName:            "Repère",
-		Sauvegarde:          "backup@asso-repere.ch",
 		Unsubscribe:         "info@lerepere.ch",
 		ReplyTo:             "info@lerepere.ch",
 		SignatureMailCentre: "L'équipe Repère",
@@ -162,10 +160,12 @@ type RemisesHints struct {
 
 type MailsSettings struct {
 	AssoName            string // used in adress and as object prefix
-	Sauvegarde          string // send copies to this adress
 	Unsubscribe         string // used in 'List-Unsubscribe' header
 	ReplyTo             string // Adresse à laquelle répondre
 	SignatureMailCentre template.HTML
+
+	// send copies to this adress; should be specified by env. var
+	Sauvegarde string
 }
 
 // NewAsso read the ASSO env variable and returns the associated configuration.
@@ -173,7 +173,7 @@ type MailsSettings struct {
 //   - acve
 //   - repere
 //
-// The ASSO_BANK_IBAN env is also read
+// The ASSO_BANK_IBAN and ASSO_MAIL_SAUVEGARDE envs are also read
 func NewAsso() (Asso, error) {
 	var out Asso
 
@@ -193,6 +193,11 @@ func NewAsso() (Asso, error) {
 	out.bankIBANs = strings.Split(ibans, ",")
 	if len(out.bankIBANs) != len(out.bankNames) {
 		return Asso{}, errors.New("inconsistent length in ASSO_BANK_IBAN")
+	}
+
+	out.MailsSettings.Sauvegarde = os.Getenv("ASSO_MAIL_SAUVEGARDE")
+	if out.MailsSettings.Sauvegarde == "" {
+		return Asso{}, errors.New("missing ASSO_MAIL_SAUVEGARDE env. variable")
 	}
 
 	return out, nil
