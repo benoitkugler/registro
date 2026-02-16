@@ -4,6 +4,8 @@ go 1.24.1
 
 require (
 	github.com/benoitkugler/go-weasyprint v0.0.13
+	github.com/benoitkugler/num2words v1.0.1
+	github.com/benoitkugler/pdf v0.0.14
 	github.com/benoitkugler/textprocessing v0.0.3
 	github.com/benoitkugler/webrender v0.0.13
 	github.com/disintegration/imaging v1.6.2
@@ -22,8 +24,6 @@ require (
 
 require (
 	github.com/aymerick/douceur v0.2.0 // indirect
-	github.com/benoitkugler/num2words v1.0.1 // indirect
-	github.com/benoitkugler/pdf v0.0.14 // indirect
 	github.com/benoitkugler/pstokenizer v1.0.1 // indirect
 	github.com/benoitkugler/textlayout v0.3.1 // indirect
 	github.com/go-text/typesetting v0.3.0 // indirect
