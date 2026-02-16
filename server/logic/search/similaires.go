@@ -42,7 +42,7 @@ type PatternsSimilarite struct {
 }
 
 // NewPatternsSimilarite selects the proper fields.
-func NewPatternsSimilarite(pr pr.Etatcivil) PatternsSimilarite {
+func NewPatternsSimilarite(pr pr.Identite) PatternsSimilarite {
 	return PatternsSimilarite{
 		Nom:           pr.Nom,
 		Prenom:        pr.Prenom,
@@ -51,8 +51,8 @@ func NewPatternsSimilarite(pr pr.Etatcivil) PatternsSimilarite {
 	}
 }
 
-func (ps *PatternsSimilarite) Personne() pr.Etatcivil {
-	return pr.Etatcivil{
+func (ps *PatternsSimilarite) Personne() pr.Identite {
+	return pr.Identite{
 		Nom:           ps.Nom,
 		Prenom:        ps.Prenom,
 		Sexe:          ps.Sexe,
@@ -64,7 +64,7 @@ func (ps *PatternsSimilarite) Personne() pr.Etatcivil {
 // the given [candidate], that is if all the fields matches,
 // using normalization.
 // [ps] should have been normalized beforehand.
-func (ps *PatternsSimilarite) match(candidate pr.Etatcivil) bool {
+func (ps *PatternsSimilarite) match(candidate pr.Identite) bool {
 	return ps.Nom == Normalize(candidate.Nom) &&
 		ps.Prenom == Normalize(candidate.Prenom) &&
 		(ps.Sexe == pr.NoSexe || ps.Sexe == candidate.Sexe) &&
@@ -140,7 +140,7 @@ func NewPersonneHeader(p pr.Personne) PersonneHeader {
 func Match(personnes pr.Personnes, in PatternsSimilarite) (pr.IdPersonne, bool) {
 	in.normalize()
 	for _, personne := range personnes {
-		if in.match(personne.Etatcivil) {
+		if in.match(personne.Identite) {
 			return personne.Id, true
 		}
 	}

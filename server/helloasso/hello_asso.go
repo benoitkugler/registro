@@ -188,7 +188,7 @@ type paymentHelloAsso struct {
 
 type DonDonateur struct {
 	Don      dons.Don
-	Donateur pr.Etatcivil
+	Donateur pr.Identite
 }
 
 func newDonFromPayment(payment paymentHelloAsso) (DonDonateur, error) {
@@ -200,7 +200,7 @@ func newDonFromPayment(payment paymentHelloAsso) (DonDonateur, error) {
 		Affectation:  payment.Order.FormSlug,
 		Details:      fmt.Sprintf("%d", payment.Id), // pourra être modifié
 	}
-	donateur := pr.Etatcivil{
+	donateur := pr.Identite{
 		Prenom:        payment.Payer.FirstName,
 		Nom:           payment.Payer.LastName,
 		Adresse:       payment.Payer.Address,

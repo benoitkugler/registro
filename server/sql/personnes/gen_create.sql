@@ -15,6 +15,25 @@ CREATE TYPE Publicite AS (
     Eonews boolean
 );
 
+CREATE TABLE ficheequipiers (
+    IdPersonne integer NOT NULL,
+    SecuriteSociale text NOT NULL,
+    Fonctionnaire boolean NOT NULL,
+    Diplome smallint CHECK (Diplome IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19)) NOT NULL,
+    Approfondissement smallint CHECK (Approfondissement IN (0, 1, 2, 3, 4, 5)) NOT NULL,
+    Profession text NOT NULL,
+    EtatCivil smallint CHECK (EtatCivil IN (0, 1, 2)) NOT NULL,
+    NombreEnfants integer NOT NULL,
+    ExperienceTravailJeunes text NOT NULL,
+    ParcoursSpirituel text NOT NULL,
+    Eglise text NOT NULL,
+    Recommandation jsonb NOT NULL,
+    Sante text NOT NULL,
+    AssuranceMaladie text NOT NULL,
+    AssuranceAccident text NOT NULL,
+    MembreAssoPermanent boolean NOT NULL
+);
+
 CREATE TABLE fichesanitaires (
     IdPersonne integer NOT NULL,
     DifficultesSante text NOT NULL,
@@ -42,12 +61,6 @@ CREATE TABLE personnes (
     CodePostal text NOT NULL,
     Ville text NOT NULL,
     Pays text NOT NULL,
-    NomJeuneFille text NOT NULL,
-    Profession text NOT NULL,
-    Etudiant boolean NOT NULL,
-    Fonctionnaire boolean NOT NULL,
-    Diplome smallint CHECK (Diplome IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19)) NOT NULL,
-    Approfondissement smallint CHECK (Approfondissement IN (0, 1, 2, 3, 4, 5)) NOT NULL,
     Publicite Publicite NOT NULL,
     CharteAccepted timestamp(0) with time zone NOT NULL,
     IsTemp boolean NOT NULL
@@ -72,6 +85,15 @@ ALTER TABLE fichesanitaires
 ALTER TABLE fichesanitaires
     ADD CHECK (guard = FALSE);
 
+ALTER TABLE ficheequipiers
+    ADD UNIQUE (IdPersonne);
+
+ALTER TABLE ficheequipiers
+    ADD FOREIGN KEY (IdPersonne, guard) REFERENCES personnes (Id, IsTemp);
+
+ALTER TABLE ficheequipiers
+    ADD FOREIGN KEY (IdPersonne) REFERENCES personnes ON DELETE CASCADE;
+
 CREATE OR REPLACE FUNCTION gomacro_validate_json_pers_NomTel (data jsonb)
     RETURNS boolean
     AS $$
@@ -87,6 +109,30 @@ BEGIN
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'Nom')
+        AND gomacro_validate_json_string (data -> 'Tel');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_pers_Recommandation (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('Nom', 'Prenom', 'Mail', 'Tel'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_string (data -> 'Nom')
+        AND gomacro_validate_json_string (data -> 'Prenom')
+        AND gomacro_validate_json_string (data -> 'Mail')
         AND gomacro_validate_json_string (data -> 'Tel');
     RETURN is_valid;
 END;
@@ -114,4 +160,7 @@ ALTER TABLE fichesanitaires
 
 ALTER TABLE fichesanitaires
     ADD CONSTRAINT Medecin_gomacro CHECK (gomacro_validate_json_pers_NomTel (Medecin));
+
+ALTER TABLE ficheequipiers
+    ADD CONSTRAINT Recommandation_gomacro CHECK (gomacro_validate_json_pers_Recommandation (Recommandation));
 

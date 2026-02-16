@@ -68,7 +68,7 @@ func TestInviteEquipier(t *testing.T) {
 
 	html, err := InviteEquipier(cfg,
 		fmt.Sprintf("C3 - %d", time.Now().Year()), "Vincent",
-		pr.Etatcivil{Prenom: "Cl audie", Sexe: pr.Woman}, "http://test.fr")
+		pr.Identite{Prenom: "Cl audie", Sexe: pr.Woman}, "http://test.fr")
 	tu.AssertNoErr(t, err)
 
 	tu.Write(t, "InviteEquipier.html", []byte(html))
@@ -78,7 +78,7 @@ func TestNotifieModificationOptions(t *testing.T) {
 	cfg, _ := loadEnv(t)
 
 	html, err := NotifieModificationOptions(cfg,
-		pr.Etatcivil{Prenom: "Cl audie", Sexe: pr.Woman}, fmt.Sprintf("C3 - %d", time.Now().Year()), []string{
+		pr.Identite{Prenom: "Cl audie", Sexe: pr.Woman}, fmt.Sprintf("C3 - %d", time.Now().Year()), []string{
 			"Vincent",
 		}, "http://test.fr")
 	tu.AssertNoErr(t, err)
@@ -86,7 +86,7 @@ func TestNotifieModificationOptions(t *testing.T) {
 	tu.Write(t, "NotifieModificationOptions_1.html", []byte(html))
 
 	html, err = NotifieModificationOptions(cfg,
-		pr.Etatcivil{Prenom: "Cl audie", Sexe: pr.Woman}, fmt.Sprintf("C3 - %d", time.Now().Year()), []string{
+		pr.Identite{Prenom: "Cl audie", Sexe: pr.Woman}, fmt.Sprintf("C3 - %d", time.Now().Year()), []string{
 			"Vincent",
 			"Beoit Kugler",
 		}, "http://test.fr")

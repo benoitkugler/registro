@@ -94,7 +94,7 @@ func generate(recus map[pr.IdPersonne]recuFiscal, personnes pr.Personnes) ([]byt
 	var archiveB bytes.Buffer
 	archive := utils.NewZip(&archiveB)
 
-	etiquettes := make([]pr.Etatcivil, 0, len(recus))
+	etiquettes := make([]pr.Identite, 0, len(recus))
 
 	for idDonateur, r := range recus {
 		donateur := personnes[idDonateur]
@@ -103,7 +103,7 @@ func generate(recus map[pr.IdPersonne]recuFiscal, personnes pr.Personnes) ([]byt
 			return nil, err
 		}
 		archive.AddFile(fmt.Sprintf("recu_%s_%d.pdf", donateur.NOMPrenom(), idDonateur), bytes.NewReader(donPDF))
-		etiquettes = append(etiquettes, donateur.Etatcivil)
+		etiquettes = append(etiquettes, donateur.Identite)
 	}
 
 	// sort etiquettes by name

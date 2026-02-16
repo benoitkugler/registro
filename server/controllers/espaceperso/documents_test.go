@@ -21,9 +21,9 @@ func TestDocuments(t *testing.T) {
 		"../../migrations/init.sql")
 	defer db.Remove()
 
-	pe1, err := pr.Personne{Etatcivil: pr.Etatcivil{DateNaissance: shared.NewDateFrom(tu.DateFor(13))}}.Insert(db)
+	pe1, err := pr.Personne{Identite: pr.Identite{DateNaissance: shared.NewDateFrom(tu.DateFor(13))}}.Insert(db)
 	tu.AssertNoErr(t, err)
-	pe2, err := pr.Personne{Etatcivil: pr.Etatcivil{DateNaissance: shared.NewDateFrom(tu.DateFor(8))}}.Insert(db)
+	pe2, err := pr.Personne{Identite: pr.Identite{DateNaissance: shared.NewDateFrom(tu.DateFor(8))}}.Insert(db)
 	tu.AssertNoErr(t, err)
 	pe3, err := pr.Personne{}.Insert(db)
 	tu.AssertNoErr(t, err)

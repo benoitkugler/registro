@@ -28,7 +28,7 @@ func Test_events(t *testing.T) {
 
 	asso, smtp := loadEnv(t)
 
-	pe1, err := pr.Personne{Etatcivil: pr.Etatcivil{DateNaissance: shared.Date(time.Now()), Prenom: "Benoit"}}.Insert(db)
+	pe1, err := pr.Personne{Identite: pr.Identite{DateNaissance: shared.Date(time.Now()), Prenom: "Benoit"}}.Insert(db)
 	tu.AssertNoErr(t, err)
 	camp1, err := cps.Camp{IdTaux: 1}.Insert(db)
 	tu.AssertNoErr(t, err)

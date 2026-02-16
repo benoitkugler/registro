@@ -84,25 +84,25 @@ func Test_normalize(t *testing.T) {
 func TestPatternsSimilarite_match(t *testing.T) {
 	d1 := shared.NewDate(1994, time.April, 2)
 	d2 := shared.NewDate(1994, time.April, 3)
-	c1 := pr.Etatcivil{
+	c1 := pr.Identite{
 		Nom:           "Benoit",
 		Prenom:        "Kugler",
 		Sexe:          pr.Man,
 		DateNaissance: d1,
 	}
-	c2 := pr.Etatcivil{
+	c2 := pr.Identite{
 		Nom:           "Léo",
 		Prenom:        "Kugler",
 		Sexe:          pr.Man,
 		DateNaissance: d1,
 	}
-	c3 := pr.Etatcivil{
+	c3 := pr.Identite{
 		Nom:           "Léa",
 		Prenom:        "Kugler",
 		Sexe:          pr.Woman,
 		DateNaissance: d1,
 	}
-	c4 := pr.Etatcivil{
+	c4 := pr.Identite{
 		Nom:           "Dominique",
 		Prenom:        "Kugler",
 		Sexe:          pr.Woman,
@@ -117,7 +117,7 @@ func TestPatternsSimilarite_match(t *testing.T) {
 
 	tests := []struct {
 		fields    PatternsSimilarite
-		candidate pr.Etatcivil
+		candidate pr.Identite
 		want      bool
 	}{
 		{PatternsSimilarite{"Benoit", "Kugler", d1, pr.Man}, c1, true},

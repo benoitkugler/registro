@@ -38,10 +38,11 @@ type Tel string
 // Tels is a list of phone numbers
 type Tels []string
 
-// Etatcivil stores information about the identity of one person.
+// Identite stores information about the identity of one person.
 //
-// The fields defined here are the ones used in profil merging.
-type Etatcivil struct {
+// The fields defined here are the ones used in profil merging for
+// new inscriptions and donateurs
+type Identite struct {
 	Nom    string
 	Prenom string
 	Sexe   Sexe
@@ -59,31 +60,24 @@ type Etatcivil struct {
 	CodePostal string
 	Ville      string
 	Pays       Pays
-
-	NomJeuneFille     string            // used for equipiers
-	Profession        string            // used for equipiers
-	Etudiant          bool              // used for equipiers
-	Fonctionnaire     bool              // used for equipiers
-	Diplome           Diplome           // used for equipiers
-	Approfondissement Approfondissement // used for equipiers
 }
 
-func (p *Etatcivil) FPrenom() string { return formatPrenom(p.Prenom) }
+func (p *Identite) FPrenom() string { return formatPrenom(p.Prenom) }
 
-func (p *Etatcivil) FNom() string { return strings.ToUpper(p.Nom) }
+func (p *Identite) FNom() string { return strings.ToUpper(p.Nom) }
 
 // NOMPrenom return NOM Prenom
-func (p Etatcivil) NOMPrenom() string {
+func (p Identite) NOMPrenom() string {
 	return p.FNom() + " " + p.FPrenom()
 }
 
 // PrenomNOM return NOM Prenom
-func (p Etatcivil) PrenomNOM() string {
+func (p Identite) PrenomNOM() string {
 	return p.FPrenom() + "  " + p.FNom()
 }
 
 // PrenomN returns Prenom N.
-func (p *Etatcivil) PrenomN() string {
+func (p *Identite) PrenomN() string {
 	var initiale string
 	if nom := p.FNom(); nom != "" {
 		r, _ := utf8.DecodeRuneInString(nom)
@@ -143,6 +137,19 @@ type Publicite struct {
 	PubEte        bool
 	EchoRocher    bool
 	Eonews        bool
+}
+
+type EtatCivil uint8
+
+const (
+	EtatCivilEmpty EtatCivil = iota //
+	Marie                           // Marié(e)
+	Celibataire                     // Célibataire
+)
+
+type Recommandation struct {
+	Nom, Prenom, Mail string
+	Tel               Tel
 }
 
 //--------------------------------------------------------------------

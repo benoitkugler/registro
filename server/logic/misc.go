@@ -74,7 +74,7 @@ func SearchSimilaires(db pr.DB, id pr.IdPersonne) ([]search.ScoredPersonne, erro
 		return nil, err
 	}
 
-	_, filtered := search.ChercheSimilaires(personnes, search.NewPatternsSimilarite(input.Etatcivil))
+	_, filtered := search.ChercheSimilaires(personnes, search.NewPatternsSimilarite(input.Identite))
 	if len(filtered) > maxCount {
 		filtered = filtered[:maxCount]
 	}

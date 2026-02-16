@@ -20,9 +20,9 @@ func Test_inscriptions(t *testing.T) {
 
 	forAge7 := shared.NewDateFrom(tu.DateFor(7))
 
-	pe1, err := pr.Personne{IsTemp: false, Etatcivil: pr.Etatcivil{Nom: "test", DateNaissance: forAge7}}.Insert(db)
+	pe1, err := pr.Personne{IsTemp: false, Identite: pr.Identite{Nom: "test", DateNaissance: forAge7}}.Insert(db)
 	tu.AssertNoErr(t, err)
-	pe2, err := pr.Personne{IsTemp: false, Etatcivil: pr.Etatcivil{Nom: "test", DateNaissance: forAge7}}.Insert(db)
+	pe2, err := pr.Personne{IsTemp: false, Identite: pr.Identite{Nom: "test", DateNaissance: forAge7}}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	camp1, err := cps.Camp{IdTaux: 1, Places: 20, AgeMin: 6, AgeMax: 12, Nom: "C2", DateDebut: shared.Date(time.Now())}.Insert(db)

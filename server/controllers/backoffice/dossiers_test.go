@@ -34,11 +34,11 @@ func TestController_searchDossiers(t *testing.T) {
 		"../../migrations/init.sql")
 	defer db.Remove()
 
-	pe1, err := pr.Personne{IsTemp: false, Etatcivil: pr.Etatcivil{DateNaissance: shared.Date(time.Now())}}.Insert(db)
+	pe1, err := pr.Personne{IsTemp: false, Identite: pr.Identite{DateNaissance: shared.Date(time.Now())}}.Insert(db)
 	tu.AssertNoErr(t, err)
-	pe2, err := pr.Personne{IsTemp: false, Etatcivil: pr.Etatcivil{DateNaissance: shared.Date(time.Now())}}.Insert(db)
+	pe2, err := pr.Personne{IsTemp: false, Identite: pr.Identite{DateNaissance: shared.Date(time.Now())}}.Insert(db)
 	tu.AssertNoErr(t, err)
-	pe3, err := pr.Personne{IsTemp: false, Etatcivil: pr.Etatcivil{DateNaissance: shared.Date(time.Now())}}.Insert(db)
+	pe3, err := pr.Personne{IsTemp: false, Identite: pr.Identite{DateNaissance: shared.Date(time.Now())}}.Insert(db)
 	tu.AssertNoErr(t, err)
 	camp1, err := cps.Camp{IdTaux: 1, Places: 20, AgeMin: 6, AgeMax: 12, Prix: ds.NewEuros(100)}.Insert(db)
 	tu.AssertNoErr(t, err)
@@ -108,7 +108,7 @@ func TestController_aides(t *testing.T) {
 		"../../migrations/init.sql")
 	defer db.Remove()
 
-	pe1, err := pr.Personne{IsTemp: false, Etatcivil: pr.Etatcivil{DateNaissance: shared.Date(time.Now())}}.Insert(db)
+	pe1, err := pr.Personne{IsTemp: false, Identite: pr.Identite{DateNaissance: shared.Date(time.Now())}}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	camp1, err := cps.Camp{IdTaux: 1, Places: 20, AgeMin: 6, AgeMax: 12}.Insert(db)
@@ -172,7 +172,7 @@ func TestController_paiements(t *testing.T) {
 		"../../migrations/init.sql")
 	defer db.Remove()
 
-	pe1, err := pr.Personne{IsTemp: false, Etatcivil: pr.Etatcivil{DateNaissance: shared.Date(time.Now())}}.Insert(db)
+	pe1, err := pr.Personne{IsTemp: false, Identite: pr.Identite{DateNaissance: shared.Date(time.Now())}}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	dossier1, err := ds.Dossier{IdResponsable: pe1.Id, IdTaux: 1, MomentInscription: time.Now()}.Insert(db)
@@ -213,9 +213,9 @@ func TestController_mergeDossiers(t *testing.T) {
 
 	asso, smtp := loadEnv(t)
 
-	pe1, err := pr.Personne{Etatcivil: pr.Etatcivil{DateNaissance: shared.Date(time.Now())}}.Insert(db)
+	pe1, err := pr.Personne{Identite: pr.Identite{DateNaissance: shared.Date(time.Now())}}.Insert(db)
 	tu.AssertNoErr(t, err)
-	pe2, err := pr.Personne{Etatcivil: pr.Etatcivil{DateNaissance: shared.Date(time.Now())}}.Insert(db)
+	pe2, err := pr.Personne{Identite: pr.Identite{DateNaissance: shared.Date(time.Now())}}.Insert(db)
 	tu.AssertNoErr(t, err)
 	camp1, err := cps.Camp{IdTaux: 1, Places: 20, AgeMin: 6, AgeMax: 12}.Insert(db)
 	tu.AssertNoErr(t, err)
@@ -258,26 +258,26 @@ func TestEstimeRemises(t *testing.T) {
 		"../../migrations/init.sql")
 	defer db.Remove()
 
-	pe1, err := pr.Personne{Etatcivil: pr.Etatcivil{Nom: "Kugler"}}.Insert(db)
+	pe1, err := pr.Personne{Identite: pr.Identite{Nom: "Kugler"}}.Insert(db)
 	tu.AssertNoErr(t, err)
-	pe2, err := pr.Personne{Etatcivil: pr.Etatcivil{Nom: "kugler"}}.Insert(db)
+	pe2, err := pr.Personne{Identite: pr.Identite{Nom: "kugler"}}.Insert(db)
 	tu.AssertNoErr(t, err)
-	pe2bis, err := pr.Personne{Etatcivil: pr.Etatcivil{Nom: "kugler"}}.Insert(db)
+	pe2bis, err := pr.Personne{Identite: pr.Identite{Nom: "kugler"}}.Insert(db)
 	tu.AssertNoErr(t, err)
-	pe3, err := pr.Personne{Etatcivil: pr.Etatcivil{Nom: "hug"}}.Insert(db)
+	pe3, err := pr.Personne{Identite: pr.Identite{Nom: "hug"}}.Insert(db)
 	tu.AssertNoErr(t, err)
-	pe3bis, err := pr.Personne{Etatcivil: pr.Etatcivil{Nom: "hug"}}.Insert(db)
+	pe3bis, err := pr.Personne{Identite: pr.Identite{Nom: "hug"}}.Insert(db)
 	tu.AssertNoErr(t, err)
-	eq, err := pr.Personne{Etatcivil: pr.Etatcivil{Nom: "hug", Ville: "v3", DateNaissance: shared.Date(tu.DateFor(20))}}.Insert(db)
+	eq, err := pr.Personne{Identite: pr.Identite{Nom: "hug", Ville: "v3", DateNaissance: shared.Date(tu.DateFor(20))}}.Insert(db)
 	tu.AssertNoErr(t, err)
-	pe5, err := pr.Personne{Etatcivil: pr.Etatcivil{Nom: "sansfamille"}}.Insert(db)
+	pe5, err := pr.Personne{Identite: pr.Identite{Nom: "sansfamille"}}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	respo1, err := pr.Personne{Etatcivil: pr.Etatcivil{Ville: "Begude"}}.Insert(db)
+	respo1, err := pr.Personne{Identite: pr.Identite{Ville: "Begude"}}.Insert(db)
 	tu.AssertNoErr(t, err)
-	respo2, err := pr.Personne{Etatcivil: pr.Etatcivil{Ville: "Lyon"}}.Insert(db)
+	respo2, err := pr.Personne{Identite: pr.Identite{Ville: "Lyon"}}.Insert(db)
 	tu.AssertNoErr(t, err)
-	respo3, err := pr.Personne{Etatcivil: pr.Etatcivil{Ville: "v3"}}.Insert(db)
+	respo3, err := pr.Personne{Identite: pr.Identite{Ville: "v3"}}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	ct := Controller{db: db.DB}

@@ -28,7 +28,7 @@ func TestEquipiers(t *testing.T) {
 	camp, err := cps.Camp{IdTaux: 1}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	pe1, err := pr.Personne{Etatcivil: pr.Etatcivil{
+	pe1, err := pr.Personne{Identite: pr.Identite{
 		Mail: "epondrea@free.fr",
 	}}.Insert(db)
 	tu.AssertNoErr(t, err)
@@ -105,7 +105,7 @@ func TestDemandes(t *testing.T) {
 	camp, err := cps.Camp{IdTaux: 1}.Insert(db)
 	tu.AssertNoErr(t, err)
 	for range [10]int{} {
-		pe, err := pr.Personne{Etatcivil: pr.Etatcivil{Nom: utils.RandString(8, true)}}.Insert(db)
+		pe, err := pr.Personne{Identite: pr.Identite{Nom: utils.RandString(8, true)}}.Insert(db)
 		tu.AssertNoErr(t, err)
 		_, err = cps.Equipier{IdCamp: camp.Id, IdPersonne: pe.Id}.Insert(db)
 		tu.AssertNoErr(t, err)

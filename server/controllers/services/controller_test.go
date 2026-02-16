@@ -30,7 +30,7 @@ func TestSearchMail(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, got.Found == 0)
 
-	respo, err := pr.Personne{Etatcivil: pr.Etatcivil{Mail: "xx@free.fr", DateNaissance: shared.NewDate(2000, 1, 1)}}.Insert(ct.db)
+	respo, err := pr.Personne{Identite: pr.Identite{Mail: "xx@free.fr", DateNaissance: shared.NewDate(2000, 1, 1)}}.Insert(ct.db)
 	tu.AssertNoErr(t, err)
 	p2, err := pr.Personne{}.Insert(ct.db)
 	tu.AssertNoErr(t, err)

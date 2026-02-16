@@ -65,7 +65,7 @@ func TestFormatTime(t *testing.T) {
 
 func TestListeParticipants(t *testing.T) {
 	camp := cps.Camp{DateDebut: shared.NewDateFrom(time.Now())}
-	p1 := pr.Personne{Etatcivil: pr.Etatcivil{
+	p1 := pr.Personne{Identite: pr.Identite{
 		Nom: utils.RandString(12, false), Prenom: utils.RandString(12, false),
 		Sexe:          pr.Man,
 		DateNaissance: shared.NewDate(2000, time.August, 5),
@@ -98,7 +98,7 @@ func TestListeParticipants(t *testing.T) {
 
 func TestListeParticipantsCamps(t *testing.T) {
 	camp := cps.Camp{Id: 123, Nom: "Mini's", DateDebut: shared.NewDateFrom(time.Now())}
-	p1 := pr.Personne{Etatcivil: pr.Etatcivil{
+	p1 := pr.Personne{Identite: pr.Identite{
 		Nom: utils.RandString(12, false), Prenom: utils.RandString(12, false),
 		Sexe:          pr.Man,
 		DateNaissance: shared.NewDate(2000, time.August, 5),

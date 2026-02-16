@@ -128,7 +128,7 @@ func (ct *Controller) createEquipier(host string, args EquipiersCreateIn, user c
 		// two modes : create or link Personne
 		if args.CreatePersonne {
 			// we do not mark as tmp since it would prevent document uploading
-			pe, err := pr.Personne{Etatcivil: pr.Etatcivil{
+			pe, err := pr.Personne{Identite: pr.Identite{
 				Nom: args.Nom, Prenom: args.Prenom, Mail: args.Mail,
 			}}.Insert(tx)
 			if err != nil {
@@ -244,7 +244,7 @@ func (ct *Controller) inviteEquipiers(host string, args EquipiersInviteIn, user 
 			personne := personnes[equipier.IdPersonne]
 			url := equipierURL(ct.key, host, id)
 
-			html, err := mails.InviteEquipier(ct.asso, camp.Label(), directeur, personne.Etatcivil, url)
+			html, err := mails.InviteEquipier(ct.asso, camp.Label(), directeur, personne.Identite, url)
 			if err != nil {
 				return err
 			}

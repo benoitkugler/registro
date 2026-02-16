@@ -307,7 +307,7 @@ func TransfertFicheSanitaire(asso config.Asso, urlDebloqueFicheSanitaire, newMai
 	return render(transfertFicheSanitaireT, args)
 }
 
-func InviteEquipier(cfg config.Asso, labelCamp string, directeur string, equipier pr.Etatcivil, lienFormulaire string) (string, error) {
+func InviteEquipier(cfg config.Asso, labelCamp string, directeur string, equipier pr.Identite, lienFormulaire string) (string, error) {
 	s := "Cher"
 	if equipier.Sexe == pr.Woman {
 		s = "Chère"
@@ -330,7 +330,7 @@ func InviteEquipier(cfg config.Asso, labelCamp string, directeur string, equipie
 	return render(inviteEquipierT, args)
 }
 
-func NotifieModificationOptions(cfg config.Asso, directeur pr.Etatcivil, camp string, participants []string, urlDirecteur string) (string, error) {
+func NotifieModificationOptions(cfg config.Asso, directeur pr.Identite, camp string, participants []string, urlDirecteur string) (string, error) {
 	s := "Cher"
 	if directeur.Sexe == pr.Woman {
 		s = "Chère"

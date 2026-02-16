@@ -222,7 +222,7 @@ func (ct *Controller) updateParticipants(host string, args UpdateParticipantsIn)
 				// send a notification
 				directeur := personnes[dir.IdPersonne]
 
-				html, err := mails.NotifieModificationOptions(ct.asso, directeur.Etatcivil, camp.Label(), participants, urlDirecteur)
+				html, err := mails.NotifieModificationOptions(ct.asso, directeur.Identite, camp.Label(), participants, urlDirecteur)
 				if err != nil {
 					return err
 				}

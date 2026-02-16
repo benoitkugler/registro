@@ -61,13 +61,13 @@ func randFicheSanitaire() FicheSanitaire {
 		},
 	}
 
-	pers := pr.Etatcivil{
+	pers := pr.Identite{
 		Nom:           utils.RandString(15, true),
 		Prenom:        "zkle é@dzkmk è",
 		Sexe:          pr.Woman,
 		DateNaissance: shared.NewDateFrom(time.Now()),
 	}
-	resp := pr.Etatcivil{
+	resp := pr.Identite{
 		Nom:        utils.RandString(25, true),
 		Prenom:     utils.RandString(25, true),
 		Adresse:    "lskkd \n lsmdksmd smdl",
@@ -170,7 +170,7 @@ func TestAttestationPresence(t *testing.T) {
 		Duree:     30,
 		Agrement:  "5465sd6s64s6d4",
 	}
-	personne := pr.Etatcivil{
+	personne := pr.Identite{
 		Nom: "Kugler", Prenom: "Benoit",
 		Sexe: pr.Woman, DateNaissance: shared.NewDate(1999, 1, 3),
 	}
@@ -182,10 +182,10 @@ func TestAttestationPresence(t *testing.T) {
 		CodePostal: "07568",
 		Ville:      "Montélimar",
 	}, []camps.ParticipantCamp{
-		{Camp: camp, ParticipantPersonne: camps.ParticipantPersonne{Personne: pr.Personne{Etatcivil: personne}}},
-		{Camp: camp, ParticipantPersonne: camps.ParticipantPersonne{Personne: pr.Personne{Etatcivil: personne}}},
-		{Camp: camp, ParticipantPersonne: camps.ParticipantPersonne{Personne: pr.Personne{Etatcivil: personne}}},
-		{Camp: camp, ParticipantPersonne: camps.ParticipantPersonne{Personne: pr.Personne{Etatcivil: personne}}},
+		{Camp: camp, ParticipantPersonne: camps.ParticipantPersonne{Personne: pr.Personne{Identite: personne}}},
+		{Camp: camp, ParticipantPersonne: camps.ParticipantPersonne{Personne: pr.Personne{Identite: personne}}},
+		{Camp: camp, ParticipantPersonne: camps.ParticipantPersonne{Personne: pr.Personne{Identite: personne}}},
+		{Camp: camp, ParticipantPersonne: camps.ParticipantPersonne{Personne: pr.Personne{Identite: personne}}},
 	})
 	fmt.Println(time.Since(ti))
 	tu.AssertNoErr(t, err)
@@ -199,7 +199,7 @@ func TestFacture(t *testing.T) {
 		Duree:     30,
 		Agrement:  "5465sd6s64s6d4",
 	}
-	personne := pr.Etatcivil{
+	personne := pr.Identite{
 		Nom: "Kugler", Prenom: "Benoit",
 		Sexe: pr.Woman, DateNaissance: shared.NewDate(1999, 1, 3),
 	}
@@ -211,10 +211,10 @@ func TestFacture(t *testing.T) {
 		CodePostal: "07568",
 		Ville:      "Montélimar",
 	}, []camps.ParticipantCamp{
-		{Camp: camp, ParticipantPersonne: camps.ParticipantPersonne{Participant: camps.Participant{Id: 1}, Personne: pr.Personne{Etatcivil: personne}}},
-		{Camp: camp, ParticipantPersonne: camps.ParticipantPersonne{Participant: camps.Participant{Id: 2}, Personne: pr.Personne{Etatcivil: personne}}},
-		{Camp: camp, ParticipantPersonne: camps.ParticipantPersonne{Participant: camps.Participant{Id: 3}, Personne: pr.Personne{Etatcivil: personne}}},
-		{Camp: camp, ParticipantPersonne: camps.ParticipantPersonne{Participant: camps.Participant{Id: 4}, Personne: pr.Personne{Etatcivil: personne}}},
+		{Camp: camp, ParticipantPersonne: camps.ParticipantPersonne{Participant: camps.Participant{Id: 1}, Personne: pr.Personne{Identite: personne}}},
+		{Camp: camp, ParticipantPersonne: camps.ParticipantPersonne{Participant: camps.Participant{Id: 2}, Personne: pr.Personne{Identite: personne}}},
+		{Camp: camp, ParticipantPersonne: camps.ParticipantPersonne{Participant: camps.Participant{Id: 3}, Personne: pr.Personne{Identite: personne}}},
+		{Camp: camp, ParticipantPersonne: camps.ParticipantPersonne{Participant: camps.Participant{Id: 4}, Personne: pr.Personne{Identite: personne}}},
 	}, logic.BilanFinancesPub{
 		Inscrits: map[camps.IdParticipant]logic.BilanParticipantPub{
 			1: {BilanParticipant: logic.BilanParticipant{Aides: []logic.AideResolved{
@@ -272,7 +272,7 @@ func TestLettreDirecteur(t *testing.T) {
 		Html:               lettre1,
 		ShowAdressePostale: true,
 		ColorCoord:         "#FF12A1",
-	}, pr.Etatcivil{
+	}, pr.Identite{
 		Nom:        "Kugler",
 		Prenom:     " benoit",
 		Mail:       "ummy@free.fr",
@@ -289,7 +289,7 @@ func TestLettreDirecteur(t *testing.T) {
 		UseCoordCentre:     true,
 		Html:               lettre1,
 		ShowAdressePostale: true,
-	}, pr.Etatcivil{})
+	}, pr.Identite{})
 	fmt.Println("Generated in", time.Since(ti))
 	tu.AssertNoErr(t, err)
 	tu.Write(t, "LettreDirecteur_2.pdf", content)

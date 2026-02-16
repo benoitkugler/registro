@@ -2,7 +2,7 @@ package personnes
 
 import "time"
 
-func (r Etatcivil) Age() int { return r.DateNaissance.Age(time.Now()) }
+func (r Identite) Age() int { return r.DateNaissance.Age(time.Now()) }
 
 type FichesanitaireState uint8
 

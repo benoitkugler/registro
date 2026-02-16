@@ -207,7 +207,7 @@ func (ct *Controller) updateLettreDirecteur(idCamp cps.IdCamp, lettre cps.Lettre
 	}
 
 	// Etape 1: HTML -> PDF
-	pdfContent, err := pdfcreator.CreateLettreDirecteur(ct.asso, lettre, directeur.Etatcivil)
+	pdfContent, err := pdfcreator.CreateLettreDirecteur(ct.asso, lettre, directeur.Identite)
 	if err != nil {
 		return LettreOut{}, err
 	}

@@ -26,7 +26,7 @@ type stripeMetadata struct {
 }
 
 // StartSession should be called to start a paiement session.
-func StartSession(key config.Stripe, idDossier dossiers.IdDossier, respo personnes.Etatcivil, userProvidedMail bool,
+func StartSession(key config.Stripe, idDossier dossiers.IdDossier, respo personnes.Identite, userProvidedMail bool,
 	montant dossiers.Montant,
 	succesURL, cancelURL string,
 ) (sessionID string, _ error) {

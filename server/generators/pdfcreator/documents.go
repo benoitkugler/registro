@@ -46,9 +46,9 @@ func parseTemplate(templateFile string) *template.Template {
 }
 
 type FicheSanitaire struct {
-	Personne       pr.Etatcivil
+	Personne       pr.Identite
 	FicheSanitaire pr.Fichesanitaire
-	Responsable    pr.Etatcivil
+	Responsable    pr.Identite
 }
 
 // CreateFicheSanitaires returns a PDF document, one "fiche sanitaire" per page.
@@ -175,7 +175,7 @@ type directeurCoords struct {
 }
 
 // CreateLettreDirecteur returns a PDF document.
-func CreateLettreDirecteur(cfg config.Asso, lettre cps.Lettredirecteur, directeur pr.Etatcivil) ([]byte, error) {
+func CreateLettreDirecteur(cfg config.Asso, lettre cps.Lettredirecteur, directeur pr.Identite) ([]byte, error) {
 	args := struct {
 		Asso                config.Asso
 		ExpediteurDirecteur bool

@@ -93,13 +93,13 @@ func TestExportParticipants(t *testing.T) {
 	ct, err := NewController(db.DB, crypto.Encrypter{}, "", "", files.FileSystem{}, config.SMTP{}, config.Asso{}, config.Immich{}, config.Helloasso{})
 	tu.AssertNoErr(t, err)
 
-	resp, err := pr.Personne{Etatcivil: pr.Etatcivil{Nom: "REspo", Prenom: "Sable"}}.Insert(db)
+	resp, err := pr.Personne{Identite: pr.Identite{Nom: "REspo", Prenom: "Sable"}}.Insert(db)
 	tu.AssertNoErr(t, err)
-	pe1, err := pr.Personne{Etatcivil: pr.Etatcivil{Nom: "REspo", Prenom: "Huge"}}.Insert(db)
+	pe1, err := pr.Personne{Identite: pr.Identite{Nom: "REspo", Prenom: "Huge"}}.Insert(db)
 	tu.AssertNoErr(t, err)
-	pe2, err := pr.Personne{Etatcivil: pr.Etatcivil{Nom: "REspo", Prenom: "Hugette"}}.Insert(db)
+	pe2, err := pr.Personne{Identite: pr.Identite{Nom: "REspo", Prenom: "Hugette"}}.Insert(db)
 	tu.AssertNoErr(t, err)
-	pe3, err := pr.Personne{Etatcivil: pr.Etatcivil{Nom: "Autre", Prenom: "Hugette"}}.Insert(db)
+	pe3, err := pr.Personne{Identite: pr.Identite{Nom: "Autre", Prenom: "Hugette"}}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	camp1, err := ct.createCamp("localhost")

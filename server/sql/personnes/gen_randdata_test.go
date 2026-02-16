@@ -24,6 +24,34 @@ func randDiplome() Diplome {
 	return choix[i]
 }
 
+func randEtatCivil() EtatCivil {
+	choix := [...]EtatCivil{EtatCivilEmpty, Marie, Celibataire}
+	i := rand.Intn(len(choix))
+	return choix[i]
+}
+
+func randFicheequipier() Ficheequipier {
+	var s Ficheequipier
+	s.IdPersonne = randIdPersonne()
+	s.SecuriteSociale = randstring()
+	s.Fonctionnaire = randbool()
+	s.Diplome = randDiplome()
+	s.Approfondissement = randApprofondissement()
+	s.Profession = randstring()
+	s.EtatCivil = randEtatCivil()
+	s.NombreEnfants = randint()
+	s.ExperienceTravailJeunes = randstring()
+	s.ParcoursSpirituel = randstring()
+	s.Eglise = randstring()
+	s.Recommandation = randRecommandation()
+	s.Sante = randstring()
+	s.AssuranceMaladie = randstring()
+	s.AssuranceAccident = randstring()
+	s.MembreAssoPermanent = randbool()
+
+	return s
+}
+
 func randFichesanitaire() Fichesanitaire {
 	var s Fichesanitaire
 	s.IdPersonne = randIdPersonne()
@@ -81,12 +109,6 @@ func randPersonne() Personne {
 	s.CodePostal = randstring()
 	s.Ville = randstring()
 	s.Pays = randPays()
-	s.NomJeuneFille = randstring()
-	s.Profession = randstring()
-	s.Etudiant = randbool()
-	s.Fonctionnaire = randbool()
-	s.Diplome = randDiplome()
-	s.Approfondissement = randApprofondissement()
 	s.Publicite = randPublicite()
 	s.CharteAccepted = randtTime()
 	s.IsTemp = randbool()
@@ -101,6 +123,16 @@ func randPublicite() Publicite {
 	s.PubEte = randbool()
 	s.EchoRocher = randbool()
 	s.Eonews = randbool()
+
+	return s
+}
+
+func randRecommandation() Recommandation {
+	var s Recommandation
+	s.Nom = randstring()
+	s.Prenom = randstring()
+	s.Mail = randstring()
+	s.Tel = randTel()
 
 	return s
 }
@@ -131,6 +163,10 @@ func randTels() Tels {
 func randbool() bool {
 	i := rand.Int31n(2)
 	return i == 1
+}
+
+func randint() int {
+	return int(rand.Intn(1000000))
 }
 
 func randint64() int64 {

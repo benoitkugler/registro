@@ -181,7 +181,7 @@ func choose[T fields](entrant, existant T) (T, bool) {
 
 // Merge compare champs par champs les deux personnes et renvoie
 // le résultat de la fusion et un crible d'alerte
-func Merge(entrant pr.Etatcivil, existant pr.Etatcivil) (merged pr.Etatcivil, conflicts conflicts) {
+func Merge(entrant pr.Identite, existant pr.Identite) (merged pr.Identite, conflicts conflicts) {
 	merged.Nom, conflicts.Nom = choose(entrant.Nom, existant.Nom)
 	merged.Prenom, conflicts.Prenom = choose(entrant.Prenom, existant.Prenom)
 	merged.Sexe, conflicts.Sexe = choose(entrant.Sexe, existant.Sexe)
@@ -195,12 +195,12 @@ func Merge(entrant pr.Etatcivil, existant pr.Etatcivil) (merged pr.Etatcivil, co
 	merged.CodePostal, conflicts.CodePostal = choose(entrant.CodePostal, existant.CodePostal)
 	merged.Ville, conflicts.Ville = choose(entrant.Ville, existant.Ville)
 	merged.Pays, conflicts.Pays = choose(entrant.Pays, existant.Pays)
-	merged.NomJeuneFille, conflicts.NomJeuneFille = choose(entrant.NomJeuneFille, existant.NomJeuneFille)
-	merged.Profession, conflicts.Profession = choose(entrant.Profession, existant.Profession)
-	merged.Etudiant, conflicts.Etudiant = choose(entrant.Etudiant, existant.Etudiant)
-	merged.Fonctionnaire, conflicts.Fonctionnaire = choose(entrant.Fonctionnaire, existant.Fonctionnaire)
-	merged.Diplome, conflicts.Diplome = choose(entrant.Diplome, existant.Diplome)
-	merged.Approfondissement, conflicts.Approfondissement = choose(entrant.Approfondissement, existant.Approfondissement)
+	// merged.NomJeuneFille, conflicts.NomJeuneFille = choose(entrant.NomJeuneFille, existant.NomJeuneFille)
+	// merged.Profession, conflicts.Profession = choose(entrant.Profession, existant.Profession)
+	// merged.Etudiant, conflicts.Etudiant = choose(entrant.Etudiant, existant.Etudiant)
+	// merged.Fonctionnaire, conflicts.Fonctionnaire = choose(entrant.Fonctionnaire, existant.Fonctionnaire)
+	// merged.Diplome, conflicts.Diplome = choose(entrant.Diplome, existant.Diplome)
+	// merged.Approfondissement, conflicts.Approfondissement = choose(entrant.Approfondissement, existant.Approfondissement)
 	// merged.SecuriteSociale, conflicts.SecuriteSociale = choose(entrant.SecuriteSociale, existant.SecuriteSociale)
 
 	return merged, conflicts

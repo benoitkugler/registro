@@ -8,12 +8,12 @@ type IdPersonne int64
 
 // Personne représente les attributs d'une personne
 //
-// required by Fichesanitaire
+// required by Fichesanitaire and Ficheequipier
 // gomacro:SQL ADD UNIQUE(Id, IsTemp)
 type Personne struct {
 	Id IdPersonne
 
-	Etatcivil
+	Identite
 
 	// Publicite est utilisé pour des exports automatiques
 	// TODO: https://github.com/benoitkugler/registro/issues/11
@@ -69,4 +69,35 @@ type Fichesanitaire struct {
 	Owners   Mails // used for security
 
 	guard bool `gomacro-sql-guard:"false"`
+}
+
+// Ficheequipier is an extension table loaded
+// only when dealing with equipiers.
+//
+// gomacro:SQL ADD UNIQUE(IdPersonne)
+//
+// Temp people must not have one Ficheequipier
+// gomacro:SQL ADD FOREIGN KEY (IdPersonne, guard) REFERENCES Personne(Id,IsTemp)
+type Ficheequipier struct {
+	IdPersonne IdPersonne `gomacro-sql-on-delete:"CASCADE"`
+
+	SecuriteSociale string // ou numéro AVS pour la configuration Repere
+	Fonctionnaire   bool
+
+	Diplome           Diplome
+	Approfondissement Approfondissement
+
+	// champs Repère
+
+	Profession              string
+	EtatCivil               EtatCivil
+	NombreEnfants           int
+	ExperienceTravailJeunes string
+	ParcoursSpirituel       string // étapes de découverte de la foi, relation avec Dieu, conversion, étapes d'engagement, doutes...) - (5-10 lignes)
+	Eglise                  string
+	Recommandation          Recommandation // deuxième optionnel
+	Sante                   string         // éventuelles informations sur ma santé qui pourraient avoir un impact sur la vie du camp
+	AssuranceMaladie        string
+	AssuranceAccident       string
+	MembreAssoPermanent     bool
 }

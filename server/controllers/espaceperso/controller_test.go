@@ -111,11 +111,11 @@ func Test_loadFichesanitaires(t *testing.T) {
 	camp2, err := cps.Camp{IdTaux: 1, DateDebut: shared.Date(now), Duree: 1}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	mineur, err := pr.Personne{Etatcivil: pr.Etatcivil{DateNaissance: shared.Date(now.Add(-15 * 365 * 24 * time.Hour))}}.Insert(db)
+	mineur, err := pr.Personne{Identite: pr.Identite{DateNaissance: shared.Date(now.Add(-15 * 365 * 24 * time.Hour))}}.Insert(db)
 	tu.AssertNoErr(t, err)
-	mineur2, err := pr.Personne{Etatcivil: pr.Etatcivil{DateNaissance: shared.Date(now.Add(-15 * 365 * 24 * time.Hour))}}.Insert(db)
+	mineur2, err := pr.Personne{Identite: pr.Identite{DateNaissance: shared.Date(now.Add(-15 * 365 * 24 * time.Hour))}}.Insert(db)
 	tu.AssertNoErr(t, err)
-	majeur, err := pr.Personne{Etatcivil: pr.Etatcivil{DateNaissance: shared.Date(now.Add(-30 * 365 * 24 * time.Hour))}}.Insert(db)
+	majeur, err := pr.Personne{Identite: pr.Identite{DateNaissance: shared.Date(now.Add(-30 * 365 * 24 * time.Hour))}}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	// vaccins

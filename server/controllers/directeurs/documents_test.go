@@ -37,7 +37,7 @@ func TestDocuments(t *testing.T) {
 	camp, err := cps.Camp{IdTaux: 1}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	pe1, err := pr.Personne{Etatcivil: pr.Etatcivil{Mail: "dummy@free.fr"}}.Insert(db)
+	pe1, err := pr.Personne{Identite: pr.Identite{Mail: "dummy@free.fr"}}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	pe2, err := pr.Personne{}.Insert(db)

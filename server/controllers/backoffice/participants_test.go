@@ -21,7 +21,7 @@ func TestController_participants(t *testing.T) {
 	taux2, err := ds.Taux{Label: "autre", Euros: 1000, FrancsSuisse: 1560}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	pe1, err := pr.Personne{IsTemp: false, Etatcivil: pr.Etatcivil{DateNaissance: shared.Date(time.Now())}}.Insert(db)
+	pe1, err := pr.Personne{IsTemp: false, Identite: pr.Identite{DateNaissance: shared.Date(time.Now())}}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	camp1, err := cps.Camp{IdTaux: 1, Places: 20, AgeMin: 6, AgeMax: 12}.Insert(db)

@@ -19,11 +19,11 @@ func TestSondages(t *testing.T) {
 
 	camp, err := cps.Camp{IdTaux: 1}.Insert(db)
 	tu.AssertNoErr(t, err)
-	pe1, err := pr.Personne{Etatcivil: pr.Etatcivil{DateNaissance: shared.NewDate(2000, time.January, 5)}}.Insert(db)
+	pe1, err := pr.Personne{Identite: pr.Identite{DateNaissance: shared.NewDate(2000, time.January, 5)}}.Insert(db)
 	tu.AssertNoErr(t, err)
-	pe2, err := pr.Personne{Etatcivil: pr.Etatcivil{DateNaissance: shared.NewDate(2001, time.January, 5)}}.Insert(db)
+	pe2, err := pr.Personne{Identite: pr.Identite{DateNaissance: shared.NewDate(2001, time.January, 5)}}.Insert(db)
 	tu.AssertNoErr(t, err)
-	pe3, err := pr.Personne{Etatcivil: pr.Etatcivil{DateNaissance: shared.NewDate(2002, time.January, 5)}}.Insert(db)
+	pe3, err := pr.Personne{Identite: pr.Identite{DateNaissance: shared.NewDate(2002, time.January, 5)}}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	d1, err := ds.Dossier{IdTaux: 1, IdResponsable: pe1.Id}.Insert(db)

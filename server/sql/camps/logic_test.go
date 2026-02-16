@@ -17,13 +17,13 @@ func part(p pr.IdPersonne, statut StatutParticipant) Participant {
 }
 
 func pers(s pr.Sexe, n pr.Nationnalite) pr.Personne {
-	return pr.Personne{Etatcivil: pr.Etatcivil{Sexe: s, Nationnalite: n}}
+	return pr.Personne{Identite: pr.Identite{Sexe: s, Nationnalite: n}}
 }
 
 func pers2(s pr.Sexe, age int) pr.Personne {
 	now := time.Now()
 	dateNaissace := sh.NewDate(now.Year()-age, now.Month(), now.Day())
-	return pr.Personne{Etatcivil: pr.Etatcivil{Sexe: s, DateNaissance: dateNaissace}}
+	return pr.Personne{Identite: pr.Identite{Sexe: s, DateNaissance: dateNaissace}}
 }
 
 func TestCampLoader_Stats(t *testing.T) {

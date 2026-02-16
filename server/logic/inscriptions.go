@@ -118,7 +118,7 @@ func IdentifiePersonne(db *sql.DB, args IdentTarget) error {
 		}
 
 		// 1) on applique les modifications de la fusion
-		existant.Etatcivil, _ = search.Merge(temporaire.Etatcivil, existant.Etatcivil)
+		existant.Identite, _ = search.Merge(temporaire.Identite, existant.Identite)
 		_, err = existant.Update(tx)
 		if err != nil {
 			return err

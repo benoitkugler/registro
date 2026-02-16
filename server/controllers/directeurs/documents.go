@@ -561,7 +561,7 @@ func (ct *Controller) renderFichesSanitaires(user cps.IdCamp) ([]byte, string, e
 			continue
 		}
 		responsable := responsables[dossiers[part.IdDossier].IdResponsable]
-		list = append(list, pdfcreator.FicheSanitaire{Personne: personne.Etatcivil, FicheSanitaire: fiche, Responsable: responsable.Etatcivil})
+		list = append(list, pdfcreator.FicheSanitaire{Personne: personne.Identite, FicheSanitaire: fiche, Responsable: responsable.Identite})
 	}
 	content, err := pdfcreator.CreateFicheSanitaires(ct.asso, list)
 	if err != nil {

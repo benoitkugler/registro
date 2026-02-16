@@ -59,7 +59,7 @@ func TestController_load(t *testing.T) {
 	})
 
 	t.Run("decodePreinscription", func(t *testing.T) {
-		resp, err := pr.Personne{Etatcivil: pr.Etatcivil{Nom: "nom_resp"}}.Insert(ct.db)
+		resp, err := pr.Personne{Identite: pr.Identite{Nom: "nom_resp"}}.Insert(ct.db)
 		tu.AssertNoErr(t, err)
 		part, err := pr.Personne{}.Insert(ct.db)
 		tu.AssertNoErr(t, err)
@@ -87,7 +87,7 @@ func TestController_chercheMail(t *testing.T) {
 
 	got, _ := ct.chercheMail("")
 	tu.Assert(t, len(got.responsables) == 0)
-	p1, err := pr.Personne{Etatcivil: pr.Etatcivil{Mail: "xx@free.fr", DateNaissance: shared.NewDate(2000, 1, 1)}}.Insert(ct.db)
+	p1, err := pr.Personne{Identite: pr.Identite{Mail: "xx@free.fr", DateNaissance: shared.NewDate(2000, 1, 1)}}.Insert(ct.db)
 	tu.AssertNoErr(t, err)
 	p2, err := pr.Personne{}.Insert(ct.db)
 	tu.AssertNoErr(t, err)

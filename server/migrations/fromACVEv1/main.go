@@ -288,8 +288,10 @@ type (
 	personnesM  map[int64]pr.IdPersonne
 )
 
+// TODO: fiche sanitaire + fiche equipier
+
 func insert(dbV2 *sql.DB, origin, trimmed baseV1) error {
-	diplomeAppros := origin.inferDiplomeAppro()
+	// diplomeAppros := origin.inferDiplomeAppro()
 
 	pM := make(personnesM)
 	oM := make(organismesM)
@@ -299,9 +301,9 @@ func insert(dbV2 *sql.DB, origin, trimmed baseV1) error {
 		// insert personnes
 		fmt.Println("\t", len(trimmed.personnes), "personnes")
 		for _, v1 := range trimmed.personnes {
-			equipier := diplomeAppros[v1.Id]
+			// equipier := diplomeAppros[v1.Id]
 			v2 := pr.Personne{
-				Etatcivil: pr.Etatcivil{
+				Identite: pr.Identite{
 					Nom:                  string(v1.Nom),
 					Prenom:               string(v1.Prenom),
 					Sexe:                 sexe(v1.Sexe),
@@ -315,12 +317,12 @@ func insert(dbV2 *sql.DB, origin, trimmed baseV1) error {
 					CodePostal:           string(v1.CodePostal),
 					Ville:                string(v1.Ville),
 					Pays:                 pr.Pays(v1.Pays),
-					NomJeuneFille:        string(v1.NomJeuneFille),
-					Profession:           string(v1.Profession),
-					Etudiant:             bool(v1.Etudiant),
-					Fonctionnaire:        bool(v1.Fonctionnaire),
-					Diplome:              diplome(equipier.Diplome),
-					Approfondissement:    approfondissement(equipier.Appro),
+					// NomJeuneFille:        string(v1.NomJeuneFille),
+					// Profession:           string(v1.Profession),
+					// Etudiant:             bool(v1.Etudiant),
+					// Fonctionnaire:        bool(v1.Fonctionnaire),
+					// Diplome:              diplome(equipier.Diplome),
+					// Approfondissement:    approfondissement(equipier.Appro),
 				},
 			}
 			v2, err = v2.Insert(tx)

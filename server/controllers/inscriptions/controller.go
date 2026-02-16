@@ -270,7 +270,7 @@ func (insc *Inscription) check() error {
 
 // newResponsableLegal renvoie les champs de la personne
 // vus comme le responsable d'une inscription
-func newResponsableLegal(r pr.Etatcivil) in.ResponsableLegal {
+func newResponsableLegal(r pr.Identite) in.ResponsableLegal {
 	return in.ResponsableLegal{
 		Nom:           r.Nom,
 		Prenom:        r.Prenom,
@@ -297,7 +297,7 @@ type Participant struct {
 
 // newParticipant renvoie la personne comme un
 // participant d'une inscription
-func newParticipant(r pr.Etatcivil) Participant {
+func newParticipant(r pr.Identite) Participant {
 	return Participant{
 		Nom:           r.Nom,
 		Prenom:        r.Prenom,
@@ -414,10 +414,10 @@ func (ct *Controller) decodePreinscription(crypted string) (insc Inscription, _ 
 		return insc, utils.SQLError(err)
 	}
 
-	insc.Responsable = newResponsableLegal(respo.Etatcivil)
+	insc.Responsable = newResponsableLegal(respo.Identite)
 
 	for _, part := range parts {
-		partInsc := newParticipant(part.Etatcivil)
+		partInsc := newParticipant(part.Identite)
 		insc.Participants = append(insc.Participants, partInsc)
 	}
 	return insc, nil
@@ -581,7 +581,7 @@ func ConfirmeInscription(db *sql.DB, id in.IdInscription) (ds.Dossier, error) {
 	var dossier ds.Dossier
 	err = utils.InTx(db, func(tx *sql.Tx) error {
 		// mise à jour (ou création) des personnes
-		responsable := pr.Etatcivil{
+		responsable := pr.Identite{
 			Nom:           insc.Responsable.Nom,
 			Prenom:        insc.Responsable.Prenom,
 			DateNaissance: insc.Responsable.DateNaissance,
@@ -627,7 +627,7 @@ func ConfirmeInscription(db *sql.DB, id in.IdInscription) (ds.Dossier, error) {
 		// mais l'éventuel groupe est calculé
 
 		for _, part := range participants {
-			pers := pr.Etatcivil{
+			pers := pr.Identite{
 				Nom:           part.Nom,
 				Prenom:        part.Prenom,
 				Sexe:          part.Sexe,
@@ -690,7 +690,7 @@ func ConfirmeInscription(db *sql.DB, id in.IdInscription) (ds.Dossier, error) {
 // le statut temporaire, pour indiquer une situation anormale
 //
 // Si un nouveau profil (non temporaire) est créé, il est aussi ajouté à l'index
-func rapprochePersonne(tx *sql.Tx, index pr.Personnes, incomming pr.Etatcivil,
+func rapprochePersonne(tx *sql.Tx, index pr.Personnes, incomming pr.Identite,
 	idCampToCheck cps.OptIdCamp,
 ) (pr.Personne, error) {
 	var target pr.OptIdPersonne
@@ -725,14 +725,14 @@ func rapprochePersonne(tx *sql.Tx, index pr.Personnes, incomming pr.Etatcivil,
 		if err != nil {
 			return pr.Personne{}, err
 		}
-		out.Etatcivil, _ = search.Merge(incomming, out.Etatcivil)
+		out.Identite, _ = search.Merge(incomming, out.Identite)
 		out, err = out.Update(tx)
 		if err != nil {
 			return pr.Personne{}, err
 		}
 	} else {
 		// sinon, on crée une nouvelle personne
-		out = pr.Personne{Etatcivil: incomming, IsTemp: markTemp}
+		out = pr.Personne{Identite: incomming, IsTemp: markTemp}
 		out, err = out.Insert(tx)
 		if err != nil {
 			return pr.Personne{}, err

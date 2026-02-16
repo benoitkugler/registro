@@ -29,18 +29,18 @@ func TestIdentifieDon(t *testing.T) {
 		"../../migrations/init.sql")
 	defer db.Remove()
 
-	pe1, err := pr.Personne{Etatcivil: pr.Etatcivil{Nom: "Kugler", Prenom: "Benoit", DateNaissance: shared.NewDate(2000, 1, 1)}}.Insert(db)
+	pe1, err := pr.Personne{Identite: pr.Identite{Nom: "Kugler", Prenom: "Benoit", DateNaissance: shared.NewDate(2000, 1, 1)}}.Insert(db)
 	tu.AssertNoErr(t, err)
-	pe2, err := pr.Personne{Etatcivil: pr.Etatcivil{Nom: "Kugler", Prenom: "Estelle", DateNaissance: shared.NewDate(2000, 1, 1)}}.Insert(db)
+	pe2, err := pr.Personne{Identite: pr.Identite{Nom: "Kugler", Prenom: "Estelle", DateNaissance: shared.NewDate(2000, 1, 1)}}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	ct := Controller{db: db.DB}
 
-	id, err := ct.identifieAddDon(dons.Don{}, pr.Etatcivil{})
+	id, err := ct.identifieAddDon(dons.Don{}, pr.Identite{})
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, id != pe1.Id && id != pe2.Id)
 
-	id, err = ct.identifieAddDon(dons.Don{}, pr.Etatcivil{Nom: "Kugler", Prenom: "Benoit", DateNaissance: shared.NewDate(2000, 1, 1)})
+	id, err = ct.identifieAddDon(dons.Don{}, pr.Identite{Nom: "Kugler", Prenom: "Benoit", DateNaissance: shared.NewDate(2000, 1, 1)})
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, id == pe1.Id)
 }
@@ -61,7 +61,7 @@ func TestDonsAPI(t *testing.T) {
 		"../../migrations/init.sql")
 	defer db.Remove()
 
-	pe1, err := pr.Personne{Etatcivil: pr.Etatcivil{Nom: "Kugler", Prenom: "Benoit", DateNaissance: shared.NewDate(2000, 1, 1)}}.Insert(db)
+	pe1, err := pr.Personne{Identite: pr.Identite{Nom: "Kugler", Prenom: "Benoit", DateNaissance: shared.NewDate(2000, 1, 1)}}.Insert(db)
 	tu.AssertNoErr(t, err)
 	pe2, err := dons.Organisme{Nom: "Eglise chrétienne"}.Insert(db)
 	tu.AssertNoErr(t, err)

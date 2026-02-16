@@ -17,7 +17,7 @@ var etiquetteTemplate string
 var etiquettesT = template.Must(template.New("").Parse(etiquetteTemplate))
 
 // genereEtiquettes	renvoie un pdf
-func genereEtiquettes(personnes []pr.Etatcivil) ([]byte, error) {
+func genereEtiquettes(personnes []pr.Identite) ([]byte, error) {
 	type adresse struct {
 		Personne   string
 		Adresse    string

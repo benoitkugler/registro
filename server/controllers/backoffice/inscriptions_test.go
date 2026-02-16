@@ -57,9 +57,9 @@ func TestValideInscription(t *testing.T) {
 
 	asso, smtp := loadEnv(t)
 
-	pe1, err := pr.Personne{IsTemp: false, Etatcivil: pr.Etatcivil{Nom: "melzmel", Prenom: "szlùs", DateNaissance: shared.Date(time.Now())}}.Insert(db)
+	pe1, err := pr.Personne{IsTemp: false, Identite: pr.Identite{Nom: "melzmel", Prenom: "szlùs", DateNaissance: shared.Date(time.Now())}}.Insert(db)
 	tu.AssertNoErr(t, err)
-	pe2, err := pr.Personne{IsTemp: false, Etatcivil: pr.Etatcivil{Nom: "melzmel", Prenom: "szlsdsmldlmsùs", DateNaissance: shared.Date(time.Now())}}.Insert(db)
+	pe2, err := pr.Personne{IsTemp: false, Identite: pr.Identite{Nom: "melzmel", Prenom: "szlsdsmldlmsùs", DateNaissance: shared.Date(time.Now())}}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	camp1, err := cps.Camp{IdTaux: 1, Places: 20, AgeMin: 6, AgeMax: 12, Nom: "Séjour Test"}.Insert(db)

@@ -57,7 +57,7 @@ type DemandeEquipier struct {
 
 type EquipierExt struct {
 	Equipier cps.Equipier
-	Personne pr.Etatcivil
+	Personne pr.Identite
 	Camp     Camp
 
 	Demandes []DemandeEquipier
@@ -95,7 +95,7 @@ func (ct *Controller) load(id cps.IdEquipier) (EquipierExt, error) {
 		}
 	}
 
-	out := EquipierExt{equipier, personne.Etatcivil, Camp{camp.Nom, camp.DateDebut, camp.Duree}, demandes}
+	out := EquipierExt{equipier, personne.Identite, Camp{camp.Nom, camp.DateDebut, camp.Duree}, demandes}
 	return out, nil
 }
 
@@ -145,7 +145,7 @@ func (ct *Controller) loadPhotos(id cps.IdEquipier) (Photos, error) {
 type UpdateIn struct {
 	Token string
 
-	Personne pr.Etatcivil
+	Personne pr.Identite
 	Presence cps.PresenceOffsets
 }
 
@@ -169,7 +169,7 @@ func (ct *Controller) Update(c echo.Context) error {
 	return c.NoContent(200)
 }
 
-func (ct *Controller) update(id cps.IdEquipier, argsP pr.Etatcivil, argsPre cps.PresenceOffsets) error {
+func (ct *Controller) update(id cps.IdEquipier, argsP pr.Identite, argsPre cps.PresenceOffsets) error {
 	equipier, err := cps.SelectEquipier(ct.db, id)
 	if err != nil {
 		return utils.SQLError(err)
@@ -191,7 +191,7 @@ func (ct *Controller) update(id cps.IdEquipier, argsP pr.Etatcivil, argsPre cps.
 	equipier.FormStatus = cps.Answered
 	equipier.Presence = argsPre
 
-	personne.Etatcivil = argsP
+	personne.Identite = argsP
 
 	return utils.InTx(ct.db, func(tx *sql.Tx) error {
 		_, err = personne.Update(tx)

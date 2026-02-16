@@ -185,7 +185,7 @@ func (ct *Controller) downloadFicheSanitaire(user cps.IdCamp, id cps.IdParticipa
 	}
 
 	content, err := pdfcreator.CreateFicheSanitaires(ct.asso, []pdfcreator.FicheSanitaire{
-		{Personne: personne.Etatcivil, FicheSanitaire: fiche, Responsable: responsable.Etatcivil},
+		{Personne: personne.Identite, FicheSanitaire: fiche, Responsable: responsable.Identite},
 	})
 	name := fmt.Sprintf("Fiche sanitaire %s.pdf", personne.NOMPrenom())
 	return content, name, nil

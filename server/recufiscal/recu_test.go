@@ -36,7 +36,7 @@ func TestRecu(t *testing.T) {
 		Mode:    ds.Virement,
 		Date:    time.Now().AddDate(-2, 3, -5),
 	},
-		pr.Personne{Id: 1, Etatcivil: pr.Etatcivil{Nom: "GER", Prenom: "EMLZKEs"}},
+		pr.Personne{Id: 1, Identite: pr.Identite{Nom: "GER", Prenom: "EMLZKEs"}},
 	)
 	tu.AssertNoErr(t, err)
 
@@ -46,7 +46,7 @@ func TestRecu(t *testing.T) {
 func TestFields(t *testing.T) {
 	champNum := champPdf{id: "z1", valeur: formfill.FDFText(numero(4))}
 	donateur := pr.Personne{
-		Etatcivil: pr.Etatcivil{
+		Identite: pr.Identite{
 			Nom:        "')='à=(kmlrk'",
 			Prenom:     "mldmskld8+-*",
 			Adresse:    "lmemzkd\ndlss\nzlkdsmkmdkmsdk",
@@ -81,9 +81,9 @@ func TestGenerate(t *testing.T) {
 		"../migrations/init.sql")
 	defer db.Remove()
 
-	donateur1, err := pr.Personne{Etatcivil: pr.Etatcivil{Nom: "Kugler", Prenom: "Benoit", Mail: "smldsmkd.flm@free.fr"}}.Insert(db)
+	donateur1, err := pr.Personne{Identite: pr.Identite{Nom: "Kugler", Prenom: "Benoit", Mail: "smldsmkd.flm@free.fr"}}.Insert(db)
 	tu.AssertNoErr(t, err)
-	donateur2, err := pr.Personne{Etatcivil: pr.Etatcivil{Nom: "Kugler", Prenom: "Eudes-Jàéa", Mail: "smldsmkd.flm@free.fr"}}.Insert(db)
+	donateur2, err := pr.Personne{Identite: pr.Identite{Nom: "Kugler", Prenom: "Eudes-Jàéa", Mail: "smldsmkd.flm@free.fr"}}.Insert(db)
 	tu.AssertNoErr(t, err)
 	organisme, err := dons.Organisme{}.Insert(db)
 	tu.AssertNoErr(t, err)

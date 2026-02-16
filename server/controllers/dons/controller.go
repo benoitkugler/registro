@@ -70,7 +70,7 @@ func (ct *Controller) HandleDonHelloasso(c echo.Context) error {
 	return c.NoContent(200)
 }
 
-func (ct *Controller) identifieAddDon(don dn.Don, donateur pr.Etatcivil) (pr.IdPersonne, error) {
+func (ct *Controller) identifieAddDon(don dn.Don, donateur pr.Identite) (pr.IdPersonne, error) {
 	// try to find and merge the donateur
 	personnes, err := search.SelectAllFieldsForSimilaires(ct.db)
 	if err != nil {
@@ -84,13 +84,13 @@ func (ct *Controller) identifieAddDon(don dn.Don, donateur pr.Etatcivil) (pr.IdP
 			if err != nil {
 				return utils.SQLError(err)
 			}
-			existing.Etatcivil, _ = search.Merge(donateur, existing.Etatcivil)
+			existing.Identite, _ = search.Merge(donateur, existing.Identite)
 			_, err = existing.Update(tx)
 			if err != nil {
 				return err
 			}
 		} else { // create a new profil
-			donateur, err := pr.Personne{Etatcivil: donateur}.Insert(tx)
+			donateur, err := pr.Personne{Identite: donateur}.Insert(tx)
 			if err != nil {
 				return err
 			}
@@ -238,7 +238,7 @@ type PersonneD struct {
 }
 
 func (p PersonneD) personne() pr.Personne {
-	return pr.Personne{Etatcivil: pr.Etatcivil{
+	return pr.Personne{Identite: pr.Identite{
 		Nom:           p.Nom,
 		Prenom:        p.Prenom,
 		Sexe:          p.Sexe,

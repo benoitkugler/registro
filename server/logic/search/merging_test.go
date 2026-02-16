@@ -10,23 +10,20 @@ import (
 )
 
 func TestSimilaires(t *testing.T) {
-	entrant := pr.Etatcivil{
-		Nom:               "NNS",
-		Prenom:            "ben",
-		Tels:              pr.Tels{"0675784512"},
-		Sexe:              pr.Man,
-		DateNaissance:     shared.NewDateFrom(time.Now()),
-		Approfondissement: pr.ACanoe,
-		Etudiant:          true,
-		Nationnalite:      pr.Nationnalite{IsSuisse: true},
+	entrant := pr.Identite{
+		Nom:           "NNS",
+		Prenom:        "ben",
+		Tels:          pr.Tels{"0675784512"},
+		Sexe:          pr.Man,
+		DateNaissance: shared.NewDateFrom(time.Now()),
+		Nationnalite:  pr.Nationnalite{IsSuisse: true},
 	}
-	existant := pr.Etatcivil{
+	existant := pr.Identite{
 		Nom:           "llmmlsd",
 		Prenom:        "Bèn",
 		Tels:          pr.Tels{"06-75-78-45-12", "0478458956"},
 		Sexe:          pr.Woman,
 		DateNaissance: shared.NewDateFrom(time.Now()),
-		Fonctionnaire: true,
 	}
 	merged, conficts := Merge(entrant, existant)
 	tu.Assert(t, conficts.Nom)

@@ -29,7 +29,7 @@ func TestVetements(t *testing.T) {
 	tu.AssertNoErr(t, err)
 
 	for range [50]int{} {
-		pe, err := personnes.Personne{Etatcivil: personnes.Etatcivil{
+		pe, err := personnes.Personne{Identite: personnes.Identite{
 			Nom:    utils.RandString(10, true),
 			Prenom: utils.RandString(10, true),
 		}}.Insert(db)
