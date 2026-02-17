@@ -50,7 +50,10 @@
           ></Step2>
         </v-stepper-window-item>
         <v-stepper-window-item :value="3">
-          <Step3 :settings="props.data.Settings"></Step3>
+          <Step3
+            :settings="props.data.Settings"
+            :remises="props.data.Remises"
+          ></Step3>
         </v-stepper-window-item>
         <v-stepper-window-item :value="4">
           <Step4

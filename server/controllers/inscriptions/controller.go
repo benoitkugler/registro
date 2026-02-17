@@ -159,6 +159,7 @@ func (ct *Controller) GetCamps(c echo.Context) error {
 type Data struct {
 	InitialInscription Inscription
 	Settings           config.ConfigInscription
+	Remises            config.RemisesHints // en %
 }
 
 func (ct *Controller) initInscription(preinscription string) (Data, error) {
@@ -180,6 +181,7 @@ func (ct *Controller) initInscription(preinscription string) (Data, error) {
 	return Data{
 		initialInscription,
 		ct.asso.ConfigInscription,
+		ct.asso.RemisesHints,
 	}, nil
 }
 

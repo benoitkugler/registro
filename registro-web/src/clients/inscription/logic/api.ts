@@ -20,6 +20,11 @@ export interface ConfigInscription {
   ShowAutorisationVehicules: boolean;
   ShowAnnulationConditions: boolean;
 }
+// registro/config.RemisesHints
+export interface RemisesHints {
+  ParentEquipier: Int;
+  AutresInscrits: Int;
+}
 // registro/controllers/inscriptions.CampExt
 export interface CampExt {
   Id: IdCamp;
@@ -45,6 +50,7 @@ export interface CampExt {
 export interface Data {
   InitialInscription: Inscription;
   Settings: ConfigInscription;
+  Remises: RemisesHints;
 }
 // registro/controllers/inscriptions.Inscription
 export interface Inscription {

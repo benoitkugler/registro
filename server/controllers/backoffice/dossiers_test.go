@@ -281,7 +281,7 @@ func TestEstimeRemises(t *testing.T) {
 	tu.AssertNoErr(t, err)
 
 	ct := Controller{db: db.DB}
-	ct.asso.RemisesHints = config.RemisesHints{ParentEquipier: 5, AutreInscrit: 6}
+	ct.asso.RemisesHints = config.RemisesHints{ParentEquipier: 5, AutresInscrits: 6}
 
 	camp1, err := ct.createCamp("localhost")
 	tu.AssertNoErr(t, err)

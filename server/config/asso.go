@@ -86,7 +86,7 @@ var acve = Asso{
 
 	RemisesHints: RemisesHints{
 		ParentEquipier: 30,
-		AutreInscrit:   15,
+		AutresInscrits: 15,
 	},
 
 	ConfigInscription: ConfigInscription{
@@ -131,7 +131,7 @@ var repere = Asso{
 
 	RemisesHints: RemisesHints{
 		ParentEquipier: 50,
-		AutreInscrit:   10,
+		AutresInscrits: 10,
 	},
 
 	ConfigInscription: ConfigInscription{
@@ -155,7 +155,7 @@ type ChequeSettings struct {
 
 type RemisesHints struct {
 	ParentEquipier int // in %
-	AutreInscrit   int // in %
+	AutresInscrits int // in %
 }
 
 type MailsSettings struct {

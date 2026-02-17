@@ -992,7 +992,7 @@ func estimeRemises(loader cps.CampsData, dossiers logic.Dossiers, equipiers cps.
 			Camp: inscrit.camp, Actual: currentRemise,
 		}
 		if autres := cribleInscrits[inscrit.famille]; len(autres) >= 2 {
-			hint.Hint.Famille = hints.AutreInscrit
+			hint.Hint.Famille = hints.AutresInscrits
 			hint.AutresInscrits = autres
 		}
 		if equipiers := cribleEquipiers[inscrit.famille]; len(equipiers) != 0 {

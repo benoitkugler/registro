@@ -31,8 +31,11 @@
       </v-alert>
       <v-alert class="my-1">
         REMISES : Une remise peut être appliquée dans le cas d'une famille avec
-        <i>plusieurs participants</i> inscrits ou pour un
-        <i>équipier</i> bénévole sur un de nos séjours.
+        <i>plusieurs participants</i> inscrits ({{
+          props.remises.AutresInscrits
+        }}% par enfant) ou pour un <i>équipier</i>
+        bénévole sur un de nos séjours (renseignez-vous auprès du directeur de
+        camp).
       </v-alert>
 
       <v-alert class="my-1" v-if="props.settings.ShowAnnulationConditions">
@@ -45,9 +48,10 @@
 </template>
 
 <script lang="ts" setup>
-import type { ConfigInscription } from "../logic/api";
+import type { ConfigInscription, RemisesHints } from "../logic/api";
 
 const props = defineProps<{
   settings: ConfigInscription;
+  remises: RemisesHints;
 }>();
 </script>
