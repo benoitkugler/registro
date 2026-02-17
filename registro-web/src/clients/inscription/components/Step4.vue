@@ -73,31 +73,6 @@
         </template>
       </v-checkbox>
 
-      <v-checkbox
-        density="comfortable"
-        v-model="autorisationPhoto"
-        color="primary"
-        :rules="[FormRules.required('Merci de donner votre autorisation')]"
-      >
-        <template #label>
-          <div>
-            Dans le cadre des activités de l'association, des photographies ou
-            des séquences vidéo pourront être faites.
-            <br />
-            J'autorise la diffusion <i>restreinte</i> de ces souvenirs, sur une
-            plateforme protégée, le site internet ou les brochures papier.
-          </div>
-        </template>
-      </v-checkbox>
-
-      <v-alert type="info" class="my-2 mb-4">
-        Sur votre demande, nous nous engageons à retirer dans les plus brefs
-        délais toute photo ou vidéo que nous aurions publiée. Pour cela, vous
-        pouvez le spécifier en envoyant un mail à
-        <a :href="hrefRetraitMedia">{{ props.settings.EmailRetraitMedia }}</a
-        >.
-      </v-alert>
-
       <v-checkbox v-model="partageAdresse" color="primary">
         <template #label>
           <div>
@@ -107,6 +82,20 @@
           </div>
         </template>
       </v-checkbox>
+
+      <v-alert type="info" class="my-2 mb-4">
+        Dans le cadre des activités de l'association, des photographies ou des
+        séquences vidéo pourront être faites.
+        <br />
+        En vous inscrivant, vous autorisez la diffusion <i>restreinte</i> de ces
+        souvenirs, sur une plateforme protégée, le site internet ou les
+        brochures papier. <br /><br />
+        Sur votre demande, nous nous engageons à retirer dans les plus brefs
+        délais toute photo ou vidéo que nous aurions publiée. Pour cela, vous
+        pouvez le spécifier en envoyant un mail à
+        <a :href="hrefRetraitMedia">{{ props.settings.EmailRetraitMedia }}</a
+        >.
+      </v-alert>
     </v-card-text>
   </v-card>
 
@@ -179,9 +168,6 @@ const autorisationVehicules = defineModel<boolean>("autorisationVehicules", {
   required: true,
 });
 const autorisationSoin = defineModel<boolean>("autorisationSoin", {
-  required: true,
-});
-const autorisationPhoto = defineModel<boolean>("autorisationPhoto", {
   required: true,
 });
 </script>

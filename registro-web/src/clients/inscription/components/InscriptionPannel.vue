@@ -61,7 +61,6 @@
             v-model:charte="isCharteOK"
             v-model:autorisation-vehicules="autorisationVehicules"
             v-model:autorisation-soin="autorisationSoin"
-            v-model:autorisation-photo="autorisationPhoto"
             :settings="props.data.Settings"
           ></Step4>
         </v-stepper-window-item>
@@ -179,14 +178,12 @@ const isStep2Valid = computed(() => {
 const isCharteOK = ref(false);
 const autorisationVehicules = ref(true);
 const autorisationSoin = ref(true);
-const autorisationPhoto = ref(true);
 const isStep4Valid = computed(
   () =>
     (isCharteOK.value || !props.data.Settings.ShowCharteConduite) &&
     (autorisationVehicules.value ||
       !props.data.Settings.ShowAutorisationVehicules) &&
-    autorisationSoin.value &&
-    autorisationPhoto.value
+    autorisationSoin.value
 );
 
 const isInscValid = computed(() => {
