@@ -97,6 +97,12 @@
             "Output": "sql/events/gen_randdata_test.go"
         }
     ],
+    "logic/events_src.go": [
+        {
+            "Mode": "go/unions",
+            "Output": "logic/events_gen.go"
+        }
+    ],
     "routes_backoffice.go": [
         {
             "Mode": "typescript/api",

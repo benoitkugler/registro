@@ -26,35 +26,35 @@ func (out *EventContentWrapper) UnmarshalJSON(src []byte) error {
 		return err
 	}
 	switch wr.Kind {
-	case "Attestation":
+	case "AttestationEvt":
 		var data AttestationEvt
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
-	case "CampDocs":
+	case "CampDocsEvt":
 		var data CampDocsEvt
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
-	case "Facture":
+	case "FactureEvt":
 		var data FactureEvt
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
-	case "Message":
+	case "MessageEvt":
 		var data MessageEvt
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
-	case "PlaceLiberee":
+	case "PlaceLibereeEvt":
 		var data PlaceLibereeEvt
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
-	case "Sondage":
+	case "SondageEvt":
 		var data SondageEvt
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
-	case "Supprime":
+	case "SupprimeEvt":
 		var data SupprimeEvt
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
-	case "Validation":
+	case "ValidationEvt":
 		var data ValidationEvt
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
@@ -73,21 +73,21 @@ func (item EventContentWrapper) MarshalJSON() ([]byte, error) {
 	var wr wrapper
 	switch data := item.Data.(type) {
 	case AttestationEvt:
-		wr = wrapper{Kind: "Attestation", Data: data}
+		wr = wrapper{Kind: "AttestationEvt", Data: data}
 	case CampDocsEvt:
-		wr = wrapper{Kind: "CampDocs", Data: data}
+		wr = wrapper{Kind: "CampDocsEvt", Data: data}
 	case FactureEvt:
-		wr = wrapper{Kind: "Facture", Data: data}
+		wr = wrapper{Kind: "FactureEvt", Data: data}
 	case MessageEvt:
-		wr = wrapper{Kind: "Message", Data: data}
+		wr = wrapper{Kind: "MessageEvt", Data: data}
 	case PlaceLibereeEvt:
-		wr = wrapper{Kind: "PlaceLiberee", Data: data}
+		wr = wrapper{Kind: "PlaceLibereeEvt", Data: data}
 	case SondageEvt:
-		wr = wrapper{Kind: "Sondage", Data: data}
+		wr = wrapper{Kind: "SondageEvt", Data: data}
 	case SupprimeEvt:
-		wr = wrapper{Kind: "Supprime", Data: data}
+		wr = wrapper{Kind: "SupprimeEvt", Data: data}
 	case ValidationEvt:
-		wr = wrapper{Kind: "Validation", Data: data}
+		wr = wrapper{Kind: "ValidationEvt", Data: data}
 
 	default:
 		panic("exhaustive switch")
@@ -96,14 +96,14 @@ func (item EventContentWrapper) MarshalJSON() ([]byte, error) {
 }
 
 const (
-	AttestationEvKind  = "Attestation"
-	CampDocsEvKind     = "CampDocs"
-	FactureEvKind      = "Facture"
-	MessageEvKind      = "Message"
-	PlaceLibereeEvKind = "PlaceLiberee"
-	SondageEvKind      = "Sondage"
-	SupprimeEvKind     = "Supprime"
-	ValidationEvKind   = "Validation"
+	AttestationEvtEvKind  = "AttestationEvt"
+	CampDocsEvtEvKind     = "CampDocsEvt"
+	FactureEvtEvKind      = "FactureEvt"
+	MessageEvtEvKind      = "MessageEvt"
+	PlaceLibereeEvtEvKind = "PlaceLibereeEvt"
+	SondageEvtEvKind      = "SondageEvt"
+	SupprimeEvtEvKind     = "SupprimeEvt"
+	ValidationEvtEvKind   = "ValidationEvt"
 )
 
 func (item Event) MarshalJSON() ([]byte, error) {

@@ -493,6 +493,7 @@ function pseudoEventTime(event: PseudoEvent): Date {
 function isMessageVisibleBy(message: EventMessage, user: Acteur) {
   const aboutFondSoutien =
     message.Origine == Acteur.FondSoutien || message.OnlyToFondSoutien;
+  console.log(message.Origine, aboutFondSoutien, user);
   switch (user) {
     case Acteur.Backoffice:
       return !aboutFondSoutien;
@@ -507,6 +508,8 @@ function isMessageVisibleBy(message: EventMessage, user: Acteur) {
 
 /** add the inscription time and paiements and sort by time */
 export function buildPseudoEvents(dossier: DossierExt, user: Acteur) {
+  console.log(dossier.Events);
+
   // hide fonds de soutien
   const evList: PseudoEvent[] = (dossier.Events || [])
     .filter((ev) =>

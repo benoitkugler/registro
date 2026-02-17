@@ -3,7 +3,6 @@ package logic
 import (
 	"iter"
 	"slices"
-	"time"
 
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
@@ -12,22 +11,9 @@ import (
 	"registro/utils"
 )
 
-//go:generate ../../../../../go/src/github.com/benoitkugler/gomacro/cmd/gomacro events.go go/unions:events_gen.go
-
-// Event exposes on event on the dossier track
-type Event struct {
-	Id        evs.IdEvent
-	idDossier ds.IdDossier
-	Created   time.Time
-	Content   EventContent
-}
-
 func (ev Event) Raw() evs.Event {
 	return evs.Event{Id: ev.Id, IdDossier: ev.idDossier, Created: ev.Created, Kind: ev.Content.kind()}
 }
-
-// Events stores the [Event] for one [Dossier]
-type Events []Event
 
 type EventExt[T EventContent] struct {
 	Event   evs.Event
