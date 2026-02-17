@@ -1,9 +1,20 @@
 <template>
   <v-card v-if="data != null" title="Messages des familles">
     <template #append>
-      <v-btn-toggle color="primary" class="mx-1" v-model="mode" rounded>
-        <v-btn size="small" prepend-icon="mdi-clock"> Trier par date</v-btn>
-        <v-btn size="small" append-icon="mdi-account"> Trier par inscrit</v-btn>
+      <v-btn-toggle
+        color="primary"
+        class="mx-1"
+        v-model="sortBy"
+        rounded
+        mandatory
+      >
+        <v-btn
+          icon="mdi-sort-clock-ascending-outline"
+          title="Trier par date du dernier message"
+        >
+        </v-btn>
+        <v-btn icon="mdi-sort-alphabetical-ascending" title="Trier par nom">
+        </v-btn>
       </v-btn-toggle>
 
       <v-divider vertical thickness="1" class="mx-1"> </v-divider>
@@ -18,19 +29,8 @@
         <v-tooltip activator="parent"> Filtrer les messages non lu </v-tooltip>
       </v-btn>
     </template>
-    <!-- par date -->
-    <v-card-text v-if="mode == 0">
-      <MessageRow
-        v-for="message in filteredMessages"
-        :message="message"
-        @set-seen="(s) => setMessageSeen(message.Event.Id, s)"
-        @start-reply="createMessageTo = message.Event.IdDossier"
-        :show-reply="true"
-      ></MessageRow>
-    </v-card-text>
 
-    <!-- par dossier -->
-    <v-card-text v-else>
+    <v-card-text>
       <v-card
         v-for="dossier in byDossiers"
         :title="dossier.Dossier.Responsable"
@@ -52,7 +52,6 @@
             :message="message"
             @set-seen="(s) => setMessageSeen(message.Event.Id, s)"
             @start-reply="createMessageTo = message.Event.IdDossier"
-            :show-reply="false"
           ></MessageRow>
         </v-card-text>
       </v-card>
@@ -108,7 +107,7 @@ const props = defineProps<{}>();
 
 onMounted(loadMessages);
 
-const mode = ref<0 | 1>(0); // time / inscrit
+const sortBy = ref<0 | 1>(0); // time / inscrit
 const showOnlyNew = ref(false);
 
 const filteredMessages = computed(() =>
@@ -117,21 +116,43 @@ const filteredMessages = computed(() =>
   )
 );
 
+function timeLastMessage(l: EventExt_MessageEvt[]) {
+  let ti = new Date(l[0].Event.Created);
+  for (const event of l) {
+    const itemTime = new Date(event.Event.Created);
+    if (itemTime.valueOf() > ti.valueOf()) {
+      ti = itemTime;
+    }
+  }
+  return ti;
+}
+
 const byDossiers = computed(() => {
-  const out = new Map<IdDossier, EventExt_MessageEvt[]>();
+  const tmp = new Map<IdDossier, EventExt_MessageEvt[]>();
   for (const element of filteredMessages.value) {
-    out.set(
+    tmp.set(
       element.Event.IdDossier,
-      (out.get(element.Event.IdDossier) || []).concat(element)
+      (tmp.get(element.Event.IdDossier) || []).concat(element)
     );
   }
-  return Array.from(out.entries())
-    .map((dossier) => ({
-      IdDossier: dossier[0],
-      Dossier: (data.value?.Dossiers || {})[dossier[0]],
-      Messages: dossier[1].reverse(),
-    }))
-    .sort((a, b) => a.Dossier.Responsable.localeCompare(b.Dossier.Responsable));
+  const out = Array.from(tmp.entries()).map((dossier) => ({
+    IdDossier: dossier[0],
+    Dossier: (data.value?.Dossiers || {})[dossier[0]],
+    Messages: dossier[1].reverse(),
+  }));
+  if (sortBy.value == 0) {
+    // by time, new comes first
+    out.sort(
+      (a, b) =>
+        timeLastMessage(b.Messages).valueOf() -
+        timeLastMessage(a.Messages).valueOf()
+    );
+  } else {
+    out.sort((a, b) =>
+      a.Dossier.Responsable.localeCompare(b.Dossier.Responsable)
+    );
+  }
+  return out;
 });
 
 const data = ref<Messages | null>(null);

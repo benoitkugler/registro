@@ -35,11 +35,6 @@
     >
       <pre>{{ props.message.Content.Message.Contenu }}</pre>
     </v-col>
-    <v-col align-self="center" cols="auto" v-if="props.showReply">
-      <v-btn icon size="small" @click="emit('startReply')">
-        <v-icon>mdi-reply</v-icon>
-      </v-btn>
-    </v-col>
     <v-col align-self="center" cols="2" class="text-grey">
       {{ Formatters.time(props.message.Event.Created) }}
     </v-col>
@@ -54,7 +49,6 @@ import { computed } from "vue";
 
 const props = defineProps<{
   message: EventExt_MessageEvt;
-  showReply: boolean;
 }>();
 
 const emit = defineEmits<{
