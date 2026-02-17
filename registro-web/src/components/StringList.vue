@@ -9,6 +9,7 @@
     v-model="modelValue"
     @update:model-value="format"
     :rules="props.rule ? [rule] : undefined"
+    hint="Valider avec entrée ou en cliquant à côté du champ."
   ></v-combobox>
 </template>
 
