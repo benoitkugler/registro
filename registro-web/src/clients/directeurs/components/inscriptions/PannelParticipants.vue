@@ -6,6 +6,7 @@
         <v-tooltip activator="parent" content-class="ma-0 pa-0">
           <StatistiquesCard
             :participants="data.Participants || []"
+            :statistiques="data.Statistiques"
           ></StatistiquesCard>
         </v-tooltip>
       </v-btn>

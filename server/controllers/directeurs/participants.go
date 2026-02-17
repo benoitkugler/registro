@@ -37,10 +37,11 @@ func (ct *Controller) ParticipantsGet(c echo.Context) error {
 type ParticipantsOut struct {
 	Participants []logic.ParticipantExt
 	Dossiers     map[ds.IdDossier]logic.DossierReglement
+	Statistiques cps.StatistiquesInscrits
 }
 
 func (ct *Controller) getParticipants(id cps.IdCamp) (ParticipantsOut, error) {
-	participants, dossiers, _, err := logic.LoadParticipants(ct.db, id)
+	participants, dossiers, camp, err := logic.LoadParticipants(ct.db, id)
 	if err != nil {
 		return ParticipantsOut{}, err
 	}
@@ -54,7 +55,7 @@ func (ct *Controller) getParticipants(id cps.IdCamp) (ParticipantsOut, error) {
 		reglements[id] = dossier.Reglement()
 	}
 
-	return ParticipantsOut{participants, reglements}, nil
+	return ParticipantsOut{participants, reglements, camp.Stats()}, nil
 }
 
 // ParticipantsUpdate modifie les champs d'un participant.

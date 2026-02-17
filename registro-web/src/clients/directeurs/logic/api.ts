@@ -151,6 +151,7 @@ export interface Messages {
 export interface ParticipantsOut {
   Participants: ParticipantExt[] | null;
   Dossiers: Record<IdDossier, DossierReglement> | null;
+  Statistiques: StatistiquesInscrits;
 }
 // registro/controllers/directeurs.Photos
 export interface Photos {
@@ -562,6 +563,19 @@ export interface Sondage {
   Ressenti: Satisfaction;
   MessageEnfant: string;
   MessageResponsable: string;
+}
+// registro/sql/camps.StatistiquesInscrits
+export interface StatistiquesInscrits {
+  Inscriptions: Int;
+  InscriptionsFilles: Int;
+  InscriptionsSuisses: Int;
+  Valides: Int;
+  ValidesFilles: Int;
+  ValidesSuisses: Int;
+  Refus: Int;
+  AStatuer: Int;
+  Exceptions: Int;
+  Attente: Int;
 }
 // registro/sql/camps.StatutCamp
 export const StatutCamp = {

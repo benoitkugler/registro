@@ -49,7 +49,7 @@ func (ct *Controller) getParticipants(id cps.IdCamp) (CampLoadOut, error) {
 		dossier := finances.For(id)
 		reglements[id] = dossier.Reglement()
 	}
-	return CampLoadOut{camp, participants, reglements}, nil
+	return CampLoadOut{camp.Camp.Ext(), participants, reglements}, nil
 }
 
 type ParticipantsCreateIn struct {

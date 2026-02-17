@@ -34,7 +34,7 @@ type ParticipantPersonne struct {
 type StatistiquesInscrits struct {
 	Inscriptions                            int // nombre total
 	InscriptionsFilles, InscriptionsSuisses int
-	Valides, ValidesFilles, ValidesSuisses  int // confirmés
+	Valides, ValidesFilles, ValidesSuisses  int // inscrits confirmés
 	Refus, AStatuer, Exceptions, Attente    int
 }
 
