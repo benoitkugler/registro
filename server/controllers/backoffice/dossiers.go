@@ -1023,7 +1023,7 @@ func (ct *Controller) estimeRemises(db *sql.DB, ids []cps.IdCamp) ([]RemisesHint
 	}
 
 	// load equipiers
-	equipiers, equipiersP, err := cps.LoadEquipiersByCamps(db, ids...)
+	equipiers, equipiersP, _, err := cps.LoadEquipiersByCamps(db, ids...)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}

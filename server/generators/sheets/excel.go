@@ -277,7 +277,7 @@ func intCell[T ~int | ~int64](v T) Cell {
 	return Cell{ValueF: float32(v), NumFormat: Int}
 }
 
-func (b *Builder) drawItems(liste [][]Cell, startingRow int, showLineNumbers bool, separators []int) error {
+func (b *Builder) drawItems(rows [][]Cell, startingRow int, showLineNumbers bool, separators []int) error {
 	var colOffset int // pour les numéros de lignes
 	if showLineNumbers {
 		colOffset = 1
@@ -285,7 +285,7 @@ func (b *Builder) drawItems(liste [][]Cell, startingRow int, showLineNumbers boo
 
 	seps := utils.NewSet(separators...)
 
-	for row, data := range liste {
+	for row, data := range rows {
 		currentRow := row + startingRow
 		if showLineNumbers {
 			b.SetCell(currentRow, 1, strconv.Itoa(row+1))
@@ -346,19 +346,19 @@ func renderListe(headers []string, liste [][]Cell, totals []oneTotal, showLineNu
 
 // CreateTable returns an Excel file for the basic data defined
 // by [headers] and [liste]
-func CreateTable(headers []string, liste [][]Cell) ([]byte, error) {
-	f, err := renderListe(headers, liste, nil, false)
+func CreateTable(headers []string, rows [][]Cell) ([]byte, error) {
+	f, err := renderListe(headers, rows, nil, false)
 	if err != nil {
 		return nil, err
 	}
 	return f.Bytes(), nil
 }
 
-func CreateTableTotal(headers []string, liste [][]Cell, total string) ([]byte, error) {
+func CreateTableTotal(headers []string, rows [][]Cell, total string) ([]byte, error) {
 	totals := []oneTotal{
 		{"Total :", total},
 	}
-	f, err := renderListe(headers, liste, totals, true)
+	f, err := renderListe(headers, rows, totals, true)
 	if err != nil {
 		return nil, err
 	}
@@ -374,7 +374,7 @@ func CreateTableTotal(headers []string, liste [][]Cell, total string) ([]byte, e
 //   - FinancesPEtatPaiement
 //
 // TODO: vérifier le lien avec [ListeParticipantsCamps]
-func SuiviFinancierCamp(liste [][]Cell, totalDemande,
+func SuiviFinancierCamp(rows [][]Cell, totalDemande,
 	totalAides string,
 ) ([]byte, error) {
 	totals := []oneTotal{
@@ -388,7 +388,7 @@ func SuiviFinancierCamp(liste [][]Cell, totalDemande,
 		"Dont aides (€)",      // FinancesPTotalAides
 		"Etat du paiement",    // FinancesPEtatPaiement
 	}
-	f, err := renderListe(headers[:], liste, totals, false)
+	f, err := renderListe(headers[:], rows, totals, false)
 	if err != nil {
 		return nil, err
 	}

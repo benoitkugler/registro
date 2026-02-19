@@ -104,7 +104,7 @@ func (ct *Controller) getCamps(host string) ([]CampHeader, error) {
 }
 
 func loadDirecteurs(db cps.DB, camps []cps.IdCamp) (map[cps.IdCamp]pr.Personne, error) {
-	tmp, personnes, err := cps.LoadEquipiersByCamps(db, camps...)
+	tmp, personnes, _, err := cps.LoadEquipiersByCamps(db, camps...)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
@@ -489,61 +489,6 @@ func (ct *Controller) getCampDocument(id cps.IdCamp) (FilesCamp, error) {
 	return out, nil
 }
 
-type CreateEquipierIn struct {
-	IdPersonne pr.IdPersonne
-	IdCamp     cps.IdCamp
-	Roles      cps.Roles // to select default Demandes
-}
-
-func (ct *Controller) CampsCreateEquipier(c echo.Context) error {
-	var args CreateEquipierIn
-	if err := c.Bind(&args); err != nil {
-		return err
-	}
-	out, err := ct.createEquipier(args)
-	if err != nil {
-		return err
-	}
-	return c.JSON(200, out)
-}
-
-func (ct *Controller) createEquipier(args CreateEquipierIn) (out cps.Equipier, _ error) {
-	err := utils.InTx(ct.db, func(tx *sql.Tx) error {
-		var err error
-		out, err = cps.Equipier{IdCamp: args.IdCamp, IdPersonne: args.IdPersonne, Roles: args.Roles}.Insert(tx)
-		if err != nil {
-			return err
-		}
-		demandes := ct.builtins.Defaut(out.Id, out.Roles)
-		err = fs.InsertManyDemandeEquipiers(tx, demandes...)
-		if err != nil {
-			return err
-		}
-		return nil
-	})
-	return out, err
-}
-
-func (ct *Controller) CampUpdateEquipier(c echo.Context) error {
-	var args cps.Equipier
-	if err := c.Bind(&args); err != nil {
-		return err
-	}
-	err := ct.updateEquipier(args)
-	if err != nil {
-		return err
-	}
-	return c.NoContent(200)
-}
-
-func (ct *Controller) updateEquipier(args cps.Equipier) error {
-	_, err := args.Update(ct.db)
-	if err != nil {
-		return utils.SQLError(err)
-	}
-	return nil
-}
-
 func (ct *Controller) CampsDownloadParticipants(c echo.Context) error {
 	year, err := utils.QueryParamInt[int](c, "year")
 	if err != nil {
@@ -584,7 +529,7 @@ func (ct *Controller) exportListeParticipants(year int) ([]byte, string, error) 
 	}
 
 	// load equipiers
-	equipiers, equipiersP, err := cps.LoadEquipiersByCamps(ct.db, camps.IDs()...)
+	equipiers, equipiersP, _, err := cps.LoadEquipiersByCamps(ct.db, camps.IDs()...)
 	if err != nil {
 		return nil, "", utils.SQLError(err)
 	}

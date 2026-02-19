@@ -64,7 +64,7 @@ func (ct *Controller) getEquipiers(host string, user cps.IdCamp) ([]EquipierExt,
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
-	equipiers, personnes, err := cps.LoadEquipiersByCamps(ct.db, user)
+	equipiers, personnes, _, err := cps.LoadEquipiersByCamps(ct.db, user)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
@@ -195,7 +195,7 @@ func (ct *Controller) inviteEquipiers(host string, args EquipiersInviteIn, user 
 	if err != nil {
 		return utils.SQLError(err)
 	}
-	equipiers, personnes, err := cps.LoadEquipiersByCamps(ct.db, user)
+	equipiers, personnes, _, err := cps.LoadEquipiersByCamps(ct.db, user)
 	if err != nil {
 		return utils.SQLError(err)
 	}
@@ -441,7 +441,7 @@ type fileAndPrefix struct {
 }
 
 func (ct *Controller) compileFilesEquipiers(user cps.IdCamp) ([]fileAndPrefix, error) {
-	equipiers, personnes, err := cps.LoadEquipiersByCamps(ct.db, user)
+	equipiers, personnes, _, err := cps.LoadEquipiersByCamps(ct.db, user)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}

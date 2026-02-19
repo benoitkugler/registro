@@ -364,16 +364,21 @@ func (gs Groupes) TrouveGroupe(dateNaissance shared.Date) (Groupe, bool) {
 	return Groupe{}, false
 }
 
-func LoadEquipiersByCamps(db DB, idCamps ...IdCamp) (Equipiers, pr.Personnes, error) {
+func LoadEquipiersByCamps(db DB, idCamps ...IdCamp) (Equipiers, pr.Personnes, map[pr.IdPersonne]pr.Ficheequipier, error) {
 	equipiers, err := SelectEquipiersByIdCamps(db, idCamps...)
 	if err != nil {
-		return nil, nil, utils.SQLError(err)
+		return nil, nil, nil, utils.SQLError(err)
 	}
 	personnes, err := pr.SelectPersonnes(db, equipiers.IdPersonnes()...)
 	if err != nil {
-		return nil, nil, utils.SQLError(err)
+		return nil, nil, nil, utils.SQLError(err)
 	}
-	return equipiers, personnes, nil
+	ficheequipiers, err := pr.SelectFicheequipiersByIdPersonnes(db, equipiers.IdPersonnes()...)
+	if err != nil {
+		return nil, nil, nil, utils.SQLError(err)
+	}
+
+	return equipiers, personnes, ficheequipiers.ByIdPersonne(), nil
 }
 
 // Directeur renvoie le directeur (unique par construction)

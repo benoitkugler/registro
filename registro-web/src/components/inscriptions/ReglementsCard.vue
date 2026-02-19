@@ -39,7 +39,7 @@ import { computed } from "vue";
 import type { ParticipantsOut } from "@/clients/directeurs/logic/api";
 
 const props = defineProps<{
-  data: ParticipantsOut;
+  data: Pick<ParticipantsOut, "Dossiers" | "Participants">;
 }>();
 
 function dossier(p: ParticipantExt) {

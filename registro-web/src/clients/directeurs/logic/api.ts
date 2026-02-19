@@ -766,77 +766,6 @@ export interface Demande {
 export type Demandes = Record<IdDemande, Demande> | null;
 export type IdDemande = Int & { __opaque_int__: "IdDemande" };
 export type IdFile = Int & { __opaque_int__: "IdFile" };
-// registro/sql/personnes.Approfondissement
-export const Approfondissement = {
-  AAucun: 0,
-  AAutre: 1,
-  ASb: 2,
-  ACanoe: 3,
-  AVoile: 4,
-  AMoto: 5,
-} as const;
-export type Approfondissement =
-  (typeof Approfondissement)[keyof typeof Approfondissement];
-
-export const ApprofondissementLabels: Record<Approfondissement, string> = {
-  [Approfondissement.AAucun]: "Non effectué",
-  [Approfondissement.AAutre]: "Approfondissement",
-  [Approfondissement.ASb]: "Surveillant de baignade",
-  [Approfondissement.ACanoe]: "Canoë - Kayak",
-  [Approfondissement.AVoile]: "Voile",
-  [Approfondissement.AMoto]: "Loisirs motocyclistes",
-};
-
-// registro/sql/personnes.Departement
-export type Departement = string;
-// registro/sql/personnes.Diplome
-export const Diplome = {
-  DAucun: 0,
-  DBafa: 1,
-  DBafaStag: 2,
-  DBafd: 3,
-  DBafdStag: 4,
-  DCap: 5,
-  DAssSociale: 6,
-  DEducSpe: 7,
-  DMonEduc: 8,
-  DInstit: 9,
-  DProf: 10,
-  DAgreg: 11,
-  DBjeps: 12,
-  DDut: 13,
-  DEje: 14,
-  DDeug: 15,
-  DStaps: 16,
-  DBapaat: 17,
-  DBeatep: 18,
-  DZzautre: 19,
-} as const;
-export type Diplome = (typeof Diplome)[keyof typeof Diplome];
-
-export const DiplomeLabels: Record<Diplome, string> = {
-  [Diplome.DAucun]: "Aucun",
-  [Diplome.DBafa]: "BAFA Titulaire",
-  [Diplome.DBafaStag]: "BAFA Stagiaire",
-  [Diplome.DBafd]: "BAFD titulaire",
-  [Diplome.DBafdStag]: "BAFD stagiaire",
-  [Diplome.DCap]: "CAP petit enfance",
-  [Diplome.DAssSociale]: "Assitante Sociale",
-  [Diplome.DEducSpe]: "Educ. spé.",
-  [Diplome.DMonEduc]: "Moniteur educateur",
-  [Diplome.DInstit]: "Professeur des écoles",
-  [Diplome.DProf]: "Enseignant du secondaire",
-  [Diplome.DAgreg]: "Agrégé",
-  [Diplome.DBjeps]: "BPJEPS",
-  [Diplome.DDut]: "DUT carrière sociale",
-  [Diplome.DEje]: "EJE",
-  [Diplome.DDeug]: "DEUG",
-  [Diplome.DStaps]: "STAPS",
-  [Diplome.DBapaat]: "BAPAAT",
-  [Diplome.DBeatep]: "BEATEP",
-  [Diplome.DZzautre]: "AUTRE",
-};
-
 // registro/sql/personnes.Fichesanitaire
 export interface Fichesanitaire {
   IdPersonne: IdPersonne;
@@ -884,8 +813,6 @@ export interface Personne {
   Prenom: string;
   Sexe: Sexe;
   DateNaissance: Date;
-  VilleNaissance: string;
-  DepartementNaissance: Departement;
   Nationnalite: Nationnalite;
   Tels: Tels;
   Mail: string;
@@ -893,12 +820,6 @@ export interface Personne {
   CodePostal: string;
   Ville: string;
   Pays: Pays;
-  NomJeuneFille: string;
-  Profession: string;
-  Etudiant: boolean;
-  Fonctionnaire: boolean;
-  Diplome: Diplome;
-  Approfondissement: Approfondissement;
   Publicite: Publicite;
   CharteAccepted: Time;
   IsTemp: boolean;

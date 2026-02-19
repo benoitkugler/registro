@@ -48,6 +48,7 @@ func setupRoutesBackoffice(e *echo.Echo, ct *backoffice.Controller) {
 	gr.DELETE("/api/v1/backoffice/camps/photos", ct.CampsDeleteAlbum)
 
 	e.GET("/api/v1/backoffice/camps/download-participants", ct.CampsDownloadParticipants, ct.JWTMiddlewareForQuery()) // url-only
+	e.GET("/api/v1/backoffice/camps/download-equipiers", ct.CampsDownloadEquipiers, ct.JWTMiddlewareForQuery())       // url-only
 
 	gr.PUT("/api/v1/backoffice/camps/equipiers", ct.CampsCreateEquipier)
 

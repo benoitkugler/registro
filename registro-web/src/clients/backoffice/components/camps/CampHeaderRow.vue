@@ -128,6 +128,21 @@
             <v-divider thickness="1"></v-divider>
 
             <v-list-item
+              prepend-icon="mdi-file-excel"
+              title="Exporter les équipiers"
+              subtitle="Télécharger la liste des équipiers (format Excel)"
+              link
+              :href="
+                controller.CampsDownloadEquipiers(
+                  props.camp.Camp.Camp.Id,
+                  controller.authToken
+                )
+              "
+            ></v-list-item>
+
+            <v-divider thickness="1"></v-divider>
+
+            <v-list-item
               title="Envoyer le sondage"
               subtitle="de fin de séjour"
               prepend-icon="mdi-comment-quote"
@@ -201,12 +216,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import type {
-  CampHeader,
-  Camp,
-  IdPersonne,
-  DemandeStat,
-} from "@/clients/backoffice/logic/api";
+import type { CampHeader, IdPersonne } from "@/clients/backoffice/logic/api";
 import CampStats from "./CampStats.vue";
 import { Camps, Formatters } from "@/utils";
 import { controller } from "../../logic/logic";

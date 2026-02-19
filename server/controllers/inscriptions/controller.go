@@ -203,7 +203,7 @@ func (ct *Controller) LoadCamps() (cps.Camps, []CampExt, error) {
 	if err != nil {
 		return nil, nil, utils.SQLError(err)
 	}
-	link, personnes, err := cps.LoadEquipiersByCamps(ct.db, camps.IDs()...)
+	link, personnes, _, err := cps.LoadEquipiersByCamps(ct.db, camps.IDs()...)
 	if err != nil {
 		return nil, nil, utils.SQLError(err)
 	}

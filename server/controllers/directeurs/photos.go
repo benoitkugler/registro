@@ -93,7 +93,7 @@ func (ct *Controller) sendMailInvitePhotos(idCamp cps.IdCamp) (iter.Seq2[backoff
 		return nil, utils.SQLError(err)
 	}
 
-	_, equipiers, err := cps.LoadEquipiersByCamps(ct.db, idCamp)
+	_, equipiers, _, err := cps.LoadEquipiersByCamps(ct.db, idCamp)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
