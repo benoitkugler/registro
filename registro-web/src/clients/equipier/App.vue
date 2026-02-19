@@ -21,7 +21,7 @@
         <EquipierForm
           :token="token"
           :equipier="data"
-          :album="joomeo"
+          :album="album"
         ></EquipierForm>
       </v-container>
 
@@ -96,10 +96,10 @@ async function fetchData() {
   data.value = res;
 }
 
-const joomeo = ref<Photos | null>(null);
+const album = ref<Photos | null>(null);
 async function fetchPhotos() {
   const res = await controller.LoadPhotos({ token: token.value });
   if (res === undefined) return;
-  joomeo.value = res;
+  album.value = res;
 }
 </script>

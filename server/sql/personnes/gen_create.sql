@@ -21,9 +21,10 @@ CREATE TABLE ficheequipiers (
     Fonctionnaire boolean NOT NULL,
     Diplome smallint CHECK (Diplome IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19)) NOT NULL,
     Approfondissement smallint CHECK (Approfondissement IN (0, 1, 2, 3, 4, 5)) NOT NULL,
-    Profession text NOT NULL,
     EtatCivil smallint CHECK (EtatCivil IN (0, 1, 2)) NOT NULL,
     NombreEnfants integer NOT NULL,
+    Formation text NOT NULL,
+    Profession text NOT NULL,
     ExperienceTravailJeunes text NOT NULL,
     ParcoursSpirituel text NOT NULL,
     Eglise text NOT NULL,
@@ -31,7 +32,8 @@ CREATE TABLE ficheequipiers (
     Sante text NOT NULL,
     AssuranceMaladie text NOT NULL,
     AssuranceAccident text NOT NULL,
-    MembreAssoPermanent boolean NOT NULL
+    DemandeMembreAssoPermanent boolean NOT NULL,
+    guard boolean NOT NULL
 );
 
 CREATE TABLE fichesanitaires (
@@ -52,8 +54,6 @@ CREATE TABLE personnes (
     Prenom text NOT NULL,
     Sexe smallint CHECK (Sexe IN (0, 1, 2)) NOT NULL,
     DateNaissance date NOT NULL,
-    VilleNaissance text NOT NULL,
-    DepartementNaissance text NOT NULL,
     Nationnalite Nationnalite NOT NULL,
     Tels text[],
     Mail text NOT NULL,
@@ -93,6 +93,12 @@ ALTER TABLE ficheequipiers
 
 ALTER TABLE ficheequipiers
     ADD FOREIGN KEY (IdPersonne) REFERENCES personnes ON DELETE CASCADE;
+
+ALTER TABLE ficheequipiers
+    ALTER COLUMN guard SET DEFAULT FALSE;
+
+ALTER TABLE ficheequipiers
+    ADD CHECK (guard = FALSE);
 
 CREATE OR REPLACE FUNCTION gomacro_validate_json_pers_NomTel (data jsonb)
     RETURNS boolean

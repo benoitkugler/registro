@@ -116,8 +116,7 @@
                   variant="outlined"
                   density="compact"
                   label="Téléphone"
-                  :model-value="Formatters.telFr(inner.Medecin.Tel)"
-                  @update:model-value="(s) => (inner.Medecin.Tel = s)"
+                  v-model="inner.Medecin.Tel"
                   hide-details
                 ></v-text-field>
               </v-col>

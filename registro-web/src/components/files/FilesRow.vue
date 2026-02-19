@@ -3,7 +3,7 @@
     :title="props.title"
     :subtitle="props.subtitle"
     rounded
-    class="bg-grey-lighten-4 my-1"
+    class="bg-grey-lighten-4 my-2"
   >
     <template #prepend>
       <slot name="prepend"></slot>

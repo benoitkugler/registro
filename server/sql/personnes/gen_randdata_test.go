@@ -14,10 +14,6 @@ func randApprofondissement() Approfondissement {
 	return choix[i]
 }
 
-func randDepartement() Departement {
-	return Departement(randstring())
-}
-
 func randDiplome() Diplome {
 	choix := [...]Diplome{DAucun, DBafa, DBafaStag, DBafd, DBafdStag, DCap, DAssSociale, DEducSpe, DMonEduc, DInstit, DProf, DAgreg, DBjeps, DDut, DEje, DDeug, DStaps, DBapaat, DBeatep, DZzautre}
 	i := rand.Intn(len(choix))
@@ -25,7 +21,7 @@ func randDiplome() Diplome {
 }
 
 func randEtatCivil() EtatCivil {
-	choix := [...]EtatCivil{EtatCivilEmpty, Marie, Celibataire}
+	choix := [...]EtatCivil{NoEtatCivil, Marie, Celibataire}
 	i := rand.Intn(len(choix))
 	return choix[i]
 }
@@ -37,9 +33,10 @@ func randFicheequipier() Ficheequipier {
 	s.Fonctionnaire = randbool()
 	s.Diplome = randDiplome()
 	s.Approfondissement = randApprofondissement()
-	s.Profession = randstring()
 	s.EtatCivil = randEtatCivil()
 	s.NombreEnfants = randint()
+	s.Formation = randstring()
+	s.Profession = randstring()
 	s.ExperienceTravailJeunes = randstring()
 	s.ParcoursSpirituel = randstring()
 	s.Eglise = randstring()
@@ -47,7 +44,7 @@ func randFicheequipier() Ficheequipier {
 	s.Sante = randstring()
 	s.AssuranceMaladie = randstring()
 	s.AssuranceAccident = randstring()
-	s.MembreAssoPermanent = randbool()
+	s.DemandeMembreAssoPermanent = randbool()
 
 	return s
 }
@@ -100,8 +97,6 @@ func randPersonne() Personne {
 	s.Prenom = randstring()
 	s.Sexe = randSexe()
 	s.DateNaissance = randsha_Date()
-	s.VilleNaissance = randstring()
-	s.DepartementNaissance = randDepartement()
 	s.Nationnalite = randNationnalite()
 	s.Tels = randTels()
 	s.Mail = randstring()

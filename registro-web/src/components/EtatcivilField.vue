@@ -1,6 +1,6 @@
 <template>
   <v-select
-    label="Approfondissement BAFA"
+    label="État civil"
     variant="outlined"
     density="compact"
     :items="items"
@@ -12,10 +12,7 @@
 </template>
 
 <script setup lang="ts">
-import {
-  Approfondissement,
-  ApprofondissementLabels,
-} from "@/clients/equipier/logic/api";
+import { EtatCivil, EtatCivilLabels } from "@/clients/equipier/logic/api";
 import { selectItems } from "@/utils";
 const props = defineProps<{
   hideDetails?: boolean;
@@ -23,7 +20,7 @@ const props = defineProps<{
   rules?: any[];
 }>();
 
-const modelValue = defineModel<Approfondissement>({ required: true });
+const modelValue = defineModel<EtatCivil>({ required: true });
 
-const items = selectItems(ApprofondissementLabels);
+const items = selectItems(EtatCivilLabels);
 </script>

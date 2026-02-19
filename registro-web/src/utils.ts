@@ -210,7 +210,13 @@ export namespace FormRules {
     return (l: string[] | null) => {
       return l?.every((s) => patternMail.test(s))
         ? true
-        : "L'adresse mail semble invalide";
+        : "L'adresse mail semble invalide.";
+    };
+  }
+
+  export function validMail(error = "L'adresse mail semble invalide.") {
+    return (s: string) => {
+      return patternMail.test(s) ? true : error;
     };
   }
 }

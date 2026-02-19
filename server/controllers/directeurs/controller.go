@@ -41,7 +41,7 @@ type Controller struct {
 	builtins fs.Builtins
 }
 
-func NewController(db *sql.DB, encryptKey, password string, files fs.FileSystem, smtp config.SMTP, asso config.Asso, joomeo config.Immich) (*Controller, error) {
+func NewController(db *sql.DB, encryptKey, password string, files fs.FileSystem, smtp config.SMTP, asso config.Asso, immich config.Immich) (*Controller, error) {
 	builtins, err := fs.LoadBuiltins(db)
 	if err != nil {
 		return nil, err
@@ -53,7 +53,7 @@ func NewController(db *sql.DB, encryptKey, password string, files fs.FileSystem,
 		files,
 		smtp,
 		asso,
-		joomeo,
+		immich,
 		password,
 		builtins,
 	}, nil

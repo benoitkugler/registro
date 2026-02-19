@@ -31,7 +31,8 @@ export interface DemandeEquipier {
 // registro/controllers/equipier.EquipierExt
 export interface EquipierExt {
   Equipier: Equipier;
-  Personne: Etatcivil;
+  PersonneBase: Identite;
+  PersonneDetails: Ficheequipier;
   Camp: Camp;
   Demandes: DemandeEquipier[] | null;
 }
@@ -43,7 +44,8 @@ export interface Photos {
 // registro/controllers/equipier.UpdateIn
 export interface UpdateIn {
   Token: string;
-  Personne: Etatcivil;
+  PersonneBase: Identite;
+  PersonneDetails: Ficheequipier;
   Presence: PresenceOffsets;
 }
 // registro/logic.PublicFile
@@ -191,8 +193,6 @@ export const ApprofondissementLabels: Record<Approfondissement, string> = {
   [Approfondissement.AMoto]: "Loisirs motocyclistes",
 };
 
-// registro/sql/personnes.Departement
-export type Departement = string;
 // registro/sql/personnes.Diplome
 export const Diplome = {
   DAucun: 0,
@@ -241,14 +241,47 @@ export const DiplomeLabels: Record<Diplome, string> = {
   [Diplome.DZzautre]: "AUTRE",
 };
 
-// registro/sql/personnes.Etatcivil
-export interface Etatcivil {
+// registro/sql/personnes.EtatCivil
+export const EtatCivil = {
+  NoEtatCivil: 0,
+  Marie: 1,
+  Celibataire: 2,
+} as const;
+export type EtatCivil = (typeof EtatCivil)[keyof typeof EtatCivil];
+
+export const EtatCivilLabels: Record<EtatCivil, string> = {
+  [EtatCivil.NoEtatCivil]: "",
+  [EtatCivil.Marie]: "Marié(e)",
+  [EtatCivil.Celibataire]: "Célibataire",
+};
+
+// registro/sql/personnes.Ficheequipier
+export interface Ficheequipier {
+  IdPersonne: IdPersonne;
+  SecuriteSociale: string;
+  Fonctionnaire: boolean;
+  Diplome: Diplome;
+  Approfondissement: Approfondissement;
+  EtatCivil: EtatCivil;
+  NombreEnfants: Int;
+  Formation: string;
+  Profession: string;
+  ExperienceTravailJeunes: string;
+  ParcoursSpirituel: string;
+  Eglise: string;
+  Recommandation: Recommandation;
+  Sante: string;
+  AssuranceMaladie: string;
+  AssuranceAccident: string;
+  DemandeMembreAssoPermanent: boolean;
+}
+export type IdPersonne = Int & { __opaque_int__: "IdPersonne" };
+// registro/sql/personnes.Identite
+export interface Identite {
   Nom: string;
   Prenom: string;
   Sexe: Sexe;
   DateNaissance: Date;
-  VilleNaissance: string;
-  DepartementNaissance: Departement;
   Nationnalite: Nationnalite;
   Tels: Tels;
   Mail: string;
@@ -256,20 +289,20 @@ export interface Etatcivil {
   CodePostal: string;
   Ville: string;
   Pays: Pays;
-  NomJeuneFille: string;
-  Profession: string;
-  Etudiant: boolean;
-  Fonctionnaire: boolean;
-  Diplome: Diplome;
-  Approfondissement: Approfondissement;
 }
-export type IdPersonne = Int & { __opaque_int__: "IdPersonne" };
 // registro/sql/personnes.Nationnalite
 export interface Nationnalite {
   IsSuisse: boolean;
 }
 // registro/sql/personnes.Pays
 export type Pays = string;
+// registro/sql/personnes.Recommandation
+export interface Recommandation {
+  Nom: string;
+  Prenom: string;
+  Mail: string;
+  Tel: Tel;
+}
 // registro/sql/personnes.Sexe
 export const Sexe = {
   NoSexe: 0,
@@ -284,6 +317,8 @@ export const SexeLabels: Record<Sexe, string> = {
   [Sexe.Man]: "Homme",
 };
 
+// registro/sql/personnes.Tel
+export type Tel = string;
 // registro/sql/personnes.Tels
 export type Tels = string[] | null;
 // registro/sql/shared.Date

@@ -22,6 +22,30 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION gomacro_validate_json_pers_Recommandation (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('Nom', 'Prenom', 'Mail', 'Tel'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_string (data -> 'Nom')
+        AND gomacro_validate_json_string (data -> 'Prenom')
+        AND gomacro_validate_json_string (data -> 'Mail')
+        AND gomacro_validate_json_string (data -> 'Tel');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
 CREATE OR REPLACE FUNCTION gomacro_validate_json_string (data jsonb)
     RETURNS boolean
     AS $$

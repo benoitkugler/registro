@@ -1,9 +1,10 @@
 package equipier
 
 import (
-	pr "registro/sql/personnes"
 	"testing"
 	"time"
+
+	pr "registro/sql/personnes"
 )
 
 func d(year, month int) time.Time {
@@ -18,6 +19,7 @@ func Test_checkSecuriteSociale(t *testing.T) {
 		wantErr         bool
 	}{
 		{pr.Man, d(1994, 5), "1 94 05 78 551 268 91", false},
+		{pr.Man, d(1994, 5), "194057855126891", false},
 		{pr.Man, d(1994, 5), "1 94 05 78 551 AER 91", true},
 		{pr.Man, d(1994, 5), "1 94 05 78 551 268 AF", true},
 		{pr.Man, d(1994, 5), "1 94 05 AF 000 268 91", true},

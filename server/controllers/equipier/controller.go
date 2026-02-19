@@ -21,13 +21,14 @@ import (
 type Controller struct {
 	db *sql.DB
 
+	assoID string
 	key    crypto.Encrypter
 	files  fs.FileSystem
 	immich config.Immich
 }
 
-func NewController(db *sql.DB, key crypto.Encrypter, files fs.FileSystem, immich config.Immich) *Controller {
-	return &Controller{db, key, files, immich}
+func NewController(db *sql.DB, assoID string, key crypto.Encrypter, files fs.FileSystem, immich config.Immich) *Controller {
+	return &Controller{db, assoID, key, files, immich}
 }
 
 func (ct *Controller) Load(c echo.Context) error {
@@ -57,8 +58,11 @@ type DemandeEquipier struct {
 
 type EquipierExt struct {
 	Equipier cps.Equipier
-	Personne pr.Identite
-	Camp     Camp
+
+	PersonneBase    pr.Identite
+	PersonneDetails pr.Ficheequipier
+
+	Camp Camp
 
 	Demandes []DemandeEquipier
 }
@@ -68,7 +72,15 @@ func (ct *Controller) load(id cps.IdEquipier) (EquipierExt, error) {
 	if err != nil {
 		return EquipierExt{}, utils.SQLError(err)
 	}
-	personne, err := pr.SelectPersonne(ct.db, equipier.IdPersonne)
+	personneBase, err := pr.SelectPersonne(ct.db, equipier.IdPersonne)
+	if err != nil {
+		return EquipierExt{}, utils.SQLError(err)
+	}
+	if personneBase.Pays == "" {
+		// pre fill for france
+		personneBase.Pays = "FR"
+	}
+	personneDetails, _, err := pr.SelectFicheequipierByIdPersonne(ct.db, equipier.IdPersonne)
 	if err != nil {
 		return EquipierExt{}, utils.SQLError(err)
 	}
@@ -95,7 +107,7 @@ func (ct *Controller) load(id cps.IdEquipier) (EquipierExt, error) {
 		}
 	}
 
-	out := EquipierExt{equipier, personne.Identite, Camp{camp.Nom, camp.DateDebut, camp.Duree}, demandes}
+	out := EquipierExt{equipier, personneBase.Identite, personneDetails, Camp{camp.Nom, camp.DateDebut, camp.Duree}, demandes}
 	return out, nil
 }
 
@@ -145,8 +157,9 @@ func (ct *Controller) loadPhotos(id cps.IdEquipier) (Photos, error) {
 type UpdateIn struct {
 	Token string
 
-	Personne pr.Identite
-	Presence cps.PresenceOffsets
+	PersonneBase    pr.Identite
+	PersonneDetails pr.Ficheequipier
+	Presence        cps.PresenceOffsets
 }
 
 // Update updates the Equipier and the underlying Personne
@@ -161,7 +174,7 @@ func (ct *Controller) Update(c echo.Context) error {
 		return err
 	}
 
-	err = ct.update(id, args.Personne, args.Presence)
+	err = ct.update(id, args)
 	if err != nil {
 		return err
 	}
@@ -169,12 +182,16 @@ func (ct *Controller) Update(c echo.Context) error {
 	return c.NoContent(200)
 }
 
-func (ct *Controller) update(id cps.IdEquipier, argsP pr.Identite, argsPre cps.PresenceOffsets) error {
+func (ct *Controller) update(id cps.IdEquipier, args UpdateIn) error {
 	equipier, err := cps.SelectEquipier(ct.db, id)
 	if err != nil {
 		return utils.SQLError(err)
 	}
-	personne, err := pr.SelectPersonne(ct.db, equipier.IdPersonne)
+	personneBase, err := pr.SelectPersonne(ct.db, equipier.IdPersonne)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	personneDetails, _, err := pr.SelectFicheequipierByIdPersonne(ct.db, equipier.IdPersonne)
 	if err != nil {
 		return utils.SQLError(err)
 	}
@@ -184,20 +201,32 @@ func (ct *Controller) update(id cps.IdEquipier, argsP pr.Identite, argsPre cps.P
 	}
 
 	// sanitize presence
-	if argsPre.Debut-argsPre.Fin >= camp.Duree {
+	if args.Presence.Debut-args.Presence.Fin >= camp.Duree {
 		return errors.New("invalid Presence")
 	}
 
 	equipier.FormStatus = cps.Answered
-	equipier.Presence = argsPre
+	equipier.Presence = args.Presence
 
-	personne.Identite = argsP
+	personneBase.Identite = args.PersonneBase
+	personneDetails = args.PersonneDetails
+	personneDetails.IdPersonne = equipier.IdPersonne // for new profils
 
 	return utils.InTx(ct.db, func(tx *sql.Tx) error {
-		_, err = personne.Update(tx)
+		_, err = personneBase.Update(tx)
 		if err != nil {
 			return err
 		}
+
+		err = personneDetails.Delete(tx)
+		if err != nil {
+			return err
+		}
+		err = personneDetails.Insert(tx)
+		if err != nil {
+			return err
+		}
+
 		_, err = equipier.Update(tx)
 		if err != nil {
 			return err

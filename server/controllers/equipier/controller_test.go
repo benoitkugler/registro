@@ -23,10 +23,10 @@ func TestUpdate(t *testing.T) {
 
 	ct := Controller{db: db.DB}
 
-	err = ct.update(eq.Id, pr.Identite{}, cps.PresenceOffsets{})
+	err = ct.update(eq.Id, UpdateIn{PersonneDetails: pr.Ficheequipier{EtatCivil: pr.Marie, Recommandation: pr.Recommandation{Tel: "0256"}}})
 	tu.AssertNoErr(t, err)
-	err = ct.update(eq.Id, pr.Identite{}, cps.PresenceOffsets{Debut: 4, Fin: -5})
+	err = ct.update(eq.Id, UpdateIn{Presence: cps.PresenceOffsets{Debut: 4, Fin: -5}})
 	tu.AssertNoErr(t, err)
-	err = ct.update(eq.Id, pr.Identite{}, cps.PresenceOffsets{Debut: 5, Fin: -5})
+	err = ct.update(eq.Id, UpdateIn{Presence: cps.PresenceOffsets{Debut: 5, Fin: -5}})
 	tu.AssertErr(t, err) // invalid with respect to duree
 }

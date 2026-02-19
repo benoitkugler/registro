@@ -39,6 +39,27 @@ CREATE TYPE PresenceOffsets AS (
     Fin integer
 );
 
+CREATE TABLE ficheequipiers (
+    IdPersonne integer NOT NULL,
+    SecuriteSociale text NOT NULL,
+    Fonctionnaire boolean NOT NULL,
+    Diplome smallint CHECK (Diplome IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19)) NOT NULL,
+    Approfondissement smallint CHECK (Approfondissement IN (0, 1, 2, 3, 4, 5)) NOT NULL,
+    EtatCivil smallint CHECK (EtatCivil IN (0, 1, 2)) NOT NULL,
+    NombreEnfants integer NOT NULL,
+    Formation text NOT NULL,
+    Profession text NOT NULL,
+    ExperienceTravailJeunes text NOT NULL,
+    ParcoursSpirituel text NOT NULL,
+    Eglise text NOT NULL,
+    Recommandation jsonb NOT NULL,
+    Sante text NOT NULL,
+    AssuranceMaladie text NOT NULL,
+    AssuranceAccident text NOT NULL,
+    DemandeMembreAssoPermanent boolean NOT NULL,
+    guard boolean NOT NULL
+);
+
 CREATE TABLE fichesanitaires (
     IdPersonne integer NOT NULL,
     DifficultesSante text NOT NULL,
@@ -57,8 +78,6 @@ CREATE TABLE personnes (
     Prenom text NOT NULL,
     Sexe smallint CHECK (Sexe IN (0, 1, 2)) NOT NULL,
     DateNaissance date NOT NULL,
-    VilleNaissance text NOT NULL,
-    DepartementNaissance text NOT NULL,
     Nationnalite Nationnalite NOT NULL,
     Tels text[],
     Mail text NOT NULL,
@@ -66,12 +85,6 @@ CREATE TABLE personnes (
     CodePostal text NOT NULL,
     Ville text NOT NULL,
     Pays text NOT NULL,
-    NomJeuneFille text NOT NULL,
-    Profession text NOT NULL,
-    Etudiant boolean NOT NULL,
-    Fonctionnaire boolean NOT NULL,
-    Diplome smallint CHECK (Diplome IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19)) NOT NULL,
-    Approfondissement smallint CHECK (Approfondissement IN (0, 1, 2, 3, 4, 5)) NOT NULL,
     Publicite Publicite NOT NULL,
     CharteAccepted timestamp(0) with time zone NOT NULL,
     IsTemp boolean NOT NULL

@@ -18,11 +18,29 @@ ALTER TABLE fichesanitaires
 ALTER TABLE fichesanitaires
     ADD CHECK (guard = FALSE);
 
+ALTER TABLE ficheequipiers
+    ADD UNIQUE (IdPersonne);
+
+ALTER TABLE ficheequipiers
+    ADD FOREIGN KEY (IdPersonne, guard) REFERENCES personnes (Id, IsTemp);
+
+ALTER TABLE ficheequipiers
+    ADD FOREIGN KEY (IdPersonne) REFERENCES personnes ON DELETE CASCADE;
+
+ALTER TABLE ficheequipiers
+    ALTER COLUMN guard SET DEFAULT FALSE;
+
+ALTER TABLE ficheequipiers
+    ADD CHECK (guard = FALSE);
+
 ALTER TABLE fichesanitaires
     ADD CONSTRAINT AutreContact_gomacro CHECK (gomacro_validate_json_pers_NomTel (AutreContact));
 
 ALTER TABLE fichesanitaires
     ADD CONSTRAINT Medecin_gomacro CHECK (gomacro_validate_json_pers_NomTel (Medecin));
+
+ALTER TABLE ficheequipiers
+    ADD CONSTRAINT Recommandation_gomacro CHECK (gomacro_validate_json_pers_Recommandation (Recommandation));
 
 ALTER TABLE tauxs
     ADD UNIQUE (Label);

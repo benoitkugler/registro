@@ -217,6 +217,6 @@ type Equipier struct {
 
 	FormStatus FormStatusEquipier
 
-	// validation de la charte ACVE
+	// validation de la charte de l'asso
 	AccepteCharte sql.NullBool
 }

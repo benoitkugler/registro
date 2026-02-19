@@ -47,9 +47,7 @@ type Identite struct {
 	Prenom string
 	Sexe   Sexe
 
-	DateNaissance        shared.Date
-	VilleNaissance       string
-	DepartementNaissance Departement
+	DateNaissance shared.Date
 
 	Nationnalite Nationnalite
 
@@ -142,9 +140,9 @@ type Publicite struct {
 type EtatCivil uint8
 
 const (
-	EtatCivilEmpty EtatCivil = iota //
-	Marie                           // Marié(e)
-	Celibataire                     // Célibataire
+	NoEtatCivil EtatCivil = iota //
+	Marie                        // Marié(e)
+	Celibataire                  // Célibataire
 )
 
 type Recommandation struct {

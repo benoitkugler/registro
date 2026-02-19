@@ -82,22 +82,32 @@ type Ficheequipier struct {
 	IdPersonne IdPersonne `gomacro-sql-on-delete:"CASCADE"`
 
 	SecuriteSociale string // ou numéro AVS pour la configuration Repere
-	Fonctionnaire   bool
 
+	// champs ACVE
+
+	Fonctionnaire     bool
 	Diplome           Diplome
 	Approfondissement Approfondissement
 
+	// VilleNaissance et DepartementNaissance sont calculés automatiquement
+	// à partir du numéro de sécurité sociale
+	// VilleNaissance       string
+	// DepartementNaissance Departement
+
 	// champs Repère
 
-	Profession              string
-	EtatCivil               EtatCivil
-	NombreEnfants           int
-	ExperienceTravailJeunes string
-	ParcoursSpirituel       string // étapes de découverte de la foi, relation avec Dieu, conversion, étapes d'engagement, doutes...) - (5-10 lignes)
-	Eglise                  string
-	Recommandation          Recommandation // deuxième optionnel
-	Sante                   string         // éventuelles informations sur ma santé qui pourraient avoir un impact sur la vie du camp
-	AssuranceMaladie        string
-	AssuranceAccident       string
-	MembreAssoPermanent     bool
+	EtatCivil                  EtatCivil
+	NombreEnfants              int
+	Formation                  string
+	Profession                 string
+	ExperienceTravailJeunes    string
+	ParcoursSpirituel          string // étapes de découverte de la foi, relation avec Dieu, conversion, étapes d'engagement, doutes...) - (5-10 lignes)
+	Eglise                     string
+	Recommandation             Recommandation
+	Sante                      string // éventuelles informations sur ma santé qui pourraient avoir un impact sur la vie du camp
+	AssuranceMaladie           string
+	AssuranceAccident          string
+	DemandeMembreAssoPermanent bool
+
+	guard bool `gomacro-sql-guard:"false"`
 }

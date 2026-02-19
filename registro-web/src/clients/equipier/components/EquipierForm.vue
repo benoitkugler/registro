@@ -1,8 +1,8 @@
 <template>
   <!-- bienvenue -->
   <v-alert type="info" class="my-2">
-    Bienvenu{{ props.equipier.Personne.Sexe == Sexe.Woman ? "e" : "" }}
-    <b>{{ props.equipier.Personne.Prenom }}</b
+    Bienvenu{{ props.equipier.PersonneBase.Sexe == Sexe.Woman ? "e" : "" }}
+    <b>{{ props.equipier.PersonneBase.Prenom }}</b
     >, et merci pour ton engagement !<br />
     Ce formulaire te permet de remplir directement les informations et documents
     nécessaires.
@@ -10,7 +10,7 @@
     Merci de vérifier que tout est à jour...
   </v-alert>
 
-  <!-- joomeo -->
+  <!-- album photo -->
   <v-alert
     v-if="props.album?.HasAlbum"
     class="my-2"
@@ -29,87 +29,89 @@
     </v-row>
   </v-alert>
 
-  <!-- formulaire -->
+  <!-- formulaire commun ACVE/Repere -->
+  <!-- Nom Prénom Sexe DateNaissance Adresse CodePostal Ville Pays Mail -->
   <v-card title="Informations personnelles">
     <v-card-text>
       <v-form class="my-6">
         <v-row>
-          <v-col md="4" sm="6">
+          <v-col md="3" sm="6">
             <v-text-field
               variant="outlined"
               density="compact"
-              v-model="inner.Nom"
+              v-model="innerBase.Nom"
               label="Nom"
               :rules="[FormRules.required('Merci de remplir ton nom.')]"
-            ></v-text-field>
-          </v-col>
-          <v-col md="3" sm="8">
-            <v-text-field
-              variant="outlined"
-              density="compact"
-              v-model="inner.NomJeuneFille"
-              placeholder="Optionnel"
-              label="Nom de jeune fille"
             ></v-text-field>
           </v-col>
           <v-col md="3" sm="6">
             <v-text-field
               variant="outlined"
               density="compact"
-              v-model="inner.Prenom"
+              v-model="innerBase.Prenom"
               label="Prénom"
               :rules="[FormRules.required('Merci de remplir ton prénom.')]"
             ></v-text-field>
           </v-col>
           <v-col md="2" sm="4">
             <SexeField
-              v-model="inner.Sexe"
+              v-model="innerBase.Sexe"
               :rules="[FormRules.required('Merci de préciser ton sexe.')]"
             ></SexeField>
           </v-col>
-        </v-row>
-        <v-row>
           <v-col md="4" sm="12">
             <DateNaissanceField
-              v-model="inner.DateNaissance"
+              v-model="innerBase.DateNaissance"
               :rule="
                 FormRules.requiredDate(
-                  'Ta date de naissance est requise par Jeunesse et Sport.'
+                  'Merci de préciser ta date de naissance.'
                 )
               "
             ></DateNaissanceField>
           </v-col>
-          <v-col md="4" sm="6">
+        </v-row>
+        <v-row>
+          <v-col md="3" sm="6">
+            <v-textarea
+              variant="outlined"
+              density="compact"
+              v-model="innerBase.Adresse"
+              label="Adresse"
+              rows="2"
+              :rules="[FormRules.required(`Merci de préciser ton adresse.`)]"
+            >
+            </v-textarea>
+          </v-col>
+          <v-col md="3" sm="6">
             <v-text-field
               variant="outlined"
               density="compact"
-              v-model="inner.VilleNaissance"
-              label="Ville de naissance"
+              v-model="innerBase.CodePostal"
+              label="Code postal"
               :rules="[
-                FormRules.required(
-                  'Ta ville de naissance est requise par Jeunesse et Sport.'
-                ),
+                FormRules.required(`Merci de préciser ton code postal.`),
               ]"
             ></v-text-field>
           </v-col>
-          <v-col md="4" sm="6">
-            <DepartementField
-              label="Département de naissance"
-              v-model="inner.DepartementNaissance"
-              :rules="[
-                FormRules.required(
-                  'Ton département (ou pays) est requis par Jeunesse et Sport.'
-                ),
-              ]"
-            ></DepartementField>
-          </v-col>
-        </v-row>
-        <v-row>
-          <v-col md="4" sm="6">
+          <v-col md="3" sm="6">
             <v-text-field
               variant="outlined"
               density="compact"
-              v-model="inner.Mail"
+              v-model="innerBase.Ville"
+              label="Ville"
+              :rules="[FormRules.required(`Merci de préciser ton adresse.`)]"
+            ></v-text-field>
+          </v-col>
+          <v-col md="3">
+            <PaysField v-model="innerBase.Pays"></PaysField>
+          </v-col>
+        </v-row>
+        <v-row>
+          <v-col md="5" sm="6">
+            <v-text-field
+              variant="outlined"
+              density="compact"
+              v-model="innerBase.Mail"
               label="Adresse mail"
               type="email"
               :rules="[
@@ -119,115 +121,289 @@
               ]"
             ></v-text-field>
           </v-col>
-          <v-col md="8" sm="6">
+          <v-col md="7" sm="6">
             <StringList
-              v-model="inner.Tels"
+              v-model="innerBase.Tels"
               :formatter="
-                inner.Pays == 'CH' ? Formatters.telCh : Formatters.telFr
+                innerBase.Pays == 'CH' ? Formatters.telCh : Formatters.telFr
               "
               label="Téléphones"
             ></StringList>
           </v-col>
         </v-row>
-        <v-row>
-          <v-col md="3" sm="6">
-            <v-textarea
-              variant="outlined"
-              density="compact"
-              v-model="inner.Adresse"
-              label="Adresse"
-              rows="2"
-              :rules="[
-                FormRules.required(`Ton adresse est requise par l'URSSAF.`),
-              ]"
-            >
-            </v-textarea>
-          </v-col>
-          <v-col md="3" sm="6">
-            <v-text-field
-              variant="outlined"
-              density="compact"
-              v-model="inner.CodePostal"
-              label="Code postal"
-              :rules="[
-                FormRules.required(`Ton code postal est requis par l'URSSAF.`),
-              ]"
-            ></v-text-field>
-          </v-col>
-          <v-col md="3" sm="6">
-            <v-text-field
-              variant="outlined"
-              density="compact"
-              v-model="inner.Ville"
-              label="Ville"
-              :rules="[
-                FormRules.required(`Ton adresse est requise par l'URSSAF.`),
-              ]"
-            ></v-text-field>
-          </v-col>
-          <v-col md="3">
-            <PaysField v-model="inner.Pays"></PaysField>
-          </v-col>
-        </v-row>
-        <v-row>
+
+        <!-- champs Repère -->
+        <v-row v-if="asso == 'repere'">
           <v-col>
-            <DiplomeField v-model="inner.Diplome"></DiplomeField>
+            <NationaliteField
+              v-model="innerBase.Nationnalite"
+            ></NationaliteField>
           </v-col>
           <v-col>
-            <ApprofondissementField
-              v-model="inner.Approfondissement"
-            ></ApprofondissementField>
+            <EtatcivilField
+              v-model="innerDetails.EtatCivil"
+              :rules="[FormRules.required('Merci de préciser ton état civil.')]"
+            ></EtatcivilField>
           </v-col>
           <v-col>
-            <v-text-field
-              variant="outlined"
-              density="compact"
-              v-model="inner.Profession"
-              label="Profession"
-              :rules="[
-                FormRules.required(
-                  `Ta profession est requise par Jeunesse et Sport.`
-                ),
-              ]"
-            ></v-text-field>
-          </v-col>
-        </v-row>
-        <v-row>
-          <!-- <v-col>
-            <v-text-field
-              variant="outlined"
-              density="compact"
-              v-model="inner.SecuriteSociale"
-              label="Sécurité sociale"
-              :rules="[
-                FormRules.required(
-                  `Ton numéro de Sécurité Sociale est requis par l'Ursaf.`
-                ),
-              ]"
-            ></v-text-field>
-          </v-col> -->
-          <v-col>
-            <v-checkbox
-              density="compact"
-              hide-details
-              v-model="inner.Etudiant"
-              label="Etudiant ?"
-            ></v-checkbox>
-          </v-col>
-          <v-col>
-            <v-checkbox
-              density="compact"
-              hide-details
-              v-model="inner.Fonctionnaire"
-              label="Fonctionnaire ?"
-            ></v-checkbox>
+            <IntField
+              label="Nombre d'enfants"
+              v-model="innerDetails.NombreEnfants"
+              :min="(0 as Int)"
+            ></IntField>
           </v-col>
         </v-row>
       </v-form>
     </v-card-text>
   </v-card>
 
+  <!-- Champs ACVE -->
+  <!-- Diplome Approfondissement SecuriteSociale Fonctionnaire-->
+  <!-- TODO -->
+
+  <v-card v-if="asso == 'acve'">
+    <v-row>
+      <v-col>
+        <DiplomeField v-model="innerDetails.Diplome"></DiplomeField>
+      </v-col>
+      <v-col>
+        <ApprofondissementField
+          v-model="innerDetails.Approfondissement"
+        ></ApprofondissementField>
+      </v-col>
+    </v-row>
+
+    <!-- <v-row>
+          <v-col md="6">
+            <v-text-field
+              variant="outlined"
+              density="compact"
+              v-model="innerDetails.SecuriteSociale"
+              label="Sécurité sociale"
+              :rules="[
+                FormRules.required(
+                  `Merci de préciser ton numéro de Sécurité Sociale.`
+                ),
+              ]"
+            ></v-text-field>
+          </v-col>
+        </v-row> -->
+
+    <!-- <v-row>
+          <v-col>
+            <v-text-field
+              variant="outlined"
+              density="compact"
+              v-model="innerDetails.Profession"
+              label="Profession"
+              :rules="[FormRules.required(`Merci de préciser ta profession.`)]"
+            ></v-text-field>
+          </v-col>
+         
+        </v-row>
+        <v-row>
+          <v-col>
+            <v-checkbox
+              density="compact"
+              hide-details
+              v-model="innerDetails.Fonctionnaire"
+              label="Je suis fonctionnaire"
+            ></v-checkbox>
+          </v-col>
+        </v-row> -->
+  </v-card>
+
+  <!-- Champs Repère -->
+  <template v-if="asso == 'repere'">
+    <v-card title="Expérience" class="my-2">
+      <v-card-text>
+        <v-form>
+          <v-row>
+            <v-col>
+              <v-textarea
+                label="Formation"
+                variant="outlined"
+                density="compact"
+                hint="Jeunesse et Sport, BAFA, cuisine, autres..."
+                v-model="innerDetails.Formation"
+                rows="2"
+                :rules="[FormRules.required('Merci de décrire ta formation.')]"
+              ></v-textarea>
+            </v-col>
+          </v-row>
+          <v-row>
+            <v-col>
+              <v-text-field
+                label="Profession"
+                variant="outlined"
+                density="compact"
+                v-model="innerDetails.Profession"
+                :rules="[FormRules.required(`Merci d'indiquer ta profession.`)]"
+              ></v-text-field>
+            </v-col>
+          </v-row>
+          <v-row>
+            <v-col>
+              <v-textarea
+                label="Expérience avec les jeunes"
+                variant="outlined"
+                density="compact"
+                hint="Expérience(s) de travail parmi les enfants et les jeunes"
+                v-model="innerDetails.ExperienceTravailJeunes"
+                rows="2"
+                :rules="[
+                  FormRules.required('Merci de décrire tes expériences.'),
+                ]"
+              ></v-textarea>
+            </v-col>
+          </v-row>
+        </v-form>
+      </v-card-text>
+    </v-card>
+
+    <v-card title="Expérience spirituelle">
+      <v-card-text>
+        <v-row>
+          <v-col>
+            <v-textarea
+              label="Parcours spirituel"
+              variant="outlined"
+              density="compact"
+              hint="Décrit tes étapes de découverte de la foi, ta relation avec Dieu, ta conversion, tes étapes d'engagement, tes doutes..."
+              v-model="innerDetails.ParcoursSpirituel"
+              rows="5"
+              :rules="[
+                FormRules.required('Merci de décrire ton parcours spirituel.'),
+              ]"
+            ></v-textarea>
+          </v-col>
+        </v-row>
+        <v-row>
+          <v-col>
+            <v-text-field
+              label="Église ou communauté fréquentée "
+              variant="outlined"
+              density="compact"
+              v-model="innerDetails.Eglise"
+              :rules="[FormRules.required(`Merci d'indiquer ton église.`)]"
+            ></v-text-field>
+          </v-col>
+        </v-row>
+      </v-card-text>
+    </v-card>
+
+    <v-card
+      title="Contact pour recommandation"
+      subtitle="Indique un responsable de ton église locale qui peut te recommander"
+      class="my-2"
+    >
+      <v-card-text>
+        <v-row>
+          <v-col>
+            <v-text-field
+              label="Nom"
+              variant="outlined"
+              density="compact"
+              v-model="innerDetails.Recommandation.Nom"
+              :rules="[FormRules.required(`Merci d'indiquer un contact.`)]"
+            ></v-text-field>
+          </v-col>
+          <v-col>
+            <v-text-field
+              label="Prénom"
+              variant="outlined"
+              density="compact"
+              v-model="innerDetails.Recommandation.Prenom"
+              :rules="[FormRules.required(`Merci d'indiquer un contact.`)]"
+            ></v-text-field>
+          </v-col>
+          <v-col>
+            <v-text-field
+              label="Mail"
+              variant="outlined"
+              density="compact"
+              v-model="innerDetails.Recommandation.Mail"
+              :rules="[FormRules.validMail()]"
+            ></v-text-field>
+          </v-col>
+          <v-col>
+            <v-text-field
+              label="Téléphone"
+              variant="outlined"
+              density="compact"
+              v-model="innerDetails.Recommandation.Tel"
+              :rules="[FormRules.required(`Merci d'indiquer un contact.`)]"
+            ></v-text-field>
+          </v-col>
+        </v-row>
+      </v-card-text>
+    </v-card>
+
+    <v-card title="Santé">
+      <v-card-text>
+        <v-row>
+          <v-col>
+            <v-textarea
+              label="Informations sur ma santé"
+              variant="outlined"
+              density="compact"
+              hint="Éventuelles informations sur ta santé qui pourraient avoir un impact sur la vie du camp."
+              v-model="innerDetails.Sante"
+              rows="2"
+            ></v-textarea>
+          </v-col>
+        </v-row>
+        <v-row>
+          <v-col>
+            <v-text-field
+              label="Assurance Maladie"
+              variant="outlined"
+              density="compact"
+              v-model="innerDetails.AssuranceMaladie"
+              :rules="[
+                FormRules.required(`Merci d'indiquer ton assurance Maladie.`),
+              ]"
+            ></v-text-field>
+          </v-col>
+          <v-col>
+            <v-text-field
+              label="Assurance Accident ou Responsabilité civile"
+              variant="outlined"
+              density="compact"
+              v-model="innerDetails.AssuranceAccident"
+              :rules="[
+                FormRules.required(`Merci d'indiquer ton assurance Accident.`),
+              ]"
+            ></v-text-field>
+          </v-col>
+          <v-col>
+            <v-text-field
+              label="Numéro AVS"
+              variant="outlined"
+              density="compact"
+              v-model="innerDetails.SecuriteSociale"
+              hint="Si tu vis en Suisse ou as la nationalité Suisse."
+            ></v-text-field>
+          </v-col>
+        </v-row>
+      </v-card-text>
+    </v-card>
+
+    <v-card title="Membre de l'association" class="my-2">
+      <v-card-text>
+        <v-row>
+          <v-col>
+            <v-checkbox
+              label="En m'engageant comme équipier je deviens membre de l'association l'année de mon engagement. Je souhaite faire partie de l'association Repère en tant que membre au-delà du camp et être informé de la tenue des assemblées générales."
+            ></v-checkbox>
+          </v-col>
+        </v-row>
+      </v-card-text>
+    </v-card>
+  </template>
+
   <v-card
+    v-if="asso == 'acve'"
     class="my-2"
     title="Dates de présence"
     subtitle="Tu peux décaler ton jour d'arrivée ou de départ."
@@ -323,7 +499,16 @@
   </v-dialog>
 
   <v-dialog v-model="showCharteDialog">
-    <CharteEquipier :sexe="inner.Sexe" @update="updateCharte"></CharteEquipier>
+    <CharteEquipierACVE
+      v-if="asso == 'acve'"
+      :sexe="innerBase.Sexe"
+      @update="updateCharte"
+    ></CharteEquipierACVE>
+    <CharteEquipierRepere
+      v-if="asso == 'repere'"
+      :sexe="innerBase.Sexe"
+      @update="updateCharte"
+    ></CharteEquipierRepere>
   </v-dialog>
 </template>
 
@@ -332,16 +517,19 @@ import { computed, reactive, ref } from "vue";
 import {
   Categorie,
   CategorieLabels,
+  EtatCivil,
   Sexe,
   type EquipierExt,
   type IdDemande,
   type Photos,
   type PublicFile,
+  type Int,
 } from "../logic/api";
 import { Camps, copy, Formatters, FormRules } from "@/utils";
 import { controller } from "../logic/logic";
 import { isDateZero } from "@/components/date";
-import CharteEquipier from "./CharteEquipier.vue";
+import CharteEquipierACVE from "./CharteEquipierACVE.vue";
+import CharteEquipierRepere from "./CharteEquipierRepere.vue";
 
 const props = defineProps<{
   token: string;
@@ -349,7 +537,10 @@ const props = defineProps<{
   album: Photos | null;
 }>();
 
-const inner = ref(copy(props.equipier.Personne));
+const asso = import.meta.env.VITE_ASSO;
+
+const innerBase = ref(copy(props.equipier.PersonneBase));
+const innerDetails = ref(copy(props.equipier.PersonneDetails));
 const innerPresences = ref(copy(props.equipier.Equipier.Presence));
 const innerCharte = ref(copy(props.equipier.Equipier.AccepteCharte));
 const demandesL = ref(copy(props.equipier.Demandes || []));
@@ -419,26 +610,53 @@ const showCharteDialog = ref(false);
 const isFormValid = computed(
   () =>
     !!(
+      // champs communs ACVE/Repere
       (
-        inner.value.Nom &&
-        inner.value.Prenom &&
-        inner.value.Sexe != Sexe.NoSexe &&
-        !isDateZero(inner.value.DateNaissance) &&
-        inner.value.VilleNaissance &&
-        inner.value.DepartementNaissance &&
-        inner.value.Mail &&
-        inner.value.Adresse &&
-        inner.value.CodePostal &&
-        inner.value.Profession
+        innerBase.value.Nom &&
+        innerBase.value.Prenom &&
+        innerBase.value.Sexe != Sexe.NoSexe &&
+        !isDateZero(innerBase.value.DateNaissance) &&
+        innerBase.value.Adresse &&
+        innerBase.value.CodePostal &&
+        innerBase.value.Ville &&
+        innerBase.value.Pays &&
+        innerBase.value.Mail &&
+        innerBase.value.Tels?.length &&
+        innerDetails.value.SecuriteSociale &&
+        ((asso == "repere" && isFormRepereValid()) ||
+          (asso == "acve" && isFormAcveValid()))
       )
-      //   inner.value.Pays &&
-      //   inner.value.SecuriteSociale
     )
 );
+
+function isFormRepereValid() {
+  const d = innerDetails.value;
+  return !!(
+    d.EtatCivil != EtatCivil.NoEtatCivil &&
+    d.Formation &&
+    d.Profession &&
+    d.ExperienceTravailJeunes &&
+    d.ParcoursSpirituel &&
+    d.Eglise &&
+    d.Recommandation.Nom &&
+    d.Recommandation.Prenom &&
+    d.Recommandation.Mail &&
+    d.Recommandation.Tel &&
+    d.AssuranceMaladie &&
+    d.AssuranceAccident
+  );
+}
+
+function isFormAcveValid() {
+  // TODO
+  return true;
+}
+
 async function save() {
   const res = await controller.Update({
     Token: props.token,
-    Personne: inner.value,
+    PersonneBase: innerBase.value,
+    PersonneDetails: innerDetails.value,
     Presence: innerPresences.value,
   });
   if (res === undefined) return;

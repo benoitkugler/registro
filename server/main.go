@@ -38,7 +38,7 @@ func main() {
 	asso, keys, dbCreds, smtp, directories, immich := loadEnvs(isDev)
 
 	fmt.Println("Loading env. -> OK.")
-	fmt.Println("\tASSO:", asso.Title)
+	fmt.Println("\tASSO:", asso.ID)
 	fmt.Println("\tFILES_DIR:", directories.Files)
 	fmt.Println("\tASSETS_DIR:", directories.Assets)
 	fmt.Println("\tCACHE_DIR:", directories.Cache)
@@ -82,7 +82,7 @@ func main() {
 	directeursCt, err := directeurs.NewController(db, keys.EncryptKey, keys.Directeurs, fs, smtp, asso, immich)
 	check(err)
 
-	equipiersCt := equipiers.NewController(db, encrypter, fs, immich)
+	equipiersCt := equipiers.NewController(db, asso.ID, encrypter, fs, immich)
 
 	espacepersoCt := espaceperso.NewController(db, encrypter, smtp, asso, fs, immich)
 
