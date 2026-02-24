@@ -242,7 +242,7 @@ CREATE TABLE demandes (
     Id serial PRIMARY KEY,
     IdFile integer,
     IdDirecteur integer,
-    Categorie smallint CHECK (Categorie IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13)) NOT NULL,
+    Categorie smallint CHECK (Categorie IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)) NOT NULL,
     Description text NOT NULL,
     MaxDocs integer NOT NULL,
     JoursValide integer NOT NULL
@@ -1368,7 +1368,11 @@ INSERT INTO demandes (Categorie, Description, MaxDocs, JoursValide)
         --
         (12, 'Non contre-indication à la cuisine de collectivité, à demander à son médecin traitant.', 1, 90),
         --
-        (13, '', 1, 0);
+        (13, '', 1, 0),
+        --
+        (14, '', 1, 0),
+        --
+        (15, '', 1, 0);
 
 SELECT
     setval('demandes_id_seq', (

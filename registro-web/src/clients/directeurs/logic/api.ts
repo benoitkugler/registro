@@ -731,7 +731,9 @@ export const Categorie = {
   BafdEquiv: 10,
   BafaEquiv: 11,
   CertMedicalCuisine: 12,
-  Autre: 13,
+  PhotoIdentite: 13,
+  ExtraitCasierJudiciaire: 14,
+  Autre: 15,
 } as const;
 export type Categorie = (typeof Categorie)[keyof typeof Categorie];
 
@@ -749,6 +751,8 @@ export const CategorieLabels: Record<Categorie, string> = {
   [Categorie.BafdEquiv]: "Equivalent BAFD",
   [Categorie.BafaEquiv]: "Equivalent BAFA",
   [Categorie.CertMedicalCuisine]: "Certificat médical cuisine",
+  [Categorie.PhotoIdentite]: "Photo d'identité",
+  [Categorie.ExtraitCasierJudiciaire]: "Extrait du casier judiciaire",
   [Categorie.Autre]: "Autre",
 };
 

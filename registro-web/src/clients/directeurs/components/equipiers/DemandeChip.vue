@@ -1,13 +1,17 @@
 <template>
-  <v-menu>
+  <v-menu location="bottom center">
     <template #activator="{ props: menuProps }">
       <v-chip v-bind="menuProps" :color="color" class="my-1" size="small">
         {{ DemandeStateLabels[props.demande.State] }}
       </v-chip>
     </template>
-    <v-card title="Documents">
+    <v-card subtitle="Demande de document">
       <v-card-text>
         <v-btn-toggle
+          density="comfortable"
+          rounded="lg"
+          variant="outlined"
+          color="primary"
           mandatory
           :model-value="props.demande.State"
           @update:model-value="(v) => emit('updateState', v)"

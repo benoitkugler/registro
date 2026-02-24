@@ -41,7 +41,11 @@ INSERT INTO demandes (Categorie, Description, MaxDocs, JoursValide)
         --
         (12, 'Non contre-indication à la cuisine de collectivité, à demander à son médecin traitant.', 1, 90),
         --
-        (13, '', 1, 0);
+        (13, '', 1, 0),
+        --
+        (14, '', 1, 0),
+        --
+        (15, '', 1, 0);
 
 SELECT
     setval('demandes_id_seq', (

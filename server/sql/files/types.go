@@ -15,19 +15,21 @@ type Categorie uint8
 const (
 	NoBuiltin Categorie = iota // -
 
-	CarteId            // Carte d'identité/Passeport
-	Permis             // Permis de conduire
-	SB                 // Surveillant de baignade
-	Secourisme         // Secourisme (PSC1 - AFPS)
-	Bafa               // BAFA
-	Bafd               // BAFD
-	CarteVitale        // Carte Vitale
-	Vaccins            // Vaccins
-	Haccp              // Cuisine (HACCP)
-	BafdEquiv          // Equivalent BAFD
-	BafaEquiv          // Equivalent BAFA
-	CertMedicalCuisine // Certificat médical cuisine
-	Autre              // Autre
+	CarteId                 // Carte d'identité/Passeport
+	Permis                  // Permis de conduire
+	SB                      // Surveillant de baignade
+	Secourisme              // Secourisme (PSC1 - AFPS)
+	Bafa                    // BAFA
+	Bafd                    // BAFD
+	CarteVitale             // Carte Vitale
+	Vaccins                 // Vaccins
+	Haccp                   // Cuisine (HACCP)
+	BafdEquiv               // Equivalent BAFD
+	BafaEquiv               // Equivalent BAFA
+	CertMedicalCuisine      // Certificat médical cuisine
+	PhotoIdentite           // Photo d'identité
+	ExtraitCasierJudiciaire // Extrait du casier judiciaire
+	Autre                   // Autre
 
 )
 
@@ -59,6 +61,10 @@ func (c Categorie) String() string {
 		return "Equivalent BAFA"
 	case CertMedicalCuisine:
 		return "Certificat médical cuisine"
+	case PhotoIdentite:
+		return "Photo d'identité"
+	case ExtraitCasierJudiciaire:
+		return "Extrait du casier judiciaire"
 	case Autre:
 		return "Autre"
 	default:
