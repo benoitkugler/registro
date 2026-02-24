@@ -39,10 +39,9 @@
 
 <script lang="ts" setup>
 import { reactive, ref } from "vue";
-import { CachedTokens, controller } from "./logic/logic";
+import { CachedTokens, controller, isBackofficeLoggin } from "./logic/logic";
 import type { Action } from "@/utils";
 import { useRouter } from "vue-router";
-import type { IdCamp } from "./logic/api";
 
 const message = reactive({
   text: "",
@@ -73,6 +72,10 @@ controller.showMessage = (s, color, action) => {
 const router = useRouter();
 router.beforeEach(async (to, from) => {
   if (controller.hasToken()) return;
+
+  // comming from backoffice, give priority
+  // to the selected camp, not the one in the cache (if any)
+  if (isBackofficeLoggin(to)) return;
 
   // try do loggin from cached token
   const { idCamp, token } = CachedTokens.get();

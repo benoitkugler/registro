@@ -9,7 +9,7 @@ import {
   type IdCamp,
   type Lettredirecteur,
 } from "./api";
-import { Endpoints } from "@/urls";
+import type { RouteLocationNormalizedLoaded, Router } from "vue-router";
 
 class Controller extends AbstractAPI {
   /**  camp is setup at login */
@@ -92,5 +92,13 @@ export namespace CachedTokens {
   export function clear() {
     window.localStorage.removeItem("cachedIdCamp");
     window.localStorage.removeItem("cachedTokenDirecteurs");
+  }
+}
+
+export function isBackofficeLoggin(router: RouteLocationNormalizedLoaded) {
+  const idCamp = router.query["idCamp"];
+  const token = router.query["backoffice-token"];
+  if (idCamp && token) {
+    return { idCamp: Number(idCamp) as IdCamp, token: token as string };
   }
 }

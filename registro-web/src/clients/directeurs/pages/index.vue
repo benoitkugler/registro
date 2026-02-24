@@ -53,7 +53,7 @@
 import { useRouter } from "vue-router";
 import NavBar from "../components/NavBar.vue";
 import { onMounted, ref } from "vue";
-import { CachedTokens, controller } from "../logic/logic";
+import { CachedTokens, controller, isBackofficeLoggin } from "../logic/logic";
 import type { CampItem, IdCamp } from "../logic/api";
 
 const router = useRouter();
@@ -72,10 +72,9 @@ async function loadCamps() {
 
 async function handleBackofficeLoggin() {
   await router.isReady();
-  const idCamp = router.currentRoute.value.query["idCamp"];
-  const token = router.currentRoute.value.query["backoffice-token"];
-  if (idCamp && token) {
-    logginTo(Number(idCamp) as IdCamp, token as string);
+  const keys = isBackofficeLoggin(router.currentRoute.value);
+  if (keys) {
+    logginTo(keys.idCamp, keys.token);
   }
 }
 
