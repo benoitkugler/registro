@@ -24,63 +24,6 @@ CREATE TABLE ficheequipiers (
 --
 --
 
-ALTER TABLE ficheequipiers
-    ADD UNIQUE (IdPersonne);
-ALTER TABLE ficheequipiers
-    ADD FOREIGN KEY (IdPersonne, guard) REFERENCES personnes (Id, IsTemp);
-ALTER TABLE ficheequipiers
-    ADD FOREIGN KEY (IdPersonne) REFERENCES personnes ON DELETE CASCADE;
-ALTER TABLE ficheequipiers
-    ADD CONSTRAINT Recommandation_gomacro CHECK (gomacro_validate_json_pers_Recommandation (Recommandation));
-ALTER TABLE ficheequipiers
-    ALTER COLUMN guard SET DEFAULT FALSE;
-ALTER TABLE ficheequipiers
-    ADD CHECK (guard = FALSE);
---
---
-
-INSERT INTO ficheequipiers
-SELECT
-    Id,
-    '',
-    Fonctionnaire,
-    Diplome,
-    Approfondissement,
-    Profession,
-    0,
-    0,
-    '',
-    '',
-    '',
-    '',
-    '{"Nom": "", "Prenom": "", "Mail":"", "Tel": ""}',
-    '',
-    '',
-    '',
-    FALSE,
-    FALSE
-FROM
-    personnes;
--- Cleanup
-ALTER TABLE personnes
-    DROP COLUMN DepartementNaissance;
-ALTER TABLE personnes
-    DROP COLUMN VilleNaissance;
-ALTER TABLE personnes
-    DROP COLUMN NomJeuneFille;
-ALTER TABLE personnes
-    DROP COLUMN Profession;
-ALTER TABLE personnes
-    DROP COLUMN Etudiant;
-ALTER TABLE personnes
-    DROP COLUMN Fonctionnaire;
-ALTER TABLE personnes
-    DROP COLUMN Diplome;
-ALTER TABLE personnes
-    DROP COLUMN Approfondissement;
---
---
-
 CREATE OR REPLACE FUNCTION gomacro_validate_json_pers_Recommandation (data jsonb)
     RETURNS boolean
     AS $$
@@ -104,6 +47,62 @@ END;
 $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
+--
+--
+
+ALTER TABLE ficheequipiers
+    ADD UNIQUE (IdPersonne);
+ALTER TABLE ficheequipiers
+    ADD FOREIGN KEY (IdPersonne, guard) REFERENCES personnes (Id, IsTemp);
+ALTER TABLE ficheequipiers
+    ADD FOREIGN KEY (IdPersonne) REFERENCES personnes ON DELETE CASCADE;
+ALTER TABLE ficheequipiers
+    ADD CONSTRAINT Recommandation_gomacro CHECK (gomacro_validate_json_pers_Recommandation (Recommandation));
+ALTER TABLE ficheequipiers
+    ALTER COLUMN guard SET DEFAULT FALSE;
+ALTER TABLE ficheequipiers
+    ADD CHECK (guard = FALSE);
+--
+--
+
+INSERT INTO ficheequipiers
+SELECT
+    Id, -- IdPersonne
+    '', -- SecuriteSociale
+    Fonctionnaire, -- Fonctionnaire
+    Diplome, -- Diplome
+    Approfondissement, -- Approfondissement
+    0, -- EtatCivil
+    0, -- NombreEnfants
+    '', -- Formation
+    Profession, -- Profession
+    '', -- ExperienceTravailJeunes
+    '', -- ParcoursSpirituel
+    '', -- Eglise
+    '{"Nom": "", "Prenom": "", "Mail":"", "Tel": ""}', -- Recommandation
+    '', -- Sante
+    '', -- AssuranceMaladie
+    '', -- AssuranceAccident
+    FALSE -- DemandeMembreAssoPermanent
+FROM
+    personnes;
+-- Cleanup
+ALTER TABLE personnes
+    DROP COLUMN DepartementNaissance;
+ALTER TABLE personnes
+    DROP COLUMN VilleNaissance;
+ALTER TABLE personnes
+    DROP COLUMN NomJeuneFille;
+ALTER TABLE personnes
+    DROP COLUMN Profession;
+ALTER TABLE personnes
+    DROP COLUMN Etudiant;
+ALTER TABLE personnes
+    DROP COLUMN Fonctionnaire;
+ALTER TABLE personnes
+    DROP COLUMN Diplome;
+ALTER TABLE personnes
+    DROP COLUMN Approfondissement;
 --
 --
 
