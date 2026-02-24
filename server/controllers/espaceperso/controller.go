@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"slices"
 	"time"
 
@@ -119,28 +120,36 @@ type SendMessageIn struct {
 	OnlyToFondSoutien bool
 }
 
-// SendMessage inscrit un nouveau message, sans notifications
+// SendMessage inscrit un nouveau message et envoie un
+// mail de notification : fonds de soutien ou directeurs.
 func (ct *Controller) SendMessage(c echo.Context) error {
 	var args SendMessageIn
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
-	out, err := ct.sendMessage(args)
+	id, err := crypto.DecryptID[ds.IdDossier](ct.key, args.Token)
+	if err != nil {
+		return err
+	}
+	out, err := ct.sendMessage(c.Request().Host, id, args.Message, args.OnlyToFondSoutien)
 	if err != nil {
 		return err
 	}
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) sendMessage(args SendMessageIn) (logic.Event, error) {
-	id, err := crypto.DecryptID[ds.IdDossier](ct.key, args.Token)
-	if err != nil {
-		return logic.Event{}, err
-	}
-	event, message, err := evs.CreateMessage(ct.db, id, time.Now(), evs.EventMessage{Contenu: args.Message, Origine: evs.Espaceperso, OnlyToFondSoutien: args.OnlyToFondSoutien})
+func (ct *Controller) sendMessage(host string, id ds.IdDossier, contenu string, onlyToFondsSoutien bool) (logic.Event, error) {
+	event, message, err := evs.CreateMessage(ct.db, id, time.Now(), evs.EventMessage{Contenu: contenu, Origine: evs.Espaceperso, OnlyToFondSoutien: onlyToFondsSoutien})
 	if err != nil {
 		return logic.Event{}, utils.SQLError(err)
 	}
+
+	go func() {
+		err := ct.notifieMessageByMail(host, id, message)
+		if err != nil {
+			log.Println("espaceperso.Controller.notifieMessageByMail", id, err)
+		}
+	}()
 
 	return logic.Event{
 		Id:      event.Id,
@@ -149,6 +158,45 @@ func (ct *Controller) sendMessage(args SendMessageIn) (logic.Event, error) {
 			Message: message,
 		},
 	}, nil
+}
+
+func (ct *Controller) notifieMessageByMail(host string, idDossier ds.IdDossier, message evs.EventMessage) error {
+	dossier, err := logic.LoadDossier(ct.db, idDossier)
+	if err != nil {
+		return err
+	}
+	if message.OnlyToFondSoutien {
+		// notifie fonds soutien
+		html, err := mails.NotifieMessageFondsSoutien(ct.asso, dossier.Responsable().PrenomNOM(), message.Contenu, utils.BuildUrl(host, "/backoffice"))
+		if err != nil {
+			return err
+		}
+		mailFondsSoutien := ct.asso.MailsSettings.FondsSoutien
+		err = mails.NewMailer(ct.smtp, ct.asso.MailsSettings).SendMail(mailFondsSoutien, "Nouveau message", html, nil, nil)
+		if err != nil {
+			return err
+		}
+	} else {
+		// notifie directeurs
+		equipiers, personnes, _, err := cps.LoadEquipiersByCamps(ct.db, dossier.Participants.IdCamps()...)
+		if err != nil {
+			return err
+		}
+		tos := make(utils.Set[string])
+		for _, dir := range equipiers.Direction() {
+			tos.Add(personnes[dir.IdPersonne].Mail)
+		}
+		html, err := mails.NotifieMessageDirecteurs(ct.asso, dossier.Responsable().PrenomNOM(), message.Contenu, utils.BuildUrl(host, "/directeurs"))
+		if err != nil {
+			return err
+		}
+		err = mails.NewMailer(ct.smtp, ct.asso.MailsSettings).SendMailToMany(tos.Keys(), "Nouveau message", html, nil, nil)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 type UpdateParticipantsIn struct {

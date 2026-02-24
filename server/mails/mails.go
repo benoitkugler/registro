@@ -109,18 +109,23 @@ type Mailer interface {
 	SendMail(to, subject, htmlBody string, ccs []string, replyTo ReplyTo) (err error)
 }
 
-type basicMailer struct {
+type BasicMailer struct {
 	smtp     config.SMTP
 	settings config.MailsSettings
 }
 
-func NewMailer(smtp config.SMTP, settings config.MailsSettings) Mailer {
-	return basicMailer{smtp, settings}
+func NewMailer(smtp config.SMTP, settings config.MailsSettings) BasicMailer {
+	return BasicMailer{smtp, settings}
 }
 
 // SendMail envoie un mail directement.
-func (b basicMailer) SendMail(to, subject, htmlBody string, ccs []string, replyTo ReplyTo) (err error) {
-	e, err := newMail([]string{to}, subject, htmlBody, ccs, replyTo, nil, b.smtp, b.settings)
+func (b BasicMailer) SendMail(to, subject, htmlBody string, ccs []string, replyTo ReplyTo) (err error) {
+	return b.SendMailToMany([]string{to}, subject, htmlBody, ccs, replyTo)
+}
+
+// SendMailToMany envoie un mail directement.
+func (b BasicMailer) SendMailToMany(to []string, subject, htmlBody string, ccs []string, replyTo ReplyTo) (err error) {
+	e, err := newMail(to, subject, htmlBody, ccs, replyTo, nil, b.smtp, b.settings)
 	if err != nil {
 		return err
 	}

@@ -34,6 +34,8 @@ var (
 	renvoieEspacePersoURLT      *template.Template
 	sendPhotosLinkInscritsT     *template.Template
 	sendPhotosLinkEquipiersT    *template.Template
+	notifieMessageDirecteursT   *template.Template
+	notifieMessageFondsSoutienT *template.Template
 )
 
 func init() {
@@ -54,6 +56,8 @@ func init() {
 	renvoieEspacePersoURLT = parseTemplate("templates/renvoieEspacePersoURL.html")
 	sendPhotosLinkInscritsT = parseTemplate("templates/sendPhotosLinkInscrits.html")
 	sendPhotosLinkEquipiersT = parseTemplate("templates/sendPhotosLinkEquipiers.html")
+	notifieMessageDirecteursT = parseTemplate("templates/notifieMessageDirecteurs.html")
+	notifieMessageFondsSoutienT = parseTemplate("templates/notifieMessageFondsSoutien.html")
 }
 
 func parseTemplate(templateFile string) *template.Template {
@@ -484,6 +488,52 @@ func SendPhotosLinkEquipiers(cfg config.Asso, contact Contact, campLabel, albumU
 		EspacePersoButtonLabel: "Album photos",
 	}
 	return render(sendPhotosLinkEquipiersT, args)
+}
+
+func NotifieMessageDirecteurs(cfg config.Asso, responsable, contenu, directeursURL string) (string, error) {
+	contenu = strings.ReplaceAll(contenu, "\n", "<br/>")
+	args := struct {
+		champsCommuns
+		Responsable            string
+		Contenu                template.HTML
+		EspacePersoURL         string
+		EspacePersoButtonLabel string
+	}{
+		champsCommuns: champsCommuns{
+			Title:       "Nouveau message",
+			Salutations: Contact{}.Salutations(),
+			Asso:        cfg,
+			Signature:   "<i>Ce mail est envoyé automatiquement, merci de ne pas y répondre.</i>",
+		},
+		Responsable:            responsable,
+		Contenu:                template.HTML(contenu),
+		EspacePersoURL:         directeursURL,
+		EspacePersoButtonLabel: "Espace Directeur",
+	}
+	return render(notifieMessageDirecteursT, args)
+}
+
+func NotifieMessageFondsSoutien(cfg config.Asso, responsable, contenu, backofficeURL string) (string, error) {
+	contenu = strings.ReplaceAll(contenu, "\n", "<br/>")
+	args := struct {
+		champsCommuns
+		Responsable            string
+		Contenu                template.HTML
+		EspacePersoURL         string
+		EspacePersoButtonLabel string
+	}{
+		champsCommuns: champsCommuns{
+			Title:       "Nouveau message",
+			Salutations: Contact{}.Salutations(),
+			Asso:        cfg,
+			Signature:   "<i>Ce mail est envoyé automatiquement, merci de ne pas y répondre.</i>",
+		},
+		Responsable:            responsable,
+		Contenu:                template.HTML(contenu),
+		EspacePersoURL:         backofficeURL,
+		EspacePersoButtonLabel: "Backoffice",
+	}
+	return render(notifieMessageFondsSoutienT, args)
 }
 
 // func NewRenvoieLienJoomeo(lien, login, password string) (string, error) {

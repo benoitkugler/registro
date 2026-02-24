@@ -1,0 +1,26 @@
+{{ define "content" }}
+
+<table cellpadding="0">
+  <tr>
+    <td>
+      {{ .Responsable }} nous a écrit depuis son espace de suivi. Voici son
+      message.
+    </td>
+  </tr>
+  <tr>
+    <td style="font-style: italic">
+      <br />
+      {{ .Contenu }}
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <br />
+      Vous pouvez répondre à ce message via votre espace Directeur.
+    </td>
+  </tr>
+  <tr>
+    <td>{{ template "espacePersoButton" . }}</td>
+  </tr>
+</table>
+{{ end }}

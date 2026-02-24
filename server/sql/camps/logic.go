@@ -393,7 +393,10 @@ func (equipiers Equipiers) Directeur() (Equipier, bool) {
 }
 
 // Direction renvoie les équipiers dans la direction ou sous-direction.
-// S'il existe, le directeur est en premier
+// S'il existe, le directeur est en premier.
+//
+// Cette méthode est aussi valide pour plusieurs camps : les directeurs sont
+// regroupés en premier.
 func (equipiers Equipiers) Direction() []Equipier {
 	var direction, adjoints []Equipier
 	for _, eq := range equipiers {

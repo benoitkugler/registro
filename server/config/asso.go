@@ -164,8 +164,11 @@ type MailsSettings struct {
 	ReplyTo             string // Adresse à laquelle répondre
 	SignatureMailCentre template.HTML
 
-	// send copies to this adress; should be specified by env. var
+	// send copies to this adress; should be specified by env. var ASSO_MAIL_SAUVEGARDE
 	Sauvegarde string
+
+	// notification adress; should be specified by env. var ASSO_MAIL_FONDS_SOUTIEN
+	FondsSoutien string
 }
 
 // NewAsso read the ASSO env variable and returns the associated configuration.
@@ -198,6 +201,11 @@ func NewAsso() (Asso, error) {
 	out.MailsSettings.Sauvegarde = os.Getenv("ASSO_MAIL_SAUVEGARDE")
 	if out.MailsSettings.Sauvegarde == "" {
 		return Asso{}, errors.New("missing ASSO_MAIL_SAUVEGARDE env. variable")
+	}
+
+	out.MailsSettings.FondsSoutien = os.Getenv("ASSO_MAIL_FONDS_SOUTIEN")
+	if out.MailsSettings.FondsSoutien == "" {
+		return Asso{}, errors.New("missing ASSO_MAIL_FONDS_SOUTIEN env. variable")
 	}
 
 	return out, nil

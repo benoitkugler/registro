@@ -247,6 +247,41 @@ func TestSendPhotosLink(t *testing.T) {
 	tu.Write(t, "SendPhotosLinkEquipiers.html", []byte(html))
 }
 
+func TestNotifieMessageDirecteurs(t *testing.T) {
+	cfg, _ := loadEnv(t)
+
+	html, err := NotifieMessageDirecteurs(cfg,
+		"Benoit-Vincent MARIE",
+		`Bonor, 
+		
+		sdsmùld
+		
+		
+		msdlsmdl. Merci !
+		msldmsd
+		`, "http://test.fr")
+	tu.AssertNoErr(t, err)
+
+	tu.Write(t, "NotifieMessageDirecteurs.html", []byte(html))
+}
+
+func TestNotifieMessageFondsSoutien(t *testing.T) {
+	cfg, _ := loadEnv(t)
+
+	html, err := NotifieMessageFondsSoutien(cfg,
+		"Benoit-Vincent MARIE",
+		`Bonor,  
+		
+		sdsmùld
+		
+		msdlsmdl. Merci !
+		msldmsd
+		`, "http://test.fr")
+	tu.AssertNoErr(t, err)
+
+	tu.Write(t, "NotifieMessageFondsSoutien.html", []byte(html))
+}
+
 // func TestPrein(t *testing.T) {
 // 	html, err := NewPreinscription("smsld@free.fr", []TargetRespo{
 // 		{NomPrenom: "lkdkmslkd", Lien: "http://free.fr"},

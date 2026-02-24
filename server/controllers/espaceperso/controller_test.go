@@ -260,3 +260,51 @@ func TestPlaceLiberee(t *testing.T) {
 	err = ct.acceptePlaceLiberee(dossier.Id, ev.Id)
 	tu.AssertErr(t, err) // already accepted
 }
+
+func Test_sendMessage(t *testing.T) {
+	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
+		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",
+		"../../migrations/init.sql")
+	defer db.Remove()
+
+	asso, smtp := loadEnv(t)
+
+	respo, err := pr.Personne{}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	dir1, err := pr.Personne{Identite: pr.Identite{Mail: "add1"}}.Insert(db)
+	tu.AssertNoErr(t, err)
+	dir2, err := pr.Personne{Identite: pr.Identite{Mail: "add2"}}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	camp1, err := cps.Camp{IdTaux: 1}.Insert(db)
+	tu.AssertNoErr(t, err)
+	camp2, err := cps.Camp{IdTaux: 1}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	_, err = cps.Equipier{IdCamp: camp1.Id, IdPersonne: dir1.Id, Roles: cps.Roles{cps.Direction}}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	_, err = cps.Equipier{IdCamp: camp2.Id, IdPersonne: dir1.Id, Roles: cps.Roles{cps.Direction}}.Insert(db)
+	tu.AssertNoErr(t, err)
+	_, err = cps.Equipier{IdCamp: camp2.Id, IdPersonne: dir2.Id, Roles: cps.Roles{cps.Adjoint}}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	dossier, err := ds.Dossier{IdTaux: 1, IdResponsable: respo.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	_, err = cps.Participant{IdTaux: 1, IdCamp: camp1.Id, IdPersonne: respo.Id, IdDossier: dossier.Id, Statut: cps.AttenteCampComplet}.Insert(db)
+	tu.AssertNoErr(t, err)
+	_, err = cps.Participant{IdTaux: 1, IdCamp: camp2.Id, IdPersonne: respo.Id, IdDossier: dossier.Id, Statut: cps.AttenteCampComplet}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	ct := Controller{db: db.DB, asso: asso, smtp: smtp}
+
+	_, err = ct.sendMessage("localhost", dossier.Id, "test \n sdlsmkdm", true)
+	tu.AssertNoErr(t, err)
+
+	_, err = ct.sendMessage("localhost", dossier.Id, "test \n sdlsmkdm", false)
+	tu.AssertNoErr(t, err)
+
+	time.Sleep(200 * time.Millisecond) // finish notification
+}
