@@ -96,4 +96,8 @@ func setupRoutesDirecteurs(e *echo.Echo, ct *directeurs.Controller) {
 
 	// Sondages
 	gr.GET("/api/v1/directeurs/sondages", ct.SondagesGet)
+
+	// Projet spirituel
+	gr.GET("/api/v1/directeurs/projet-spi", ct.ProjetSpiLoad)
+	gr.POST("/api/v1/directeurs/projet-spi", ct.ProjetSpiUpdate)
 }

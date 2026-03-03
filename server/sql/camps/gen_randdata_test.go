@@ -266,6 +266,24 @@ func randPrixQuotientFamilial() PrixQuotientFamilial {
 	return PrixQuotientFamilial(randAr4_int32())
 }
 
+func randProjetSpi() ProjetSpi {
+	var s ProjetSpi
+	s.IdCamp = randIdCamp()
+	s.Description = randstring()
+	s.Programme = randstring()
+	s.JourneeType = randstring()
+	s.DynamiqueCampeur = randstring()
+	s.Evangile = randstring()
+	s.Equipe = randstring()
+	s.Cuisine = randstring()
+	s.Suite = randstring()
+	s.VisiteLibrairie = randVisiteLibrairie()
+	s.Bibles = randbool()
+	s.Question = randstring()
+
+	return s
+}
+
 func randRemises() Remises {
 	var s Remises
 	s.Equipiers = randint()
@@ -395,6 +413,12 @@ func randVetement() Vetement {
 	s.Important = randbool()
 
 	return s
+}
+
+func randVisiteLibrairie() VisiteLibrairie {
+	choix := [...]VisiteLibrairie{EnReflexion, Oui, Non}
+	i := rand.Intn(len(choix))
+	return choix[i]
 }
 
 func randbool() bool {

@@ -51,6 +51,15 @@
 
     <v-divider></v-divider>
     <v-list-item
+      prepend-icon="mdi-cross"
+      link
+      :to="{ path: '/projetspi' }"
+      color="primary"
+    >
+      Projet spirituel
+    </v-list-item>
+    <v-divider></v-divider>
+    <v-list-item
       prepend-icon="mdi-comment-quote"
       link
       :to="{ path: '/avis' }"

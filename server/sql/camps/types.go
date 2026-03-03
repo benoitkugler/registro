@@ -459,3 +459,11 @@ type DocumentsToShow struct {
 
 // Meta is a list of (untyped) key/value pairs.
 type Meta map[string]string
+
+type VisiteLibrairie uint8
+
+const (
+	EnReflexion VisiteLibrairie = iota // En réflexion
+	Oui                                // Oui
+	Non                                // Non
+)

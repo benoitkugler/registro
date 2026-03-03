@@ -1571,6 +1571,171 @@ func SelectParticipantByIdAndIdCamp(tx DB, id IdParticipant, idCamp IdCamp) (ite
 	return item, true, err
 }
 
+func scanOneProjetSpi(row scanner) (ProjetSpi, error) {
+	var item ProjetSpi
+	err := row.Scan(
+		&item.IdCamp,
+		&item.Description,
+		&item.Programme,
+		&item.JourneeType,
+		&item.DynamiqueCampeur,
+		&item.Evangile,
+		&item.Equipe,
+		&item.Cuisine,
+		&item.Suite,
+		&item.VisiteLibrairie,
+		&item.Bibles,
+		&item.Question,
+	)
+	return item, err
+}
+
+func ScanProjetSpi(row *sql.Row) (ProjetSpi, error) { return scanOneProjetSpi(row) }
+
+// SelectAll returns all the items in the projet_spis table.
+func SelectAllProjetSpis(db DB) (ProjetSpis, error) {
+	rows, err := db.Query("SELECT idcamp, description, programme, journeetype, dynamiquecampeur, evangile, equipe, cuisine, suite, visitelibrairie, bibles, question FROM projet_spis")
+	if err != nil {
+		return nil, err
+	}
+	return ScanProjetSpis(rows)
+}
+
+type ProjetSpis []ProjetSpi
+
+func ScanProjetSpis(rs *sql.Rows) (ProjetSpis, error) {
+	var (
+		item ProjetSpi
+		err  error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(ProjetSpis, 0, 16)
+	for rs.Next() {
+		item, err = scanOneProjetSpi(rs)
+		if err != nil {
+			return nil, err
+		}
+		structs = append(structs, item)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+func (item ProjetSpi) Insert(db DB) error {
+	_, err := db.Exec(`INSERT INTO projet_spis (
+			idcamp, description, programme, journeetype, dynamiquecampeur, evangile, equipe, cuisine, suite, visitelibrairie, bibles, question
+			) VALUES (
+			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
+			);
+			`, item.IdCamp, item.Description, item.Programme, item.JourneeType, item.DynamiqueCampeur, item.Evangile, item.Equipe, item.Cuisine, item.Suite, item.VisiteLibrairie, item.Bibles, item.Question)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Insert the links ProjetSpi in the database.
+// It is a no-op if 'items' is empty.
+func InsertManyProjetSpis(tx *sql.Tx, items ...ProjetSpi) error {
+	if len(items) == 0 {
+		return nil
+	}
+
+	stmt, err := tx.Prepare(pq.CopyIn("projet_spis",
+		"idcamp",
+		"description",
+		"programme",
+		"journeetype",
+		"dynamiquecampeur",
+		"evangile",
+		"equipe",
+		"cuisine",
+		"suite",
+		"visitelibrairie",
+		"bibles",
+		"question",
+	))
+	if err != nil {
+		return err
+	}
+
+	for _, item := range items {
+		_, err = stmt.Exec(item.IdCamp, item.Description, item.Programme, item.JourneeType, item.DynamiqueCampeur, item.Evangile, item.Equipe, item.Cuisine, item.Suite, item.VisiteLibrairie, item.Bibles, item.Question)
+		if err != nil {
+			return err
+		}
+	}
+
+	if _, err = stmt.Exec(); err != nil {
+		return err
+	}
+
+	if err = stmt.Close(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Delete the link ProjetSpi from the database.
+// Only the foreign keys IdCamp fields are used in 'item'.
+func (item ProjetSpi) Delete(tx DB) error {
+	_, err := tx.Exec(`DELETE FROM projet_spis WHERE IdCamp = $1;`, item.IdCamp)
+	return err
+}
+
+// ByIdCamp returns a map with 'IdCamp' as keys.
+func (items ProjetSpis) ByIdCamp() map[IdCamp]ProjetSpi {
+	out := make(map[IdCamp]ProjetSpi, len(items))
+	for _, target := range items {
+		out[target.IdCamp] = target
+	}
+	return out
+}
+
+// IdCamps returns the list of ids of IdCamp
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items ProjetSpis) IdCamps() []IdCamp {
+	out := make([]IdCamp, len(items))
+	for index, target := range items {
+		out[index] = target.IdCamp
+	}
+	return out
+}
+
+// SelectProjetSpiByIdCamp return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectProjetSpiByIdCamp(tx DB, idCamp IdCamp) (item ProjetSpi, found bool, err error) {
+	row := tx.QueryRow("SELECT idcamp, description, programme, journeetype, dynamiquecampeur, evangile, equipe, cuisine, suite, visitelibrairie, bibles, question FROM projet_spis WHERE idcamp = $1", idCamp)
+	item, err = ScanProjetSpi(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
+}
+
+func SelectProjetSpisByIdCamps(tx DB, idCamps_ ...IdCamp) (ProjetSpis, error) {
+	rows, err := tx.Query("SELECT idcamp, description, programme, journeetype, dynamiquecampeur, evangile, equipe, cuisine, suite, visitelibrairie, bibles, question FROM projet_spis WHERE idcamp = ANY($1)", IdCampArrayToPQ(idCamps_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanProjetSpis(rows)
+}
+
+func DeleteProjetSpisByIdCamps(tx DB, idCamps_ ...IdCamp) (ProjetSpis, error) {
+	rows, err := tx.Query("DELETE FROM projet_spis WHERE idcamp = ANY($1) RETURNING idcamp, description, programme, journeetype, dynamiquecampeur, evangile, equipe, cuisine, suite, visitelibrairie, bibles, question", IdCampArrayToPQ(idCamps_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanProjetSpis(rows)
+}
+
 func scanOneSondage(row scanner) (Sondage, error) {
 	var item Sondage
 	err := row.Scan(

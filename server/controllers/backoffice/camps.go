@@ -548,3 +548,17 @@ func (ct *Controller) exportListeParticipants(year int) ([]byte, string, error) 
 	name := fmt.Sprintf("Participants %d.xlsx", year)
 	return content, name, nil
 }
+
+func (ct *Controller) CampsLoadProjetSpi(c echo.Context) error {
+	idCamp, err := utils.QueryParamInt[cps.IdCamp](c, "idCamp")
+	if err != nil {
+		return err
+	}
+	projet, _, err := cps.SelectProjetSpiByIdCamp(ct.db, idCamp)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	projet.IdCamp = idCamp // for empty structs
+
+	return c.JSON(200, projet)
+}

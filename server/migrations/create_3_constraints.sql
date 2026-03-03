@@ -66,6 +66,12 @@ ALTER TABLE camps
 ALTER TABLE camps
     ADD FOREIGN KEY (IdTaux) REFERENCES tauxs;
 
+ALTER TABLE projet_spis
+    ADD UNIQUE (IdCamp);
+
+ALTER TABLE projet_spis
+    ADD FOREIGN KEY (IdCamp) REFERENCES camps ON DELETE CASCADE;
+
 ALTER TABLE lettredirecteurs
     ADD UNIQUE (IdCamp);
 
