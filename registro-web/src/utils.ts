@@ -499,7 +499,6 @@ function pseudoEventTime(event: PseudoEvent): Date {
 function isMessageVisibleBy(message: EventMessage, user: Acteur) {
   const aboutFondSoutien =
     message.Origine == Acteur.FondSoutien || message.OnlyToFondSoutien;
-  console.log(message.Origine, aboutFondSoutien, user);
   switch (user) {
     case Acteur.Backoffice:
       return !aboutFondSoutien;
