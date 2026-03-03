@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"log"
 	"slices"
 	"sort"
 	"strings"
@@ -502,6 +503,7 @@ func (ct *Controller) saveInscription(host string, publicInsc Inscription) (err 
 		// enregistre l'inscription sur la base
 		insc, err = in.Create(tx, insc, participants)
 		if err != nil {
+			log.Println("saveInscription: Create()", insc, participants)
 			return err
 		}
 
@@ -510,9 +512,11 @@ func (ct *Controller) saveInscription(host string, publicInsc Inscription) (err 
 		urlValide := utils.BuildUrl(host, EndpointConfirmeInscription, utils.QP(queryParamIdInscription, cryptedId))
 		html, err := mails.ValidationMailInscription(ct.asso, mails.Contact{Prenom: insc.Responsable.Prenom, Sexe: insc.Responsable.Sexe}, urlValide)
 		if err != nil {
+			log.Println("saveInscription: ValidationMailInscription()", insc, urlValide)
 			return err
 		}
 		if err = mails.NewMailer(ct.smtp, ct.asso.MailsSettings).SendMail(insc.Responsable.Mail, "Vérification de l'adresse mail", html, nil, nil); err != nil {
+			log.Println("saveInscription: SendMail()", insc.Responsable.Mail)
 			return err
 		}
 		return nil
