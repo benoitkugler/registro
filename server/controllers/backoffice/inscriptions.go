@@ -12,21 +12,22 @@ import (
 
 // InscriptionsGet returns the [Dossier]s to be validated.
 func (ct *Controller) InscriptionsGet(c echo.Context) error {
-	out, err := ct.getInscriptions()
+	_, isFondsSoutien := JWTUser(c)
+	out, err := ct.getInscriptions(isFondsSoutien)
 	if err != nil {
 		return err
 	}
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) getInscriptions() ([]logic.Inscription, error) {
+func (ct *Controller) getInscriptions(isFondsSoutien bool) ([]logic.Inscription, error) {
 	dossiers, err := ds.SelectAllDossiers(ct.db)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
 	dossiers.RestrictByValidated(false)
 
-	return logic.LoadInscriptions(ct.db, backofficeRights, dossiers.IDs()...)
+	return logic.LoadInscriptions(ct.db, backofficeRights, isFondsSoutien, dossiers.IDs()...)
 }
 
 func (ct *Controller) InscriptionsSearchSimilaires(c echo.Context) error {
@@ -49,6 +50,7 @@ type InscriptionIdentifieIn struct {
 // InscriptionsIdentifiePersonne identifie et renvoie l'inscription
 // mise à jour
 func (ct *Controller) InscriptionsIdentifiePersonne(c echo.Context) error {
+	_, isFondsSoutien := JWTUser(c)
 	var args InscriptionIdentifieIn
 	if err := c.Bind(&args); err != nil {
 		return err
@@ -59,7 +61,7 @@ func (ct *Controller) InscriptionsIdentifiePersonne(c echo.Context) error {
 		return err
 	}
 
-	l, err := logic.LoadInscriptions(ct.db, backofficeRights, args.IdDossier)
+	l, err := logic.LoadInscriptions(ct.db, backofficeRights, isFondsSoutien, args.IdDossier)
 	if err != nil {
 		return err
 	}
@@ -92,6 +94,8 @@ var backofficeRights = logic.StatutBypassRights{ProfilInvalide: true, CampComple
 // Le statut des participants est mis à jour
 // et un mail d'accusé de réception est envoyé.
 func (ct *Controller) InscriptionsValide(c echo.Context) error {
+	_, isFondsSoutien := JWTUser(c)
+
 	var args logic.InscriptionsValideIn
 	if err := c.Bind(&args); err != nil {
 		return err
@@ -101,7 +105,7 @@ func (ct *Controller) InscriptionsValide(c echo.Context) error {
 		return err
 	}
 
-	l, err := logic.LoadInscriptions(ct.db, backofficeRights, args.IdDossier)
+	l, err := logic.LoadInscriptions(ct.db, backofficeRights, isFondsSoutien, args.IdDossier)
 	if err != nil {
 		return err
 	}

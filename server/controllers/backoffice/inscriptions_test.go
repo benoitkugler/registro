@@ -43,7 +43,7 @@ func TestController_getInscriptions(t *testing.T) {
 
 	ct := Controller{db: db.DB}
 
-	out, err := ct.getInscriptions()
+	out, err := ct.getInscriptions(false)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(out) == 2)
 	tu.Assert(t, out[0].Dossier.Id == dossier1.Id)

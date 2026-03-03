@@ -46,7 +46,7 @@ func (ct *Controller) getInscriptions(user cps.IdCamp) ([]logic.Inscription, err
 	// restrict to new inscriptions
 	dossiers.RestrictByValidated(false)
 
-	out, err := logic.LoadInscriptions(ct.db, directeursBypass, dossiers.IDs()...)
+	out, err := logic.LoadInscriptions(ct.db, directeursBypass, false, dossiers.IDs()...)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +88,7 @@ func (ct *Controller) InscriptionsIdentifiePersonne(c echo.Context) error {
 		return err
 	}
 
-	l, err := logic.LoadInscriptions(ct.db, directeursBypass, args.IdDossier)
+	l, err := logic.LoadInscriptions(ct.db, directeursBypass, false, args.IdDossier)
 	if err != nil {
 		return err
 	}
@@ -131,7 +131,7 @@ func (ct *Controller) InscriptionsValide(c echo.Context) error {
 		return err
 	}
 
-	l, err := logic.LoadInscriptions(ct.db, directeursBypass, args.IdDossier)
+	l, err := logic.LoadInscriptions(ct.db, directeursBypass, false, args.IdDossier)
 	if err != nil {
 		return err
 	}

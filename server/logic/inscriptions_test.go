@@ -7,6 +7,7 @@ import (
 
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
+	evs "registro/sql/events"
 	"registro/sql/files"
 	pr "registro/sql/personnes"
 	tu "registro/utils/testutils"
@@ -80,4 +81,33 @@ func TestStatutBypassRights_resolve(t *testing.T) {
 	}
 
 	tu.Assert(t, !backofficeRights.resolve(cps.StatutCauses{}, cps.Inscrit).Validable)
+}
+
+// See https://github.com/benoitkugler/registro/issues/196
+func TestInscriptionsMessage(t *testing.T) {
+	db := tu.NewTestDB(t, "../migrations/create_1_tables.sql",
+		"../migrations/create_2_json_funcs.sql", "../migrations/create_3_constraints.sql",
+		"../migrations/init.sql")
+	defer db.Remove()
+
+	pe1, err := pr.Personne{IsTemp: false}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	dossier1, err := ds.Dossier{IdResponsable: pe1.Id, IdTaux: 1, MomentInscription: time.Now()}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	_, _, err = evs.CreateMessage(db, dossier1.Id, time.Now(), evs.EventMessage{Contenu: "AA", Origine: evs.Espaceperso, OnlyToFondSoutien: true})
+	tu.AssertNoErr(t, err)
+	_, _, err = evs.CreateMessage(db, dossier1.Id, time.Now().Add(time.Second), evs.EventMessage{Contenu: "BB", Origine: evs.Espaceperso, OnlyToFondSoutien: false})
+	tu.AssertNoErr(t, err)
+	_, _, err = evs.CreateMessage(db, dossier1.Id, time.Now().Add(2*time.Second), evs.EventMessage{Contenu: "CC", Origine: evs.Espaceperso, OnlyToFondSoutien: false})
+	tu.AssertNoErr(t, err)
+
+	inscs, err := LoadInscriptions(db, StatutBypassRights{}, true, dossier1.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, inscs[0].Message == "AA\n\nBB\n\nCC")
+
+	inscs, err = LoadInscriptions(db, StatutBypassRights{}, false, dossier1.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, inscs[0].Message == "BB\n\nCC")
 }

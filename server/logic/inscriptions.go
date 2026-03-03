@@ -20,19 +20,22 @@ import (
 )
 
 type Inscription struct {
-	Dossier      ds.Dossier
-	Message      string // le message (optionnel) du formulaire d'inscription
+	Dossier ds.Dossier
+	// le message (optionnel) du formulaire d'inscription
+	// Son contenu s'adapte pour prendre en compte le fonds de soutien
+	Message      string
 	Responsable  pr.Personne
 	Participants []cps.ParticipantCamp
 	StatutHints  StatutHints
 }
 
-func newInscription(de Dossier, statutHints StatutHints) Inscription {
-	var chunks []string
+func newInscription(de Dossier, statutHints StatutHints, userIsFondsSoutien bool) Inscription {
 	// collect the messages
-	for event := range IterEventsBy[MessageEvt](de.Events) {
+	var chunks []string
+	for _, event := range EventsBy[MessageEvt](de.Events) {
 		content := event.Content.Message
-		if content.Origine == evs.Espaceperso {
+		isVisible := userIsFondsSoutien || !content.OnlyToFondSoutien
+		if content.Origine == evs.Espaceperso && isVisible {
 			chunks = append(chunks, content.Contenu)
 		}
 	}
@@ -48,7 +51,7 @@ func newInscription(de Dossier, statutHints StatutHints) Inscription {
 }
 
 // LoadInscriptions sorts by time
-func LoadInscriptions(db ds.DB, byPass StatutBypassRights, ids ...ds.IdDossier) ([]Inscription, error) {
+func LoadInscriptions(db ds.DB, byPass StatutBypassRights, userIsFondsSoutien bool, ids ...ds.IdDossier) ([]Inscription, error) {
 	loaders, err := LoadDossiers(db, ids)
 	if err != nil {
 		return nil, err
@@ -63,7 +66,7 @@ func LoadInscriptions(db ds.DB, byPass StatutBypassRights, ids ...ds.IdDossier) 
 	for i, id := range ids {
 		loader := loaders.For(id)
 		hints := loader.StatutHints(camps, byPass)
-		out[i] = newInscription(loader, hints)
+		out[i] = newInscription(loader, hints, userIsFondsSoutien)
 	}
 
 	// sort by time

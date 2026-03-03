@@ -464,7 +464,7 @@ func (ct *Controller) loadSondages(id ds.IdDossier) ([]SondageExt, error) {
 		campsToAdd.Delete(sondage.IdCamp)
 	}
 	// 2 : complete with "open" camps
-	for event := range logic.IterEventsBy[logic.SondageEvt](dossier.Events) {
+	for _, event := range logic.EventsBy[logic.SondageEvt](dossier.Events) {
 		if !campsToAdd.Has(event.Content.IdCamp) { // already included
 			continue
 		}

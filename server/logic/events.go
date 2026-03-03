@@ -1,7 +1,6 @@
 package logic
 
 import (
-	"iter"
 	"slices"
 
 	cps "registro/sql/camps"
@@ -20,23 +19,23 @@ type EventExt[T EventContent] struct {
 	Content T
 }
 
-func IterEventsBy[T EventContent](evs Events) iter.Seq[EventExt[T]] {
-	return func(yield func(EventExt[T]) bool) {
-		for _, ev := range evs {
-			if typed, ok := ev.Content.(T); ok {
-				if !yield(EventExt[T]{ev.Raw(), typed}) {
-					return
-				}
-			}
+// EventsBy return events with given kind, sorted by time (older first)
+func EventsBy[T EventContent](evs Events) []EventExt[T] {
+	var out []EventExt[T]
+	for _, ev := range evs {
+		if typed, ok := ev.Content.(T); ok {
+			out = append(out, EventExt[T]{ev.Raw(), typed})
 		}
 	}
+	slices.SortFunc(out, func(a, b EventExt[T]) int { return a.Event.Created.Compare(b.Event.Created) })
+	return out
 }
 
 // UnreadMessagesFor returns the [Event]s with kind [evs.Message],
 // not yet seen by the backoffice or fonds de soutien.
 // Only message with specified target are considered.
 func (events Events) UnreadMessagesFor(isFondSoutien bool) (out []EventExt[MessageEvt]) {
-	for ev := range IterEventsBy[MessageEvt](events) {
+	for _, ev := range EventsBy[MessageEvt](events) {
 		if (isFondSoutien && ev.Content.Message.OnlyToFondSoutien && !ev.Content.Message.VuFondSoutien) ||
 			(ev.Content.Message.Origine != evs.Backoffice && !ev.Content.Message.VuBackoffice) {
 			out = append(out, ev)
@@ -48,7 +47,7 @@ func (events Events) UnreadMessagesFor(isFondSoutien bool) (out []EventExt[Messa
 // HasSendCampDocuments returns [true] is the documents for the
 // given camp has been sent (at least once)
 func (events Events) HasSendCampDocuments(idCamp cps.IdCamp) bool {
-	for camp := range IterEventsBy[CampDocsEvt](events) {
+	for _, camp := range EventsBy[CampDocsEvt](events) {
 		if camp.Content.IdCamp == idCamp {
 			return true
 		}

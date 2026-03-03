@@ -239,7 +239,7 @@ func (ct *Controller) loadMessages(idCamp cps.IdCamp) (Messages, error) {
 		dossier := dossiers.For(idDossier)
 
 		// hide fonds de soutien
-		for message := range logic.IterEventsBy[logic.MessageEvt](dossier.Events) {
+		for _, message := range logic.EventsBy[logic.MessageEvt](dossier.Events) {
 			if message.Content.Message.Origine == evs.FondSoutien || message.Content.Message.OnlyToFondSoutien {
 				continue
 			}

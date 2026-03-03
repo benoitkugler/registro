@@ -1,7 +1,6 @@
 package logic
 
 import (
-	"slices"
 	"testing"
 
 	tu "registro/utils/testutils"
@@ -18,6 +17,6 @@ func TestIterEvents(t *testing.T) {
 		{Content: SupprimeEvt{}},
 		{Content: FactureEvt{}},
 	}
-	tu.Assert(t, len(slices.Collect(IterEventsBy[SupprimeEvt](l))) == 4)
-	tu.Assert(t, len(slices.Collect(IterEventsBy[MessageEvt](l))) == 0)
+	tu.Assert(t, len(EventsBy[SupprimeEvt](l)) == 4)
+	tu.Assert(t, len(EventsBy[MessageEvt](l)) == 0)
 }
