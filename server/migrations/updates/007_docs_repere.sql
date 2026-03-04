@@ -1,4 +1,6 @@
+-- v0.9.2
 -- add two new categories
+
 BEGIN;
 ALTER TABLE demandes
     DROP CONSTRAINT demandes_categorie_check;
