@@ -1288,9 +1288,9 @@ func InsertManyEventValidations(tx *sql.Tx, items ...EventValidation) error {
 }
 
 // Delete the link EventValidation from the database.
-// Only the foreign keys IdEvent fields are used in 'item'.
+// Only the foreign keys IdEvent, IdCamp fields are used in 'item'.
 func (item EventValidation) Delete(tx DB) error {
-	_, err := tx.Exec(`DELETE FROM event_validations WHERE IdEvent = $1;`, item.IdEvent)
+	_, err := tx.Exec(`DELETE FROM event_validations WHERE IdEvent = $1 AND ((IdCamp IS NULL AND $2 IS NULL) OR IdCamp = $2);`, item.IdEvent, item.IdCamp)
 	return err
 }
 
@@ -1334,6 +1334,35 @@ func SelectEventValidationsByIdEvents(tx DB, idEvents_ ...IdEvent) (EventValidat
 
 func DeleteEventValidationsByIdEvents(tx DB, idEvents_ ...IdEvent) (EventValidations, error) {
 	rows, err := tx.Query("DELETE FROM event_validations WHERE idevent = ANY($1) RETURNING idevent, idcamp", IdEventArrayToPQ(idEvents_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanEventValidations(rows)
+}
+
+// IdCamps returns the list of non null IdCamp
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items EventValidations) IdCamps() []camps.IdCamp {
+	var out []camps.IdCamp
+	for _, target := range items {
+		if id := target.IdCamp; id.Valid {
+			out = append(out, id.Id)
+		}
+	}
+	return out
+}
+
+func SelectEventValidationsByIdCamps(tx DB, idCamps_ ...camps.IdCamp) (EventValidations, error) {
+	rows, err := tx.Query("SELECT idevent, idcamp FROM event_validations WHERE idcamp = ANY($1)", camps.IdCampArrayToPQ(idCamps_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanEventValidations(rows)
+}
+
+func DeleteEventValidationsByIdCamps(tx DB, idCamps_ ...camps.IdCamp) (EventValidations, error) {
+	rows, err := tx.Query("DELETE FROM event_validations WHERE idcamp = ANY($1) RETURNING idevent, idcamp", camps.IdCampArrayToPQ(idCamps_))
 	if err != nil {
 		return nil, err
 	}
@@ -1418,7 +1447,7 @@ func ScanIdEventArray(rs *sql.Rows) ([]IdEvent, error) {
 	return ints, nil
 }
 
-func SwitchEventMessageDossier(db DB, to dossiers.IdDossier, from dossiers.IdDossier) error {
-	_, err := db.Exec("UPDATE events SET IdDossier = $1 WHERE IdDossier = $2 AND Kind = 2 /* EventKind.Message */;", to, from)
+func SwitchValidationAndMessageDossier(db DB, to dossiers.IdDossier, from dossiers.IdDossier) error {
+	_, err := db.Exec("UPDATE events SET IdDossier = $1 WHERE IdDossier = $2 AND (Kind = 2 /* EventKind.Message */ OR Kind = 1 /* EventKind.Validation */);", to, from)
 	return err
 }

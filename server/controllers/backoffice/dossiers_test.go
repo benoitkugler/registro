@@ -11,6 +11,7 @@ import (
 	ds "registro/sql/dossiers"
 	"registro/sql/events"
 	fs "registro/sql/files"
+	in "registro/sql/inscriptions"
 	pr "registro/sql/personnes"
 	"registro/sql/shared"
 	tu "registro/utils/testutils"
@@ -232,6 +233,9 @@ func TestController_mergeDossiers(t *testing.T) {
 	_, err = ct.createParticipant(ParticipantsCreateIn{IdDossier: d2.Id, IdPersonne: pe2.Id, IdCamp: camp1.Id})
 	tu.AssertNoErr(t, err)
 
+	in1, err := in.Inscription{IdTaux: 1, ConfirmedAsDossier: d2.Id.Opt()}.Insert(db)
+	tu.AssertNoErr(t, err)
+
 	_, err = ct.createPaiement(false, d2.Id)
 	tu.AssertNoErr(t, err)
 
@@ -239,9 +243,19 @@ func TestController_mergeDossiers(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	_, err = events.Event{Kind: events.Validation, IdDossier: d2.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
+	_, err = events.Event{Kind: events.PlaceLiberee, IdDossier: d2.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
 
 	err = ct.mergeDossier("", DossiersMergeIn{d2.Id, d1.Id, true})
 	tu.AssertNoErr(t, err)
+
+	merged, err := ct.loadDossier("", d1.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(merged.Dossier.Events) == 2)
+
+	in1, err = in.SelectInscription(db, in1.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, in1.ConfirmedAsDossier == d1.Id.Opt())
 }
 
 func TestQueryReglement(t *testing.T) {

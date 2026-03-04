@@ -489,3 +489,8 @@ func ScanIdInscriptionArray(rs *sql.Rows) ([]IdInscription, error) {
 
 func (s *ResponsableLegal) Scan(src any) error          { return loadJSON(s, src) }
 func (s ResponsableLegal) Value() (driver.Value, error) { return dumpJSON(s) }
+
+func SwitchInscriptionDossier(db DB, to dossiers.OptIdDossier, from dossiers.OptIdDossier) error {
+	_, err := db.Exec("UPDATE inscriptions SET ConfirmedAsDossier = $1 WHERE ConfirmedAsDossier = $2;", to, from)
+	return err
+}

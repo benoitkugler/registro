@@ -19,6 +19,7 @@ import (
 	evs "registro/sql/events"
 	"registro/sql/files"
 	fs "registro/sql/files"
+	in "registro/sql/inscriptions"
 	pr "registro/sql/personnes"
 	"registro/utils"
 
@@ -819,7 +820,7 @@ func (ct *Controller) mergeDossier(host string, args DossiersMergeIn) error {
 		if err != nil {
 			return err
 		}
-		err = evs.SwitchEventMessageDossier(tx, args.To, from.Id)
+		err = evs.SwitchValidationAndMessageDossier(tx, args.To, from.Id)
 		if err != nil {
 			return err
 		}
@@ -827,6 +828,12 @@ func (ct *Controller) mergeDossier(host string, args DossiersMergeIn) error {
 		if err != nil {
 			return err
 		}
+		// also redirect inscription confirmation column
+		err = in.SwitchInscriptionDossier(tx, args.To.Opt(), args.From.Opt())
+		if err != nil {
+			return err
+		}
+
 		// now delete the empty dossier
 		_, err = ds.DeleteDossierById(tx, from.Id)
 		if err != nil {

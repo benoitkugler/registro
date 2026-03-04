@@ -17,7 +17,7 @@ type IdEvent int64
 // Requis pour référence
 // gomacro:SQL ADD UNIQUE(Id, Kind)
 //
-// gomacro:QUERY SwitchEventMessageDossier UPDATE Event SET IdDossier = $to$ WHERE IdDossier = $from$ AND Kind = #[EventKind.Message];
+// gomacro:QUERY SwitchValidationAndMessageDossier UPDATE Event SET IdDossier = $to$ WHERE IdDossier = $from$ AND (Kind = #[EventKind.Message] OR Kind = #[EventKind.Validation]);
 type Event struct {
 	Id        IdEvent
 	IdDossier dossiers.IdDossier `gomacro-sql-on-delete:"CASCADE"`
@@ -31,7 +31,7 @@ type Event struct {
 // gomacro:SQL ADD FOREIGN KEY (IdEvent, guard) REFERENCES Event(Id,Kind) ON DELETE CASCADE
 type EventValidation struct {
 	IdEvent IdEvent
-	IdCamp  OptIdCamp // empty for backoffice
+	IdCamp  OptIdCamp `gomacro-sql-foreign:"Camp"` // empty for backoffice
 
 	guard EventKind `gomacro-sql-guard:"#[EventKind.Validation]"`
 }

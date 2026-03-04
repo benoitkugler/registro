@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"registro/sql/camps"
-	"registro/sql/dossiers"
+	ds "registro/sql/dossiers"
 	"registro/sql/personnes"
 	tu "registro/utils/testutils"
 )
@@ -16,9 +16,9 @@ func TestEvents(t *testing.T) {
 
 	_, err := personnes.Personne{}.Insert(db)
 	tu.AssertNoErr(t, err)
-	_, err = dossiers.Taux{Euros: 1000}.Insert(db)
+	_, err = ds.Taux{Euros: 1000}.Insert(db)
 	tu.AssertNoErr(t, err)
-	_, err = dossiers.Dossier{IdTaux: 1, IdResponsable: 1}.Insert(db)
+	_, err = ds.Dossier{IdTaux: 1, IdResponsable: 1}.Insert(db)
 	tu.AssertNoErr(t, err)
 	camp1, err := camps.Camp{IdTaux: 1}.Insert(db)
 	tu.AssertNoErr(t, err)
@@ -50,5 +50,34 @@ func TestEvents(t *testing.T) {
 	event, err = Event{IdDossier: 1, Kind: Attestation, Created: time.Now()}.Insert(db)
 	tu.AssertNoErr(t, err)
 	err = EventAttestation{IdEvent: event.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+}
+
+func TestSwitchDossier(t *testing.T) {
+	db := tu.NewTestDB(t, "../personnes/gen_create.sql", "../dossiers/gen_create.sql", "../camps/gen_create.sql", "gen_create.sql")
+	defer db.Remove()
+
+	_, err := personnes.Personne{}.Insert(db)
+	tu.AssertNoErr(t, err)
+	_, err = ds.Taux{Euros: 1000}.Insert(db)
+	tu.AssertNoErr(t, err)
+	d1, err := ds.Dossier{IdTaux: 1, IdResponsable: 1}.Insert(db)
+	tu.AssertNoErr(t, err)
+	d2, err := ds.Dossier{IdTaux: 1, IdResponsable: 1}.Insert(db)
+	tu.AssertNoErr(t, err)
+	camp1, err := camps.Camp{IdTaux: 1}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	event, err := Event{IdDossier: d1.Id, Kind: Validation, Created: time.Now()}.Insert(db)
+	tu.AssertNoErr(t, err)
+	err = EventValidation{IdEvent: event.Id, IdCamp: camp1.Id.Opt()}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	event, err = Event{IdDossier: d1.Id, Kind: Validation, Created: time.Now()}.Insert(db)
+	tu.AssertNoErr(t, err)
+	err = EventValidation{IdEvent: event.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	err = SwitchValidationAndMessageDossier(db, d1.Id, d2.Id)
 	tu.AssertNoErr(t, err)
 }

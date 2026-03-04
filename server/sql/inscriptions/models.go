@@ -20,6 +20,7 @@ type IdInscription int64
 // cette table sert donc essentiellement à garder une trace en cas de problème.
 //
 // gomacro:SQL ADD UNIQUE(Id, IdTaux)
+// gomacro:QUERY SwitchInscriptionDossier UPDATE Inscription SET ConfirmedAsDossier = $to$ WHERE ConfirmedAsDossier = $from$;
 type Inscription struct {
 	Id IdInscription
 
@@ -36,8 +37,6 @@ type Inscription struct {
 
 	// ConfirmedAsDossier is set when the
 	// mail has been confirmed and the [Dossier] has been created.
-	// Note that the [Dossier.IsValidated] is still false,
-	// since some personnes may still require to be identified by humans
 	ConfirmedAsDossier dossiers.OptIdDossier `gomacro-sql-on-delete:"SET NULL" gomacro-sql-foreign:"Dossier"`
 }
 
