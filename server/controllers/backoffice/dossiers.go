@@ -333,7 +333,7 @@ func (ct *Controller) createDossier(idResponsable pr.IdPersonne) (DossierHeader,
 	}
 	dossier, err := ds.Dossier{
 		IdTaux: 1, IdResponsable: responsable.Id, MomentInscription: time.Now().Truncate(time.Second),
-		IsValidated: true, PartageAdressesOK: true,
+		PartageAdressesOK: true,
 	}.Insert(ct.db)
 	if err != nil {
 		return DossierHeader{}, err

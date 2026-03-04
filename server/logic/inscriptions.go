@@ -27,6 +27,9 @@ type InscriptionExt struct {
 	Responsable  pr.Personne
 	Participants []cps.ParticipantCamp
 	StatutHints  StatutHints
+
+	// IsValidated is true if no participant has AStatuer
+	IsValidated bool
 }
 
 func newInscription(de Dossier, statutHints StatutHints, userIsFondsSoutien bool) InscriptionExt {
@@ -47,10 +50,20 @@ func newInscription(de Dossier, statutHints StatutHints, userIsFondsSoutien bool
 		Participants: de.ParticipantsExt(),
 		Message:      message,
 		StatutHints:  statutHints,
+		IsValidated:  allValidated(de.Participants),
 	}
 }
 
-// LoadInscriptions sorts by time
+func allValidated(ps cps.Participants) bool {
+	for _, part := range ps {
+		if part.Statut == cps.AStatuer {
+			return false
+		}
+	}
+	return true
+}
+
+// LoadInscriptions sorts by time. [ids] may contain repetitions, which are ignored.
 func LoadInscriptions(db ds.DB, byPass StatutBypassRights, userIsFondsSoutien bool, ids ...ds.IdDossier) ([]InscriptionExt, error) {
 	loaders, err := LoadDossiers(db, ids)
 	if err != nil {
@@ -62,11 +75,11 @@ func LoadInscriptions(db ds.DB, byPass StatutBypassRights, userIsFondsSoutien bo
 		return nil, err
 	}
 
-	out := make([]InscriptionExt, len(ids))
-	for i, id := range ids {
+	out := make([]InscriptionExt, 0, len(loaders.Dossiers))
+	for id := range loaders.Dossiers {
 		loader := loaders.For(id)
 		hints := loader.StatutHints(camps, byPass)
-		out[i] = newInscription(loader, hints, userIsFondsSoutien)
+		out = append(out, newInscription(loader, hints, userIsFondsSoutien))
 	}
 
 	// sort by time
@@ -234,15 +247,6 @@ func (bp StatutBypassRights) resolve(st cps.StatutCauses, currentStatut cps.Stat
 	return out
 }
 
-func allValidated(ps cps.Participants) bool {
-	for _, part := range ps {
-		if part.Statut == cps.AStatuer {
-			return false
-		}
-	}
-	return true
-}
-
 // HintValideInscription load an inscription and compute the validation status.
 func HintValideInscription(db cps.DB, byPass StatutBypassRights, id ds.IdDossier) (StatutHints, error) {
 	loader, err := LoadDossier(db, id)
@@ -330,14 +334,6 @@ func ValideInscription(db *sql.DB, key crypto.Encrypter, smtp config.SMTP, asso 
 				inscrits = append(inscrits, mailPart)
 			} else {
 				attente = append(attente, mailPart)
-			}
-		}
-
-		if allValidated(loader.Participants) {
-			dossier.IsValidated = true
-			_, err = dossier.Update(tx)
-			if err != nil {
-				return err
 			}
 		}
 

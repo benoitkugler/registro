@@ -10,16 +10,6 @@ import (
 	"registro/sql/shared"
 )
 
-// RestrictByValidated only keep the [Dossier] with the given
-// validation state.
-func (dossiers Dossiers) RestrictByValidated(validated bool) {
-	for id, dossier := range dossiers {
-		if dossier.IsValidated != validated {
-			delete(dossiers, id)
-		}
-	}
-}
-
 // Remise applique une remise de [percent]% sur le montant,
 // le résultat étant pallié à 0 si besoin.
 func (m Montant) Remise(percent int) Montant {

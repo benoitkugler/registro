@@ -364,6 +364,15 @@ func (gs Groupes) TrouveGroupe(dateNaissance shared.Date) (Groupe, bool) {
 	return Groupe{}, false
 }
 
+// RestrictAStatuer garde uniquement les participants avec le statut [AStatuer]
+func (ps Participants) RestrictAStatuer() {
+	for k, v := range ps {
+		if v.Statut != AStatuer {
+			delete(ps, k)
+		}
+	}
+}
+
 func LoadEquipiersByCamps(db DB, idCamps ...IdCamp) (Equipiers, pr.Personnes, map[pr.IdPersonne]pr.Ficheequipier, error) {
 	equipiers, err := SelectEquipiersByIdCamps(db, idCamps...)
 	if err != nil {

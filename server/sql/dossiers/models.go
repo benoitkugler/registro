@@ -58,12 +58,6 @@ type Dossier struct {
 
 	DemandeFondSoutien bool
 
-	// IsValidated devient 'true' lorsque l'inscription
-	// est validée manuellement par le centre ou un directeur.
-	// Côté backoffice, les inscriptions non validées sont affichées
-	// sur une liste séparée
-	IsValidated bool
-
 	// MomentInscription est le moment de l'inscription sous-jacente
 	// (ou de la création pour les ajouts manuels)
 	MomentInscription time.Time

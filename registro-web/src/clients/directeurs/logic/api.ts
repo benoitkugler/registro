@@ -227,6 +227,7 @@ export interface InscriptionExt {
   Responsable: Personne;
   Participants: ParticipantCamp[] | null;
   StatutHints: Record<IdParticipant, StatutExt> | null;
+  IsValidated: boolean;
 }
 // registro/logic.InscriptionsValideIn
 export interface InscriptionsValideIn {
@@ -650,7 +651,6 @@ export interface Dossier {
   CopiesMails: Mails;
   PartageAdressesOK: boolean;
   DemandeFondSoutien: boolean;
-  IsValidated: boolean;
   MomentInscription: Time;
   LastLoadDocuments: Time;
   KeyV1: string;

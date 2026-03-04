@@ -69,14 +69,9 @@ func (ct *Controller) getInscriptions(user cps.IdCamp) (InscriptionsOut, error) 
 	if err != nil {
 		return InscriptionsOut{}, utils.SQLError(err)
 	}
-	dossiers, err := ds.SelectDossiers(ct.db, parts.IdDossiers()...)
-	if err != nil {
-		return InscriptionsOut{}, utils.SQLError(err)
-	}
-	// restrict to new inscriptions
-	dossiers.RestrictByValidated(false)
+	parts.RestrictAStatuer() // restrict to new inscriptions
 
-	out, err := logic.LoadInscriptions(ct.db, directeursBypass, false, dossiers.IDs()...)
+	out, err := logic.LoadInscriptions(ct.db, directeursBypass, false, parts.IdDossiers()...)
 	if err != nil {
 		return InscriptionsOut{}, err
 	}

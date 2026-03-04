@@ -172,7 +172,7 @@ async function valideInsc(
   });
 
   // delete from this view if validated, only update otherwise
-  if (res.Dossier.IsValidated) {
+  if (res.IsValidated) {
     data.value = data.value.filter((val) => val.Dossier.Id != id);
   } else {
     const index = data.value.findIndex((val) => val.Dossier.Id == id);

@@ -38,7 +38,7 @@ func TestController_getInscriptions(t *testing.T) {
 
 	_, err = ds.Dossier{IdResponsable: pe1.Id, IdTaux: 1, MomentInscription: time.Now().Add(time.Hour)}.Insert(db)
 	tu.AssertNoErr(t, err)
-	_, err = ds.Dossier{IdResponsable: pe1.Id, IdTaux: 1, MomentInscription: time.Now().Add(time.Hour), IsValidated: true}.Insert(db)
+	_, err = ds.Dossier{IdResponsable: pe1.Id, IdTaux: 1, MomentInscription: time.Now().Add(time.Hour)}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	ct := Controller{db: db.DB}
@@ -89,7 +89,6 @@ func TestValideInscription(t *testing.T) {
 	for _, part := range data.Participants {
 		tu.Assert(t, part.Statut == cps.AttenteProfilInvalide)
 	}
-	tu.Assert(t, data.Dossier.IsValidated)
 
 	err = ct.deleteDossier(data.Dossier.Id)
 	tu.AssertNoErr(t, err)

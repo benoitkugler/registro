@@ -111,6 +111,8 @@ type LettreImage struct {
 //
 // gomacro:QUERY SwitchParticipantPersonne UPDATE Participant SET IdPersonne = $target$ WHERE IdPersonne = $temporaire$;
 // gomacro:QUERY SwitchParticipantDossier UPDATE Participant SET IdDossier = $to$ WHERE IdDossier = $from$;
+//
+// gomacro:SQL _SELECT KEY(Statut)
 type Participant struct {
 	Id         IdParticipant
 	IdCamp     IdCamp

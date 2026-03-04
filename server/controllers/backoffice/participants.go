@@ -241,10 +241,6 @@ func (ct *Controller) deleteParticipant(id cps.IdParticipant) error {
 		if err != nil {
 			return err
 		}
-		dossier, err := ds.SelectDossier(ct.db, participant.IdDossier)
-		if err != nil {
-			return err
-		}
 		personne, err := pr.SelectPersonne(tx, participant.IdPersonne)
 		if err != nil {
 			return err
@@ -253,7 +249,7 @@ func (ct *Controller) deleteParticipant(id cps.IdParticipant) error {
 		if err != nil {
 			return err
 		}
-		if personne.IsTemp || (!dossier.IsValidated && refs.Empty()) { // cleanup
+		if personne.IsTemp || (participant.Statut == cps.AStatuer && refs.Empty()) { // cleanup
 			_, err = pr.DeletePersonneById(tx, personne.Id)
 			if err != nil {
 				return err

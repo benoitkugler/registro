@@ -182,7 +182,6 @@ func addMessages(db *sql.DB) {
 	// expect one existing dossier
 	dossiers, err := ds.SelectAllDossiers(db)
 	check(err)
-	dossiers.RestrictByValidated(true)
 
 	ids := dossiers.IDs()
 	id := ids[rand.Intn(len(ids))]

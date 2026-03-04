@@ -22,7 +22,6 @@ func randDossier() Dossier {
 	s.CopiesMails = randper_Mails()
 	s.PartageAdressesOK = randbool()
 	s.DemandeFondSoutien = randbool()
-	s.IsValidated = randbool()
 	s.MomentInscription = randtTime()
 	s.LastLoadDocuments = randtTime()
 	s.KeyV1 = randstring()

@@ -627,7 +627,6 @@ func ConfirmeInscription(db *sql.DB, id in.IdInscription) (ds.Dossier, error) {
 			PartageAdressesOK:  insc.PartageAdressesOK,
 			DemandeFondSoutien: insc.DemandeFondSoutien,
 			MomentInscription:  insc.DateHeure,
-			IsValidated:        false,
 		}
 		dossier, err = dossier.Insert(tx)
 		if err != nil {

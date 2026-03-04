@@ -43,9 +43,9 @@ func TestController_searchDossiers(t *testing.T) {
 	camp1, err := cps.Camp{IdTaux: 1, Places: 20, AgeMin: 6, AgeMax: 12, Prix: ds.NewEuros(100)}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	dossier1, err := ds.Dossier{IsValidated: true, IdResponsable: pe1.Id, IdTaux: 1, MomentInscription: time.Now()}.Insert(db)
+	dossier1, err := ds.Dossier{IdResponsable: pe1.Id, IdTaux: 1, MomentInscription: time.Now()}.Insert(db)
 	tu.AssertNoErr(t, err)
-	dossier2, err := ds.Dossier{IsValidated: true, IdResponsable: pe1.Id, IdTaux: 1, MomentInscription: time.Now()}.Insert(db)
+	dossier2, err := ds.Dossier{IdResponsable: pe1.Id, IdTaux: 1, MomentInscription: time.Now()}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	_, err = cps.Participant{IdCamp: camp1.Id, IdDossier: dossier2.Id, IdTaux: 1, IdPersonne: pe3.Id, Statut: cps.Inscrit}.Insert(db)

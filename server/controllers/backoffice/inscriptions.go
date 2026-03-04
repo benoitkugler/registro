@@ -21,13 +21,11 @@ func (ct *Controller) InscriptionsGet(c echo.Context) error {
 }
 
 func (ct *Controller) getInscriptions(isFondsSoutien bool) ([]logic.InscriptionExt, error) {
-	dossiers, err := ds.SelectAllDossiers(ct.db)
+	participants, err := cps.SelectParticipantsByStatut(ct.db, cps.AStatuer)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
-	dossiers.RestrictByValidated(false)
-
-	return logic.LoadInscriptions(ct.db, backofficeRights, isFondsSoutien, dossiers.IDs()...)
+	return logic.LoadInscriptions(ct.db, backofficeRights, isFondsSoutien, participants.IdDossiers()...)
 }
 
 func (ct *Controller) InscriptionsSearchSimilaires(c echo.Context) error {

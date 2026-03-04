@@ -158,7 +158,7 @@ async function valideInscription(
   });
   if (res === undefined) return;
 
-  if (res.Dossier.IsValidated) {
+  if (res.IsValidated) {
     controller.showMessage("Inscription validée avec succès.", "", {
       title: "Aller au dossier",
       action: () => emit("goTo", id),

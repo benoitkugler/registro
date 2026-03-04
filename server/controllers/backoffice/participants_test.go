@@ -112,7 +112,7 @@ func TestController_participants(t *testing.T) {
 		pe2, err := pr.Personne{}.Insert(db)
 		tu.AssertNoErr(t, err)
 
-		dossier, err := ds.Dossier{IdResponsable: pe2.Id, IdTaux: camp2.IdTaux, IsValidated: true}.Insert(db)
+		dossier, err := ds.Dossier{IdResponsable: pe2.Id, IdTaux: camp2.IdTaux}.Insert(db)
 		tu.AssertNoErr(t, err)
 		part, err := ct.createParticipant(ParticipantsCreateIn{IdDossier: dossier.Id, IdCamp: camp2.Id, IdPersonne: pe1.Id})
 		tu.AssertNoErr(t, err)
@@ -120,10 +120,6 @@ func TestController_participants(t *testing.T) {
 		err = ct.deleteParticipant(part.Participant.Id)
 		tu.AssertNoErr(t, err)
 		assertExist(pe2.Id) // dossier validé
-
-		dossier.IsValidated = false
-		_, err = dossier.Update(ct.db)
-		tu.AssertNoErr(t, err)
 
 		part, err = ct.createParticipant(ParticipantsCreateIn{IdDossier: dossier.Id, IdCamp: camp2.Id, IdPersonne: pe1.Id})
 		tu.AssertNoErr(t, err)

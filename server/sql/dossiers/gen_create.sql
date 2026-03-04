@@ -13,7 +13,6 @@ CREATE TABLE dossiers (
     CopiesMails text[],
     PartageAdressesOK boolean NOT NULL,
     DemandeFondSoutien boolean NOT NULL,
-    IsValidated boolean NOT NULL,
     MomentInscription timestamp(0) with time zone NOT NULL,
     LastLoadDocuments timestamp(0) with time zone NOT NULL,
     KeyV1 text NOT NULL

@@ -1387,6 +1387,25 @@ func DeleteParticipantsByIDs(tx DB, ids ...IdParticipant) ([]IdParticipant, erro
 	return ScanIdParticipantArray(rows)
 }
 
+// SelectParticipantsByStatut selects the items matching the given fields.
+func SelectParticipantsByStatut(tx DB, statut StatutParticipant) (item Participants, err error) {
+	rows, err := tx.Query("SELECT id, idcamp, idpersonne, iddossier, idtaux, statut, remises, quotientfamilial, optionprix, commentaire, navette FROM participants WHERE Statut = $1", statut)
+	if err != nil {
+		return nil, err
+	}
+	return ScanParticipants(rows)
+}
+
+// DeleteParticipantsByStatut deletes the item matching the given fields, returning
+// the deleted items.
+func DeleteParticipantsByStatut(tx DB, statut StatutParticipant) (item Participants, err error) {
+	rows, err := tx.Query("DELETE FROM participants WHERE Statut = $1 RETURNING id, idcamp, idpersonne, iddossier, idtaux, statut, remises, quotientfamilial, optionprix, commentaire, navette", statut)
+	if err != nil {
+		return nil, err
+	}
+	return ScanParticipants(rows)
+}
+
 // ByIdCamp returns a map with 'IdCamp' as keys.
 func (items Participants) ByIdCamp() map[IdCamp]Participants {
 	out := make(map[IdCamp]Participants)
