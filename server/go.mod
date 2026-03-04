@@ -3,11 +3,11 @@ module registro
 go 1.24.1
 
 require (
-	github.com/benoitkugler/go-weasyprint v0.0.13
+	github.com/benoitkugler/go-weasyprint v0.0.14
 	github.com/benoitkugler/num2words v1.0.1
-	github.com/benoitkugler/pdf v0.0.14
-	github.com/benoitkugler/textprocessing v0.0.3
-	github.com/benoitkugler/webrender v0.0.13
+	github.com/benoitkugler/pdf v0.0.15
+	github.com/benoitkugler/textprocessing v0.0.5
+	github.com/benoitkugler/webrender v0.0.14
 	github.com/disintegration/imaging v1.6.2
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/jordan-wright/email v4.0.1-0.20210109023952-943e75fe5223+incompatible
@@ -25,8 +25,8 @@ require (
 require (
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/benoitkugler/pstokenizer v1.0.1 // indirect
-	github.com/benoitkugler/textlayout v0.3.1 // indirect
-	github.com/go-text/typesetting v0.3.0 // indirect
+	github.com/benoitkugler/textlayout v0.3.2 // indirect
+	github.com/go-text/typesetting v0.3.1-0.20250404103358-86159049fd02 // indirect
 	github.com/gorilla/css v1.0.1 // indirect
 	github.com/hhrutter/lzw v1.0.0 // indirect
 	github.com/labstack/gommon v0.4.2 // indirect
@@ -40,7 +40,7 @@ require (
 	github.com/xuri/efp v0.0.1 // indirect
 	github.com/xuri/nfp v0.0.1 // indirect
 	golang.org/x/crypto v0.45.0 // indirect
-	golang.org/x/image v0.27.0 // indirect
+	golang.org/x/image v0.29.0 // indirect
 	golang.org/x/sys v0.38.0 // indirect
 	golang.org/x/time v0.11.0 // indirect
 )
