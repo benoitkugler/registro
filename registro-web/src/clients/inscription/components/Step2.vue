@@ -3,11 +3,6 @@
     title="Participants"
     subtitle="Merci de préciser les participants à inscrire."
   >
-    <template #append v-if="!isStart">
-      <v-btn color="green" @click="addParticipant" prepend-icon="mdi-plus">
-        Ajouter un participant</v-btn
-      >
-    </template>
     <v-card-text v-if="isStart">
       <v-row class="my-4" no-gutters justify="space-evenly">
         <v-col align-self="center" class="text-center" cols="12" md="5">
@@ -48,6 +43,18 @@
         @update:model-value="(v) => (participants[i] = v)"
         @delete="deleteParticipant(i)"
       ></ParticipantRow>
+      <v-row v-if="!isStart">
+        <v-col>
+          <v-btn
+            color="green"
+            @click="addParticipant"
+            prepend-icon="mdi-plus"
+            block
+          >
+            Ajouter un participant</v-btn
+          >
+        </v-col>
+      </v-row>
     </v-card-text>
   </v-card>
   <div ref="bottom"></div>
