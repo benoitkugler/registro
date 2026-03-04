@@ -103,7 +103,7 @@ func (ds Demandes) builtins() (out [nbCategorieEquipier]Demande, err error) {
 			continue
 		}
 		if v.Id == 0 {
-			return out, fmt.Errorf("missing builtin Categorie %d", cat)
+			return out, fmt.Errorf("table 'demandes': missing builtin Categorie %d (%s)", cat, Categorie(cat))
 		}
 	}
 	return out, nil
