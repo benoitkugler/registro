@@ -91,6 +91,7 @@
               size="x-small"
               class="mx-1"
               icon="mdi-dots-vertical"
+              flat
             ></v-btn>
           </template>
           <v-list density="compact">

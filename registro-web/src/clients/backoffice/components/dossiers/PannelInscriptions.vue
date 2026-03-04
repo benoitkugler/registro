@@ -81,8 +81,7 @@ import {
   type IdDossier,
   type IdentTarget,
   type IdParticipant,
-  type Inscription,
-  type StatutExt,
+  type InscriptionExt,
 } from "../../logic/api";
 import InscriptionRow from "../../../../components/inscriptions/InscriptionRow.vue";
 import { normalize, Personnes, Camps } from "@/utils";
@@ -104,7 +103,7 @@ onMounted(async () => {
   }
 });
 
-const data = ref<Inscription[]>([]);
+const data = ref<InscriptionExt[]>([]);
 
 async function fetchInscriptions() {
   isLoading.value = true;
@@ -141,7 +140,7 @@ async function identifie(id: IdDossier, target: IdentTarget) {
 }
 
 const inscToValid = ref<{
-  inscription: Inscription;
+  inscription: InscriptionExt;
   participants?: IdParticipant[];
 } | null>(null);
 
@@ -175,7 +174,7 @@ async function valideInscription(
   }
 }
 
-async function deleteInsc(insc: Inscription) {
+async function deleteInsc(insc: InscriptionExt) {
   const res = await controller.DossiersDelete({ id: insc.Dossier.Id });
   if (res === undefined) return;
 

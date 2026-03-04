@@ -205,7 +205,7 @@ import {
   type IdCamp,
   type IdentTarget,
   type IdParticipant,
-  type Inscription,
+  type InscriptionExt,
   type Participant,
   type ParticipantCamp,
 } from "../../clients/backoffice/logic/api";
@@ -213,7 +213,7 @@ import InscriptionEtatcivilCols from "./InscriptionEtatcivilCols.vue";
 import { computed, ref } from "vue";
 import type { SimilairesAPI } from "../types";
 const props = defineProps<{
-  inscription: Inscription;
+  inscription: InscriptionExt;
   api: SimilairesAPI;
   user: IdCamp | null; // null for admin
   hideDelete?: boolean;

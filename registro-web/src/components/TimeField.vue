@@ -56,7 +56,8 @@ const formatedTime = computed(() =>
   })
 );
 
-function onUpdateTime(val: string) {
+function onUpdateTime(val: string | null) {
+  if (val == null) return;
   // format is HH:MM
   const [hour, min] = val.split(":");
   const current = new Date(modelValue.value);

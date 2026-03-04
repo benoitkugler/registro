@@ -11,33 +11,47 @@
     </template>
     <v-card-text>
       <v-skeleton-loader v-if="isLoading"></v-skeleton-loader>
-      <div class="text-center font-italic" v-else-if="!data.length">
-        Il n'y a aucune inscription à valider.
-      </div>
-      <div v-else>
-        <InscriptionRow
-          class="my-1"
-          :user="controller.camp!.Id"
-          v-for="(insc, i) in displayed"
-          :key="i"
-          :inscription="insc"
-          hide-delete
-          :already-validated="isValidatedByUs(insc)"
-          @identifie="(v) => identifie(insc.Dossier.Id, v)"
-          @valide="
-            (v) =>
-              (inscToValid = {
-                inscription: insc,
-                participants: v === undefined ? ownParticipants(insc) : [v],
-              })
-          "
-          :api="{
-            SearchSimilaires:
-              controller.InscriptionsSearchSimilaires.bind(controller),
-            SelectPersonne: controller.SelectPersonne.bind(controller),
-          }"
-        ></InscriptionRow>
-      </div>
+      <template v-else>
+        <v-alert
+          density="compact"
+          rounded
+          v-if="pendingCount"
+          type="info"
+          color="grey"
+        >
+          Il y a {{ pendingCount }} inscription{{
+            Formatters.pluriel(pendingCount)
+          }}
+          de plus en attente de confirmation. L'analyse du centre est en cours.
+        </v-alert>
+        <div class="text-center font-italic" v-if="!data.length">
+          Il n'y a aucune inscription à valider.
+        </div>
+        <div v-else>
+          <InscriptionRow
+            class="my-1"
+            :user="controller.camp!.Id"
+            v-for="(insc, i) in displayed"
+            :key="i"
+            :inscription="insc"
+            hide-delete
+            :already-validated="isValidatedByUs(insc)"
+            @identifie="(v) => identifie(insc.Dossier.Id, v)"
+            @valide="
+              (v) =>
+                (inscToValid = {
+                  inscription: insc,
+                  participants: v === undefined ? ownParticipants(insc) : [v],
+                })
+            "
+            :api="{
+              SearchSimilaires:
+                controller.InscriptionsSearchSimilaires.bind(controller),
+              SelectPersonne: controller.SelectPersonne.bind(controller),
+            }"
+          ></InscriptionRow>
+        </div>
+      </template>
     </v-card-text>
 
     <!-- preview valid -->
@@ -64,10 +78,11 @@ import {
   type IdDossier,
   type IdentTarget,
   type IdParticipant,
-  type Inscription,
+  type InscriptionExt,
+  type Int,
 } from "../../logic/api";
 import InscriptionRow from "@/components/inscriptions/InscriptionRow.vue";
-import { normalize, Personnes, Camps } from "@/utils";
+import { normalize, Personnes, Camps, Formatters } from "@/utils";
 
 const props = defineProps<{}>();
 
@@ -79,14 +94,16 @@ const isLoading = ref(false);
 
 onMounted(fetchInscriptions);
 
-const data = ref<Inscription[]>([]);
+const data = ref<InscriptionExt[]>([]);
+const pendingCount = ref(0 as Int);
 
 async function fetchInscriptions() {
   isLoading.value = true;
   const res = await controller.InscriptionsGet();
   isLoading.value = false;
   if (res === undefined) return;
-  data.value = res || [];
+  data.value = res.Inscriptions || [];
+  pendingCount.value = res.PendingCount;
 }
 
 const search = ref("");
@@ -103,7 +120,7 @@ const displayed = computed(() => {
   });
 });
 
-function isValidatedByUs(insc: Inscription) {
+function isValidatedByUs(insc: InscriptionExt) {
   const us = controller.camp!.Id;
   return (insc.Participants || [])
     .filter((p) => p.Camp.Id == us)
@@ -125,11 +142,11 @@ async function identifie(id: IdDossier, target: IdentTarget) {
 // copied from backoffice : keep in sync
 
 const inscToValid = ref<{
-  inscription: Inscription;
+  inscription: InscriptionExt;
   participants?: IdParticipant[];
 } | null>(null);
 
-function ownParticipants(insc: Inscription) {
+function ownParticipants(insc: InscriptionExt) {
   return (insc.Participants || [])
     .filter((p) => p.Camp.Id == controller.camp?.Id)
     .map((p) => p.Participant.Id);

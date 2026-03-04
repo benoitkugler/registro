@@ -241,8 +241,7 @@
     <RequestProgressCard
       v-if="sondagesProgress"
       title="Envoi du sondage en cours"
-      :current="sondagesProgress.Current"
-      :total="sondagesProgress.Total"
+      :progress="sondagesProgress"
     ></RequestProgressCard>
   </v-dialog>
 

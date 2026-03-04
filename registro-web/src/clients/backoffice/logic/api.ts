@@ -152,6 +152,16 @@ export interface ParticipantsMoveIn {
   Id: IdParticipant;
   Target: IdCamp;
 }
+// registro/controllers/backoffice.PendingInscription
+export interface PendingInscription {
+  Inscription: Inscription;
+  Participants: InscriptionParticipants;
+}
+// registro/controllers/backoffice.PendingInscriptionsOut
+export interface PendingInscriptionsOut {
+  Inscriptions: PendingInscription[] | null;
+  Camps: Camps;
+}
 // registro/controllers/backoffice.PreviewRelance
 export interface PreviewRelance {
   Id: IdDossier;
@@ -195,6 +205,10 @@ export const QueryReglementLabels: Record<QueryReglement, string> = {
 // registro/controllers/backoffice.RelancePaiementIn
 export interface RelancePaiementIn {
   IdDossiers: IdDossier[] | null;
+}
+// registro/controllers/backoffice.RelancePendingInscriptionsIn
+export interface RelancePendingInscriptionsIn {
+  Ids: IdInscription[] | null;
 }
 // registro/controllers/backoffice.RemisesHint
 export interface RemisesHint {
@@ -250,6 +264,11 @@ export interface TauxExt {
   Euros: Int;
   FrancsSuisse: Int;
   Description: string;
+}
+// registro/controllers/backoffice.UpdatePendingInscriptionIn
+export interface UpdatePendingInscriptionIn {
+  Id: IdInscription;
+  Mail: string;
 }
 // registro/controllers/files.DemandeStat
 export interface DemandeStat {
@@ -379,8 +398,8 @@ export interface IdentTarget {
   Rattache: boolean;
   RattacheTo: IdPersonne;
 }
-// registro/logic.Inscription
-export interface Inscription {
+// registro/logic.InscriptionExt
+export interface InscriptionExt {
   Dossier: Dossier;
   Message: string;
   Responsable: Personne;
@@ -535,6 +554,8 @@ export interface CampExt {
   IsTerminated: boolean;
   Slug: string;
 }
+// registro/sql/camps.Camps
+export type Camps = Record<IdCamp, Camp> | null;
 // registro/sql/camps.DocumentsToShow
 export interface DocumentsToShow {
   LettreDirecteur: boolean;
@@ -928,6 +949,45 @@ export interface EventMessage {
 }
 export type IdEvent = Int & { __opaque_int__: "IdEvent" };
 export type IdFile = Int & { __opaque_int__: "IdFile" };
+export type IdInscription = Int & { __opaque_int__: "IdInscription" };
+// registro/sql/inscriptions.Inscription
+export interface Inscription {
+  Id: IdInscription;
+  IdTaux: IdTaux;
+  Responsable: ResponsableLegal;
+  Message: string;
+  CopiesMails: Mails;
+  PartageAdressesOK: boolean;
+  DemandeFondSoutien: boolean;
+  DateHeure: Time;
+  ConfirmedAsDossier: OptID_IdDossier;
+}
+// registro/sql/inscriptions.InscriptionParticipant
+export interface InscriptionParticipant {
+  IdInscription: IdInscription;
+  IdCamp: IdCamp;
+  IdTaux: IdTaux;
+  Nom: string;
+  Prenom: string;
+  DateNaissance: Date;
+  Sexe: Sexe;
+  Nationnalite: Nationnalite;
+}
+// registro/sql/inscriptions.InscriptionParticipants
+export type InscriptionParticipants = InscriptionParticipant[] | null;
+// registro/sql/inscriptions.ResponsableLegal
+export interface ResponsableLegal {
+  Nom: string;
+  Prenom: string;
+  DateNaissance: Date;
+  Sexe: Sexe;
+  Mail: string;
+  Tels: Tels;
+  Adresse: string;
+  CodePostal: string;
+  Ville: string;
+  Pays: Pays;
+}
 export type IdPersonne = Int & { __opaque_int__: "IdPersonne" };
 // registro/sql/personnes.Mails
 export type Mails = string[] | null;
@@ -984,6 +1044,11 @@ export type Date = Date_;
 // registro/sql/shared.OptID[registro/sql/camps.IdCamp]
 export interface OptID_IdCamp {
   Id: IdCamp;
+  Valid: boolean;
+}
+// registro/sql/shared.OptID[registro/sql/dossiers.IdDossier]
+export interface OptID_IdDossier {
+  Id: IdDossier;
   Valid: boolean;
 }
 
@@ -1352,12 +1417,75 @@ export abstract class AbstractAPI {
     }
   }
 
+  /** InscriptionsGetPending performs the request and handles the error */
+  async InscriptionsGetPending() {
+    const fullUrl = this.baseURL + "/api/v1/backoffice/pending-inscriptions";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<PendingInscriptionsOut> = await Axios.get(
+        fullUrl,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** InscriptionsUpdatePending performs the request and handles the error */
+  async InscriptionsUpdatePending(params: UpdatePendingInscriptionIn) {
+    const fullUrl = this.baseURL + "/api/v1/backoffice/pending-inscriptions";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** InscriptionsDeletePending performs the request and handles the error */
+  async InscriptionsDeletePending(params: { id: IdInscription }) {
+    const fullUrl = this.baseURL + "/api/v1/backoffice/pending-inscriptions";
+    this.startRequest();
+    try {
+      await Axios.delete(fullUrl, {
+        headers: this.getHeaders(),
+        params: { id: String(params["id"]) },
+      });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** InscriptionsRelancePending return a streaming Response (JSON line format) */
+  async InscriptionsRelancePending(params: RelancePendingInscriptionsIn) {
+    const fullUrl =
+      this.baseURL + "/api/v1/backoffice/pending-inscriptions/relance";
+    this.startRequest();
+    try {
+      const response = await fetch(fullUrl, {
+        method: "POST",
+        headers: {
+          ...this.getHeaders(),
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(params),
+      });
+      return response as JSONStreamResponse<SendProgress>;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
   /** InscriptionsGet performs the request and handles the error */
   async InscriptionsGet() {
     const fullUrl = this.baseURL + "/api/v1/backoffice/inscriptions";
     this.startRequest();
     try {
-      const rep: AxiosResponse<Inscription[] | null> = await Axios.get(
+      const rep: AxiosResponse<InscriptionExt[] | null> = await Axios.get(
         fullUrl,
         { headers: this.getHeaders() },
       );
@@ -1391,7 +1519,7 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseURL + "/api/v1/backoffice/inscriptions/identifie";
     this.startRequest();
     try {
-      const rep: AxiosResponse<Inscription> = await Axios.post(
+      const rep: AxiosResponse<InscriptionExt> = await Axios.post(
         fullUrl,
         params,
         { headers: this.getHeaders() },
@@ -1424,7 +1552,7 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseURL + "/api/v1/backoffice/inscriptions/valide";
     this.startRequest();
     try {
-      const rep: AxiosResponse<Inscription> = await Axios.post(
+      const rep: AxiosResponse<InscriptionExt> = await Axios.post(
         fullUrl,
         params,
         { headers: this.getHeaders() },

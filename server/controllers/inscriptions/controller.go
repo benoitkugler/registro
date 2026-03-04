@@ -492,6 +492,20 @@ func (ct *Controller) BuildInscription(publicInsc Inscription) (insc in.Inscript
 	return insc, ps, nil
 }
 
+// SendValidationMail send an email to the reponsable of [insc].
+func SendValidationMail(asso config.Asso, key crypto.Encrypter, mailer mails.Mailer, host string, insc in.Inscription) error {
+	cryptedId := crypto.EncryptID(key, insc.Id)
+	urlValide := utils.BuildUrl(host, EndpointConfirmeInscription, utils.QP(queryParamIdInscription, cryptedId))
+	html, err := mails.ValidationMailInscription(asso, mails.Contact{Prenom: insc.Responsable.Prenom, Sexe: insc.Responsable.Sexe}, urlValide)
+	if err != nil {
+		return err
+	}
+	if err = mailer.SendMail(insc.Responsable.Mail, "Vérification de l'adresse mail", html, nil, nil); err != nil {
+		return err
+	}
+	return nil
+}
+
 // envoie un mail de demande de confirmation
 func (ct *Controller) saveInscription(host string, publicInsc Inscription) (err error) {
 	insc, participants, err := ct.BuildInscription(publicInsc)
@@ -508,15 +522,9 @@ func (ct *Controller) saveInscription(host string, publicInsc Inscription) (err 
 		}
 
 		// envoie un mail de demande de confirmation
-		cryptedId := crypto.EncryptID(ct.key, insc.Id)
-		urlValide := utils.BuildUrl(host, EndpointConfirmeInscription, utils.QP(queryParamIdInscription, cryptedId))
-		html, err := mails.ValidationMailInscription(ct.asso, mails.Contact{Prenom: insc.Responsable.Prenom, Sexe: insc.Responsable.Sexe}, urlValide)
+		err := SendValidationMail(ct.asso, ct.key, mails.NewMailer(ct.smtp, ct.asso.MailsSettings), host, insc)
 		if err != nil {
-			log.Println("saveInscription: ValidationMailInscription()", insc, urlValide)
-			return err
-		}
-		if err = mails.NewMailer(ct.smtp, ct.asso.MailsSettings).SendMail(insc.Responsable.Mail, "Vérification de l'adresse mail", html, nil, nil); err != nil {
-			log.Println("saveInscription: SendMail()", insc.Responsable.Mail)
+			log.Println("saveInscription: SendValidationMail()", insc)
 			return err
 		}
 		return nil
@@ -546,7 +554,7 @@ func (ct *Controller) ConfirmeInscription(c echo.Context) error {
 // ConfirmeInscription transforme l'inscription en dossier,
 // et rapproche (automatiquement) les profils.
 //
-// Si l'inscription a déjà été validée
+// Si l'inscription a déjà été validée, le dossier correspondant est simplement renvoyé.
 func ConfirmeInscription(db *sql.DB, id in.IdInscription) (ds.Dossier, error) {
 	insc, err := in.SelectInscription(db, id)
 	if err != nil {

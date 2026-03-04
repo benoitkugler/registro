@@ -44,7 +44,7 @@ onMounted(async () => {
   // go to participants if inscriptions is empty
   const res = await controller.InscriptionsGet();
   if (res === undefined) return;
-  if (!res?.length) setTab("participants");
+  if (!res.Inscriptions?.length) setTab("participants");
 });
 
 const currentTab = computed(() => query.value.tab || "insc");

@@ -2,23 +2,22 @@
   <v-card :title="props.title">
     <v-card-text>
       <v-progress-linear
-        :max="props.total"
-        :model-value="props.current"
+        :max="props.progress.Total"
+        :model-value="props.progress.Current"
         color="primary"
         height="24"
       >
-        {{ props.current }} / {{ props.total }}
+        {{ props.progress.Current }} / {{ props.progress.Total }}
       </v-progress-linear>
     </v-card-text>
   </v-card>
 </template>
 
 <script setup lang="ts">
-import { type Int } from "@/clients/backoffice/logic/api";
+import { type SendProgress } from "@/clients/backoffice/logic/api";
 
 const props = defineProps<{
   title: string;
-  current: Int;
-  total: Int;
+  progress: SendProgress;
 }>();
 </script>

@@ -43,10 +43,10 @@ func Test_inscriptions(t *testing.T) {
 	ct := Controller{db: db.DB, asso: asso, smtp: smtp}
 
 	t.Run("load", func(t *testing.T) {
-		l, err := ct.getInscriptions(camp1.Id)
+		out, err := ct.getInscriptions(camp1.Id)
 		tu.AssertNoErr(t, err)
-		tu.Assert(t, len(l) == 1)
-		insc := l[0]
+		tu.Assert(t, len(out.Inscriptions) == 1 && out.PendingCount == 0)
+		insc := out.Inscriptions[0]
 		tu.Assert(t, insc.Participants[0].Camp.Id == camp1.Id)
 		tu.Assert(t, insc.Participants[1].Camp.Id == camp1.Id)
 		tu.Assert(t, insc.Participants[2].Camp.Id == camp2.Id)
@@ -54,10 +54,10 @@ func Test_inscriptions(t *testing.T) {
 		tu.Assert(t, insc.StatutHints[pa2.Id].Statut == cps.Inscrit)
 		tu.Assert(t, insc.StatutHints[pa3.Id].Statut == cps.AttenteProfilInvalide)
 
-		l, err = ct.getInscriptions(camp2.Id)
+		out, err = ct.getInscriptions(camp2.Id)
 		tu.AssertNoErr(t, err)
-		tu.Assert(t, len(l) == 1)
-		insc = l[0]
+		tu.Assert(t, len(out.Inscriptions) == 1)
+		insc = out.Inscriptions[0]
 		tu.Assert(t, insc.Participants[0].Camp.Id == camp2.Id)
 		tu.Assert(t, insc.Participants[1].Camp.Id == camp1.Id)
 		tu.Assert(t, insc.Participants[2].Camp.Id == camp1.Id)
@@ -81,9 +81,9 @@ func Test_inscriptions(t *testing.T) {
 		tu.AssertNoErr(t, err)
 		tu.Assert(t, !data.Dossier.IsValidated)
 
-		insc, err := ct.getInscriptions(camp1.Id)
+		out, err := ct.getInscriptions(camp1.Id)
 		tu.AssertNoErr(t, err)
-		tu.Assert(t, len(insc) == 1)
+		tu.Assert(t, len(out.Inscriptions) == 1)
 
 		err = ct.valideInscription("localhost", InscriptionsValideIn{
 			IdDossier: dossier1.Id,

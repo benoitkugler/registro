@@ -4,12 +4,16 @@
       :model-value="currentTab"
       @update:model-value="v => setTab(v as InscriptionsTab)"
     >
+      <v-tab value="pending">Inscriptions non terminées</v-tab>
       <v-tab value="insc">Inscriptions en attente</v-tab>
-      <v-tab value="doss">Suivi des dossiers</v-tab>
+      <v-tab value="doss">Dossiers validés </v-tab>
     </v-tabs>
   </NavBar>
 
   <v-tabs-window :model-value="currentTab">
+    <v-tabs-window-item value="pending">
+      <PannelPendingInscriptions></PannelPendingInscriptions>
+    </v-tabs-window-item>
     <v-tabs-window-item value="insc">
       <PannelInscriptions
         @go-to="goToDossier"
@@ -25,8 +29,8 @@
 <script lang="ts" setup>
 import { computed } from "vue";
 import NavBar from "../components/NavBar.vue";
-import PannelInscriptions from "../components/inscriptions/PannelInscriptions.vue";
-import PannelDossiers from "../components/inscriptions/PannelDossiers.vue";
+import PannelInscriptions from "../components/dossiers/PannelInscriptions.vue";
+import PannelDossiers from "../components/dossiers/PannelDossiers.vue";
 import { useRouter } from "vue-router";
 import {
   goToDossier,
@@ -34,6 +38,7 @@ import {
   type QueryURLInscriptions,
   parseQueryURLInscriptions,
 } from "../plugins/router";
+import PannelPendingInscriptions from "../components/dossiers/PannelPendingInscriptions.vue";
 
 const router = useRouter();
 

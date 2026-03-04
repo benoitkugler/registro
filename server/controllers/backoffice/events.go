@@ -388,7 +388,7 @@ func (ct *Controller) EventsSendRelancePaiement(c echo.Context) error {
 }
 
 type SendProgress struct {
-	Current int
+	Current int // 1-based
 	Total   int
 }
 

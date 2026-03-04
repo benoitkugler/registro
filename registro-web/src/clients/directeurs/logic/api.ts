@@ -125,6 +125,11 @@ export interface GroupesOut {
   MinHint: Date;
   MaxHint: Date;
 }
+// registro/controllers/directeurs.InscriptionsOut
+export interface InscriptionsOut {
+  PendingCount: Int;
+  Inscriptions: InscriptionExt[] | null;
+}
 // registro/controllers/directeurs.LettreImageUploadOut
 export interface LettreImageUploadOut {
   location: string;
@@ -215,8 +220,8 @@ export interface IdentTarget {
   Rattache: boolean;
   RattacheTo: IdPersonne;
 }
-// registro/logic.Inscription
-export interface Inscription {
+// registro/logic.InscriptionExt
+export interface InscriptionExt {
   Dossier: Dossier;
   Message: string;
   Responsable: Personne;
@@ -987,10 +992,9 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseURL + "/api/v1/directeurs/inscriptions";
     this.startRequest();
     try {
-      const rep: AxiosResponse<Inscription[] | null> = await Axios.get(
-        fullUrl,
-        { headers: this.getHeaders() },
-      );
+      const rep: AxiosResponse<InscriptionsOut> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+      });
       return rep.data;
     } catch (error) {
       this.handleError(error);
@@ -1021,7 +1025,7 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseURL + "/api/v1/directeurs/inscriptions/identifie";
     this.startRequest();
     try {
-      const rep: AxiosResponse<Inscription> = await Axios.post(
+      const rep: AxiosResponse<InscriptionExt> = await Axios.post(
         fullUrl,
         params,
         { headers: this.getHeaders() },
@@ -1054,7 +1058,7 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseURL + "/api/v1/directeurs/inscriptions/valide";
     this.startRequest();
     try {
-      const rep: AxiosResponse<Inscription> = await Axios.post(
+      const rep: AxiosResponse<InscriptionExt> = await Axios.post(
         fullUrl,
         params,
         { headers: this.getHeaders() },

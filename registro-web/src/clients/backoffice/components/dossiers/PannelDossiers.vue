@@ -119,8 +119,7 @@
       <RequestProgressCard
         v-if="documentsCampProgress"
         title="Envoi des documents en cours"
-        :current="documentsCampProgress.Current"
-        :total="documentsCampProgress.Total"
+        :progress="documentsCampProgress"
       ></RequestProgressCard>
     </v-dialog>
 
@@ -133,8 +132,7 @@
       <RequestProgressCard
         v-if="relancePaiementProgress"
         title="Envoi des relances en cours"
-        :current="relancePaiementProgress.Current"
-        :total="relancePaiementProgress.Total"
+        :progress="relancePaiementProgress"
       ></RequestProgressCard>
     </v-dialog>
 

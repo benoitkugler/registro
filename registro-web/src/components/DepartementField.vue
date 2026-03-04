@@ -11,7 +11,6 @@
 </template>
 
 <script setup lang="ts">
-import type { Departement } from "@/clients/backoffice/logic/api";
 import { Departements } from "@/utils";
 
 const props = defineProps<{
@@ -20,7 +19,7 @@ const props = defineProps<{
   readonly?: boolean;
 }>();
 
-const modelValue = defineModel<Departement>({ required: true });
+const modelValue = defineModel<string>({ required: true });
 </script>
 
 <style scoped></style>

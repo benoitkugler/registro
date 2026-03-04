@@ -65,8 +65,7 @@
       <RequestProgressCard
         v-if="invitingProgress != null"
         title="Envoi des mails"
-        :current="invitingProgress.Current"
-        :total="invitingProgress.Total"
+        :progress="invitingProgress"
       ></RequestProgressCard>
     </v-dialog>
   </v-card>

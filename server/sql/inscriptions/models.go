@@ -73,3 +73,11 @@ func Create(tx *sql.Tx, insc Inscription, participants InscriptionParticipants) 
 	}
 	return insc, nil
 }
+
+func (inscs Inscriptions) RestrictByConfirmed(confirmed bool) {
+	for k, insc := range inscs {
+		if insc.ConfirmedAsDossier.Valid != confirmed {
+			delete(inscs, k)
+		}
+	}
+}

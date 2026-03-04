@@ -53,6 +53,10 @@ func setupRoutesBackoffice(e *echo.Echo, ct *backoffice.Controller) {
 	gr.PUT("/api/v1/backoffice/camps/equipiers", ct.CampsCreateEquipier)
 
 	// Onglet Inscriptions/Dossiers
+	gr.GET("/api/v1/backoffice/pending-inscriptions", ct.InscriptionsGetPending)
+	gr.POST("/api/v1/backoffice/pending-inscriptions", ct.InscriptionsUpdatePending)
+	gr.DELETE("/api/v1/backoffice/pending-inscriptions", ct.InscriptionsDeletePending)
+	gr.POST("/api/v1/backoffice/pending-inscriptions/relance", ct.InscriptionsRelancePending)
 
 	gr.GET("/api/v1/backoffice/inscriptions", ct.InscriptionsGet)
 	gr.GET("/api/v1/backoffice/inscriptions/search-similaires", ct.InscriptionsSearchSimilaires)

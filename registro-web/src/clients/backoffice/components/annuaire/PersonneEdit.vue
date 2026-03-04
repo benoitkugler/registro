@@ -32,7 +32,7 @@
               v-model="inner.DateNaissance"
             ></DateNaissanceField>
           </v-col>
-          <v-col>
+          <!-- <v-col>
             <v-text-field
               hide-details
               label="Ville de naissance"
@@ -46,7 +46,7 @@
               label="Département de naissance"
               v-model="inner.DepartementNaissance"
             ></DepartementField>
-          </v-col>
+          </v-col> -->
           <v-col>
             <NationaliteField v-model="inner.Nationnalite"></NationaliteField>
           </v-col>

@@ -266,20 +266,25 @@ export namespace Camps {
   }
 }
 
+interface PersonneLike {
+  Nom: Personne["Nom"];
+  Prenom: Personne["Prenom"];
+}
+
 export namespace Personnes {
-  export function label(pr: Personne) {
+  export function label(pr: PersonneLike) {
     return `${pr.Prenom} ${pr.Nom}`;
   }
 
-  export function NOMPrenom(pr: Personne) {
+  export function NOMPrenom(pr: PersonneLike) {
     return `${pr.Nom.toUpperCase()} ${pr.Prenom}`;
   }
 
-  export function prenomN(pr: Personne) {
+  export function prenomN(pr: PersonneLike) {
     return `${pr.Prenom} ${pr.Nom.substring(0, 1).toUpperCase()}`;
   }
 
-  export function match(pr: Personne, normalizedPattern: string) {
+  export function match(pr: PersonneLike, normalizedPattern: string) {
     if (normalizedPattern == "") return true;
     const str = normalize(pr.Nom + pr.Prenom);
     return str.includes(normalizedPattern);
@@ -401,6 +406,10 @@ export namespace Formatters {
       case ModePaiement.Helloasso:
         return "mdi-credit-card";
     }
+  }
+
+  export function pluriel(nb: Int) {
+    return nb >= 2 ? "s" : "";
   }
 
   export function accord(sexe: Sexe) {

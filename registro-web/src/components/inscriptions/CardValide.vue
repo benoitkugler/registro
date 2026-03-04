@@ -27,13 +27,13 @@
 import { computed, ref } from "vue";
 import {
   type IdParticipant,
-  type Inscription,
+  type InscriptionExt,
   StatutParticipant,
 } from "../../clients/backoffice/logic/api";
 import CardValideParticipantRow from "./CardValideParticipantRow.vue";
 
 const props = defineProps<{
-  inscription: Inscription;
+  inscription: InscriptionExt;
   idParticipants?: IdParticipant[]; // only edit these participants
 }>();
 

@@ -19,7 +19,7 @@ import (
 	"registro/utils"
 )
 
-type Inscription struct {
+type InscriptionExt struct {
 	Dossier ds.Dossier
 	// le message (optionnel) du formulaire d'inscription
 	// Son contenu s'adapte pour prendre en compte le fonds de soutien
@@ -29,7 +29,7 @@ type Inscription struct {
 	StatutHints  StatutHints
 }
 
-func newInscription(de Dossier, statutHints StatutHints, userIsFondsSoutien bool) Inscription {
+func newInscription(de Dossier, statutHints StatutHints, userIsFondsSoutien bool) InscriptionExt {
 	// collect the messages
 	var chunks []string
 	for _, event := range EventsBy[MessageEvt](de.Events) {
@@ -41,7 +41,7 @@ func newInscription(de Dossier, statutHints StatutHints, userIsFondsSoutien bool
 	}
 	message := strings.Join(chunks, "\n\n")
 
-	return Inscription{
+	return InscriptionExt{
 		Dossier:      de.Dossier,
 		Responsable:  de.Responsable(),
 		Participants: de.ParticipantsExt(),
@@ -51,7 +51,7 @@ func newInscription(de Dossier, statutHints StatutHints, userIsFondsSoutien bool
 }
 
 // LoadInscriptions sorts by time
-func LoadInscriptions(db ds.DB, byPass StatutBypassRights, userIsFondsSoutien bool, ids ...ds.IdDossier) ([]Inscription, error) {
+func LoadInscriptions(db ds.DB, byPass StatutBypassRights, userIsFondsSoutien bool, ids ...ds.IdDossier) ([]InscriptionExt, error) {
 	loaders, err := LoadDossiers(db, ids)
 	if err != nil {
 		return nil, err
@@ -62,7 +62,7 @@ func LoadInscriptions(db ds.DB, byPass StatutBypassRights, userIsFondsSoutien bo
 		return nil, err
 	}
 
-	out := make([]Inscription, len(ids))
+	out := make([]InscriptionExt, len(ids))
 	for i, id := range ids {
 		loader := loaders.For(id)
 		hints := loader.StatutHints(camps, byPass)
@@ -70,7 +70,7 @@ func LoadInscriptions(db ds.DB, byPass StatutBypassRights, userIsFondsSoutien bo
 	}
 
 	// sort by time
-	slices.SortFunc(out, func(a, b Inscription) int {
+	slices.SortFunc(out, func(a, b InscriptionExt) int {
 		return a.Dossier.MomentInscription.Compare(b.Dossier.MomentInscription)
 	})
 

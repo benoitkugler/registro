@@ -20,7 +20,7 @@ func (ct *Controller) InscriptionsGet(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) getInscriptions(isFondsSoutien bool) ([]logic.Inscription, error) {
+func (ct *Controller) getInscriptions(isFondsSoutien bool) ([]logic.InscriptionExt, error) {
 	dossiers, err := ds.SelectAllDossiers(ct.db)
 	if err != nil {
 		return nil, utils.SQLError(err)

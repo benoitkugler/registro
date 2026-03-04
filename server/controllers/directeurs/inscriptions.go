@@ -7,6 +7,7 @@ import (
 	"registro/logic"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
+	in "registro/sql/inscriptions"
 	pr "registro/sql/personnes"
 	"registro/utils"
 
@@ -23,7 +24,7 @@ func (ct *Controller) InscriptionsGet(c echo.Context) error {
 }
 
 // sortParticipants affiche les participants du séjour en premier
-func sortParticipants(insc logic.Inscription, user cps.IdCamp) {
+func sortParticipants(insc logic.InscriptionExt, user cps.IdCamp) {
 	slices.SortFunc(insc.Participants, func(a, b cps.ParticipantCamp) int {
 		if a.Camp.Id == user {
 			return -1
@@ -34,21 +35,50 @@ func sortParticipants(insc logic.Inscription, user cps.IdCamp) {
 	})
 }
 
-func (ct *Controller) getInscriptions(user cps.IdCamp) ([]logic.Inscription, error) {
+type InscriptionsOut struct {
+	PendingCount int // number of not confirmed inscription
+	Inscriptions []logic.InscriptionExt
+}
+
+func getPendingCount(db in.DB, idCamp cps.IdCamp) (int, error) {
+	// fetch pending inscriptions and participants
+	links, err := in.SelectInscriptionParticipantsByIdCamps(db, idCamp)
+	if err != nil {
+		return 0, utils.SQLError(err)
+	}
+	participantsByInscriptions := links.ByIdInscription()
+	inscriptions, err := in.SelectInscriptions(db, links.IdInscriptions()...)
+	if err != nil {
+		return 0, utils.SQLError(err)
+	}
+	inscriptions.RestrictByConfirmed(false)
+	var pendingCount int
+	for _, inscription := range inscriptions {
+		pendingCount += len(participantsByInscriptions[inscription.Id].ByIdCamp()[idCamp])
+	}
+	return pendingCount, nil
+}
+
+func (ct *Controller) getInscriptions(user cps.IdCamp) (InscriptionsOut, error) {
+	pendingCount, err := getPendingCount(ct.db, user)
+	if err != nil {
+		return InscriptionsOut{}, err
+	}
+
 	parts, err := cps.SelectParticipantsByIdCamps(ct.db, user)
 	if err != nil {
-		return nil, utils.SQLError(err)
+		return InscriptionsOut{}, utils.SQLError(err)
 	}
 	dossiers, err := ds.SelectDossiers(ct.db, parts.IdDossiers()...)
 	if err != nil {
-		return nil, utils.SQLError(err)
+		return InscriptionsOut{}, utils.SQLError(err)
 	}
 	// restrict to new inscriptions
 	dossiers.RestrictByValidated(false)
 
 	out, err := logic.LoadInscriptions(ct.db, directeursBypass, false, dossiers.IDs()...)
 	if err != nil {
-		return nil, err
+		return InscriptionsOut{}, err
 	}
 
 	// sort participant by camp
@@ -56,7 +86,7 @@ func (ct *Controller) getInscriptions(user cps.IdCamp) ([]logic.Inscription, err
 		sortParticipants(insc, user)
 	}
 
-	return out, nil
+	return InscriptionsOut{pendingCount, out}, nil
 }
 
 func (ct *Controller) InscriptionsSearchSimilaires(c echo.Context) error {

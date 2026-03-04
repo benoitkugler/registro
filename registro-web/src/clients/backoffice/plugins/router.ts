@@ -75,7 +75,7 @@ export function goToParticipant(participant: {
   });
 }
 
-export type InscriptionsTab = "insc" | "doss";
+export type InscriptionsTab = "pending" | "insc" | "doss";
 
 export type QueryURLInscriptions = {
   tab?: InscriptionsTab;
