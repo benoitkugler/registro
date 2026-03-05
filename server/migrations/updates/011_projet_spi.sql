@@ -1,3 +1,6 @@
+-- v0.10.2
+-- add Projet spirituel
+
 BEGIN;
 --
 CREATE TABLE projet_spis (
