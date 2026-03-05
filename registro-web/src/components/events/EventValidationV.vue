@@ -6,12 +6,10 @@
   >
     <v-row no-gutters>
       <v-col align-self="center">
-        Inscription reçue et confirmée
-        {{
-          props.content.ByCamp
-            ? `par la direction du séjour ${props.content.ByCamp}.`
-            : `par le centre.`
-        }}
+        Inscription confirmée
+        {{ props.content.IsBackoffice ? `par le centre` : `par la direction` }}
+        pour le séjour <i>{{ props.content.ForCamp }}</i
+        >.
       </v-col>
       <v-col align-self="center" cols="auto">
         <v-btn

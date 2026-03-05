@@ -494,7 +494,8 @@ export const StatutPaiementLabels: Record<StatutPaiement, string> = {
 export type SupprimeEvt = Record<string, never>;
 // registro/logic.ValidationEvt
 export interface ValidationEvt {
-  ByCamp: string;
+  ForCamp: string;
+  IsBackoffice: boolean;
 }
 // registro/logic/search.PersonneHeader
 export interface PersonneHeader {

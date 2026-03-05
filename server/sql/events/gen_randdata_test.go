@@ -97,7 +97,8 @@ func randEventSondage() EventSondage {
 func randEventValidation() EventValidation {
 	var s EventValidation
 	s.IdEvent = randIdEvent()
-	s.IdCamp = randsha_OptID_cam_IdCamp()
+	s.IdCamp = randcam_IdCamp()
+	s.IsBackoffice = randbool()
 
 	return s
 }

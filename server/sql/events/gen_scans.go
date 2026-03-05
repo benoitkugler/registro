@@ -1200,6 +1200,7 @@ func scanOneEventValidation(row scanner) (EventValidation, error) {
 	err := row.Scan(
 		&item.IdEvent,
 		&item.IdCamp,
+		&item.IsBackoffice,
 	)
 	return item, err
 }
@@ -1208,7 +1209,7 @@ func ScanEventValidation(row *sql.Row) (EventValidation, error) { return scanOne
 
 // SelectAll returns all the items in the event_validations table.
 func SelectAllEventValidations(db DB) (EventValidations, error) {
-	rows, err := db.Query("SELECT idevent, idcamp FROM event_validations")
+	rows, err := db.Query("SELECT idevent, idcamp, isbackoffice FROM event_validations")
 	if err != nil {
 		return nil, err
 	}
@@ -1244,11 +1245,11 @@ func ScanEventValidations(rs *sql.Rows) (EventValidations, error) {
 
 func (item EventValidation) Insert(db DB) error {
 	_, err := db.Exec(`INSERT INTO event_validations (
-			idevent, idcamp
+			idevent, idcamp, isbackoffice
 			) VALUES (
-			$1, $2
+			$1, $2, $3
 			);
-			`, item.IdEvent, item.IdCamp)
+			`, item.IdEvent, item.IdCamp, item.IsBackoffice)
 	if err != nil {
 		return err
 	}
@@ -1265,13 +1266,14 @@ func InsertManyEventValidations(tx *sql.Tx, items ...EventValidation) error {
 	stmt, err := tx.Prepare(pq.CopyIn("event_validations",
 		"idevent",
 		"idcamp",
+		"isbackoffice",
 	))
 	if err != nil {
 		return err
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdEvent, item.IdCamp)
+		_, err = stmt.Exec(item.IdEvent, item.IdCamp, item.IsBackoffice)
 		if err != nil {
 			return err
 		}
@@ -1290,7 +1292,7 @@ func InsertManyEventValidations(tx *sql.Tx, items ...EventValidation) error {
 // Delete the link EventValidation from the database.
 // Only the foreign keys IdEvent, IdCamp fields are used in 'item'.
 func (item EventValidation) Delete(tx DB) error {
-	_, err := tx.Exec(`DELETE FROM event_validations WHERE IdEvent = $1 AND ((IdCamp IS NULL AND $2 IS NULL) OR IdCamp = $2);`, item.IdEvent, item.IdCamp)
+	_, err := tx.Exec(`DELETE FROM event_validations WHERE IdEvent = $1 AND IdCamp = $2;`, item.IdEvent, item.IdCamp)
 	return err
 }
 
@@ -1316,7 +1318,7 @@ func (items EventValidations) IdEvents() []IdEvent {
 
 // SelectEventValidationByIdEvent return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectEventValidationByIdEvent(tx DB, idEvent IdEvent) (item EventValidation, found bool, err error) {
-	row := tx.QueryRow("SELECT idevent, idcamp FROM event_validations WHERE idevent = $1", idEvent)
+	row := tx.QueryRow("SELECT idevent, idcamp, isbackoffice FROM event_validations WHERE idevent = $1", idEvent)
 	item, err = ScanEventValidation(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
@@ -1325,7 +1327,7 @@ func SelectEventValidationByIdEvent(tx DB, idEvent IdEvent) (item EventValidatio
 }
 
 func SelectEventValidationsByIdEvents(tx DB, idEvents_ ...IdEvent) (EventValidations, error) {
-	rows, err := tx.Query("SELECT idevent, idcamp FROM event_validations WHERE idevent = ANY($1)", IdEventArrayToPQ(idEvents_))
+	rows, err := tx.Query("SELECT idevent, idcamp, isbackoffice FROM event_validations WHERE idevent = ANY($1)", IdEventArrayToPQ(idEvents_))
 	if err != nil {
 		return nil, err
 	}
@@ -1333,28 +1335,35 @@ func SelectEventValidationsByIdEvents(tx DB, idEvents_ ...IdEvent) (EventValidat
 }
 
 func DeleteEventValidationsByIdEvents(tx DB, idEvents_ ...IdEvent) (EventValidations, error) {
-	rows, err := tx.Query("DELETE FROM event_validations WHERE idevent = ANY($1) RETURNING idevent, idcamp", IdEventArrayToPQ(idEvents_))
+	rows, err := tx.Query("DELETE FROM event_validations WHERE idevent = ANY($1) RETURNING idevent, idcamp, isbackoffice", IdEventArrayToPQ(idEvents_))
 	if err != nil {
 		return nil, err
 	}
 	return ScanEventValidations(rows)
 }
 
-// IdCamps returns the list of non null IdCamp
+// ByIdCamp returns a map with 'IdCamp' as keys.
+func (items EventValidations) ByIdCamp() map[camps.IdCamp]EventValidations {
+	out := make(map[camps.IdCamp]EventValidations)
+	for _, target := range items {
+		out[target.IdCamp] = append(out[target.IdCamp], target)
+	}
+	return out
+}
+
+// IdCamps returns the list of ids of IdCamp
 // contained in this table.
 // They are not garanteed to be distinct.
 func (items EventValidations) IdCamps() []camps.IdCamp {
-	var out []camps.IdCamp
-	for _, target := range items {
-		if id := target.IdCamp; id.Valid {
-			out = append(out, id.Id)
-		}
+	out := make([]camps.IdCamp, len(items))
+	for index, target := range items {
+		out[index] = target.IdCamp
 	}
 	return out
 }
 
 func SelectEventValidationsByIdCamps(tx DB, idCamps_ ...camps.IdCamp) (EventValidations, error) {
-	rows, err := tx.Query("SELECT idevent, idcamp FROM event_validations WHERE idcamp = ANY($1)", camps.IdCampArrayToPQ(idCamps_))
+	rows, err := tx.Query("SELECT idevent, idcamp, isbackoffice FROM event_validations WHERE idcamp = ANY($1)", camps.IdCampArrayToPQ(idCamps_))
 	if err != nil {
 		return nil, err
 	}
@@ -1362,7 +1371,7 @@ func SelectEventValidationsByIdCamps(tx DB, idCamps_ ...camps.IdCamp) (EventVali
 }
 
 func DeleteEventValidationsByIdCamps(tx DB, idCamps_ ...camps.IdCamp) (EventValidations, error) {
-	rows, err := tx.Query("DELETE FROM event_validations WHERE idcamp = ANY($1) RETURNING idevent, idcamp", camps.IdCampArrayToPQ(idCamps_))
+	rows, err := tx.Query("DELETE FROM event_validations WHERE idcamp = ANY($1) RETURNING idevent, idcamp, isbackoffice", camps.IdCampArrayToPQ(idCamps_))
 	if err != nil {
 		return nil, err
 	}

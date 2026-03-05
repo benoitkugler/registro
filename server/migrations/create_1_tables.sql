@@ -317,13 +317,13 @@ CREATE TABLE event_attestations (
     IdEvent integer NOT NULL,
     Distribution smallint CHECK (Distribution IN (0, 1, 2)) NOT NULL,
     IsPresence boolean NOT NULL,
-    guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7)) NOT NULL
+    guard smallint NOT NULL
 );
 
 CREATE TABLE event_camp_docss (
     IdEvent integer NOT NULL,
     IdCamp integer NOT NULL,
-    guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7)) NOT NULL
+    guard smallint NOT NULL
 );
 
 CREATE TABLE event_messages (
@@ -335,32 +335,33 @@ CREATE TABLE event_messages (
     VuEspaceperso boolean NOT NULL,
     VuFondSoutien boolean NOT NULL,
     OnlyToFondSoutien boolean NOT NULL,
-    guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7)) NOT NULL
+    guard smallint NOT NULL
 );
 
 CREATE TABLE event_message_vus (
     IdEvent integer NOT NULL,
     IdCamp integer NOT NULL,
-    guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7)) NOT NULL
+    guard smallint NOT NULL
 );
 
 CREATE TABLE event_place_liberees (
     IdEvent integer NOT NULL,
     IdParticipant integer NOT NULL,
     Accepted boolean NOT NULL,
-    guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7)) NOT NULL
+    guard smallint NOT NULL
 );
 
 CREATE TABLE event_sondages (
     IdEvent integer NOT NULL,
     IdCamp integer NOT NULL,
-    guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7)) NOT NULL
+    guard smallint NOT NULL
 );
 
 CREATE TABLE event_validations (
     IdEvent integer NOT NULL,
-    IdCamp integer,
-    guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7)) NOT NULL
+    IdCamp integer NOT NULL,
+    IsBackoffice boolean NOT NULL,
+    guard smallint NOT NULL
 );
 
 CREATE TABLE dons (

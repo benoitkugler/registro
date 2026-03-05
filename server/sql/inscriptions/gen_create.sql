@@ -81,7 +81,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Nom', 'Prenom', 'DateNaissance', 'Sexe', 'Mail', 'Tels', 'Adresse', 'CodePostal', 'Ville', 'Pays'))
+            bool_and(KEY IN ('Nom', 'Prenom', 'DateNaissance', 'Sexe', 'Mail', 'Tels', 'Adresse', 'CodePostal', 'Ville', 'Pays'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'Nom')

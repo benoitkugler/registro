@@ -83,18 +83,16 @@ func (SondageEvt) kind() evs.EventKind      { return evs.Sondage }
 type SupprimeEvt struct{}
 
 type ValidationEvt struct {
-	ByCamp string // optionnel
+	ForCamp      string
+	IsBackoffice bool
 }
 
 // m must have kind [ValidationEvt]
 func (ld *eventsContent) newValidation(ev evs.Event) ValidationEvt {
 	m := ld.validations[ev.Id]
-	label := ""
-	if m.IdCamp.Valid {
-		camp := ld.camps[m.IdCamp.Id]
-		label = camp.Label()
-	}
-	return ValidationEvt{label}
+	camp := ld.camps[m.IdCamp]
+	label := camp.Label()
+	return ValidationEvt{label, m.IsBackoffice}
 }
 
 type MessageEvt struct {
@@ -254,19 +252,7 @@ func loadEventsContent(db evs.DB, ids ...evs.IdEvent) (out eventsContent, _ erro
 	if err != nil {
 		return eventsContent{}, utils.SQLError(err)
 	}
-
-	var idCamps []cps.IdCamp
-	for _, m := range tmp1 {
-		if m.OrigineCamp.Valid {
-			idCamps = append(idCamps, m.OrigineCamp.Id)
-		}
-	}
-	for _, m := range tmp20 {
-		if m.IdCamp.Valid {
-			idCamps = append(idCamps, m.IdCamp.Id)
-		}
-	}
-	idCamps = slices.Concat(idCamps, tmp1bis.IdCamps(), tmp2.IdCamps(), tmp5.IdCamps(), out.participants.IdCamps())
+	idCamps := slices.Concat(tmp1.OrigineCamps(), tmp20.IdCamps(), tmp1bis.IdCamps(), tmp2.IdCamps(), tmp5.IdCamps(), out.participants.IdCamps())
 	out.camps, err = cps.SelectCamps(db, idCamps...)
 	if err != nil {
 		return eventsContent{}, utils.SQLError(err)

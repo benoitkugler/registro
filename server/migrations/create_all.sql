@@ -317,13 +317,13 @@ CREATE TABLE event_attestations (
     IdEvent integer NOT NULL,
     Distribution smallint CHECK (Distribution IN (0, 1, 2)) NOT NULL,
     IsPresence boolean NOT NULL,
-    guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7)) NOT NULL
+    guard smallint NOT NULL
 );
 
 CREATE TABLE event_camp_docss (
     IdEvent integer NOT NULL,
     IdCamp integer NOT NULL,
-    guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7)) NOT NULL
+    guard smallint NOT NULL
 );
 
 CREATE TABLE event_messages (
@@ -335,32 +335,33 @@ CREATE TABLE event_messages (
     VuEspaceperso boolean NOT NULL,
     VuFondSoutien boolean NOT NULL,
     OnlyToFondSoutien boolean NOT NULL,
-    guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7)) NOT NULL
+    guard smallint NOT NULL
 );
 
 CREATE TABLE event_message_vus (
     IdEvent integer NOT NULL,
     IdCamp integer NOT NULL,
-    guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7)) NOT NULL
+    guard smallint NOT NULL
 );
 
 CREATE TABLE event_place_liberees (
     IdEvent integer NOT NULL,
     IdParticipant integer NOT NULL,
     Accepted boolean NOT NULL,
-    guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7)) NOT NULL
+    guard smallint NOT NULL
 );
 
 CREATE TABLE event_sondages (
     IdEvent integer NOT NULL,
     IdCamp integer NOT NULL,
-    guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7)) NOT NULL
+    guard smallint NOT NULL
 );
 
 CREATE TABLE event_validations (
     IdEvent integer NOT NULL,
-    IdCamp integer,
-    guard smallint CHECK (guard IN (0, 1, 2, 3, 4, 5, 6, 7)) NOT NULL
+    IdCamp integer NOT NULL,
+    IsBackoffice boolean NOT NULL,
+    guard smallint NOT NULL
 );
 
 CREATE TABLE dons (
@@ -398,7 +399,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Nom', 'Tel'))
+            bool_and(KEY IN ('Nom', 'Tel'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'Nom')
@@ -420,7 +421,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Nom', 'Prenom', 'Mail', 'Tel'))
+            bool_and(KEY IN ('Nom', 'Prenom', 'Mail', 'Tel'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'Nom')
@@ -543,7 +544,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Vetements', 'Complement'))
+            bool_and(KEY IN ('Vetements', 'Complement'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_array_camp_Vetement (data -> 'Vetements')
@@ -565,7 +566,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Actif', 'Commentaire'))
+            bool_and(KEY IN ('Actif', 'Commentaire'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_boolean (data -> 'Actif')
@@ -587,7 +588,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Active', 'Statuts', 'Jours'))
+            bool_and(KEY IN ('Active', 'Statuts', 'Jours'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_camp_OptionPrixKind (data -> 'Active')
@@ -626,7 +627,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('IdStatut', 'Jour'))
+            bool_and(KEY IN ('IdStatut', 'Jour'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_number (data -> 'IdStatut')
@@ -648,7 +649,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Id', 'Prix', 'Label', 'Description'))
+            bool_and(KEY IN ('Id', 'Prix', 'Label', 'Description'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_number (data -> 'Id')
@@ -672,7 +673,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Equipiers', 'Famille', 'Speciale'))
+            bool_and(KEY IN ('Equipiers', 'Famille', 'Speciale'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_number (data -> 'Equipiers')
@@ -695,7 +696,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Quantite', 'Description', 'Important'))
+            bool_and(KEY IN ('Quantite', 'Description', 'Important'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_number (data -> 'Quantite')
@@ -734,7 +735,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Cent', 'Currency'))
+            bool_and(KEY IN ('Cent', 'Currency'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_number (data -> 'Cent')
@@ -828,7 +829,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Nom', 'Prenom', 'DateNaissance', 'Sexe', 'Mail', 'Tels', 'Adresse', 'CodePostal', 'Ville', 'Pays'))
+            bool_and(KEY IN ('Nom', 'Prenom', 'DateNaissance', 'Sexe', 'Mail', 'Tels', 'Adresse', 'CodePostal', 'Ville', 'Pays'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'Nom')

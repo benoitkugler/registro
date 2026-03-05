@@ -119,7 +119,7 @@ func TestController_participants(t *testing.T) {
 
 		err = ct.deleteParticipant(part.Participant.Id)
 		tu.AssertNoErr(t, err)
-		assertExist(pe2.Id) // dossier validé
+		assertExist(pe2.Id) // participant validé : on garde le profil
 
 		part, err = ct.createParticipant(ParticipantsCreateIn{IdDossier: dossier.Id, IdCamp: camp2.Id, IdPersonne: pe1.Id})
 		tu.AssertNoErr(t, err)
@@ -129,6 +129,9 @@ func TestController_participants(t *testing.T) {
 		tu.AssertNoErr(t, err)
 		assertExist(pe2.Id) // personne utilisée ailleurs
 
+		part2.Participant.Statut = cps.AStatuer
+		_, err = part2.Participant.Update(ct.db)
+		tu.AssertNoErr(t, err)
 		err = ct.deleteParticipant(part2.Participant.Id)
 		tu.AssertNoErr(t, err)
 		_, err = pr.SelectPersonne(db, pe1.Id)

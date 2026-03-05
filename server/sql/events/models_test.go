@@ -44,6 +44,15 @@ func TestEvents(t *testing.T) {
 	err = EventMessageVu{IdEvent: event.Id, IdCamp: camp2.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
 
+	event, err = Event{IdDossier: 1, Kind: Validation, Created: time.Now()}.Insert(db)
+	tu.AssertNoErr(t, err)
+	err = EventValidation{IdEvent: event.Id, IdCamp: camp2.Id, IsBackoffice: true}.Insert(db)
+	tu.AssertNoErr(t, err)
+	event, err = Event{IdDossier: 1, Kind: Validation, Created: time.Now()}.Insert(db)
+	tu.AssertNoErr(t, err)
+	err = EventValidation{IdEvent: event.Id, IdCamp: camp2.Id, IsBackoffice: false}.Insert(db)
+	tu.AssertNoErr(t, err)
+
 	_, err = camps.DeleteCampById(db, camp1.Id)
 	tu.AssertNoErr(t, err) // cascade
 
@@ -70,12 +79,12 @@ func TestSwitchDossier(t *testing.T) {
 
 	event, err := Event{IdDossier: d1.Id, Kind: Validation, Created: time.Now()}.Insert(db)
 	tu.AssertNoErr(t, err)
-	err = EventValidation{IdEvent: event.Id, IdCamp: camp1.Id.Opt()}.Insert(db)
+	err = EventValidation{IdEvent: event.Id, IdCamp: camp1.Id, IsBackoffice: true}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	event, err = Event{IdDossier: d1.Id, Kind: Validation, Created: time.Now()}.Insert(db)
 	tu.AssertNoErr(t, err)
-	err = EventValidation{IdEvent: event.Id}.Insert(db)
+	err = EventValidation{IdEvent: event.Id, IdCamp: camp1.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	err = SwitchValidationAndMessageDossier(db, d1.Id, d2.Id)

@@ -276,7 +276,7 @@ type InscriptionsValideIn struct {
 //
 // Le dossier est validé si aucun participant n'est encore [AStatuer]
 func ValideInscription(db *sql.DB, key crypto.Encrypter, smtp config.SMTP, asso config.Asso,
-	host string, args InscriptionsValideIn, bypass StatutBypassRights, idCamp cps.OptIdCamp,
+	host string, args InscriptionsValideIn, bypass StatutBypassRights, acteur cps.OptIdCamp,
 ) error {
 	loader, err := LoadDossier(db, args.IdDossier)
 	if err != nil {
@@ -300,7 +300,10 @@ func ValideInscription(db *sql.DB, key crypto.Encrypter, smtp config.SMTP, asso 
 	}
 
 	err = utils.InTx(db, func(tx *sql.Tx) error {
-		var inscrits, attente, astatuer []mails.Participant
+		var (
+			inscrits, attente, astatuer []mails.Participant
+			validatedCamp               = utils.Set[cps.IdCamp]{}
+		)
 		for _, pExt := range loader.ParticipantsExt() {
 			participant := pExt.Participant
 			mailPart := mails.Participant{Personne: pExt.Personne.PrenomNOM(), Camp: pExt.Camp.Label()}
@@ -309,7 +312,7 @@ func ValideInscription(db *sql.DB, key crypto.Encrypter, smtp config.SMTP, asso 
 
 			// ignore participant not validable (already validated or restricted for directors)
 			// or for other camps
-			if !hasNew || !serverHint.Validable || (idCamp.Valid && !idCamp.Is(participant.IdCamp)) {
+			if !hasNew || !serverHint.Validable || (acteur.Valid && !acteur.Is(participant.IdCamp)) {
 				// in the mail, only show the remaining participants
 				if participant.Statut == cps.AStatuer {
 					astatuer = append(astatuer, mailPart)
@@ -327,6 +330,9 @@ func ValideInscription(db *sql.DB, key crypto.Encrypter, smtp config.SMTP, asso 
 			if err != nil {
 				return err
 			}
+			// mark for event registration
+			validatedCamp.Add(participant.IdCamp)
+
 			// update loader, used below
 			loader.Participants[participant.Id] = participant
 
@@ -337,14 +343,22 @@ func ValideInscription(db *sql.DB, key crypto.Encrypter, smtp config.SMTP, asso 
 			}
 		}
 
-		// mark the validation ...
-		ev, err := evs.Event{IdDossier: dossier.Id, Kind: evs.Validation, Created: time.Now()}.Insert(tx)
-		if err != nil {
-			return err
+		if len(validatedCamp) == 0 {
+			return errors.New("internal error: no validation performed")
 		}
-		err = evs.EventValidation{IdEvent: ev.Id, IdCamp: idCamp}.Insert(tx)
-		if err != nil {
-			return err
+
+		// mark the validation (if [acteur] is valid, [validatedCamp] contains only that id)...
+		now := time.Now()
+		var ev evs.Event // register the last for the notification
+		for idCamp := range validatedCamp {
+			ev, err = evs.Event{IdDossier: dossier.Id, Kind: evs.Validation, Created: now}.Insert(tx)
+			if err != nil {
+				return err
+			}
+			err = evs.EventValidation{IdEvent: ev.Id, IdCamp: idCamp, IsBackoffice: !acteur.Valid}.Insert(tx)
+			if err != nil {
+				return err
+			}
 		}
 
 		// ... and notify if required

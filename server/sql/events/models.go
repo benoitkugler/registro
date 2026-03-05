@@ -25,13 +25,14 @@ type Event struct {
 	Created   time.Time
 }
 
-// EventValidation indicates the origin of the validation
+// EventValidation indicates the origin and camp of the validation
 //
 // gomacro:SQL ADD UNIQUE(IdEvent)
 // gomacro:SQL ADD FOREIGN KEY (IdEvent, guard) REFERENCES Event(Id,Kind) ON DELETE CASCADE
 type EventValidation struct {
-	IdEvent IdEvent
-	IdCamp  OptIdCamp `gomacro-sql-foreign:"Camp"` // empty for backoffice
+	IdEvent      IdEvent
+	IdCamp       camps.IdCamp
+	IsBackoffice bool
 
 	guard EventKind `gomacro-sql-guard:"#[EventKind.Validation]"`
 }

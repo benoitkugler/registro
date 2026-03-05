@@ -34,9 +34,9 @@ func Test_inscriptions(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	_, err = cps.Participant{IdCamp: camp1.Id, IdPersonne: pe1.Id, IdDossier: dossier1.Id, IdTaux: 1, Statut: cps.Inscrit}.Insert(db)
 	tu.AssertNoErr(t, err)
-	_, err = cps.Participant{IdCamp: camp1.Id, IdPersonne: pe2.Id, IdDossier: dossier1.Id, IdTaux: 1, Statut: cps.Inscrit}.Insert(db)
+	_, err = cps.Participant{IdCamp: camp1.Id, IdPersonne: pe2.Id, IdDossier: dossier1.Id, IdTaux: 1, Statut: cps.AStatuer}.Insert(db)
 	tu.AssertNoErr(t, err)
-	pa3, err := cps.Participant{IdCamp: camp2.Id, IdPersonne: pe2.Id, IdDossier: dossier1.Id, IdTaux: 1, Statut: cps.AStatuer}.Insert(db)
+	_, err = cps.Participant{IdCamp: camp2.Id, IdPersonne: pe2.Id, IdDossier: dossier1.Id, IdTaux: 1, Statut: cps.AStatuer}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	asso, smtp := loadEnv(t)
@@ -45,7 +45,7 @@ func Test_inscriptions(t *testing.T) {
 	t.Run("load", func(t *testing.T) {
 		out, err := ct.getInscriptions(camp1.Id)
 		tu.AssertNoErr(t, err)
-		tu.Assert(t, len(out.Inscriptions) == 0 && out.PendingCount == 0) // all participant for camp1 are validated
+		tu.Assert(t, len(out.Inscriptions) == 1 && out.PendingCount == 0)
 
 		out, err = ct.getInscriptions(camp2.Id)
 		tu.AssertNoErr(t, err)
@@ -73,6 +73,8 @@ func Test_inscriptions(t *testing.T) {
 		data, err := logic.LoadDossier(db, dossier1.Id)
 		tu.AssertNoErr(t, err)
 
+		tu.Assert(t, len(logic.EventsBy[logic.ValidationEvt](data.Events)) == 1)
+
 		out, err := ct.getInscriptions(camp1.Id)
 		tu.AssertNoErr(t, err)
 		tu.Assert(t, len(out.Inscriptions) == 0)
@@ -81,10 +83,7 @@ func Test_inscriptions(t *testing.T) {
 			IdDossier: dossier1.Id,
 			Statuts:   values,
 		}, camp2.Id)
-		tu.AssertNoErr(t, err)
-		data, err = logic.LoadDossier(db, dossier1.Id)
-		tu.AssertNoErr(t, err)
-		tu.Assert(t, data.Participants[pa3.Id].Statut == cps.AStatuer) // not validable because of age
+		tu.AssertErr(t, err) // not validable because of age
 
 		out, err = ct.getInscriptions(camp2.Id)
 		tu.AssertNoErr(t, err)
