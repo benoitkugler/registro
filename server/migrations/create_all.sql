@@ -212,6 +212,21 @@ CREATE TABLE participants (
     Navette smallint CHECK (Navette IN (0, 1, 2, 3)) NOT NULL
 );
 
+CREATE TABLE projet_spis (
+    IdCamp integer NOT NULL,
+    Description text NOT NULL,
+    Programme text NOT NULL,
+    JourneeType text NOT NULL,
+    DynamiqueCampeur text NOT NULL,
+    Evangile text NOT NULL,
+    Equipe text NOT NULL,
+    Cuisine text NOT NULL,
+    Suite text NOT NULL,
+    VisiteLibrairie smallint CHECK (VisiteLibrairie IN (0, 1, 2)) NOT NULL,
+    Bibles boolean NOT NULL,
+    Question text NOT NULL
+);
+
 CREATE TABLE sondages (
     Id serial PRIMARY KEY,
     IdCamp integer NOT NULL,
@@ -946,6 +961,12 @@ ALTER TABLE camps
 
 ALTER TABLE camps
     ADD FOREIGN KEY (IdTaux) REFERENCES tauxs;
+
+ALTER TABLE projet_spis
+    ADD UNIQUE (IdCamp);
+
+ALTER TABLE projet_spis
+    ADD FOREIGN KEY (IdCamp) REFERENCES camps ON DELETE CASCADE;
 
 ALTER TABLE lettredirecteurs
     ADD UNIQUE (IdCamp);

@@ -686,6 +686,21 @@ export interface PrixParStatut {
 }
 // registro/sql/camps.PrixQuotientFamilial
 export type PrixQuotientFamilial = Ar4_Int;
+// registro/sql/camps.ProjetSpi
+export interface ProjetSpi {
+  IdCamp: IdCamp;
+  Description: string;
+  Programme: string;
+  JourneeType: string;
+  DynamiqueCampeur: string;
+  Evangile: string;
+  Equipe: string;
+  Cuisine: string;
+  Suite: string;
+  VisiteLibrairie: VisiteLibrairie;
+  Bibles: boolean;
+  Question: string;
+}
 // registro/sql/camps.Remises
 export interface Remises {
   Equipiers: Int;
@@ -834,6 +849,21 @@ export interface Vetement {
   Description: string;
   Important: boolean;
 }
+// registro/sql/camps.VisiteLibrairie
+export const VisiteLibrairie = {
+  EnReflexion: 0,
+  Oui: 1,
+  Non: 2,
+} as const;
+export type VisiteLibrairie =
+  (typeof VisiteLibrairie)[keyof typeof VisiteLibrairie];
+
+export const VisiteLibrairieLabels: Record<VisiteLibrairie, string> = {
+  [VisiteLibrairie.EnReflexion]: "",
+  [VisiteLibrairie.Oui]: "",
+  [VisiteLibrairie.Non]: "",
+};
+
 // registro/sql/dossiers.Currency
 export const Currency = {
   Euros: 0,
@@ -1266,6 +1296,21 @@ export abstract class AbstractAPI {
       const rep: AxiosResponse<SondagesOut> = await Axios.get(fullUrl, {
         headers: this.getHeaders(),
         params: { year: String(params["year"]) },
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** CampsLoadProjetSpi performs the request and handles the error */
+  async CampsLoadProjetSpi(params: { idCamp: IdCamp }) {
+    const fullUrl = this.baseURL + "/api/v1/backoffice/camps/projet-spi";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<ProjetSpi> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { idCamp: String(params["idCamp"]) },
       });
       return rep.data;
     } catch (error) {

@@ -492,6 +492,21 @@ export interface PrixParStatut {
 }
 // registro/sql/camps.PrixQuotientFamilial
 export type PrixQuotientFamilial = Ar4_Int;
+// registro/sql/camps.ProjetSpi
+export interface ProjetSpi {
+  IdCamp: IdCamp;
+  Description: string;
+  Programme: string;
+  JourneeType: string;
+  DynamiqueCampeur: string;
+  Evangile: string;
+  Equipe: string;
+  Cuisine: string;
+  Suite: string;
+  VisiteLibrairie: VisiteLibrairie;
+  Bibles: boolean;
+  Question: string;
+}
 // registro/sql/camps.Remises
 export interface Remises {
   Equipiers: Int;
@@ -631,6 +646,21 @@ export interface Vetement {
   Description: string;
   Important: boolean;
 }
+// registro/sql/camps.VisiteLibrairie
+export const VisiteLibrairie = {
+  EnReflexion: 0,
+  Oui: 1,
+  Non: 2,
+} as const;
+export type VisiteLibrairie =
+  (typeof VisiteLibrairie)[keyof typeof VisiteLibrairie];
+
+export const VisiteLibrairieLabels: Record<VisiteLibrairie, string> = {
+  [VisiteLibrairie.EnReflexion]: "En réflexion",
+  [VisiteLibrairie.Oui]: "Oui",
+  [VisiteLibrairie.Non]: "Non",
+};
+
 // registro/sql/dossiers.Currency
 export const Currency = {
   Euros: 0,
@@ -1699,6 +1729,32 @@ export abstract class AbstractAPI {
         headers: this.getHeaders(),
       });
       return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** ProjetSpiLoad performs the request and handles the error */
+  async ProjetSpiLoad() {
+    const fullUrl = this.baseURL + "/api/v1/directeurs/projet-spi";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<ProjetSpi> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** ProjetSpiUpdate performs the request and handles the error */
+  async ProjetSpiUpdate(params: ProjetSpi) {
+    const fullUrl = this.baseURL + "/api/v1/directeurs/projet-spi";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
     } catch (error) {
       this.handleError(error);
     }

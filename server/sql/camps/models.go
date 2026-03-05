@@ -75,6 +75,26 @@ type Camp struct {
 	Meta Meta
 }
 
+// ProjetSpi est une extension de la table [Camp],
+// contenant le projet spirituel.
+//
+// gomacro:SQL ADD UNIQUE(IdCamp)
+type ProjetSpi struct {
+	IdCamp IdCamp `gomacro-sql-on-delete:"CASCADE"`
+
+	Description      string
+	Programme        string
+	JourneeType      string
+	DynamiqueCampeur string
+	Evangile         string
+	Equipe           string
+	Cuisine          string
+	Suite            string
+	VisiteLibrairie  VisiteLibrairie
+	Bibles           bool
+	Question         string
+}
+
 // Lettredirecteur conserve le html utilisé pour générer la lettre.
 // En revanche, c'est bien le document PDF généré et enregistré dans la
 // table Files qui est envoyé aux parents.

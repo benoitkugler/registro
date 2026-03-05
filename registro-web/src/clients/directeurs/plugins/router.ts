@@ -6,6 +6,7 @@ import Equipiers from "../pages/equipiers.vue";
 import Documents from "../pages/documents.vue";
 import Photos from "../pages/photos.vue";
 import Avis from "../pages/avis.vue";
+import Projetspi from "../pages/projetspi.vue";
 
 const routes = [
   { path: "/", component: Index },
@@ -13,6 +14,7 @@ const routes = [
   { path: "/equipiers", component: Equipiers },
   { path: "/documents", component: Documents },
   { path: "/photos", component: Photos },
+  { path: "/projetspi", component: Projetspi },
   { path: "/avis", component: Avis },
 ];
 
