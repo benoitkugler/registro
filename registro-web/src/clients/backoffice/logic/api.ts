@@ -169,6 +169,11 @@ export interface PreviewRelance {
   Bilan: BilanFinancesPub;
   LastEventFacture: Time;
 }
+// registro/controllers/backoffice.ProjetSpiOut
+export interface ProjetSpiOut {
+  Projet: ProjetSpi;
+  Directeur: Personne;
+}
 // registro/controllers/backoffice.QueryAttente
 export const QueryAttente = {
   EmptyQA: 0,
@@ -859,9 +864,9 @@ export type VisiteLibrairie =
   (typeof VisiteLibrairie)[keyof typeof VisiteLibrairie];
 
 export const VisiteLibrairieLabels: Record<VisiteLibrairie, string> = {
-  [VisiteLibrairie.EnReflexion]: "",
-  [VisiteLibrairie.Oui]: "",
-  [VisiteLibrairie.Non]: "",
+  [VisiteLibrairie.EnReflexion]: "En réflexion",
+  [VisiteLibrairie.Oui]: "Oui",
+  [VisiteLibrairie.Non]: "Non",
 };
 
 // registro/sql/dossiers.Currency
@@ -1308,7 +1313,7 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseURL + "/api/v1/backoffice/camps/projet-spi";
     this.startRequest();
     try {
-      const rep: AxiosResponse<ProjetSpi> = await Axios.get(fullUrl, {
+      const rep: AxiosResponse<ProjetSpiOut> = await Axios.get(fullUrl, {
         headers: this.getHeaders(),
         params: { idCamp: String(params["idCamp"]) },
       });

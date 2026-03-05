@@ -54,6 +54,7 @@ declare module 'vue' {
     ParticipantRow: typeof import('./src/components/inscriptions/ParticipantRow.vue')['default']
     ParticipantRowHeader: typeof import('./src/components/inscriptions/ParticipantRowHeader.vue')['default']
     PaysField: typeof import('./src/components/PaysField.vue')['default']
+    ProjetSpiFields: typeof import('./src/components/ProjetSpiFields.vue')['default']
     RatingBadge: typeof import('./src/components/sondages/RatingBadge.vue')['default']
     RatingField: typeof import('./src/components/sondages/RatingField.vue')['default']
     ReglementsCard: typeof import('./src/components/inscriptions/ReglementsCard.vue')['default']

@@ -111,6 +111,11 @@
               @click="emit('show-documents')"
               title="Documents"
             ></v-list-item>
+            <v-list-item
+              prepend-icon="mdi-cross"
+              @click="showProjetSpi = true"
+              title="Projet spirituel"
+            ></v-list-item>
 
             <v-divider thickness="1"></v-divider>
             <v-list-item
@@ -213,6 +218,10 @@
       </v-card-actions>
     </v-card>
   </v-dialog>
+
+  <v-dialog v-model="showProjetSpi" max-width="800px">
+    <CampProjetSpi :camp="props.camp"></CampProjetSpi>
+  </v-dialog>
 </template>
 
 <script setup lang="ts">
@@ -221,6 +230,7 @@ import type { CampHeader, IdPersonne } from "@/clients/backoffice/logic/api";
 import CampStats from "./CampStats.vue";
 import { Camps, Formatters } from "@/utils";
 import { controller } from "../../logic/logic";
+import CampProjetSpi from "./CampProjetSpi.vue";
 const props = defineProps<{
   camp: CampHeader;
 }>();
@@ -278,4 +288,6 @@ const fileUploadProgress = computed(() => {
   }
   return Math.round((p / files.length) * 100);
 });
+
+const showProjetSpi = ref(false);
 </script>

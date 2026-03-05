@@ -103,6 +103,7 @@ func (ct *Controller) getCamps(host string) ([]CampHeader, error) {
 	return out, nil
 }
 
+// error is wrapped
 func loadDirecteurs(db cps.DB, camps []cps.IdCamp) (map[cps.IdCamp]pr.Personne, error) {
 	tmp, personnes, _, err := cps.LoadEquipiersByCamps(db, camps...)
 	if err != nil {
@@ -549,16 +550,36 @@ func (ct *Controller) exportListeParticipants(year int) ([]byte, string, error) 
 	return content, name, nil
 }
 
+type ProjetSpiOut struct {
+	Projet    cps.ProjetSpi
+	Directeur pr.Personne // may be empty
+}
+
 func (ct *Controller) CampsLoadProjetSpi(c echo.Context) error {
 	idCamp, err := utils.QueryParamInt[cps.IdCamp](c, "idCamp")
 	if err != nil {
 		return err
 	}
+
+	out, err := ct.loadProjetSpi(idCamp)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) loadProjetSpi(idCamp cps.IdCamp) (ProjetSpiOut, error) {
 	projet, _, err := cps.SelectProjetSpiByIdCamp(ct.db, idCamp)
 	if err != nil {
-		return utils.SQLError(err)
+		return ProjetSpiOut{}, utils.SQLError(err)
 	}
 	projet.IdCamp = idCamp // for empty structs
 
-	return c.JSON(200, projet)
+	dirs, err := loadDirecteurs(ct.db, []cps.IdCamp{idCamp})
+	if err != nil {
+		return ProjetSpiOut{}, err
+	}
+
+	return ProjetSpiOut{projet, dirs[idCamp]}, nil
 }
