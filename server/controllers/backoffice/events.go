@@ -40,7 +40,7 @@ func (ct *Controller) EventsSendMessage(c echo.Context) error {
 }
 
 // add a message and send a notification
-func (ct *Controller) sendMessage(host string, args EventsSendMessageIn, isFondSoutien bool) (event evs.Event, _ error) {
+func (ct *Controller) sendMessage(host string, args EventsSendMessageIn, fromFondsSoutien bool) (event evs.Event, _ error) {
 	dossier, responsable, err := dossierAndResp(ct.db, args.IdDossier)
 	if err != nil {
 		return evs.Event{}, utils.SQLError(err)
@@ -48,7 +48,7 @@ func (ct *Controller) sendMessage(host string, args EventsSendMessageIn, isFondS
 	url := logic.EspacePersoURL(ct.key, host, args.IdDossier)
 	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
 		origine := evs.Backoffice
-		if isFondSoutien {
+		if fromFondsSoutien {
 			origine = evs.FondSoutien
 		}
 		event, _, err = evs.CreateMessage(tx, args.IdDossier, time.Now(), evs.EventMessage{Contenu: args.Contenu, Origine: origine})
@@ -56,11 +56,15 @@ func (ct *Controller) sendMessage(host string, args EventsSendMessageIn, isFondS
 			return err
 		}
 		// notifie le responsable
-		body, err := mails.NotifieMessage(ct.asso, mails.NewContact(&responsable), args.Contenu, url)
+		body, err := mails.NotifieMessage(ct.asso, mails.NewContact(&responsable), args.Contenu, url, fromFondsSoutien)
 		if err != nil {
 			return err
 		}
-		err = mails.NewMailer(ct.smtp, ct.asso.MailsSettings).SendMail(responsable.Mail, "Nouveau message", body, dossier.CopiesMails, nil)
+		var replyTo mails.ReplyTo
+		if fromFondsSoutien {
+			replyTo = mails.CustomReplyTo(ct.asso.MailsSettings.FondsSoutien)
+		}
+		err = mails.NewMailer(ct.smtp, ct.asso.MailsSettings).SendMail(responsable.Mail, "Nouveau message", body, dossier.CopiesMails, replyTo)
 		if err != nil {
 			return err
 		}

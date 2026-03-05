@@ -347,7 +347,7 @@ func (ct *Controller) createMessage(host string, idCamp cps.IdCamp, args CreateM
 		}
 		// notifie le responsable
 		resp := dossier.Responsable()
-		body, err := mails.NotifieMessage(ct.asso, mails.NewContact(&resp), args.Contenu, url)
+		body, err := mails.NotifieMessage(ct.asso, mails.NewContact(&resp), args.Contenu, url, false)
 		if err != nil {
 			return err
 		}

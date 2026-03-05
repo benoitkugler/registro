@@ -117,11 +117,12 @@ type champsCommuns struct {
 	Asso config.Asso
 }
 
-func NotifieMessage(asso config.Asso, contact Contact, contenu, lienEspacePerso string) (string, error) {
+func NotifieMessage(asso config.Asso, contact Contact, contenu, lienEspacePerso string, fromFondsSoutien bool) (string, error) {
 	contenu = strings.ReplaceAll(contenu, "\n", "<br/>")
 	args := struct {
 		champsCommuns
 		Contenu                template.HTML
+		FromFondsSoutien       bool
 		EspacePersoURL         string
 		EspacePersoButtonLabel string
 	}{
@@ -132,6 +133,7 @@ func NotifieMessage(asso config.Asso, contact Contact, contenu, lienEspacePerso 
 			Signature:   mailAuto,
 		},
 		Contenu:                template.HTML(contenu),
+		FromFondsSoutien:       fromFondsSoutien,
 		EspacePersoURL:         lienEspacePerso,
 		EspacePersoButtonLabel: "MON ESPACE",
 	}

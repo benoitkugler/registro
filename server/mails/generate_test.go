@@ -19,6 +19,7 @@ func TestNotifieMessage(t *testing.T) {
 		Contact{Prenom: "Claudy", Sexe: pr.Woman},
 		"sdlmdmlk\nmsldsm\n\nmsldk! smdlsmdlslùd",
 		"https://acve.fr/inscription/valide?data:cryp4tedinscriptin",
+		true,
 	)
 	tu.AssertNoErr(t, err)
 

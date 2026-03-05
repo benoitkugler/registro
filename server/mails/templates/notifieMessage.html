@@ -1,7 +1,11 @@
 {{ define "content" }}
 <table cellpadding="0">
   <tr>
-    <td>Vous avez reçu le message ci-dessous.</td>
+    <td>
+      {{ if .FromFondsSoutien }} Vous avez reçu le message ci-dessous, de la
+      part du fonds de soutien. {{ else }} Vous avez reçu le message ci-dessous.
+      {{ end }}
+    </td>
   </tr>
   <tr>
     <td style="font-style: italic">
