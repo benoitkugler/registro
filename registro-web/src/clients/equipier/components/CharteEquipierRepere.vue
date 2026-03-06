@@ -1,7 +1,7 @@
 <template>
   <v-card title="Charte et confession de foi">
     <v-card-text>
-      La charte de l’association Repère s’adresse à toutes personnes impliquées
+      La charte de l’association Repère s’adresse à toute personne impliquée
       dans le comité et toutes personnes ayant une responsabilité d’encadrement
       et d’animation dans les camps. Pour travailler dans les camps, il est
       important que chacun partage cette vision et accepte les points suivants.
