@@ -375,7 +375,6 @@ import {
   Formatters,
   Personnes,
 } from "@/utils";
-import FactureCard from "./FactureCard.vue";
 import PaiementEditCard from "./PaiementEditCard.vue";
 import { controller } from "@/clients/backoffice/logic/logic";
 import {

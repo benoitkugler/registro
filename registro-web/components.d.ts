@@ -38,6 +38,7 @@ declare module 'vue' {
     EventSupprimeV: typeof import('./src/components/events/EventSupprimeV.vue')['default']
     EventSwitch: typeof import('./src/components/EventSwitch.vue')['default']
     EventValidationV: typeof import('./src/components/events/EventValidationV.vue')['default']
+    FactureCard: typeof import('./src/components/FactureCard.vue')['default']
     FileCard: typeof import('./src/components/files/FileCard.vue')['default']
     FileCardReadonly: typeof import('./src/components/files/FileCardReadonly.vue')['default']
     FileInput: typeof import('./src/components/files/FileInput.vue')['default']

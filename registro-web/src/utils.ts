@@ -562,6 +562,10 @@ export async function copyToClipboard(text: string) {
 }
 
 export namespace Participants {
+  export function montantEquals(a: Montant, b: Montant) {
+    return a.Cent == b.Cent && a.Currency == b.Currency;
+  }
+
   export function cmp(a: ParticipantExt, b: ParticipantExt, byTime = false) {
     if (byTime)
       return (

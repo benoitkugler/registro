@@ -28,6 +28,14 @@
 
     <v-card-text>
       <v-row class="mt-2">
+        <v-menu>
+          <template #activator="{ props: menuProps }">
+            <v-col cols="auto">
+              <v-icon v-bind="menuProps"> mdi-view-list </v-icon>
+            </v-col>
+          </template>
+          <FactureCard :dossier="dossier" only-participants></FactureCard>
+        </v-menu>
         <v-col>Prix des séjours</v-col>
         <v-col cols="4" class="text-right">
           {{ dossier.Bilan.Demande }}
@@ -42,25 +50,6 @@
       </v-row>
 
       <v-row class="my-0" v-if="dossier.Bilan.Aides">
-        <v-col cols="auto">
-          <v-menu>
-            <template #activator="{ props: menuProps }">
-              <v-icon v-bind="menuProps"> mdi-view-list </v-icon>
-            </template>
-            <v-card title="Aides extérieures" v-if="structures">
-              <v-card-text>
-                <v-chip
-                  v-for="aide in aides"
-                  :color="aide.Valide ? undefined : 'orange'"
-                  class="mx-1"
-                >
-                  {{ structures[aide.IdStructureaide].Nom }} :
-                  {{ Formatters.montant(aide.Valeur) }}
-                </v-chip>
-              </v-card-text>
-            </v-card>
-          </v-menu>
-        </v-col>
         <v-col>
           Dont aides extérieures
           <v-icon v-if="pendingAides" color="orange">mdi-clock</v-icon>
