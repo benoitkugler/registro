@@ -125,14 +125,7 @@
                   <v-card max-width="400px">
                     <v-card-text>
                       Merci de joindre le scan des pages « vaccinations » du
-                      carnet de santé du participant. <br />
-                      Seul le DTPolio est obligatoire pour être accueilli en
-                      séjour de vacances.
-                      <br />
-                      <i>
-                        Si le participant n’a pas les vaccins obligatoires,
-                        joindre un certificat médical de contre-indication.
-                      </i>
+                      carnet de santé du participant.
                     </v-card-text>
                   </v-card>
                 </v-menu>
