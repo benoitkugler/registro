@@ -52,7 +52,7 @@ func SelectByMail(db DB, mail string) (Personnes, error) {
 // gomacro:SQL ADD UNIQUE(IdPersonne)
 //
 // Temp people must not have one Fichesanitaire
-// gomacro:SQL ADD FOREIGN KEY (IdPersonne, guard) REFERENCES Personne(Id,IsTemp)
+// gomacro:SQL ADD FOREIGN KEY (IdPersonne, guard) REFERENCES Personne(Id,IsTemp) ON DELETE CASCADE
 type Fichesanitaire struct {
 	IdPersonne IdPersonne `gomacro-sql-on-delete:"CASCADE"`
 
@@ -77,7 +77,7 @@ type Fichesanitaire struct {
 // gomacro:SQL ADD UNIQUE(IdPersonne)
 //
 // Temp people must not have one Ficheequipier
-// gomacro:SQL ADD FOREIGN KEY (IdPersonne, guard) REFERENCES Personne(Id,IsTemp)
+// gomacro:SQL ADD FOREIGN KEY (IdPersonne, guard) REFERENCES Personne(Id,IsTemp) ON DELETE CASCADE
 type Ficheequipier struct {
 	IdPersonne IdPersonne `gomacro-sql-on-delete:"CASCADE"`
 

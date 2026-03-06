@@ -918,7 +918,7 @@ ALTER TABLE ficheequipiers
     ADD UNIQUE (IdPersonne);
 
 ALTER TABLE ficheequipiers
-    ADD FOREIGN KEY (IdPersonne, guard) REFERENCES personnes (Id, IsTemp);
+    ADD FOREIGN KEY (IdPersonne, guard) REFERENCES personnes (Id, IsTemp) ON DELETE CASCADE;
 
 ALTER TABLE ficheequipiers
     ADD FOREIGN KEY (IdPersonne) REFERENCES personnes ON DELETE CASCADE;

@@ -62,6 +62,15 @@ func TestSQL(t *testing.T) {
 
 	err = Fichesanitaire{IdPersonne: p.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
+
+	// check deletion properly cascade
+	err = Ficheequipier{IdPersonne: p.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+	_, err = DeletePersonneById(db, p.Id)
+	tu.AssertNoErr(t, err)
+	fiches, err := SelectAllFicheequipiers(db)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(fiches) == 0)
 }
 
 func TestDumpRandomDB(t *testing.T) {
