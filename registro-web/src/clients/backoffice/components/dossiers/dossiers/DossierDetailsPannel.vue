@@ -1,20 +1,12 @@
 <template>
-  <v-card class="ml-2">
-    <template #title>
-      Responsable
+  <v-card class="ml-2" title="Détails du dossier">
+    <template #subtitle>
+      Resp. :
       <a
         href="/annuaire"
         @click.prevent="goToPersonne(props.dossier.Dossier.IdResponsable)"
         >{{ props.dossier.Dossier.Responsable }}</a
       >
-    </template>
-    <template #subtitle>
-      Participants
-      <span class="mr-1" v-for="p in props.dossier.Dossier.Participants">
-        <a href="/camps" @click.prevent="goToParticipant(p.Participant)">
-          {{ Personnes.prenomN(p.Personne) }}</a
-        >
-      </span>
     </template>
 
     <!-- actions -->
@@ -23,6 +15,7 @@
         icon="mdi-pencil"
         @click="showEditDialog = true"
         class="mx-1"
+        size="small"
       ></v-btn>
 
       <v-menu>
@@ -81,23 +74,57 @@
     </template>
 
     <v-card-text>
-      <!-- récap financier -->
-      <v-row>
-        <v-col class="ml-2 mb-1 text-center">
+      <v-row no-gutters>
+        <!-- liste des participants -->
+        <v-col align-self="center">
+          <v-list dense>
+            <v-list-item
+              class="px-0"
+              density="compact"
+              v-for="p in props.dossier.Dossier.Participants"
+              :title="Personnes.prenomN(p.Personne)"
+              :subtitle="Camps.label(p.Camp)"
+              @click.prevent="goToParticipant(p.Participant)"
+              rounded
+            >
+              <template #prepend>
+                <ParticipantIcon
+                  :statut="p.Participant.Statut"
+                ></ParticipantIcon>
+              </template>
+            </v-list-item>
+          </v-list>
+        </v-col>
+
+        <!-- récap financier -->
+        <v-col class="ml-2 mb-1 text-center" align-self="center" cols="5">
           <v-menu>
             <template #activator="{ props: menuProps }">
-              <v-chip
-                v-bind="menuProps"
-                prepend-icon="mdi-currency-eur"
-                :color="
-                  Formatters.colorStatutPaiement(
-                    props.dossier.Dossier.Bilan.Statut
-                  )
-                "
-              >
-                {{ props.dossier.Dossier.Bilan.Recu }} payé sur
-                {{ props.dossier.Dossier.Bilan.Demande }}
-              </v-chip>
+              <v-row no-gutters v-bind="menuProps">
+                <v-col cols="12">
+                  <v-chip
+                    class="mb-2"
+                    :color="
+                      Formatters.colorStatutPaiement(
+                        props.dossier.Dossier.Bilan.Statut
+                      )
+                    "
+                  >
+                    Prix : {{ props.dossier.Dossier.Bilan.Demande }}
+                  </v-chip>
+                </v-col>
+                <v-col cols="12">
+                  <v-chip
+                    :color="
+                      Formatters.colorStatutPaiement(
+                        props.dossier.Dossier.Bilan.Statut
+                      )
+                    "
+                  >
+                    Payé : {{ props.dossier.Dossier.Bilan.Recu }}
+                  </v-chip>
+                </v-col>
+              </v-row>
             </template>
             <FactureCard :dossier="props.dossier.Dossier"></FactureCard>
           </v-menu>
@@ -343,6 +370,7 @@ import {
 } from "../../../logic/api";
 import {
   buildPseudoEvents,
+  Camps,
   copyToClipboard,
   Formatters,
   Personnes,

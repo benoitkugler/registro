@@ -6,31 +6,9 @@
         class="px-0"
       >
         <template #prepend>
-          <v-tooltip
-            v-if="
-              props.participant.Participant.Statut != StatutParticipant.Inscrit
-            "
-            :text="
-              StatutParticipantLabels[props.participant.Participant.Statut]
-            "
-          >
-            <template #activator="{ props: tooltipProps }">
-              <v-icon
-                :color="
-                  Formatters.statutParticipant(
-                    props.participant.Participant.Statut
-                  ).color
-                "
-                v-bind="tooltipProps"
-              >
-                {{
-                  Formatters.statutParticipant(
-                    props.participant.Participant.Statut
-                  ).icon
-                }}
-              </v-icon>
-            </template>
-          </v-tooltip>
+          <ParticipantIcon
+            :statut="props.participant.Participant.Statut"
+          ></ParticipantIcon>
         </template>
       </v-list-item>
     </v-col>

@@ -51,6 +51,7 @@ declare module 'vue' {
     NationaliteField: typeof import('./src/components/NationaliteField.vue')['default']
     NavetteField: typeof import('./src/components/NavetteField.vue')['default']
     ParticipantEdit: typeof import('./src/components/inscriptions/ParticipantEdit.vue')['default']
+    ParticipantIcon: typeof import('./src/components/inscriptions/ParticipantIcon.vue')['default']
     ParticipantRow: typeof import('./src/components/inscriptions/ParticipantRow.vue')['default']
     ParticipantRowHeader: typeof import('./src/components/inscriptions/ParticipantRowHeader.vue')['default']
     PaysField: typeof import('./src/components/PaysField.vue')['default']
