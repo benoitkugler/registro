@@ -87,16 +87,19 @@
         v-else-if="data != null"
       >
         <!-- confirmation après API call; hiding the form -->
-        <v-card v-if="showInscriptionSaved != null" title="Confirmation">
+        <v-card v-if="showInscriptionSaved != null" title="Conclusion">
           <v-card-text>
-            Merci pour votre demande d'inscription ! <br />
-            <br />
-            Par mesure de sécurité, nous devons vérifier votre adresse mail. Un
-            mail de confirmation a été envoyé à
-            <b>{{ showInscriptionSaved.Responsable.Mail }}</b> : veuillez
-            valider votre demande en suivant le lien que vous y trouverez.
-            <br />
-            <br />
+            Merci pour votre demande d'inscription !
+            <v-alert type="info" class="my-4">
+              Pour finaliser votre demande d'inscription, un mail a été envoyé à
+              <i>{{ showInscriptionSaved.Responsable.Mail }}</i> : veuillez
+              cliquer sur le lien que vous y trouverez. <br />
+              <b
+                >La demande d'inscription ne pourra être prise en compte sans
+                cette validation.</b
+              >
+            </v-alert>
+
             <div class="text-grey font-italic">
               Vous pouvez désormais quitter cette page.
             </div>

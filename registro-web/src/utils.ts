@@ -523,8 +523,6 @@ function isMessageVisibleBy(message: EventMessage, user: Acteur) {
 
 /** add the inscription time and paiements and sort by time */
 export function buildPseudoEvents(dossier: DossierExt, user: Acteur) {
-  console.log(dossier.Events);
-
   // hide fonds de soutien
   const evList: PseudoEvent[] = (dossier.Events || [])
     .filter((ev) =>
