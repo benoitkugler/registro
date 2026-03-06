@@ -1,6 +1,6 @@
 <template>
   <v-card
-    title="Vue d'ensembe"
+    title="Vue d'ensemble"
     :subtitle="`Moyenne des (${props.sondages.Sondages.length}) notes atttribuées (de 1 à 4)`"
     class="mb-2"
     v-if="props.sondages.Sondages?.length"

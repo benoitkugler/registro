@@ -11,7 +11,7 @@
     <v-card-text>
       <v-alert v-if="data.length" color="primary" icon="mdi-comment-quote">
         Afin d'améliorer nos prestations, nous avons à cœur de vous laisser la
-        parole. Vos suggestions, remarques et ressentis nous aiderons à
+        parole. Vos suggestions, remarques et ressentis nous aideront à
         améliorer nos séjours. Merci d'avance de ce temps que vous réserverez
         pour répondre à cette courte enquête.
       </v-alert>
