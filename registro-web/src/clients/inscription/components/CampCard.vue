@@ -33,14 +33,14 @@
       </v-row>
       <v-row v-if="props.camp.Description.length">
         <v-col>
-          <v-alert type="info">
-            {{ props.camp.Description }}
+          <v-alert color="accent" icon="mdi-information">
+            <div v-html="props.camp.Description"></div>
           </v-alert>
         </v-col>
       </v-row>
       <v-row v-if="props.camp.Navette.Actif">
         <v-col>
-          <v-alert color="info" icon="mdi-bus">
+          <v-alert color="accent" icon="mdi-bus">
             {{ props.camp.Navette.Commentaire }}
           </v-alert>
         </v-col>

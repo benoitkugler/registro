@@ -416,7 +416,7 @@ const (
 //
 // La valeur zéro correspond à la date par défaut.
 type PresenceOffsets struct {
-	// Nombre de jours à ajouter
+	// Nombre de jours à ajouter (peut être négatif)
 	Debut, Fin int
 }
 
