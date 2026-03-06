@@ -1,15 +1,22 @@
 {
   "extends": "@vue/tsconfig/tsconfig.dom.json",
-  "include": ["env.d.ts", "src/**/*", "src/**/*.vue","components.d.ts", "vite-env.d.ts"],
+  "include": [
+    "env.d.ts",
+    "src/**/*",
+    "src/**/*.vue",
+    "components.d.ts",
+    "vite-env.d.ts"
+  ],
   "exclude": ["src/**/__tests__/*"],
   "compilerOptions": {
-    "lib": ["es2021","DOM"],
+    "lib": ["es2021", "DOM"],
     "composite": true,
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     },
-    "noUncheckedIndexedAccess": false
+    "noUncheckedIndexedAccess": false,
+    "types": ["bun"]
   }
 }

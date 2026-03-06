@@ -30,7 +30,7 @@
           :value="4"
           :complete="state4 === true"
           :error="state4 === false"
-          :subtitle="state4 === false ? 'Charte à accepter' : ''"
+          :subtitle="state4 === false ? step4Error! : ''"
           :color="state4 === true ? 'primary' : state4 === false ? 'red' : ''"
         ></v-stepper-item>
       </v-stepper-header>
@@ -103,7 +103,7 @@ import {
   type Inscription,
 } from "../logic/api";
 import { ageFrom, isDateZero } from "@/components/date";
-import { copy } from "@/utils";
+import { copy, FormRules } from "@/utils";
 import { controller } from "../logic/logic";
 import { useDisplay } from "vuetify";
 
@@ -181,13 +181,23 @@ const isStep2Valid = computed(() => {
 const isCharteOK = ref(false);
 const autorisationVehicules = ref(true);
 const autorisationSoin = ref(true);
-const isStep4Valid = computed(
-  () =>
-    (isCharteOK.value || !props.data.Settings.ShowCharteConduite) &&
-    (autorisationVehicules.value ||
-      !props.data.Settings.ShowAutorisationVehicules) &&
-    autorisationSoin.value
-);
+const isStep4Valid = computed(() => step4Error.value === null);
+
+// perform validations and return a precise error string
+const step4Error = computed(() => {
+  if (FormRules.validMails()(inner.CopiesMails) !== true)
+    return "Mail invalide";
+  if (!isCharteOK.value && props.data.Settings.ShowCharteConduite)
+    return "Charte à accepter";
+  if (
+    !autorisationVehicules.value &&
+    props.data.Settings.ShowAutorisationVehicules
+  )
+    return "Autorisation manquante";
+  if (!autorisationSoin.value) return "Autorisation manquante";
+
+  return null; // everything OK
+});
 
 const isInscValid = computed(() => {
   return isStep1Valid.value && isStep2Valid.value && isStep4Valid.value;
