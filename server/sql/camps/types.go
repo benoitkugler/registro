@@ -407,7 +407,7 @@ type FormStatusEquipier uint8
 
 const (
 	NotSend  FormStatusEquipier = iota // Non envoyé
-	Pending                            // En attente
+	Pending                            // En attente de réponse
 	Answered                           // Répondu
 )
 

@@ -127,7 +127,8 @@
               :formatter="
                 innerBase.Pays == 'CH' ? Formatters.telCh : Formatters.telFr
               "
-              label="Téléphones"
+              label="Téléphone"
+              :rules="[FormRules.noEmptyList(`Merci d'indiquer ton numéro.`)]"
             ></StringList>
           </v-col>
         </v-row>
@@ -344,7 +345,7 @@
         <v-row>
           <v-col>
             <v-textarea
-              label="Informations sur ma santé"
+              label="Informations sur ma santé (optionnel)"
               variant="outlined"
               density="compact"
               hint="Éventuelles informations sur ta santé qui pourraient avoir un impact sur la vie du camp."
@@ -378,7 +379,7 @@
           </v-col>
           <v-col>
             <v-text-field
-              label="Numéro AVS"
+              label="Numéro AVS (optionnel)"
               variant="outlined"
               density="compact"
               v-model="innerDetails.SecuriteSociale"
