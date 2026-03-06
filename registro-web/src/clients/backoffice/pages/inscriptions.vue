@@ -6,7 +6,7 @@
     >
       <v-tab value="pending">Inscriptions non terminées</v-tab>
       <v-tab value="insc">Inscriptions en attente</v-tab>
-      <v-tab value="doss">Dossiers validés </v-tab>
+      <v-tab value="doss">Tous les dossiers</v-tab>
     </v-tabs>
   </NavBar>
 
