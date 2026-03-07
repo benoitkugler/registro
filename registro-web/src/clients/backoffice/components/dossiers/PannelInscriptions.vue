@@ -34,7 +34,7 @@
         <InscriptionRow
           class="my-1"
           :user="null"
-          v-for="(insc, i) in displayed"
+          v-for="(insc, i) in currentPage"
           :key="i"
           :inscription="insc"
           @identifie="(v) => identifie(insc.Dossier.Id, v)"
@@ -56,6 +56,11 @@
             SelectPersonne: controller.SelectPersonne.bind(controller),
           }"
         ></InscriptionRow>
+        <v-pagination
+          v-if="data.length"
+          :length="pagesCount"
+          v-model="currentPageIndex"
+        ></v-pagination>
       </div>
     </v-card-text>
 
@@ -89,7 +94,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, computed, ref } from "vue";
+import { onMounted, computed, ref, watch } from "vue";
 import { controller } from "../../logic/logic";
 import {
   StatutParticipant,
@@ -144,7 +149,7 @@ const displayed = computed(() => {
         )) &&
       (!restrictToAStatuerAndInvalid.value ||
         insc.Participants?.some((p) =>
-          Participants.statusRequireAttention(
+          Participants.requiresAttention(
             p,
             (insc.StatutHints || {})[p.Participant.Id]
           )
@@ -152,6 +157,25 @@ const displayed = computed(() => {
     );
   });
 });
+const pageSize = 8;
+const pagesCount = computed(() => Math.ceil(displayed.value.length / pageSize));
+const currentPageIndex = ref(1);
+const currentPage = computed(() =>
+  displayed.value.slice(
+    (currentPageIndex.value - 1) * pageSize,
+    currentPageIndex.value * pageSize
+  )
+);
+
+// ensure currentPageIndex stays valid
+watch(
+  () => displayed.value.length,
+  () => {
+    if (currentPageIndex.value >= pagesCount.value) {
+      currentPageIndex.value = pagesCount.value;
+    }
+  }
+);
 
 async function identifie(id: IdDossier, target: IdentTarget) {
   const res = await controller.InscriptionsIdentifiePersonne({

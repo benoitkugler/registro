@@ -564,11 +564,12 @@ export async function copyToClipboard(text: string) {
 }
 
 export namespace Participants {
-  export function statusRequireAttention(p: ParticipantCamp, hint: StatutExt) {
+  export function requiresAttention(p: ParticipantCamp, hint: StatutExt) {
     return (
-      p.Participant.Statut == StatutParticipant.AStatuer &&
-      (hint.Statut == StatutParticipant.AttenteCampComplet ||
-        hint.Statut == StatutParticipant.AttenteProfilInvalide)
+      p.Personne.IsTemp ||
+      (p.Participant.Statut == StatutParticipant.AStatuer &&
+        (hint.Statut == StatutParticipant.AttenteCampComplet ||
+          hint.Statut == StatutParticipant.AttenteProfilInvalide))
     );
   }
 
