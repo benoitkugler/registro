@@ -1,7 +1,6 @@
 package camps
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 	"time"
@@ -155,7 +154,6 @@ func TestCampLoader_Status(t *testing.T) {
 			participants: participants,
 			personnes:    personnes,
 		}
-		fmt.Println(tt.want)
 		tu.Assert(t, reflect.DeepEqual(cd.Status(tt.participants), tt.want))
 	}
 }
@@ -255,5 +253,31 @@ func TestGroupes_TrouveGroupe(t *testing.T) {
 	for _, tt := range tests {
 		got, got2 := tt.groupes.TrouveGroupe(tt.dateNaissance)
 		tu.Assert(t, got.Id == tt.want && got2 == tt.want2)
+	}
+}
+
+func TestCamp_IsAgeValide(t *testing.T) {
+	now := sh.NewDate(2025, time.March, 5)
+	tests := []struct {
+		plage         sh.Plage
+		dateNaissance sh.Date
+		wantMin       bool
+		wantMax       bool
+	}{
+		{sh.Plage{From: now, Duree: 10}, sh.NewDate(2000, time.March, 1), true, false}, // 25 ans
+		{sh.Plage{From: now, Duree: 10}, sh.NewDate(2024, time.March, 1), false, true}, // 1 ans
+		{sh.Plage{From: now, Duree: 10}, sh.NewDate(2015, time.March, 1), true, true},  // 10 ans
+
+		// cas "fins"
+		{sh.Plage{From: now, Duree: 10}, sh.NewDate(2019, time.March, 14), true, true},  // 6 ans le dernier jour
+		{sh.Plage{From: now, Duree: 10}, sh.NewDate(2012, time.March, 6), true, true},   // 13 ans le deuxième jour
+		{sh.Plage{From: now, Duree: 10}, sh.NewDate(2019, time.March, 15), false, true}, // 6 ans juste après le dernier jour
+		{sh.Plage{From: now, Duree: 10}, sh.NewDate(2012, time.March, 5), true, false},  // 13 ans le premier jour
+	}
+	for _, tt := range tests {
+		cp := Camp{DateDebut: tt.plage.From, Duree: tt.plage.Duree, AgeMin: 6, AgeMax: 12}
+		gotMin, gotMax := cp.IsAgeValide(tt.dateNaissance)
+		tu.Assert(t, gotMin == tt.wantMin)
+		tu.Assert(t, gotMax == tt.wantMax)
 	}
 }

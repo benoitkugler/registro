@@ -250,6 +250,7 @@ func (c Camp) Label() string {
 
 func (cp *Camp) Plage() sh.Plage { return sh.Plage{From: cp.DateDebut, Duree: cp.Duree} }
 
+// DateFin renvoie la date du dernier jour du camp
 func (cp *Camp) DateFin() sh.Date { return cp.Plage().To() }
 
 // IsPassedBy renvoie `true` si le séjour est
@@ -266,11 +267,17 @@ func (cp *Camp) AgeDebutCamp(dateNaissance sh.Date) int {
 	return dateNaissance.Age(cp.DateDebut.Time())
 }
 
-// IsAgeValide renvoie le statut correspondant aux âges min et max du séjour
+// IsAgeValide renvoie le statut correspondant aux âges min et max du séjour.
+// Les règles exactes sont :
+//   - le participant n'est pas trop jeune s'il a l'âge requis le dernier jour du camp
+//     (donc son anniversaire est au plus tard le dernier jour du camp).
+//   - le participant n'est pas trop vieux s'il a l'âge requis le premier jour du camp
+//     (donc son anniversaire au plus tôt le premier jour du camp).
 func (cp *Camp) IsAgeValide(dateNaissance sh.Date) (min, max bool) {
-	age := cp.AgeDebutCamp(dateNaissance)
-	min = age >= cp.AgeMin
-	max = age <= cp.AgeMax
+	agePremierJour := dateNaissance.Age(cp.DateDebut.Time())
+	ageDernierJour := dateNaissance.Age(cp.DateFin().Time())
+	min = ageDernierJour >= cp.AgeMin
+	max = agePremierJour <= cp.AgeMax
 	return min, max
 }
 
