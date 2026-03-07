@@ -81,7 +81,7 @@ func before(d1, d2 time.Time) bool {
 	return d1.YearDay() <= d2.YearDay()
 }
 
-// CalculeAge renvoie l'âge qu'aura une personne au jour `now`.
+// Age renvoie l'âge qu'aura une personne au jour `now`, en année.
 // Si la date de naissance est invalide, l'âge renvoyé est 0.
 func (d Date) Age(now time.Time) int {
 	dt := d.Time()

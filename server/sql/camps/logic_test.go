@@ -19,9 +19,9 @@ func pers(s pr.Sexe, n pr.Nationnalite) pr.Personne {
 	return pr.Personne{Identite: pr.Identite{Sexe: s, Nationnalite: n}}
 }
 
-func pers2(s pr.Sexe, age int) pr.Personne {
-	now := time.Now()
-	dateNaissace := sh.NewDate(now.Year()-age, now.Month(), now.Day())
+func pers2(s pr.Sexe, now sh.Date, age int) pr.Personne {
+	n := now.Time()
+	dateNaissace := sh.NewDate(n.Year()-age, n.Month(), n.Day())
 	return pr.Personne{Identite: pr.Identite{Sexe: s, DateNaissance: dateNaissace}}
 }
 
@@ -77,19 +77,22 @@ func TestCamp_isTerminated(t *testing.T) {
 }
 
 func TestCampLoader_Status(t *testing.T) {
+	now := sh.NewDate(2026, time.March, 7)
 	campNoGF := Camp{
 		AgeMin:          6,
 		AgeMax:          12,
 		Places:          5,
 		NeedEquilibreGF: false,
-		DateDebut:       sh.NewDateFrom(time.Now()),
+		DateDebut:       now,
+		Duree:           1,
 	}
 	campGF := Camp{
 		AgeMin:          6,
 		AgeMax:          12,
 		Places:          5,
 		NeedEquilibreGF: true,
-		DateDebut:       sh.NewDateFrom(time.Now()),
+		DateDebut:       now,
+		Duree:           1,
 	}
 	personnes := pr.Personnes{1: pers(pr.Man, pr.Nationnalite{}), 2: pers(pr.Woman, pr.Nationnalite{})}
 	participants := Participants{
@@ -104,48 +107,48 @@ func TestCampLoader_Status(t *testing.T) {
 		{campNoGF, nil, []StatutCauses{}},
 		{
 			campNoGF,
-			[]pr.Personne{pers2(pr.Man, 10)},
-			[]StatutCauses{{true, true, true, true}},
+			[]pr.Personne{pers2(pr.Man, now, 10)},
+			[]StatutCauses{{true, true, true, CauseAge{}}},
 		},
 		{
 			campNoGF,
-			[]pr.Personne{pers2(pr.Man, 18)},
-			[]StatutCauses{{true, false, true, true}},
+			[]pr.Personne{pers2(pr.Man, now, 14)},
+			[]StatutCauses{{false, true, true, CauseAge{Jeune: false, Age: 14, EcartInDays: 366}}},
 		},
 		{
 			campNoGF,
-			[]pr.Personne{pers2(pr.Man, 4)},
-			[]StatutCauses{{false, true, true, true}},
+			[]pr.Personne{pers2(pr.Man, now, 4)},
+			[]StatutCauses{{false, true, true, CauseAge{Jeune: true, Age: 4, EcartInDays: 730}}},
 		},
 		{
 			campNoGF,
-			[]pr.Personne{pers2(pr.Man, 10), pers2(pr.Man, 10)},
-			[]StatutCauses{{true, true, true, true}, {true, true, true, true}},
+			[]pr.Personne{pers2(pr.Man, now, 10), pers2(pr.Man, now, 10)},
+			[]StatutCauses{{true, true, true, CauseAge{}}, {true, true, true, CauseAge{}}},
 		},
 		{ // places manquantes
 			campNoGF,
-			[]pr.Personne{pers2(pr.Man, 10), pers2(pr.Man, 10), pers2(pr.Man, 10)},
-			[]StatutCauses{{true, true, true, false}, {true, true, true, false}, {true, true, true, false}},
+			[]pr.Personne{pers2(pr.Man, now, 10), pers2(pr.Man, now, 10), pers2(pr.Man, now, 10)},
+			[]StatutCauses{{true, true, false, CauseAge{}}, {true, true, false, CauseAge{}}, {true, true, false, CauseAge{}}},
 		},
 		{
 			campGF,
-			[]pr.Personne{pers2(pr.Man, 10)},
-			[]StatutCauses{{true, true, true, true}},
+			[]pr.Personne{pers2(pr.Man, now, 10)},
+			[]StatutCauses{{true, true, true, CauseAge{}}},
 		},
 		{ // equlibre actuel : 1G / 2F
 			campGF,
-			[]pr.Personne{pers2(pr.Woman, 10), pers2(pr.Woman, 10), pers2(pr.Woman, 10)},
-			[]StatutCauses{{true, true, false, false}, {true, true, false, false}, {true, true, false, false}},
+			[]pr.Personne{pers2(pr.Woman, now, 10), pers2(pr.Woman, now, 10), pers2(pr.Woman, now, 10)},
+			[]StatutCauses{{true, false, false, CauseAge{}}, {true, false, false, CauseAge{}}, {true, false, false, CauseAge{}}},
 		},
 		{ // equlibre actuel : 1G / 2F
 			campGF,
-			[]pr.Personne{pers2(pr.Man, 10), pers2(pr.Woman, 10), pers2(pr.Woman, 10)},
-			[]StatutCauses{{true, true, false, false}, {true, true, false, false}, {true, true, false, false}},
+			[]pr.Personne{pers2(pr.Man, now, 10), pers2(pr.Woman, now, 10), pers2(pr.Woman, now, 10)},
+			[]StatutCauses{{true, false, false, CauseAge{}}, {true, false, false, CauseAge{}}, {true, false, false, CauseAge{}}},
 		},
 		{ // equlibre actuel : 1G / 2F
 			campGF,
-			[]pr.Personne{pers2(pr.Man, 10), pers2(pr.Man, 10), pers2(pr.Woman, 10)},
-			[]StatutCauses{{true, true, true, false}, {true, true, true, false}, {true, true, true, false}},
+			[]pr.Personne{pers2(pr.Man, now, 10), pers2(pr.Man, now, 10), pers2(pr.Woman, now, 10)},
+			[]StatutCauses{{true, true, false, CauseAge{}}, {true, true, false, CauseAge{}}, {true, true, false, CauseAge{}}},
 		},
 	}
 	for _, tt := range tests {
@@ -257,27 +260,27 @@ func TestGroupes_TrouveGroupe(t *testing.T) {
 }
 
 func TestCamp_IsAgeValide(t *testing.T) {
-	now := sh.NewDate(2025, time.March, 5)
+	debut := sh.NewDate(2025, time.March, 5)
 	tests := []struct {
 		plage         sh.Plage
 		dateNaissance sh.Date
-		wantMin       bool
-		wantMax       bool
+		wantValid     bool
+		wantCause     CauseAge
 	}{
-		{sh.Plage{From: now, Duree: 10}, sh.NewDate(2000, time.March, 1), true, false}, // 25 ans
-		{sh.Plage{From: now, Duree: 10}, sh.NewDate(2024, time.March, 1), false, true}, // 1 ans
-		{sh.Plage{From: now, Duree: 10}, sh.NewDate(2015, time.March, 1), true, true},  // 10 ans
+		{sh.Plage{From: debut, Duree: 10}, sh.NewDate(2012, time.March, 1), false, CauseAge{false, 13, 5}}, // 13 ans
+		{sh.Plage{From: debut, Duree: 10}, sh.NewDate(2015, time.March, 1), true, CauseAge{}},              // 10 ans
 
 		// cas "fins"
-		{sh.Plage{From: now, Duree: 10}, sh.NewDate(2019, time.March, 14), true, true},  // 6 ans le dernier jour
-		{sh.Plage{From: now, Duree: 10}, sh.NewDate(2012, time.March, 6), true, true},   // 13 ans le deuxième jour
-		{sh.Plage{From: now, Duree: 10}, sh.NewDate(2019, time.March, 15), false, true}, // 6 ans juste après le dernier jour
-		{sh.Plage{From: now, Duree: 10}, sh.NewDate(2012, time.March, 5), true, false},  // 13 ans le premier jour
+		{sh.Plage{From: debut, Duree: 10}, sh.NewDate(2019, time.March, 14), true, CauseAge{}},             // 6 ans le dernier jour
+		{sh.Plage{From: debut, Duree: 10}, sh.NewDate(2012, time.March, 6), true, CauseAge{}},              // 13 ans le deuxième jour
+		{sh.Plage{From: debut, Duree: 10}, sh.NewDate(2019, time.March, 15), false, CauseAge{true, 5, 1}},  // 6 ans juste après le dernier jour
+		{sh.Plage{From: debut, Duree: 10}, sh.NewDate(2012, time.March, 5), false, CauseAge{false, 13, 1}}, // 13 ans le premier jour
+		{sh.Plage{From: debut, Duree: 10}, sh.NewDate(2012, time.March, 3), false, CauseAge{false, 13, 3}},
 	}
 	for _, tt := range tests {
 		cp := Camp{DateDebut: tt.plage.From, Duree: tt.plage.Duree, AgeMin: 6, AgeMax: 12}
-		gotMin, gotMax := cp.IsAgeValide(tt.dateNaissance)
-		tu.Assert(t, gotMin == tt.wantMin)
-		tu.Assert(t, gotMax == tt.wantMax)
+		gotValid, gotCause := cp.IsAgeValide(tt.dateNaissance)
+		tu.Assert(t, gotValid == tt.wantValid)
+		tu.Assert(t, gotCause == tt.wantCause)
 	}
 }

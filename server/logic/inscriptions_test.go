@@ -60,18 +60,18 @@ func TestStatutBypassRights_resolve(t *testing.T) {
 		want   StatutExt
 	}{
 		// problème d'age
-		{directorRights, cps.StatutCauses{AgeMin: false}, StatutExt{AllowedChanges: nil, Validable: false}},
+		{directorRights, cps.StatutCauses{Age: false}, StatutExt{AllowedChanges: nil, Validable: false}},
 		// problème de place -> OK
-		{directorRights, cps.StatutCauses{AgeMin: true, AgeMax: true}, StatutExt{AllowedChanges: []cps.StatutParticipant{cps.Inscrit}, Validable: true}},
+		{directorRights, cps.StatutCauses{Age: true}, StatutExt{AllowedChanges: []cps.StatutParticipant{cps.Inscrit}, Validable: true}},
 		// valide
-		{directorRights, cps.StatutCauses{AgeMin: true, AgeMax: true, EquilibreGF: true, Place: true}, StatutExt{AllowedChanges: nil, Validable: true}},
+		{directorRights, cps.StatutCauses{Age: true, EquilibreGF: true, Place: true}, StatutExt{AllowedChanges: nil, Validable: true}},
 
 		// problème d'age
-		{backofficeRights, cps.StatutCauses{AgeMin: false}, StatutExt{AllowedChanges: []cps.StatutParticipant{cps.Inscrit}, Validable: true}},
+		{backofficeRights, cps.StatutCauses{Age: false}, StatutExt{AllowedChanges: []cps.StatutParticipant{cps.Inscrit}, Validable: true}},
 		// problème de place -> OK
-		{backofficeRights, cps.StatutCauses{AgeMin: true, AgeMax: true}, StatutExt{AllowedChanges: []cps.StatutParticipant{cps.Inscrit}, Validable: true}},
+		{backofficeRights, cps.StatutCauses{Age: true}, StatutExt{AllowedChanges: []cps.StatutParticipant{cps.Inscrit}, Validable: true}},
 		// valide
-		{backofficeRights, cps.StatutCauses{AgeMin: true, AgeMax: true, EquilibreGF: true, Place: true}, StatutExt{AllowedChanges: []cps.StatutParticipant{cps.AttenteProfilInvalide, cps.AttenteCampComplet}, Validable: true}},
+		{backofficeRights, cps.StatutCauses{Age: true, EquilibreGF: true, Place: true}, StatutExt{AllowedChanges: []cps.StatutParticipant{cps.AttenteProfilInvalide, cps.AttenteCampComplet}, Validable: true}},
 	}
 	for _, tt := range tests {
 		got := tt.fields.resolve(tt.args, cps.AStatuer)

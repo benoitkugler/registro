@@ -209,12 +209,14 @@ func (cd *Camp) keepEquilibreGF(stats StatistiquesInscrits, participants []pr.Pe
 // de validité pour l'inscription d'un participant à un camp,
 // ainsi que le statut conseillé
 type StatutCauses struct {
-	AgeMin, AgeMax, EquilibreGF, Place bool
+	Age, EquilibreGF, Place bool
+
+	CauseAge CauseAge // valid only if [Age] is false
 }
 
 // Hint indique comment placer le participant
 func (s StatutCauses) Hint() StatutParticipant {
-	if !(s.AgeMin && s.AgeMax) {
+	if !s.Age {
 		return AttenteProfilInvalide
 	} else if !(s.Place && s.EquilibreGF) {
 		return AttenteCampComplet
@@ -232,12 +234,12 @@ func (cd CampData) Status(participants []pr.Personne) []StatutCauses {
 
 	out := make([]StatutCauses, len(participants))
 	for i, part := range participants {
-		isMinValid, isMaxValid := cd.Camp.IsAgeValide(part.DateNaissance)
+		ageValid, reason := cd.Camp.IsAgeValide(part.DateNaissance)
 		out[i] = StatutCauses{
-			AgeMin:      isMinValid,
-			AgeMax:      isMaxValid,
+			Age:         ageValid,
 			Place:       restePlace,
 			EquilibreGF: equilibreGF,
+			CauseAge:    reason,
 		}
 	}
 	return out
@@ -267,18 +269,47 @@ func (cp *Camp) AgeDebutCamp(dateNaissance sh.Date) int {
 	return dateNaissance.Age(cp.DateDebut.Time())
 }
 
+type CauseAge struct {
+	Jeune       bool // trop vieux ou trop jeune ?
+	Age         int  // age pendant le séjour, 0 si l'âge est valide
+	EcartInDays int  // écart avec la date limite, en terme de nombre de jours
+}
+
 // IsAgeValide renvoie le statut correspondant aux âges min et max du séjour.
 // Les règles exactes sont :
 //   - le participant n'est pas trop jeune s'il a l'âge requis le dernier jour du camp
 //     (donc son anniversaire est au plus tard le dernier jour du camp).
 //   - le participant n'est pas trop vieux s'il a l'âge requis le premier jour du camp
 //     (donc son anniversaire au plus tôt le premier jour du camp).
-func (cp *Camp) IsAgeValide(dateNaissance sh.Date) (min, max bool) {
-	agePremierJour := dateNaissance.Age(cp.DateDebut.Time())
-	ageDernierJour := dateNaissance.Age(cp.DateFin().Time())
-	min = ageDernierJour >= cp.AgeMin
-	max = agePremierJour <= cp.AgeMax
-	return min, max
+//
+// En cas invalide, l'écart en terme de nombre de jours est renvoyé (0 si l'âge est valide).
+func (cp *Camp) IsAgeValide(dateNaissance sh.Date) (valid bool, _ CauseAge) {
+	debut, fin := cp.DateDebut.Time(), cp.DateFin().Time()
+
+	agePremierJour := dateNaissance.Age(debut)
+	ageDernierJour := dateNaissance.Age(fin)
+	minOK := ageDernierJour >= cp.AgeMin
+	maxOK := agePremierJour <= cp.AgeMax
+	if minOK && maxOK {
+		return true, CauseAge{}
+	}
+
+	cause := CauseAge{Jeune: !minOK}
+	var ecartD time.Duration
+	if cause.Jeune { // trop jeune
+		cause.Age = ageDernierJour
+
+		expected := sh.NewDate(fin.Year()-cp.AgeMin, fin.Month(), fin.Day()).Time()
+		ecartD = dateNaissance.Time().Sub(expected)
+	} else { // trop vieux
+		cause.Age = agePremierJour
+
+		expected := sh.NewDate(debut.Year()-cp.AgeMax-1, debut.Month(), debut.Day()).Time()
+		ecartD = expected.Sub(dateNaissance.Time()) + 24*time.Hour
+	}
+	cause.EcartInDays = int(ecartD.Hours() / 24)
+
+	return false, cause
 }
 
 var alphaNumSpace = rangetable.Merge(unicode.L, unicode.Digit, unicode.Zs)

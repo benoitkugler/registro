@@ -340,6 +340,12 @@ export interface Camp {
   AlbumID: string;
   Meta: Meta;
 }
+// registro/sql/camps.CauseAge
+export interface CauseAge {
+  Jeune: boolean;
+  Age: Int;
+  EcartInDays: Int;
+}
 // registro/sql/camps.DocumentsToShow
 export interface DocumentsToShow {
   LettreDirecteur: boolean;
@@ -368,7 +374,7 @@ export type FormStatusEquipier =
 
 export const FormStatusEquipierLabels: Record<FormStatusEquipier, string> = {
   [FormStatusEquipier.NotSend]: "Non envoyé",
-  [FormStatusEquipier.Pending]: "En attente",
+  [FormStatusEquipier.Pending]: "En attente de réponse",
   [FormStatusEquipier.Answered]: "Répondu",
 };
 
@@ -614,10 +620,10 @@ export const StatutCampLabels: Record<StatutCamp, string> = {
 
 // registro/sql/camps.StatutCauses
 export interface StatutCauses {
-  AgeMin: boolean;
-  AgeMax: boolean;
+  Age: boolean;
   EquilibreGF: boolean;
   Place: boolean;
+  CauseAge: CauseAge;
 }
 // registro/sql/camps.StatutParticipant
 export const StatutParticipant = {

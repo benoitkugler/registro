@@ -10,7 +10,9 @@ import {
   type CampItem,
   type DossierExt,
   type EventMessage,
+  type ParticipantCamp,
   type ParticipantExt,
+  type StatutExt,
   type Tels,
 } from "./clients/backoffice/logic/api";
 import {
@@ -562,6 +564,14 @@ export async function copyToClipboard(text: string) {
 }
 
 export namespace Participants {
+  export function statusRequireAttention(p: ParticipantCamp, hint: StatutExt) {
+    return (
+      p.Participant.Statut == StatutParticipant.AStatuer &&
+      (hint.Statut == StatutParticipant.AttenteCampComplet ||
+        hint.Statut == StatutParticipant.AttenteProfilInvalide)
+    );
+  }
+
   export function montantEquals(a: Montant, b: Montant) {
     return a.Cent == b.Cent && a.Currency == b.Currency;
   }

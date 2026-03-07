@@ -1,12 +1,12 @@
 <template>
   <v-row>
-    <v-col cols="4" align-self="center">
+    <v-col cols="3" align-self="center">
       <v-list-item
         :title="Personnes.label(props.participant.Personne)"
         :subtitle="Camps.label(props.participant.Camp)"
       ></v-list-item>
     </v-col>
-    <v-col cols="3" align-self="center" class="text-center">
+    <v-col cols="5" align-self="center" class="text-center">
       <v-chip
         v-if="props.statut.Statut != StatutParticipant.Inscrit"
         color="warning"
@@ -56,10 +56,11 @@ const props = defineProps<{
 const statut = defineModel<StatutParticipant>({ required: true });
 
 function formatStatutCauses(c: StatutCauses) {
-  if (!c.AgeMin) {
-    return "Trop jeune";
-  } else if (!c.AgeMax) {
-    return `Trop âgé${Formatters.accord(props.participant.Personne.Sexe)}`;
+  if (!c.Age) {
+    const out = c.CauseAge.Jeune
+      ? "Trop jeune"
+      : `Trop âgé${Formatters.accord(props.participant.Personne.Sexe)}`;
+    return `${out} : ${c.CauseAge.Age} ans; écart ${c.CauseAge.EcartInDays} j.`;
   } else if (!c.EquilibreGF) {
     return "Equilibre G./F.";
   } else if (!c.Place) {

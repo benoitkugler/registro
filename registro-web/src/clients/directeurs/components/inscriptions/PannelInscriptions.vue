@@ -58,7 +58,7 @@
     <v-dialog
       :model-value="inscToValid != null"
       @update:model-value="inscToValid = null"
-      max-width="800px"
+      max-width="1000px"
     >
       <CardValide
         v-if="inscToValid"

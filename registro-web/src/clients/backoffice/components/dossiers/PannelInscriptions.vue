@@ -1,6 +1,22 @@
 <template>
-  <v-card title="Inscriptions" subtitle="En attente de validation" class="ma-2">
+  <v-card
+    title="Inscriptions à valider"
+    :subtitle="`${displayed.length} / ${data.length} visibles`"
+    class="ma-2"
+  >
     <template #append>
+      <v-select
+        label="Filtre"
+        hide-details
+        class="mx-2"
+        v-model="restrictToAStatuerAndInvalid"
+        :items="[
+          { title: 'Toutes', value: false },
+          { title: 'Profils limites à valider', value: true },
+        ]"
+      >
+      </v-select>
+
       <v-text-field
         width="300"
         append-inner-icon="mdi-magnify"
@@ -60,7 +76,7 @@
     <v-dialog
       :model-value="inscToValid != null"
       @update:model-value="inscToValid = null"
-      max-width="800px"
+      max-width="1000px"
     >
       <CardValide
         v-if="inscToValid"
@@ -84,7 +100,7 @@ import {
   type InscriptionExt,
 } from "../../logic/api";
 import InscriptionRow from "../../../../components/inscriptions/InscriptionRow.vue";
-import { normalize, Personnes, Camps } from "@/utils";
+import { normalize, Personnes, Camps, Participants } from "@/utils";
 import MergeCard from "./MergeCard.vue";
 
 const props = defineProps<{}>();
@@ -114,15 +130,25 @@ async function fetchInscriptions() {
 }
 
 const search = ref("");
+// n'affiche que les dossiers contenant au moins un participant
+// à statuer, avec un profil limite (as hint)
+const restrictToAStatuerAndInvalid = ref(false);
 const displayed = computed(() => {
   const pattern = normalize(search.value);
   return data.value.filter((insc) => {
     return (
-      Personnes.match(insc.Responsable, pattern) ||
-      insc.Participants?.some(
-        (p) =>
-          Personnes.match(p.Personne, pattern) || Camps.match(p.Camp, pattern)
-      )
+      (Personnes.match(insc.Responsable, pattern) ||
+        insc.Participants?.some(
+          (p) =>
+            Personnes.match(p.Personne, pattern) || Camps.match(p.Camp, pattern)
+        )) &&
+      (!restrictToAStatuerAndInvalid.value ||
+        insc.Participants?.some((p) =>
+          Participants.statusRequireAttention(
+            p,
+            (insc.StatutHints || {})[p.Participant.Id]
+          )
+        ))
     );
   });
 });
