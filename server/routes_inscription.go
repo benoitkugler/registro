@@ -16,4 +16,5 @@ func setupRoutesInscription(e *echo.Echo, ct *inscriptions.Controller) {
 	e.GET("/api/v1/inscription", ct.InitInscription)
 	e.PUT("/api/v1/inscription", ct.SaveInscription)
 	e.GET("/api/v1/inscription/search", ct.SearchHistory)
+	e.POST("/api/v1/inscription/check-participant", ct.CheckParticipant)
 }

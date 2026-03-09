@@ -260,25 +260,34 @@ func TestGroupes_TrouveGroupe(t *testing.T) {
 }
 
 func TestCamp_IsAgeValide(t *testing.T) {
-	debut := sh.NewDate(2025, time.March, 5)
+	plage1 := sh.Plage{From: sh.NewDate(2025, time.March, 5), Duree: 10}
+	// Le camp commence le 1 février 2031, et dure 10 jours (fin le 10 février 2031). La plage d'âge est de 1 à 2 ans (inclus).
+	plage2 := sh.Plage{From: sh.NewDate(2031, time.February, 1), Duree: 10}
+
 	tests := []struct {
-		plage         sh.Plage
-		dateNaissance sh.Date
-		wantValid     bool
-		wantCause     CauseAge
+		plage          sh.Plage
+		ageMin, ageMax int
+		dateNaissance  sh.Date
+		wantValid      bool
+		wantCause      CauseAge
 	}{
-		{sh.Plage{From: debut, Duree: 10}, sh.NewDate(2012, time.March, 1), false, CauseAge{false, 13, 5}}, // 13 ans
-		{sh.Plage{From: debut, Duree: 10}, sh.NewDate(2015, time.March, 1), true, CauseAge{}},              // 10 ans
+		{plage1, 6, 12, sh.NewDate(2012, time.March, 1), false, CauseAge{false, 13, 4}}, // 13 ans
+		{plage1, 6, 12, sh.NewDate(2015, time.March, 1), true, CauseAge{}},              // 10 ans
 
 		// cas "fins"
-		{sh.Plage{From: debut, Duree: 10}, sh.NewDate(2019, time.March, 14), true, CauseAge{}},             // 6 ans le dernier jour
-		{sh.Plage{From: debut, Duree: 10}, sh.NewDate(2012, time.March, 6), true, CauseAge{}},              // 13 ans le deuxième jour
-		{sh.Plage{From: debut, Duree: 10}, sh.NewDate(2019, time.March, 15), false, CauseAge{true, 5, 1}},  // 6 ans juste après le dernier jour
-		{sh.Plage{From: debut, Duree: 10}, sh.NewDate(2012, time.March, 5), false, CauseAge{false, 13, 1}}, // 13 ans le premier jour
-		{sh.Plage{From: debut, Duree: 10}, sh.NewDate(2012, time.March, 3), false, CauseAge{false, 13, 3}},
+		{plage1, 6, 12, sh.NewDate(2019, time.March, 14), true, CauseAge{}},             // 6 ans le dernier jour
+		{plage1, 6, 12, sh.NewDate(2012, time.March, 6), true, CauseAge{}},              // 13 ans le deuxième jour
+		{plage1, 6, 12, sh.NewDate(2019, time.March, 15), false, CauseAge{true, 5, 1}},  // 6 ans juste après le dernier jour
+		{plage1, 6, 12, sh.NewDate(2012, time.March, 4), false, CauseAge{false, 13, 1}}, // 13 ans juste avant le premier jour
+		{plage1, 6, 12, sh.NewDate(2012, time.March, 3), false, CauseAge{false, 13, 2}},
+
+		{plage2, 1, 2, sh.NewDate(2030, time.February, 10), true, CauseAge{}},            // Aura "1 an à la fin du séjour"
+		{plage2, 1, 2, sh.NewDate(2030, time.February, 11), false, CauseAge{true, 0, 1}}, // Trop jeune Aura 0 an à la fin du séjour
+		{plage2, 1, 2, sh.NewDate(2028, time.January, 31), false, CauseAge{false, 3, 1}}, // Trop vieux Aura 3 ans au début du séjour
+		{plage2, 1, 2, sh.NewDate(2028, time.February, 1), true, CauseAge{}},             // ok : aura 3 ans le premier jour du camp
 	}
 	for _, tt := range tests {
-		cp := Camp{DateDebut: tt.plage.From, Duree: tt.plage.Duree, AgeMin: 6, AgeMax: 12}
+		cp := Camp{DateDebut: tt.plage.From, Duree: tt.plage.Duree, AgeMin: tt.ageMin, AgeMax: tt.ageMax}
 		gotValid, gotCause := cp.IsAgeValide(tt.dateNaissance)
 		tu.Assert(t, gotValid == tt.wantValid)
 		tu.Assert(t, gotCause == tt.wantCause)

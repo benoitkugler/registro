@@ -10,6 +10,8 @@ export function parse(s: string) {
   const day = match[1];
   const month = match[2];
   const year = match[3];
+  if (Number(day) <= 0 || Number(month) <= 0) return;
+
   const date = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
   return date as Date_;
 }

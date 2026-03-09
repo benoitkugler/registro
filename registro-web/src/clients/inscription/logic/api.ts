@@ -74,6 +74,13 @@ export interface Participant {
 export interface SearchHistoryOut {
   MailFound: boolean;
 }
+// registro/controllers/inscriptions.StatutParticipantOut
+export interface StatutParticipantOut {
+  Valid: boolean;
+  Jeune: boolean;
+  Age: Int;
+  EcartInDays: Int;
+}
 export type IdCamp = Int & { __opaque_int__: "IdCamp" };
 // registro/sql/camps.Meta
 export type Meta = Record<string, string> | null;
@@ -189,6 +196,22 @@ export abstract class AbstractAPI {
         headers: this.getHeaders(),
         params: { mail: params["mail"] },
       });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** CheckParticipant performs the request and handles the error */
+  async CheckParticipant(params: Participant) {
+    const fullUrl = this.baseURL + "/api/v1/inscription/check-participant";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<StatutParticipantOut> = await Axios.post(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
       return rep.data;
     } catch (error) {
       this.handleError(error);

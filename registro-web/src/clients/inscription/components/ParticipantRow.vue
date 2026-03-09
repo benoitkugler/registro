@@ -70,15 +70,20 @@
             </v-col>
           </v-row>
 
-          <v-alert type="warning" v-if="avertissementAge != null" class="mb-2">
-            {{ participant.Prenom }} aura <b>{{ avertissementAge }} ans</b> au
-            début du séjour.
-          </v-alert>
-
           <v-alert v-if="selectedCamp === undefined" class="text-center">
             <i>Veuillez sélectionner un séjour...</i>
           </v-alert>
           <CampCard v-else :camp="selectedCamp"></CampCard>
+
+          <v-alert
+            type="warning"
+            v-if="avertissementAge && !avertissementAge.Valid"
+          >
+            {{ Personnes.prenomN(participant) }} aura
+            <b>{{ avertissementAge.Age }} ans</b>
+            {{ avertissementAge.Jeune ? "à la fin" : "au début" }}
+            du séjour.
+          </v-alert>
         </v-col>
       </v-row>
     </v-card-text>
@@ -97,16 +102,19 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import type {
   CampExt,
   Date_,
   Participant,
   ConfigInscription,
+  StatutParticipantOut,
 } from "../logic/api";
-import { Camps, FormRules } from "@/utils";
-import { ageFrom, isDateZero } from "@/components/date";
+import { Camps, FormRules, Personnes } from "@/utils";
+import { isDateZero } from "@/components/date";
 import CampCard from "./CampCard.vue";
+import { controller } from "../logic/logic";
+import { isDate } from "util/types";
 
 const props = defineProps<{
   camps: CampExt[];
@@ -130,19 +138,26 @@ const selectedCamp = computed(() =>
   props.camps.find((c) => c.Id == participant.value.IdCamp)
 );
 
+watch(
+  () => [participant.value.DateNaissance, participant.value.IdCamp],
+  refreshCheck
+);
+
 // renvoie l'âge en début de camp s'il est invalide, null sinon
-const avertissementAge = computed(() => {
-  const camp = selectedCamp.value;
-  if (camp === undefined || isDateZero(participant.value.DateNaissance))
-    return null;
-  const ageDebut = ageFrom(
-    participant.value.DateNaissance,
-    new Date(camp.DateDebut)
+const avertissementAge = ref<StatutParticipantOut | null>(null);
+async function refreshCheck() {
+  console.log(
+    isDateZero(participant.value.DateNaissance),
+    participant.value.DateNaissance
   );
-  if (ageDebut == null) return null;
-  const isInvalid =
-    (camp.AgeMin && ageDebut < camp.AgeMin) ||
-    (camp.AgeMax && ageDebut > camp.AgeMax);
-  return isInvalid ? ageDebut : null;
-});
+
+  if (
+    isDateZero(participant.value.DateNaissance) ||
+    participant.value.IdCamp == 0
+  )
+    return;
+  const res = await controller.CheckParticipant(participant.value);
+  if (res === undefined) return; // arg..
+  avertissementAge.value = res;
+}
 </script>

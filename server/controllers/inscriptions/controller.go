@@ -231,6 +231,33 @@ func (ct *Controller) LoadCamps() (cps.Camps, []CampExt, error) {
 	return camps, list, nil
 }
 
+// CheckParticipant renvoie un avertissement si le participant n'est pas valide.
+func (ct *Controller) CheckParticipant(c echo.Context) error {
+	var args Participant
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+	out, err := ct.checkParticipantStatus(args)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
+type StatutParticipantOut struct {
+	Valid bool
+	cps.CauseAge
+}
+
+func (ct *Controller) checkParticipantStatus(args Participant) (StatutParticipantOut, error) {
+	camp, err := cps.SelectCamp(ct.db, args.IdCamp)
+	if err != nil {
+		return StatutParticipantOut{}, err
+	}
+	ok, cause := camp.IsAgeValide(args.DateNaissance)
+	return StatutParticipantOut{ok, cause}, nil
+}
+
 // Inscription est la donnée publique correspondant
 // à une inscription.
 type Inscription struct {
