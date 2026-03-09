@@ -257,12 +257,12 @@
     </v-dialog>
 
     <!-- identifiants dialog -->
-    <v-dialog v-model="showLinks" max-width="800px">
+    <v-dialog v-model="showLinks" max-width="1000px">
       <v-card title="Liens et identifiants">
         <v-card-text>
           <v-row>
-            <v-col cols="3">Espace personnel</v-col>
-            <v-col class="text-truncate">
+            <v-col align-self="center" cols="3">Espace personnel</v-col>
+            <v-col align-self="center" class="text-truncate">
               <a :href="props.dossier.EspacepersoURL" target="_blank"
                 >{{ props.dossier.EspacepersoURL }}
               </a>
@@ -276,14 +276,14 @@
             </v-col>
           </v-row>
           <v-row v-for="account in props.dossier.BankAccounts">
-            <v-col cols="3">RIB ({{ asso }})</v-col>
-            <v-col cols="3">{{ account[0] }}</v-col>
-            <v-col>{{ account[1] }}</v-col>
+            <v-col align-self="center" cols="3">{{ account.Name }}</v-col>
+            <v-col align-self="center" cols="3">{{ account.Owner }}</v-col>
+            <v-col align-self="center">{{ account.IBAN }}</v-col>
             <v-col align-self="center" cols="auto">
               <v-btn
                 size="small"
                 icon="mdi-content-copy"
-                @click="() => copyBankIBAN(account[1])"
+                @click="() => copyBankIBAN(account.IBAN)"
               ></v-btn>
             </v-col>
           </v-row>

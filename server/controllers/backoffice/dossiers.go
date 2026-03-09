@@ -301,7 +301,7 @@ type DossierDetails struct {
 	VirementCode   string
 	// also displayed in espace perso
 	// name, IBAN
-	BankAccounts [][2]string
+	BankAccounts []config.BankAccount
 }
 
 func (ct *Controller) loadDossier(host string, id ds.IdDossier) (DossierDetails, error) {
@@ -311,7 +311,7 @@ func (ct *Controller) loadDossier(host string, id ds.IdDossier) (DossierDetails,
 	}
 	url := logic.EspacePersoURL(ct.key, host, id)
 	virement := OffuscateurVirements.Mask(id)
-	accounts := ct.asso.BankAccounts()
+	accounts := ct.asso.BankAccounts
 	return DossierDetails{dossier.Publish(ct.key), url, virement, accounts}, nil
 }
 

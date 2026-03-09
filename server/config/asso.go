@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"os"
+	"slices"
 	"strings"
 )
 
@@ -24,21 +25,16 @@ type Asso struct {
 
 	MailsSettings MailsSettings
 
-	bankNames, bankIBANs []string       // displayed in espace perso
-	ChequeSettings       ChequeSettings // nil for disabled
+	BankAccounts   []BankAccount  // displayed in espace perso
+	ChequeSettings ChequeSettings // nil for disabled
 
 	RemisesHints RemisesHints
 
 	ConfigInscription
 }
 
-func (a *Asso) BankAccounts() [][2]string {
-	out := make([][2]string, len(a.bankNames))
-	for i, name := range a.bankNames {
-		iban := a.bankIBANs[i]
-		out[i] = [2]string{name, iban}
-	}
-	return out
+type BankAccount struct {
+	Owner, Name, IBAN string
 }
 
 type ConfigInscription struct {
@@ -76,7 +72,7 @@ var acve = Asso{
 		SignatureMailCentre: "Pour le centre d'inscriptions, <br /> Marie-Pierre BUFFET",
 	},
 
-	bankNames: []string{"Crédit Mutuel (FR)", "Crédit mutual (CHF)"},
+	BankAccounts: []BankAccount{{Name: "Crédit Mutuel (FR)"}},
 
 	ChequeSettings: ChequeSettings{
 		IsValid: true,
@@ -125,7 +121,7 @@ var repere = Asso{
 		SignatureMailCentre: "L'équipe Repère",
 	},
 
-	bankNames: []string{"Compte en euros (EUR)", "Compte en francs suisses (CHF)"},
+	BankAccounts: []BankAccount{{Owner: "ASSOCIATION REPERE", Name: "Compte en euros (EUR)"}, {Owner: "ASSOCIATION REPERE", Name: "Compte en francs suisses (CHF)"}},
 
 	ChequeSettings: ChequeSettings{}, // disabled
 
@@ -193,9 +189,14 @@ func NewAsso() (Asso, error) {
 	if ibans == "" {
 		return Asso{}, errors.New("missing ASSO_BANK_IBAN env. variable")
 	}
-	out.bankIBANs = strings.Split(ibans, ",")
-	if len(out.bankIBANs) != len(out.bankNames) {
+	bankIBANs := strings.Split(ibans, ",")
+	if len(bankIBANs) != len(out.BankAccounts) {
 		return Asso{}, errors.New("inconsistent length in ASSO_BANK_IBAN")
+	}
+	// deep copy to avoid unexpected mutations
+	out.BankAccounts = slices.Clone(out.BankAccounts)
+	for i, iban := range bankIBANs {
+		out.BankAccounts[i].IBAN = iban
 	}
 
 	out.MailsSettings.Sauvegarde = os.Getenv("ASSO_MAIL_SAUVEGARDE")

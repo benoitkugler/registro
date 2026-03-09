@@ -232,7 +232,7 @@
   </v-dialog>
 
   <!-- reglement -->
-  <v-dialog v-if="data" v-model="showReglement" max-width="800px">
+  <v-dialog v-if="data" v-model="showReglement" max-width="1000px">
     <FinancesReglementCard
       :token="token"
       :dossier="data.Dossier"

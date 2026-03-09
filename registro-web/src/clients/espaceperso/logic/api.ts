@@ -14,6 +14,12 @@ export type Int = number & { __opaque__: "Int" };
 // ISO date-time string
 export type Time = string & { __opaque__: "Time" };
 
+// registro/config.BankAccount
+export interface BankAccount {
+  Owner: string;
+  Name: string;
+  IBAN: string;
+}
 // registro/config.ChequeSettings
 export interface ChequeSettings {
   IsValid: boolean;
@@ -75,7 +81,7 @@ export interface FilesCamp {
 // registro/controllers/espaceperso.PaiementSettings
 export interface PaiementSettings {
   VirementCode: string;
-  BankAccounts: Ar2_string[] | null;
+  BankAccounts: BankAccount[] | null;
   SupportPaiementEnLigne: boolean;
   Cheques: ChequeSettings;
 }

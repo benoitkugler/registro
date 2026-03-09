@@ -4,7 +4,6 @@ import type { AxiosResponse } from "axios";
 import Axios from "axios";
 
 import type { JSONStreamResponse } from "@/utils";
-export type Ar2_string = [string, string];
 export type Ar4_Int = [Int, Int, Int, Int];
 
 // AAAA-MM-YY date format
@@ -19,6 +18,12 @@ export type Time = string & { __opaque__: "Time" };
 export interface NullBool {
   Bool: boolean;
   Valid: boolean;
+}
+// registro/config.BankAccount
+export interface BankAccount {
+  Owner: string;
+  Name: string;
+  IBAN: string;
 }
 // registro/controllers/backoffice.AidesCreateIn
 export interface AidesCreateIn {
@@ -76,7 +81,7 @@ export interface DossierDetails {
   Dossier: DossierExt;
   EspacepersoURL: string;
   VirementCode: string;
-  BankAccounts: Ar2_string[] | null;
+  BankAccounts: BankAccount[] | null;
 }
 // registro/controllers/backoffice.DossierDocumentsState
 export interface DossierDocumentsState {

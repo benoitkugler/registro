@@ -80,7 +80,7 @@ type Data struct {
 // pay the bill (which may depend on the asso)
 type PaiementSettings struct {
 	VirementCode string
-	BankAccounts [][2]string
+	BankAccounts []config.BankAccount
 	// true if an external service to pay by CB is available
 	SupportPaiementEnLigne bool
 	Cheques                config.ChequeSettings
@@ -103,7 +103,7 @@ func (ct *Controller) load(id ds.IdDossier) (Data, error) {
 		ct.asso.ContactMail,
 		PaiementSettings{
 			backoffice.OffuscateurVirements.Mask(id),
-			ct.asso.BankAccounts(),
+			ct.asso.BankAccounts,
 			ct.asso.SupportPaiementEnLigne,
 			ct.asso.ChequeSettings,
 		},

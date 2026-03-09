@@ -62,16 +62,23 @@
               :
               <v-list class="my-2">
                 <v-list-item
-                  :title="account[0]"
-                  :subtitle="account[1]"
+                  :title="account.Owner"
+                  :subtitle="account.IBAN"
                   v-for="account in props.settings.BankAccounts"
                 >
                   <template #append>
-                    <v-btn
-                      size="x-small"
-                      icon="mdi-content-copy"
-                      @click="copyIBAN(account[1])"
-                    ></v-btn>
+                    <v-row no-gutters>
+                      <v-col align-self="center">
+                        {{ account.Name }}
+                      </v-col>
+                      <v-col align-self="center" cols="auto" class="ml-2">
+                        <v-btn
+                          size="x-small"
+                          icon="mdi-content-copy"
+                          @click="copyIBAN(account.IBAN)"
+                        ></v-btn>
+                      </v-col>
+                    </v-row>
                   </template>
                 </v-list-item>
               </v-list>
