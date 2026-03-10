@@ -1,10 +1,10 @@
 <template>
-  <v-card subtitle="Réglement" class="mt-2">
+  <v-card subtitle="Réglement" class="mt-2" @click="showDetails = true">
     <template #append>
       <v-btn
         size="small"
         class="mr-1"
-        @click="emit('showReglement')"
+        @click.stop="emit('showReglement')"
         :disabled="
           !props.isPaiementOpen ||
           props.dossier.Bilan.Statut == StatutPaiement.Complet
@@ -16,7 +16,7 @@
       <v-btn
         size="small"
         :disabled="!props.dossier.Participants?.length"
-        @click="showCreateAide = true"
+        @click.stop="showCreateAide = true"
         v-if="props.supportsAidesExt"
       >
         <template #prepend>
@@ -27,78 +27,45 @@
     </template>
 
     <v-card-text>
-      <v-row class="mt-2">
-        <v-menu>
-          <template #activator="{ props: menuProps }">
-            <v-col cols="auto">
-              <v-icon v-bind="menuProps"> mdi-view-list </v-icon>
-            </v-col>
+      <v-list>
+        <v-list-item title="Prix des séjours" density="compact">
+          <template #append> {{ dossier.Bilan.Demande }} </template>
+        </v-list-item>
+        <v-list-item
+          class="text-grey"
+          title="Séjours en attente de validation"
+          density="compact"
+          v-if="dossier.Bilan.DemandeEnAttenteValidation"
+        >
+          <template #append>
+            {{ dossier.Bilan.DemandeEnAttenteValidation }}
           </template>
-          <FactureCard :dossier="dossier" only-participants></FactureCard>
-        </v-menu>
-        <v-col>Prix des séjours</v-col>
-        <v-col cols="4" class="text-right">
-          {{ dossier.Bilan.Demande }}
-        </v-col>
-      </v-row>
+        </v-list-item>
 
-      <v-row class="my-2" v-if="dossier.Bilan.DemandeEnAttenteValidation">
-        <v-col class="text-grey">Séjours en attente de validation</v-col>
-        <v-col cols="4" class="text-right text-grey">
-          {{ dossier.Bilan.DemandeEnAttenteValidation }}
-        </v-col>
-      </v-row>
+        <v-divider thickness="1"></v-divider>
 
-      <v-row class="my-0" v-if="dossier.Bilan.Aides">
-        <v-col>
-          Dont aides extérieures
-          <v-icon v-if="pendingAides" color="orange">mdi-clock</v-icon>
-        </v-col>
-        <v-col cols="4" class="text-right"> {{ dossier.Bilan.Aides }} </v-col>
-      </v-row>
-      <v-divider thickness="1"></v-divider>
-      <v-row class="my-0">
-        <v-col cols="auto">
-          <v-menu>
-            <template #activator="{ props: menuProps }">
-              <v-icon v-bind="menuProps"> mdi-view-list </v-icon>
-            </template>
-            <v-card title="Paiements">
-              <v-card-text>
-                <i v-if="!Object.values(props.dossier.Paiements || {}).length">
-                  Aucun paiement n'a encore été enregistré.
-                </i>
-                <v-chip
-                  v-for="paiement in props.dossier.Paiements"
-                  class="mx-1"
-                >
-                  {{ paiement.Payeur }} :
-                  {{ Formatters.montant(paiement.Montant) }}
-                </v-chip>
-              </v-card-text>
-            </v-card>
-          </v-menu>
-        </v-col>
-        <v-col> Paiements </v-col>
-        <v-col cols="4" class="text-right">
-          {{ dossier.Bilan.Recu }}
-        </v-col>
-      </v-row>
-      <v-divider thickness="1"></v-divider>
-      <v-row class="my-0">
-        <v-col>Montant restant à régler</v-col>
-        <v-col cols="4" class="text-right">
-          <b
-            :class="
-              dossier.Bilan.Statut == StatutPaiement.Complet
-                ? 'text-green'
-                : 'text-orange'
-            "
-          >
-            {{ dossier.Bilan.Restant }}
-          </b>
-        </v-col>
-      </v-row>
+        <v-list-item title="Paiements" density="compact">
+          <template #append>
+            {{ dossier.Bilan.Recu }}
+          </template>
+        </v-list-item>
+
+        <v-divider thickness="1"></v-divider>
+
+        <v-list-item title="Montant restant à régler" density="compact">
+          <template #append>
+            <span
+              :class="
+                dossier.Bilan.Statut == StatutPaiement.Complet
+                  ? 'font-weight-bold text-green'
+                  : 'font-weight-bold text-orange'
+              "
+            >
+              {{ dossier.Bilan.Restant }}
+            </span>
+          </template>
+        </v-list-item>
+      </v-list>
     </v-card-text>
 
     <v-dialog v-model="showCreateAide" max-width="450px">
@@ -107,6 +74,10 @@
         :structureaides="structures"
         @save="createAide"
       ></AideCard>
+    </v-dialog>
+
+    <v-dialog v-model="showDetails">
+      <FactureCard :dossier="dossier"></FactureCard>
     </v-dialog>
   </v-card>
 </template>
@@ -147,21 +118,12 @@ async function createAide(aide: Aide, file: File) {
   emit("refresh");
 }
 
-const aides = computed(() => {
-  const out: Aide[] = [];
-  Object.values(props.dossier.Aides || {}).forEach((aides) =>
-    out.push(...Object.values(aides || {}))
-  );
-  return out;
-});
-const pendingAides = computed(
-  () => aides.value.filter((aide) => !aide.Valide).length
-);
-
 const structures = ref<Structureaides>({});
 async function fetchStructures() {
   const res = await controller.GetStructureaides();
   if (res === undefined) return;
   structures.value = res || {};
 }
+
+const showDetails = ref(false);
 </script>

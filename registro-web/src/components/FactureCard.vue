@@ -59,7 +59,7 @@
             v-if="!hideOptionsAndAides"
           >
             <span v-if="!part.Bilan.Aides?.length">-</span>
-            <v-chip v-for="aide in part.Bilan.Aides">
+            <v-chip v-for="aide in part.Bilan.Aides" label size="small">
               {{ aide.Structure }} : {{ Formatters.montant(aide.Montant) }}
             </v-chip>
           </v-col>
@@ -72,8 +72,6 @@
           </v-col>
         </v-row>
 
-        <v-divider v-if="hasRemise(part.Bilan)" thickness="1"></v-divider>
-
         <v-row v-if="hasRemise(part.Bilan)" no-gutters class="my-1">
           <v-col cols="10" class="text-right">
             <i>
@@ -84,42 +82,63 @@
             {{ part.Bilan.Net }}
           </v-col>
         </v-row>
+
+        <v-divider thickness="1"></v-divider>
       </template>
 
-      <template v-if="!props.onlyParticipants">
+      <!-- Participant non validés -->
+      <template v-if="dossier.Bilan.DemandeEnAttenteValidation">
+        <v-row class="mt-0 text-grey">
+          <v-col cols="auto">
+            <v-icon>mdi-information-outline</v-icon>
+          </v-col>
+          <v-col>Séjours en attente de validation</v-col>
+          <v-col cols="4" class="text-right">
+            {{ dossier.Bilan.DemandeEnAttenteValidation }}
+          </v-col>
+        </v-row>
+
         <v-divider thickness="1" class="my-2"></v-divider>
-
-        <!-- Total avant paiements -->
-        <v-row>
-          <v-col cols="10" class="text-right">Total demandé</v-col>
-          <v-col cols="2" class="text-right">{{
-            props.dossier.Bilan.Demande
-          }}</v-col>
-        </v-row>
-
-        <v-divider thickness="1" class="my-2"></v-divider>
-
-        <!-- Paiements -->
-        <v-row v-for="paiement in paiements">
-          <v-col>
-            Paiement de {{ paiement.Payeur }}, le
-            {{ Formatters.date(paiement.Time) }}
-          </v-col>
-          <v-col cols="2" class="text-right">
-            {{ paiement.IsRemboursement ? "+" : "-"
-            }}{{ Formatters.montant(paiement.Montant) }}
-          </v-col>
-        </v-row>
-        <!-- Solde -->
-        <v-row>
-          <v-col cols="10" class="text-right">Solde</v-col>
-          <v-col cols="2" class="text-right">
-            <b>
-              {{ props.dossier.Bilan.Restant }}
-            </b>
-          </v-col>
-        </v-row>
       </template>
+
+      <!-- Total avant paiements -->
+      <v-row>
+        <v-col cols="10" class="text-right">Total demandé</v-col>
+        <v-col cols="2" class="text-right">{{
+          props.dossier.Bilan.Demande
+        }}</v-col>
+      </v-row>
+
+      <v-divider thickness="1" class="my-2"></v-divider>
+
+      <!-- Paiements -->
+      <v-row v-if="!paiements.length">
+        <v-col class="text-right">
+          <i>Aucun paiement pour l'instant.</i>
+        </v-col>
+      </v-row>
+      <v-row v-for="paiement in paiements">
+        <v-col>
+          Paiement de {{ paiement.Payeur }}, le
+          {{ Formatters.date(paiement.Time) }}
+        </v-col>
+        <v-col cols="2" class="text-right">
+          {{ paiement.IsRemboursement ? "+" : "-"
+          }}{{ Formatters.montant(paiement.Montant) }}
+        </v-col>
+      </v-row>
+
+      <v-divider thickness="1" class="my-2"></v-divider>
+
+      <!-- Solde -->
+      <v-row>
+        <v-col cols="10" class="text-right">Solde</v-col>
+        <v-col cols="2" class="text-right">
+          <b>
+            {{ props.dossier.Bilan.Restant }}
+          </b>
+        </v-col>
+      </v-row>
     </v-card-text>
   </v-card>
 </template>
@@ -136,7 +155,6 @@ import { computed } from "vue";
 
 const props = defineProps<{
   dossier: DossierExt;
-  onlyParticipants?: boolean;
 }>();
 
 const listeAttente = computed(() =>
