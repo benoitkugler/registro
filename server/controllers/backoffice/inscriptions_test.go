@@ -7,6 +7,7 @@ import (
 	"registro/logic"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
+	in "registro/sql/inscriptions"
 	pr "registro/sql/personnes"
 	"registro/sql/shared"
 	tu "registro/utils/testutils"
@@ -96,4 +97,39 @@ func TestValideInscription(t *testing.T) {
 
 	err = ct.deleteDossier(data.Dossier.Id)
 	tu.AssertNoErr(t, err)
+}
+
+func TestSearchDoublons(t *testing.T) {
+	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
+		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",
+		"../../migrations/init.sql")
+	defer db.Remove()
+
+	camp1, err := cps.Camp{IdTaux: 1, DateDebut: shared.Date(time.Now()), Duree: 2, Statut: cps.Ouvert}.Insert(db)
+	tu.AssertNoErr(t, err)
+	camp2, err := cps.Camp{IdTaux: 1, DateDebut: shared.Date(time.Now()), Duree: 2, Statut: cps.Ouvert}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	i1, err := in.Inscription{IdTaux: 1}.Insert(db)
+	tu.AssertNoErr(t, err)
+	i2, err := in.Inscription{IdTaux: 1}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	err = in.InscriptionParticipant{Nom: "ugler", Prenom: "benoît", DateNaissance: shared.NewDate(2000, 2, 2), IdInscription: i1.Id, IdCamp: camp1.Id, IdTaux: 1}.Insert(db)
+	tu.AssertNoErr(t, err)
+	err = in.InscriptionParticipant{Nom: "Ugler", Prenom: "benoit", DateNaissance: shared.NewDate(2000, 2, 2), IdInscription: i1.Id, IdCamp: camp1.Id, IdTaux: 1}.Insert(db)
+	tu.AssertNoErr(t, err)
+	err = in.InscriptionParticipant{Nom: "ugl er", Prenom: "benoît ", DateNaissance: shared.NewDate(2000, 2, 2), IdInscription: i1.Id, IdCamp: camp2.Id, IdTaux: 1}.Insert(db)
+	tu.AssertNoErr(t, err)
+	err = in.InscriptionParticipant{Nom: "ugler", Prenom: "benoît", DateNaissance: shared.NewDate(2000, 2, 2), IdInscription: i2.Id, IdCamp: camp1.Id, IdTaux: 1}.Insert(db)
+	tu.AssertNoErr(t, err)
+	err = in.InscriptionParticipant{Nom: "ugler", Prenom: "benoît", DateNaissance: shared.NewDate(2000, 2, 2), IdInscription: i2.Id, IdCamp: camp1.Id, IdTaux: 1}.Insert(db)
+	tu.AssertNoErr(t, err)
+	err = in.InscriptionParticipant{Nom: "ugler", Prenom: "benoît", DateNaissance: shared.NewDate(2001, 2, 2), IdInscription: i2.Id, IdCamp: camp2.Id, IdTaux: 1}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	ct := Controller{db: db.DB}
+	out, err := ct.searchInscriptionsDoublons()
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(out.Participants) == 1 && len(out.Participants[0]) == 5)
 }

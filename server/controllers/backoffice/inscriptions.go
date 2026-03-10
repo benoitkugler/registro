@@ -2,8 +2,10 @@ package backoffice
 
 import (
 	"registro/logic"
+	"registro/logic/search"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
+	in "registro/sql/inscriptions"
 	pr "registro/sql/personnes"
 	"registro/utils"
 
@@ -115,4 +117,61 @@ func (ct *Controller) InscriptionsValide(c echo.Context) error {
 func (ct *Controller) valideInscription(host string, args logic.InscriptionsValideIn) error {
 	return logic.ValideInscription(ct.db, ct.key, ct.smtp, ct.asso,
 		host, args, backofficeRights, cps.OptIdCamp{})
+}
+
+// SearchInscriptionsDoublons parcourt la table "inscriptions" à la recherche
+// d'un même participant inscrit sur plusieurs séjours.
+// Les séjours concernés sont uniquement ceux ouverts aux inscriptions.
+func (ct *Controller) SearchInscriptionsDoublons(c echo.Context) error {
+	out, err := ct.searchInscriptionsDoublons()
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
+type InscriptionsDoublonsOut struct {
+	Participants [][]in.InscriptionParticipant // each item is non empty
+
+	Inscriptions in.Inscriptions // enough for ids in [Participants]
+	Camps        cps.Camps       // enough for ids in [Participants]
+}
+
+func (ct *Controller) searchInscriptionsDoublons() (InscriptionsDoublonsOut, error) {
+	camps, err := cps.SelectAllCamps(ct.db)
+	if err != nil {
+		return InscriptionsDoublonsOut{}, utils.SQLError(err)
+	}
+	camps.RestrictOpen()
+
+	participants, err := in.SelectInscriptionParticipantsByIdCamps(ct.db, camps.IDs()...)
+	if err != nil {
+		return InscriptionsDoublonsOut{}, utils.SQLError(err)
+	}
+	// build a crible, keyed by participant identity
+	crible := make(map[search.PatternsSimilarite][]in.InscriptionParticipant)
+	for _, part := range participants {
+		key := search.NewPatternsSimilarite(part.Identite())
+		crible[key] = append(crible[key], part)
+	}
+
+	// now restrict to doublons
+	var out [][]in.InscriptionParticipant
+	inscriptionsIds := utils.NewSet[in.IdInscription]()
+	for _, inscList := range crible {
+		if len(inscList) < 2 {
+			continue
+		}
+		out = append(out, inscList)
+		for _, insc := range inscList {
+			inscriptionsIds.Add(insc.IdInscription)
+		}
+	}
+
+	inscriptions, err := in.SelectInscriptions(ct.db, inscriptionsIds.Keys()...)
+	if err != nil {
+		return InscriptionsDoublonsOut{}, utils.SQLError(err)
+	}
+
+	return InscriptionsDoublonsOut{out, inscriptions, camps}, nil
 }

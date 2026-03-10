@@ -41,11 +41,12 @@ type PatternsSimilarite struct {
 	Sexe pr.Sexe // if empty, the matching is done ignoring Sexe
 }
 
-// NewPatternsSimilarite selects the proper fields.
+// NewPatternsSimilarite selects the fields [Nom], [Prenom], [Sexe], [DateNaissance],
+// applying proper normalization
 func NewPatternsSimilarite(pr pr.Identite) PatternsSimilarite {
 	return PatternsSimilarite{
-		Nom:           pr.Nom,
-		Prenom:        pr.Prenom,
+		Nom:           Normalize(pr.Nom),
+		Prenom:        Normalize(pr.Prenom),
 		Sexe:          pr.Sexe,
 		DateNaissance: pr.DateNaissance,
 	}
@@ -138,7 +139,6 @@ func NewPersonneHeader(p pr.Personne) PersonneHeader {
 //
 // Voir aussi [SelectAllFieldsForSimilaires]
 func Match(personnes pr.Personnes, in PatternsSimilarite) (pr.IdPersonne, bool) {
-	in.normalize()
 	for _, personne := range personnes {
 		if in.match(personne.Identite) {
 			return personne.Id, true
@@ -164,7 +164,6 @@ func ChercheSimilaires(personnes pr.Personnes, in PatternsSimilarite) (scoreMax 
 	if scoreMax == 0 {
 		return
 	}
-	in.normalize()
 
 	out = make([]ScoredPersonne, 0, 8)
 	for _, p := range personnes {

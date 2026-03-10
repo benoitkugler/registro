@@ -57,6 +57,16 @@ type InscriptionParticipant struct {
 	Nationnalite  pr.Nationnalite
 }
 
+func (part InscriptionParticipant) Identite() pr.Identite {
+	return pr.Identite{
+		Nom:           part.Nom,
+		Prenom:        part.Prenom,
+		Sexe:          part.Sexe,
+		DateNaissance: part.DateNaissance,
+		Nationnalite:  part.Nationnalite,
+	}
+}
+
 // Create insert [insc], then update [participants] id's and insert them
 func Create(tx *sql.Tx, insc Inscription, participants InscriptionParticipants) (Inscription, error) {
 	insc, err := insc.Insert(tx)

@@ -19,6 +19,15 @@ import (
 	"golang.org/x/text/unicode/rangetable"
 )
 
+// RestrictOpen se restreint aux camps visibles aux inscriptions et non terminés.
+func (camps Camps) RestrictOpen() {
+	for id, camp := range camps {
+		if camp.Ext().IsTerminated || camp.Statut == Ferme {
+			delete(camps, id)
+		}
+	}
+}
+
 type ParticipantCamp struct {
 	Camp Camp
 	ParticipantPersonne

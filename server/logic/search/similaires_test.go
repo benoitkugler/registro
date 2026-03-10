@@ -51,14 +51,14 @@ func TestLoadAndSearchSimilaires(t *testing.T) {
 	tu.Assert(t, len(res1) > 0)
 
 	_, res2 := ChercheSimilaires(personnes, PatternsSimilarite{
-		Nom:    "Kug ",
-		Prenom: "dédé ",
+		Nom:    Normalize("Kug "),
+		Prenom: Normalize("dédé "),
 	})
 	tu.Assert(t, len(res1) == len(res2))
 
 	_, ok := Match(personnes, PatternsSimilarite{
-		Nom:           "JOnac",
-		Prenom:        "Tom",
+		Nom:           Normalize("JOnac"),
+		Prenom:        Normalize("Tom"),
 		DateNaissance: shared.NewDate(2021, time.May, 6),
 		Sexe:          pr.Woman,
 	})

@@ -195,11 +195,8 @@ func (ct *Controller) LoadCamps() (cps.Camps, []CampExt, error) {
 	if err != nil {
 		return nil, nil, utils.SQLError(err)
 	}
-	for id, camp := range camps {
-		if camp.Ext().IsTerminated || camp.Statut == cps.Ferme {
-			delete(camps, id)
-		}
-	}
+	camps.RestrictOpen()
+
 	tauxs, err := ds.SelectTauxs(ct.db, camps.IdTauxs()...)
 	if err != nil {
 		return nil, nil, utils.SQLError(err)
@@ -665,13 +662,7 @@ func ConfirmeInscription(db *sql.DB, id in.IdInscription) (ds.Dossier, error) {
 		// mais l'éventuel groupe est calculé
 
 		for _, part := range participants {
-			pers := pr.Identite{
-				Nom:           part.Nom,
-				Prenom:        part.Prenom,
-				Sexe:          part.Sexe,
-				DateNaissance: part.DateNaissance,
-				Nationnalite:  part.Nationnalite,
-			}
+			pers := part.Identite()
 			personne, err := rapprochePersonne(tx, index, pers, part.IdCamp.Opt())
 			if err != nil {
 				return err
