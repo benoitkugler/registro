@@ -130,6 +130,12 @@ export interface InscriptionIdentifieIn {
   IdDossier: IdDossier;
   Target: IdentTarget;
 }
+// registro/controllers/backoffice.InscriptionsDoublonsOut
+export interface InscriptionsDoublonsOut {
+  Participants: (InscriptionParticipant[] | null)[] | null;
+  Inscriptions: Inscriptions;
+  Camps: Camps;
+}
 // registro/controllers/backoffice.InscritHeader
 export interface InscritHeader {
   Id: IdParticipant;
@@ -1022,6 +1028,8 @@ export interface InscriptionParticipant {
 }
 // registro/sql/inscriptions.InscriptionParticipants
 export type InscriptionParticipants = InscriptionParticipant[] | null;
+// registro/sql/inscriptions.Inscriptions
+export type Inscriptions = Record<IdInscription, Inscription> | null;
 // registro/sql/inscriptions.ResponsableLegal
 export interface ResponsableLegal {
   Nom: string;
@@ -1569,6 +1577,22 @@ export abstract class AbstractAPI {
           headers: this.getHeaders(),
           params: { idPersonne: String(params["idPersonne"]) },
         },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** InscriptionsSearchDoublons performs the request and handles the error */
+  async InscriptionsSearchDoublons() {
+    const fullUrl =
+      this.baseURL + "/api/v1/backoffice/inscriptions/search-doublons";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<InscriptionsDoublonsOut> = await Axios.get(
+        fullUrl,
+        { headers: this.getHeaders() },
       );
       return rep.data;
     } catch (error) {

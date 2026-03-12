@@ -6,6 +6,7 @@
   >
     <template #append>
       <v-select
+        density="comfortable"
         label="Filtre"
         hide-details
         class="mx-2"
@@ -18,12 +19,19 @@
       </v-select>
 
       <v-text-field
+        density="comfortable"
         width="300"
         append-inner-icon="mdi-magnify"
         label="Rechercher"
         hide-details
         v-model="search"
       ></v-text-field>
+
+      <v-divider vertical thickness="1" class="mx-2"></v-divider>
+
+      <v-btn prepend-icon="mdi-layers-search" @click="showDoublons = true"
+        >Doublons</v-btn
+      >
     </template>
     <v-card-text>
       <v-skeleton-loader v-if="isLoading"></v-skeleton-loader>
@@ -90,6 +98,11 @@
         @valide="valideInscription"
       ></CardValide>
     </v-dialog>
+
+    <!-- doublons -->
+    <v-dialog v-model="showDoublons" max-width="800px">
+      <DoublonsParticipantsCard></DoublonsParticipantsCard>
+    </v-dialog>
   </v-card>
 </template>
 
@@ -107,6 +120,7 @@ import {
 import InscriptionRow from "../../../../components/inscriptions/InscriptionRow.vue";
 import { normalize, Personnes, Camps, Participants } from "@/utils";
 import MergeCard from "./MergeCard.vue";
+import DoublonsParticipantsCard from "./DoublonsParticipantsCard.vue";
 
 const props = defineProps<{}>();
 
@@ -257,4 +271,6 @@ async function mergeDossier(args: DossiersMergeIn) {
   // reset the view
   fetchInscriptions();
 }
+
+const showDoublons = ref(false);
 </script>

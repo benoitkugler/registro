@@ -119,10 +119,10 @@ func (ct *Controller) valideInscription(host string, args logic.InscriptionsVali
 		host, args, backofficeRights, cps.OptIdCamp{})
 }
 
-// SearchInscriptionsDoublons parcourt la table "inscriptions" à la recherche
+// InscriptionsSearchDoublons parcourt la table "inscriptions" à la recherche
 // d'un même participant inscrit sur plusieurs séjours.
 // Les séjours concernés sont uniquement ceux ouverts aux inscriptions.
-func (ct *Controller) SearchInscriptionsDoublons(c echo.Context) error {
+func (ct *Controller) InscriptionsSearchDoublons(c echo.Context) error {
 	out, err := ct.searchInscriptionsDoublons()
 	if err != nil {
 		return err
