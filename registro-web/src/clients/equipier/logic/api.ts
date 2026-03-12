@@ -77,7 +77,7 @@ export type FormStatusEquipier =
 
 export const FormStatusEquipierLabels: Record<FormStatusEquipier, string> = {
   [FormStatusEquipier.NotSend]: "Non envoyé",
-  [FormStatusEquipier.Pending]: "En attente",
+  [FormStatusEquipier.Pending]: "En attente de réponse",
   [FormStatusEquipier.Answered]: "Répondu",
 };
 
