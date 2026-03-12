@@ -114,7 +114,6 @@ import { Camps, FormRules, Personnes } from "@/utils";
 import { isDateZero } from "@/components/date";
 import CampCard from "./CampCard.vue";
 import { controller } from "../logic/logic";
-import { isDate } from "util/types";
 
 const props = defineProps<{
   camps: CampExt[];
