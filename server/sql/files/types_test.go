@@ -34,12 +34,14 @@ func TestBuiltins(t *testing.T) {
 }
 
 func TestBuiltins_Defaut(t *testing.T) {
-	b := Builtins{{Id: 0}, {Id: 1}, {Id: 2}, {Id: 3}, {Id: 4}, {Id: 5}, {Id: 6}, {Id: 7}, {Id: 8}, {Id: 9}, {Id: 10}, {Id: 11}, {Id: 12}, {Id: 13}}
+	b := Builtins{{Id: 0}, {Id: 1}, {Id: 2}, {Id: 3}, {Id: 4}, {Id: 5}, {Id: 6}, {Id: 7}, {Id: 8}, {Id: 9}, {Id: 10}, {Id: 11}, {Id: 12}, {Id: 13}, {Id: 14}, {Id: 15}}
+
+	// ACVE
 	tests := []struct {
 		equipier cp.Equipier
 		want     DemandeEquipiers
 	}{
-		{cp.Equipier{Id: 1, Roles: cp.Roles{}}, nil},
+		{cp.Equipier{Id: 1, Roles: cp.Roles{}}, DemandeEquipiers{}},
 		{cp.Equipier{Id: 1, Roles: cp.Roles{cp.Direction}}, DemandeEquipiers{
 			{1, b[CarteId].Id, true}, {1, b[Permis].Id, true}, {1, b[SB].Id, true}, {1, b[Bafa].Id, true}, {1, b[Bafd].Id, true}, {1, b[CarteVitale].Id, true}, {1, b[Vaccins].Id, true}, {1, b[BafdEquiv].Id, true},
 		}},
@@ -48,7 +50,28 @@ func TestBuiltins_Defaut(t *testing.T) {
 		}},
 	}
 	for _, tt := range tests {
-		got := b.Defaut(tt.equipier.Id, tt.equipier.Roles)
+		got := b.Defaut(tt.equipier.Id, tt.equipier.Roles, "acve")
+		tu.Assert(t, reflect.DeepEqual(got, tt.want))
+	}
+
+	// Repere
+	tests = []struct {
+		equipier cp.Equipier
+		want     DemandeEquipiers
+	}{
+		{
+			cp.Equipier{Id: 1, Roles: cp.Roles{}}, DemandeEquipiers{
+				{1, b[SB].Id, true}, {1, b[Secourisme].Id, true}, {1, b[Bafa].Id, true}, {1, b[Bafd].Id, true}, {1, b[BafaEquiv].Id, true}, {1, b[BafdEquiv].Id, true}, {1, b[ExtraitCasierJudiciaire].Id, false},
+			},
+		},
+		{
+			cp.Equipier{Id: 1, Roles: cp.Roles{cp.Direction}}, DemandeEquipiers{
+				{1, b[SB].Id, true}, {1, b[Secourisme].Id, true}, {1, b[Bafa].Id, true}, {1, b[Bafd].Id, true}, {1, b[BafaEquiv].Id, true}, {1, b[BafdEquiv].Id, true}, {1, b[ExtraitCasierJudiciaire].Id, false},
+			},
+		},
+	}
+	for _, tt := range tests {
+		got := b.Defaut(tt.equipier.Id, tt.equipier.Roles, "repere")
 		tu.Assert(t, reflect.DeepEqual(got, tt.want))
 	}
 }

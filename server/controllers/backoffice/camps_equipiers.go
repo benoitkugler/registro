@@ -41,7 +41,7 @@ func (ct *Controller) createEquipier(args CreateEquipierIn) (out cps.Equipier, _
 		if err != nil {
 			return err
 		}
-		demandes := ct.builtins.Defaut(out.Id, out.Roles)
+		demandes := ct.builtins.Defaut(out.Id, out.Roles, ct.asso.ID)
 		err = fs.InsertManyDemandeEquipiers(tx, demandes...)
 		if err != nil {
 			return err

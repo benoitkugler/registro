@@ -220,7 +220,7 @@ func createEquipier(db *sql.DB, enc crypto.Encrypter) {
 	builtins, err := fs.LoadBuiltins(db)
 	check(err)
 
-	demandes := builtins.Defaut(equipier.Id, equipier.Roles)
+	demandes := builtins.Defaut(equipier.Id, equipier.Roles, "acve")
 	err = utils.InTx(db, func(tx *sql.Tx) error { return fs.InsertManyDemandeEquipiers(tx, demandes...) })
 	check(err)
 

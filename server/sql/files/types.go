@@ -109,8 +109,34 @@ func (ds Demandes) builtins() (out [nbCategorieEquipier]Demande, err error) {
 	return out, nil
 }
 
-// un nouvel équipier est créé avec ces demandes par défaut
-var demandesDefaut = [cp.NbRoles][]Categorie{
+// Defaut renvoie les demandes par défaut pour l'équipier donné.
+func (builtinDemandes Builtins) Defaut(id cp.IdEquipier, roles cp.Roles, asso string) DemandeEquipiers {
+	var demandes []optionalCategorie
+	switch asso {
+	case "acve":
+		demandes = defaultACVE(roles)
+	case "repere":
+		demandes = defaultRepere(roles)
+	default:
+		panic("invalid asso ID: " + asso)
+	}
+	out := make(DemandeEquipiers, len(demandes))
+	for i, d := range demandes {
+		out[i] = DemandeEquipier{
+			IdEquipier:  id,
+			IdDemande:   builtinDemandes[d.Categorie].Id,
+			Optionnelle: d.Optionnelle,
+		}
+	}
+	return out
+}
+
+type optionalCategorie struct {
+	Categorie   Categorie
+	Optionnelle bool
+}
+
+var defaultDemandesACVE = [cp.NbRoles][]Categorie{
 	cp.Direction:     {CarteId, Permis, SB, Bafa, Bafd, CarteVitale, Vaccins, BafdEquiv},
 	cp.Adjoint:       {CarteId, Permis, SB, CarteVitale, Vaccins},
 	cp.Animation:     {CarteId, Permis, SB, Bafa, BafaEquiv, CarteVitale, Vaccins},
@@ -123,9 +149,32 @@ var demandesDefaut = [cp.NbRoles][]Categorie{
 	cp.Chauffeur:     {CarteId, CarteVitale, Vaccins},
 	cp.Factotum:      {CarteId, CarteVitale, Vaccins},
 	cp.Babysiter:     {CarteId, CarteVitale, Vaccins},
+	cp.AutreRole:     {}, // rien
 }
 
-func isDemandeOpt(cat Categorie, roles cp.Roles) bool {
+func defaultACVE(roles cp.Roles) []optionalCategorie {
+	// on aggrège les demandes de chaque rôle
+	var categories [nbCategorieEquipier]bool
+	for _, role := range roles {
+		for _, cat := range defaultDemandesACVE[role] {
+			categories[cat] = true
+		}
+	}
+	// on prend en compte le caractère optionnelle
+	var demandes []optionalCategorie
+	for cat, has := range categories {
+		if !has {
+			continue
+		}
+		demandes = append(demandes, optionalCategorie{
+			Categorie:   Categorie(cat),
+			Optionnelle: isDemandeOptACVE(Categorie(cat), roles),
+		})
+	}
+	return demandes
+}
+
+func isDemandeOptACVE(cat Categorie, roles cp.Roles) bool {
 	// un certificat de secourisme est obligatoire pour l'infirmerie
 	if roles.Is(cp.Infirmerie) && cat == Secourisme {
 		return false
@@ -136,26 +185,14 @@ func isDemandeOpt(cat Categorie, roles cp.Roles) bool {
 	return true
 }
 
-// Defaut renvoie les demandes par défaut pour l'équipier donné.
-func (builtinDemandes Builtins) Defaut(id cp.IdEquipier, roles cp.Roles) DemandeEquipiers {
-	// on aggrège les demandes de chaque rôle
-	var categories [nbCategorieEquipier]bool
-	for _, role := range roles {
-		for _, cat := range demandesDefaut[role] {
-			categories[cat] = true
-		}
+func defaultRepere(_ cp.Roles) []optionalCategorie {
+	return []optionalCategorie{
+		{SB, true},
+		{Secourisme, true},
+		{Bafa, true},
+		{Bafd, true},
+		{BafaEquiv, true},
+		{BafdEquiv, true},
+		{ExtraitCasierJudiciaire, false},
 	}
-	// on prend en compte le caractère optionnelle
-	var demandes DemandeEquipiers
-	for cat, has := range categories {
-		if !has {
-			continue
-		}
-		demandes = append(demandes, DemandeEquipier{
-			IdEquipier:  id,
-			IdDemande:   builtinDemandes[cat].Id,
-			Optionnelle: isDemandeOpt(Categorie(cat), roles),
-		})
-	}
-	return demandes
 }
