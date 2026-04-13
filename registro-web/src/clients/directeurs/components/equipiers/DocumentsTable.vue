@@ -29,7 +29,9 @@
             <td class="text-left">{{ equipier.Personne }}</td>
             <td v-for="demande in demandes">
               <DemandeChip
-                :demande="itemAt(equipier.Equipier.Id, demande.Id)"
+                :demande="demande"
+                :documents="itemAt(equipier.Equipier.Id, demande.Id)"
+                :is-suisse="equipier.IsSuisse"
                 @update-state="
                   (s) => updateState(equipier.Equipier.Id, demande.Id, s)
                 "
@@ -55,7 +57,6 @@ import {
   type IdEquipier,
 } from "../../logic/api";
 import DemandeChip from "./DemandeChip.vue";
-import { endpoints } from "@/utils";
 
 const props = defineProps<{
   equipiers: EquipierExt[];

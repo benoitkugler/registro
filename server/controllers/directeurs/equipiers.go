@@ -45,6 +45,7 @@ func equipierURL(key crypto.Encrypter, host string, id cps.IdEquipier) string {
 type EquipierExt struct {
 	Equipier              cps.Equipier
 	Personne              string
+	IsSuisse              bool
 	HasBirthday           bool
 	IsAnimateur, IsAuPair bool
 	FormURL               string
@@ -52,7 +53,7 @@ type EquipierExt struct {
 
 func newEquipierExt(key crypto.Encrypter, host string, camp cps.Camp, equipier cps.Equipier, personne pr.Personne) EquipierExt {
 	return EquipierExt{
-		equipier, personne.NOMPrenom(), camp.Plage().HasBirthday(personne.DateNaissance),
+		equipier, personne.NOMPrenom(), personne.Nationnalite.IsSuisse, camp.Plage().HasBirthday(personne.DateNaissance),
 		equipier.Roles.Is(cps.Animation) || equipier.Roles.Is(cps.AideAnimation),
 		equipier.Roles.IsAuPair(),
 		equipierURL(key, host, equipier.Id),

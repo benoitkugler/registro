@@ -87,6 +87,7 @@ export interface EquipierDemande {
 export interface EquipierExt {
   Equipier: Equipier;
   Personne: string;
+  IsSuisse: boolean;
   HasBirthday: boolean;
   IsAnimateur: boolean;
   IsAuPair: boolean;

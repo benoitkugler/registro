@@ -547,7 +547,15 @@ const innerCharte = ref(copy(props.equipier.Equipier.AccepteCharte));
 const demandesL = ref(copy(props.equipier.Demandes || []));
 
 const demandes = computed(() => {
-  const out = demandesL.value.map((p) => p);
+  const hideCasierJudiciaire = innerBase.value.Nationnalite.IsSuisse;
+  const out = demandesL.value
+    .map((p) => p)
+    .filter(
+      // hide CasierJudicaire for Suisse people
+      (d) =>
+        d.Demande.Categorie != Categorie.ExtraitCasierJudiciaire ||
+        !hideCasierJudiciaire
+    );
   out.sort((a, b) =>
     a.Optionnelle == b.Optionnelle
       ? a.Demande.Id - b.Demande.Id
@@ -588,7 +596,7 @@ const missingFiles = computed(() => {
     (p) => p.Demande.Categorie == Categorie.Bafd
   );
 
-  return demandesL.value
+  return demandes.value
     .filter((dem) => !dem.Optionnelle) // contraintes bloquantes uniquement
     .filter((dem) => {
       // doc nons remplis
