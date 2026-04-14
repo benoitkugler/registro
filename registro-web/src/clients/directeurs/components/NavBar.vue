@@ -6,12 +6,9 @@
     permanent
     rail
   >
-    <v-list-item
-      prepend-icon="mdi-menu"
-      title="Registro - Directeurs"
-      :subtitle="version"
-    >
+    <v-list-item prepend-icon="mdi-menu" :title="`Registro ${version}`">
     </v-list-item>
+
     <v-divider></v-divider>
 
     <v-list-item

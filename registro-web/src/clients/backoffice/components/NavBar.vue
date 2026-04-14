@@ -6,11 +6,7 @@
     permanent
     rail
   >
-    <v-list-item
-      prepend-icon="mdi-menu"
-      title="Registro - Backoffice"
-      :subtitle="version"
-    >
+    <v-list-item prepend-icon="mdi-menu" :title="`Registro ${version}`">
     </v-list-item>
 
     <v-divider></v-divider>
@@ -20,16 +16,16 @@
       link
       :to="{ path: '/camps' }"
       color="primary"
+      title="Séjours"
     >
-      Séjours
     </v-list-item>
     <v-list-item
       prepend-icon="mdi-calendar-multiple-check"
       link
       :to="{ path: '/inscriptions' }"
       color="primary"
+      title="Inscriptions"
     >
-      Inscriptions
     </v-list-item>
     <v-divider></v-divider>
     <v-list-item
@@ -37,8 +33,8 @@
       link
       :to="{ path: '/annuaire' }"
       color="primary"
+      title="Annuaire"
     >
-      Annuaire
     </v-list-item>
     <v-divider> </v-divider>
 
