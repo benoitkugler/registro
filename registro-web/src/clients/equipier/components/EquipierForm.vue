@@ -477,24 +477,40 @@
     </v-col>
     <v-spacer></v-spacer>
     <v-col cols="6">
-      <v-btn block color="green" @click="save" :disabled="!isFormValid">
-        Enregistrer</v-btn
-      >
+      <v-btn block color="green" @click="save"> Enregistrer</v-btn>
     </v-col>
   </v-row>
 
-  <v-dialog v-model="showMissingFilesDialog" max-width="600px">
-    <v-card title="Documents manquants">
+  <v-dialog v-model="showIncompleteFormDialog" max-width="600px">
+    <v-card title="Formulaire incomplet">
       <v-card-text>
-        Attention, il te reste à fournir les documents suivants :
+        <v-alert
+          type="warning"
+          v-if="!isFormValid"
+          class="my-2"
+          variant="outlined"
+        >
+          Attention, certains champs du formulaire sont encore à remplir.
+          <br />
+          Merci de revenir le compléter !
+        </v-alert>
 
-        <div class="my-2 text-center">
-          <v-chip v-for="piece in missingFiles" color="warning">
-            {{ CategorieLabels[piece.Demande.Categorie] }}
-          </v-chip>
-        </div>
+        <v-alert
+          type="warning"
+          v-if="missingFiles.length"
+          class="my-2"
+          variant="outlined"
+        >
+          Attention, il te reste à fournir les documents suivants :
 
-        Merci de revenir les ajouter !
+          <div class="my-2 text-center">
+            <v-chip v-for="piece in missingFiles">
+              {{ CategorieLabels[piece.Demande.Categorie] }}
+            </v-chip>
+          </div>
+
+          Merci de revenir les ajouter !
+        </v-alert>
       </v-card-text>
     </v-card>
   </v-dialog>
@@ -613,7 +629,7 @@ const missingFiles = computed(() => {
     });
 });
 
-const showMissingFilesDialog = ref(false);
+const showIncompleteFormDialog = ref(false);
 const showCharteDialog = ref(false);
 
 const isFormValid = computed(
@@ -631,7 +647,6 @@ const isFormValid = computed(
         innerBase.value.Pays &&
         innerBase.value.Mail &&
         innerBase.value.Tels?.length &&
-        innerDetails.value.SecuriteSociale &&
         ((asso == "repere" && isFormRepereValid()) ||
           (asso == "acve" && isFormAcveValid()))
       )
@@ -669,10 +684,10 @@ async function save() {
     Presence: innerPresences.value,
   });
   if (res === undefined) return;
-  controller.showMessage("Profil mis à jour avec succès.");
+  controller.showMessage("Formulaire mis à jour avec succès.");
   // s'il y a des documents manquants, affiche une alerte
-  if (missingFiles.value.length) {
-    showMissingFilesDialog.value = true;
+  if (missingFiles.value.length || !isFormValid.value) {
+    showIncompleteFormDialog.value = true;
   }
   // si la charte n'a pas encore été remplie, affiche la
   if (!innerCharte.value.Valid) {
