@@ -1,37 +1,49 @@
 <template>
   <NavBar title="Annuaire : personnes et organismes"> </NavBar>
 
-  <v-card class="my-2 mx-auto" max-width="600px">
+  <v-card class="my-2 mx-auto" max-width="1000px">
     <template #append>
-      <v-btn color="green" @click="create">Créer un nouveau profil</v-btn>
-    </template>
-    <v-card-text>
       <v-row>
-        <v-col>
+        <v-col align-self="center">
           <DebounceField
+            density="compact"
+            width="250px"
+            hide-details
             prepend-inner-icon="mdi-magnify"
             label="Recherche"
             v-model="search"
             @update:model-value="doSearch"
           ></DebounceField>
-          <v-list>
-            <v-list-item
-              v-for="personne in list"
-              :title="personne.Label"
-              :subtitle="Formatters.dateNaissance(personne.DateNaissance)"
-              :prepend-icon="Formatters.sexeIcon(personne.Sexe)"
-              @click="goToPersonne(personne.Id)"
-            >
-              <template #append v-if="personne.IsTemp">
-                <v-chip prepend-icon="mdi-alert" color="warning">
-                  Ce profil est temporaire et devrait être identifié.
-                </v-chip>
-              </template>
-            </v-list-item>
-          </v-list>
         </v-col>
-        <v-col></v-col>
+        <v-col align-self="center" cols="auto">
+          <v-btn color="green" @click="create" prepend-icon="mdi-plus"
+            >Créer un nouveau profil</v-btn
+          >
+        </v-col>
       </v-row>
+    </template>
+    <v-card-text>
+      <v-list>
+        <v-list-item v-if="!list.length">
+          <i v-if="!search.length"
+            >Utiliser le champ de recherche pour afficher un profil.</i
+          >
+          <i v-else>Aucun profil ne correspond à votre recherche.</i>
+        </v-list-item>
+        <v-list-item
+          v-for="personne in list"
+          :title="personne.Label"
+          :subtitle="Formatters.dateNaissance(personne.DateNaissance)"
+          :prepend-icon="Formatters.sexeIcon(personne.Sexe)"
+          @click="goToPersonne(personne.Id)"
+        >
+          <template #append v-if="personne.IsTemp">
+            <v-chip prepend-icon="mdi-alert" color="warning">
+              Ce profil est temporaire et devrait être identifié.
+            </v-chip>
+          </template>
+        </v-list-item>
+      </v-list>
     </v-card-text>
 
     <!-- edit dialog -->
