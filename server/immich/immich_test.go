@@ -15,6 +15,17 @@ func devCreds(t *testing.T) config.Immich {
 	return out
 }
 
+func TestShareURL(t *testing.T) {
+	tu.LoadEnv(t, "../env.sh")
+	t.Setenv("IMMICH_BASE_URL", "https://host.eu/") // notice the trailing /
+	c, err := config.NewImmich()
+	tu.AssertNoErr(t, err)
+
+	api := NewApi(c)
+	url := api.shareURL("key1234")
+	tu.Assert(t, url == "https://host.eu/share/key1234")
+}
+
 func Test(t *testing.T) {
 	api := NewApi(devCreds(t))
 

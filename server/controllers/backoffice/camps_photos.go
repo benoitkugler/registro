@@ -20,7 +20,7 @@ func (ct *Controller) CampsLoadAlbums(c echo.Context) error {
 		return err
 	}
 	out := CampPhotos{
-		HostURL: ct.immich.BaseURL,
+		HostURL: ct.immich.BaseURL.String(),
 		Camps:   albums,
 	}
 	return c.JSON(200, out)

@@ -13,7 +13,7 @@ import (
 	"registro/config"
 )
 
-// https://api.immich.app/endpoints
+// See documentation at https://api.immich.app/endpoints
 
 type Api struct {
 	config config.Immich
@@ -22,7 +22,9 @@ type Api struct {
 func NewApi(config config.Immich) *Api { return &Api{config} }
 
 func (api *Api) shareURL(key string) string {
-	return fmt.Sprintf("%s/share/%s", api.config.BaseURL, key)
+	copy := api.config.BaseURL
+	copy.Path = fmt.Sprintf("share/%s", key)
+	return copy.String()
 }
 
 // if [dst] is non nil, the response body is read as JSON into [dst]
@@ -34,7 +36,10 @@ func (api *Api) request(method string, endpoint string, query map[string]string,
 		queryParams.Set(k, v)
 	}
 
-	fullURL := fmt.Sprintf("%s/api%s?%s", api.config.BaseURL, endpoint, queryParams.Encode())
+	copy := api.config.BaseURL
+	copy.Path = "api" + endpoint
+	copy.RawQuery = queryParams.Encode()
+	fullURL := copy.String()
 
 	var bodyReader io.Reader
 	if body != nil {

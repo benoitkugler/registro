@@ -2,23 +2,30 @@ package config
 
 import (
 	"errors"
+	"fmt"
+	"net/url"
 	"os"
 )
 
 // See https://api.immich.app
 type Immich struct {
 	// URL containing scheme and host, without path
-	BaseURL string
+	BaseURL url.URL
 	ApiKey  string
 }
 
 // NewImmich uses env variables to build Immich credentials :
 // IMMICH_BASE_URL, IMMICH_API_KEY
 func NewImmich() (out Immich, err error) {
-	out.BaseURL = os.Getenv("IMMICH_BASE_URL")
-	if out.BaseURL == "" {
+	baseURL := os.Getenv("IMMICH_BASE_URL")
+	if baseURL == "" {
 		return Immich{}, errors.New("missing env IMMICH_BASE_URL")
 	}
+	u, err := url.Parse(baseURL)
+	if err != nil {
+		return out, fmt.Errorf("invalid env IMMICH_BASE_URL: %s", baseURL)
+	}
+	out.BaseURL = *u
 
 	out.ApiKey = os.Getenv("IMMICH_API_KEY")
 	if out.ApiKey == "" {
