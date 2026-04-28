@@ -37,13 +37,24 @@
           prepend-icon="mdi-content-save"
           color="success"
           variant="outlined"
-          :disabled="!isValid"
           @click="save"
           >Enregistrer mon projet</v-btn
         >
       </v-card-actions>
     </v-card>
   </div>
+
+  <v-dialog v-model="showMissingInfo" max-width="600px">
+    <v-card title="Formulaire incomplet">
+      <v-card-text>
+        <v-alert type="warning" class="my-2" variant="outlined">
+          Attention, certains champs du formulaire sont encore à remplir.
+          <br />
+          Merci de revenir le compléter !
+        </v-alert>
+      </v-card-text>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script lang="ts" setup>
@@ -82,5 +93,10 @@ async function save() {
   const res = await controller.ProjetSpiUpdate(data.value);
   if (res === undefined) return;
   controller.showMessage("Projet enregistré avec succès.");
+  if (!isValid.value) {
+    showMissingInfo.value = true;
+  }
 }
+
+const showMissingInfo = ref(false);
 </script>
