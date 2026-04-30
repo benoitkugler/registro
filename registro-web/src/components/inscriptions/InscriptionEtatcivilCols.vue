@@ -13,18 +13,18 @@
             </v-chip>
           </template>
 
-          <v-card v-if="props.acteur == Acteur.Directeur">
+          <CardSimilaires
+            v-if="props.acteur == Acteur.Backoffice"
+            :api="props.api"
+            :personne="props.personne"
+            @identifie="(v) => emit('identifie', v)"
+          ></CardSimilaires>
+          <v-card v-else>
             <v-card-text>
               Le rapprochement de ce profil requiert une action du centre
               d'inscription.
             </v-card-text>
           </v-card>
-          <CardSimilaires
-            v-else
-            :api="props.api"
-            :personne="props.personne"
-            @identifie="(v) => emit('identifie', v)"
-          ></CardSimilaires>
         </v-menu>
 
         <div v-else v-bind="tooltipProps">
@@ -70,6 +70,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
+  // only used when acteur == Backoffice
   (e: "identifie", params: IdentTarget): void;
 }>();
 </script>

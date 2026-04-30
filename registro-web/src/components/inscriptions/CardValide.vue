@@ -50,18 +50,28 @@ const participants = computed(() =>
   )
 );
 
-// start with server hints, restricted if needed to participants
-const inner = ref(
+// start with server hints (if validable), restricted if needed to validable participants
+const inner = ref<Statuts>(
   Object.fromEntries(
     participants.value
       .filter(
-        (p) => (props.inscription.StatutHints || {})[p.Participant.Id].Validable
+        (p) =>
+          (props.inscription.StatutHints || {})[p.Participant.Id]
+            .AllowedValidation?.length
       )
-      .map((p) => [
-        p.Participant.Id,
-        (props.inscription.StatutHints || {})[p.Participant.Id].Statut,
-      ])
-  ) as Statuts
+      .map((p) => {
+        const serverHint = (props.inscription.StatutHints || {})[
+          p.Participant.Id
+        ].Hint;
+        const allowed =
+          (props.inscription.StatutHints || {})[p.Participant.Id]
+            .AllowedValidation || [];
+        // make sure the preselected value is in the allowed list,
+        // which is non empty here
+        const statut = allowed.includes(serverHint) ? serverHint : allowed[0];
+        return [p.Participant.Id, statut];
+      })
+  ) satisfies Statuts
 );
 
 type Statuts = { [key in IdParticipant]: StatutParticipant };

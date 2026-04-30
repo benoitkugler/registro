@@ -8,22 +8,22 @@
     </v-col>
     <v-col cols="5" align-self="center" class="text-center">
       <v-chip
-        v-if="props.statut.Statut != StatutParticipant.Inscrit"
+        v-if="props.statut.Hint != StatutParticipant.Inscrit"
         color="warning"
         prepend-icon="mdi-alert"
       >
         {{ formatStatutCauses(props.statut.Causes) }}
       </v-chip>
+      <v-chip v-if="props.statut.AllowedValidation?.length == 1" size="small">
+        Seul le centre peut accepter cette inscription.
+      </v-chip>
     </v-col>
     <v-col align-self="center">
       <StatutParticipantField
-        v-if="props.statut.Validable"
-        v-model="statut"
+        v-if="props.statut.AllowedValidation?.length"
+        v-model="selected"
         hide-details
-        :readonly="!props.statut.AllowedChanges?.length"
-        :restrict-items="
-          (props.statut.AllowedChanges || []).concat(props.statut.Statut)
-        "
+        :restrict-items="props.statut.AllowedValidation || []"
       ></StatutParticipantField>
       <v-chip
         v-else-if="
@@ -32,9 +32,6 @@
         size="small"
       >
         Inscription déjà validée.
-      </v-chip>
-      <v-chip v-else size="small">
-        Seul le centre peut accepter cette inscription.
       </v-chip>
     </v-col>
   </v-row>
@@ -53,7 +50,7 @@ const props = defineProps<{
   statut: StatutExt;
 }>();
 
-const statut = defineModel<StatutParticipant>({ required: true });
+const selected = defineModel<StatutParticipant>({ required: true });
 
 function formatStatutCauses(c: StatutCauses) {
   if (!c.Age) {

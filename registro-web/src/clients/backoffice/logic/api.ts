@@ -486,10 +486,9 @@ export interface SondageMoyennes {
 }
 // registro/logic.StatutExt
 export interface StatutExt {
+  Hint: StatutParticipant;
   Causes: StatutCauses;
-  Statut: StatutParticipant;
-  AllowedChanges: StatutParticipant[] | null;
-  Validable: boolean;
+  AllowedValidation: StatutParticipant[] | null;
 }
 // registro/logic.StatutPaiement
 export const StatutPaiement = {

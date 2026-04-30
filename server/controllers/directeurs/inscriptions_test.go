@@ -62,7 +62,7 @@ func Test_inscriptions(t *testing.T) {
 
 		values := make(map[cps.IdParticipant]cps.StatutParticipant)
 		for k, v := range hints {
-			values[k] = v.Statut
+			values[k] = v.Hint
 		}
 		err = ct.valideInscription("localhost", InscriptionsValideIn{
 			IdDossier: dossier1.Id,

@@ -19,11 +19,6 @@ export interface NullBool {
   Bool: boolean;
   Valid: boolean;
 }
-// registro/controllers/backoffice.InscriptionIdentifieIn
-export interface InscriptionIdentifieIn {
-  IdDossier: IdDossier;
-  Target: IdentTarget;
-}
 // registro/controllers/backoffice.SendProgress
 export interface SendProgress {
   Current: Int;
@@ -215,12 +210,6 @@ export interface EventExt_MessageEvt {
   Event: Event;
   Content: MessageEvt;
 }
-// registro/logic.IdentTarget
-export interface IdentTarget {
-  IdTemporaire: IdPersonne;
-  Rattache: boolean;
-  RattacheTo: IdPersonne;
-}
 // registro/logic.InscriptionExt
 export interface InscriptionExt {
   Dossier: Dossier;
@@ -280,10 +269,9 @@ export interface SondageMoyennes {
 }
 // registro/logic.StatutExt
 export interface StatutExt {
+  Hint: StatutParticipant;
   Causes: StatutCauses;
-  Statut: StatutParticipant;
-  AllowedChanges: StatutParticipant[] | null;
-  Validable: boolean;
+  AllowedValidation: StatutParticipant[] | null;
 }
 // registro/logic.StatutPaiement
 export const StatutPaiement = {
@@ -1050,22 +1038,6 @@ export abstract class AbstractAPI {
           headers: this.getHeaders(),
           params: { idPersonne: String(params["idPersonne"]) },
         },
-      );
-      return rep.data;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  /** InscriptionsIdentifiePersonne performs the request and handles the error */
-  async InscriptionsIdentifiePersonne(params: InscriptionIdentifieIn) {
-    const fullUrl = this.baseURL + "/api/v1/directeurs/inscriptions/identifie";
-    this.startRequest();
-    try {
-      const rep: AxiosResponse<InscriptionExt> = await Axios.post(
-        fullUrl,
-        params,
-        { headers: this.getHeaders() },
       );
       return rep.data;
     } catch (error) {

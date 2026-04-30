@@ -198,6 +198,7 @@ func (dossier Dossier) StatutHints(camps cps.CampsData, bypass StatutBypassRight
 
 // StatutBypassRights grants the rights to validate a participant,
 // and override the default (computed) hint.
+// Currently, the right to refuse a participant is always (implicitely) granted.
 type StatutBypassRights struct {
 	ProfilInvalide bool
 	CampComplet    bool
@@ -205,45 +206,55 @@ type StatutBypassRights struct {
 }
 
 type StatutExt struct {
+	// Hint is the automatic value computed
+	// using age, remaining places, etc...
+	// It may not always be enabled for directors.
+	Hint cps.StatutParticipant
+	// Causes explains [Hint]
 	Causes cps.StatutCauses
-	Statut cps.StatutParticipant
 
-	AllowedChanges []cps.StatutParticipant // empty for readonly
-	// if false, no update will be done
-	// it is always false for participnt already
-	// validated
-	Validable bool
+	// AllowedValidation contains the statuts one
+	// can apply.
+	// [Hint] may be missing to disabled positive validation.
+	// Currently, it always contains [Refuse]
+	AllowedValidation []cps.StatutParticipant
 }
 
 // IsAllowed returns 'true' if the bypass rights allow the given statut to be
 // applied.
+// [Refuse] is always allowed.
 func (st StatutExt) IsAllowed(statut cps.StatutParticipant) bool {
-	return statut == st.Statut || slices.Contains(st.AllowedChanges, statut)
+	return slices.Contains(st.AllowedValidation, statut)
 }
 
 func (bp StatutBypassRights) resolve(st cps.StatutCauses, currentStatut cps.StatutParticipant) StatutExt {
-	out := StatutExt{Causes: st, Statut: st.Hint()}
-	switch out.Statut {
+	out := StatutExt{Causes: st, Hint: st.Hint()}
+
+	if currentStatut != cps.AStatuer { // always disable modification at this stage
+		return out
+	}
+
+	switch out.Hint {
 	case cps.AttenteProfilInvalide:
-		if bp.ProfilInvalide {
-			out.AllowedChanges = []cps.StatutParticipant{cps.Inscrit}
-			out.Validable = true
+		if bp.ProfilInvalide { // allow override
+			out.AllowedValidation = []cps.StatutParticipant{cps.Inscrit, out.Hint}
 		}
 	case cps.AttenteCampComplet:
-		if bp.CampComplet {
-			out.AllowedChanges = []cps.StatutParticipant{cps.Inscrit}
-			out.Validable = true
+		if bp.CampComplet { // allow override
+			out.AllowedValidation = []cps.StatutParticipant{cps.Inscrit, out.Hint}
 		}
 	case cps.Inscrit:
-		out.Validable = true
-		if bp.Inscrit {
-			out.AllowedChanges = []cps.StatutParticipant{cps.AttenteProfilInvalide, cps.AttenteCampComplet}
+		if bp.Inscrit { // allow override
+			out.AllowedValidation = []cps.StatutParticipant{cps.Inscrit, cps.AttenteProfilInvalide, cps.AttenteCampComplet}
+		} else {
+			out.AllowedValidation = []cps.StatutParticipant{cps.Inscrit}
 		}
 	default: // should not happen
 	}
-	if currentStatut != cps.AStatuer {
-		out.Validable = false
-	}
+
+	// always add Refuse
+	out.AllowedValidation = append(out.AllowedValidation, cps.Refuse)
+
 	return out
 }
 
@@ -274,7 +285,7 @@ type InscriptionsValideIn struct {
 // ValideInscription met à jour le statut des participants et
 // envoie un mail d'accusé de réception.
 //
-// Le dossier est validé si aucun participant n'est encore [AStatuer]
+// Le dossier est considéré comme validé si aucun participant n'est encore [AStatuer]
 func ValideInscription(db *sql.DB, key crypto.Encrypter, smtp config.SMTP, asso config.Asso,
 	host string, args InscriptionsValideIn, bypass StatutBypassRights, acteur cps.OptIdCamp,
 ) error {
@@ -312,7 +323,8 @@ func ValideInscription(db *sql.DB, key crypto.Encrypter, smtp config.SMTP, asso 
 
 			// ignore participant not validable (already validated or restricted for directors)
 			// or for other camps
-			if !hasNew || !serverHint.Validable || (acteur.Valid && !acteur.Is(participant.IdCamp)) {
+			allowChange := hasNew && len(serverHint.AllowedValidation) != 0 && (!acteur.Valid || acteur.Is(participant.IdCamp))
+			if !allowChange {
 				// in the mail, only show the remaining participants
 				if participant.Statut == cps.AStatuer {
 					astatuer = append(astatuer, mailPart)

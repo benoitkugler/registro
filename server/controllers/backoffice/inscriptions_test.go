@@ -82,7 +82,7 @@ func TestValideInscription(t *testing.T) {
 
 	values := make(map[cps.IdParticipant]cps.StatutParticipant)
 	for k, v := range hints {
-		values[k] = v.Statut
+		values[k] = v.Hint
 	}
 	err = ct.valideInscription("localhost:1323", logic.InscriptionsValideIn{IdDossier: dossier1.Id, Statuts: values, SendMail: true})
 	tu.AssertNoErr(t, err)

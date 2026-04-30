@@ -3,7 +3,6 @@ package directeurs
 import (
 	"slices"
 
-	"registro/controllers/backoffice"
 	"registro/logic"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
@@ -93,33 +92,6 @@ func (ct *Controller) InscriptionsSearchSimilaires(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	return c.JSON(200, out)
-}
-
-type InscriptionIdentifieIn = backoffice.InscriptionIdentifieIn
-
-// InscriptionsIdentifiePersonne identifie et renvoie l'inscription
-// mise à jour
-func (ct *Controller) InscriptionsIdentifiePersonne(c echo.Context) error {
-	user := JWTUser(c)
-
-	var args InscriptionIdentifieIn
-	if err := c.Bind(&args); err != nil {
-		return err
-	}
-
-	err := logic.IdentifiePersonne(ct.db, args.Target)
-	if err != nil {
-		return err
-	}
-
-	l, err := logic.LoadInscriptions(ct.db, directeursBypass, false, args.IdDossier)
-	if err != nil {
-		return err
-	}
-	out := l[0]
-	sortParticipants(out, user)
-
 	return c.JSON(200, out)
 }
 

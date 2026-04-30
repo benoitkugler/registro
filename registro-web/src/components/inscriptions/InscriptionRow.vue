@@ -119,14 +119,14 @@
                       Formatters.statutParticipant(
                         (props.inscription.StatutHints || {})[
                           part.Participant.Id
-                        ].Statut
+                        ].Hint
                       ).icon
                     "
                     :color="
                       Formatters.statutParticipant(
                         (props.inscription.StatutHints || {})[
                           part.Participant.Id
-                        ].Statut
+                        ].Hint
                       ).color
                     "
                   >
@@ -221,6 +221,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
+  // only used if user == null (admin)
   (e: "identifie", params: IdentTarget): void;
   (e: "valide", idParticipant?: IdParticipant): void;
   (e: "merge"): void;

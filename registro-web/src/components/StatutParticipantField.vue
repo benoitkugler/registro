@@ -5,8 +5,8 @@
     density="compact"
     :items="items"
     :readonly="props.readonly"
-    :hide-details="props.hideDetails"
     v-model="modelValue"
+    :hide-details="props.hideDetails"
     :rules="props.rules"
   >
     <template #item="{ item, props: menuProps }">

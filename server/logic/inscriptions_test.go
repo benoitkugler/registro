@@ -60,27 +60,26 @@ func TestStatutBypassRights_resolve(t *testing.T) {
 		want   StatutExt
 	}{
 		// problème d'age
-		{directorRights, cps.StatutCauses{Age: false}, StatutExt{AllowedChanges: nil, Validable: false}},
+		{directorRights, cps.StatutCauses{Age: false}, StatutExt{AllowedValidation: []cps.StatutParticipant{cps.Refuse}}},
 		// problème de place -> OK
-		{directorRights, cps.StatutCauses{Age: true}, StatutExt{AllowedChanges: []cps.StatutParticipant{cps.Inscrit}, Validable: true}},
+		{directorRights, cps.StatutCauses{Age: true}, StatutExt{AllowedValidation: []cps.StatutParticipant{cps.Inscrit, cps.AttenteCampComplet, cps.Refuse}}},
 		// valide
-		{directorRights, cps.StatutCauses{Age: true, EquilibreGF: true, Place: true}, StatutExt{AllowedChanges: nil, Validable: true}},
+		{directorRights, cps.StatutCauses{Age: true, EquilibreGF: true, Place: true}, StatutExt{AllowedValidation: []cps.StatutParticipant{cps.Inscrit, cps.Refuse}}},
 
 		// problème d'age
-		{backofficeRights, cps.StatutCauses{Age: false}, StatutExt{AllowedChanges: []cps.StatutParticipant{cps.Inscrit}, Validable: true}},
+		{backofficeRights, cps.StatutCauses{Age: false}, StatutExt{AllowedValidation: []cps.StatutParticipant{cps.Inscrit, cps.AttenteProfilInvalide, cps.Refuse}}},
 		// problème de place -> OK
-		{backofficeRights, cps.StatutCauses{Age: true}, StatutExt{AllowedChanges: []cps.StatutParticipant{cps.Inscrit}, Validable: true}},
+		{backofficeRights, cps.StatutCauses{Age: true}, StatutExt{AllowedValidation: []cps.StatutParticipant{cps.Inscrit, cps.AttenteCampComplet, cps.Refuse}}},
 		// valide
-		{backofficeRights, cps.StatutCauses{Age: true, EquilibreGF: true, Place: true}, StatutExt{AllowedChanges: []cps.StatutParticipant{cps.AttenteProfilInvalide, cps.AttenteCampComplet}, Validable: true}},
+		{backofficeRights, cps.StatutCauses{Age: true, EquilibreGF: true, Place: true}, StatutExt{AllowedValidation: []cps.StatutParticipant{cps.Inscrit, cps.AttenteProfilInvalide, cps.AttenteCampComplet, cps.Refuse}}},
 	}
 	for _, tt := range tests {
 		got := tt.fields.resolve(tt.args, cps.AStatuer)
-		tu.Assert(t, reflect.DeepEqual(got.AllowedChanges, tt.want.AllowedChanges))
-		tu.Assert(t, got.Validable == tt.want.Validable)
-		tu.Assert(t, got.IsAllowed(got.Statut))
+		tu.Assert(t, reflect.DeepEqual(got.AllowedValidation, tt.want.AllowedValidation))
 	}
 
-	tu.Assert(t, !backofficeRights.resolve(cps.StatutCauses{}, cps.Inscrit).Validable)
+	// already validated
+	tu.Assert(t, reflect.DeepEqual(backofficeRights.resolve(cps.StatutCauses{}, cps.Inscrit).AllowedValidation, []cps.StatutParticipant(nil)))
 }
 
 // See https://github.com/benoitkugler/registro/issues/196

@@ -28,6 +28,7 @@
           Il n'y a aucune inscription à valider.
         </div>
         <div v-else>
+          <!-- @identifie event is not triggered for directeurs -->
           <InscriptionRow
             class="my-1"
             :user="controller.camp!.Id"
@@ -36,7 +37,6 @@
             :inscription="insc"
             hide-delete
             :already-validated="isValidatedByUs(insc)"
-            @identifie="(v) => identifie(insc.Dossier.Id, v)"
             @valide="
               (v) =>
                 (inscToValid = {
@@ -75,8 +75,6 @@ import { onMounted, computed, ref } from "vue";
 import { controller } from "../../logic/logic";
 import {
   StatutParticipant,
-  type IdDossier,
-  type IdentTarget,
   type IdParticipant,
   type InscriptionExt,
   type Int,
@@ -125,18 +123,6 @@ function isValidatedByUs(insc: InscriptionExt) {
   return (insc.Participants || [])
     .filter((p) => p.Camp.Id == us)
     .every((p) => p.Participant.Statut != StatutParticipant.AStatuer);
-}
-
-async function identifie(id: IdDossier, target: IdentTarget) {
-  const res = await controller.InscriptionsIdentifiePersonne({
-    IdDossier: id,
-    Target: target,
-  });
-  if (res === undefined) return;
-
-  controller.showMessage("Profil identifié avec succès.");
-  const index = data.value.findIndex((insc) => insc.Dossier.Id == id);
-  data.value[index] = res;
 }
 
 // copied from backoffice : keep in sync

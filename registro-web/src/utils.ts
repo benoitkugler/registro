@@ -568,8 +568,8 @@ export namespace Participants {
     return (
       p.Personne.IsTemp ||
       (p.Participant.Statut == StatutParticipant.AStatuer &&
-        (hint.Statut == StatutParticipant.AttenteCampComplet ||
-          hint.Statut == StatutParticipant.AttenteProfilInvalide))
+        (hint.Hint == StatutParticipant.AttenteCampComplet ||
+          hint.Hint == StatutParticipant.AttenteProfilInvalide))
     );
   }
 
