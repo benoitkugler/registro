@@ -53,48 +53,31 @@
       <template v-if="!props.fiche.IsLocked">
         <v-card class="my-2" title="Santé">
           <v-card-text>
-            <v-row
-              ><v-col>
-                <v-textarea
-                  label="Difficultés de santé"
-                  rows="3"
-                  variant="outlined"
-                  v-model="inner.DifficultesSante"
-                  hint="Préciser les problèmes de santé, allergies (non alimentaires), ou tout autre renseignement utile ..."
-                  persistent-hint
-                ></v-textarea> </v-col
-            ></v-row>
+            <ActivableStringRow
+              label="Difficultés de santé"
+              hint="Préciser les problèmes de santé, allergies (non alimentaires), ou tout autre renseignement utile ..."
+              text-disabled="Aucune"
+              v-model="inner.DifficultesSante"
+            ></ActivableStringRow>
 
-            <v-row
-              ><v-col>
-                <v-textarea
-                  label="Allergies alimentaires"
-                  rows="3"
-                  variant="outlined"
-                  v-model="inner.AllergiesAlimentaires"
-                ></v-textarea> </v-col
-            ></v-row>
+            <v-divider horizontal thickness="1" class="my-4"></v-divider>
 
-            <v-row
-              ><v-col>
-                <v-textarea
-                  label="Traitement en cours et mesures proposées"
-                  rows="3"
-                  variant="outlined"
-                  v-model="inner.TraitementMedical"
-                ></v-textarea>
-                <v-fade-transition>
-                  <v-alert
-                    :model-value="inner.TraitementMedical != ''"
-                    color="blue-lighten-4"
-                    type="warning"
-                  >
-                    Merci d'apporter les médicaments prescrits et leur
-                    posologie, ainsi que d'informer l'équipe à votre arrivée.
-                  </v-alert>
-                </v-fade-transition>
-              </v-col></v-row
-            >
+            <ActivableStringRow
+              label="Allergies alimentaires"
+              hint=""
+              text-disabled="Aucune"
+              v-model="inner.AllergiesAlimentaires"
+            ></ActivableStringRow>
+
+            <v-divider horizontal thickness="1" class="my-4"></v-divider>
+
+            <ActivableStringRow
+              label="Traitement en cours et mesures proposées"
+              hint=""
+              text-disabled="Aucun"
+              alert-on-enabled="Merci d'apporter les médicaments prescrits et leur posologie, ainsi que d'informer l'équipe à votre arrivée."
+              v-model="inner.TraitementMedical"
+            ></ActivableStringRow>
           </v-card-text>
         </v-card>
 
@@ -219,8 +202,9 @@ import {
   type Fichesanitaire,
   type FichesanitaireExt,
 } from "../logic/api";
-import { computed, reactive } from "vue";
+import { computed, reactive, ref } from "vue";
 import { useDisplay } from "vuetify";
+import ActivableStringRow from "./ActivableStringRow.vue";
 const props = defineProps<{
   fiche: FichesanitaireExt;
 }>();
@@ -244,5 +228,9 @@ const subtitle = computed(() =>
         props.fiche.Fichesanitaire.Modified
       )} / Propriétaire(s) :
          ${ownerMails.value.join(" ; ")}`
+);
+
+const difficultesSanteEnabled = ref(
+  props.fiche.Fichesanitaire.DifficultesSante != ""
 );
 </script>
