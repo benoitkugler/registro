@@ -2,16 +2,18 @@
   <v-card title="Inscription confirmée">
     <v-card-text>
       <div class="mb-4">
-        Nous avons bien reçu votre inscription, et nous vous en remercions.
-        Voici son statut :
+        Nous avons bien reçu votre demande d'inscription, et nous vous en
+        remercions. Voici son statut :
       </div>
 
       <!-- inscrits -->
       <v-alert
         v-if="inscrits.length"
-        color="lime-lighten-1"
         class="my-2"
         elevation="2"
+        :color="
+          Formatters.statutParticipantColorClass(StatutParticipant.Inscrit)
+        "
         :icon="Formatters.statutParticipant(StatutParticipant.Inscrit).icon"
       >
         <v-row>
@@ -36,9 +38,13 @@
       <!-- attente -->
       <v-alert
         v-if="attente.length"
-        color="orange-lighten-3"
         class="my-2"
         elevation="2"
+        :color="
+          Formatters.statutParticipantColorClass(
+            StatutParticipant.AttenteCampComplet
+          )
+        "
         :icon="
           Formatters.statutParticipant(StatutParticipant.AttenteCampComplet)
             .icon
@@ -52,10 +58,34 @@
             </v-chip>
           </v-col>
           <v-col xs="12" md="7"
-            >Malheureusement, nous avons dû placer
+            >Nous avons dû placer
             {{ attente.length == 1 ? "cette demande" : "ces demandes" }}
             en liste d'attente. Nous reviendrons vers vous si une place se
             libère.</v-col
+          >
+        </v-row>
+      </v-alert>
+
+      <!-- refus -->
+      <v-alert
+        v-if="refuses.length"
+        class="my-2"
+        elevation="2"
+        :color="
+          Formatters.statutParticipantColorClass(StatutParticipant.Refuse)
+        "
+        :icon="Formatters.statutParticipant(StatutParticipant.Refuse).icon"
+      >
+        <v-row>
+          <v-col align-self="center" class="text-center">
+            <v-chip v-for="participant in refuses" class="my-1">
+              {{ participant.Personne.Prenom }} :
+              {{ Camps.label(participant.Camp) }}
+            </v-chip>
+          </v-col>
+          <v-col xs="12" md="7"
+            >Nous avons refusé définitivement
+            {{ refuses.length == 1 ? "cette demande" : "ces demandes" }}.</v-col
           >
         </v-row>
       </v-alert>
@@ -112,7 +142,13 @@ const attente = computed(() =>
   (props.dossier.Participants || []).filter(
     (p) =>
       p.Participant.Statut != StatutParticipant.Inscrit &&
-      p.Participant.Statut != StatutParticipant.AStatuer
+      p.Participant.Statut != StatutParticipant.AStatuer &&
+      p.Participant.Statut != StatutParticipant.Refuse
+  )
+);
+const refuses = computed(() =>
+  (props.dossier.Participants || []).filter(
+    (p) => p.Participant.Statut == StatutParticipant.Refuse
   )
 );
 const aStatuer = computed(() =>

@@ -37,7 +37,7 @@ const (
 	// personne n'a encore décidé ou placer le participant
 	AStatuer StatutParticipant = iota // En attente de validation
 	// définitivment refusé (non concerné par une place libérée)
-	Refuse // Refusé définitivement
+	Refuse // Refus définitif
 	// le profil ne suit pas les conditions du séjour
 	AttenteProfilInvalide // Profil limite
 	// le séjour est déjà complet
@@ -68,7 +68,7 @@ func (s StatutParticipant) String() string {
 	case AStatuer:
 		return "A statuer"
 	case Refuse:
-		return "Refusé définitivement"
+		return "Refus définitif"
 	case AttenteProfilInvalide:
 		return "Profil limite"
 	case AttenteCampComplet:

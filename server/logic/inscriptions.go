@@ -312,8 +312,8 @@ func ValideInscription(db *sql.DB, key crypto.Encrypter, smtp config.SMTP, asso 
 
 	err = utils.InTx(db, func(tx *sql.Tx) error {
 		var (
-			inscrits, attente, astatuer []mails.Participant
-			validatedCamp               = utils.Set[cps.IdCamp]{}
+			inscrits, attente, refuses, astatuer []mails.Participant
+			validatedCamp                        = utils.Set[cps.IdCamp]{}
 		)
 		for _, pExt := range loader.ParticipantsExt() {
 			participant := pExt.Participant
@@ -350,6 +350,8 @@ func ValideInscription(db *sql.DB, key crypto.Encrypter, smtp config.SMTP, asso 
 
 			if newStatut == cps.Inscrit {
 				inscrits = append(inscrits, mailPart)
+			} else if newStatut == cps.Refuse {
+				refuses = append(refuses, mailPart)
 			} else {
 				attente = append(attente, mailPart)
 			}
@@ -377,11 +379,11 @@ func ValideInscription(db *sql.DB, key crypto.Encrypter, smtp config.SMTP, asso 
 		if args.SendMail {
 			resp := loader.Responsable()
 			url := EspacePersoURL(key, host, dossier.Id, utils.QPInt("idEvent", ev.Id))
-			html, err := mails.ConfirmationInscription(asso, mails.NewContact(&resp), url, inscrits, attente, astatuer)
+			html, err := mails.ConfirmationInscription(asso, mails.NewContact(&resp), url, inscrits, attente, refuses, astatuer)
 			if err != nil {
 				return err
 			}
-			err = mails.NewMailer(smtp, asso.MailsSettings).SendMail(resp.Mail, "Inscription confirmée", html, dossier.CopiesMails, nil)
+			err = mails.NewMailer(smtp, asso.MailsSettings).SendMail(resp.Mail, "Inscription", html, dossier.CopiesMails, nil)
 			if err != nil {
 				return err
 			}

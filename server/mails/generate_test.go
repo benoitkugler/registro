@@ -135,6 +135,7 @@ func TestConfirmationInscription(t *testing.T) {
 		[]Participant{{"Benoit Kugler", "C2 2025"}},
 		[]Participant{},
 		[]Participant{},
+		[]Participant{},
 	)
 	tu.AssertNoErr(t, err)
 	tu.Write(t, "ConfirmationInscription_1.html", []byte(html))
@@ -142,6 +143,7 @@ func TestConfirmationInscription(t *testing.T) {
 	html, err = ConfirmationInscription(cfg, contact, url,
 		[]Participant{{"Benoit Kugler", "C2 2025"}, {"Benoit Kugler", "C3 2025"}},
 		[]Participant{},
+		[]Participant{{"Benoit Kugler", "C2 2025"}},
 		[]Participant{},
 	)
 	tu.AssertNoErr(t, err)
@@ -151,25 +153,37 @@ func TestConfirmationInscription(t *testing.T) {
 		[]Participant{},
 		[]Participant{{"Benoit Kugler", "C2 2025"}},
 		[]Participant{},
+		[]Participant{},
 	)
 	tu.AssertNoErr(t, err)
 	tu.Write(t, "ConfirmationInscription_3.html", []byte(html))
 
 	html, err = ConfirmationInscription(cfg, contact, url,
 		[]Participant{},
-		[]Participant{{"Benoit Kugler", "C2 2025"}, {"Benoit Kugler", "C3 2025"}},
+		[]Participant{},
+		[]Participant{{"Benoit Kugler", "C2 2025"}},
 		[]Participant{},
 	)
 	tu.AssertNoErr(t, err)
 	tu.Write(t, "ConfirmationInscription_4.html", []byte(html))
 
 	html, err = ConfirmationInscription(cfg, contact, url,
+		[]Participant{},
 		[]Participant{{"Benoit Kugler", "C2 2025"}, {"Benoit Kugler", "C3 2025"}},
-		[]Participant{{"Benoit Kugler", "C2 2025"}, {"Benoit Kugler", "C3 2025"}},
-		[]Participant{{"Benoit Kugler", "C2 2025"}, {"Benoit Kugler", "C3 2025"}},
+		[]Participant{},
+		[]Participant{},
 	)
 	tu.AssertNoErr(t, err)
 	tu.Write(t, "ConfirmationInscription_5.html", []byte(html))
+
+	html, err = ConfirmationInscription(cfg, contact, url,
+		[]Participant{{"Benoit Inscrit", "C2 2025"}},
+		[]Participant{{"Benoit Attente", "C2 2025"}, {"Benoit Attente", "C3 2025"}},
+		[]Participant{{"Benoit Refusé", "C2 2025"}},
+		[]Participant{{"Benoit A statuer", "C2 2025"}, {"Benoit A statuer", "C3 2025"}},
+	)
+	tu.AssertNoErr(t, err)
+	tu.Write(t, "ConfirmationInscription_6.html", []byte(html))
 }
 
 func TestNotifieFusionDossier(t *testing.T) {

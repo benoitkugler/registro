@@ -266,23 +266,25 @@ func ValidationMailInscription(asso config.Asso, contact Contact, urlConfirmeIns
 	return render(validationMailInscriptionT, args)
 }
 
-func ConfirmationInscription(asso config.Asso, contact Contact, lienEspacePerso string, inscrits, attente, astatuer []Participant) (string, error) {
+func ConfirmationInscription(asso config.Asso, contact Contact, lienEspacePerso string, inscrits, attente, refuses, astatuer []Participant) (string, error) {
 	args := struct {
 		champsCommuns
 		Inscrits               []Participant
 		Attente                []Participant
+		Refuses                []Participant
 		AStatuer               []Participant
 		EspacePersoURL         string
 		EspacePersoButtonLabel string
 	}{
 		champsCommuns: champsCommuns{
-			Title:       "Inscription confirmée",
+			Title:       "Inscription",
 			Salutations: contact.Salutations(),
 			Signature:   mailAutoSignature,
 			Asso:        asso,
 		},
 		Inscrits:               inscrits,
 		Attente:                attente,
+		Refuses:                refuses,
 		AStatuer:               astatuer,
 		EspacePersoURL:         lienEspacePerso,
 		EspacePersoButtonLabel: "Mon espace",

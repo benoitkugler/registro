@@ -419,12 +419,25 @@ export namespace Formatters {
     return sexe == Sexe.Woman ? "e" : "";
   }
 
+  export function statutParticipantColorClass(s: StatutParticipant) {
+    switch (s) {
+      case StatutParticipant.Inscrit:
+        return "bg-lime-lighten-2";
+      case StatutParticipant.AStatuer:
+        return "bg-grey-lighten-1";
+      case StatutParticipant.Refuse:
+        return "bg-red-lighten-3";
+      default:
+        return "bg-orange-lighten-3";
+    }
+  }
+
   export function statutParticipant(s: StatutParticipant) {
     switch (s) {
       case StatutParticipant.EnAttenteReponse:
         return { icon: "mdi-clock", color: "yellow-darken-2" };
       case StatutParticipant.Refuse:
-        return { icon: "mdi-close-thick", color: "deep-orange" };
+        return { icon: "mdi-close-thick", color: "red" };
       case StatutParticipant.AStatuer:
         return { icon: "mdi-help" };
       case StatutParticipant.Inscrit:

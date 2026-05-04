@@ -123,7 +123,9 @@
                 rounded
                 :class="{
                   'my-2': true,
-                  [participantColorClass(participant)]: true,
+                  [Formatters.statutParticipantColorClass(
+                    participant.Participant.Statut
+                  )]: true,
                 }"
               >
                 <template #append>
@@ -396,15 +398,6 @@ async function sendMessage() {
   if (res === undefined) return;
   controller.showMessage("Message envoyé avec succès.");
   data.value.Dossier.Events = (data.value.Dossier.Events || []).concat(res);
-}
-
-function participantColorClass(p: ParticipantCamp) {
-  if (p.Participant.Statut == StatutParticipant.Inscrit) {
-    return "bg-lime-lighten-2";
-  } else if (p.Participant.Statut == StatutParticipant.AStatuer) {
-    return "bg-grey-lighten-1";
-  }
-  return "bg-orange-lighten-3";
 }
 
 const showEditOptions = ref(false);

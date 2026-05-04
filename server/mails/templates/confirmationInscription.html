@@ -1,57 +1,48 @@
 {{ define "content" }}
 <table cellpadding="0">
-  <!-- aucun inscrit, phrase positive -->
-  {{ if eq (len .Inscrits) 0}}
+  <!-- Phrase positive systématique -->
   <tr>
     <td>
       Nous avons bien pris connaissance de votre demande d'inscription, et nous
       vous en remercions !
+      <br />
+      Voici, ci-dessous, notre retour :
     </td>
   </tr>
-  {{ end }}
-
   <tr>
     <td>
-      <!-- un seul inscrit -->
-      {{ if eq (len .Inscrits) 1 }} Nous sommes ravis de vous confirmer la
-      participation de {{ (index .Inscrits 0).Personne }} au séjour {{ (index
-      .Inscrits 0).Camp }} !
-      <!-- pluieurs inscrits -->
-      {{ else if ne (len .Inscrits) 0 }} Nous sommes ravis de vous confirmer les
-      participations de :
+      {{ range .Inscrits }}
       <ul>
-        {{ range .Inscrits }}
-        <li>{{ .Personne }} au séjour {{ .Camp }}</li>
-        {{ end }}
+        <li>
+          <!-- pour un inscrit -->
+          Nous sommes ravis de vous confirmer la participation de {{ .Personne
+          }} au séjour {{ .Camp }}.
+        </li>
       </ul>
       {{ end }}
-      <!-- aucun inscrits -->
-    </td>
-  </tr>
 
-  <!-- liste d'attente -->
-  {{ if ne (len .Attente) 0 }}
-  <tr>
-    <td>
-      <!-- transition -->
-      {{ if ne (len .Inscrits) 0 }}<br />En revanche, nous{{ else }}Nous{{ end
-      }}
-
-      <!-- un -->
-      {{ if eq (len .Attente) 1 }} avons pour l'instant placé {{ (index .Attente
-      0).Personne }} sur la liste d'attente du séjour {{ (index .Attente 0).Camp
-      }}.
-      <!-- plusieurs -->
-      {{ else }} avons pour l'instant placé sur liste d'attente :
+      <!-- liste d'attente -->
+      {{ range .Attente }}
       <ul>
-        {{ range .Attente }}
-        <li>{{ .Personne }} au séjour {{ .Camp }}</li>
-        {{ end }}
+        <li>
+          Nous avons pour l'instant placé {{ .Personne }} sur la liste d'attente
+          du séjour {{ .Camp }}. Nous reviendrons vers vous si une place se
+          libère.
+        </li>
       </ul>
-      Nous reviendrons vers vous si une place se libère. {{ end }}
+      {{ end }}
+
+      <!-- refus définitif -->
+      {{ range .Refuses }}
+      <ul>
+        <li>
+          Nous avons refusé définitivement l'inscription de {{ .Personne }} sur
+          le séjour {{ .Camp }}.
+        </li>
+      </ul>
+      {{ end }}
     </td>
   </tr>
-  {{ end }}
 
   <!-- a statuer -->
   {{ if ne (len .AStatuer) 0 }}
