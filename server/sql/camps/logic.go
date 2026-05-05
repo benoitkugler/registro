@@ -43,8 +43,10 @@ type ParticipantPersonne struct {
 type StatistiquesInscrits struct {
 	Inscriptions                            int // nombre total
 	InscriptionsFilles, InscriptionsSuisses int
-	Valides, ValidesFilles, ValidesSuisses  int // inscrits confirmés
-	Refus, AStatuer, Exceptions, Attente    int
+
+	Valides, ValidesFilles, ValidesSuisses int // inscrits confirmés
+
+	Refus, AStatuer, ListeAttente int
 }
 
 func (stats *StatistiquesInscrits) add(p ParticipantPersonne) {
@@ -65,10 +67,6 @@ func (stats *StatistiquesInscrits) add(p ParticipantPersonne) {
 		stats.Refus += 1
 	case AStatuer:
 		stats.AStatuer += 1
-	case AttenteProfilInvalide:
-		stats.Exceptions += 1
-	case AttenteCampComplet, EnAttenteReponse:
-		stats.Attente += 1
 	case Inscrit:
 		stats.Valides += 1
 		if isFille {
@@ -77,6 +75,8 @@ func (stats *StatistiquesInscrits) add(p ParticipantPersonne) {
 		if isSuisse {
 			stats.ValidesSuisses += 1
 		}
+	default:
+		stats.ListeAttente += 1
 	}
 }
 

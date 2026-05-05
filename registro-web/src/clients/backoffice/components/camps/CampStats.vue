@@ -59,7 +59,7 @@
             {{ pourcentS(props.stats.ListeAttente, props.stats.Inscriptions) }}
           </template>
         </v-list-item>
-        <v-list-item title="Refus">
+        <v-list-item title="Refus définitif">
           <template #append>
             {{ props.stats.Refus }}
             {{ pourcentS(props.stats.Refus, props.stats.Inscriptions) }}

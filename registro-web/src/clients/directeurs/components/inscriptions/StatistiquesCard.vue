@@ -46,15 +46,27 @@
       </v-row>
       <v-divider thickness="1"></v-divider>
       <v-row class="my-1" no-gutters justify="space-between">
+        <v-col> A statuer </v-col>
+        <v-col cols="auto">
+          <v-badge color="grey" inline :content="props.statistiques.AStatuer">
+          </v-badge>
+        </v-col>
+      </v-row>
+      <v-row class="my-1" no-gutters justify="space-between">
         <v-col> Liste d'attente </v-col>
         <v-col cols="auto">
           <v-badge
             color="orange"
             inline
-            :content="
-              props.statistiques.Inscriptions - props.statistiques.Valides
-            "
+            :content="props.statistiques.ListeAttente"
           >
+          </v-badge>
+        </v-col>
+      </v-row>
+      <v-row class="my-1" no-gutters justify="space-between">
+        <v-col> Refus définitif </v-col>
+        <v-col cols="auto">
+          <v-badge color="red" inline :content="props.statistiques.Refus">
           </v-badge>
         </v-col>
       </v-row>
@@ -82,26 +94,4 @@ const birthdays = computed(
       (p) => p.Participant.Statut == StatutParticipant.Inscrit && p.HasBirthday
     ).length
 );
-
-const inscrits = computed(() =>
-  props.participants.filter(
-    (p) => p.Participant.Statut == StatutParticipant.Inscrit
-  )
-);
-
-const stats = computed(() => {
-  const out = {
-    inscrits: 0,
-    listeAttente: 0,
-    anniversaires: 0,
-    garcons: 0,
-    filles: 0,
-    suisses: 0,
-  };
-  props.participants.forEach((p) => {
-    if (p.Participant.Statut == StatutParticipant.Inscrit) {
-      out.inscrits += 1;
-    }
-  });
-});
 </script>

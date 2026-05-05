@@ -44,7 +44,7 @@ func TestCampLoader_Stats(t *testing.T) {
 				5: part(1, AttenteCampComplet), 6: part(1, EnAttenteReponse),
 			},
 			pr.Personnes{1: pers(0, pr.Nationnalite{})},
-			StatistiquesInscrits{Inscriptions: 6, Valides: 1, Refus: 1, AStatuer: 1, Exceptions: 1, Attente: 2},
+			StatistiquesInscrits{Inscriptions: 6, Valides: 1, Refus: 1, AStatuer: 1, ListeAttente: 3},
 		},
 		{
 			Participants{

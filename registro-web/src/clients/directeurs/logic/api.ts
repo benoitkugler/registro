@@ -590,8 +590,7 @@ export interface StatistiquesInscrits {
   ValidesSuisses: Int;
   Refus: Int;
   AStatuer: Int;
-  Exceptions: Int;
-  Attente: Int;
+  ListeAttente: Int;
 }
 // registro/sql/camps.StatutCamp
 export const StatutCamp = {
@@ -628,7 +627,7 @@ export type StatutParticipant =
 
 export const StatutParticipantLabels: Record<StatutParticipant, string> = {
   [StatutParticipant.AStatuer]: "En attente de validation",
-  [StatutParticipant.Refuse]: "Refusé définitivement",
+  [StatutParticipant.Refuse]: "Refus définitif",
   [StatutParticipant.AttenteProfilInvalide]: "Profil limite",
   [StatutParticipant.AttenteCampComplet]: "Camp complet",
   [StatutParticipant.EnAttenteReponse]: "En attente de réponse",
