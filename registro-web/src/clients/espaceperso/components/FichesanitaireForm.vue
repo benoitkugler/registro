@@ -115,20 +115,22 @@
                 <v-text-field
                   variant="outlined"
                   density="compact"
-                  readonly
-                  hide-details
                   :model-value="props.fiche.ResponsableNom"
                   label="Responsable légal"
+                  disabled
+                  hint="Contactez-nous pour modifier ce champ."
+                  persistent-hint
                 ></v-text-field>
               </v-col>
               <v-col cols="12" sm="6">
                 <v-text-field
                   variant="outlined"
                   density="compact"
-                  readonly
-                  hide-details
                   :model-value="Formatters.tels(props.fiche.ResponsableTels)"
                   label="Téléphone"
+                  disabled
+                  hint="Contactez-nous pour modifier ce champ."
+                  persistent-hint
                 ></v-text-field>
               </v-col>
             </v-row>
