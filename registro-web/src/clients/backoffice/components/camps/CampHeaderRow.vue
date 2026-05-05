@@ -38,9 +38,9 @@
                 >{{ props.camp.Stats.Valides }}/{{
                   props.camp.Camp.Camp.Places
                 }}
-                <span v-if="allAttente > 0">
+                <span v-if="props.camp.Stats.AStatuer > 0">
                   (+
-                  {{ allAttente }})</span
+                  {{ props.camp.Stats.AStatuer }})</span
                 >
               </strong>
               <v-icon class="ml-2">mdi-account-multiple</v-icon>
@@ -256,10 +256,6 @@ const emit = defineEmits<{
   (e: "send-sondage"): void;
   (e: "add-directeur", id: IdPersonne): void;
 }>();
-
-const allAttente = computed(
-  () => props.camp.Stats.Inscriptions - props.camp.Stats.Valides
-);
 
 const isExternal = computed(() => props.camp.Camp.Camp.InscriptionExterne);
 
