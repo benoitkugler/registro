@@ -32,12 +32,22 @@
         <tr v-for="participant in data" :title="participant.Personne">
           <td class="py-2">{{ participant.Personne }}</td>
           <td class="px-2 text-center">
-            <v-chip :color="color(participant)"
+            <v-chip size="small" :color="color(participant)"
               >{{ FichesanitaireStateLabels[participant.State] }}
             </v-chip>
           </td>
           <td class="px-2">
             <v-chip
+              size="small"
+              v-if="participant.Fiche.DifficultesSante"
+              prepend-icon="mdi-alert"
+            >
+              Santé
+            </v-chip>
+          </td>
+          <td class="px-2">
+            <v-chip
+              size="small"
               v-if="participant.Fiche.TraitementMedical"
               prepend-icon="mdi-alert"
             >
@@ -45,6 +55,13 @@
             </v-chip>
           </td>
           <td class="px-2">
+            <v-chip
+              size="small"
+              v-if="participant.Fiche.AllergiesAlimentaires"
+              prepend-icon="mdi-alert"
+            >
+              Allergie alimentaire
+            </v-chip>
             <!-- <v-menu v-if="allergies(participant.Fiche) != null">
               <template #activator="{ props: menuProps }">
                 <v-chip v-bind="menuProps" prepend-icon="mdi-alert">
