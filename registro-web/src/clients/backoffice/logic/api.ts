@@ -369,6 +369,7 @@ export interface DossierExt {
 // registro/logic.DossierReglement
 export interface DossierReglement {
   Responsable: string;
+  ResponsableDetails: Personne;
   Reglement: StatutPaiement;
 }
 // registro/logic.Event

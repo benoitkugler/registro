@@ -75,8 +75,6 @@
 <script setup lang="ts">
 import { Formatters, Personnes } from "@/utils";
 import {
-  StatutParticipant,
-  StatutParticipantLabels,
   Navette,
   NavetteLabels,
   type ParticipantExt,

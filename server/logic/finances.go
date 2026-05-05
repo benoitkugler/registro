@@ -7,6 +7,7 @@ import (
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
 	fs "registro/sql/files"
+	pr "registro/sql/personnes"
 	"registro/utils"
 )
 
@@ -371,10 +372,11 @@ func (p pc) prixBase() (cps.Montant, string) {
 }
 
 type DossierReglement struct {
-	Responsable string
-	Reglement   StatutPaiement
+	Responsable        string
+	ResponsableDetails pr.Personne
+	Reglement          StatutPaiement
 }
 
 func (de *DossierFinance) Reglement() DossierReglement {
-	return DossierReglement{de.Responsable().NOMPrenom(), de.Bilan().StatutPaiement()}
+	return DossierReglement{de.Responsable().NOMPrenom(), de.Responsable(), de.Bilan().StatutPaiement()}
 }

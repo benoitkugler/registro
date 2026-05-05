@@ -203,6 +203,7 @@ export interface CampSondages {
 // registro/logic.DossierReglement
 export interface DossierReglement {
   Responsable: string;
+  ResponsableDetails: Personne;
   Reglement: StatutPaiement;
 }
 // registro/logic.EventExt[registro/logic.MessageEvt]

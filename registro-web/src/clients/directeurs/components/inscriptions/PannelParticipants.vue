@@ -129,6 +129,12 @@
           <template #actions>
             <v-list density="comfortable">
               <v-list-item
+                title="Responsable"
+                prepend-icon="mdi-account-details"
+                @click="responsableToShow = p.responsable"
+              ></v-list-item>
+              <v-divider horizontal thickness="1"></v-divider>
+              <v-list-item
                 title="Modifier"
                 prepend-icon="mdi-pencil"
                 @click="toEdit = p.participant"
@@ -186,6 +192,58 @@
         @refresh="loadGroupes"
       ></GroupesPannel>
     </v-dialog>
+
+    <!-- détails responsable -->
+    <v-dialog
+      :model-value="responsableToShow != null"
+      @update:model-value="responsableToShow = null"
+      max-width="600px"
+    >
+      <v-card title="Profil du responsable" v-if="responsableToShow != null">
+        <v-card-text>
+          <v-row>
+            <v-col>
+              <v-chip prepend-icon="mdi-account">{{
+                Personnes.NOMPrenom(responsableToShow)
+              }}</v-chip></v-col
+            >
+          </v-row>
+
+          <v-row
+            ><v-col>
+              <v-chip prepend-icon="mdi-email">{{
+                responsableToShow.Mail
+              }}</v-chip>
+            </v-col></v-row
+          >
+          <v-row
+            ><v-col>
+              <v-chip prepend-icon="mdi-phone">
+                {{ Formatters.tels(responsableToShow.Tels) }}
+              </v-chip></v-col
+            ></v-row
+          >
+          <v-row
+            ><v-col>
+              <v-chip prepend-icon="mdi-home-city">
+                {{ responsableToShow.Adresse }}
+                {{ responsableToShow.CodePostal }}
+                {{ responsableToShow.Ville }} {{ responsableToShow.Pays }}
+              </v-chip></v-col
+            ></v-row
+          >
+          <v-row
+            ><v-col>
+              <v-chip
+                prepend-icon="mdi-passport"
+                v-if="responsableToShow.Nationnalite.IsSuisse"
+                >Nationnalité Suisse
+              </v-chip></v-col
+            ></v-row
+          >
+        </v-card-text>
+      </v-card>
+    </v-dialog>
   </v-card>
   <v-skeleton-loader v-else type="card"></v-skeleton-loader>
 </template>
@@ -194,7 +252,6 @@
 import { ref, onMounted, computed } from "vue";
 import { controller } from "../../logic/logic";
 import {
-  type CampItem,
   type Date_,
   type Groupe,
   type GroupeParticipant,
@@ -203,8 +260,9 @@ import {
   type Participant,
   type ParticipantExt,
   type ParticipantsOut,
+  type Personne,
 } from "../../logic/api";
-import { Participants } from "@/utils";
+import { Formatters, Participants, Personnes } from "@/utils";
 import FichesSanitairesPannel from "./FichesSanitairesPannel.vue";
 import DocumentsPannel from "./DocumentsPannel.vue";
 import MessagesPannel from "./MessagesPannel.vue";
@@ -216,34 +274,34 @@ const props = defineProps<{}>();
 onMounted(() => {
   loadGroupes();
   loadParticipants();
-  fetchCamps();
 });
 
 defineExpose({ loadParticipants });
 
 const isLoading = ref(false);
 
-const camps = ref<CampItem[]>([]);
-async function fetchCamps() {
-  const res = await controller.GetCamps();
-  if (res === undefined) return;
-  camps.value = res || [];
-}
+type participantData = {
+  participant: ParticipantExt;
+  responsable: Personne;
+  groupe: Groupe | null;
+};
 
 // with sort and groupe
 const sortByTime = ref(false);
 const participants = computed(() => {
   const d = data.value;
-  const g = groupes.value;
   if (!d) return [];
+  const g = groupes.value;
+  const dossiers = d.Dossiers || {};
   const out = (d.Participants || []).map((p) => {
     const link: GroupeParticipant | undefined = (g.ParticipantsToGroupe || {})[
       p.Participant.Id
     ];
     return {
       participant: p,
+      responsable: dossiers[p.Participant.IdDossier].ResponsableDetails,
       groupe: link ? (g.Groupes || {})[link.IdGroupe] : null,
-    };
+    } satisfies participantData;
   });
 
   out.sort((a, b) =>
@@ -309,4 +367,6 @@ const showMessages = ref(false);
 const showReglements = ref(false);
 
 const showGroupes = ref(false);
+
+const responsableToShow = ref<Personne | null>(null);
 </script>
