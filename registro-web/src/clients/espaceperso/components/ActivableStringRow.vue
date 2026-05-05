@@ -38,6 +38,7 @@
           :model-value="model != ''"
           color="blue-lighten-4"
           type="warning"
+          class="mt-2"
         >
           {{ props.alertOnEnabled }}
         </v-alert>
