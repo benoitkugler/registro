@@ -1,12 +1,24 @@
 <template>
   <v-card class="ml-2" title="Détails du dossier">
+    <template #prepend>
+      <v-badge
+        inline
+        :content="`ID: ${props.dossier.Dossier.Dossier.Id}`"
+      ></v-badge>
+    </template>
     <template #subtitle>
       Resp. :
-      <a
-        href="/annuaire"
-        @click.prevent="goToPersonne(props.dossier.Dossier.IdResponsable)"
-        >{{ props.dossier.Dossier.Responsable }}</a
-      >
+      <v-tooltip>
+        <template #activator="{ props: tooltipProps }">
+          <a
+            v-bind="tooltipProps"
+            href="/annuaire"
+            @click.prevent="goToPersonne(props.dossier.Dossier.IdResponsable)"
+            >{{ props.dossier.Dossier.Responsable }}</a
+          >
+        </template>
+        ID : {{ props.dossier.Dossier.IdResponsable }}
+      </v-tooltip>
     </template>
 
     <!-- actions -->
