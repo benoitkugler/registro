@@ -17,7 +17,13 @@
         {{ Camps.formatPlage(camp.Camp.Camp) }}</v-col
       >
       <v-col cols="2" align-self="center">
-        <v-tooltip width="450px" location="left" content-class="pa-0">
+        <!-- statistiques de remplissage -->
+        <v-tooltip
+          width="450px"
+          location="left"
+          content-class="pa-0"
+          v-if="!isExternal"
+        >
           <template #activator="{ props: innerProps }">
             <v-progress-linear
               class="bg-white border-md border-primary"
@@ -44,7 +50,13 @@
         </v-tooltip>
       </v-col>
       <v-col cols="1" align-self="center" class="px-2">
-        <v-tooltip width="600" location="left" content-class="pa-0">
+        <!-- statistiques des pièces -->
+        <v-tooltip
+          width="600"
+          location="left"
+          content-class="pa-0"
+          v-if="!isExternal"
+        >
           <template #activator="{ props: innerProps }">
             <v-progress-linear
               class="bg-white border-md border-primary"
@@ -248,6 +260,8 @@ const emit = defineEmits<{
 const allAttente = computed(
   () => props.camp.Stats.Inscriptions - props.camp.Stats.Valides
 );
+
+const isExternal = computed(() => props.camp.Camp.Camp.InscriptionExterne);
 
 const showDelete = ref(false);
 

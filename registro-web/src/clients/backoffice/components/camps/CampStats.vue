@@ -7,10 +7,7 @@
             {{ props.stats.Inscriptions }}
           </template>
         </v-list-item>
-        <v-list-item
-          title="Filles"
-          subtitle="Parmi toutes les demandes d'inscription"
-        >
+        <v-list-item subtitle="Dont filles" prepend-icon="mdi-blank">
           <template #append>
             {{ props.stats.InscriptionsFilles }}
             {{
@@ -21,10 +18,7 @@
             }}
           </template>
         </v-list-item>
-        <v-list-item
-          title="Suisses"
-          subtitle="Parmi toutes les demandes d'inscription"
-        >
+        <v-list-item subtitle="Dont suisses" prepend-icon="mdi-blank">
           <template #append>
             {{ props.stats.InscriptionsSuisses }}
             {{
@@ -41,19 +35,13 @@
             {{ pourcentS(props.stats.Valides, props.stats.Inscriptions) }}
           </template>
         </v-list-item>
-        <v-list-item
-          title="Filles"
-          subtitle="Parmi les inscriptions confirmées"
-        >
+        <v-list-item subtitle="Dont filles" prepend-icon="mdi-blank">
           <template #append>
             {{ props.stats.ValidesFilles }}
             {{ pourcentS(props.stats.ValidesFilles, props.stats.Valides) }}
           </template>
         </v-list-item>
-        <v-list-item
-          title="Suisses"
-          subtitle="Parmi les inscriptions confirmées"
-        >
+        <v-list-item subtitle="Dont suisses" prepend-icon="mdi-blank">
           <template #append>
             {{ props.stats.ValidesSuisses }}
             {{ pourcentS(props.stats.ValidesSuisses, props.stats.Valides) }}
@@ -65,10 +53,10 @@
             {{ pourcentS(props.stats.AStatuer, props.stats.Inscriptions) }}
           </template>
         </v-list-item>
-        <v-list-item title="Demandes d'exception">
+        <v-list-item title="Liste d'attente">
           <template #append>
-            {{ props.stats.Exceptions }}
-            {{ pourcentS(props.stats.Exceptions, props.stats.Inscriptions) }}
+            {{ props.stats.ListeAttente }}
+            {{ pourcentS(props.stats.ListeAttente, props.stats.Inscriptions) }}
           </template>
         </v-list-item>
         <v-list-item title="Refus">
