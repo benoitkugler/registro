@@ -129,6 +129,16 @@
           <template #actions>
             <v-list density="comfortable">
               <v-list-item
+                :disabled="
+                  p.participant.Participant.Statut != StatutParticipant.AStatuer
+                "
+                title="Aller à l'inscription"
+                prepend-icon="mdi-arrow-left-top-bold"
+                @click="
+                  emit('goToInscription', p.participant.Participant.IdDossier)
+                "
+              ></v-list-item>
+              <v-list-item
                 title="Responsable"
                 prepend-icon="mdi-account-details"
                 @click="responsableToShow = p.responsable"
@@ -252,10 +262,12 @@
 import { ref, onMounted, computed } from "vue";
 import { controller } from "../../logic/logic";
 import {
+  StatutParticipant,
   type Date_,
   type Groupe,
   type GroupeParticipant,
   type GroupesOut,
+  type IdDossier,
   type IdGroupe,
   type Participant,
   type ParticipantExt,
@@ -270,6 +282,10 @@ import StatistiquesCard from "./StatistiquesCard.vue";
 import GroupesPannel from "./GroupesPannel.vue";
 
 const props = defineProps<{}>();
+
+const emit = defineEmits<{
+  (e: "goToInscription", dossier: IdDossier): void;
+}>();
 
 onMounted(() => {
   loadGroupes();

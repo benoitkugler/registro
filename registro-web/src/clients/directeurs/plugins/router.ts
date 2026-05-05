@@ -48,7 +48,7 @@ function enforceNumber<T extends number>(id: T | undefined) {
   return id ? (Number(id) as T) : undefined;
 }
 
-export type InscriptionsTab = "insc" | "participants";
+export type InscriptionsTab = "inscriptions" | "participants";
 
 export type QueryURLInscriptions = {
   tab?: InscriptionsTab;

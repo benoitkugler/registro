@@ -6,6 +6,7 @@
         append-inner-icon="mdi-magnify"
         label="Rechercher"
         hide-details
+        clearable
         v-model="search"
       ></v-text-field>
     </template>
@@ -75,6 +76,7 @@ import { onMounted, computed, ref } from "vue";
 import { controller } from "../../logic/logic";
 import {
   StatutParticipant,
+  type IdDossier,
   type IdParticipant,
   type InscriptionExt,
   type Int,
@@ -87,6 +89,8 @@ const props = defineProps<{}>();
 const emit = defineEmits<{
   (e: "goTo"): void;
 }>();
+
+defineExpose({ goToInscription });
 
 const isLoading = ref(false);
 
@@ -104,9 +108,23 @@ async function fetchInscriptions() {
   pendingCount.value = res.PendingCount;
 }
 
+function isIDSearch(s: string | null): IdDossier | null {
+  const reIDSearch = /ID:(\d+)/;
+  const match = reIDSearch.exec(s || "");
+  if (match) {
+    return Number(match[1]) as IdDossier;
+  }
+  return null;
+}
 const search = ref("");
 const displayed = computed(() => {
-  const pattern = normalize(search.value);
+  // special ID search
+  const id = isIDSearch(search.value);
+  if (id != null) {
+    return data.value.filter((insc) => insc.Dossier.Id == id);
+  }
+
+  const pattern = normalize(search.value || "");
   return data.value.filter((insc) => {
     return (
       Personnes.match(insc.Responsable, pattern) ||
@@ -123,6 +141,11 @@ function isValidatedByUs(insc: InscriptionExt) {
   return (insc.Participants || [])
     .filter((p) => p.Camp.Id == us)
     .every((p) => p.Participant.Statut != StatutParticipant.AStatuer);
+}
+
+// public hook
+function goToInscription(id: IdDossier) {
+  search.value = `ID:${id}`;
 }
 
 // copied from backoffice : keep in sync
@@ -160,6 +183,10 @@ async function valideInsc(
   // delete from this view if validated, only update otherwise
   if (res.IsValidated) {
     data.value = data.value.filter((val) => val.Dossier.Id != id);
+    if (isIDSearch(search.value) != null) {
+      // clear search
+      search.value = "";
+    }
   } else {
     const index = data.value.findIndex((val) => val.Dossier.Id == id);
     data.value[index] = res;
