@@ -69,6 +69,7 @@ declare module 'vue' {
     SexeField: typeof import('./src/components/SexeField.vue')['default']
     StatutParticipantField: typeof import('./src/components/StatutParticipantField.vue')['default']
     StringList: typeof import('./src/components/StringList.vue')['default']
+    TelField: typeof import('./src/components/TelField.vue')['default']
     TimeField: typeof import('./src/components/TimeField.vue')['default']
   }
 }

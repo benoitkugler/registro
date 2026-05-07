@@ -16,7 +16,7 @@ func (id IdPersonne) Opt() OptIdPersonne { return OptIdPersonne{Id: id, Valid: t
 // Time is date and time
 type Time time.Time
 
-// Pays is the ISO 3166 code of a country
+// Pays is the ISO 3166 (2 letter) code of a country
 type Pays string
 
 // Departement is the number of a french departement,

@@ -28,9 +28,11 @@ import {
   CategorieLabels,
   FichesanitaireState,
   type Demande,
+  type Tel,
 } from "./clients/directeurs/logic/api";
 import type { Date_, Int } from "./clients/inscription/logic/api";
 import { addDays, isDateZero } from "./components/date";
+import { normalizeTel } from "./phones";
 import { Endpoints } from "./urls";
 
 export type Action = {
@@ -295,8 +297,6 @@ export namespace Personnes {
 }
 
 export namespace Formatters {
-  const reSepTel = /[ -/;\t]/g;
-
   function splitBySize2(a: string) {
     const b = [];
     for (var i = 2; i < a.length; i += 2) {
@@ -349,8 +349,11 @@ export namespace Formatters {
     return s;
   }
 
+  /** look for an international identifier */
+  export function parseTel(tel: Tel) {}
+
   export function telCh(tel: string) {
-    tel = tel.replace(reSepTel, "");
+    tel = normalizeTel(tel);
     if (tel.length < 10) {
       return tel;
     }
@@ -366,7 +369,7 @@ export namespace Formatters {
   }
 
   export function telFr(tel: string) {
-    tel = tel.replace(reSepTel, "");
+    tel = normalizeTel(tel);
     if (tel.length < 10) {
       return splitBySize2(tel).join(" ");
     }
