@@ -18,6 +18,7 @@ declare module 'vue' {
     CardValide: typeof import('./src/components/inscriptions/CardValide.vue')['default']
     CardValideParticipantRow: typeof import('./src/components/inscriptions/CardValideParticipantRow.vue')['default']
     ColorField: typeof import('./src/components/ColorField.vue')['default']
+    copy: typeof import('./src/components/StringList copy.vue')['default']
     DateField: typeof import('./src/components/DateField.vue')['default']
     DateNaissanceField: typeof import('./src/components/DateNaissanceField.vue')['default']
     DayOffsetField: typeof import('./src/components/DayOffsetField.vue')['default']
@@ -70,6 +71,9 @@ declare module 'vue' {
     StatutParticipantField: typeof import('./src/components/StatutParticipantField.vue')['default']
     StringList: typeof import('./src/components/StringList.vue')['default']
     TelField: typeof import('./src/components/TelField.vue')['default']
+    TelsField: typeof import('./src/components/TelsField.vue')['default']
+    TelsField2: typeof import('./src/components/TelsField2.vue')['default']
+    TelsField3: typeof import('./src/components/TelsField3.vue')['default']
     TimeField: typeof import('./src/components/TimeField.vue')['default']
   }
 }

@@ -4,6 +4,7 @@ import type { AxiosResponse } from "axios";
 import Axios from "axios";
 
 import type { JSONStreamResponse } from "@/utils";
+export type Ar2_string = [string, string];
 export type Ar4_Int = [Int, Int, Int, Int];
 
 // AAAA-MM-YY date format
@@ -883,7 +884,7 @@ export const SexeLabels: Record<Sexe, string> = {
 // registro/sql/personnes.Tel
 export type Tel = string;
 // registro/sql/personnes.Tels
-export type Tels = string[] | null;
+export type Tels = Ar2_string;
 // registro/sql/shared.Date
 export type Date = Date_;
 // registro/sql/shared.OptID[registro/sql/camps.IdCamp]

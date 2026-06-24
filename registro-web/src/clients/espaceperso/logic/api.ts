@@ -743,7 +743,7 @@ export const SexeLabels: Record<Sexe, string> = {
 // registro/sql/personnes.Tel
 export type Tel = string;
 // registro/sql/personnes.Tels
-export type Tels = string[] | null;
+export type Tels = Ar2_string;
 // registro/sql/shared.Date
 export type Date = Date_;
 // registro/sql/shared.OptID[registro/sql/camps.IdCamp]

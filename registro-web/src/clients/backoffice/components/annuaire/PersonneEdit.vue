@@ -94,13 +94,14 @@
             ></v-text-field>
           </v-col>
           <v-col>
-            <StringList
+            <TelsField label="Téléphone" v-model="inner.Tels"></TelsField>
+            <!-- <StringList
               label="Téléphone"
               v-model="inner.Tels"
               :formatter="
                 inner.Pays == 'CH' ? Formatters.telCh : Formatters.telFr
               "
-            ></StringList>
+            ></StringList> -->
           </v-col>
         </v-row>
       </v-form>

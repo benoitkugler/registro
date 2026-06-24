@@ -6,6 +6,267 @@ export function normalizeTel(tel: Tel) {
   return tel.replace(reSepTel, "");
 }
 
+const countryNames = {
+  AF: "Afghanistan",
+  ZA: "Afrique du Sud",
+  AL: "Albanie",
+  DZ: "Algérie",
+  DE: "Allemagne",
+  AD: "Andorre",
+  AO: "Angola",
+  AI: "Anguilla",
+  AQ: "Antarctique",
+  AG: "Antigua-et-Barbuda",
+  AN: "Antilles néerlandaises",
+  SA: "Arabie saoudite",
+  AR: "Argentine",
+  AM: "Arménie",
+  AW: "Aruba",
+  AU: "Australie",
+  AT: "Autriche",
+  AZ: "Azerbaïdjan",
+  BS: "Bahamas",
+  BH: "Bahreïn",
+  BD: "Bangladesh",
+  BB: "Barbade",
+  BY: "Bélarus",
+  BE: "Belgique",
+  BZ: "Belize",
+  BJ: "Bénin",
+  BM: "Bermudes",
+  BT: "Bhoutan",
+  BO: "Bolivie",
+  BA: "Bosnie-Herzégovine",
+  BW: "Botswana",
+  BR: "Brésil",
+  BN: "Brunéi Darussalam",
+  BG: "Bulgarie",
+  BF: "Burkina Faso",
+  BI: "Burundi",
+  KH: "Cambodge",
+  CM: "Cameroun",
+  CA: "Canada",
+  CV: "Cap-Vert",
+  EA: "Ceuta et Melilla",
+  CL: "Chili",
+  CN: "Chine",
+  CY: "Chypre",
+  CO: "Colombie",
+  KM: "Comores",
+  CG: "Congo-Brazzaville",
+  KP: "Corée du Nord",
+  KR: "Corée du Sud",
+  CR: "Costa Rica",
+  CI: "Côte d’Ivoire",
+  HR: "Croatie",
+  CU: "Cuba",
+  CW: "Curaçao",
+  DK: "Danemark",
+  DG: "Diego Garcia",
+  DJ: "Djibouti",
+  DM: "Dominique",
+  EG: "Égypte",
+  SV: "El Salvador",
+  AE: "Émirats arabes unis",
+  EC: "Équateur",
+  ER: "Érythrée",
+  ES: "Espagne",
+  EE: "Estonie",
+  VA: "État de la Cité du Vatican",
+  FM: "États fédérés de Micronésie",
+  US: "États-Unis",
+  ET: "Éthiopie",
+  FJ: "Fidji",
+  FI: "Finlande",
+  FR: "France",
+  GA: "Gabon",
+  GM: "Gambie",
+  GE: "Géorgie",
+  GS: "Géorgie du Sud et les îles Sandwich du Sud",
+  GH: "Ghana",
+  GI: "Gibraltar",
+  GR: "Grèce",
+  GD: "Grenade",
+  GL: "Groenland",
+  GP: "Guadeloupe",
+  GU: "Guam",
+  GT: "Guatemala",
+  GG: "Guernesey",
+  GN: "Guinée",
+  GQ: "Guinée équatoriale",
+  GW: "Guinée-Bissau",
+  GY: "Guyana",
+  GF: "Guyane française",
+  HT: "Haïti",
+  HN: "Honduras",
+  HU: "Hongrie",
+  BV: "Île Bouvet",
+  CX: "Île Christmas",
+  CP: "Île Clipperton",
+  AC: "Île de l'Ascension",
+  IM: "Île de Man",
+  NF: "Île Norfolk",
+  AX: "Îles Åland",
+  KY: "Îles Caïmans",
+  IC: "Îles Canaries",
+  CC: "Îles Cocos - Keeling",
+  CK: "Îles Cook",
+  FO: "Îles Féroé",
+  HM: "Îles Heard et MacDonald",
+  FK: "Îles Malouines",
+  MP: "Îles Mariannes du Nord",
+  MH: "Îles Marshall",
+  UM: "Îles Mineures Éloignées des États-Unis",
+  SB: "Îles Salomon",
+  TC: "Îles Turks et Caïques",
+  VG: "Îles Vierges britanniques",
+  VI: "Îles Vierges des États-Unis",
+  IN: "Inde",
+  ID: "Indonésie",
+  IQ: "Irak",
+  IR: "Iran",
+  IE: "Irlande",
+  IS: "Islande",
+  IL: "Israël",
+  IT: "Italie",
+  JM: "Jamaïque",
+  JP: "Japon",
+  JE: "Jersey",
+  JO: "Jordanie",
+  KZ: "Kazakhstan",
+  KE: "Kenya",
+  KG: "Kirghizistan",
+  KI: "Kiribati",
+  XK: "Kosovo",
+  KW: "Koweït",
+  LA: "Laos",
+  LS: "Lesotho",
+  LV: "Lettonie",
+  LB: "Liban",
+  LR: "Libéria",
+  LY: "Libye",
+  LI: "Liechtenstein",
+  LT: "Lituanie",
+  LU: "Luxembourg",
+  MK: "Macédoine",
+  MG: "Madagascar",
+  MY: "Malaisie",
+  MW: "Malawi",
+  MV: "Maldives",
+  ML: "Mali",
+  MT: "Malte",
+  MA: "Maroc",
+  MQ: "Martinique",
+  MU: "Maurice",
+  MR: "Mauritanie",
+  YT: "Mayotte",
+  MX: "Mexique",
+  MD: "Moldavie",
+  MC: "Monaco",
+  MN: "Mongolie",
+  ME: "Monténégro",
+  MS: "Montserrat",
+  MZ: "Mozambique",
+  MM: "Myanmar",
+  NA: "Namibie",
+  NR: "Nauru",
+  NP: "Népal",
+  NI: "Nicaragua",
+  NE: "Niger",
+  NG: "Nigéria",
+  NU: "Niue",
+  NO: "Norvège",
+  NC: "Nouvelle-Calédonie",
+  NZ: "Nouvelle-Zélande",
+  OM: "Oman",
+  UG: "Ouganda",
+  UZ: "Ouzbékistan",
+  PK: "Pakistan",
+  PW: "Palaos",
+  PA: "Panama",
+  PG: "Papouasie-Nouvelle-Guinée",
+  PY: "Paraguay",
+  NL: "Pays-Bas",
+  PE: "Pérou",
+  PH: "Philippines",
+  PN: "Pitcairn",
+  PL: "Pologne",
+  PF: "Polynésie française",
+  PR: "Porto Rico",
+  PT: "Portugal",
+  QA: "Qatar",
+  HK: "R.A.S. chinoise de Hong Kong",
+  MO: "R.A.S. chinoise de Macao",
+  QO: "régions éloignées de l’Océanie",
+  CF: "République centrafricaine",
+  CD: "République démocratique du Congo",
+  DO: "République dominicaine",
+  CZ: "République tchèque",
+  RE: "Réunion",
+  RO: "Roumanie",
+  GB: "Royaume-Uni",
+  RU: "Russie",
+  RW: "Rwanda",
+  EH: "Sahara occidental",
+  BL: "Saint-Barthélémy",
+  KN: "Saint-Kitts-et-Nevis",
+  SM: "Saint-Marin",
+  MF: "Saint-Martin",
+  PM: "Saint-Pierre-et-Miquelon",
+  VC: "Saint-Vincent-et-les Grenadines",
+  SH: "Sainte-Hélène",
+  LC: "Sainte-Lucie",
+  WS: "Samoa",
+  AS: "Samoa américaines",
+  ST: "Sao Tomé-et-Principe",
+  SN: "Sénégal",
+  RS: "Serbie",
+  CS: "Serbie-et-Monténégro",
+  SC: "Seychelles",
+  SL: "Sierra Leone",
+  SG: "Singapour",
+  SK: "Slovaquie",
+  SI: "Slovénie",
+  SO: "Somalie",
+  SD: "Soudan",
+  SS: "Soudan du Sud",
+  LK: "Sri Lanka",
+  SE: "Suède",
+  CH: "Suisse",
+  SR: "Suriname",
+  SJ: "Svalbard et Île Jan Mayen",
+  SZ: "Swaziland",
+  SY: "Syrie",
+  TJ: "Tadjikistan",
+  TW: "Taïwan",
+  TZ: "Tanzanie",
+  TD: "Tchad",
+  TF: "Terres australes françaises",
+  IO: "Territoire britannique de l'océan Indien",
+  PS: "Territoire palestinien",
+  TH: "Thaïlande",
+  TL: "Timor oriental",
+  TG: "Togo",
+  TK: "Tokelau",
+  TO: "Tonga",
+  TT: "Trinité-et-Tobago",
+  TA: "Tristan da Cunha",
+  TN: "Tunisie",
+  TM: "Turkménistan",
+  TR: "Turquie",
+  TV: "Tuvalu",
+  UA: "Ukraine",
+  EU: "Union européenne",
+  UY: "Uruguay",
+  VU: "Vanuatu",
+  VE: "Venezuela",
+  VN: "Viêt Nam",
+  WF: "Wallis-et-Futuna",
+  YE: "Yémen",
+  ZM: "Zambie",
+  ZW: "Zimbabwe",
+} as const;
+
 const indicatifToCountry = {
   "1": "US", //  "AG", "AI", "AS", "BB", "BM", "BS", "CA", "DM", "DO", "GD", "GU", "JM", "KN", "KY", "LC", "MP", "MS", "PR", "SX", "TC", "TT", "VC", "VG", "VI",),
   "7": "RU", //  "KZ",),
@@ -224,33 +485,419 @@ const indicatifToCountry = {
   "998": "UZ", // ),
 } as const;
 
-/** expects 'tel' to be normalized; and to starts with +, otherwise return undefined */
-export function lookupIndicatif(tel: Tel): [number, Pays] | undefined {
-  if (!tel.startsWith("+")) return;
+const countryFlags = {
+  AC: "🇦🇨",
+  AD: "🇦🇩",
+  AE: "🇦🇪",
+  AF: "🇦🇫",
+  AG: "🇦🇬",
+  AI: "🇦🇮",
+  AL: "🇦🇱",
+  AM: "🇦🇲",
+  AO: "🇦🇴",
+  AQ: "🇦🇶",
+  AR: "🇦🇷",
+  AS: "🇦🇸",
+  AT: "🇦🇹",
+  AU: "🇦🇺",
+  AW: "🇦🇼",
+  AX: "🇦🇽",
+  AZ: "🇦🇿",
+  BA: "🇧🇦",
+  BB: "🇧🇧",
+  BD: "🇧🇩",
+  BE: "🇧🇪",
+  BF: "🇧🇫",
+  BG: "🇧🇬",
+  BH: "🇧🇭",
+  BI: "🇧🇮",
+  BJ: "🇧🇯",
+  BL: "🇧🇱",
+  BM: "🇧🇲",
+  BN: "🇧🇳",
+  BO: "🇧🇴",
+  BQ: "🇧🇶",
+  BR: "🇧🇷",
+  BS: "🇧🇸",
+  BT: "🇧🇹",
+  BV: "🇧🇻",
+  BW: "🇧🇼",
+  BY: "🇧🇾",
+  BZ: "🇧🇿",
+  CA: "🇨🇦",
+  CC: "🇨🇨",
+  CD: "🇨🇩",
+  CF: "🇨🇫",
+  CG: "🇨🇬",
+  CH: "🇨🇭",
+  CI: "🇨🇮",
+  CK: "🇨🇰",
+  CL: "🇨🇱",
+  CM: "🇨🇲",
+  CN: "🇨🇳",
+  CO: "🇨🇴",
+  CR: "🇨🇷",
+  CU: "🇨🇺",
+  CV: "🇨🇻",
+  CW: "🇨🇼",
+  CX: "🇨🇽",
+  CY: "🇨🇾",
+  CZ: "🇨🇿",
+  DE: "🇩🇪",
+  DJ: "🇩🇯",
+  DK: "🇩🇰",
+  DM: "🇩🇲",
+  DO: "🇩🇴",
+  DZ: "🇩🇿",
+  EC: "🇪🇨",
+  EE: "🇪🇪",
+  EG: "🇪🇬",
+  EH: "🇪🇭",
+  ER: "🇪🇷",
+  ES: "🇪🇸",
+  ET: "🇪🇹",
+  FI: "🇫🇮",
+  FJ: "🇫🇯",
+  FK: "🇫🇰",
+  FM: "🇫🇲",
+  FO: "🇫🇴",
+  FR: "🇫🇷",
+  GA: "🇬🇦",
+  GB: "🇬🇧",
+  GD: "🇬🇩",
+  GE: "🇬🇪",
+  GF: "🇬🇫",
+  GG: "🇬🇬",
+  GH: "🇬🇭",
+  GI: "🇬🇮",
+  GL: "🇬🇱",
+  GM: "🇬🇲",
+  GN: "🇬🇳",
+  GP: "🇬🇵",
+  GQ: "🇬🇶",
+  GR: "🇬🇷",
+  GS: "🇬🇸",
+  GT: "🇬🇹",
+  GU: "🇬🇺",
+  GW: "🇬🇼",
+  GY: "🇬🇾",
+  HK: "🇭🇰",
+  HM: "🇭🇲",
+  HN: "🇭🇳",
+  HR: "🇭🇷",
+  HT: "🇭🇹",
+  HU: "🇭🇺",
+  ID: "🇮🇩",
+  IE: "🇮🇪",
+  IL: "🇮🇱",
+  IM: "🇮🇲",
+  IN: "🇮🇳",
+  IO: "🇮🇴",
+  IQ: "🇮🇶",
+  IR: "🇮🇷",
+  IS: "🇮🇸",
+  IT: "🇮🇹",
+  JE: "🇯🇪",
+  JM: "🇯🇲",
+  JO: "🇯🇴",
+  JP: "🇯🇵",
+  KE: "🇰🇪",
+  KG: "🇰🇬",
+  KH: "🇰🇭",
+  KI: "🇰🇮",
+  KM: "🇰🇲",
+  KN: "🇰🇳",
+  KP: "🇰🇵",
+  KR: "🇰🇷",
+  KW: "🇰🇼",
+  KY: "🇰🇾",
+  KZ: "🇰🇿",
+  LA: "🇱🇦",
+  LB: "🇱🇧",
+  LC: "🇱🇨",
+  LI: "🇱🇮",
+  LK: "🇱🇰",
+  LR: "🇱🇷",
+  LS: "🇱🇸",
+  LT: "🇱🇹",
+  LU: "🇱🇺",
+  LV: "🇱🇻",
+  LY: "🇱🇾",
+  MA: "🇲🇦",
+  MC: "🇲🇨",
+  MD: "🇲🇩",
+  ME: "🇲🇪",
+  MF: "🇲🇫",
+  MG: "🇲🇬",
+  MH: "🇲🇭",
+  MK: "🇲🇰",
+  ML: "🇲🇱",
+  MM: "🇲🇲",
+  MN: "🇲🇳",
+  MO: "🇲🇴",
+  MP: "🇲🇵",
+  MQ: "🇲🇶",
+  MR: "🇲🇷",
+  MS: "🇲🇸",
+  MT: "🇲🇹",
+  MU: "🇲🇺",
+  MV: "🇲🇻",
+  MW: "🇲🇼",
+  MX: "🇲🇽",
+  MY: "🇲🇾",
+  MZ: "🇲🇿",
+  NA: "🇳🇦",
+  NC: "🇳🇨",
+  NE: "🇳🇪",
+  NF: "🇳🇫",
+  NG: "🇳🇬",
+  NI: "🇳🇮",
+  NL: "🇳🇱",
+  NO: "🇳🇴",
+  NP: "🇳🇵",
+  NR: "🇳🇷",
+  NU: "🇳🇺",
+  NZ: "🇳🇿",
+  OM: "🇴🇲",
+  PA: "🇵🇦",
+  PE: "🇵🇪",
+  PF: "🇵🇫",
+  PG: "🇵🇬",
+  PH: "🇵🇭",
+  PK: "🇵🇰",
+  PL: "🇵🇱",
+  PM: "🇵🇲",
+  PN: "🇵🇳",
+  PR: "🇵🇷",
+  PS: "🇵🇸",
+  PT: "🇵🇹",
+  PW: "🇵🇼",
+  PY: "🇵🇾",
+  QA: "🇶🇦",
+  RE: "🇷🇪",
+  RO: "🇷🇴",
+  RS: "🇷🇸",
+  RU: "🇷🇺",
+  RW: "🇷🇼",
+  SA: "🇸🇦",
+  SB: "🇸🇧",
+  SC: "🇸🇨",
+  SD: "🇸🇩",
+  SE: "🇸🇪",
+  SG: "🇸🇬",
+  SH: "🇸🇭",
+  SI: "🇸🇮",
+  SJ: "🇸🇯",
+  SK: "🇸🇰",
+  SL: "🇸🇱",
+  SM: "🇸🇲",
+  SN: "🇸🇳",
+  SO: "🇸🇴",
+  SR: "🇸🇷",
+  SS: "🇸🇸",
+  ST: "🇸🇹",
+  SV: "🇸🇻",
+  SX: "🇸🇽",
+  SY: "🇸🇾",
+  SZ: "🇸🇿",
+  TC: "🇹🇨",
+  TD: "🇹🇩",
+  TF: "🇹🇫",
+  TG: "🇹🇬",
+  TH: "🇹🇭",
+  TJ: "🇹🇯",
+  TK: "🇹🇰",
+  TL: "🇹🇱",
+  TM: "🇹🇲",
+  TN: "🇹🇳",
+  TO: "🇹🇴",
+  TR: "🇹🇷",
+  TT: "🇹🇹",
+  TV: "🇹🇻",
+  TW: "🇹🇼",
+  TZ: "🇹🇿",
+  UA: "🇺🇦",
+  UG: "🇺🇬",
+  UM: "🇺🇲",
+  US: "🇺🇸",
+  UY: "🇺🇾",
+  UZ: "🇺🇿",
+  VA: "🇻🇦",
+  VC: "🇻🇨",
+  VE: "🇻🇪",
+  VG: "🇻🇬",
+  VI: "🇻🇮",
+  VN: "🇻🇳",
+  VU: "🇻🇺",
+  WF: "🇼🇫",
+  WS: "🇼🇸",
+  XK: "🇽🇰",
+  YE: "🇾🇪",
+  YT: "🇾🇹",
+  ZA: "🇿🇦",
+  ZM: "🇿🇲",
+  ZW: "🇿🇼",
+  "GB-ENG": "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
+  "GB-SCT": "🏴󠁧󠁢󠁳󠁣󠁴󠁿",
+  "GB-WLS": "🏴󠁧󠁢󠁷󠁬󠁳󠁿",
+} as const;
 
-  tel = tel.substring(1);
+/** expects 'tel' to be normalized; and to starts with + or 00, otherwise return undefined */
+export function _lookupIndicatif(tel: Tel): [number, Pays] | undefined {
+  let symbolLength: number;
+  if (tel.startsWith("+")) {
+    symbolLength = 1;
+  } else if (tel.startsWith("00")) {
+    symbolLength = 2;
+  } else {
+    return;
+  }
+
+  tel = tel.substring(symbolLength);
   if (!tel.length) return;
   // try 1 digit, then 2 then 3
   const d1 = tel.substring(0, 1);
   if (d1 in indicatifToCountry)
-    return [2, indicatifToCountry[d1 as keyof typeof indicatifToCountry]];
+    return [
+      symbolLength + 1,
+      indicatifToCountry[d1 as keyof typeof indicatifToCountry],
+    ];
 
   if (tel.length < 2) return;
   const d2 = tel.substring(0, 2);
   if (d2 in indicatifToCountry)
-    return [3, indicatifToCountry[d2 as keyof typeof indicatifToCountry]];
+    return [
+      symbolLength + 2,
+      indicatifToCountry[d2 as keyof typeof indicatifToCountry],
+    ];
 
   if (tel.length < 3) return;
   const d3 = tel.substring(0, 3);
   if (d3 in indicatifToCountry)
-    return [4, indicatifToCountry[d3 as keyof typeof indicatifToCountry]];
+    return [
+      symbolLength + 3,
+      indicatifToCountry[d3 as keyof typeof indicatifToCountry],
+    ];
 }
 
-export function parseTel(tel: Tel) {
-  tel = normalizeTel(tel);
+function splitBySize2(a: string) {
+  const b = [];
+  for (var i = 2; i < a.length; i += 2) {
+    // length 2, for example
+    b.push(a.slice(i - 2, i));
+  }
+  b.push(a.slice(a.length - (2 - (a.length % 2)))); // last fragment
+  return b;
+}
 
-  const indicatif = lookupIndicatif(tel);
-  if (indicatif === undefined) return { indicatif: "", number: tel }; // no indicatif found
-  const [length, _] = indicatif;
-  return { indicatif: tel.substring(0, length), number: tel.substring(length) };
+export namespace Phones {
+  /** list all known countries, mapping the indicatif (including "+")
+   * to flag and name
+   */
+  const countries = Object.fromEntries(
+    Object.entries(indicatifToCountry).map((v) => [
+      "+" + v[0],
+      {
+        flag: countryFlags[v[1]],
+        name: countryNames[v[1]],
+      },
+    ])
+  );
+
+  export const PaysToIndicatif = new Map<Pays, string>(
+    Object.entries(indicatifToCountry).map((e) => [e[1], "+" + e[0]])
+  );
+
+  /** parse normalizes the input and splits it according to <indicatif><local number> */
+  export function _parse(tel: Tel) {
+    tel = normalizeTel(tel);
+
+    const indicatifLocation = _lookupIndicatif(tel);
+    if (indicatifLocation === undefined)
+      return { indicatif: "", localNumber: tel, flag: "", tel: tel }; // no indicatif found
+    const [length, country] = indicatifLocation;
+    const indicatif = tel.substring(0, length); // including + or 00
+    return {
+      indicatif: indicatif,
+      localNumber: tel.substring(length),
+      flag: countries[indicatif].flag,
+      country: country,
+      tel: tel,
+    };
+  }
+
+  /** returns true if the local part is empty */
+  export function isEmpty(tel: Tel) {
+    const parsed = _parse(tel);
+    return parsed.localNumber == "";
+  }
+
+  /** returns an equivalent number, formatted using local rules  */
+  export function format(tel: Tel) {
+    const parsed = _parse(tel);
+    switch (parsed.country) {
+      case "FR":
+        return parsed.indicatif + " " + telFr(parsed.localNumber);
+      case "CH":
+        return parsed.indicatif + " " + telCh(parsed.localNumber);
+      default:
+        const local = splitBySize2(parsed.localNumber).join(" ");
+        if (parsed.indicatif) {
+          return parsed.indicatif + " " + local;
+        } else {
+          // do not add a spurious space
+          return local;
+        }
+    }
+  }
+
+  function telCh(local: string) {
+    // do we have a starting, optional 0 ?
+    const chunks =
+      local.charAt(0) == "0"
+        ? // 3 3 2 2
+          [
+            local.substring(0, 3),
+            local.substring(3, 6),
+            local.substring(6, 8),
+            local.substring(8),
+          ]
+        : // 2 3 2 2
+          [
+            local.substring(0, 2),
+            local.substring(2, 5),
+            local.substring(5, 7),
+            local.substring(7),
+          ];
+    return chunks.filter((c) => c).join(" ");
+  }
+
+  function telFr(local: string) {
+    // do we have a starting, optional 0 ?
+    const chunks =
+      local.charAt(0) == "0"
+        ? // 2 2 2 2 2
+          [
+            local.substring(0, 2),
+            local.substring(2, 4),
+            local.substring(4, 6),
+            local.substring(6, 8),
+            local.substring(8, 10),
+            local.substring(10),
+          ]
+        : // 1 2 2 2 2
+          [
+            local.substring(0, 1),
+            local.substring(1, 3),
+            local.substring(3, 5),
+            local.substring(5, 7),
+            local.substring(7, 9),
+            local.substring(9),
+          ];
+    return chunks.filter((c) => c).join(" ");
+  }
+
+  export function parseFlag(tel: Tel) {
+    return _parse(tel).flag;
+  }
 }

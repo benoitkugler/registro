@@ -32,7 +32,7 @@ import {
 } from "./clients/directeurs/logic/api";
 import type { Date_, Int } from "./clients/inscription/logic/api";
 import { addDays, isDateZero } from "./components/date";
-import { normalizeTel } from "./phones";
+import { normalizeTel, Phones } from "./phones";
 import { Endpoints } from "./urls";
 
 export type Action = {
@@ -196,6 +196,11 @@ export namespace FormRules {
     };
   }
 
+  export type TelRule = (l: Tel) => true | string;
+  export function requiredTel(error: string) {
+    return (l: Tel) => (Phones.isEmpty(l) ? error : true);
+  }
+
   export function requiredDate(error: string) {
     return (s: Date_) => {
       return isDateZero(s) ? error : true;
@@ -297,16 +302,6 @@ export namespace Personnes {
 }
 
 export namespace Formatters {
-  function splitBySize2(a: string) {
-    const b = [];
-    for (var i = 2; i < a.length; i += 2) {
-      // length 2, for example
-      b.push(a.slice(i - 2, i));
-    }
-    b.push(a.slice(a.length - (2 - (a.length % 2)))); // last fragment
-    return b;
-  }
-
   const _weekdays = ["Dim.", "Lun.", "Mar.", "Mer.", "Jeu.", "Ven.", "Sam."];
 
   export function time(t: Time, showYear = false, showSeconds = false) {
@@ -349,41 +344,11 @@ export namespace Formatters {
     return s;
   }
 
-  /** look for an international identifier */
-  export function parseTel(tel: Tel) {}
-
-  export function telCh(tel: string) {
-    tel = normalizeTel(tel);
-    if (tel.length < 10) {
-      return tel;
-    }
-    const start = tel.length - 10; // 10 derniers chiffres
-    const chunks = [
-      tel.substring(0, start),
-      tel.substring(start, start + 3),
-      tel.substring(start + 3, start + 6),
-      tel.substring(start + 6, start + 8),
-      tel.substring(start + 8, start + 10),
-    ];
-    return chunks.join(" ");
-  }
-
-  export function telFr(tel: string) {
-    tel = normalizeTel(tel);
-    if (tel.length < 10) {
-      return splitBySize2(tel).join(" ");
-    }
-    // numéro incomplet, on insert des espaces
-    const start = tel.length - 8; // 8 derniers chiffres
-    const chunks = [tel.substring(0, start)];
-    for (let i = 0; i < 4; i++) {
-      chunks.push(tel.substring(start + 2 * i, start + 2 * i + 2));
-    }
-    return chunks.join(" ");
-  }
-
   export function tels(tels: Tels) {
-    return (tels || []).map(telFr).join("; ");
+    return (tels || [])
+      .filter((t) => t)
+      .map(Phones.format)
+      .join("; ");
   }
 
   export function sexeIcon(s: Sexe) {

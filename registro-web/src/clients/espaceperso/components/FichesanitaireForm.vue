@@ -95,13 +95,11 @@
                 ></v-text-field>
               </v-col>
               <v-col cols="12" sm="6">
-                <v-text-field
-                  variant="outlined"
-                  density="compact"
+                <TelField
                   label="Téléphone"
                   v-model="inner.Medecin.Tel"
                   hide-details
-                ></v-text-field>
+                ></TelField>
               </v-col>
             </v-row>
           </v-card-text>
@@ -148,13 +146,10 @@
                 ></v-text-field>
               </v-col>
               <v-col cols="12" sm="6">
-                <v-text-field
-                  variant="outlined"
-                  density="compact"
+                <TelField
                   label="Téléphone du contact"
-                  :model-value="Formatters.telFr(inner.AutreContact.Tel)"
-                  @update:model-value="(s) => (inner.AutreContact.Tel = s)"
-                ></v-text-field>
+                  v-model="inner.AutreContact.Tel"
+                ></TelField>
               </v-col>
             </v-row>
           </v-card-text>

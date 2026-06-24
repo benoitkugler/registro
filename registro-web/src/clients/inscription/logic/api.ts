@@ -3,6 +3,8 @@
 import type { AxiosResponse } from "axios";
 import Axios from "axios";
 
+export type Ar2_string = [string, string];
+
 // AAAA-MM-YY date format
 export type Date_ = string & { __opaque__: "Date" };
 
@@ -125,7 +127,7 @@ export const SexeLabels: Record<Sexe, string> = {
 };
 
 // registro/sql/personnes.Tels
-export type Tels = string[] | null;
+export type Tels = Ar2_string;
 // registro/sql/shared.Date
 export type Date = Date_;
 
