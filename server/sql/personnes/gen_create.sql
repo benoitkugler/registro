@@ -55,7 +55,7 @@ CREATE TABLE personnes (
     Sexe smallint CHECK (Sexe IN (0, 1, 2)) NOT NULL,
     DateNaissance date NOT NULL,
     Nationnalite Nationnalite NOT NULL,
-    Tels text[],
+    Tels text[] CHECK (array_length(Tels, 1) = 2) NOT NULL,
     Mail text NOT NULL,
     Adresse text NOT NULL,
     CodePostal text NOT NULL,

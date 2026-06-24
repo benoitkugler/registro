@@ -36,7 +36,7 @@ const (
 type Tel string
 
 // Tels is a list of phone numbers
-type Tels []string
+type Tels [2]string
 
 // Identite stores information about the identity of one person.
 //

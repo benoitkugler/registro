@@ -14,6 +14,14 @@ func randApprofondissement() Approfondissement {
 	return choix[i]
 }
 
+func randAr2_string() [2]string {
+	var out [2]string
+	for i := range out {
+		out[i] = randstring()
+	}
+	return out
+}
+
 func randDiplome() Diplome {
 	choix := [...]Diplome{DAucun, DBafa, DBafaStag, DBafd, DBafdStag, DCap, DAssSociale, DEducSpe, DMonEduc, DInstit, DProf, DAgreg, DBjeps, DDut, DEje, DDeug, DStaps, DBapaat, DBeatep, DZzautre}
 	i := rand.Intn(len(choix))
@@ -152,7 +160,7 @@ func randTel() Tel {
 }
 
 func randTels() Tels {
-	return Tels(randSlicestring())
+	return Tels(randAr2_string())
 }
 
 func randbool() bool {
