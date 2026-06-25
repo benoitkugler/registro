@@ -238,7 +238,7 @@
   <v-dialog :model-value="sendingProgress != null" persistent max-width="600px">
     <RequestProgressCard
       v-if="sendingProgress"
-      title="Envoi du sondage en cours"
+      title="Envoi des documents en cours"
       :progress="sendingProgress"
     ></RequestProgressCard>
   </v-dialog>
