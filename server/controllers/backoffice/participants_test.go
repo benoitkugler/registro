@@ -69,6 +69,11 @@ func TestController_participants(t *testing.T) {
 
 	p2, err := ct.createParticipant(ParticipantsCreateIn{IdDossier: dossier1.Id, IdCamp: camp2.Id, IdPersonne: pe1.Id})
 	tu.AssertNoErr(t, err) // now the change of taux is OK
+	// add a group
+	g, err := cps.Groupe{IdCamp: camp2.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+	err = cps.GroupeParticipant{IdCamp: camp2.Id, IdGroupe: g.Id, IdParticipant: p2.Participant.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
 
 	t.Run("move", func(t *testing.T) {
 		err = ct.moveParticipant(ParticipantsMoveIn{Id: p2.Participant.Id, Target: camp1.Id})
@@ -88,6 +93,14 @@ func TestController_participants(t *testing.T) {
 
 		err = ct.moveParticipant(ParticipantsMoveIn{Id: p2.Participant.Id, Target: camp3.Id})
 		tu.AssertNoErr(t, err)
+
+		// check no more participant is in camp2 (see https://github.com/benoitkugler/registro/issues/234)
+		ps, err := ct.getParticipants(camp2.Id)
+		tu.AssertNoErr(t, err)
+		tu.Assert(t, len(ps.Participants) == 0)
+		ps, err = ct.getParticipants(camp3.Id)
+		tu.AssertNoErr(t, err)
+		tu.Assert(t, len(ps.Participants) == 1)
 	})
 
 	t.Run("place liberee", func(t *testing.T) {

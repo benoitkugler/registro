@@ -317,9 +317,15 @@ func (ct *Controller) moveParticipant(args ParticipantsMoveIn) error {
 	participant.IdCamp = args.Target
 	participant.Statut = statut
 	participant.OptionPrix = cps.OptionPrixParticipant{}
+	// groupes are updated in a different query
 
 	return utils.InTx(ct.db, func(tx *sql.Tx) error {
-		participant, err = participant.Insert(tx)
+		// delete potential groupe link
+		_, err = cps.DeleteGroupeParticipantsByIdParticipants(tx, participant.Id)
+		if err != nil {
+			return err
+		}
+		participant, err = participant.Update(tx)
 		if err != nil {
 			return err
 		}
