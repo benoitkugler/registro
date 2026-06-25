@@ -97,6 +97,7 @@ func renderListeVetements(db *sql.DB, asso config.Asso, id cps.IdCamp) ([]byte, 
 	return content, fmt.Sprintf("Liste de vêtements - %s.pdf", camp.Label()), nil
 }
 
+// do not include dossiers refusing adress sharing
 func renderListeParticipants(db *sql.DB, asso config.Asso, id cps.IdCamp) ([]byte, string, error) {
 	camp, err := cps.LoadCamp(db, id)
 	if err != nil {
@@ -113,19 +114,25 @@ func renderListeParticipants(db *sql.DB, asso config.Asso, id cps.IdCamp) ([]byt
 	var participants []pdfcreator.Participant
 	for _, part := range camp.Participants(true) {
 		dossier := dossiers[part.Participant.IdDossier]
+		if !dossier.PartageAdressesOK {
+			continue
+		}
+
 		respo := responsables[dossier.IdResponsable]
 		mail := part.Personne.Mail
 		if mail == "" {
 			mail = respo.Mail
 		}
-		commune := part.Personne.Ville
+		commune, codePostal := part.Personne.Ville, part.Personne.CodePostal
 		if commune == "" {
-			commune = respo.Ville
+			commune, codePostal = respo.Ville, respo.CodePostal
 		}
+
 		participants = append(participants, pdfcreator.Participant{
 			NomPrenom:   part.Personne.NOMPrenom(),
 			Responsable: respo.NOMPrenom(),
-			Mail:        mail, Commune: commune,
+			Mail:        mail,
+			Commune:     fmt.Sprintf("%s (%s)", commune, codePostal),
 		})
 	}
 	content, err := pdfcreator.CreateListeParticipants(asso, participants, camp.Camp.Label())

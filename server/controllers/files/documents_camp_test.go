@@ -15,7 +15,7 @@ import (
 	tu "registro/utils/testutils"
 )
 
-func TestVetements(t *testing.T) {
+func TestExportListes(t *testing.T) {
 	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
 		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",
 		"../../migrations/init.sql")
@@ -23,9 +23,11 @@ func TestVetements(t *testing.T) {
 
 	camp1, err := cps.Camp{IdTaux: 1}.Insert(db)
 	tu.AssertNoErr(t, err)
-	respo, err := personnes.Personne{}.Insert(db)
+	respo, err := personnes.Personne{Identite: personnes.Identite{Ville: "Crest", CodePostal: "26278"}}.Insert(db)
 	tu.AssertNoErr(t, err)
-	dossier, err := dossiers.Dossier{IdTaux: 1, IdResponsable: respo.Id}.Insert(db)
+	dossier, err := dossiers.Dossier{IdTaux: 1, IdResponsable: respo.Id, PartageAdressesOK: true}.Insert(db)
+	tu.AssertNoErr(t, err)
+	dossier2, err := dossiers.Dossier{IdTaux: 1, IdResponsable: respo.Id, PartageAdressesOK: false}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	for range [50]int{} {
@@ -36,6 +38,18 @@ func TestVetements(t *testing.T) {
 		tu.AssertNoErr(t, err)
 		_, err = cps.Participant{
 			IdPersonne: pe.Id, IdCamp: camp1.Id, IdDossier: dossier.Id, IdTaux: 1,
+			Statut: cps.Inscrit,
+		}.Insert(db)
+		tu.AssertNoErr(t, err)
+	}
+	for range [5]int{} {
+		pe, err := personnes.Personne{Identite: personnes.Identite{
+			Nom:    utils.RandString(10, true),
+			Prenom: utils.RandString(10, true),
+		}}.Insert(db)
+		tu.AssertNoErr(t, err)
+		_, err = cps.Participant{
+			IdPersonne: pe.Id, IdCamp: camp1.Id, IdDossier: dossier2.Id, IdTaux: 1,
 			Statut: cps.Inscrit,
 		}.Insert(db)
 		tu.AssertNoErr(t, err)
@@ -55,12 +69,14 @@ func TestVetements(t *testing.T) {
 	tu.AssertNoErr(t, err)
 
 	ti := time.Now()
-	_, _, err = renderListeVetements(db.DB, config.Asso{}, camp1.Id)
+	content, name, err := renderListeVetements(db.DB, config.Asso{BackgroundColor: "#BBBB11"}, camp1.Id)
 	tu.AssertNoErr(t, err)
 	fmt.Println("rendered in", time.Since(ti))
+	tu.Write(t, name, content)
 
 	ti = time.Now()
-	_, _, err = renderListeParticipants(db.DB, config.Asso{}, camp1.Id)
+	content, name, err = renderListeParticipants(db.DB, config.Asso{BackgroundColor: "#BBBB11"}, camp1.Id)
 	tu.AssertNoErr(t, err)
 	fmt.Println("rendered in", time.Since(ti))
+	tu.Write(t, name, content)
 }
