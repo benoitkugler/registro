@@ -1,6 +1,6 @@
 <template>
   <v-row class="my-1">
-    <v-col align-self="center" cols="1" class="text-center">
+    <v-col align-self="center" cols="auto" class="text-center">
       <v-tooltip
         :text="isNew ? 'Marquer comme lu' : 'Marquer comme non lu'"
         location="left"
@@ -33,7 +33,9 @@
       }"
       style="font-size: smaller"
     >
-      <pre>{{ props.message.Content.Message.Contenu }}</pre>
+      <pre style="white-space: pre-wrap">{{
+        props.message.Content.Message.Contenu
+      }}</pre>
     </v-col>
     <v-col align-self="center" cols="2" class="text-grey">
       {{ Formatters.time(props.message.Event.Created) }}
