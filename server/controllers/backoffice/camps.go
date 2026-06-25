@@ -503,7 +503,7 @@ func (ct *Controller) CampsDownloadParticipants(c echo.Context) error {
 	return c.Blob(200, mimeType, content)
 }
 
-// export the [Inscrits] from the camp starting at the given year
+// export the [Inscrits] from all the camps starting at the given year
 func (ct *Controller) exportListeParticipants(year int) ([]byte, string, error) {
 	// select the correct [Camp]s
 	camps, err := cps.SelectAllCamps(ct.db)

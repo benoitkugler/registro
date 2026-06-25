@@ -486,7 +486,7 @@ func ListeParticipantsCamp(camp cps.Camp, inscrits []cps.ParticipantPersonne, do
 	return f.Bytes(), nil
 }
 
-// ListeParticipantsCamps renvoie un document Excel des participants (éventuellemnt en liste d'attente)
+// ListeParticipantsCamps renvoie un document Excel des participants (éventuellement en liste d'attente)
 // de plusieurs séjours, à destination des comptables.
 //
 // Le champ [Speciale] des remises est ignoré.
@@ -528,6 +528,7 @@ func ListeParticipantsCamps(participants []cps.ParticipantCamp, dossiers logic.D
 	headersDossier := [...]string{
 		"ID Dossier",
 		"Moment d'inscription",
+		"Partage Adresse",
 		"Etat du règlement",
 		"Montant payé",
 		"Fonds de soutien",
@@ -581,6 +582,7 @@ func ListeParticipantsCamps(participants []cps.ParticipantCamp, dossiers logic.D
 			// dossier
 			intCell(dossier.Dossier.Dossier.Id),                            // ID Dossier
 			{Value: formatTime(dossier.Dossier.Dossier.MomentInscription)}, // Inscription
+			{Value: formatBool(dossier.Dossier.Dossier.PartageAdressesOK)}, // Partage Adresse
 			{Value: bilan.StatutPaiement().String()},                       // Etat du règlement
 			{Value: taux.Convertible(bilan.Recu()).String()},               // Montant payé
 			{Value: taux.Convertible(bilan.FondsSoutien()).String()},       // Fonds de soutien

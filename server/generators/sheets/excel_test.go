@@ -78,7 +78,7 @@ func TestListeParticipants(t *testing.T) {
 		Personne:    p1,
 	}
 	inscrit2 := cps.ParticipantPersonne{
-		Participant: cps.Participant{Id: 2, IdDossier: 1, Commentaire: utils.RandString(10, true)},
+		Participant: cps.Participant{Id: 2, IdDossier: 2, Commentaire: utils.RandString(10, true)},
 		Personne:    p2,
 	}
 	g1, g2 := cps.Groupe{Nom: "Groupe 1", Couleur: "#AA12BB"}, cps.Groupe{Nom: "Groupe 2"}
@@ -124,8 +124,8 @@ func TestListeParticipantsCamps(t *testing.T) {
 	}
 	liste := []cps.ParticipantCamp{inscrit1, inscrit2, inscrit1}
 	dossiers := logic.DossiersFinances{Dossiers: logic.Dossiers{Dossiers: dossiers.Dossiers{
-		1: dossiers.Dossier{Id: 1, MomentInscription: time.Now(), IdResponsable: 2},
-		2: dossiers.Dossier{Id: 2, MomentInscription: time.Now().Add(time.Hour), IdResponsable: 1},
+		1: dossiers.Dossier{Id: 1, MomentInscription: time.Now(), IdResponsable: 2, PartageAdressesOK: true},
+		2: dossiers.Dossier{Id: 2, MomentInscription: time.Now().Add(time.Hour), IdResponsable: 1, PartageAdressesOK: false},
 	}}}
 	remisesHints := map[cps.IdParticipant]cps.Remises{
 		pa1.Id: {Equipiers: 10, Famille: 5},
