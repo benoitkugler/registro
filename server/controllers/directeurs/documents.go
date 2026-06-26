@@ -529,47 +529,41 @@ func (ct *Controller) DocumentsDownloadFichesSanitaires(c echo.Context) error {
 
 // ignore les participants majeurs et les fiches vides
 func (ct *Controller) renderFichesSanitaires(user cps.IdCamp) ([]byte, string, error) {
-	camp, err := cps.SelectCamp(ct.db, user)
+	camp, err := cps.LoadCamp(ct.db, user)
+	if err != nil {
+		return nil, "", err
+	}
+	dossiers, err := ds.SelectDossiers(ct.db, camp.IdDossiers()...)
 	if err != nil {
 		return nil, "", utils.SQLError(err)
 	}
-	participants, err := cps.SelectParticipantsByIdCamps(ct.db, user)
-	if err != nil {
-		return nil, "", utils.SQLError(err)
-	}
-	dossiers, err := ds.SelectDossiers(ct.db, participants.IdDossiers()...)
-	if err != nil {
-		return nil, "", utils.SQLError(err)
-	}
-	responsables, err := pr.SelectPersonnes(ct.db, dossiers.IdResponsables()...)
-	if err != nil {
-		return nil, "", utils.SQLError(err)
-	}
-	personnes, err := pr.SelectPersonnes(ct.db, participants.IdPersonnes()...)
-	if err != nil {
-		return nil, "", utils.SQLError(err)
-	}
+	participants := camp.Participants(true)
+	personnes := camp.Personnes(true)
 	tmp, err := pr.SelectFichesanitairesByIdPersonnes(ct.db, personnes.IDs()...)
 	if err != nil {
 		return nil, "", utils.SQLError(err)
 	}
 	fiches := tmp.ByIdPersonne()
 
+	responsables, err := pr.SelectPersonnes(ct.db, dossiers.IdResponsables()...)
+	if err != nil {
+		return nil, "", utils.SQLError(err)
+	}
+
 	var list []pdfcreator.FicheSanitaire
 	for _, part := range participants {
-		personne := personnes[part.IdPersonne]
-		fiche, hasFiche := fiches[part.IdPersonne]
-		if !hasFiche || personne.Age() >= 18 {
+		fiche, hasFiche := fiches[part.Participant.IdPersonne]
+		if !hasFiche || part.Personne.Age() >= 18 {
 			continue
 		}
-		responsable := responsables[dossiers[part.IdDossier].IdResponsable]
-		list = append(list, pdfcreator.FicheSanitaire{Personne: personne.Identite, FicheSanitaire: fiche, Responsable: responsable.Identite})
+		responsable := responsables[dossiers[part.Participant.IdDossier].IdResponsable]
+		list = append(list, pdfcreator.FicheSanitaire{Personne: part.Personne.Identite, FicheSanitaire: fiche, Responsable: responsable.Identite})
 	}
 	content, err := pdfcreator.CreateFicheSanitaires(ct.asso, list)
 	if err != nil {
 		return nil, "", err
 	}
-	name := fmt.Sprintf("Fiches sanitaires %s.pdf", camp.Label())
+	name := fmt.Sprintf("Fiches sanitaires %s.pdf", camp.Camp.Label())
 	return content, name, nil
 }
 

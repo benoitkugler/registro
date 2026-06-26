@@ -41,18 +41,18 @@ func TestFichesSanitaires(t *testing.T) {
 	dossier, err := ds.Dossier{IdTaux: 1, IdResponsable: pe1.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	pa1, err := cps.Participant{IdCamp: camp.Id, IdTaux: 1, IdDossier: dossier.Id, IdPersonne: pe1.Id}.Insert(db)
+	pa1, err := cps.Participant{IdCamp: camp.Id, IdTaux: 1, IdDossier: dossier.Id, IdPersonne: pe1.Id, Statut: cps.Inscrit}.Insert(db)
 	tu.AssertNoErr(t, err)
-	_, err = cps.Participant{IdCamp: camp.Id, IdTaux: 1, IdDossier: dossier.Id, IdPersonne: pe2.Id}.Insert(db)
+	_, err = cps.Participant{IdCamp: camp.Id, IdTaux: 1, IdDossier: dossier.Id, IdPersonne: pe2.Id, Statut: cps.AttenteCampComplet}.Insert(db)
 	tu.AssertNoErr(t, err)
-	_, err = cps.Participant{IdCamp: camp.Id, IdTaux: 1, IdDossier: dossier.Id, IdPersonne: pe3.Id}.Insert(db)
+	_, err = cps.Participant{IdCamp: camp.Id, IdTaux: 1, IdDossier: dossier.Id, IdPersonne: pe3.Id, Statut: cps.Refuse}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	ct := Controller{db: db.DB}
 
 	fiches, err := ct.loadFichesSanitaires(camp.Id)
 	tu.AssertNoErr(t, err)
-	tu.Assert(t, len(fiches) == 3)
+	tu.Assert(t, len(fiches) == 1)
 
 	_, _, err = ct.downloadFicheSanitaire(camp.Id, pa1.Id)
 	tu.AssertNoErr(t, err)

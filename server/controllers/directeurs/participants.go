@@ -107,20 +107,17 @@ type FicheSanitaireExt struct {
 }
 
 func (ct *Controller) loadFichesSanitaires(user cps.IdCamp) ([]FicheSanitaireExt, error) {
-	participants, err := cps.SelectParticipantsByIdCamps(ct.db, user)
+	camp, err := cps.LoadCamp(ct.db, user)
+	if err != nil {
+		return nil, err
+	}
+	dossiers, err := ds.SelectDossiers(ct.db, camp.IdDossiers()...)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
-	dossiers, err := ds.SelectDossiers(ct.db, participants.IdDossiers()...)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-	pIds := participants.IdPersonnes()
-	personnes, err := pr.SelectPersonnes(ct.db, pIds...)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-	tmp, err := pr.SelectFichesanitairesByIdPersonnes(ct.db, pIds...)
+	participants := camp.Participants(true)
+	personnes := camp.Personnes(true)
+	tmp, err := pr.SelectFichesanitairesByIdPersonnes(ct.db, personnes.IDs()...)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
@@ -128,12 +125,11 @@ func (ct *Controller) loadFichesSanitaires(user cps.IdCamp) ([]FicheSanitaireExt
 
 	out := make([]FicheSanitaireExt, 0, len(personnes))
 	for _, participant := range participants {
-		personne := personnes[participant.IdPersonne]
-		fiche := fiches[personne.Id]
-		dossier := dossiers[participant.IdDossier]
+		fiche := fiches[participant.Personne.Id]
+		dossier := dossiers[participant.Participant.IdDossier]
 		out = append(out, FicheSanitaireExt{
-			participant.Id,
-			personne.NOMPrenom(),
+			participant.Participant.Id,
+			participant.Personne.NOMPrenom(),
 			fiche.State(dossier.MomentInscription),
 			fiche,
 		})
