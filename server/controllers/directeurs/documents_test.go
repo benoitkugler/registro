@@ -70,6 +70,7 @@ func TestDocuments(t *testing.T) {
 		docs, err := ct.getDocuments(camp.Id)
 		tu.AssertNoErr(t, err)
 		tu.Assert(t, len(docs.FilesToDownload) == 2)
+		tu.Assert(t, docs.FilesToDownload[0].Id != 0 && docs.FilesToDownload[1].Id != 0)
 		tu.Assert(t, docs.ToShow.LettreDirecteur)
 
 		_, err = filesAPI.Delete(ct.db, ct.key, ct.files, file1.Key)

@@ -64,9 +64,18 @@ func (ct *Controller) getDocuments(id cps.IdCamp) (DocumentsOut, error) {
 	if err != nil {
 		return DocumentsOut{}, utils.SQLError(err)
 	}
-	allDemandes, err := fs.SelectAllDemandes(ct.db)
+	availableDemandes, err := fs.SelectAllDemandes(ct.db)
 	if err != nil {
 		return DocumentsOut{}, utils.SQLError(err)
+	}
+	// select available demandes
+	for id, demande := range availableDemandes {
+		isBuiltin := demande.Categorie != 0
+		toOther := demande.IdDirecteur.Valid && demande.IdDirecteur.Id != directeur.Id
+		// only custom and owned by us
+		if isBuiltin || toOther {
+			delete(availableDemandes, id)
+		}
 	}
 
 	links, err := fs.SelectDemandeCampsByIdCamps(ct.db, id)
@@ -77,7 +86,7 @@ func (ct *Controller) getDocuments(id cps.IdCamp) (DocumentsOut, error) {
 	if err != nil {
 		return DocumentsOut{}, utils.SQLError(err)
 	}
-	files, err := fs.SelectFiles(ct.db, appliedDemandes.IdFiles()...)
+	files, err := fs.SelectFiles(ct.db, slices.Concat(toDownload.IdFiles(), availableDemandes.IdFiles(), appliedDemandes.IdFiles())...)
 	if err != nil {
 		return DocumentsOut{}, utils.SQLError(err)
 	}
@@ -101,14 +110,7 @@ func (ct *Controller) getDocuments(id cps.IdCamp) (DocumentsOut, error) {
 		}
 		out.CampDemandes = append(out.CampDemandes, item)
 	}
-	for _, demande := range allDemandes {
-		if demande.Categorie != 0 { // only custom
-			continue
-		}
-		if owner := demande.IdDirecteur; owner.Valid && owner.Id != directeur.Id {
-			// private to someone else
-			continue
-		}
+	for _, demande := range availableDemandes {
 		item := DemandeDirecteur{Demande: demande}
 		if file := demande.IdFile; file.Valid {
 			item.File = logic.NewPublicFile(ct.key, files[file.Id])
