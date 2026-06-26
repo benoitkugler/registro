@@ -396,7 +396,7 @@ async function unlockAndSendDocuments() {
   // start with initial 0 progress
   sendingProgress.value = {
     Current: 0 as Int,
-    Total: 10 as Int, // just a guess
+    Total: 0 as Int, // not known just yet
   };
   const res = await controller.DocumentsUnlockAndSend();
   if (res === undefined) {

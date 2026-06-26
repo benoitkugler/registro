@@ -467,7 +467,7 @@ async function sendSondage(idCamp: IdCamp) {
   // start with initial 0 progress
   sondagesProgress.value = {
     Current: 0 as Int,
-    Total: 10 as Int, // just a guess
+    Total: 0 as Int, // not known just yet
   };
   const res = await controller.EventsSendSondages({ idCamp });
   if (res === undefined) {

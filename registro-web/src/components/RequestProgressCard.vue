@@ -6,8 +6,12 @@
         :model-value="props.progress.Current"
         color="primary"
         height="24"
+        :indeterminate="props.progress.Total == 0"
       >
-        {{ props.progress.Current }} / {{ props.progress.Total }}
+        <template v-if="props.progress.Total">
+          {{ props.progress.Current }} /
+          {{ props.progress.Total }}
+        </template>
       </v-progress-linear>
     </v-card-text>
   </v-card>
