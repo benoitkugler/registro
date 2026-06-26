@@ -1,8 +1,7 @@
 <template>
-  <v-card subtitle="Réglement" class="mt-2" @click="showDetails = true">
+  <v-card subtitle="Paiement" class="mt-2" @click="showDetails = true">
     <template #append>
       <v-btn
-        size="small"
         class="mr-1"
         @click.stop="emit('showReglement')"
         :disabled="
