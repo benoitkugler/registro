@@ -480,19 +480,29 @@ func (ct *Controller) DocumentsStreamFiles(c echo.Context) error {
 	}
 	return fsAPI.StreamZip(c.Response(), archiveName, func(yield func(fsAPI.ZipItem, error) bool) {
 		for _, file := range files {
-			content, err := ct.files.Load(file.Id, false)
+			content, err := ct.files.Load(file.file.Id, false)
 			if err != nil {
 				yield(fsAPI.ZipItem{}, err)
 				return
 			}
-			if !yield(fsAPI.ZipItem{Name: file.NomClient, Content: content}, nil) {
+			if !yield(fsAPI.ZipItem{Name: file.zipName(), Content: content}, nil) {
 				return
 			}
 		}
 	})
 }
 
-func (ct *Controller) selectFilesForDemande(idCamp cps.IdCamp, idDemande fs.IdDemande) (fs.Files, string, error) {
+type ownedFile struct {
+	file  fs.File
+	owner pr.Personne
+}
+
+// prefix the owner
+func (of ownedFile) zipName() string {
+	return fmt.Sprintf("%s %s", of.owner.NOMPrenom(), of.file.NomClient)
+}
+
+func (ct *Controller) selectFilesForDemande(idCamp cps.IdCamp, idDemande fs.IdDemande) ([]ownedFile, string, error) {
 	demande, err := fs.SelectDemande(ct.db, idDemande)
 	if err != nil {
 		return nil, "", utils.SQLError(err)
@@ -513,8 +523,15 @@ func (ct *Controller) selectFilesForDemande(idCamp cps.IdCamp, idDemande fs.IdDe
 		return nil, "", utils.SQLError(err)
 	}
 
+	toPersonne := links.ByIdFile()
+	out := make([]ownedFile, 0, len(files))
+	for id, file := range files {
+		idPersonne := toPersonne[id].IdPersonne
+		out = append(out, ownedFile{file, personnes[idPersonne]})
+	}
+
 	archiveName := fmt.Sprintf("Fichiers %s %s.zip", camp.Camp.Label(), demande.Title())
-	return files, archiveName, nil
+	return out, archiveName, nil
 }
 
 func (ct *Controller) DocumentsDownloadFichesSanitaires(c echo.Context) error {
