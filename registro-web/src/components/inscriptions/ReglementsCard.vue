@@ -1,14 +1,12 @@
 <template>
   <v-card
     title="Suivi du règlement"
-    :subtitle="`${completCount} / ${
-      props.data.Participants?.length || 0
-    } complet`"
+    :subtitle="`${completCount} / ${filtered.length || 0} complet`"
   >
     <v-card-text>
       <v-list>
         <v-list-item
-          v-for="participant in data.Participants"
+          v-for="participant in filtered"
           :title="Personnes.NOMPrenom(participant.Personne)"
           :subtitle="dossier(participant).Responsable"
         >
@@ -33,6 +31,7 @@ import { Formatters, Personnes } from "@/utils";
 import {
   StatutPaiement,
   StatutPaiementLabels,
+  StatutParticipant,
   type ParticipantExt,
 } from "@/clients/backoffice/logic/api";
 import { computed } from "vue";
@@ -46,10 +45,15 @@ function dossier(p: ParticipantExt) {
   return (props.data.Dossiers || {})[p.Participant.IdDossier];
 }
 
+const filtered = computed(() =>
+  (props.data.Participants || []).filter(
+    (p) => p.Participant.Statut == StatutParticipant.Inscrit
+  )
+);
+
 const completCount = computed(
   () =>
-    (props.data.Participants || []).filter(
-      (p) => dossier(p).Reglement == StatutPaiement.Complet
-    ).length
+    filtered.value.filter((p) => dossier(p).Reglement == StatutPaiement.Complet)
+      .length
 );
 </script>
