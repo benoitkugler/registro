@@ -499,7 +499,7 @@ type ownedFile struct {
 
 // prefix the owner
 func (of ownedFile) zipName() string {
-	return fmt.Sprintf("%s %s", of.owner.NOMPrenom(), of.file.NomClient)
+	return fmt.Sprintf("%s (%d) %s", of.owner.NOMPrenom(), of.file.Id, of.file.NomClient)
 }
 
 func (ct *Controller) selectFilesForDemande(idCamp cps.IdCamp, idDemande fs.IdDemande) ([]ownedFile, string, error) {
