@@ -74,6 +74,9 @@
                 Formatters.colorFichesanitaireState(participant.Fichesanitaire)
               "
               density="compact"
+              @[enableFichesanitaireDownload(participant)&&`click`]="
+                () => downloadFicheSanitaire(participant.Id)
+              "
             >
               {{ FichesanitaireStateLabels[participant.Fichesanitaire] }}
             </v-chip>
@@ -179,7 +182,7 @@ import {
   type ParticipantFiles,
   type ParticipantsFiles,
 } from "../../logic/api";
-import { Formatters } from "@/utils";
+import { Formatters, saveBlobAsFile } from "@/utils";
 import FileCardReadonly from "@/components/files/FileCardReadonly.vue";
 
 const props = defineProps<{}>();
@@ -214,6 +217,19 @@ function isComplete(participant: ParticipantFiles) {
     participant.Fichesanitaire == FichesanitaireState.UpToDate &&
     demandes.every((d) => ((participant.Files || {})[d.Id] || []).length != 0)
   );
+}
+
+function enableFichesanitaireDownload(participant: ParticipantFiles) {
+  return participant.Fichesanitaire != FichesanitaireState.NoFiche;
+}
+
+async function downloadFicheSanitaire(idParticipant: IdParticipant) {
+  const res = await controller.ParticipantsDownloadFicheSanitaire({
+    idParticipant,
+  });
+  if (res === undefined) return;
+  controller.showMessage("Fiche sanitaire téléchargée avec succès.");
+  saveBlobAsFile(res.blob, res.filename);
 }
 
 const isSendingMailFor = reactive(new Set<IdParticipant>());
