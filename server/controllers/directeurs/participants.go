@@ -374,6 +374,10 @@ func (ct *Controller) exportListeParticipants(user cps.IdCamp) ([]byte, string, 
 	if err != nil {
 		return nil, "", err
 	}
+	fiches, err := pr.SelectFichesanitairesByIdPersonnes(ct.db, camp.Personnes(true).IDs()...)
+	if err != nil {
+		return nil, "", utils.SQLError(err)
+	}
 	groupes, err := cps.SelectGroupesByIdCamps(ct.db, user)
 	if err != nil {
 		return nil, "", utils.SQLError(err)
@@ -386,12 +390,18 @@ func (ct *Controller) exportListeParticipants(user cps.IdCamp) ([]byte, string, 
 	for _, link := range links {
 		participantToGroupe[link.IdParticipant] = groupes[link.IdGroupe]
 	}
+	participants := camp.Participants(true)
+	participantToFiches := make(map[cps.IdParticipant]pr.Fichesanitaire)
+	for _, participant := range participants {
+		participantToFiches[participant.Participant.Id] = fiches[participant.Participant.IdPersonne]
+	}
 	dossiers, err := logic.LoadDossiers(ct.db, camp.IdDossiers())
 	if err != nil {
 		return nil, "", err
 	}
 	showNationnaliteSuisse := ct.asso.AskNationnalite
-	content, err := sheets.ListeParticipantsCamp(camp.Camp, camp.Participants(true), dossiers, participantToGroupe, showNationnaliteSuisse)
+	content, err := sheets.ListeParticipantsCamp(camp.Camp, participants, dossiers,
+		participantToGroupe, participantToFiches, showNationnaliteSuisse)
 	if err != nil {
 		return nil, "", err
 	}

@@ -86,12 +86,15 @@ func TestListeParticipants(t *testing.T) {
 	dossiers := logic.Dossiers{Dossiers: dossiers.Dossiers{
 		1: dossiers.Dossier{MomentInscription: time.Now(), IdResponsable: 2},
 	}}
+	fiches := map[cps.IdParticipant]pr.Fichesanitaire{
+		1: {AutreContact: pr.NomTel{Tel: "0682084101"}},
+	}
 
-	content, err := ListeParticipantsCamp(camp, liste, dossiers, map[cps.IdParticipant]cps.Groupe{1: g1, 2: g2}, false)
+	content, err := ListeParticipantsCamp(camp, liste, dossiers, map[cps.IdParticipant]cps.Groupe{1: g1, 2: g2}, fiches, false)
 	tu.AssertNoErr(t, err)
 	tu.Write(t, "ListeParticipantsCamp_1.xlsx", content)
 
-	content, err = ListeParticipantsCamp(camp, liste, dossiers, map[cps.IdParticipant]cps.Groupe{1: g1, 2: g2}, true)
+	content, err = ListeParticipantsCamp(camp, liste, dossiers, map[cps.IdParticipant]cps.Groupe{1: g1, 2: g2}, fiches, true)
 	tu.AssertNoErr(t, err)
 	tu.Write(t, "ListeParticipantsCamp_2.xlsx", content)
 }

@@ -9,6 +9,7 @@ import (
 
 	"registro/logic"
 	cps "registro/sql/camps"
+	pr "registro/sql/personnes"
 	"registro/utils"
 
 	"github.com/xuri/excelize/v2"
@@ -412,7 +413,8 @@ func formatTime(t time.Time) string {
 
 // ListeParticipantsCamp renvoie un document Excel des inscrits
 // d'un séjour, à destination du directeur.
-func ListeParticipantsCamp(camp cps.Camp, inscrits []cps.ParticipantPersonne, dossiers logic.Dossiers, groupes map[cps.IdParticipant]cps.Groupe,
+func ListeParticipantsCamp(camp cps.Camp, inscrits []cps.ParticipantPersonne, dossiers logic.Dossiers,
+	groupes map[cps.IdParticipant]cps.Groupe, fichesSanitaires map[cps.IdParticipant]pr.Fichesanitaire,
 	showNationnaliteSuisse bool,
 ) ([]byte, error) {
 	headersParticipant := [...]string{
@@ -436,6 +438,7 @@ func ListeParticipantsCamp(camp cps.Camp, inscrits []cps.ParticipantPersonne, do
 		"Responsable",
 		"Mail",
 		"Tel.",
+		"Tel. contact",
 		"Adresse",
 		"Code postal",
 		"Ville",
@@ -450,6 +453,7 @@ func ListeParticipantsCamp(camp cps.Camp, inscrits []cps.ParticipantPersonne, do
 		dossier := dossiers.For(inscrit.Participant.IdDossier)
 		responsable := dossier.Responsable()
 		groupe := groupes[inscrit.Participant.Id]
+		fiche := fichesSanitaires[inscrit.Participant.Id]
 		nationalite := ""
 		if showNationnaliteSuisse {
 			nationalite = formatBool(inscrit.Personne.Nationnalite.IsSuisse)
@@ -468,13 +472,14 @@ func ListeParticipantsCamp(camp cps.Camp, inscrits []cps.ParticipantPersonne, do
 			{Value: inscrit.Participant.Commentaire},                   // Commentaire
 			{Value: nationalite},                                       // Suisse ?
 			// responsable
-			{Value: responsable.NOMPrenom()},   // Responsable
-			{Value: responsable.Mail},          // Mail
-			{Value: responsable.Tels.String()}, // Tel.
-			{Value: responsable.Adresse},       // Adresse
-			{Value: responsable.CodePostal},    // Code postal
-			{Value: responsable.Ville},         // Ville
-			{Value: string(responsable.Pays)},  // Pays
+			{Value: responsable.NOMPrenom()},         // Responsable
+			{Value: responsable.Mail},                // Mail
+			{Value: responsable.Tels.String()},       // Tel.
+			{Value: fiche.AutreContact.Tel.String()}, // Tel contact
+			{Value: responsable.Adresse},             // Adresse
+			{Value: responsable.CodePostal},          // Code postal
+			{Value: responsable.Ville},               // Ville
+			{Value: string(responsable.Pays)},        // Pays
 		}
 		rows[i] = row[:]
 	}
