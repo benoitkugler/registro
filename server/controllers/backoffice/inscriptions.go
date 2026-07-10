@@ -137,6 +137,7 @@ type InscriptionsDoublonsOut struct {
 	Camps        cps.Camps       // enough for ids in [Participants]
 }
 
+// return the participant which appears at least twice
 func (ct *Controller) searchInscriptionsDoublons() (InscriptionsDoublonsOut, error) {
 	camps, err := cps.SelectAllCamps(ct.db)
 	if err != nil {
@@ -155,15 +156,18 @@ func (ct *Controller) searchInscriptionsDoublons() (InscriptionsDoublonsOut, err
 		crible[key] = append(crible[key], part)
 	}
 
-	// now restrict to doublons
+	// Now restrict to doublons
+	// Note that, for now, we also report someone
+	// asking for two different camps, which cam be fine.
 	var out [][]in.InscriptionParticipant
 	inscriptionsIds := utils.NewSet[in.IdInscription]()
-	for _, inscList := range crible {
-		if len(inscList) < 2 {
+	for _, personneInscriptions := range crible {
+		if len(personneInscriptions) < 2 {
 			continue
 		}
-		out = append(out, inscList)
-		for _, insc := range inscList {
+		out = append(out, personneInscriptions)
+		// mark the inscription to be loaded
+		for _, insc := range personneInscriptions {
 			inscriptionsIds.Add(insc.IdInscription)
 		}
 	}
