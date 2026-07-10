@@ -139,9 +139,10 @@
                 "
               ></v-list-item>
               <v-list-item
-                title="Responsable"
+                title="Détails"
+                subtitle="Responsable, ..."
                 prepend-icon="mdi-account-details"
-                @click="responsableToShow = p.responsable"
+                @click="participantDetailsToShow = p"
               ></v-list-item>
               <v-divider horizontal thickness="1"></v-divider>
               <v-list-item
@@ -205,52 +206,111 @@
 
     <!-- détails responsable -->
     <v-dialog
-      :model-value="responsableToShow != null"
-      @update:model-value="responsableToShow = null"
+      :model-value="participantDetailsToShow != null"
+      @update:model-value="participantDetailsToShow = null"
       max-width="600px"
     >
-      <v-card title="Profil du responsable" v-if="responsableToShow != null">
+      <v-card title="Détails" v-if="participantDetailsToShow != null">
         <v-card-text>
-          <v-row>
-            <v-col>
-              <v-chip prepend-icon="mdi-account">{{
-                Personnes.NOMPrenom(responsableToShow)
-              }}</v-chip></v-col
-            >
-          </v-row>
+          <v-card class="my-2" subtitle="Participant">
+            <v-card-text>
+              <v-row>
+                <v-col cols="7">
+                  <v-chip prepend-icon="mdi-account">{{
+                    Personnes.NOMPrenom(
+                      participantDetailsToShow.participant.Personne
+                    )
+                  }}</v-chip>
+                </v-col>
 
-          <v-row
-            ><v-col>
-              <v-chip prepend-icon="mdi-email">{{
-                responsableToShow.Mail
-              }}</v-chip>
-            </v-col></v-row
-          >
-          <v-row
-            ><v-col>
-              <v-chip prepend-icon="mdi-phone">
-                {{ Formatters.tels(responsableToShow.Tels) }}
-              </v-chip></v-col
-            ></v-row
-          >
-          <v-row
-            ><v-col>
-              <v-chip prepend-icon="mdi-home-city">
-                {{ responsableToShow.Adresse }}
-                {{ responsableToShow.CodePostal }}
-                {{ responsableToShow.Ville }} {{ responsableToShow.Pays }}
-              </v-chip></v-col
-            ></v-row
-          >
-          <v-row
-            ><v-col>
+                <v-col
+                  class="text-right"
+                  v-if="
+                    participantDetailsToShow.participant.Personne.Nationnalite
+                      .IsSuisse
+                  "
+                >
+                  <v-chip prepend-icon="mdi-passport"
+                    >Nationnalité Suisse
+                  </v-chip>
+                </v-col>
+              </v-row>
+            </v-card-text>
+          </v-card>
+
+          <v-card subtitle="Responsable" class="my-2">
+            <v-card-text>
+              <v-row>
+                <v-col cols="7">
+                  <v-chip prepend-icon="mdi-account">{{
+                    Personnes.NOMPrenom(
+                      participantDetailsToShow.dossier.Responsable
+                    )
+                  }}</v-chip></v-col
+                >
+                <v-col class="text-right">
+                  <v-chip
+                    prepend-icon="mdi-passport"
+                    v-if="
+                      participantDetailsToShow.dossier.Responsable.Nationnalite
+                        .IsSuisse
+                    "
+                    >Nationnalité Suisse
+                  </v-chip>
+                </v-col>
+              </v-row>
+
+              <v-row
+                ><v-col>
+                  <v-chip prepend-icon="mdi-email">{{
+                    participantDetailsToShow.dossier.Responsable.Mail
+                  }}</v-chip>
+                </v-col></v-row
+              >
+              <v-row
+                ><v-col>
+                  <v-chip prepend-icon="mdi-phone">
+                    {{
+                      Formatters.tels(
+                        participantDetailsToShow.dossier.Responsable.Tels
+                      )
+                    }}
+                  </v-chip></v-col
+                ></v-row
+              >
+              <v-row
+                ><v-col>
+                  <v-chip prepend-icon="mdi-home-city">
+                    {{ participantDetailsToShow.dossier.Responsable.Adresse }}
+                    {{
+                      participantDetailsToShow.dossier.Responsable.CodePostal
+                    }}
+                    {{ participantDetailsToShow.dossier.Responsable.Ville }}
+                    {{ participantDetailsToShow.dossier.Responsable.Pays }}
+                  </v-chip></v-col
+                ></v-row
+              >
+            </v-card-text>
+          </v-card>
+
+          <v-card subtitle="Préférences">
+            <v-card-text>
               <v-chip
-                prepend-icon="mdi-passport"
-                v-if="responsableToShow.Nationnalite.IsSuisse"
-                >Nationnalité Suisse
-              </v-chip></v-col
-            ></v-row
-          >
+                :append-icon="
+                  participantDetailsToShow.dossier.Dossier.PartageAdressesOK
+                    ? 'mdi-check'
+                    : 'mdi-close'
+                "
+                :color="
+                  participantDetailsToShow.dossier.Dossier.PartageAdressesOK
+                    ? 'green'
+                    : 'red'
+                "
+              >
+                Diffusion des coordonnées pour covoiturage
+              </v-chip>
+            </v-card-text>
+          </v-card>
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -264,6 +324,7 @@ import { controller } from "../../logic/logic";
 import {
   StatutParticipant,
   type Date_,
+  type DossierRecap,
   type Groupe,
   type GroupeParticipant,
   type GroupesOut,
@@ -298,7 +359,7 @@ const isLoading = ref(false);
 
 type participantData = {
   participant: ParticipantExt;
-  responsable: Personne;
+  dossier: DossierRecap;
   groupe: Groupe | null;
 };
 
@@ -315,7 +376,7 @@ const participants = computed(() => {
     ];
     return {
       participant: p,
-      responsable: dossiers[p.Participant.IdDossier].ResponsableDetails,
+      dossier: dossiers[p.Participant.IdDossier],
       groupe: link ? (g.Groupes || {})[link.IdGroupe] : null,
     } satisfies participantData;
   });
@@ -384,5 +445,5 @@ const showReglements = ref(false);
 
 const showGroupes = ref(false);
 
-const responsableToShow = ref<Personne | null>(null);
+const participantDetailsToShow = ref<participantData | null>(null);
 </script>

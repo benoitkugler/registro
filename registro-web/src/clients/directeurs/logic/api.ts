@@ -151,7 +151,7 @@ export interface Messages {
 // registro/controllers/directeurs.ParticipantsOut
 export interface ParticipantsOut {
   Participants: ParticipantExt[] | null;
-  Dossiers: Record<IdDossier, DossierReglement> | null;
+  Dossiers: Record<IdDossier, DossierRecap> | null;
   Statistiques: StatistiquesInscrits;
 }
 // registro/controllers/directeurs.Photos
@@ -200,10 +200,10 @@ export interface CampSondages {
   Moyennes: SondageMoyennes;
   Sondages: SondageExt[] | null;
 }
-// registro/logic.DossierReglement
-export interface DossierReglement {
-  Responsable: string;
-  ResponsableDetails: Personne;
+// registro/logic.DossierRecap
+export interface DossierRecap {
+  Dossier: Dossier;
+  Responsable: Personne;
   Reglement: StatutPaiement;
 }
 // registro/logic.EventExt[registro/logic.MessageEvt]

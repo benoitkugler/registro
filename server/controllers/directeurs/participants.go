@@ -36,7 +36,7 @@ func (ct *Controller) ParticipantsGet(c echo.Context) error {
 
 type ParticipantsOut struct {
 	Participants []logic.ParticipantExt
-	Dossiers     map[ds.IdDossier]logic.DossierReglement
+	Dossiers     map[ds.IdDossier]logic.DossierRecap
 	Statistiques cps.StatistiquesInscrits
 }
 
@@ -49,7 +49,7 @@ func (ct *Controller) getParticipants(id cps.IdCamp) (ParticipantsOut, error) {
 	if err != nil {
 		return ParticipantsOut{}, err
 	}
-	reglements := make(map[ds.IdDossier]logic.DossierReglement)
+	reglements := make(map[ds.IdDossier]logic.DossierRecap)
 	for id := range dossiers {
 		dossier := finances.For(id)
 		reglements[id] = dossier.Reglement()

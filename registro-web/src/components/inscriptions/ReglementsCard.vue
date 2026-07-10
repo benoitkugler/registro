@@ -8,7 +8,7 @@
         <v-list-item
           v-for="participant in filtered"
           :title="Personnes.NOMPrenom(participant.Personne)"
-          :subtitle="dossier(participant).Responsable"
+          :subtitle="Personnes.NOMPrenom(dossier(participant).Responsable)"
         >
           <template #append>
             <v-chip

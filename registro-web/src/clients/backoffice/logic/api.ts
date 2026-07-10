@@ -49,7 +49,7 @@ export interface CampHeader {
 export interface CampLoadOut {
   Camp: CampExt;
   Participants: ParticipantExt[] | null;
-  Dossiers: Record<IdDossier, DossierReglement> | null;
+  Dossiers: Record<IdDossier, DossierRecap> | null;
 }
 // registro/controllers/backoffice.CampPhotos
 export interface CampPhotos {
@@ -366,10 +366,10 @@ export interface DossierExt {
   Paiements: Paiements;
   Bilan: BilanFinancesPub;
 }
-// registro/logic.DossierReglement
-export interface DossierReglement {
-  Responsable: string;
-  ResponsableDetails: Personne;
+// registro/logic.DossierRecap
+export interface DossierRecap {
+  Dossier: Dossier;
+  Responsable: Personne;
   Reglement: StatutPaiement;
 }
 // registro/logic.Event

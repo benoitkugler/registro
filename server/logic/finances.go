@@ -371,12 +371,14 @@ func (p pc) prixBase() (cps.Montant, string) {
 	return prix, desc
 }
 
-type DossierReglement struct {
-	Responsable        string
-	ResponsableDetails pr.Personne
-	Reglement          StatutPaiement
+// DossierRecap is used for backoffice and directeurs
+// to display the main information regarding one [Dossier].
+type DossierRecap struct {
+	Dossier     ds.Dossier
+	Responsable pr.Personne
+	Reglement   StatutPaiement
 }
 
-func (de *DossierFinance) Reglement() DossierReglement {
-	return DossierReglement{de.Responsable().NOMPrenom(), de.Responsable(), de.Bilan().StatutPaiement()}
+func (de *DossierFinance) Reglement() DossierRecap {
+	return DossierRecap{de.Dossier.Dossier, de.Responsable(), de.Bilan().StatutPaiement()}
 }
