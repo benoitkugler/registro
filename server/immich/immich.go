@@ -83,7 +83,6 @@ type Album struct {
 	// albumThumbnailAssetId 	string | Null
 	// albumUsers 	AlbumUserResponseDto[]
 	AssetCount int `json:"assetCount"`
-	// assets 	AssetResponseDto[]
 	// contributorCounts 	ContributorCountResponseDto[]
 	CreatedAt time.Time `json:"createdAt"`
 	// description 	string
@@ -93,8 +92,6 @@ type Album struct {
 	// isActivityEnabled 	bool
 	// lastModifiedAssetTimestamp	time.Time
 	Order string `json:"order"` // AssetOrder
-	// owner 	UserResponseDto
-	// ownerId 	string
 	// shared 	bool
 	// startDate	time.Time
 	// updatedAt 	time.Time
@@ -118,7 +115,6 @@ type sharedLink struct {
 	// Password    string    `json:"password"`
 	// showMetadata bool
 	// Slug string `json:"slug"`
-	// token string | Null
 	Type string `json:"type"` // SharedLinkType
 	// userId string
 }
