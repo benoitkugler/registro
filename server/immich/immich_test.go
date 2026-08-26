@@ -26,7 +26,7 @@ func TestShareURL(t *testing.T) {
 	tu.Assert(t, url == "https://host.eu/share/key1234")
 }
 
-func Test(t *testing.T) {
+func TestAPI(t *testing.T) {
 	api := NewApi(devCreds(t))
 
 	var albumL []Album
