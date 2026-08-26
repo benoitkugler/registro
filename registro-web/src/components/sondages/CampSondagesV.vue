@@ -94,7 +94,7 @@
     </template>
     <v-card-text>
       <v-row>
-        <v-col cols="7">
+        <v-col cols="7" align-self="center">
           <v-row>
             <v-col cols="12" sm="6" md="4">
               <RatingBadge
@@ -160,26 +160,22 @@
         <v-col align-self="center">
           <v-row>
             <v-col cols="12">
-              <v-textarea
-                density="compact"
-                label="Participant"
-                variant="outlined"
-                hide-details
-                :value="sondage.Sondage.MessageEnfant"
-                readonly
-                rows="3"
-              ></v-textarea>
+              <v-card subtitle="Participant">
+                <v-card-text>
+                  <pre style="white-space: pre-wrap">{{
+                    sondage.Sondage.MessageEnfant
+                  }}</pre>
+                </v-card-text>
+              </v-card>
             </v-col>
             <v-col cols="12">
-              <v-textarea
-                density="compact"
-                label="Responsable"
-                variant="outlined"
-                hide-details
-                :value="sondage.Sondage.MessageResponsable"
-                readonly
-                rows="3"
-              ></v-textarea>
+              <v-card subtitle="Responsable">
+                <v-card-text>
+                  <pre style="white-space: pre-wrap">{{
+                    sondage.Sondage.MessageResponsable
+                  }}</pre>
+                </v-card-text>
+              </v-card>
             </v-col>
           </v-row>
         </v-col>
