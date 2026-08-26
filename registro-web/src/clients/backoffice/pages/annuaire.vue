@@ -35,12 +35,31 @@
           :title="personne.Label"
           :subtitle="Formatters.dateNaissance(personne.DateNaissance)"
           :prepend-icon="Formatters.sexeIcon(personne.Sexe)"
-          @click="goToPersonne(personne.Id)"
         >
-          <template #append v-if="personne.IsTemp">
+          <template #prepend v-if="personne.IsTemp">
             <v-chip prepend-icon="mdi-alert" color="warning">
               Ce profil est temporaire et devrait être identifié.
             </v-chip>
+          </template>
+          <template #append>
+            <v-btn size="x-small" icon>
+              <v-icon>mdi-dots-vertical</v-icon>
+              <v-menu activator="parent">
+                <v-list density="compact">
+                  <v-list-item
+                    title="Editer"
+                    prepend-icon="mdi-pencil"
+                    @click="goToPersonne(personne.Id)"
+                  ></v-list-item>
+                  <v-list-item
+                    title="Fiche sanitaire"
+                    subtitle="Modifier l'accès"
+                    prepend-icon="mdi-pill"
+                    @click="fichesanitaireToShow = personne"
+                  ></v-list-item>
+                </v-list>
+              </v-menu>
+            </v-btn>
           </template>
         </v-list-item>
       </v-list>
@@ -58,6 +77,19 @@
     >
       <PersonneEdit :personne="toEdit" @save="updatePersonne"></PersonneEdit>
     </v-dialog>
+
+    <!-- fiche sanitaire dialog -->
+    <v-dialog
+      v-if="fichesanitaireToShow != null"
+      :model-value="fichesanitaireToShow != null"
+      @update:model-value="fichesanitaireToShow = null"
+      max-width="800px"
+    >
+      <FichesanitairePannel
+        :personne="fichesanitaireToShow"
+        @close="fichesanitaireToShow = null"
+      ></FichesanitairePannel>
+    </v-dialog>
   </v-card>
 </template>
 
@@ -70,11 +102,12 @@ import type { IdPersonne, Personne, PersonneHeader } from "../logic/api";
 import PersonneEdit from "../components/annuaire/PersonneEdit.vue";
 import { controller } from "../logic/logic";
 import { Formatters } from "@/utils";
+import FichesanitairePannel from "../components/annuaire/FichesanitairePannel.vue";
 
 const router = useRouter();
 
 const queryURL = computed(() =>
-  parseQueryURLPersonnes(router.currentRoute.value.query)
+  parseQueryURLPersonnes(router.currentRoute.value.query),
 );
 
 const currentId = computed(() => queryURL.value.idPersonne);
@@ -82,7 +115,7 @@ const currentId = computed(() => queryURL.value.idPersonne);
 watch(
   () => currentId.value,
   () => (currentId.value !== undefined ? loadAndEdit(currentId.value) : null),
-  { immediate: true }
+  { immediate: true },
 );
 
 const list = ref<PersonneHeader[]>([]);
@@ -121,4 +154,6 @@ async function loadAndEdit(id: IdPersonne) {
   if (res === undefined) return;
   toEdit.value = res;
 }
+
+const fichesanitaireToShow = ref<PersonneHeader | null>(null);
 </script>

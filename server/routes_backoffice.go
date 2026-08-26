@@ -109,4 +109,7 @@ func setupRoutesBackoffice(e *echo.Echo, ct *backoffice.Controller) {
 	gr.GET("/api/v1/backoffice/personnes", ct.PersonnesLoad)
 	gr.PUT("/api/v1/backoffice/personnes", ct.PersonnesCreate)
 	gr.POST("/api/v1/backoffice/personnes", ct.PersonnesUpdate)
+
+	gr.GET("/api/v1/backoffice/personnes/fiche-sanitaire", ct.PersonnesLoadFichesanitaire)
+	gr.POST("/api/v1/backoffice/personnes/fiche-sanitaire", ct.PersonnesUpdateFichesanitaireAccess)
 }

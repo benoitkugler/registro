@@ -281,6 +281,11 @@ export interface TauxExt {
   FrancsSuisse: Int;
   Description: string;
 }
+// registro/controllers/backoffice.UpdateFichesanitaireAccessIn
+export interface UpdateFichesanitaireAccessIn {
+  Id: IdPersonne;
+  Mails: Mails;
+}
 // registro/controllers/backoffice.UpdatePendingInscriptionIn
 export interface UpdatePendingInscriptionIn {
   Id: IdInscription;
@@ -1042,12 +1047,28 @@ export interface ResponsableLegal {
   Ville: string;
   Pays: Pays;
 }
+// registro/sql/personnes.Fichesanitaire
+export interface Fichesanitaire {
+  IdPersonne: IdPersonne;
+  DifficultesSante: string;
+  AllergiesAlimentaires: string;
+  TraitementMedical: string;
+  Medecin: NomTel;
+  AutreContact: NomTel;
+  Modified: Time;
+  Owners: Mails;
+}
 export type IdPersonne = Int & { __opaque_int__: "IdPersonne" };
 // registro/sql/personnes.Mails
 export type Mails = string[] | null;
 // registro/sql/personnes.Nationnalite
 export interface Nationnalite {
   IsSuisse: boolean;
+}
+// registro/sql/personnes.NomTel
+export interface NomTel {
+  Nom: string;
+  Tel: Tel;
 }
 // registro/sql/personnes.Pays
 export type Pays = string;
@@ -1091,6 +1112,8 @@ export const SexeLabels: Record<Sexe, string> = {
   [Sexe.Man]: "Homme",
 };
 
+// registro/sql/personnes.Tel
+export type Tel = string;
 // registro/sql/personnes.Tels
 export type Tels = string[] | null;
 // registro/sql/shared.Date
@@ -2152,6 +2175,37 @@ export abstract class AbstractAPI {
         { headers: this.getHeaders() },
       );
       return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** PersonnesLoadFichesanitaire performs the request and handles the error */
+  async PersonnesLoadFichesanitaire(params: { id: IdPersonne }) {
+    const fullUrl =
+      this.baseURL + "/api/v1/backoffice/personnes/fiche-sanitaire";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<Fichesanitaire> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { id: String(params["id"]) },
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** PersonnesUpdateFichesanitaireAccess performs the request and handles the error */
+  async PersonnesUpdateFichesanitaireAccess(
+    params: UpdateFichesanitaireAccessIn,
+  ) {
+    const fullUrl =
+      this.baseURL + "/api/v1/backoffice/personnes/fiche-sanitaire";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
     } catch (error) {
       this.handleError(error);
     }
