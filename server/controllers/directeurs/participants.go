@@ -187,6 +187,8 @@ func (ct *Controller) downloadFicheSanitaire(user cps.IdCamp, id cps.IdParticipa
 	return content, name, nil
 }
 
+// ParticipantsMessagesLoad renvoie tous les dossiers concernés pas le camp,
+// ainsi que les messages associés.
 func (ct *Controller) ParticipantsMessagesLoad(c echo.Context) error {
 	user := JWTUser(c)
 	out, err := ct.loadMessages(user)

@@ -25,7 +25,7 @@
           }}
           de plus en attente de confirmation. L'analyse du centre est en cours.
         </v-alert>
-        <div class="text-center font-italic" v-if="!data.length">
+        <div class="text-center font-italic mt-2" v-if="!data.length">
           Il n'y a aucune inscription à valider.
         </div>
         <div v-else>
@@ -130,7 +130,7 @@ const displayed = computed(() => {
       Personnes.match(insc.Responsable, pattern) ||
       insc.Participants?.some(
         (p) =>
-          Personnes.match(p.Personne, pattern) || Camps.match(p.Camp, pattern)
+          Personnes.match(p.Personne, pattern) || Camps.match(p.Camp, pattern),
       )
     );
   });
@@ -163,7 +163,7 @@ function ownParticipants(insc: InscriptionExt) {
 
 async function valideInsc(
   statuts: Record<IdParticipant, StatutParticipant>,
-  sendMail: boolean
+  sendMail: boolean,
 ) {
   if (!inscToValid.value) return;
   const id = inscToValid.value.inscription.Dossier.Id;

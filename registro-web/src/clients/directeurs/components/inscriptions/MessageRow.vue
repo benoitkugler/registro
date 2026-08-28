@@ -11,7 +11,7 @@
             v-bind="tooltipProps"
             size="small"
             icon
-            flat
+            :variant="isNew ? undefined : 'flat'"
             @click="emit('setSeen', isNew)"
           >
             <v-icon
@@ -55,7 +55,6 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: "setSeen", seen: boolean): void;
-  (e: "startReply"): void;
 }>();
 
 // contrary of isSeen
