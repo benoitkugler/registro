@@ -64,6 +64,60 @@ func randCamp() Camp {
 	return s
 }
 
+func randChamp() Champ {
+	var s Champ
+	s.Titre = randstring()
+	s.Description = randstring()
+	s.Question = randChampQuestion()
+
+	return s
+}
+
+func randChampQCM() ChampQCM {
+	var s ChampQCM
+	s.Multiple = randbool()
+	s.Propositions = randSlicestring()
+
+	return s
+}
+
+func randChampQuestion() ChampQuestion {
+	choix := [...]ChampQuestion{
+		randChampQCM(),
+		randChampTexte(),
+	}
+	i := rand.Intn(2)
+	return choix[i]
+}
+
+func randChampReponse() ChampReponse {
+	choix := [...]ChampReponse{
+		randChampReponseQCM(),
+		randChampReponseTexte(),
+	}
+	i := rand.Intn(2)
+	return choix[i]
+}
+
+func randChampReponseQCM() ChampReponseQCM {
+	return ChampReponseQCM(randSliceint())
+}
+
+func randChampReponseTexte() ChampReponseTexte {
+	return ChampReponseTexte(randstring())
+}
+
+func randChampTexte() ChampTexte {
+	var s ChampTexte
+	s.MultiLignes = randbool()
+
+	return s
+}
+
+func randChamps() Champs {
+	return Champs(randSliceChamp())
+}
+
 func randDocumentsToShow() DocumentsToShow {
 	var s DocumentsToShow
 	s.LettreDirecteur = randbool()
@@ -85,6 +139,21 @@ func randEquipier() Equipier {
 	s.AccepteCharte = randsql_NullBool()
 
 	return s
+}
+
+func randForm() Form {
+	var s Form
+	s.Id = randIdForm()
+	s.IdCamp = randIdCamp()
+	s.Nom = randstring()
+	s.Introduction = randstring()
+	s.Champs = randChamps()
+
+	return s
+}
+
+func randFormReponses() FormReponses {
+	return FormReponses(randSliceChampReponse())
 }
 
 func randFormStatusEquipier() FormStatusEquipier {
@@ -124,6 +193,10 @@ func randIdCamp() IdCamp {
 
 func randIdEquipier() IdEquipier {
 	return IdEquipier(randint64())
+}
+
+func randIdForm() IdForm {
+	return IdForm(randint64())
 }
 
 func randIdGroupe() IdGroupe {
@@ -245,6 +318,16 @@ func randParticipant() Participant {
 	return s
 }
 
+func randParticipantForm() ParticipantForm {
+	var s ParticipantForm
+	s.IdParticipant = randIdParticipant()
+	s.IdForm = randIdForm()
+	s.IdCamp = randIdCamp()
+	s.Reponses = randFormReponses()
+
+	return s
+}
+
 func randPresenceOffsets() PresenceOffsets {
 	var s PresenceOffsets
 	s.Debut = randint()
@@ -310,6 +393,24 @@ func randSatisfaction() Satisfaction {
 	return choix[i]
 }
 
+func randSliceChamp() []Champ {
+	l := 3 + rand.Intn(5)
+	out := make([]Champ, l)
+	for i := range out {
+		out[i] = randChamp()
+	}
+	return out
+}
+
+func randSliceChampReponse() []ChampReponse {
+	l := 3 + rand.Intn(5)
+	out := make([]ChampReponse, l)
+	for i := range out {
+		out[i] = randChampReponse()
+	}
+	return out
+}
+
 func randSlicePrixParStatut() []PrixParStatut {
 	l := 3 + rand.Intn(5)
 	out := make([]PrixParStatut, l)
@@ -351,6 +452,15 @@ func randSliceint32() []int32 {
 	out := make([]int32, l)
 	for i := range out {
 		out[i] = randint32()
+	}
+	return out
+}
+
+func randSlicestring() []string {
+	l := 3 + rand.Intn(5)
+	out := make([]string, l)
+	for i := range out {
+		out[i] = randstring()
 	}
 	return out
 }

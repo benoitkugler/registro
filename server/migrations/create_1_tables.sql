@@ -156,7 +156,8 @@ CREATE TABLE camps (
     DocumentsToShow DocumentsToShow NOT NULL,
     Vetements jsonb NOT NULL,
     AlbumID text NOT NULL,
-    Meta jsonb NOT NULL
+    Meta jsonb NOT NULL,
+    IsAlbumVisible boolean NOT NULL
 );
 
 CREATE TABLE equipiers (
@@ -167,6 +168,14 @@ CREATE TABLE equipiers (
     Presence PresenceOffsets NOT NULL,
     FormStatus smallint CHECK (FormStatus IN (0, 1, 2)) NOT NULL,
     AccepteCharte boolean
+);
+
+CREATE TABLE forms (
+    Id serial PRIMARY KEY,
+    IdCamp integer NOT NULL,
+    Nom text NOT NULL,
+    Introduction text NOT NULL,
+    Champs jsonb NOT NULL
 );
 
 CREATE TABLE groupes (
@@ -210,6 +219,13 @@ CREATE TABLE participants (
     OptionPrix jsonb NOT NULL,
     Commentaire text NOT NULL,
     Navette smallint CHECK (Navette IN (0, 1, 2, 3)) NOT NULL
+);
+
+CREATE TABLE participant_forms (
+    IdParticipant integer NOT NULL,
+    IdForm integer NOT NULL,
+    IdCamp integer NOT NULL,
+    Reponses text[]
 );
 
 CREATE TABLE projet_spis (

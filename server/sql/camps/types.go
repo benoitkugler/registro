@@ -11,6 +11,8 @@ import (
 	"registro/utils"
 )
 
+//go:generate ../../../../../go/src/github.com/benoitkugler/gomacro/cmd/gomacro types.go go/unions:types_gen.go
+
 type Montant = dossiers.Montant
 
 type OptIdCamp = shared.OptID[IdCamp]
@@ -467,3 +469,42 @@ const (
 	Oui                                // Oui
 	Non                                // Non
 )
+
+type Champs []Champ
+
+// Champ est un texte libre ou un QCM.
+type Champ struct {
+	Titre       string // titre court
+	Description string // question ou description de la réponse à donner
+	Question    ChampQuestion
+}
+
+type ChampQuestion interface {
+	isChampQuestion()
+}
+
+type ChampTexte struct {
+	MultiLignes bool // line or textarea ?
+}
+
+type ChampQCM struct {
+	Multiple     bool // accepte plusieurs choix
+	Propositions []string
+}
+
+func (ChampTexte) isChampQuestion() {}
+func (ChampQCM) isChampQuestion()   {}
+
+type FormReponses []ChampReponse
+
+type ChampReponse interface {
+	isChampReponse()
+}
+
+type (
+	ChampReponseTexte string
+	ChampReponseQCM   []int
+)
+
+func (ChampReponseTexte) isChampReponse() {}
+func (ChampReponseQCM) isChampReponse()   {}

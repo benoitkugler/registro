@@ -78,6 +78,12 @@ ALTER TABLE lettredirecteurs
 ALTER TABLE lettredirecteurs
     ADD FOREIGN KEY (IdCamp) REFERENCES camps ON DELETE CASCADE;
 
+ALTER TABLE forms
+    ADD UNIQUE (Id, IdCamp);
+
+ALTER TABLE forms
+    ADD FOREIGN KEY (IdCamp) REFERENCES camps;
+
 ALTER TABLE participants
     ADD FOREIGN KEY (IdCamp, IdTaux) REFERENCES camps (Id, IdTaux);
 
@@ -147,6 +153,24 @@ ALTER TABLE aides
 ALTER TABLE aides
     ADD FOREIGN KEY (IdParticipant) REFERENCES participants ON DELETE CASCADE;
 
+ALTER TABLE participant_forms
+    ADD UNIQUE (IdParticipant, IdForm);
+
+ALTER TABLE participant_forms
+    ADD FOREIGN KEY (IdParticipant, IdCamp) REFERENCES participants (Id, IdCamp) ON DELETE CASCADE;
+
+ALTER TABLE participant_forms
+    ADD FOREIGN KEY (IdForm, IdCamp) REFERENCES forms (Id, IdCamp) ON DELETE CASCADE;
+
+ALTER TABLE participant_forms
+    ADD FOREIGN KEY (IdParticipant) REFERENCES participants;
+
+ALTER TABLE participant_forms
+    ADD FOREIGN KEY (IdForm) REFERENCES forms;
+
+ALTER TABLE participant_forms
+    ADD FOREIGN KEY (IdCamp) REFERENCES camps;
+
 ALTER TABLE equipiers
     ADD UNIQUE (IdCamp, IdPersonne);
 
@@ -161,6 +185,9 @@ ALTER TABLE equipiers
 
 ALTER TABLE equipiers
     ADD FOREIGN KEY (IdPersonne) REFERENCES personnes ON DELETE CASCADE;
+
+ALTER TABLE forms
+    ADD CONSTRAINT Champs_gomacro CHECK (gomacro_validate_json_array_camp_Champ (Champs));
 
 ALTER TABLE camps
     ADD CONSTRAINT Vetements_gomacro CHECK (gomacro_validate_json_camp_ListeVetements (Vetements));

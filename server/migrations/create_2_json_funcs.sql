@@ -61,6 +61,29 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION gomacro_validate_json_array_camp_Champ (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) = 'null' THEN
+        RETURN TRUE;
+    END IF;
+    IF jsonb_typeof(data) != 'array' THEN
+        RETURN FALSE;
+    END IF;
+    IF jsonb_array_length(data) = 0 THEN
+        RETURN TRUE;
+    END IF;
+    RETURN (
+        SELECT
+            bool_and(gomacro_validate_json_camp_Champ (value))
+        FROM
+            jsonb_array_elements(data));
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
 CREATE OR REPLACE FUNCTION gomacro_validate_json_array_camp_PrixParStatut (data jsonb)
     RETURNS boolean
     AS $$
@@ -130,6 +153,29 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION gomacro_validate_json_array_string (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) = 'null' THEN
+        RETURN TRUE;
+    END IF;
+    IF jsonb_typeof(data) != 'array' THEN
+        RETURN FALSE;
+    END IF;
+    IF jsonb_array_length(data) = 0 THEN
+        RETURN TRUE;
+    END IF;
+    RETURN (
+        SELECT
+            bool_and(gomacro_validate_json_string (value))
+        FROM
+            jsonb_array_elements(data));
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
 CREATE OR REPLACE FUNCTION gomacro_validate_json_boolean (data jsonb)
     RETURNS boolean
     AS $$
@@ -139,6 +185,91 @@ BEGIN
     IF NOT is_valid THEN
         RAISE WARNING '% is not a boolean', data;
     END IF;
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_camp_Champ (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(KEY IN ('Titre', 'Description', 'Question'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_string (data -> 'Titre')
+        AND gomacro_validate_json_string (data -> 'Description')
+        AND gomacro_validate_json_camp_ChampQuestion (data -> 'Question');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_camp_ChampQCM (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(KEY IN ('Multiple', 'Propositions'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_boolean (data -> 'Multiple')
+        AND gomacro_validate_json_array_string (data -> 'Propositions');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_camp_ChampQuestion (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) != 'object' OR jsonb_typeof(data -> 'Kind') != 'string' OR jsonb_typeof(data -> 'Data') = 'null' THEN
+        RETURN FALSE;
+    END IF;
+    CASE WHEN data ->> 'Kind' = 'ChampQCM' THEN
+        RETURN gomacro_validate_json_camp_ChampQCM (data -> 'Data');
+    WHEN data ->> 'Kind' = 'ChampTexte' THEN
+        RETURN gomacro_validate_json_camp_ChampTexte (data -> 'Data');
+    ELSE
+        RETURN FALSE;
+    END CASE;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_camp_ChampTexte (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(KEY IN ('MultiLignes'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_boolean (data -> 'MultiLignes');
     RETURN is_valid;
 END;
 $$

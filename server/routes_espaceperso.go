@@ -33,6 +33,7 @@ func setupRoutesEspaceperso(e *echo.Echo, ct *espaceperso.Controller) {
 	e.POST("/api/v1/espaceperso/documents", ct.UploadDocument)
 	e.DELETE("/api/v1/espaceperso/documents", ct.DeleteDocument)
 	e.POST("/api/v1/espaceperso/documents/charte", ct.AccepteCharte)
+	e.POST("/api/v1/espaceperso/documents/forms", ct.UpdateForm)
 
 	e.POST("/api/v1/espaceperso/fichesanitaires", ct.UpdateFichesanitaire)
 	e.PUT("/api/v1/espaceperso/fichesanitaires/transfert", ct.TransfertFicheSanitaire)

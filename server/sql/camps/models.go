@@ -20,6 +20,7 @@ type (
 	IdEquipier      int64
 	IdStructureaide int64
 	IdAide          int64
+	IdForm          int64
 )
 
 // Camp
@@ -120,6 +121,22 @@ type LettreImage struct {
 	Id       IdLettreImage
 	Filename string // as uploaded
 	Content  []byte
+}
+
+// Form définit une série de champs que chaque inscrit
+// doit remplir (typiquement sur son espace de suivi).
+//
+// Chaque camp peut définir 0, 1 ou plusieurs questionnaires.
+//
+// Requis pour une contrainte de [ParticipantForm]
+// gomacro:SQL ADD UNIQUE(Id, IdCamp)
+type Form struct {
+	Id     IdForm
+	IdCamp IdCamp // le camp auquel ce questionnaire s'applique
+
+	Nom          string // nom court, affiché au participant
+	Introduction string // texte optionnel affiché en haut du questionnaire
+	Champs       Champs // non modifiable une fois qu'une réponse est donnée
 }
 
 // Participant
@@ -223,6 +240,20 @@ type Aide struct {
 	Valeur     Montant
 	ParJour    bool
 	NbJoursMax int
+}
+
+// ParticipantForm stocke la réponse d'un participant à un formulaire.
+//
+// gomacro:SQL ADD UNIQUE(IdParticipant, IdForm)
+// gomacro:SQL ADD FOREIGN KEY (IdParticipant, IdCamp) REFERENCES Participant (Id,IdCamp) ON DELETE CASCADE
+// gomacro:SQL ADD FOREIGN KEY (IdForm, IdCamp) REFERENCES Form (Id,IdCamp) ON DELETE CASCADE
+
+type ParticipantForm struct {
+	IdParticipant IdParticipant
+	IdForm        IdForm
+	IdCamp        IdCamp // pour l'intégrité
+
+	Reponses FormReponses // une pour chaque champ du formulaire
 }
 
 // ---------------------------- Equipiers ----------------------------

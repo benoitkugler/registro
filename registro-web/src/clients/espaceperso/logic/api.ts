@@ -61,6 +61,7 @@ export interface Documents {
   FilesToUpload: DemandesPersonne[] | null;
   Fiches: FichesanitaireExt[] | null;
   Chartes: Charte[] | null;
+  Forms: FormParticipant[] | null;
   NewCount: Int;
 }
 // registro/controllers/espaceperso.FichesanitaireExt
@@ -77,6 +78,13 @@ export interface FilesCamp {
   Camp: string;
   Generated: GeneratedFile[] | null;
   Files: PublicFile[] | null;
+}
+// registro/controllers/espaceperso.FormParticipant
+export interface FormParticipant {
+  Camp: string;
+  Personne: string;
+  Form: Form;
+  Reponses: FormReponses;
 }
 // registro/controllers/espaceperso.PaiementSettings
 export interface PaiementSettings {
@@ -107,6 +115,12 @@ export interface SondageExt {
 export interface UpdateFichesanitaireIn {
   Token: string;
   Fichesanitaire: Fichesanitaire;
+}
+// registro/controllers/espaceperso.UpdateFormIn
+export interface UpdateFormIn {
+  IdParticipant: IdParticipant;
+  IdForm: IdForm;
+  Reponses: FormReponses;
 }
 // registro/controllers/espaceperso.UpdateParticipantsIn
 export interface UpdateParticipantsIn {
@@ -299,6 +313,52 @@ export interface Camp {
   Meta: Meta;
   IsAlbumVisible: boolean;
 }
+// registro/sql/camps.Champ
+export interface Champ {
+  Titre: string;
+  Description: string;
+  Question: ChampQuestion;
+}
+// registro/sql/camps.ChampQCM
+export interface ChampQCM {
+  Multiple: boolean;
+  Propositions: string[] | null;
+}
+
+export const ChampQuestionKind = {
+  ChampQCM: "ChampQCM",
+  ChampTexte: "ChampTexte",
+} as const;
+export type ChampQuestionKind =
+  (typeof ChampQuestionKind)[keyof typeof ChampQuestionKind];
+
+// registro/sql/camps.ChampQuestion
+export type ChampQuestion =
+  | { Kind: "ChampQCM"; Data: ChampQCM }
+  | { Kind: "ChampTexte"; Data: ChampTexte };
+
+export const ChampReponseKind = {
+  ChampReponseQCM: "ChampReponseQCM",
+  ChampReponseTexte: "ChampReponseTexte",
+} as const;
+export type ChampReponseKind =
+  (typeof ChampReponseKind)[keyof typeof ChampReponseKind];
+
+// registro/sql/camps.ChampReponse
+export type ChampReponse =
+  | { Kind: "ChampReponseQCM"; Data: ChampReponseQCM }
+  | { Kind: "ChampReponseTexte"; Data: ChampReponseTexte };
+
+// registro/sql/camps.ChampReponseQCM
+export type ChampReponseQCM = Int[] | null;
+// registro/sql/camps.ChampReponseTexte
+export type ChampReponseTexte = string;
+// registro/sql/camps.ChampTexte
+export interface ChampTexte {
+  MultiLignes: boolean;
+}
+// registro/sql/camps.Champs
+export type Champs = Champ[] | null;
 // registro/sql/camps.DocumentsToShow
 export interface DocumentsToShow {
   LettreDirecteur: boolean;
@@ -306,8 +366,19 @@ export interface DocumentsToShow {
   ListeParticipants: boolean;
   CharteParticipant: boolean;
 }
+// registro/sql/camps.Form
+export interface Form {
+  Id: IdForm;
+  IdCamp: IdCamp;
+  Nom: string;
+  Introduction: string;
+  Champs: Champs;
+}
+// registro/sql/camps.FormReponses
+export type FormReponses = ChampReponse[] | null;
 export type IdAide = Int & { __opaque_int__: "IdAide" };
 export type IdCamp = Int & { __opaque_int__: "IdCamp" };
+export type IdForm = Int & { __opaque_int__: "IdForm" };
 export type IdParticipant = Int & { __opaque_int__: "IdParticipant" };
 export type IdSondage = Int & { __opaque_int__: "IdSondage" };
 export type IdStructureaide = Int & { __opaque_int__: "IdStructureaide" };
@@ -997,6 +1068,21 @@ export abstract class AbstractAPI {
           token: params["token"],
           idPersonne: String(params["idPersonne"]),
         },
+      });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** UpdateForm performs the request and handles the error */
+  async UpdateForm(params: UpdateFormIn) {
+    const fullUrl = this.baseURL + "/api/v1/espaceperso/documents/forms";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, {
+        headers: this.getHeaders(),
+        params: { token: params["token"] },
       });
       return true;
     } catch (error) {

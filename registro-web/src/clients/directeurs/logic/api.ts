@@ -114,6 +114,11 @@ export interface FicheSanitaireExt {
   State: FichesanitaireState;
   Fiche: Fichesanitaire;
 }
+// registro/controllers/directeurs.FormsOut
+export interface FormsOut {
+  Forms: Form[] | null;
+  Answers: Record<IdForm, ParticipantForms> | null;
+}
 // registro/controllers/directeurs.GroupesOut
 export interface GroupesOut {
   Groupes: Groupes;
@@ -186,9 +191,10 @@ export interface ParticipantsFiles {
 // registro/immich.AlbumAndLinks
 export interface AlbumAndLinks {
   albumName: string;
+  albumThumbnailAssetId: string;
   assetCount: Int;
   createdAt: Time;
-  Id: AlbumID;
+  id: AlbumID;
   order: string;
   EquipiersURL: string;
   InscritsURL: string;
@@ -343,6 +349,52 @@ export interface CauseAge {
   Age: Int;
   EcartInDays: Int;
 }
+// registro/sql/camps.Champ
+export interface Champ {
+  Titre: string;
+  Description: string;
+  Question: ChampQuestion;
+}
+// registro/sql/camps.ChampQCM
+export interface ChampQCM {
+  Multiple: boolean;
+  Propositions: string[] | null;
+}
+
+export const ChampQuestionKind = {
+  ChampQCM: "ChampQCM",
+  ChampTexte: "ChampTexte",
+} as const;
+export type ChampQuestionKind =
+  (typeof ChampQuestionKind)[keyof typeof ChampQuestionKind];
+
+// registro/sql/camps.ChampQuestion
+export type ChampQuestion =
+  | { Kind: "ChampQCM"; Data: ChampQCM }
+  | { Kind: "ChampTexte"; Data: ChampTexte };
+
+export const ChampReponseKind = {
+  ChampReponseQCM: "ChampReponseQCM",
+  ChampReponseTexte: "ChampReponseTexte",
+} as const;
+export type ChampReponseKind =
+  (typeof ChampReponseKind)[keyof typeof ChampReponseKind];
+
+// registro/sql/camps.ChampReponse
+export type ChampReponse =
+  | { Kind: "ChampReponseQCM"; Data: ChampReponseQCM }
+  | { Kind: "ChampReponseTexte"; Data: ChampReponseTexte };
+
+// registro/sql/camps.ChampReponseQCM
+export type ChampReponseQCM = Int[] | null;
+// registro/sql/camps.ChampReponseTexte
+export type ChampReponseTexte = string;
+// registro/sql/camps.ChampTexte
+export interface ChampTexte {
+  MultiLignes: boolean;
+}
+// registro/sql/camps.Champs
+export type Champs = Champ[] | null;
 // registro/sql/camps.DocumentsToShow
 export interface DocumentsToShow {
   LettreDirecteur: boolean;
@@ -360,6 +412,16 @@ export interface Equipier {
   FormStatus: FormStatusEquipier;
   AccepteCharte: NullBool;
 }
+// registro/sql/camps.Form
+export interface Form {
+  Id: IdForm;
+  IdCamp: IdCamp;
+  Nom: string;
+  Introduction: string;
+  Champs: Champs;
+}
+// registro/sql/camps.FormReponses
+export type FormReponses = ChampReponse[] | null;
 // registro/sql/camps.FormStatusEquipier
 export const FormStatusEquipier = {
   NotSend: 0,
@@ -394,6 +456,7 @@ export interface GroupeParticipant {
 export type Groupes = Record<IdGroupe, Groupe> | null;
 export type IdCamp = Int & { __opaque_int__: "IdCamp" };
 export type IdEquipier = Int & { __opaque_int__: "IdEquipier" };
+export type IdForm = Int & { __opaque_int__: "IdForm" };
 export type IdGroupe = Int & { __opaque_int__: "IdGroupe" };
 export type IdParticipant = Int & { __opaque_int__: "IdParticipant" };
 export type IdSondage = Int & { __opaque_int__: "IdSondage" };
@@ -481,6 +544,15 @@ export interface ParticipantCamp {
   Participant: Participant;
   Personne: Personne;
 }
+// registro/sql/camps.ParticipantForm
+export interface ParticipantForm {
+  IdParticipant: IdParticipant;
+  IdForm: IdForm;
+  IdCamp: IdCamp;
+  Reponses: FormReponses;
+}
+// registro/sql/camps.ParticipantForms
+export type ParticipantForms = ParticipantForm[] | null;
 // registro/sql/camps.PresenceOffsets
 export interface PresenceOffsets {
   Debut: Int;
@@ -1668,6 +1740,61 @@ export abstract class AbstractAPI {
         },
       });
       return response as JSONStreamResponse<SendProgress>;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** FormsLoad performs the request and handles the error */
+  async FormsLoad() {
+    const fullUrl = this.baseURL + "/api/v1/directeurs/forms";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<FormsOut> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** FormsCreate performs the request and handles the error */
+  async FormsCreate() {
+    const fullUrl = this.baseURL + "/api/v1/directeurs/forms";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<Form> = await Axios.put(fullUrl, null, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** FormsUpdate performs the request and handles the error */
+  async FormsUpdate(params: Form) {
+    const fullUrl = this.baseURL + "/api/v1/directeurs/forms";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** FormsDelete performs the request and handles the error */
+  async FormsDelete(params: { id: IdForm }) {
+    const fullUrl = this.baseURL + "/api/v1/directeurs/forms";
+    this.startRequest();
+    try {
+      await Axios.delete(fullUrl, {
+        headers: this.getHeaders(),
+        params: { id: String(params["id"]) },
+      });
+      return true;
     } catch (error) {
       this.handleError(error);
     }

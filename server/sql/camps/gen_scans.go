@@ -609,6 +609,167 @@ func SelectEquipierByIdCampAndIdPersonne(tx DB, idCamp IdCamp, idPersonne person
 	return item, true, err
 }
 
+func scanOneForm(row scanner) (Form, error) {
+	var item Form
+	err := row.Scan(
+		&item.Id,
+		&item.IdCamp,
+		&item.Nom,
+		&item.Introduction,
+		&item.Champs,
+	)
+	return item, err
+}
+
+func ScanForm(row *sql.Row) (Form, error) { return scanOneForm(row) }
+
+// SelectAll returns all the items in the forms table.
+func SelectAllForms(db DB) (Forms, error) {
+	rows, err := db.Query("SELECT id, idcamp, nom, introduction, champs FROM forms")
+	if err != nil {
+		return nil, err
+	}
+	return ScanForms(rows)
+}
+
+// SelectForm returns the entry matching 'id'.
+func SelectForm(tx DB, id IdForm) (Form, error) {
+	row := tx.QueryRow("SELECT id, idcamp, nom, introduction, champs FROM forms WHERE id = $1", id)
+	return ScanForm(row)
+}
+
+// SelectForms returns the entry matching the given 'ids'.
+func SelectForms(tx DB, ids ...IdForm) (Forms, error) {
+	rows, err := tx.Query("SELECT id, idcamp, nom, introduction, champs FROM forms WHERE id = ANY($1)", IdFormArrayToPQ(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanForms(rows)
+}
+
+type Forms map[IdForm]Form
+
+func (m Forms) IDs() []IdForm {
+	out := make([]IdForm, 0, len(m))
+	for i := range m {
+		out = append(out, i)
+	}
+	return out
+}
+
+func ScanForms(rs *sql.Rows) (Forms, error) {
+	var (
+		s   Form
+		err error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(Forms, 16)
+	for rs.Next() {
+		s, err = scanOneForm(rs)
+		if err != nil {
+			return nil, err
+		}
+		structs[s.Id] = s
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+// Insert one Form in the database and returns the item with id filled.
+func (item Form) Insert(tx DB) (out Form, err error) {
+	row := tx.QueryRow(`INSERT INTO forms (
+		idcamp, nom, introduction, champs
+		) VALUES (
+		$1, $2, $3, $4
+		) RETURNING id, idcamp, nom, introduction, champs;
+		`, item.IdCamp, item.Nom, item.Introduction, item.Champs)
+	return ScanForm(row)
+}
+
+// Update Form in the database and returns the new version.
+func (item Form) Update(tx DB) (out Form, err error) {
+	row := tx.QueryRow(`UPDATE forms SET (
+		idcamp, nom, introduction, champs
+		) = (
+		$1, $2, $3, $4
+		) WHERE id = $5 RETURNING id, idcamp, nom, introduction, champs;
+		`, item.IdCamp, item.Nom, item.Introduction, item.Champs, item.Id)
+	return ScanForm(row)
+}
+
+// Deletes the Form and returns the item
+func DeleteFormById(tx DB, id IdForm) (Form, error) {
+	row := tx.QueryRow("DELETE FROM forms WHERE id = $1 RETURNING id, idcamp, nom, introduction, champs;", id)
+	return ScanForm(row)
+}
+
+// Deletes the Form in the database and returns the ids.
+func DeleteFormsByIDs(tx DB, ids ...IdForm) ([]IdForm, error) {
+	rows, err := tx.Query("DELETE FROM forms WHERE id = ANY($1) RETURNING id", IdFormArrayToPQ(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIdFormArray(rows)
+}
+
+// ByIdCamp returns a map with 'IdCamp' as keys.
+func (items Forms) ByIdCamp() map[IdCamp]Forms {
+	out := make(map[IdCamp]Forms)
+	for _, target := range items {
+		dict := out[target.IdCamp]
+		if dict == nil {
+			dict = make(Forms)
+		}
+		dict[target.Id] = target
+		out[target.IdCamp] = dict
+	}
+	return out
+}
+
+// IdCamps returns the list of ids of IdCamp
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items Forms) IdCamps() []IdCamp {
+	out := make([]IdCamp, 0, len(items))
+	for _, target := range items {
+		out = append(out, target.IdCamp)
+	}
+	return out
+}
+
+func SelectFormsByIdCamps(tx DB, idCamps_ ...IdCamp) (Forms, error) {
+	rows, err := tx.Query("SELECT id, idcamp, nom, introduction, champs FROM forms WHERE idcamp = ANY($1)", IdCampArrayToPQ(idCamps_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanForms(rows)
+}
+
+func DeleteFormsByIdCamps(tx DB, idCamps_ ...IdCamp) (Forms, error) {
+	rows, err := tx.Query("DELETE FROM forms WHERE idcamp = ANY($1) RETURNING id, idcamp, nom, introduction, champs", IdCampArrayToPQ(idCamps_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanForms(rows)
+}
+
+// SelectFormByIdAndIdCamp return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectFormByIdAndIdCamp(tx DB, id IdForm, idCamp IdCamp) (item Form, found bool, err error) {
+	row := tx.QueryRow("SELECT id, idcamp, nom, introduction, champs FROM forms WHERE Id = $1 AND IdCamp = $2", id, idCamp)
+	item, err = ScanForm(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
+}
+
 func scanOneGroupe(row scanner) (Groupe, error) {
 	var item Groupe
 	err := row.Scan(
@@ -1386,6 +1547,217 @@ func DeleteParticipantsByIDs(tx DB, ids ...IdParticipant) ([]IdParticipant, erro
 		return nil, err
 	}
 	return ScanIdParticipantArray(rows)
+}
+
+func scanOneParticipantForm(row scanner) (ParticipantForm, error) {
+	var item ParticipantForm
+	err := row.Scan(
+		&item.IdParticipant,
+		&item.IdForm,
+		&item.IdCamp,
+		&item.Reponses,
+	)
+	return item, err
+}
+
+func ScanParticipantForm(row *sql.Row) (ParticipantForm, error) { return scanOneParticipantForm(row) }
+
+// SelectAll returns all the items in the participant_forms table.
+func SelectAllParticipantForms(db DB) (ParticipantForms, error) {
+	rows, err := db.Query("SELECT idparticipant, idform, idcamp, reponses FROM participant_forms")
+	if err != nil {
+		return nil, err
+	}
+	return ScanParticipantForms(rows)
+}
+
+type ParticipantForms []ParticipantForm
+
+func ScanParticipantForms(rs *sql.Rows) (ParticipantForms, error) {
+	var (
+		item ParticipantForm
+		err  error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(ParticipantForms, 0, 16)
+	for rs.Next() {
+		item, err = scanOneParticipantForm(rs)
+		if err != nil {
+			return nil, err
+		}
+		structs = append(structs, item)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+func (item ParticipantForm) Insert(db DB) error {
+	_, err := db.Exec(`INSERT INTO participant_forms (
+			idparticipant, idform, idcamp, reponses
+			) VALUES (
+			$1, $2, $3, $4
+			);
+			`, item.IdParticipant, item.IdForm, item.IdCamp, item.Reponses)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Insert the links ParticipantForm in the database.
+// It is a no-op if 'items' is empty.
+func InsertManyParticipantForms(tx *sql.Tx, items ...ParticipantForm) error {
+	if len(items) == 0 {
+		return nil
+	}
+
+	stmt, err := tx.Prepare(pq.CopyIn("participant_forms",
+		"idparticipant",
+		"idform",
+		"idcamp",
+		"reponses",
+	))
+	if err != nil {
+		return err
+	}
+
+	for _, item := range items {
+		_, err = stmt.Exec(item.IdParticipant, item.IdForm, item.IdCamp, item.Reponses)
+		if err != nil {
+			return err
+		}
+	}
+
+	if _, err = stmt.Exec(); err != nil {
+		return err
+	}
+
+	if err = stmt.Close(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Delete the link ParticipantForm from the database.
+// Only the foreign keys IdParticipant, IdForm, IdCamp fields are used in 'item'.
+func (item ParticipantForm) Delete(tx DB) error {
+	_, err := tx.Exec(`DELETE FROM participant_forms WHERE IdParticipant = $1 AND IdForm = $2 AND IdCamp = $3;`, item.IdParticipant, item.IdForm, item.IdCamp)
+	return err
+}
+
+// ByIdParticipant returns a map with 'IdParticipant' as keys.
+func (items ParticipantForms) ByIdParticipant() map[IdParticipant]ParticipantForms {
+	out := make(map[IdParticipant]ParticipantForms)
+	for _, target := range items {
+		out[target.IdParticipant] = append(out[target.IdParticipant], target)
+	}
+	return out
+}
+
+// IdParticipants returns the list of ids of IdParticipant
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items ParticipantForms) IdParticipants() []IdParticipant {
+	out := make([]IdParticipant, len(items))
+	for index, target := range items {
+		out[index] = target.IdParticipant
+	}
+	return out
+}
+
+func SelectParticipantFormsByIdParticipants(tx DB, idParticipants_ ...IdParticipant) (ParticipantForms, error) {
+	rows, err := tx.Query("SELECT idparticipant, idform, idcamp, reponses FROM participant_forms WHERE idparticipant = ANY($1)", IdParticipantArrayToPQ(idParticipants_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanParticipantForms(rows)
+}
+
+func DeleteParticipantFormsByIdParticipants(tx DB, idParticipants_ ...IdParticipant) (ParticipantForms, error) {
+	rows, err := tx.Query("DELETE FROM participant_forms WHERE idparticipant = ANY($1) RETURNING idparticipant, idform, idcamp, reponses", IdParticipantArrayToPQ(idParticipants_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanParticipantForms(rows)
+}
+
+// ByIdForm returns a map with 'IdForm' as keys.
+func (items ParticipantForms) ByIdForm() map[IdForm]ParticipantForms {
+	out := make(map[IdForm]ParticipantForms)
+	for _, target := range items {
+		out[target.IdForm] = append(out[target.IdForm], target)
+	}
+	return out
+}
+
+// IdForms returns the list of ids of IdForm
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items ParticipantForms) IdForms() []IdForm {
+	out := make([]IdForm, len(items))
+	for index, target := range items {
+		out[index] = target.IdForm
+	}
+	return out
+}
+
+func SelectParticipantFormsByIdForms(tx DB, idForms_ ...IdForm) (ParticipantForms, error) {
+	rows, err := tx.Query("SELECT idparticipant, idform, idcamp, reponses FROM participant_forms WHERE idform = ANY($1)", IdFormArrayToPQ(idForms_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanParticipantForms(rows)
+}
+
+func DeleteParticipantFormsByIdForms(tx DB, idForms_ ...IdForm) (ParticipantForms, error) {
+	rows, err := tx.Query("DELETE FROM participant_forms WHERE idform = ANY($1) RETURNING idparticipant, idform, idcamp, reponses", IdFormArrayToPQ(idForms_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanParticipantForms(rows)
+}
+
+// ByIdCamp returns a map with 'IdCamp' as keys.
+func (items ParticipantForms) ByIdCamp() map[IdCamp]ParticipantForms {
+	out := make(map[IdCamp]ParticipantForms)
+	for _, target := range items {
+		out[target.IdCamp] = append(out[target.IdCamp], target)
+	}
+	return out
+}
+
+// IdCamps returns the list of ids of IdCamp
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items ParticipantForms) IdCamps() []IdCamp {
+	out := make([]IdCamp, len(items))
+	for index, target := range items {
+		out[index] = target.IdCamp
+	}
+	return out
+}
+
+func SelectParticipantFormsByIdCamps(tx DB, idCamps_ ...IdCamp) (ParticipantForms, error) {
+	rows, err := tx.Query("SELECT idparticipant, idform, idcamp, reponses FROM participant_forms WHERE idcamp = ANY($1)", IdCampArrayToPQ(idCamps_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanParticipantForms(rows)
+}
+
+func DeleteParticipantFormsByIdCamps(tx DB, idCamps_ ...IdCamp) (ParticipantForms, error) {
+	rows, err := tx.Query("DELETE FROM participant_forms WHERE idcamp = ANY($1) RETURNING idparticipant, idform, idcamp, reponses", IdCampArrayToPQ(idCamps_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanParticipantForms(rows)
 }
 
 // SelectParticipantsByStatut selects the items matching the given fields.
@@ -2268,6 +2640,33 @@ func ScanIdEquipierArray(rs *sql.Rows) ([]IdEquipier, error) {
 	return ints, nil
 }
 
+func IdFormArrayToPQ(ids []IdForm) pq.Int64Array {
+	out := make(pq.Int64Array, len(ids))
+	for i, v := range ids {
+		out[i] = int64(v)
+	}
+	return out
+}
+
+// ScanIdFormArray scans the result of a query returning a
+// list of ID's.
+func ScanIdFormArray(rs *sql.Rows) ([]IdForm, error) {
+	defer rs.Close()
+	ints := make([]IdForm, 0, 16)
+	var err error
+	for rs.Next() {
+		var s IdForm
+		if err = rs.Scan(&s); err != nil {
+			return nil, err
+		}
+		ints = append(ints, s)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return ints, nil
+}
+
 func IdGroupeArrayToPQ(ids []IdGroupe) pq.Int64Array {
 	out := make(pq.Int64Array, len(ids))
 	for i, v := range ids {
@@ -2402,6 +2801,12 @@ func ScanIdStructureaideArray(rs *sql.Rows) ([]IdStructureaide, error) {
 	}
 	return ints, nil
 }
+
+func (s *Champs) Scan(src any) error          { return loadJSON(s, src) }
+func (s Champs) Value() (driver.Value, error) { return dumpJSON(s) }
+
+func (s *FormReponses) Scan(src any) error          { return loadJSON(s, src) }
+func (s FormReponses) Value() (driver.Value, error) { return dumpJSON(s) }
 
 func (s *ListeVetements) Scan(src any) error          { return loadJSON(s, src) }
 func (s ListeVetements) Value() (driver.Value, error) { return dumpJSON(s) }

@@ -1,6 +1,7 @@
 package espaceperso
 
 import (
+	"database/sql"
 	"errors"
 	"slices"
 	"time"
@@ -23,11 +24,20 @@ type Charte struct {
 	Accepted bool
 }
 
+type FormParticipant struct {
+	Camp     string
+	Personne string
+
+	Form     cps.Form
+	Reponses cps.FormReponses // initialy empty
+}
+
 type Documents struct {
 	FilesToRead   []FilesCamp
 	FilesToUpload []DemandesPersonne // including vaccins
 	Fiches        []FichesanitaireExt
 	Chartes       []Charte
+	Forms         []FormParticipant // one for each participant
 
 	NewCount int
 }
@@ -76,7 +86,15 @@ func (docs *Documents) setCounts(lastLoaded time.Time, events logic.Events) {
 		}
 	}
 
-	docs.NewCount = toRead + toFill + fichesCount + chartesCount
+	// forms
+	formsCount := 0
+	for _, form := range docs.Forms {
+		if len(form.Reponses) == 0 {
+			formsCount++
+		}
+	}
+
+	docs.NewCount = toRead + toFill + fichesCount + chartesCount + formsCount
 }
 
 type FilesCamp struct {
@@ -148,13 +166,14 @@ func loadDocuments(db ds.DB, key crypto.Encrypter, dossier logic.Dossier) (Docum
 
 	var out Documents
 	for _, camp := range camps {
-		// TODO: Only ask for documents is the camp is marked as Ready
+		if !camp.DocumentsReady {
+			continue
+		}
 
 		item := FilesCamp{idCamp: camp.Id, Camp: camp.Label()}
 		// other files
 		for _, link := range byCamp[camp.Id] {
-			if (link.IsLettre && camp.DocumentsToShow.LettreDirecteur) ||
-				!link.IsLettre {
+			if (link.IsLettre && camp.DocumentsToShow.LettreDirecteur) || !link.IsLettre {
 				item.Files = append(item.Files, logic.NewPublicFile(key, campFiles[link.IdFile]))
 			}
 		}
@@ -263,6 +282,32 @@ func loadDocuments(db ds.DB, key crypto.Encrypter, dossier logic.Dossier) (Docum
 		})
 	}
 
+	tmp, err := cps.SelectFormsByIdCamps(db, camps.IDs()...)
+	if err != nil {
+		return Documents{}, utils.SQLError(err)
+	}
+	tmp2, err := cps.SelectParticipantFormsByIdForms(db, tmp.IDs()...)
+	if err != nil {
+		return Documents{}, utils.SQLError(err)
+	}
+	formsByCamp := tmp.ByIdCamp()
+	responsesByParticipant := tmp2.ByIdParticipant()
+	for _, participant := range dossier.ParticipantsExt() {
+		if participant.Participant.Statut != cps.Inscrit {
+			continue
+		}
+		camp := participant.Camp
+		responses := responsesByParticipant[participant.Participant.Id].ByIdForm()
+		for _, form := range formsByCamp[camp.Id] {
+			var resp cps.FormReponses
+			if responsesL := responses[form.Id]; len(responsesL) != 0 { // len 0 or 1, by design
+				resp = responsesL[0].Reponses
+			}
+			item := FormParticipant{Camp: camp.Label(), Personne: participant.Personne.PrenomN(), Form: form, Reponses: resp}
+			out.Forms = append(out.Forms, item)
+		}
+	}
+
 	out.setCounts(dossier.Dossier.LastLoadDocuments, dossier.Events)
 	return out, nil
 }
@@ -359,4 +404,61 @@ func (ct *Controller) accepteCharte(idDossier ds.IdDossier, idPersonne pr.IdPers
 		return utils.SQLError(err)
 	}
 	return nil
+}
+
+type UpdateFormIn struct {
+	IdParticipant cps.IdParticipant
+	IdForm        cps.IdForm
+	Reponses      cps.FormReponses
+}
+
+// UpdateForm fills one form for one participant
+func (ct *Controller) UpdateForm(c echo.Context) error {
+	token := c.QueryParam("token")
+	idDossier, err := crypto.DecryptID[ds.IdDossier](ct.key, token)
+	if err != nil {
+		return errors.New("Lien invalide.")
+	}
+
+	var args UpdateFormIn
+	if err = c.Bind(&args); err != nil {
+		return err
+	}
+	err = ct.updateForm(idDossier, args)
+	if err != nil {
+		return err
+	}
+	return c.NoContent(200)
+}
+
+func (ct *Controller) updateForm(idDossier ds.IdDossier, args UpdateFormIn) error {
+	// check access
+	dossier, err := logic.LoadDossier(ct.db, idDossier)
+	if err != nil {
+		return err
+	}
+	if _, ok := dossier.Participants[args.IdParticipant]; !ok {
+		return errors.New("internal error: invalid IdParticipant")
+	}
+
+	form, err := cps.SelectForm(ct.db, args.IdForm)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	if len(form.Champs) != len(args.Reponses) {
+		return errors.New("internal error: mismatched length")
+	}
+
+	item := cps.ParticipantForm{
+		IdParticipant: args.IdParticipant, IdCamp: form.IdCamp, IdForm: form.Id,
+		Reponses: args.Reponses,
+	}
+	return utils.InTx(ct.db, func(tx *sql.Tx) error {
+		err = item.Delete(tx)
+		if err != nil {
+			return err
+		}
+		err = item.Insert(tx)
+		return err
+	})
 }

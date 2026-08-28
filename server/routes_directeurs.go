@@ -89,6 +89,11 @@ func setupRoutesDirecteurs(e *echo.Echo, ct *directeurs.Controller) {
 	gr.POST("/api/v1/directeurs/documents/unlock", ct.DocumentsUnlock)
 	gr.POST("/api/v1/directeurs/documents/unlock-send", ct.DocumentsUnlockAndSend)
 
+	gr.GET("/api/v1/directeurs/forms", ct.FormsLoad)
+	gr.PUT("/api/v1/directeurs/forms", ct.FormsCreate)
+	gr.POST("/api/v1/directeurs/forms", ct.FormsUpdate)
+	gr.DELETE("/api/v1/directeurs/forms", ct.FormsDelete)
+
 	// Photos
 	gr.GET("/api/v1/directeurs/photos", ct.PhotosLoad)
 	gr.PUT("/api/v1/directeurs/photos", ct.PhotosInvite)
