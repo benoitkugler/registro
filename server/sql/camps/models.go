@@ -73,6 +73,10 @@ type Camp struct {
 	// Meta permet d'ajouter une liste de clé/valeur
 	// personnalisable.
 	Meta Meta
+
+	// IsAlbumVisible vaut true pour afficher le lien
+	// Inscrits sur les espaces de suivi.
+	IsAlbumVisible bool
 }
 
 // ProjetSpi est une extension de la table [Camp],

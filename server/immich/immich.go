@@ -79,8 +79,8 @@ func (api *Api) request(method string, endpoint string, query map[string]string,
 }
 
 type Album struct {
-	AlbumName string `json:"albumName"`
-	// albumThumbnailAssetId 	string | Null
+	AlbumName             string `json:"albumName"`
+	AlbumThumbnailAssetId string `json:"albumThumbnailAssetId"` // optional
 	// albumUsers 	AlbumUserResponseDto[]
 	AssetCount int `json:"assetCount"`
 	// contributorCounts 	ContributorCountResponseDto[]
@@ -88,7 +88,7 @@ type Album struct {
 	// description 	string
 	// endDate	time.Time
 	// hasSharedLink 	bool
-	Id AlbumID `json:"Id"`
+	Id AlbumID `json:"id"`
 	// isActivityEnabled 	bool
 	// lastModifiedAssetTimestamp	time.Time
 	Order string `json:"order"` // AssetOrder

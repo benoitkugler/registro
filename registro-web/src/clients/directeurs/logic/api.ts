@@ -158,6 +158,12 @@ export interface ParticipantsOut {
 export interface Photos {
   HasAlbum: boolean;
   Album: AlbumAndLinks;
+  IsAlbumVisible: boolean;
+}
+// registro/controllers/directeurs.PhotosInviteIn
+export interface PhotosInviteIn {
+  ToResponsables: boolean;
+  ToEquipiers: boolean;
 }
 // registro/controllers/directeurs.UpdateFinsIn
 export interface UpdateFinsIn {
@@ -329,6 +335,7 @@ export interface Camp {
   Vetements: ListeVetements;
   AlbumID: string;
   Meta: Meta;
+  IsAlbumVisible: boolean;
 }
 // registro/sql/camps.CauseAge
 export interface CauseAge {
@@ -1681,7 +1688,7 @@ export abstract class AbstractAPI {
   }
 
   /** PhotosInvite return a streaming Response (JSON line format) */
-  async PhotosInvite() {
+  async PhotosInvite(params: PhotosInviteIn) {
     const fullUrl = this.baseURL + "/api/v1/directeurs/photos";
     this.startRequest();
     try {
@@ -1692,6 +1699,7 @@ export abstract class AbstractAPI {
           Accept: "application/json",
           "Content-Type": "application/json",
         },
+        body: JSON.stringify(params),
       });
       return response as JSONStreamResponse<SendProgress>;
     } catch (error) {

@@ -16,11 +16,15 @@
         <v-list-item v-for="camp in data" :title="camp.Label">
           <template #append>
             <v-btn
+              v-if="camp.IsVisible"
               target="_blank"
               :href="camp.URL"
               prepend-icon="mdi-open-in-new"
               >Aller</v-btn
             >
+            <v-chip v-else prepend-icon="mdi-clock">
+              Photos en préparation
+            </v-chip>
           </template>
         </v-list-item>
       </v-list>

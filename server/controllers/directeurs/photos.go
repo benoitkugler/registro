@@ -17,8 +17,9 @@ import (
 )
 
 type Photos struct {
-	HasAlbum bool // false if no album is link to the camp
-	Album    immich.AlbumAndLinks
+	HasAlbum       bool // false if no album is link to the camp
+	Album          immich.AlbumAndLinks
+	IsAlbumVisible bool
 }
 
 func (ct *Controller) PhotosLoad(c echo.Context) error {
@@ -47,7 +48,7 @@ func (ct *Controller) loadPhotos(id cps.IdCamp) (data Photos, err error) {
 		return Photos{}, err
 	}
 
-	return Photos{HasAlbum: true, Album: album}, nil
+	return Photos{HasAlbum: true, Album: album, IsAlbumVisible: camp.IsAlbumVisible}, nil
 }
 
 func mailsFor(m pr.Personnes) []string {
@@ -60,12 +61,21 @@ func mailsFor(m pr.Personnes) []string {
 	return out
 }
 
+type PhotosInviteIn struct {
+	ToResponsables bool
+	ToEquipiers    bool
+}
+
 // PhotosInvite send mails to the responsables (with read only link)
-// and to the  equipiers (with upload link).
+// and to the equipiers (with upload link).
 func (ct *Controller) PhotosInvite(c echo.Context) error {
 	user := JWTUser(c)
+	var args PhotosInviteIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
 
-	it, err := ct.sendMailInvitePhotos(user)
+	it, err := ct.sendMailInvitePhotos(user, args)
 	if err != nil {
 		return err
 	}
@@ -73,7 +83,10 @@ func (ct *Controller) PhotosInvite(c echo.Context) error {
 	return utils.StreamJSON(c.Response(), it)
 }
 
-func (ct *Controller) sendMailInvitePhotos(idCamp cps.IdCamp) (iter.Seq2[backoffice.SendProgress, error], error) {
+func (ct *Controller) sendMailInvitePhotos(idCamp cps.IdCamp, args PhotosInviteIn) (iter.Seq2[backoffice.SendProgress, error], error) {
+	if !(args.ToResponsables || args.ToEquipiers) {
+		return nil, errors.New("internal error: nothing to send")
+	}
 	camp, err := cps.LoadCamp(ct.db, idCamp)
 	if err != nil {
 		return nil, utils.SQLError(err)
@@ -107,11 +120,27 @@ func (ct *Controller) sendMailInvitePhotos(idCamp cps.IdCamp) (iter.Seq2[backoff
 
 	campLabel := camp.Camp.Label()
 
+	// respect user settings
+	if !args.ToResponsables {
+		responsables = nil
+	}
+	if !args.ToEquipiers {
+		equipiers = nil
+	}
+
+	// automatically set this flag on
+	if args.ToResponsables && !camp.Camp.IsAlbumVisible {
+		camp.Camp.IsAlbumVisible = true
+		_, err = camp.Camp.Update(ct.db)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	pool, err := mails.NewPool(ct.smtp, ct.asso.MailsSettings, nil)
 	if err != nil {
 		return nil, err
 	}
-
 	total := len(responsables) + len(equipiers)
 	return func(yield func(backoffice.SendProgress, error) bool) {
 		defer pool.Close()

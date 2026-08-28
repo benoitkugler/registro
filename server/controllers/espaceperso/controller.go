@@ -367,8 +367,10 @@ func (ct *Controller) createAide(id ds.IdDossier, args cps.Aide, fileContent []b
 
 type PhotoAlbum struct {
 	IdCamp cps.IdCamp
-	Label  string
-	URL    string
+
+	IsVisible bool // if true, [URL] is valid
+	Label     string
+	URL       string
 }
 
 func (ct *Controller) LoadPhotos(c echo.Context) error {
@@ -413,7 +415,7 @@ func (ct *Controller) loadPhotos(id ds.IdDossier) ([]PhotoAlbum, error) {
 			continue
 		}
 		album := albums[immich.AlbumID(camp.AlbumID)]
-		out = append(out, PhotoAlbum{IdCamp: id, Label: album.AlbumName, URL: album.InscritsURL})
+		out = append(out, PhotoAlbum{IdCamp: id, IsVisible: camp.IsAlbumVisible, Label: album.AlbumName, URL: album.InscritsURL})
 	}
 	slices.SortFunc(out, func(a, b PhotoAlbum) int { return int(a.IdCamp - b.IdCamp) })
 

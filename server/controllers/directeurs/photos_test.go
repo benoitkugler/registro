@@ -49,7 +49,20 @@ func TestPhotos(t *testing.T) {
 	_, err = ct.createEquipier("", EquipiersCreateIn{CreatePersonne: true, Mail: "dummy.fr"}, camp.Id)
 	tu.AssertNoErr(t, err)
 
-	ite, err := ct.sendMailInvitePhotos(camp.Id)
+	_, err = ct.sendMailInvitePhotos(camp.Id, PhotosInviteIn{ToResponsables: false, ToEquipiers: false})
+	tu.AssertErr(t, err)
+
+	ite, err := ct.sendMailInvitePhotos(camp.Id, PhotosInviteIn{ToResponsables: true, ToEquipiers: true})
+	tu.AssertNoErr(t, err)
+	for _, err := range ite {
+		tu.AssertNoErr(t, err)
+	}
+	ite, err = ct.sendMailInvitePhotos(camp.Id, PhotosInviteIn{ToResponsables: true, ToEquipiers: false})
+	tu.AssertNoErr(t, err)
+	for _, err := range ite {
+		tu.AssertNoErr(t, err)
+	}
+	ite, err = ct.sendMailInvitePhotos(camp.Id, PhotosInviteIn{ToResponsables: false, ToEquipiers: true})
 	tu.AssertNoErr(t, err)
 	for _, err := range ite {
 		tu.AssertNoErr(t, err)

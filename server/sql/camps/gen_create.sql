@@ -50,7 +50,8 @@ CREATE TABLE camps (
     DocumentsToShow DocumentsToShow NOT NULL,
     Vetements jsonb NOT NULL,
     AlbumID text NOT NULL,
-    Meta jsonb NOT NULL
+    Meta jsonb NOT NULL,
+    IsAlbumVisible boolean NOT NULL
 );
 
 CREATE TABLE equipiers (

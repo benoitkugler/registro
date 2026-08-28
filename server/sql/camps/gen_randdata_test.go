@@ -59,6 +59,7 @@ func randCamp() Camp {
 	s.Vetements = randListeVetements()
 	s.AlbumID = randstring()
 	s.Meta = randMeta()
+	s.IsAlbumVisible = randbool()
 
 	return s
 }

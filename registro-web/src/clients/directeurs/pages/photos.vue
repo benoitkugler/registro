@@ -32,19 +32,40 @@
         >
       </v-row>
       <v-row>
-        <v-col cols="4">Lien Équipe (permission d'ajout)</v-col>
-        <v-col>
+        <v-col align-self="center" cols="4"
+          >Lien Équipe (permission d'ajout)</v-col
+        >
+        <v-col align-self="center">
           <a target="_blank" :href="data.Album.EquipiersURL">{{
             data.Album.EquipiersURL
           }}</a>
         </v-col>
+        <v-col align-self="center" cols="1"></v-col>
       </v-row>
       <v-row>
-        <v-col cols="4">Lien Inscrits (lecture seule)</v-col>
-        <v-col>
+        <v-col align-self="center" cols="4"
+          >Lien Inscrits (lecture seule)</v-col
+        >
+        <v-col align-self="center">
           <a target="_blank" :href="data.Album.InscritsURL">{{
             data.Album.InscritsURL
           }}</a>
+        </v-col>
+        <v-col align-self="center" cols="1">
+          <v-tooltip
+            :text="
+              data.IsAlbumVisible
+                ? 'Le lien est visible sur les espaces de suivi.'
+                : 'Envoyer un mail aux responsables pour afficher le lien sur les espaces de suivi.'
+            "
+          >
+            <template #activator="{ props: tooltipProps }">
+              <v-icon
+                v-bind="tooltipProps"
+                :icon="data.IsAlbumVisible ? 'mdi-eye' : 'mdi-lock'"
+              ></v-icon>
+            </template>
+          </v-tooltip>
         </v-col>
       </v-row>
     </v-card-text>
@@ -52,11 +73,38 @@
     <v-dialog v-model="showConfirmeInvite" max-width="800px">
       <v-card title="Envoyer le lien de l'album">
         <v-card-text>
-          Confirmez-vous l'envoi d'un mail aux responsables et aux équipiers ?
+          <v-row>
+            <v-col> Confirmez-vous l'envoi d'un mail d'invitation ? </v-col>
+          </v-row>
+          <v-row>
+            <v-col
+              ><v-checkbox
+                density="compact"
+                label="Aux équipiers"
+                v-model="inviteArgs.ToEquipiers"
+                persistent-hint
+                hint="Le lien permet l'ajout de photos."
+              ></v-checkbox
+            ></v-col>
+            <v-col
+              ><v-checkbox
+                density="compact"
+                label="Aux responsables"
+                v-model="inviteArgs.ToResponsables"
+                persistent-hint
+                hint="Le lien permet uniquement la visualisation des photos."
+              ></v-checkbox
+            ></v-col>
+          </v-row>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="green" @click="invite">Partager le lien par mail</v-btn>
+          <v-btn
+            color="green"
+            :disabled="!(inviteArgs.ToResponsables || inviteArgs.ToEquipiers)"
+            @click="invite"
+            >Partager le lien par mail</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -76,7 +124,7 @@ import { onMounted, ref } from "vue";
 import NavBar from "../components/NavBar.vue";
 import { controller } from "../logic/logic";
 import { Formatters, readJSONStream } from "@/utils";
-import type { Photos, SendProgress } from "../logic/api";
+import type { Photos, PhotosInviteIn, SendProgress } from "../logic/api";
 
 onMounted(loadData);
 
@@ -89,18 +137,23 @@ async function loadData() {
 }
 
 const showConfirmeInvite = ref(false);
+const inviteArgs = ref<PhotosInviteIn>({
+  ToResponsables: true,
+  ToEquipiers: true,
+});
 const invitingProgress = ref<SendProgress | null>(null);
 async function invite() {
   if (!data.value) return;
   showConfirmeInvite.value = false;
-  const res = await controller.PhotosInvite();
+  const res = await controller.PhotosInvite(inviteArgs.value);
   if (res === undefined) return;
   await readJSONStream(
     res,
     (v) => (invitingProgress.value = v),
-    (err) => controller.onError("Envoi du mail", err)
+    (err) => controller.onError("Envoi du mail", err),
   );
   invitingProgress.value = null;
   controller.showMessage("Mails envoyés avec succès.");
+  loadData();
 }
 </script>

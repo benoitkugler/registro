@@ -88,6 +88,7 @@ export interface PaiementSettings {
 // registro/controllers/espaceperso.PhotoAlbum
 export interface PhotoAlbum {
   IdCamp: IdCamp;
+  IsVisible: boolean;
   Label: string;
   URL: string;
 }
@@ -296,6 +297,7 @@ export interface Camp {
   Vetements: ListeVetements;
   AlbumID: string;
   Meta: Meta;
+  IsAlbumVisible: boolean;
 }
 // registro/sql/camps.DocumentsToShow
 export interface DocumentsToShow {
