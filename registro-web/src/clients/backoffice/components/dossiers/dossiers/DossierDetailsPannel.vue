@@ -118,7 +118,7 @@
                     class="mb-2"
                     :color="
                       Formatters.colorStatutPaiement(
-                        props.dossier.Dossier.Bilan.Statut
+                        props.dossier.Dossier.Bilan.Statut,
                       )
                     "
                   >
@@ -129,7 +129,7 @@
                   <v-chip
                     :color="
                       Formatters.colorStatutPaiement(
-                        props.dossier.Dossier.Bilan.Statut
+                        props.dossier.Dossier.Bilan.Statut,
                       )
                     "
                   >
@@ -175,53 +175,6 @@
               showDeleteDialog = false;
             "
             >Supprimer</v-btn
-          >
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-
-    <!-- participant create dialog -->
-    <v-dialog
-      v-if="participantToCreate != null"
-      :model-value="participantToCreate != null"
-      @update:model-value="participantToCreate = null"
-      max-width="600px"
-    >
-      <v-card title="Ajouter un participant">
-        <v-card-text>
-          <v-row>
-            <v-col cols="12">
-              <SelectCamp
-                label="Camp"
-                :camps="props.camps"
-                v-model="participantToCreate.IdCamp"
-              ></SelectCamp>
-            </v-col>
-            <v-col cols="12">
-              <SelectPersonne
-                label="Personne"
-                initial-personne=""
-                v-model="participantToCreate.IdPersonne"
-                :api="{
-                  SelectPersonne: controller.SelectPersonne.bind(controller),
-                }"
-              ></SelectPersonne>
-            </v-col>
-          </v-row>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn
-            color="green"
-            :disabled="
-              participantToCreate.IdPersonne == 0 ||
-              participantToCreate.IdCamp == 0
-            "
-            @click="
-              emit('createParticipant', participantToCreate);
-              participantToCreate = null;
-            "
-            >Ajouter</v-btn
           >
         </v-card-actions>
       </v-card>
@@ -366,7 +319,6 @@
 import { computed, ref } from "vue";
 import {
   Acteur,
-  StatutPaiement,
   type Aide,
   type AidesCreateIn,
   type CampItem,
@@ -431,8 +383,8 @@ defineExpose({ showEditPaiement, showEditDossier });
 const events = computed(() =>
   buildPseudoEvents(
     props.dossier.Dossier,
-    controller.isFondsSoutien ? Acteur.FondSoutien : Acteur.Backoffice
-  )
+    controller.isFondsSoutien ? Acteur.FondSoutien : Acteur.Backoffice,
+  ),
 );
 
 const showDeleteDialog = ref(false);
@@ -441,7 +393,6 @@ const showEditDialog = ref(false);
 function showEditDossier() {
   showEditDialog.value = true;
 }
-const participantToCreate = ref<ParticipantsCreateIn | null>(null);
 
 const paiementToUpdate = ref<Paiement | null>(null);
 function showEditPaiement(paiement: Paiement) {

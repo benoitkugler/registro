@@ -13,7 +13,7 @@
         <template v-slot:prepend>
           <v-icon color="green">mdi-plus</v-icon>
         </template>
-        Ajouter un participant</v-btn
+        Créer un participant</v-btn
       >
     </template>
     <v-card-text>
@@ -52,6 +52,53 @@
         </v-col>
       </v-row>
     </v-card-text>
+
+    <!-- participant create dialog -->
+    <v-dialog
+      v-if="participantToCreate != null"
+      :model-value="participantToCreate != null"
+      @update:model-value="participantToCreate = null"
+      max-width="600px"
+    >
+      <v-card title="Créer et ajouter un participant">
+        <v-card-text>
+          <v-row>
+            <v-col cols="12">
+              <SelectCamp
+                label="Camp"
+                :camps="props.camps"
+                v-model="participantToCreate.IdCamp"
+              ></SelectCamp>
+            </v-col>
+            <v-col cols="12">
+              <SelectPersonne
+                label="Personne"
+                initial-personne=""
+                v-model="participantToCreate.IdPersonne"
+                :api="{
+                  SelectPersonne: controller.SelectPersonne.bind(controller),
+                }"
+              ></SelectPersonne>
+            </v-col>
+          </v-row>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            color="green"
+            :disabled="
+              participantToCreate.IdPersonne == 0 ||
+              participantToCreate.IdCamp == 0
+            "
+            @click="
+              emit('createParticipant', participantToCreate);
+              participantToCreate = null;
+            "
+            >Ajouter</v-btn
+          >
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-card>
 </template>
 
