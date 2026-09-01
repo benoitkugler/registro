@@ -56,20 +56,20 @@ export type QueryURLInscriptions = {
 };
 
 export function parseQueryURLInscriptions(
-  query: LocationQuery
+  query: LocationQuery,
 ): QueryURLInscriptions {
   const q = query as QueryURLInscriptions;
   return { tab: q.tab };
 }
 
-export type DocumentsTab = "documents" | "lettre" | "vetements";
+export type DocumentsTab = "documents" | "lettre" | "vetements" | "forms";
 
 export type QueryURLDocuments = {
   tab?: DocumentsTab;
 };
 
 export function parseQueryURLDocuments(
-  query: LocationQuery
+  query: LocationQuery,
 ): QueryURLDocuments {
   const q = query as QueryURLDocuments;
   return { tab: q.tab };

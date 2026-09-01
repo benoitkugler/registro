@@ -25,7 +25,7 @@
       :to="{ path: '/documents' }"
       color="primary"
     >
-      Documents
+      Communication
     </v-list-item>
     <v-divider></v-divider>
     <v-list-item
