@@ -9,9 +9,9 @@
       <v-col align-self="center">
         <v-card :class="colorClass">
           <v-card-text class="pa-2">
-            <pre style="white-space: pre-wrap">{{
-              props.content.Message.Contenu
-            }}</pre>
+            <MultilineText
+              :text="props.content.Message.Contenu"
+            ></MultilineText>
           </v-card-text>
         </v-card>
       </v-col>
@@ -82,13 +82,13 @@ const emit = defineEmits<{
 }>();
 
 const colorClass = computed(() =>
-  origineToColor(props.content.Message.Origine)
+  origineToColor(props.content.Message.Origine),
 );
 
 const allowDelete = computed(
   () =>
     props.user == Acteur.Backoffice ||
-    (props.user == Acteur.FondSoutien && fromUs)
+    (props.user == Acteur.FondSoutien && fromUs),
 );
 
 function origineToColor(or: Acteur) {

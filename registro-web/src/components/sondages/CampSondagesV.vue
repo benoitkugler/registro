@@ -162,18 +162,18 @@
             <v-col cols="12">
               <v-card subtitle="Participant">
                 <v-card-text>
-                  <pre style="white-space: pre-wrap">{{
-                    sondage.Sondage.MessageEnfant
-                  }}</pre>
+                  <MultilineText
+                    :text="sondage.Sondage.MessageEnfant"
+                  ></MultilineText>
                 </v-card-text>
               </v-card>
             </v-col>
             <v-col cols="12">
               <v-card subtitle="Responsable">
                 <v-card-text>
-                  <pre style="white-space: pre-wrap">{{
-                    sondage.Sondage.MessageResponsable
-                  }}</pre>
+                  <MultilineText
+                    :text="sondage.Sondage.MessageResponsable"
+                  ></MultilineText>
                 </v-card-text>
               </v-card>
             </v-col>

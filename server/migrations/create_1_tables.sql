@@ -225,7 +225,7 @@ CREATE TABLE participant_forms (
     IdParticipant integer NOT NULL,
     IdForm integer NOT NULL,
     IdCamp integer NOT NULL,
-    Reponses text[]
+    Reponses jsonb NOT NULL
 );
 
 CREATE TABLE projet_spis (

@@ -225,7 +225,7 @@ CREATE TABLE participant_forms (
     IdParticipant integer NOT NULL,
     IdForm integer NOT NULL,
     IdCamp integer NOT NULL,
-    Reponses text[]
+    Reponses jsonb NOT NULL
 );
 
 CREATE TABLE projet_spis (
@@ -503,6 +503,29 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION gomacro_validate_json_array_camp_ChampReponse (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) = 'null' THEN
+        RETURN TRUE;
+    END IF;
+    IF jsonb_typeof(data) != 'array' THEN
+        RETURN FALSE;
+    END IF;
+    IF jsonb_array_length(data) = 0 THEN
+        RETURN TRUE;
+    END IF;
+    RETURN (
+        SELECT
+            bool_and(gomacro_validate_json_camp_ChampReponse (value))
+        FROM
+            jsonb_array_elements(data));
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
 CREATE OR REPLACE FUNCTION gomacro_validate_json_array_camp_PrixParStatut (data jsonb)
     RETURNS boolean
     AS $$
@@ -666,6 +689,25 @@ BEGIN
         RETURN gomacro_validate_json_camp_ChampQCM (data -> 'Data');
     WHEN data ->> 'Kind' = 'ChampTexte' THEN
         RETURN gomacro_validate_json_camp_ChampTexte (data -> 'Data');
+    ELSE
+        RETURN FALSE;
+    END CASE;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_camp_ChampReponse (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) != 'object' OR jsonb_typeof(data -> 'Kind') != 'string' OR jsonb_typeof(data -> 'Data') = 'null' THEN
+        RETURN FALSE;
+    END IF;
+    CASE WHEN data ->> 'Kind' = 'ChampReponseQCM' THEN
+        RETURN gomacro_validate_json_array_number (data -> 'Data');
+    WHEN data ->> 'Kind' = 'ChampReponseTexte' THEN
+        RETURN gomacro_validate_json_string (data -> 'Data');
     ELSE
         RETURN FALSE;
     END CASE;
@@ -1197,15 +1239,6 @@ ALTER TABLE aides
     ADD FOREIGN KEY (IdParticipant) REFERENCES participants ON DELETE CASCADE;
 
 ALTER TABLE participant_forms
-    ADD UNIQUE (IdParticipant, IdForm);
-
-ALTER TABLE participant_forms
-    ADD FOREIGN KEY (IdParticipant, IdCamp) REFERENCES participants (Id, IdCamp) ON DELETE CASCADE;
-
-ALTER TABLE participant_forms
-    ADD FOREIGN KEY (IdForm, IdCamp) REFERENCES forms (Id, IdCamp) ON DELETE CASCADE;
-
-ALTER TABLE participant_forms
     ADD FOREIGN KEY (IdParticipant) REFERENCES participants;
 
 ALTER TABLE participant_forms
@@ -1228,6 +1261,9 @@ ALTER TABLE equipiers
 
 ALTER TABLE equipiers
     ADD FOREIGN KEY (IdPersonne) REFERENCES personnes ON DELETE CASCADE;
+
+ALTER TABLE participant_forms
+    ADD CONSTRAINT Reponses_gomacro CHECK (gomacro_validate_json_array_camp_ChampReponse (Reponses));
 
 ALTER TABLE forms
     ADD CONSTRAINT Champs_gomacro CHECK (gomacro_validate_json_array_camp_Champ (Champs));

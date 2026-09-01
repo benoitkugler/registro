@@ -131,7 +131,7 @@
                 </v-menu>
               </v-btn>
             </template>
-            <template #prepend v-if="demande.Demande.IdFile.Valid">
+            <template #prepend v-else-if="demande.Demande.IdFile.Valid">
               <v-tooltip content-class="pa-1">
                 <template #activator="{ props: tooltipProps }">
                   <v-btn
@@ -153,9 +153,52 @@
             </template>
           </FilesDemande>
         </template>
+
+        <!-- formulaires perso -->
+        <v-list-subheader v-if="data.Forms?.length"
+          >Formulaires à remplir</v-list-subheader
+        >
+        <v-list-item
+          v-for="form in data.Forms"
+          :title="form.Form.Nom"
+          :subtitle="`${form.Personne} - ${form.Camp}`"
+        >
+          <template #append>
+            <v-chip
+              v-if="form.Reponses?.length"
+              @click="formToUpdate = form"
+              color="green"
+              append-icon="mdi-check"
+              elevation="1"
+            >
+              Rempli
+            </v-chip>
+            <v-btn
+              size="small"
+              @click="formToUpdate = form"
+              prepend-icon="mdi-pencil"
+              v-else
+            >
+              Remplir</v-btn
+            >
+          </template>
+        </v-list-item>
       </v-list>
     </v-card-text>
     <v-skeleton-loader v-else></v-skeleton-loader>
+
+    <!-- form -->
+    <v-dialog
+      :model-value="formToUpdate != null"
+      @update:model-value="formToUpdate = null"
+      max-width="800px"
+    >
+      <FormCard
+        v-if="formToUpdate"
+        :form="formToUpdate"
+        @save="updateForm"
+      ></FormCard>
+    </v-dialog>
 
     <!-- charte -->
     <v-dialog
@@ -191,6 +234,8 @@ import {
   type Documents,
   type Fichesanitaire,
   type FichesanitaireExt,
+  type FormParticipant,
+  type FormReponses,
   type IdDemande,
   type IdPersonne,
   type PublicFile,
@@ -201,6 +246,7 @@ import { endpoints } from "@/utils";
 import FichesanitaireForm from "./FichesanitaireForm.vue";
 import CharteCard from "./CharteCard.vue";
 import { useDisplay } from "vuetify";
+import FormCard from "./FormCard.vue";
 const props = defineProps<{
   token: string;
 }>();
@@ -224,7 +270,7 @@ async function fetchData() {
 async function uploadDocument(
   idPersonne: IdPersonne,
   idDemande: IdDemande,
-  file: File
+  file: File,
 ) {
   const res = await controller.UploadDocument(file, {
     token: props.token,
@@ -277,6 +323,22 @@ async function acceptCharte() {
   });
   if (res === undefined) return;
   controller.showMessage("La charte a bien été acceptée. Merci !");
+  fetchData();
+}
+
+const formToUpdate = ref<FormParticipant | null>(null);
+async function updateForm(reponses: FormReponses) {
+  const d = formToUpdate.value;
+  if (!d) return;
+  formToUpdate.value = null;
+  const res = await controller.UpdateForm({
+    Token: props.token,
+    IdForm: d.Form.Id,
+    IdParticipant: d.IdParticipant,
+    Reponses: reponses,
+  });
+  if (res === undefined) return;
+  controller.showMessage("Votre réponse a bien été enregistrée. Merci !");
   fetchData();
 }
 </script>

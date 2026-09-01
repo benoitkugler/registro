@@ -84,6 +84,29 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION gomacro_validate_json_array_camp_ChampReponse (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) = 'null' THEN
+        RETURN TRUE;
+    END IF;
+    IF jsonb_typeof(data) != 'array' THEN
+        RETURN FALSE;
+    END IF;
+    IF jsonb_array_length(data) = 0 THEN
+        RETURN TRUE;
+    END IF;
+    RETURN (
+        SELECT
+            bool_and(gomacro_validate_json_camp_ChampReponse (value))
+        FROM
+            jsonb_array_elements(data));
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
 CREATE OR REPLACE FUNCTION gomacro_validate_json_array_camp_PrixParStatut (data jsonb)
     RETURNS boolean
     AS $$
@@ -247,6 +270,25 @@ BEGIN
         RETURN gomacro_validate_json_camp_ChampQCM (data -> 'Data');
     WHEN data ->> 'Kind' = 'ChampTexte' THEN
         RETURN gomacro_validate_json_camp_ChampTexte (data -> 'Data');
+    ELSE
+        RETURN FALSE;
+    END CASE;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_camp_ChampReponse (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) != 'object' OR jsonb_typeof(data -> 'Kind') != 'string' OR jsonb_typeof(data -> 'Data') = 'null' THEN
+        RETURN FALSE;
+    END IF;
+    CASE WHEN data ->> 'Kind' = 'ChampReponseQCM' THEN
+        RETURN gomacro_validate_json_array_number (data -> 'Data');
+    WHEN data ->> 'Kind' = 'ChampReponseTexte' THEN
+        RETURN gomacro_validate_json_string (data -> 'Data');
     ELSE
         RETURN FALSE;
     END CASE;

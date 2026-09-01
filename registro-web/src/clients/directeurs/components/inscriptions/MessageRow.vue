@@ -33,9 +33,9 @@
       }"
       style="font-size: smaller"
     >
-      <pre style="white-space: pre-wrap">{{
-        props.message.Content.Message.Contenu
-      }}</pre>
+      <MultilineText
+        :text="props.message.Content.Message.Contenu"
+      ></MultilineText>
     </v-col>
     <v-col align-self="center" cols="2" class="text-grey">
       {{ Formatters.time(props.message.Event.Created) }}

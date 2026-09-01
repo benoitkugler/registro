@@ -23,7 +23,7 @@
       <v-row>
         <v-col>
           <v-textarea
-            label="Description du champ"
+            label="Description du champ ou question à poser"
             density="compact"
             variant="outlined"
             v-model="champ.Description"
@@ -42,7 +42,7 @@
           </v-col>
         </v-row>
       </template>
-      <template v-else-if="champ.Question.Kind == 'ChampQCM'">
+      <template v-else>
         <v-row>
           <v-col>
             <v-checkbox

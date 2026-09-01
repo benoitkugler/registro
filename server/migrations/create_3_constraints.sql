@@ -154,15 +154,6 @@ ALTER TABLE aides
     ADD FOREIGN KEY (IdParticipant) REFERENCES participants ON DELETE CASCADE;
 
 ALTER TABLE participant_forms
-    ADD UNIQUE (IdParticipant, IdForm);
-
-ALTER TABLE participant_forms
-    ADD FOREIGN KEY (IdParticipant, IdCamp) REFERENCES participants (Id, IdCamp) ON DELETE CASCADE;
-
-ALTER TABLE participant_forms
-    ADD FOREIGN KEY (IdForm, IdCamp) REFERENCES forms (Id, IdCamp) ON DELETE CASCADE;
-
-ALTER TABLE participant_forms
     ADD FOREIGN KEY (IdParticipant) REFERENCES participants;
 
 ALTER TABLE participant_forms
@@ -185,6 +176,9 @@ ALTER TABLE equipiers
 
 ALTER TABLE equipiers
     ADD FOREIGN KEY (IdPersonne) REFERENCES personnes ON DELETE CASCADE;
+
+ALTER TABLE participant_forms
+    ADD CONSTRAINT Reponses_gomacro CHECK (gomacro_validate_json_array_camp_ChampReponse (Reponses));
 
 ALTER TABLE forms
     ADD CONSTRAINT Champs_gomacro CHECK (gomacro_validate_json_array_camp_Champ (Champs));

@@ -81,6 +81,7 @@ export interface FilesCamp {
 }
 // registro/controllers/espaceperso.FormParticipant
 export interface FormParticipant {
+  IdParticipant: IdParticipant;
   Camp: string;
   Personne: string;
   Form: Form;
@@ -118,6 +119,7 @@ export interface UpdateFichesanitaireIn {
 }
 // registro/controllers/espaceperso.UpdateFormIn
 export interface UpdateFormIn {
+  Token: string;
   IdParticipant: IdParticipant;
   IdForm: IdForm;
   Reponses: FormReponses;
@@ -1080,10 +1082,7 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseURL + "/api/v1/espaceperso/documents/forms";
     this.startRequest();
     try {
-      await Axios.post(fullUrl, params, {
-        headers: this.getHeaders(),
-        params: { token: params["token"] },
-      });
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
       return true;
     } catch (error) {
       this.handleError(error);

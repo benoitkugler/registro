@@ -25,8 +25,9 @@ type Charte struct {
 }
 
 type FormParticipant struct {
-	Camp     string
-	Personne string
+	IdParticipant cps.IdParticipant
+	Camp          string
+	Personne      string
 
 	Form     cps.Form
 	Reponses cps.FormReponses // initialy empty
@@ -303,7 +304,13 @@ func loadDocuments(db ds.DB, key crypto.Encrypter, dossier logic.Dossier) (Docum
 			if responsesL := responses[form.Id]; len(responsesL) != 0 { // len 0 or 1, by design
 				resp = responsesL[0].Reponses
 			}
-			item := FormParticipant{Camp: camp.Label(), Personne: participant.Personne.PrenomN(), Form: form, Reponses: resp}
+			item := FormParticipant{
+				IdParticipant: participant.Participant.Id,
+				Camp:          camp.Label(),
+				Personne:      participant.Personne.PrenomN(),
+				Form:          form,
+				Reponses:      resp,
+			}
 			out.Forms = append(out.Forms, item)
 		}
 	}
@@ -407,6 +414,7 @@ func (ct *Controller) accepteCharte(idDossier ds.IdDossier, idPersonne pr.IdPers
 }
 
 type UpdateFormIn struct {
+	Token         string
 	IdParticipant cps.IdParticipant
 	IdForm        cps.IdForm
 	Reponses      cps.FormReponses
@@ -414,15 +422,13 @@ type UpdateFormIn struct {
 
 // UpdateForm fills one form for one participant
 func (ct *Controller) UpdateForm(c echo.Context) error {
-	token := c.QueryParam("token")
-	idDossier, err := crypto.DecryptID[ds.IdDossier](ct.key, token)
+	var args UpdateFormIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+	idDossier, err := crypto.DecryptID[ds.IdDossier](ct.key, args.Token)
 	if err != nil {
 		return errors.New("Lien invalide.")
-	}
-
-	var args UpdateFormIn
-	if err = c.Bind(&args); err != nil {
-		return err
 	}
 	err = ct.updateForm(idDossier, args)
 	if err != nil {
