@@ -306,18 +306,37 @@ func (b *Builder) drawItems(rows [][]Cell, startingRow int, showLineNumbers bool
 	return nil
 }
 
-func renderListe(headers []string, liste [][]Cell, totals []oneTotal, showLineNumbers bool, separators ...int) (*bytes.Buffer, error) {
+type headerSection struct {
+	title  string
+	length int // in column
+}
+
+// [sections] is either nil, or sum up to [headers] length
+func renderListe(headers []string, sections []headerSection, liste [][]Cell, totals []oneTotal, showLineNumbers bool, separators ...int) (*bytes.Buffer, error) {
 	b := NewBuilder()
-	var colOffset int // pour les numéros de lignes
+	var rowOffset, colOffset int // header sections /  numéros de lignes
+	if sections != nil {
+		rowOffset = 1
+	}
 	if showLineNumbers {
 		colOffset = 1
 	}
 
-	// headers
-	for col, field := range headers {
-		b.SetCell(1, col+1+colOffset, field)
+	// sections
+	currentCol := 1
+	for _, section := range sections {
+		b.SetCell(1, currentCol+colOffset, section.title)
+		b.SetStyle(1, currentCol+colOffset, Style{Bold: true, TextAlignement: ACenter, Color: "#CCCCCC", Border: Left | Right})
+		b.MergeCells(1, currentCol+colOffset, 1, currentCol+colOffset+section.length-1)
+		currentCol += section.length
+	}
 
-		b.SetStyle(1, col+1+colOffset, newStyle("", true, false, false, 0))
+	// headers
+	seps := utils.NewSet(separators...)
+	for col, field := range headers {
+		b.SetCell(1+rowOffset, col+1+colOffset, field)
+
+		b.SetStyle(1+rowOffset, col+1+colOffset, newStyle("", true, false, seps.Has(col+1+colOffset), 0))
 		colLetter, err := excelize.ColumnNumberToName(col + 1 + colOffset)
 		if err != nil {
 			return nil, err
@@ -329,12 +348,12 @@ func renderListe(headers []string, liste [][]Cell, totals []oneTotal, showLineNu
 	}
 
 	// datas
-	if err := b.drawItems(liste, 2, showLineNumbers, separators); err != nil {
+	if err := b.drawItems(liste, 2+rowOffset, showLineNumbers, separators); err != nil {
 		return nil, err
 	}
 
 	// pour une ligne de totaux
-	totalRow := len(liste) + 3
+	totalRow := len(liste) + 3 + rowOffset
 	for index, total := range totals {
 		b.SetCell(totalRow, 2*index+1+colOffset, total.label)
 		b.SetStyle(totalRow, 2*index+1+colOffset, newStyle("", false, true, false, 0))
@@ -348,7 +367,7 @@ func renderListe(headers []string, liste [][]Cell, totals []oneTotal, showLineNu
 // CreateTable returns an Excel file for the basic data defined
 // by [headers] and [liste]
 func CreateTable(headers []string, rows [][]Cell) ([]byte, error) {
-	f, err := renderListe(headers, rows, nil, false)
+	f, err := renderListe(headers, nil, rows, nil, false)
 	if err != nil {
 		return nil, err
 	}
@@ -359,7 +378,7 @@ func CreateTableTotal(headers []string, rows [][]Cell, total string) ([]byte, er
 	totals := []oneTotal{
 		{"Total :", total},
 	}
-	f, err := renderListe(headers, rows, totals, true)
+	f, err := renderListe(headers, nil, rows, totals, true)
 	if err != nil {
 		return nil, err
 	}
@@ -389,7 +408,7 @@ func SuiviFinancierCamp(rows [][]Cell, totalDemande,
 		"Dont aides (€)",      // FinancesPTotalAides
 		"Etat du paiement",    // FinancesPEtatPaiement
 	}
-	f, err := renderListe(headers[:], rows, totals, false)
+	f, err := renderListe(headers[:], nil, rows, totals, false)
 	if err != nil {
 		return nil, err
 	}
@@ -411,11 +430,18 @@ func formatTime(t time.Time) string {
 	return fmt.Sprintf("%02d/%02d/%04d %02d:%02d:%02d", t.Day(), t.Month(), t.Year(), t.Hour(), t.Minute(), t.Second())
 }
 
+// Form stores one custom form and the inscrits answers
+type Form struct {
+	Nom      string
+	Champs   cps.Champs
+	Reponses map[cps.IdParticipant][]string // each slice has the same length than [Champs]
+}
+
 // ListeParticipantsCamp renvoie un document Excel des inscrits
 // d'un séjour, à destination du directeur.
 func ListeParticipantsCamp(camp cps.Camp, inscrits []cps.ParticipantPersonne, dossiers logic.Dossiers,
 	groupes map[cps.IdParticipant]cps.Groupe, fichesSanitaires map[cps.IdParticipant]pr.Fichesanitaire,
-	showNationnaliteSuisse bool,
+	customForms []Form, showNationnaliteSuisse bool,
 ) ([]byte, error) {
 	headersParticipant := [...]string{
 		"Inscription",
@@ -428,10 +454,6 @@ func ListeParticipantsCamp(camp cps.Camp, inscrits []cps.ParticipantPersonne, do
 		"Groupe",
 		"Navette",
 		"Commentaire",
-		"", // hidden if showNationnaliteSuisse is false
-	}
-	if showNationnaliteSuisse {
-		headersParticipant[10] = "Nationalité suisse"
 	}
 
 	headersResponsable := [...]string{
@@ -445,8 +467,23 @@ func ListeParticipantsCamp(camp cps.Camp, inscrits []cps.ParticipantPersonne, do
 		"Pays",
 	}
 
-	headers := append(headersParticipant[:], headersResponsable[:]...)
-	separator := len(headersParticipant) + 1
+	headers := headersParticipant[:]
+	// hidden if showNationnaliteSuisse is false
+	if showNationnaliteSuisse {
+		headers = append(headers, "Nationalité suisse")
+	}
+	sections := []headerSection{
+		{"Inscrit", len(headers)},
+	}
+	for _, form := range customForms {
+		sections = append(sections, headerSection{form.Nom, len(form.Champs)})
+		for _, champ := range form.Champs {
+			headers = append(headers, champ.Titre)
+		}
+	}
+	separator := len(headers) + 1
+	headers = append(headers, headersResponsable[:]...)
+	sections = append(sections, headerSection{"Responsable", len(headersResponsable)})
 
 	rows := make([][]Cell, len(inscrits))
 	for i, inscrit := range inscrits {
@@ -454,12 +491,12 @@ func ListeParticipantsCamp(camp cps.Camp, inscrits []cps.ParticipantPersonne, do
 		responsable := dossier.Responsable()
 		groupe := groupes[inscrit.Participant.Id]
 		fiche := fichesSanitaires[inscrit.Participant.Id]
-		nationalite := ""
+		nationalite := []Cell{}
 		if showNationnaliteSuisse {
-			nationalite = formatBool(inscrit.Personne.Nationnalite.IsSuisse)
+			nationalite = []Cell{{Value: formatBool(inscrit.Personne.Nationnalite.IsSuisse)}} // Suisse ?
 		}
-		var row [len(headersParticipant) + len(headersResponsable)]Cell = [...]Cell{
-			// inscrit
+		// inscrit
+		var row1 [len(headersParticipant)]Cell = [...]Cell{
 			{Value: formatTime(dossier.Dossier.MomentInscription)},     // Inscription
 			{Value: inscrit.Personne.FNom()},                           // Nom
 			{Value: inscrit.Personne.FPrenom()},                        // Prénom
@@ -470,8 +507,17 @@ func ListeParticipantsCamp(camp cps.Camp, inscrits []cps.ParticipantPersonne, do
 			{Value: groupe.Nom, Color: groupe.Couleur},                 // Groupe
 			{Value: inscrit.Participant.Navette.String()},              // Navette
 			{Value: inscrit.Participant.Commentaire},                   // Commentaire
-			{Value: nationalite},                                       // Suisse ?
-			// responsable
+		}
+		// custom forms
+		var formValues []Cell
+		for _, form := range customForms {
+			l := form.Reponses[inscrit.Participant.Id]
+			for _, r := range l {
+				formValues = append(formValues, Cell{Value: r})
+			}
+		}
+		// responsable
+		var row2 [len(headersResponsable)]Cell = [...]Cell{
 			{Value: responsable.NOMPrenom()},         // Responsable
 			{Value: responsable.Mail},                // Mail
 			{Value: responsable.Tels.String()},       // Tel.
@@ -481,10 +527,10 @@ func ListeParticipantsCamp(camp cps.Camp, inscrits []cps.ParticipantPersonne, do
 			{Value: responsable.Ville},               // Ville
 			{Value: string(responsable.Pays)},        // Pays
 		}
-		rows[i] = row[:]
+		rows[i] = slices.Concat(row1[:], nationalite, formValues, row2[:])
 	}
 
-	f, err := renderListe(headers, rows, nil, false, separator)
+	f, err := renderListe(headers, sections, rows, nil, false, separator)
 	if err != nil {
 		return nil, err
 	}
@@ -604,7 +650,8 @@ func ListeParticipantsCamps(participants []cps.ParticipantCamp, dossiers logic.D
 	sep2 := sep1 + len(headersParticipant)
 	sep3 := sep2 + len(headersResponsable)
 
-	f, err := renderListe(headers, rows, nil, false, sep1, sep2, sep3)
+	// TODO: we could use sections
+	f, err := renderListe(headers, nil, rows, nil, false, sep1, sep2, sep3)
 	if err != nil {
 		return nil, err
 	}

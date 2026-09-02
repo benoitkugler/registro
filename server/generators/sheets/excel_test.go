@@ -89,12 +89,30 @@ func TestListeParticipants(t *testing.T) {
 	fiches := map[cps.IdParticipant]pr.Fichesanitaire{
 		1: {AutreContact: pr.NomTel{Tel: "0682084101"}},
 	}
+	forms := []Form{
+		{
+			Nom:    "Formulaire 1",
+			Champs: cps.Champs{{Titre: "C1"}, {Titre: "C2"}, {Titre: "C3"}},
+			Reponses: map[cps.IdParticipant][]string{
+				1: {"R1", "R2", "R3"},
+				2: {"", "", ""},
+			},
+		},
+		{
+			Nom:    "Formulaire 2",
+			Champs: cps.Champs{{Titre: "C1"}, {Titre: "C2"}},
+			Reponses: map[cps.IdParticipant][]string{
+				1: {"", ""},
+				2: {"", ""},
+			},
+		},
+	}
 
-	content, err := ListeParticipantsCamp(camp, liste, dossiers, map[cps.IdParticipant]cps.Groupe{1: g1, 2: g2}, fiches, false)
+	content, err := ListeParticipantsCamp(camp, liste, dossiers, map[cps.IdParticipant]cps.Groupe{1: g1, 2: g2}, fiches, forms, false)
 	tu.AssertNoErr(t, err)
 	tu.Write(t, "ListeParticipantsCamp_1.xlsx", content)
 
-	content, err = ListeParticipantsCamp(camp, liste, dossiers, map[cps.IdParticipant]cps.Groupe{1: g1, 2: g2}, fiches, true)
+	content, err = ListeParticipantsCamp(camp, liste, dossiers, map[cps.IdParticipant]cps.Groupe{1: g1, 2: g2}, fiches, nil, true)
 	tu.AssertNoErr(t, err)
 	tu.Write(t, "ListeParticipantsCamp_2.xlsx", content)
 }

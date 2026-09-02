@@ -376,10 +376,11 @@ func (ct *Controller) exportListeParticipants(user cps.IdCamp) ([]byte, string, 
 	if err != nil {
 		return nil, "", err
 	}
-	fiches, err := pr.SelectFichesanitairesByIdPersonnes(ct.db, camp.Personnes(true).IDs()...)
+	linksFiches, err := pr.SelectFichesanitairesByIdPersonnes(ct.db, camp.Personnes(true).IDs()...)
 	if err != nil {
 		return nil, "", utils.SQLError(err)
 	}
+	fiches := linksFiches.ByIdPersonne()
 	groupes, err := cps.SelectGroupesByIdCamps(ct.db, user)
 	if err != nil {
 		return nil, "", utils.SQLError(err)
@@ -401,9 +402,35 @@ func (ct *Controller) exportListeParticipants(user cps.IdCamp) ([]byte, string, 
 	if err != nil {
 		return nil, "", err
 	}
+
+	// custom forms
+	forms, err := cps.SelectFormsByIdCamps(ct.db, user)
+	if err != nil {
+		return nil, "", utils.SQLError(err)
+	}
+	tmp, err := cps.SelectParticipantFormsByIdForms(ct.db, forms.IDs()...)
+	if err != nil {
+		return nil, "", utils.SQLError(err)
+	}
+	formReponses := tmp.ByIdForm()
+	var sheetsForm []sheets.Form
+	for _, form := range forms {
+		reponsesByParticipants := formReponses[form.Id].ByIdParticipant()
+		m := make(map[cps.IdParticipant][]string)
+		for _, participant := range participants {
+			r, _ := reponsesByParticipants[participant.Participant.Id].NonEmpty()
+			m[participant.Participant.Id] = r.ToString(form.Champs)
+		}
+		sheetsForm = append(sheetsForm, sheets.Form{
+			Nom:      form.Nom,
+			Champs:   form.Champs,
+			Reponses: m,
+		})
+	}
+
 	showNationnaliteSuisse := ct.asso.AskNationnalite
 	content, err := sheets.ListeParticipantsCamp(camp.Camp, participants, dossiers,
-		participantToGroupe, participantToFiches, showNationnaliteSuisse)
+		participantToGroupe, participantToFiches, sheetsForm, showNationnaliteSuisse)
 	if err != nil {
 		return nil, "", err
 	}
