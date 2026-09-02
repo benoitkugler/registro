@@ -508,3 +508,32 @@ type (
 
 func (ChampReponseTexte) isChampReponse() {}
 func (ChampReponseQCM) isChampReponse()   {}
+
+func (c Champ) formatReponse(rep ChampReponse) string {
+	switch c := c.Question.(type) {
+	case ChampTexte:
+		return string(rep.(ChampReponseTexte))
+	case ChampQCM:
+		indices := rep.(ChampReponseQCM)
+		chunks := make([]string, len(indices))
+		for i, indice := range indices {
+			chunks[i] = c.Propositions[indice]
+		}
+		return strings.Join(chunks, " ; ")
+	default:
+		panic("exhaustive switch")
+	}
+}
+
+// ToString returns a non empty slice, containing empty
+// string if [fr] is empty
+func (fr FormReponses) ToString(champs Champs) []string {
+	out := make([]string, len(champs))
+	if len(fr) != len(champs) {
+		return out
+	}
+	for i, c := range champs {
+		out[i] = c.formatReponse(fr[i])
+	}
+	return out
+}

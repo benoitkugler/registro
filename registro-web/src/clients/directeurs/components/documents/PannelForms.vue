@@ -25,8 +25,11 @@
             <v-row>
               <v-col align-self="center">
                 <v-badge
+                  :color="
+                    (data.AnswersCount || {})[form.Id] ? 'primary' : 'grey'
+                  "
                   inline
-                  :content="(data.Answers || {})[form.Id]?.length || 0"
+                  :content="(data.AnswersCount || {})[form.Id] || 0"
                 ></v-badge>
               </v-col>
               <v-col align-self="center">
@@ -40,14 +43,16 @@
                     ></v-btn>
                   </template>
                   <v-list density="compact">
-                    <v-list-item prepend-icon="mdi-view-list"
-                      >Afficher les réponses</v-list-item
-                    >
+                    <v-list-item
+                      title="Afficher les réponses"
+                      prepend-icon="mdi-view-list"
+                      @click="formToLoadReponses = form"
+                    ></v-list-item>
 
                     <v-divider thickness="1"></v-divider>
                     <v-list-item
-                      prepend-icon="mdi-delete"
                       title="Supprimer"
+                      prepend-icon="mdi-delete"
                       @click="formToDelete = form"
                     ></v-list-item>
                   </v-list>
@@ -58,6 +63,17 @@
         </v-list-item>
       </v-list>
     </v-card-text>
+
+    <!-- reponses -->
+    <v-dialog
+      :model-value="formToLoadReponses != null"
+      @update:model-value="formToLoadReponses = null"
+    >
+      <FormReponses
+        :form="formToLoadReponses"
+        v-if="formToLoadReponses != null"
+      ></FormReponses>
+    </v-dialog>
 
     <!-- edit form -->
     <v-dialog
@@ -102,6 +118,7 @@ import { controller } from "../../logic/logic";
 import type { Form, FormsOut } from "../../logic/api";
 import type { DocumentsTab } from "../../plugins/router";
 import FormEditor from "./FormEditor.vue";
+import FormReponses from "./FormReponses.vue";
 
 const props = defineProps<{}>();
 
@@ -153,4 +170,6 @@ async function deleteForm() {
   );
   controller.showMessage("Formulaire supprimé avec succès.");
 }
+
+const formToLoadReponses = ref<Form | null>(null);
 </script>

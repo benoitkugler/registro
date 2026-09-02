@@ -114,10 +114,21 @@ export interface FicheSanitaireExt {
   State: FichesanitaireState;
   Fiche: Fichesanitaire;
 }
+// registro/controllers/directeurs.FormReponses
+export interface FormReponses {
+  Inscrits: FormReponsesInscrit[] | null;
+  Champs: string[] | null;
+}
+// registro/controllers/directeurs.FormReponsesInscrit
+export interface FormReponsesInscrit {
+  IdParticipant: IdParticipant;
+  Inscrit: string;
+  Reponses: string[] | null;
+}
 // registro/controllers/directeurs.FormsOut
 export interface FormsOut {
   Forms: Form[] | null;
-  Answers: Record<IdForm, ParticipantForms> | null;
+  AnswersCount: Record<IdForm, Int> | null;
 }
 // registro/controllers/directeurs.GroupesOut
 export interface GroupesOut {
@@ -373,22 +384,6 @@ export type ChampQuestion =
   | { Kind: "ChampQCM"; Data: ChampQCM }
   | { Kind: "ChampTexte"; Data: ChampTexte };
 
-export const ChampReponseKind = {
-  ChampReponseQCM: "ChampReponseQCM",
-  ChampReponseTexte: "ChampReponseTexte",
-} as const;
-export type ChampReponseKind =
-  (typeof ChampReponseKind)[keyof typeof ChampReponseKind];
-
-// registro/sql/camps.ChampReponse
-export type ChampReponse =
-  | { Kind: "ChampReponseQCM"; Data: ChampReponseQCM }
-  | { Kind: "ChampReponseTexte"; Data: ChampReponseTexte };
-
-// registro/sql/camps.ChampReponseQCM
-export type ChampReponseQCM = Int[] | null;
-// registro/sql/camps.ChampReponseTexte
-export type ChampReponseTexte = string;
 // registro/sql/camps.ChampTexte
 export interface ChampTexte {
   MultiLignes: boolean;
@@ -420,8 +415,6 @@ export interface Form {
   Introduction: string;
   Champs: Champs;
 }
-// registro/sql/camps.FormReponses
-export type FormReponses = ChampReponse[] | null;
 // registro/sql/camps.FormStatusEquipier
 export const FormStatusEquipier = {
   NotSend: 0,
@@ -544,15 +537,6 @@ export interface ParticipantCamp {
   Participant: Participant;
   Personne: Personne;
 }
-// registro/sql/camps.ParticipantForm
-export interface ParticipantForm {
-  IdParticipant: IdParticipant;
-  IdForm: IdForm;
-  IdCamp: IdCamp;
-  Reponses: FormReponses;
-}
-// registro/sql/camps.ParticipantForms
-export type ParticipantForms = ParticipantForm[] | null;
 // registro/sql/camps.PresenceOffsets
 export interface PresenceOffsets {
   Debut: Int;
@@ -1795,6 +1779,21 @@ export abstract class AbstractAPI {
         params: { id: String(params["id"]) },
       });
       return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** FormsLoadReponses performs the request and handles the error */
+  async FormsLoadReponses(params: { id: IdForm }) {
+    const fullUrl = this.baseURL + "/api/v1/directeurs/forms-reponses";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<FormReponses> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { id: String(params["id"]) },
+      });
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }

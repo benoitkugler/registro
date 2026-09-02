@@ -300,10 +300,7 @@ func loadDocuments(db ds.DB, key crypto.Encrypter, dossier logic.Dossier) (Docum
 		camp := participant.Camp
 		responses := responsesByParticipant[participant.Participant.Id].ByIdForm()
 		for _, form := range formsByCamp[camp.Id] {
-			var resp cps.FormReponses
-			if responsesL := responses[form.Id]; len(responsesL) != 0 { // len 0 or 1, by design
-				resp = responsesL[0].Reponses
-			}
+			resp, _ := responses[form.Id].NonEmpty()
 			item := FormParticipant{
 				IdParticipant: participant.Participant.Id,
 				Camp:          camp.Label(),

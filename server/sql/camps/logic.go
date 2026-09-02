@@ -484,3 +484,13 @@ func (ai Aide) Resolve(nbJours int) Montant {
 	}
 	return val
 }
+
+// NonEmpty must be used on the result of selecting one camp
+// and one participant, which returns a 0 or 1 slice, thanks to
+// unique constraint.
+func (pf ParticipantForms) NonEmpty() (FormReponses, bool) {
+	if len(pf) == 0 {
+		return nil, false
+	}
+	return pf[0].Reponses, true
+}
