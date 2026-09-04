@@ -515,10 +515,20 @@ func (s Mails) Value() (driver.Value, error) {
 }
 
 func (s *Tels) Scan(src any) error {
-	return (*pq.StringArray)(s).Scan(src)
+	var tmp pq.StringArray
+	err := tmp.Scan(src)
+	if err != nil {
+		return err
+	}
+	if len(tmp) != 2 {
+		return fmt.Errorf("unexpected length %d", len(tmp))
+	}
+	copy(s[:], tmp)
+	return nil
+
 }
 func (s Tels) Value() (driver.Value, error) {
-	return pq.StringArray(s).Value()
+	return pq.StringArray(s[:]).Value()
 }
 
 func (s *Nationnalite) Scan(src any) error {

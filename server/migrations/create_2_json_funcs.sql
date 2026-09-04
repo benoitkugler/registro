@@ -580,24 +580,19 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION gomacro_validate_json_array_string (data jsonb)
+CREATE OR REPLACE FUNCTION gomacro_validate_json_array_2_string (data jsonb)
     RETURNS boolean
     AS $$
 BEGIN
-    IF jsonb_typeof(data) = 'null' THEN
-        RETURN TRUE;
-    END IF;
     IF jsonb_typeof(data) != 'array' THEN
         RETURN FALSE;
-    END IF;
-    IF jsonb_array_length(data) = 0 THEN
-        RETURN TRUE;
     END IF;
     RETURN (
         SELECT
             bool_and(gomacro_validate_json_string (value))
         FROM
-            jsonb_array_elements(data));
+            jsonb_array_elements(data))
+        AND jsonb_array_length(data) = 2;
 END;
 $$
 LANGUAGE 'plpgsql'
@@ -622,7 +617,7 @@ BEGIN
         AND gomacro_validate_json_string (data -> 'DateNaissance')
         AND gomacro_validate_json_pers_Sexe (data -> 'Sexe')
         AND gomacro_validate_json_string (data -> 'Mail')
-        AND gomacro_validate_json_array_string (data -> 'Tels')
+        AND gomacro_validate_json_array_2_string (data -> 'Tels')
         AND gomacro_validate_json_string (data -> 'Adresse')
         AND gomacro_validate_json_string (data -> 'CodePostal')
         AND gomacro_validate_json_string (data -> 'Ville')

@@ -103,7 +103,10 @@
             ></v-text-field>
           </v-col>
           <v-col md="3">
-            <PaysField v-model="innerBase.Pays"></PaysField>
+            <PaysField
+              v-model="innerBase.Pays"
+              @update:model-value="onChangePays"
+            ></PaysField>
           </v-col>
         </v-row>
         <v-row>
@@ -122,14 +125,13 @@
             ></v-text-field>
           </v-col>
           <v-col md="7" sm="6">
-            <StringList
+            <TelsField
               v-model="innerBase.Tels"
-              :formatter="
-                innerBase.Pays == 'CH' ? Formatters.telCh : Formatters.telFr
-              "
-              label="Téléphone"
-              :rules="[FormRules.noEmptyList(`Merci d'indiquer ton numéro.`)]"
-            ></StringList>
+              :rules="[
+                FormRules.requiredTel(`Merci d'indiquer ton numéro.`),
+                (_) => true,
+              ]"
+            ></TelsField>
           </v-col>
         </v-row>
 
@@ -541,12 +543,14 @@ import {
   type Photos,
   type PublicFile,
   type Int,
+  type Pays,
 } from "../logic/api";
 import { Camps, copy, Formatters, FormRules } from "@/utils";
 import { controller } from "../logic/logic";
 import { isDateZero } from "@/components/date";
 import CharteEquipierACVE from "./CharteEquipierACVE.vue";
 import CharteEquipierRepere from "./CharteEquipierRepere.vue";
+import { Phones } from "@/phones";
 
 const props = defineProps<{
   token: string;
@@ -628,6 +632,14 @@ const missingFiles = computed(() => {
       return notOK && !okByEquiv;
     });
 });
+
+function onChangePays(p: Pays) {
+  if (!Phones.isEmpty(innerBase.value.Tels[0])) return;
+  const indicatif = Phones.PaysToIndicatif.get(p);
+  if (indicatif) {
+    innerBase.value.Tels[0] = indicatif;
+  }
+}
 
 const showIncompleteFormDialog = ref(false);
 const showCharteDialog = ref(false);

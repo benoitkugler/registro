@@ -89,6 +89,7 @@ func TestDate_Age(t *testing.T) {
 		{NewDate(2000, time.February, 5), NewDate(2000, time.February, 8), 0},
 		{NewDate(2000, time.February, 5), NewDate(2001, time.February, 4), 0},
 		{NewDate(2000, time.February, 5), NewDate(2001, time.February, 5), 1},
+		{NewDate(2012, time.March, 7), NewDate(2026, time.March, 7), 14},
 		{NewDate(2000, time.February, 5), NewDate(2001, time.September, 5), 1},
 		{NewDate(2000, time.February, 5), NewDate(2001, time.January, 5), 0},
 	}

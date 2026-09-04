@@ -20,9 +20,8 @@ func pers(s pr.Sexe, n pr.Nationnalite) pr.Personne {
 }
 
 func pers2(s pr.Sexe, now sh.Date, age int) pr.Personne {
-	n := now.Time()
-	dateNaissace := sh.NewDate(n.Year()-age, n.Month(), n.Day())
-	return pr.Personne{Identite: pr.Identite{Sexe: s, DateNaissance: dateNaissace}}
+	dateNaissance := tu.DateForNow(age, now.Time())
+	return pr.Personne{Identite: pr.Identite{Sexe: s, DateNaissance: sh.NewDateFrom(dateNaissance)}}
 }
 
 func TestCampLoader_Stats(t *testing.T) {
@@ -271,20 +270,21 @@ func TestCamp_IsAgeValide(t *testing.T) {
 		wantValid      bool
 		wantCause      CauseAge
 	}{
-		{plage1, 6, 12, sh.NewDate(2012, time.March, 1), false, CauseAge{false, 13, 4}}, // 13 ans
+		{plage1, 6, 12, sh.NewDate(2012, time.March, 1), false, CauseAge{false, 13, 5}}, // Trop vieux: 13 ans
 		{plage1, 6, 12, sh.NewDate(2015, time.March, 1), true, CauseAge{}},              // 10 ans
 
 		// cas "fins"
 		{plage1, 6, 12, sh.NewDate(2019, time.March, 14), true, CauseAge{}},             // 6 ans le dernier jour
 		{plage1, 6, 12, sh.NewDate(2012, time.March, 6), true, CauseAge{}},              // 13 ans le deuxième jour
 		{plage1, 6, 12, sh.NewDate(2019, time.March, 15), false, CauseAge{true, 5, 1}},  // 6 ans juste après le dernier jour
-		{plage1, 6, 12, sh.NewDate(2012, time.March, 4), false, CauseAge{false, 13, 1}}, // 13 ans juste avant le premier jour
-		{plage1, 6, 12, sh.NewDate(2012, time.March, 3), false, CauseAge{false, 13, 2}},
+		{plage1, 6, 12, sh.NewDate(2012, time.March, 4), false, CauseAge{false, 13, 2}}, // 13 ans juste avant le premier jour
+		{plage1, 6, 12, sh.NewDate(2012, time.March, 3), false, CauseAge{false, 13, 3}},
 
 		{plage2, 1, 2, sh.NewDate(2030, time.February, 10), true, CauseAge{}},            // Aura "1 an à la fin du séjour"
 		{plage2, 1, 2, sh.NewDate(2030, time.February, 11), false, CauseAge{true, 0, 1}}, // Trop jeune Aura 0 an à la fin du séjour
-		{plage2, 1, 2, sh.NewDate(2028, time.January, 31), false, CauseAge{false, 3, 1}}, // Trop vieux Aura 3 ans au début du séjour
-		{plage2, 1, 2, sh.NewDate(2028, time.February, 1), true, CauseAge{}},             // ok : aura 3 ans le premier jour du camp
+		{plage2, 1, 2, sh.NewDate(2028, time.January, 31), false, CauseAge{false, 3, 2}}, // Trop vieux Aura 3 ans 1 jour avant le début du séjour
+		{plage2, 1, 2, sh.NewDate(2028, time.February, 1), false, CauseAge{false, 3, 1}}, // Trop vieux Aura 3 ans au début du séjour
+		{plage2, 1, 3, sh.NewDate(2028, time.February, 1), true, CauseAge{}},             // ok : aura 3 ans le premier jour du camp
 	}
 	for _, tt := range tests {
 		cp := Camp{DateDebut: tt.plage.From, Duree: tt.plage.Duree, AgeMin: tt.ageMin, AgeMax: tt.ageMax}

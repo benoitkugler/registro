@@ -89,7 +89,10 @@
             ></v-text-field>
           </v-col>
           <v-col md="3" sm="6" cols="12">
-            <PaysField v-model="respo.Pays"></PaysField>
+            <PaysField
+              v-model="respo.Pays"
+              @update:model-value="onChangePays"
+            ></PaysField>
           </v-col>
         </v-row>
 
@@ -109,18 +112,15 @@
             ></v-text-field>
           </v-col>
           <v-col md="6" cols="12">
-            <StringList
+            <TelsField
               v-model="respo.Tels"
-              :formatter="
-                respo.Pays == 'CH' ? Formatters.telCh : Formatters.telFr
-              "
-              label="Téléphones"
-              :rule="
-                FormRules.noEmptyList(
+              :rules="[
+                FormRules.requiredTel(
                   `Merci de fournir un numéro en cas d'urgence.`
-                )
-              "
-            ></StringList>
+                ),
+                (_) => true,
+              ]"
+            ></TelsField>
           </v-col>
         </v-row>
       </v-form>
@@ -129,9 +129,10 @@
 </template>
 
 <script lang="ts" setup>
-import type { Date_, ResponsableLegal } from "../logic/api";
+import type { Date_, Pays, ResponsableLegal } from "../logic/api";
 import { ageFrom, isDateZero } from "@/components/date";
-import { FormRules, Formatters } from "@/utils";
+import { Phones } from "@/phones";
+import { FormRules } from "@/utils";
 import { useDisplay } from "vuetify";
 
 const respo = defineModel<ResponsableLegal>({ required: true });
@@ -148,4 +149,12 @@ function checkDateNaissance(d: Date_) {
 }
 
 const { smAndUp } = useDisplay();
+
+function onChangePays(p: Pays) {
+  if (!Phones.isEmpty(respo.value.Tels[0])) return;
+  const indicatif = Phones.PaysToIndicatif.get(p);
+  if (indicatif) {
+    respo.value.Tels[0] = indicatif;
+  }
+}
 </script>

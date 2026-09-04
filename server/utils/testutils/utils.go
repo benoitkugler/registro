@@ -88,5 +88,12 @@ var PngData = []byte("\x89\x50\x4E\x47\x0D\x0A\x1A\x0A\x00\x00\x00\x0D\x49\x48\x
 // DateFor renvoie une date de naissance donnant un âge de [age]
 // au moment actuel
 func DateFor(age int) time.Time {
-	return time.Now().Add(-time.Hour*24*365*time.Duration(age) - time.Hour)
+	return DateForNow(age, time.Now())
+}
+
+// DateForNow renvoie une date de naissance donnant un âge de [age]
+// au moment [now]
+func DateForNow(age int, now time.Time) time.Time {
+	y, m, d := now.Year(), now.Month(), now.Day()
+	return time.Date(y-age, m, d, 0, 0, 0, 0, time.UTC)
 }

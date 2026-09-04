@@ -294,7 +294,7 @@ func TestEstimeRemises(t *testing.T) {
 	respo3, err := pr.Personne{Identite: pr.Identite{Ville: "v3"}}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	ct := Controller{db: db.DB}
+	ct := Controller{db: db.DB, asso: config.Asso{ID: "acve"}}
 	ct.asso.RemisesHints = config.RemisesHints{ParentEquipier: 5, AutresInscrits: 6}
 
 	camp1, err := ct.createCamp("localhost")

@@ -76,7 +76,7 @@ func randFicheSanitaire() FicheSanitaire {
 		CodePostal: utils.RandString(5, true),
 		Ville:      utils.RandString(15, true),
 		Pays:       pr.Pays(utils.RandString(2, false)),
-		Tels:       []string{"7987987979", "897779897998789"},
+		Tels:       pr.Tels{"7987987979", "897779897998789"},
 	}
 	return FicheSanitaire{pers, fs, resp}
 }

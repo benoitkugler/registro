@@ -296,7 +296,7 @@ func (cp *Camp) IsAgeValide(dateNaissance sh.Date) (valid bool, _ CauseAge) {
 
 	// on considère qu'un anniversaire le premier jour
 	// est OK si on "est trop vieux"
-	agePremierJour := dateNaissance.Age(debut.Add(-24 * time.Hour))
+	agePremierJour := dateNaissance.Age(debut)
 	ageDernierJour := dateNaissance.Age(fin)
 	minOK := ageDernierJour >= cp.AgeMin
 	maxOK := agePremierJour <= cp.AgeMax
@@ -314,7 +314,7 @@ func (cp *Camp) IsAgeValide(dateNaissance sh.Date) (valid bool, _ CauseAge) {
 	} else { // trop vieux
 		cause.Age = agePremierJour
 
-		expected := sh.NewDate(debut.Year()-cp.AgeMax-1, debut.Month(), debut.Day()).Time()
+		expected := sh.NewDate(debut.Year()-cp.AgeMax-1, debut.Month(), debut.Day()).Time().Add(24 * time.Hour)
 		ecartD = expected.Sub(dateNaissance.Time())
 	}
 	cause.EcartInDays = int(ecartD.Hours() / 24)
