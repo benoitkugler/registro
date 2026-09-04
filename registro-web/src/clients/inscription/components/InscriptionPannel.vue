@@ -70,8 +70,19 @@
       </v-stepper-window>
 
       <v-stepper-actions @click:prev="prev" @click:next="next">
+        <template #prev>
+          <v-btn @click="prev" variant="text" prepend-icon="mdi-chevron-left">
+            Retour
+          </v-btn>
+        </template>
         <template #next>
-          <v-btn v-if="tab != 4" @click="next" variant="text">Suivant</v-btn>
+          <v-btn
+            v-if="tab != 4"
+            @click="next"
+            variant="text"
+            append-icon="mdi-chevron-right"
+            >Suivant</v-btn
+          >
           <v-btn
             v-else
             color="green"
@@ -128,13 +139,13 @@ const hasStartedStep2 = ref(false);
 const hasStartedStep4 = ref(false);
 
 const state1 = computed(() =>
-  !hasStartedStep1.value ? undefined : isStep1Valid.value
+  !hasStartedStep1.value ? undefined : isStep1Valid.value,
 );
 const state2 = computed(() =>
-  !hasStartedStep2.value ? undefined : isStep2Valid.value
+  !hasStartedStep2.value ? undefined : isStep2Valid.value,
 );
 const state4 = computed(() =>
-  !hasStartedStep4.value ? undefined : isStep4Valid.value
+  !hasStartedStep4.value ? undefined : isStep4Valid.value,
 );
 
 watch(
@@ -143,7 +154,7 @@ watch(
     if (old == 1) hasStartedStep1.value = true;
     if (old == 2) hasStartedStep2.value = true;
     if (old == 4) hasStartedStep4.value = true;
-  }
+  },
 );
 
 const isStep1Valid = computed(() => {
@@ -173,7 +184,7 @@ const isStep2Valid = computed(() => {
         p.Nom.length &&
         p.Prenom.length &&
         p.Sexe != Sexe.NoSexe &&
-        !isDateZero(p.DateNaissance)
+        !isDateZero(p.DateNaissance),
     )
   );
 });
