@@ -72,11 +72,11 @@ func (s StatutParticipant) String() string {
 	case Refuse:
 		return "Refus définitif"
 	case AttenteProfilInvalide:
-		return "Profil limite"
+		return "Liste d'attente (Profil limite)"
 	case AttenteCampComplet:
-		return "Camp complet"
+		return "Liste d'attente (Camp complet)"
 	case EnAttenteReponse:
-		return "En attente de réponse"
+		return "Liste d'attente (En attente de réponse)"
 	case Inscrit:
 		return "Inscrit"
 	default:
