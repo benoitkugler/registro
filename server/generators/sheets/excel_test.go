@@ -74,11 +74,11 @@ func TestListeParticipants(t *testing.T) {
 	p2 := p1
 	p2.Nationnalite.IsSuisse = false
 	inscrit1 := cps.ParticipantPersonne{
-		Participant: cps.Participant{Id: 1, IdDossier: 1, Commentaire: utils.RandString(10, true), Navette: cps.AllerRetour},
+		Participant: cps.Participant{Id: 1, IdDossier: 1},
 		Personne:    p1,
 	}
 	inscrit2 := cps.ParticipantPersonne{
-		Participant: cps.Participant{Id: 2, IdDossier: 2, Commentaire: utils.RandString(10, true)},
+		Participant: cps.Participant{Id: 2, IdDossier: 2},
 		Personne:    p2,
 	}
 	g1, g2 := cps.Groupe{Nom: "Groupe 1", Couleur: "#AA12BB"}, cps.Groupe{Nom: "Groupe 2"}
@@ -127,8 +127,8 @@ func TestListeParticipantsCamps(t *testing.T) {
 	}}
 	p2 := p1
 	p2.Nationnalite.IsSuisse = false
-	pa1 := cps.Participant{Id: 1, IdDossier: 1, Commentaire: utils.RandString(10, true), Navette: cps.AllerRetour}
-	pa2 := cps.Participant{Id: 2, IdDossier: 2, Commentaire: utils.RandString(10, true), Remises: cps.Remises{Famille: 30}}
+	pa1 := cps.Participant{Id: 1, IdDossier: 1}
+	pa2 := cps.Participant{Id: 2, IdDossier: 2, Remises: cps.Remises{Famille: 30}}
 	inscrit1 := cps.ParticipantCamp{
 		Camp: camp,
 		ParticipantPersonne: cps.ParticipantPersonne{

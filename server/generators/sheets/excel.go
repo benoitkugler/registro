@@ -452,8 +452,6 @@ func ListeParticipantsCamp(camp cps.Camp, inscrits []cps.ParticipantPersonne, do
 		"Age (début de camp)",
 		"Mail du participant",
 		"Groupe",
-		"Navette",
-		"Commentaire",
 	}
 
 	headersResponsable := [...]string{
@@ -505,8 +503,6 @@ func ListeParticipantsCamp(camp cps.Camp, inscrits []cps.ParticipantPersonne, do
 			intCell(camp.AgeDebutCamp(inscrit.Personne.DateNaissance)), // Age (début de camp)
 			{Value: inscrit.Personne.Mail},                             // Mail du participant
 			{Value: groupe.Nom, Color: groupe.Couleur},                 // Groupe
-			{Value: inscrit.Participant.Navette.String()},              // Navette
-			{Value: inscrit.Participant.Commentaire},                   // Commentaire
 		}
 		// custom forms
 		var formValues []Cell

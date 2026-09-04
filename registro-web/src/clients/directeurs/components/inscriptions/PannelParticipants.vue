@@ -144,36 +144,11 @@
                 prepend-icon="mdi-account-details"
                 @click="participantDetailsToShow = p"
               ></v-list-item>
-              <v-divider horizontal thickness="1"></v-divider>
-              <v-list-item
-                title="Modifier"
-                prepend-icon="mdi-pencil"
-                @click="toEdit = p.participant"
-              ></v-list-item>
             </v-list>
           </template>
         </ParticipantRow>
       </div>
     </v-card-text>
-
-    <!-- edit participant -->
-    <v-dialog
-      v-if="toEdit != null"
-      :model-value="toEdit != null"
-      @update:model-value="toEdit = null"
-      max-width="800px"
-    >
-      <ParticipantEdit
-        :participant="toEdit.Participant"
-        :personne="toEdit.Personne"
-        :api="{
-          SelectPersonne: controller.SelectPersonne.bind(controller),
-        }"
-        hide-personne-dossier
-        readonly-statut
-        @save="updateParticipant"
-      ></ParticipantEdit>
-    </v-dialog>
 
     <!-- fiches sanitaires -->
     <v-dialog v-model="showFichesSanitaires">
@@ -218,7 +193,7 @@
                 <v-col cols="7">
                   <v-chip prepend-icon="mdi-account">{{
                     Personnes.NOMPrenom(
-                      participantDetailsToShow.participant.Personne
+                      participantDetailsToShow.participant.Personne,
                     )
                   }}</v-chip>
                 </v-col>
@@ -244,7 +219,7 @@
                 <v-col cols="7">
                   <v-chip prepend-icon="mdi-account">{{
                     Personnes.NOMPrenom(
-                      participantDetailsToShow.dossier.Responsable
+                      participantDetailsToShow.dossier.Responsable,
                     )
                   }}</v-chip></v-col
                 >
@@ -272,7 +247,7 @@
                   <v-chip prepend-icon="mdi-phone">
                     {{
                       Formatters.tels(
-                        participantDetailsToShow.dossier.Responsable.Tels
+                        participantDetailsToShow.dossier.Responsable.Tels,
                       )
                     }}
                   </v-chip></v-col
@@ -382,12 +357,12 @@ const participants = computed(() => {
   });
 
   out.sort((a, b) =>
-    Participants.cmp(a.participant, b.participant, sortByTime.value)
+    Participants.cmp(a.participant, b.participant, sortByTime.value),
   );
   return out;
 });
 const hasGroupes = computed(
-  () => Object.values(groupes.value.Groupes || {}).length != 0
+  () => Object.values(groupes.value.Groupes || {}).length != 0,
 );
 
 const data = ref<ParticipantsOut | null>(null);
@@ -411,20 +386,9 @@ async function loadGroupes() {
   groupes.value = res;
 }
 
-const toEdit = ref<ParticipantExt | null>(null);
-async function updateParticipant(p: Participant) {
-  if (toEdit.value == null || data.value == null) return;
-  const res = await controller.ParticipantsUpdate(p);
-  toEdit.value = null;
-  if (res === undefined) return;
-  controller.showMessage("Participant modifié avec succès.");
-  // reload the list
-  loadParticipants();
-}
-
 async function setParticipantGroupe(
   participant: ParticipantExt,
-  idGroupe: IdGroupe
+  idGroupe: IdGroupe,
 ) {
   const res = await controller.ParticipantSetGroupe({
     idParticipant: participant.Participant.Id,

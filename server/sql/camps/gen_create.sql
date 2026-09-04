@@ -110,9 +110,7 @@ CREATE TABLE participants (
     Statut smallint CHECK (Statut IN (0, 1, 2, 3, 4, 5)) NOT NULL,
     Remises jsonb NOT NULL,
     QuotientFamilial integer NOT NULL,
-    OptionPrix jsonb NOT NULL,
-    Commentaire text NOT NULL,
-    Navette smallint CHECK (Navette IN (0, 1, 2, 3)) NOT NULL
+    OptionPrix jsonb NOT NULL
 );
 
 CREATE TABLE participant_forms (

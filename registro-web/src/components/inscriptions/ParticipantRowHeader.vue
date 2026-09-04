@@ -1,6 +1,6 @@
 <template>
   <v-row no-gutters class="mx-2 px-2">
-    <v-col class="font-weight-bold" align-self="center" cols="2">
+    <v-col class="font-weight-bold" align-self="center" cols="3">
       Participant
     </v-col>
     <v-col class="font-weight-bold text-center" align-self="center" cols="1">
@@ -11,12 +11,6 @@
     </v-col>
     <v-col class="font-weight-bold text-center" align-self="center" cols="1">
       Age
-    </v-col>
-    <v-col class="font-weight-bold text-center" align-self="center" cols="1">
-      Navette
-    </v-col>
-    <v-col class="font-weight-bold text-center" align-self="center" cols="2">
-      Commentaire
     </v-col>
     <v-col class="font-weight-bold text-center" align-self="center" cols="2">
       Inscription
@@ -30,7 +24,5 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, useSlots } from "vue";
-
 const props = defineProps<{}>();
 </script>

@@ -17,7 +17,6 @@ import (
 	"registro/logic/search"
 	"registro/mails"
 	cps "registro/sql/camps"
-	"registro/sql/dossiers"
 	ds "registro/sql/dossiers"
 	"registro/sql/events"
 	in "registro/sql/inscriptions"
@@ -510,7 +509,7 @@ func (ct *Controller) BuildInscription(publicInsc Inscription) (insc in.Inscript
 		DemandeFondSoutien: publicInsc.DemandeFondSoutien,
 
 		DateHeure:          time.Now().Truncate(time.Second),
-		ConfirmedAsDossier: dossiers.OptIdDossier{},
+		ConfirmedAsDossier: ds.OptIdDossier{},
 	}
 
 	return insc, ps, nil

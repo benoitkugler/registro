@@ -18,7 +18,6 @@ import (
 	ds "registro/sql/dossiers"
 	evs "registro/sql/events"
 	"registro/sql/files"
-	fs "registro/sql/files"
 	in "registro/sql/inscriptions"
 	pr "registro/sql/personnes"
 	"registro/utils"
@@ -582,7 +581,7 @@ func (ct *Controller) AidesJustificatifUpload(c echo.Context) error {
 
 // uploadJustificatif create or update the link table
 func (ct *Controller) uploadAideJustificatif(idAide cps.IdAide, content []byte, filename string) (logic.PublicFile, error) {
-	item, found, err := fs.SelectFileAideByIdAide(ct.db, idAide)
+	item, found, err := files.SelectFileAideByIdAide(ct.db, idAide)
 	if err != nil {
 		return logic.PublicFile{}, utils.SQLError(err)
 	}
@@ -591,17 +590,17 @@ func (ct *Controller) uploadAideJustificatif(idAide cps.IdAide, content []byte, 
 	var out logic.PublicFile
 	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
 		if !found { // create one file and a link
-			file, err := fs.File{}.Insert(tx)
+			file, err := files.File{}.Insert(tx)
 			if err != nil {
 				return err
 			}
-			err = fs.FileAide{IdFile: file.Id, IdAide: idAide}.Insert(tx)
+			err = files.FileAide{IdFile: file.Id, IdAide: idAide}.Insert(tx)
 			if err != nil {
 				return err
 			}
 			idFile = file.Id
 		}
-		file, err := fs.UploadFile(ct.files, tx, idFile, content, filename)
+		file, err := files.UploadFile(ct.files, tx, idFile, content, filename)
 		if err != nil {
 			return err
 		}
@@ -626,11 +625,11 @@ func (ct *Controller) AidesJustificatifDelete(c echo.Context) error {
 
 func (ct *Controller) deleteAideJustificatif(id cps.IdAide) error {
 	return utils.InTx(ct.db, func(tx *sql.Tx) error {
-		links, err := fs.DeleteFileAidesByIdAides(tx, id)
+		links, err := files.DeleteFileAidesByIdAides(tx, id)
 		if err != nil {
 			return err
 		}
-		deleted, err := fs.DeleteFilesByIDs(tx, links.IdFiles()...)
+		deleted, err := files.DeleteFilesByIDs(tx, links.IdFiles()...)
 		if err != nil {
 			return err
 		}
@@ -657,14 +656,14 @@ func (ct *Controller) AidesDelete(c echo.Context) error {
 
 // returns the dossier the [Aide] was linked
 func (ct *Controller) deleteAide(id cps.IdAide) error {
-	var files []fs.IdFile
+	var toDelete []files.IdFile
 	err := utils.InTx(ct.db, func(tx *sql.Tx) error {
 		// remove associated documents
-		links, err := fs.DeleteFileAidesByIdAides(tx, id)
+		links, err := files.DeleteFileAidesByIdAides(tx, id)
 		if err != nil {
 			return err
 		}
-		files, err = fs.DeleteFilesByIDs(tx, links.IdFiles()...)
+		toDelete, err = files.DeleteFilesByIDs(tx, links.IdFiles()...)
 		if err != nil {
 			return err
 		}
@@ -677,7 +676,7 @@ func (ct *Controller) deleteAide(id cps.IdAide) error {
 	if err != nil {
 		return err
 	}
-	err = ct.files.Delete(files...)
+	err = ct.files.Delete(toDelete...)
 	if err != nil {
 		return err
 	}

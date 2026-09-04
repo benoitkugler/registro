@@ -44,10 +44,10 @@
             class="my-1"
           >
             <template #append>
-              <v-chip :color="camp.Album.Id ? 'success' : undefined">
+              <v-chip :color="camp.Album.id ? 'success' : undefined">
                 <v-tooltip
                   activator="parent"
-                  v-if="camp.Album.Id"
+                  v-if="camp.Album.id"
                   content-class="pa-0"
                 >
                   <v-card title="Album photo" min-width="400px">
@@ -60,13 +60,13 @@
                       </v-row>
                       <v-row>
                         <v-col cols="auto">ID</v-col>
-                        <v-col class="text-right">{{ camp.Album.Id }}</v-col>
+                        <v-col class="text-right">{{ camp.Album.id }}</v-col>
                       </v-row>
                       <v-row>
                         <v-col cols="auto">Date de création</v-col>
                         <v-col class="text-right">{{
                           new Date(camp.Album.createdAt).toLocaleDateString(
-                            "fr"
+                            "fr",
                           )
                         }}</v-col>
                       </v-row>
@@ -80,7 +80,7 @@
                   </v-card>
                 </v-tooltip>
                 {{
-                  camp.Album.Id == ""
+                  camp.Album.id == ""
                     ? "Pas d'album"
                     : `Album créé le ${Formatters.date(camp.Album.createdAt)}`
                 }}
@@ -142,7 +142,7 @@ const isLoading = ref(false);
 const enableCreate = computed(() => {
   if (isLoading.value) return false;
   if (!selection.value.length || !data.value) return false;
-  return selection.value.every((id) => getCamp(id).Album.Id == "");
+  return selection.value.every((id) => getCamp(id).Album.id == "");
 });
 
 async function createAlbums() {
@@ -159,7 +159,7 @@ async function createAlbums() {
 const enableDelete = computed(() => {
   if (isLoading.value) return false;
   if (!selection.value.length || !data.value) return false;
-  return selection.value.every((id) => getCamp(id).Album.Id != "");
+  return selection.value.every((id) => getCamp(id).Album.id != "");
 });
 
 const showConfirmeDelete = ref(false);

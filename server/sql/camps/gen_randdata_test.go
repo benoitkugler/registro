@@ -264,12 +264,6 @@ func randMeta() Meta {
 	return Meta(randMapstringstring())
 }
 
-func randNavette() Navette {
-	choix := [...]Navette{NoBus, Aller, Retour, AllerRetour}
-	i := rand.Intn(len(choix))
-	return choix[i]
-}
-
 func randOptionNavette() OptionNavette {
 	var s OptionNavette
 	s.Actif = randbool()
@@ -312,8 +306,6 @@ func randParticipant() Participant {
 	s.Remises = randRemises()
 	s.QuotientFamilial = randint()
 	s.OptionPrix = randOptionPrixParticipant()
-	s.Commentaire = randstring()
-	s.Navette = randNavette()
 
 	return s
 }

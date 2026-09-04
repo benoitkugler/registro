@@ -144,9 +144,6 @@
       <ParticipantEdit
         :participant="toEdit.Participant"
         :personne="toEdit.Personne"
-        :api="{
-          SelectPersonne: controller.SelectPersonne.bind(controller),
-        }"
         @save="updateParticipant"
       ></ParticipantEdit>
     </v-dialog>
@@ -257,6 +254,7 @@ import {
   goToParticipant,
   goToPersonne,
 } from "../../plugins/router";
+import ParticipantEdit from "./ParticipantEdit.vue";
 
 const props = defineProps<{
   id: IdCamp;
@@ -300,7 +298,7 @@ async function loadCamp() {
 function ensureParticipant() {
   if (props.idParticipant === undefined) return;
   const participant = (data.value?.Participants || []).find(
-    (p) => p.Participant.Id == props.idParticipant
+    (p) => p.Participant.Id == props.idParticipant,
   );
   if (!participant) return;
   toEdit.value = copy(participant);
@@ -338,7 +336,7 @@ async function deleteParticipant() {
   if (res === undefined) return;
   controller.showMessage("Participant supprimé avec succès.");
   data.value.Participants = (data.value.Participants || []).filter(
-    (p) => p.Participant.Id != id
+    (p) => p.Participant.Id != id,
   );
 }
 
@@ -354,7 +352,7 @@ async function moveParticipant() {
     action: () => goToParticipant({ IdCamp: args.Target, Id: args.Id }),
   });
   data.value.Participants = (data.value.Participants || []).filter(
-    (p) => p.Participant.Id != args.Id
+    (p) => p.Participant.Id != args.Id,
   );
 }
 

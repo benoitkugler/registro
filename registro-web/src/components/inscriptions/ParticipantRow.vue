@@ -1,6 +1,6 @@
 <template>
   <v-row no-gutters :class="cl">
-    <v-col align-self="center" cols="2">
+    <v-col align-self="center" cols="3">
       <v-list-item
         :title="Personnes.NOMPrenom(props.participant.Personne)"
         class="px-0"
@@ -40,16 +40,6 @@
     <v-col align-self="center" cols="1" class="text-center">
       {{ props.participant.Age }} ans
     </v-col>
-    <v-col align-self="center" cols="1" class="text-center">
-      {{
-        props.participant.Participant.Navette == Navette.NoBus
-          ? "-"
-          : NavetteLabels[props.participant.Participant.Navette]
-      }}
-    </v-col>
-    <v-col align-self="center" cols="2">
-      {{ props.participant.Participant.Commentaire }}
-    </v-col>
     <v-col cols="2" align-self="center" class="text-center">
       {{ Formatters.time(props.participant.MomentInscription) }}
     </v-col>
@@ -74,11 +64,7 @@
 
 <script setup lang="ts">
 import { Formatters, Personnes } from "@/utils";
-import {
-  Navette,
-  NavetteLabels,
-  type ParticipantExt,
-} from "../../clients/backoffice/logic/api";
+import { type ParticipantExt } from "../../clients/backoffice/logic/api";
 import { computed } from "vue";
 const props = defineProps<{
   participant: ParticipantExt;
@@ -86,6 +72,7 @@ const props = defineProps<{
 }>();
 
 const cl = computed(
-  () => "mx-2 px-2 rounded " + (props.index % 2 == 0 ? "bg-grey-lighten-4" : "")
+  () =>
+    "mx-2 px-2 rounded " + (props.index % 2 == 0 ? "bg-grey-lighten-4" : ""),
 );
 </script>

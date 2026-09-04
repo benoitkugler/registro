@@ -8,7 +8,6 @@ import (
 	"slices"
 
 	"registro/controllers/backoffice"
-	filesAPI "registro/controllers/files"
 	fsAPI "registro/controllers/files"
 	"registro/generators/pdfcreator"
 	"registro/logic"
@@ -159,7 +158,7 @@ func (ct *Controller) DocumentsUploadToDownload(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	content, filename, err := filesAPI.ReadUpload(header)
+	content, filename, err := fsAPI.ReadUpload(header)
 	if err != nil {
 		return err
 	}
@@ -197,7 +196,7 @@ func (ct *Controller) uploadToDownload(idCamp cps.IdCamp, content []byte, filena
 
 func (ct *Controller) DocumentsDeleteToDownload(c echo.Context) error {
 	key := c.QueryParam("key")
-	_, err := filesAPI.Delete(ct.db, ct.key, ct.files, key)
+	_, err := fsAPI.Delete(ct.db, ct.key, ct.files, key)
 	if err != nil {
 		return err
 	}
@@ -397,7 +396,7 @@ func (ct *Controller) DocumentsUploadDemandeFile(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	content, filename, err := filesAPI.ReadUpload(header)
+	content, filename, err := fsAPI.ReadUpload(header)
 	if err != nil {
 		return err
 	}
@@ -440,7 +439,7 @@ func (ct *Controller) uploadDemandeFile(user cps.IdCamp, idDemande fs.IdDemande,
 
 func (ct *Controller) DocumentsDeleteDemandeFile(c echo.Context) error {
 	key := c.QueryParam("key")
-	_, err := filesAPI.Delete(ct.db, ct.key, ct.files, key)
+	_, err := fsAPI.Delete(ct.db, ct.key, ct.files, key)
 	if err != nil {
 		return err
 	}

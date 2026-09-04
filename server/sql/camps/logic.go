@@ -11,7 +11,6 @@ import (
 
 	ds "registro/sql/dossiers"
 	pr "registro/sql/personnes"
-	"registro/sql/shared"
 	sh "registro/sql/shared"
 	"registro/utils"
 
@@ -396,7 +395,7 @@ func (cp Camp) Ext() CampExt {
 
 // TrouveGroupe renvoie le groupe dans lequel [dateNaissance] est,
 // ou [false] si [dateNaissance] est avant le premier groupe.
-func (gs Groupes) TrouveGroupe(dateNaissance shared.Date) (Groupe, bool) {
+func (gs Groupes) TrouveGroupe(dateNaissance sh.Date) (Groupe, bool) {
 	// sort by date
 	sorted := utils.MapValues(gs)
 	slices.SortFunc(sorted, func(a, b Groupe) int { return a.Fin.Time().Compare(b.Fin.Time()) })

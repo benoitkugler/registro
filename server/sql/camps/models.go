@@ -169,9 +169,6 @@ type Participant struct {
 	QuotientFamilial int // optional, 0 for inactive
 
 	OptionPrix OptionPrixParticipant
-
-	Commentaire string  // rempli sur l'espace de suivi
-	Navette     Navette // rempli sur l'espace de suivi
 }
 
 // Groupe représente un groupe de participants

@@ -38,7 +38,6 @@ func setupRoutesDirecteurs(e *echo.Echo, ct *directeurs.Controller) {
 
 	// Participants
 	gr.GET("/api/v1/directeurs/participants", ct.ParticipantsGet)
-	gr.POST("/api/v1/directeurs/participants", ct.ParticipantsUpdate)
 	gr.GET("/api/v1/directeurs/participants/fiches-sanitaires", ct.ParticipantsGetFichesSanitaires)
 	gr.GET("/api/v1/directeurs/participants/download-fiche-sanitaire", ct.ParticipantsDownloadFicheSanitaire)
 

@@ -195,7 +195,7 @@
                 variant="outlined"
                 density="compact"
                 label="Navette"
-                hint="Ce texte est affiché sur l'espace personnel de suivi."
+                hint="Ce texte est affiché sur le formulaire d'inscription."
                 persistent-hint
                 rows="3"
                 :disabled="!inner.Navette.Actif"
@@ -294,7 +294,7 @@ const areFieldsValid = computed(
     !(
       inner.value.OptionPrix.Active == OptionPrixKind.PrixJour &&
       inner.value.OptionPrix.Jours?.length != inner.value.Duree
-    )
+    ),
 );
 
 const campStatutItems = selectItems(StatutCampLabels);

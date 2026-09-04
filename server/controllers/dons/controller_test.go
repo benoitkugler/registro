@@ -80,5 +80,6 @@ func TestDonsAPI(t *testing.T) {
 	tu.Assert(t, len(out.YearTotals) == 1)
 
 	excel, err := ct.exportDonsExcel(time.Now().Year())
+	tu.AssertNoErr(t, err)
 	tu.Write(t, "Dons.xlsx", excel)
 }

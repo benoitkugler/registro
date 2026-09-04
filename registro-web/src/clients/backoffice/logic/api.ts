@@ -305,9 +305,10 @@ export interface GeneratedFile {
 // registro/immich.AlbumAndLinks
 export interface AlbumAndLinks {
   albumName: string;
+  albumThumbnailAssetId: string;
   assetCount: Int;
   createdAt: Time;
-  Id: AlbumID;
+  id: AlbumID;
   order: string;
   EquipiersURL: string;
   InscritsURL: string;
@@ -570,6 +571,7 @@ export interface Camp {
   Vetements: ListeVetements;
   AlbumID: string;
   Meta: Meta;
+  IsAlbumVisible: boolean;
 }
 // registro/sql/camps.CampExt
 export interface CampExt {
@@ -632,22 +634,6 @@ export interface ListeVetements {
 }
 // registro/sql/camps.Meta
 export type Meta = Record<string, string> | null;
-// registro/sql/camps.Navette
-export const Navette = {
-  NoBus: 0,
-  Aller: 1,
-  Retour: 2,
-  AllerRetour: 3,
-} as const;
-export type Navette = (typeof Navette)[keyof typeof Navette];
-
-export const NavetteLabels: Record<Navette, string> = {
-  [Navette.NoBus]: "Aucun trajet",
-  [Navette.Aller]: "Aller",
-  [Navette.Retour]: "Retour",
-  [Navette.AllerRetour]: "Aller-Retour",
-};
-
 // registro/sql/camps.OptionNavette
 export interface OptionNavette {
   Actif: boolean;
@@ -690,8 +676,6 @@ export interface Participant {
   Remises: Remises;
   QuotientFamilial: Int;
   OptionPrix: OptionPrixParticipant;
-  Commentaire: string;
-  Navette: Navette;
 }
 // registro/sql/camps.ParticipantCamp
 export interface ParticipantCamp {

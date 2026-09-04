@@ -11,7 +11,6 @@ import (
 	"registro/config"
 	"registro/controllers/backoffice"
 	"registro/controllers/directeurs"
-	filesAPI "registro/controllers/files"
 	fsAPI "registro/controllers/files"
 	"registro/crypto"
 	"registro/generators/pdfcreator"
@@ -22,7 +21,6 @@ import (
 	ds "registro/sql/dossiers"
 	evs "registro/sql/events"
 	fs "registro/sql/files"
-	pe "registro/sql/personnes"
 	pr "registro/sql/personnes"
 	"registro/utils"
 
@@ -204,8 +202,7 @@ type UpdateParticipantsIn struct {
 	Participants []cps.Participant
 }
 
-// UpdateParticipants met à jour les champs [Navette], [Commentaire] et
-// [OptionPrix] de chaque participant donnés.
+// UpdateParticipants met à jour le champ [OptionPrix] de chaque participant donnés.
 //
 // Une notification est envoyée au directeur si le séjour approche.
 func (ct *Controller) UpdateParticipants(c echo.Context) error {
@@ -253,8 +250,6 @@ func (ct *Controller) updateParticipants(host string, args UpdateParticipantsIn)
 			if !ok {
 				return errors.New("access forbidden")
 			}
-			current.Navette = newP.Navette
-			current.Commentaire = newP.Commentaire
 			current.OptionPrix = newP.OptionPrix // TODO: sanitize
 			_, err = current.Update(tx)
 			if err != nil {
@@ -551,7 +546,7 @@ func (ct *Controller) DownloadAttestationPresence(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	mimeType := filesAPI.SetBlobHeader(c, content, "Attestation de présence.pdf")
+	mimeType := fsAPI.SetBlobHeader(c, content, "Attestation de présence.pdf")
 	return c.Blob(200, mimeType, content)
 }
 
@@ -588,7 +583,7 @@ func (ct *Controller) DownloadFacture(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	mimeType := filesAPI.SetBlobHeader(c, content, "Facture.pdf")
+	mimeType := fsAPI.SetBlobHeader(c, content, "Facture.pdf")
 	return c.Blob(200, mimeType, content)
 }
 
@@ -664,7 +659,7 @@ func (ct *Controller) acceptePlaceLiberee(idDossier ds.IdDossier, idEvent evs.Id
 	if err != nil {
 		return utils.SQLError(err)
 	}
-	personne, err := pe.SelectPersonne(ct.db, participant.IdPersonne)
+	personne, err := pr.SelectPersonne(ct.db, participant.IdPersonne)
 	if err != nil {
 		return utils.SQLError(err)
 	}

@@ -58,37 +58,6 @@ func (ct *Controller) getParticipants(id cps.IdCamp) (ParticipantsOut, error) {
 	return ParticipantsOut{participants, reglements, camp.Stats()}, nil
 }
 
-// ParticipantsUpdate modifie les champs d'un participant.
-//
-// Seuls les champs Details et Navette sont pris en compte.
-//
-// Le statut est modifié sans aucune notification.
-func (ct *Controller) ParticipantsUpdate(c echo.Context) error {
-	var args cps.Participant
-	if err := c.Bind(&args); err != nil {
-		return err
-	}
-	err := ct.updateParticipant(args)
-	if err != nil {
-		return err
-	}
-	return c.NoContent(200)
-}
-
-func (ct *Controller) updateParticipant(args cps.Participant) error {
-	current, err := cps.SelectParticipant(ct.db, args.Id)
-	if err != nil {
-		return utils.SQLError(err)
-	}
-	current.Commentaire = args.Commentaire
-	current.Navette = args.Navette
-	_, err = current.Update(ct.db)
-	if err != nil {
-		return utils.SQLError(err)
-	}
-	return nil
-}
-
 func (ct *Controller) ParticipantsGetFichesSanitaires(c echo.Context) error {
 	user := JWTUser(c)
 	out, err := ct.loadFichesSanitaires(user)
@@ -183,6 +152,9 @@ func (ct *Controller) downloadFicheSanitaire(user cps.IdCamp, id cps.IdParticipa
 	content, err := pdfcreator.CreateFicheSanitaires(ct.asso, []pdfcreator.FicheSanitaire{
 		{Personne: personne.Identite, FicheSanitaire: fiche, Responsable: responsable.Identite},
 	})
+	if err != nil {
+		return nil, "", err
+	}
 	name := fmt.Sprintf("Fiche sanitaire %s.pdf", personne.NOMPrenom())
 	return content, name, nil
 }

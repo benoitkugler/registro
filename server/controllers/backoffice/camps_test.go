@@ -6,7 +6,6 @@ import (
 
 	"registro/config"
 	"registro/crypto"
-	cp "registro/sql/camps"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
 	"registro/sql/files"
@@ -54,7 +53,7 @@ func TestCRUD(t *testing.T) {
 		camp, err := ct.createCamp("localhost")
 		tu.AssertNoErr(t, err)
 
-		_, err = ct.createEquipier(CreateEquipierIn{pe.Id, camp.Camp.Camp.Id, cps.Roles{cp.Direction}})
+		_, err = ct.createEquipier(CreateEquipierIn{pe.Id, camp.Camp.Camp.Id, cps.Roles{cps.Direction}})
 		tu.AssertNoErr(t, err)
 	})
 
@@ -69,7 +68,7 @@ func TestCRUD(t *testing.T) {
 
 func Test_lastTaux(t *testing.T) {
 	tests := []struct {
-		camps cp.Camps
+		camps cps.Camps
 		want  ds.IdTaux
 	}{
 		{nil, 1},

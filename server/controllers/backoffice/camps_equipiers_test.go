@@ -6,7 +6,6 @@ import (
 
 	"registro/config"
 	"registro/crypto"
-	cp "registro/sql/camps"
 	cps "registro/sql/camps"
 	"registro/sql/files"
 	pr "registro/sql/personnes"
@@ -33,13 +32,13 @@ func TestEquipiers(t *testing.T) {
 	camp, err := ct.createCamp("localhost")
 	tu.AssertNoErr(t, err)
 
-	_, err = ct.createEquipier(CreateEquipierIn{pe1.Id, camp.Camp.Camp.Id, cps.Roles{cp.Direction}})
+	_, err = ct.createEquipier(CreateEquipierIn{pe1.Id, camp.Camp.Camp.Id, cps.Roles{cps.Direction}})
 	tu.AssertNoErr(t, err)
 
-	_, err = ct.createEquipier(CreateEquipierIn{pe2.Id, camp.Camp.Camp.Id, cps.Roles{cp.Adjoint, cp.Menage}})
+	_, err = ct.createEquipier(CreateEquipierIn{pe2.Id, camp.Camp.Camp.Id, cps.Roles{cps.Adjoint, cps.Menage}})
 	tu.AssertNoErr(t, err)
 
-	_, err = ct.createEquipier(CreateEquipierIn{pe3.Id, camp.Camp.Camp.Id, cps.Roles{cp.Chauffeur, cp.Cuisine}})
+	_, err = ct.createEquipier(CreateEquipierIn{pe3.Id, camp.Camp.Camp.Id, cps.Roles{cps.Chauffeur, cps.Cuisine}})
 	tu.AssertNoErr(t, err)
 
 	b, name, err := ct.exportListeEquipiers(camp.Camp.Camp.Id)

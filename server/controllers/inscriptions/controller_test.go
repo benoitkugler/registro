@@ -238,6 +238,7 @@ func TestController_confirmeInscription(t *testing.T) {
 		tu.Assert(t, dossier.MomentInscription.Equal(insc.DateHeure))
 
 		insc, err = in.SelectInscription(ct.db, insc.Id)
+		tu.AssertNoErr(t, err)
 		tu.Assert(t, insc.ConfirmedAsDossier.Valid == true)
 
 		respo, err := pr.SelectPersonne(ct.db, dossier.IdResponsable)

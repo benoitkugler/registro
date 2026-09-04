@@ -9,17 +9,16 @@ import (
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
 	"registro/sql/files"
-	fs "registro/sql/files"
 	pr "registro/sql/personnes"
 	tu "registro/utils/testutils"
 )
 
-func createFileFor(db ds.DB, idPersonne pr.IdPersonne, idDemande fs.IdDemande) error {
-	file, err := fs.File{}.Insert(db)
+func createFileFor(db ds.DB, idPersonne pr.IdPersonne, idDemande files.IdDemande) error {
+	file, err := files.File{}.Insert(db)
 	if err != nil {
 		return err
 	}
-	err = fs.FilePersonne{IdFile: file.Id, IdPersonne: idPersonne, IdDemande: idDemande}.Insert(db)
+	err = files.FilePersonne{IdFile: file.Id, IdPersonne: idPersonne, IdDemande: idDemande}.Insert(db)
 	if err != nil {
 		return err
 	}

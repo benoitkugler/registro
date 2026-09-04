@@ -101,7 +101,7 @@ func isFichesanitaireLocked(mailRespo string, mails []string) bool {
 		return false
 	}
 	for _, mail := range mails {
-		if strings.ToLower(mail) == strings.ToLower(mailRespo) {
+		if strings.EqualFold(mail, mailRespo) {
 			return false
 		}
 	}

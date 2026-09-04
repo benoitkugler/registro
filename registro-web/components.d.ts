@@ -52,8 +52,6 @@ declare module 'vue' {
     MontantField: typeof import('./src/components/MontantField.vue')['default']
     MultilineText: typeof import('./src/components/MultilineText.vue')['default']
     NationaliteField: typeof import('./src/components/NationaliteField.vue')['default']
-    NavetteField: typeof import('./src/components/NavetteField.vue')['default']
-    ParticipantEdit: typeof import('./src/components/inscriptions/ParticipantEdit.vue')['default']
     ParticipantIcon: typeof import('./src/components/inscriptions/ParticipantIcon.vue')['default']
     ParticipantRow: typeof import('./src/components/inscriptions/ParticipantRow.vue')['default']
     ParticipantRowHeader: typeof import('./src/components/inscriptions/ParticipantRowHeader.vue')['default']

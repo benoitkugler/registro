@@ -3,7 +3,6 @@ package directeurs
 import (
 	"errors"
 	"iter"
-	"slices"
 
 	"registro/controllers/backoffice"
 	"registro/immich"
@@ -49,16 +48,6 @@ func (ct *Controller) loadPhotos(id cps.IdCamp) (data Photos, err error) {
 	}
 
 	return Photos{HasAlbum: true, Album: album, IsAlbumVisible: camp.IsAlbumVisible}, nil
-}
-
-func mailsFor(m pr.Personnes) []string {
-	tmp := make(utils.Set[string])
-	for _, p := range m {
-		tmp.Add(p.Mail)
-	}
-	out := tmp.Keys()
-	slices.Sort(out)
-	return out
 }
 
 type PhotosInviteIn struct {

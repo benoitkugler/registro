@@ -470,22 +470,6 @@ export interface ListeVetements {
 }
 // registro/sql/camps.Meta
 export type Meta = Record<string, string> | null;
-// registro/sql/camps.Navette
-export const Navette = {
-  NoBus: 0,
-  Aller: 1,
-  Retour: 2,
-  AllerRetour: 3,
-} as const;
-export type Navette = (typeof Navette)[keyof typeof Navette];
-
-export const NavetteLabels: Record<Navette, string> = {
-  [Navette.NoBus]: "Aucun trajet",
-  [Navette.Aller]: "Aller",
-  [Navette.Retour]: "Retour",
-  [Navette.AllerRetour]: "Aller-Retour",
-};
-
 // registro/sql/camps.OptionNavette
 export interface OptionNavette {
   Actif: boolean;
@@ -528,8 +512,6 @@ export interface Participant {
   Remises: Remises;
   QuotientFamilial: Int;
   OptionPrix: OptionPrixParticipant;
-  Commentaire: string;
-  Navette: Navette;
 }
 // registro/sql/camps.ParticipantCamp
 export interface ParticipantCamp {
@@ -1150,18 +1132,6 @@ export abstract class AbstractAPI {
         headers: this.getHeaders(),
       });
       return rep.data;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  /** ParticipantsUpdate performs the request and handles the error */
-  async ParticipantsUpdate(params: Participant) {
-    const fullUrl = this.baseURL + "/api/v1/directeurs/participants";
-    this.startRequest();
-    try {
-      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-      return true;
     } catch (error) {
       this.handleError(error);
     }

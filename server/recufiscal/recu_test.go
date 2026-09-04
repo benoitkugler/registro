@@ -117,5 +117,6 @@ func BenchmarkExportRecus(b *testing.B) {
 
 	for b.Loop() {
 		_, err = generate(recus, personnes)
+		tu.AssertNoErr(b, err)
 	}
 }

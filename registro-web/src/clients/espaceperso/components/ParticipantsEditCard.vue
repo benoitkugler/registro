@@ -9,30 +9,6 @@
           >
             <v-card-text>
               <v-row>
-                <v-col>
-                  <NavetteField
-                    v-if="participant.Camp.Navette.Actif"
-                    v-model="inner[index].Navette"
-                    :hint="participant.Camp.Navette.Commentaire"
-                  >
-                  </NavetteField>
-                  <v-chip v-else>Ce séjour ne propose pas de navette.</v-chip>
-                </v-col>
-              </v-row>
-
-              <v-row>
-                <v-col>
-                  <v-text-field
-                    v-model="inner[index].Commentaire"
-                    label="Information libre"
-                    density="compact"
-                    variant="outlined"
-                    hide-details
-                  ></v-text-field>
-                </v-col>
-              </v-row>
-
-              <v-row>
                 <v-col> TODO: option prix </v-col>
               </v-row>
             </v-card-text>

@@ -108,12 +108,6 @@ func TestPatternsSimilarite_match(t *testing.T) {
 		Sexe:          pr.Woman,
 		DateNaissance: d1,
 	}
-	type fields struct {
-		Nom           string
-		Prenom        string
-		Sexe          pr.Sexe
-		DateNaissance shared.Date
-	}
 
 	tests := []struct {
 		fields    PatternsSimilarite

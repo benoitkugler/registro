@@ -8,7 +8,9 @@
               label="Personne"
               v-model="inner.IdPersonne"
               :initial-personne="Personnes.label(props.personne)"
-              :api="props.api"
+              :api="{
+                SelectPersonne: controller.SelectPersonne.bind(controller),
+              }"
             ></SelectPersonne>
           </v-col>
           <v-col>
@@ -22,19 +24,6 @@
               hide-details
               :readonly="props.readonlyStatut"
             ></StatutParticipantField>
-          </v-col>
-        </v-row>
-        <v-row>
-          <v-col>
-            <NavetteField v-model="inner.Navette"></NavetteField>
-          </v-col>
-          <v-col>
-            <v-text-field
-              v-model="inner.Commentaire"
-              label="Commentaire"
-              density="compact"
-              variant="outlined"
-            ></v-text-field>
           </v-col>
         </v-row>
       </v-form>
@@ -55,12 +44,10 @@ import {
   type Personne,
 } from "@/clients/backoffice/logic/api";
 import { copy, Personnes } from "@/utils";
-import StatutParticipantField from "../StatutParticipantField.vue";
-import type { SelectPersonneAPI } from "../types";
+import { controller } from "../../logic/logic";
 const props = defineProps<{
   participant: Participant;
   personne: Personne;
-  api: SelectPersonneAPI;
   hidePersonneDossier?: boolean;
   readonlyStatut?: boolean;
 }>();
@@ -70,6 +57,6 @@ const emit = defineEmits<{
 const inner = ref(copy(props.participant));
 
 const areFieldsValid = computed(
-  () => !!(inner.value.IdPersonne && inner.value.IdDossier)
+  () => !!(inner.value.IdPersonne && inner.value.IdDossier),
 );
 </script>

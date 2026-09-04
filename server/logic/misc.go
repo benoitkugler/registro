@@ -8,7 +8,6 @@ import (
 	cps "registro/sql/camps"
 	"registro/sql/dons"
 	ds "registro/sql/dossiers"
-	"registro/sql/files"
 	fs "registro/sql/files"
 	pr "registro/sql/personnes"
 	"registro/utils"
@@ -146,10 +145,10 @@ func EspacePersoURL(key crypto.Encrypter, host string, dossier ds.IdDossier, que
 // permettant téléchargement/suppression/modification.
 type PublicFile struct {
 	Key string // crypted
-	files.File
+	fs.File
 }
 
-func NewPublicFile(key crypto.Encrypter, file files.File) PublicFile {
+func NewPublicFile(key crypto.Encrypter, file fs.File) PublicFile {
 	return PublicFile{
 		Key:  crypto.EncryptID(key, file.Id),
 		File: file,

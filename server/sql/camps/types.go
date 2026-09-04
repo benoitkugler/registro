@@ -84,35 +84,6 @@ func (s StatutParticipant) String() string {
 	}
 }
 
-type Navette uint8
-
-const (
-	NoBus       Navette = iota // Aucun trajet
-	Aller                      // Aller
-	Retour                     // Retour
-	AllerRetour                // Aller-Retour
-)
-
-func (b Navette) Includes(aller bool) bool {
-	if aller {
-		return b == Aller || b == AllerRetour
-	}
-	return b == Retour || b == AllerRetour
-}
-
-func (b Navette) String() string {
-	switch b {
-	case Aller:
-		return "Aller"
-	case Retour:
-		return "Retour"
-	case AllerRetour:
-		return "Aller/Retour"
-	default:
-		return ""
-	}
-}
-
 // Remises altère le prix payé par un participant
 type Remises struct {
 	Equipiers int // en %
