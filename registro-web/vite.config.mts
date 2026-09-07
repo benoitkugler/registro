@@ -34,6 +34,7 @@ function rewriteURL(url: string) {
 export default defineConfig(({ command }) => ({
   base: command == "serve" ? "/" : "/static/",
   appType: "mpa",
+  experimental: { bundledDev: true },
   plugins: [
     {
       name: "rewrite-middleware",
