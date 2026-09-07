@@ -135,5 +135,5 @@ ALTER TABLE inscriptions
 
 DROP FUNCTION __migration_tels;
 DROP FUNCTION __migration_tels_jsonb;
-ROLLBACK;
+COMMIT;
 
