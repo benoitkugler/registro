@@ -5,6 +5,7 @@ import {
   QueryReglement,
   StatutCamp,
   type CampExt,
+  type CampHeader,
   type IdCamp,
   type IdDossier,
   type Int,
@@ -17,11 +18,11 @@ class Controller extends AbstractAPI {
     public showMessage: (
       message: string,
       color?: string,
-      action?: Action
+      action?: Action,
     ) => void,
     public isFondsSoutien: boolean,
     baseURL: string,
-    authToken: string
+    authToken: string,
   ) {
     super(baseURL, authToken);
   }
@@ -48,12 +49,8 @@ export const controller = new Controller(
   (_, __) => {},
   false,
   baseURL(),
-  ""
+  "",
 );
-
-export function isCampOpen(camp: CampExt) {
-  return camp.Camp.Statut != StatutCamp.Ferme && !camp.IsTerminated;
-}
 
 export function emptyQuery(): SearchDossierIn {
   return {

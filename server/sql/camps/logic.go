@@ -386,11 +386,15 @@ type CampExt struct {
 	// IsTerminated is 'true' when the camp
 	// is over by (at least) 1 day, even if the 'Ouvert' tag is still on.
 	IsTerminated bool
-	Slug         string
+	// IsOpen is 'true' if the status is [Ouvert]
+	// and is the camp is not already terminated
+	IsOpen bool
+	Slug   string
 }
 
 func (cp Camp) Ext() CampExt {
-	return CampExt{cp, cp.IsPassedBy(1), cp.Slug()}
+	isTerminated := cp.IsPassedBy(1)
+	return CampExt{cp, isTerminated, cp.Statut == Ouvert && !isTerminated, cp.Slug()}
 }
 
 // TrouveGroupe renvoie le groupe dans lequel [dateNaissance] est,

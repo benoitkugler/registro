@@ -578,6 +578,7 @@ export interface Camp {
 export interface CampExt {
   Camp: Camp;
   IsTerminated: boolean;
+  IsOpen: boolean;
   Slug: string;
 }
 // registro/sql/camps.Camps

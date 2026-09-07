@@ -93,7 +93,7 @@
                   :href="
                     controller.CampsDownloadParticipants(
                       new Date().getFullYear() as Int,
-                      controller.authToken
+                      controller.authToken,
                     )
                   "
                 ></v-list-item>
@@ -124,7 +124,8 @@
         @show-documents="showDocumentsFor = camp"
         @send-sondage="sendSondage(camp.Camp.Camp.Id)"
         @add-directeur="
-          (idPersonne: IdPersonne) => addDirecteur(idPersonne, camp.Camp.Camp.Id)
+          (idPersonne: IdPersonne) =>
+            addDirecteur(idPersonne, camp.Camp.Camp.Id)
         "
       ></CampHeaderRow>
 
@@ -259,7 +260,7 @@
 
 <script lang="ts" setup>
 import { ref, computed, onMounted, reactive } from "vue";
-import { controller, isCampOpen } from "@/clients/backoffice/logic/logic";
+import { controller } from "@/clients/backoffice/logic/logic";
 import {
   Role,
   StatutCamp,
@@ -314,7 +315,7 @@ const camps = computed(() => {
   const out = Array.from(campsData.values()).filter(
     (camp) =>
       Camps.match(camp.Camp.Camp, pattern) &&
-      (!filter.openOnly || isCampOpen(camp.Camp))
+      (!filter.openOnly || camp.Camp.IsOpen),
   );
   // most recent first
   out.sort((a, b) => {
@@ -327,8 +328,8 @@ const camps = computed(() => {
 const pageList = computed(() =>
   camps.value.slice(
     (currentPage.value - 1) * pageSize,
-    currentPage.value * pageSize
-  )
+    currentPage.value * pageSize,
+  ),
 );
 
 function ensurePageValid() {
@@ -359,7 +360,7 @@ async function create() {
 
 const pageSize = 16;
 const pagesCount = computed(() =>
-  Math.max(Math.ceil(camps.value.length / pageSize), 1)
+  Math.max(Math.ceil(camps.value.length / pageSize), 1),
 );
 const currentPage = ref(1); // 1-based
 
@@ -402,18 +403,15 @@ const createSelectedTaux = ref<Taux>({
   FrancsSuisse: 0 as Int,
 });
 const areCreateFieldsValid = computed(
-  () => createSelectedTaux.value.Id > 0 || createSelectedTaux.value.Label != ""
+  () => createSelectedTaux.value.Id > 0 || createSelectedTaux.value.Label != "",
 );
 
 /** isPlageTauxValid return true if all the camp
  * open to inscriptions have the same [IdTaux]
  */
 const isPlageTauxValid = computed(() => {
-  const tauxCampsOpen = new Set(
-    Array.from(campsData.values())
-      .filter((c) => isCampOpen(c.Camp))
-      .map((c) => c.Camp.Camp.IdTaux)
-  );
+  const openCamps = Array.from(campsData.values()).filter((c) => c.Camp.IsOpen);
+  const tauxCampsOpen = new Set(openCamps.map((c) => c.Camp.Camp.IdTaux));
   return tauxCampsOpen.size <= 1;
 });
 
@@ -477,7 +475,7 @@ async function sendSondage(idCamp: IdCamp) {
   await readJSONStream(
     res,
     (v) => (sondagesProgress.value = v),
-    (err) => controller.onError("Envoi du sondage", err)
+    (err) => controller.onError("Envoi du sondage", err),
   );
   sondagesProgress.value = null;
   controller.showMessage("Sondage envoyé avec succès.");
