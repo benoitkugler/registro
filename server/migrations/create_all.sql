@@ -325,6 +325,7 @@ CREATE TABLE inscriptions (
 );
 
 CREATE TABLE inscription_participants (
+    Id serial PRIMARY KEY,
     IdInscription integer NOT NULL,
     IdCamp integer NOT NULL,
     IdTaux integer NOT NULL,
@@ -332,7 +333,8 @@ CREATE TABLE inscription_participants (
     Prenom text NOT NULL,
     DateNaissance date NOT NULL,
     Sexe smallint CHECK (Sexe IN (0, 1, 2)) NOT NULL,
-    Nationnalite Nationnalite NOT NULL
+    Nationnalite Nationnalite NOT NULL,
+    IsDoublon boolean NOT NULL
 );
 
 CREATE TABLE events (

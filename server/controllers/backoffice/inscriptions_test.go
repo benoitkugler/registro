@@ -115,21 +115,29 @@ func TestSearchDoublons(t *testing.T) {
 	i2, err := in.Inscription{IdTaux: 1}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	err = in.InscriptionParticipant{Nom: "ugler", Prenom: "benoît", DateNaissance: shared.NewDate(2000, 2, 2), IdInscription: i1.Id, IdCamp: camp1.Id, IdTaux: 1}.Insert(db)
+	_, err = in.InscriptionParticipant{Nom: "ugler", Prenom: "benoît", DateNaissance: shared.NewDate(2000, 2, 2), IdInscription: i1.Id, IdCamp: camp1.Id, IdTaux: 1}.Insert(db)
 	tu.AssertNoErr(t, err)
-	err = in.InscriptionParticipant{Nom: "Ugler", Prenom: "benoit", DateNaissance: shared.NewDate(2000, 2, 2), IdInscription: i1.Id, IdCamp: camp1.Id, IdTaux: 1}.Insert(db)
+	_, err = in.InscriptionParticipant{Nom: "Ugler", Prenom: "benoit", DateNaissance: shared.NewDate(2000, 2, 2), IdInscription: i1.Id, IdCamp: camp1.Id, IdTaux: 1}.Insert(db)
 	tu.AssertNoErr(t, err)
-	err = in.InscriptionParticipant{Nom: "ugl er", Prenom: "benoît ", DateNaissance: shared.NewDate(2000, 2, 2), IdInscription: i1.Id, IdCamp: camp2.Id, IdTaux: 1}.Insert(db)
+	_, err = in.InscriptionParticipant{Nom: "ugl er", Prenom: "benoît ", DateNaissance: shared.NewDate(2000, 2, 2), IdInscription: i1.Id, IdCamp: camp2.Id, IdTaux: 1}.Insert(db)
 	tu.AssertNoErr(t, err)
-	err = in.InscriptionParticipant{Nom: "ugler", Prenom: "benoît", DateNaissance: shared.NewDate(2000, 2, 2), IdInscription: i2.Id, IdCamp: camp1.Id, IdTaux: 1}.Insert(db)
+	_, err = in.InscriptionParticipant{Nom: "ugler", Prenom: "benoît", DateNaissance: shared.NewDate(2000, 2, 2), IdInscription: i2.Id, IdCamp: camp1.Id, IdTaux: 1}.Insert(db)
 	tu.AssertNoErr(t, err)
-	err = in.InscriptionParticipant{Nom: "ugler", Prenom: "benoît", DateNaissance: shared.NewDate(2000, 2, 2), IdInscription: i2.Id, IdCamp: camp1.Id, IdTaux: 1}.Insert(db)
+	_, err = in.InscriptionParticipant{Nom: "ugler", Prenom: "benoît", DateNaissance: shared.NewDate(2000, 2, 2), IdInscription: i2.Id, IdCamp: camp1.Id, IdTaux: 1}.Insert(db)
 	tu.AssertNoErr(t, err)
-	err = in.InscriptionParticipant{Nom: "ugler", Prenom: "benoît", DateNaissance: shared.NewDate(2001, 2, 2), IdInscription: i2.Id, IdCamp: camp2.Id, IdTaux: 1}.Insert(db)
+	_, err = in.InscriptionParticipant{Nom: "ugler", Prenom: "benoît", DateNaissance: shared.NewDate(2001, 2, 2), IdInscription: i2.Id, IdCamp: camp2.Id, IdTaux: 1}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	ct := Controller{db: db.DB}
 	out, err := ct.searchInscriptionsDoublons()
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(out.Participants) == 1 && len(out.Participants[0]) == 5)
+
+	p := out.Participants[0][0]
+	err = ct.markInscriptionDoublon(p.Id)
+	tu.AssertNoErr(t, err)
+
+	out, err = ct.searchInscriptionsDoublons()
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(out.Participants) == 1 && len(out.Participants[0]) == 4)
 }

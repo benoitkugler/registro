@@ -12,7 +12,10 @@ import (
 
 //go:generate ../../../../../go/src/github.com/benoitkugler/gomacro/cmd/gomacro models.go go/sqlcrud:gen_scans.go sql:gen_create.sql go/randdata:gen_randdata_test.go
 
-type IdInscription int64
+type (
+	IdInscription            int64
+	IdInscriptionParticipant int64
+)
 
 // Inscription enregistre l'inscription faite via le formulaire publique.
 //
@@ -44,6 +47,8 @@ type Inscription struct {
 // gomacro:SQL ADD FOREIGN KEY (IdCamp, IdTaux) REFERENCES Camp (Id,IdTaux) ON DELETE CASCADE
 // gomacro:SQL ADD FOREIGN KEY (IdInscription, IdTaux) REFERENCES Inscription (Id,IdTaux) ON DELETE CASCADE
 type InscriptionParticipant struct {
+	Id IdInscriptionParticipant
+
 	IdInscription IdInscription `gomacro-sql-on-delete:"CASCADE"`
 
 	IdCamp camps.IdCamp `gomacro-sql-on-delete:"CASCADE"`
@@ -55,6 +60,10 @@ type InscriptionParticipant struct {
 	DateNaissance shared.Date
 	Sexe          pr.Sexe
 	Nationnalite  pr.Nationnalite
+
+	// IsDoublon may be checked to mark this inscription
+	// and ignore it in later processing.
+	IsDoublon bool
 }
 
 func (part InscriptionParticipant) Identite() pr.Identite {
@@ -68,17 +77,17 @@ func (part InscriptionParticipant) Identite() pr.Identite {
 }
 
 // Create insert [insc], then update [participants] id's and insert them
-func Create(tx *sql.Tx, insc Inscription, participants InscriptionParticipants) (Inscription, error) {
+func Create(tx *sql.Tx, insc Inscription, participants []InscriptionParticipant) (Inscription, error) {
 	insc, err := insc.Insert(tx)
 	if err != nil {
 		return insc, err
 	}
-	for i := range participants {
-		participants[i].IdInscription = insc.Id
-	}
-	err = InsertManyInscriptionParticipants(tx, participants...)
-	if err != nil {
-		return insc, err
+	for _, p := range participants {
+		p.IdInscription = insc.Id
+		_, err = p.Insert(tx)
+		if err != nil {
+			return insc, err
+		}
 	}
 	return insc, nil
 }

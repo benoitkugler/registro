@@ -993,6 +993,9 @@ export interface EventMessage {
 export type IdEvent = Int & { __opaque_int__: "IdEvent" };
 export type IdFile = Int & { __opaque_int__: "IdFile" };
 export type IdInscription = Int & { __opaque_int__: "IdInscription" };
+export type IdInscriptionParticipant = Int & {
+  __opaque_int__: "IdInscriptionParticipant";
+};
 // registro/sql/inscriptions.Inscription
 export interface Inscription {
   Id: IdInscription;
@@ -1007,6 +1010,7 @@ export interface Inscription {
 }
 // registro/sql/inscriptions.InscriptionParticipant
 export interface InscriptionParticipant {
+  Id: IdInscriptionParticipant;
   IdInscription: IdInscription;
   IdCamp: IdCamp;
   IdTaux: IdTaux;
@@ -1015,9 +1019,13 @@ export interface InscriptionParticipant {
   DateNaissance: Date;
   Sexe: Sexe;
   Nationnalite: Nationnalite;
+  IsDoublon: boolean;
 }
 // registro/sql/inscriptions.InscriptionParticipants
-export type InscriptionParticipants = InscriptionParticipant[] | null;
+export type InscriptionParticipants = Record<
+  IdInscriptionParticipant,
+  InscriptionParticipant
+> | null;
 // registro/sql/inscriptions.Inscriptions
 export type Inscriptions = Record<IdInscription, Inscription> | null;
 // registro/sql/inscriptions.ResponsableLegal
@@ -1592,22 +1600,6 @@ export abstract class AbstractAPI {
     }
   }
 
-  /** InscriptionsSearchDoublons performs the request and handles the error */
-  async InscriptionsSearchDoublons() {
-    const fullUrl =
-      this.baseURL + "/api/v1/backoffice/inscriptions/search-doublons";
-    this.startRequest();
-    try {
-      const rep: AxiosResponse<InscriptionsDoublonsOut> = await Axios.get(
-        fullUrl,
-        { headers: this.getHeaders() },
-      );
-      return rep.data;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
   /** InscriptionsIdentifiePersonne performs the request and handles the error */
   async InscriptionsIdentifiePersonne(params: InscriptionIdentifieIn) {
     const fullUrl = this.baseURL + "/api/v1/backoffice/inscriptions/identifie";
@@ -1652,6 +1644,36 @@ export abstract class AbstractAPI {
         { headers: this.getHeaders() },
       );
       return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** InscriptionsSearchDoublons performs the request and handles the error */
+  async InscriptionsSearchDoublons() {
+    const fullUrl = this.baseURL + "/api/v1/backoffice/inscriptions/doublons";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<InscriptionsDoublonsOut> = await Axios.get(
+        fullUrl,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** InscriptionsMarkDoublon performs the request and handles the error */
+  async InscriptionsMarkDoublon(params: { id: IdInscriptionParticipant }) {
+    const fullUrl = this.baseURL + "/api/v1/backoffice/inscriptions/doublons";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, null, {
+        headers: this.getHeaders(),
+        params: { id: String(params["id"]) },
+      });
+      return true;
     } catch (error) {
       this.handleError(error);
     }

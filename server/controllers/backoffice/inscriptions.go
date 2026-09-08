@@ -1,6 +1,8 @@
 package backoffice
 
 import (
+	"slices"
+
 	"registro/logic"
 	"registro/logic/search"
 	cps "registro/sql/camps"
@@ -149,9 +151,14 @@ func (ct *Controller) searchInscriptionsDoublons() (InscriptionsDoublonsOut, err
 	if err != nil {
 		return InscriptionsDoublonsOut{}, utils.SQLError(err)
 	}
+
 	// build a crible, keyed by participant identity
 	crible := make(map[search.PatternsSimilarite][]in.InscriptionParticipant)
 	for _, part := range participants {
+		// ignore already identified doublons
+		if part.IsDoublon {
+			continue
+		}
 		key := search.NewPatternsSimilarite(part.Identite())
 		crible[key] = append(crible[key], part)
 	}
@@ -162,9 +169,10 @@ func (ct *Controller) searchInscriptionsDoublons() (InscriptionsDoublonsOut, err
 	var out [][]in.InscriptionParticipant
 	inscriptionsIds := utils.NewSet[in.IdInscription]()
 	for _, personneInscriptions := range crible {
-		if len(personneInscriptions) < 2 {
+		if len(personneInscriptions) < 2 { // no doublons
 			continue
 		}
+		slices.SortFunc(personneInscriptions, func(a, b in.InscriptionParticipant) int { return int(a.Id - b.Id) })
 		out = append(out, personneInscriptions)
 		// mark the inscription to be loaded
 		for _, insc := range personneInscriptions {
@@ -178,4 +186,29 @@ func (ct *Controller) searchInscriptionsDoublons() (InscriptionsDoublonsOut, err
 	}
 
 	return InscriptionsDoublonsOut{out, inscriptions, camps}, nil
+}
+
+func (ct *Controller) InscriptionsMarkDoublon(c echo.Context) error {
+	idInscriptionParticipant, err := utils.QueryParamInt[in.IdInscriptionParticipant](c, "id")
+	if err != nil {
+		return err
+	}
+	err = ct.markInscriptionDoublon(idInscriptionParticipant)
+	if err != nil {
+		return err
+	}
+	return c.NoContent(200)
+}
+
+func (ct *Controller) markInscriptionDoublon(id in.IdInscriptionParticipant) error {
+	p, err := in.SelectInscriptionParticipant(ct.db, id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	p.IsDoublon = true
+	_, err = p.Update(ct.db)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	return nil
 }

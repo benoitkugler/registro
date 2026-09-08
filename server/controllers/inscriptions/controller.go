@@ -462,7 +462,7 @@ func (ct *Controller) SaveInscription(c echo.Context) error {
 	return c.NoContent(200)
 }
 
-func (ct *Controller) BuildInscription(publicInsc Inscription) (insc in.Inscription, ps in.InscriptionParticipants, _ error) {
+func (ct *Controller) BuildInscription(publicInsc Inscription) (insc in.Inscription, ps []in.InscriptionParticipant, _ error) {
 	camps, _, err := ct.LoadCamps()
 	if err != nil {
 		return insc, ps, err

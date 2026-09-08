@@ -27,11 +27,19 @@ func TestSQL(t *testing.T) {
 		IdInscription: insc.Id, IdTaux: taux.Id, IdCamp: camp.Id,
 		Nationnalite: personnes.Nationnalite{IsSuisse: true},
 	}
-	err = part.Insert(db)
+	_, err = part.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	err = utils.InTx(db.DB, func(tx *sql.Tx) error {
-		return InsertManyInscriptionParticipants(tx, part, part)
+		_, err = part.Insert(tx)
+		if err != nil {
+			return err
+		}
+		_, err = part.Insert(tx)
+		if err != nil {
+			return err
+		}
+		return nil
 	})
 	tu.AssertNoErr(t, err)
 }

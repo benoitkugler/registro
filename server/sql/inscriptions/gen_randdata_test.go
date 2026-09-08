@@ -23,6 +23,10 @@ func randIdInscription() IdInscription {
 	return IdInscription(randint64())
 }
 
+func randIdInscriptionParticipant() IdInscriptionParticipant {
+	return IdInscriptionParticipant(randint64())
+}
+
 func randInscription() Inscription {
 	var s Inscription
 	s.Id = randIdInscription()
@@ -40,6 +44,7 @@ func randInscription() Inscription {
 
 func randInscriptionParticipant() InscriptionParticipant {
 	var s InscriptionParticipant
+	s.Id = randIdInscriptionParticipant()
 	s.IdInscription = randIdInscription()
 	s.IdCamp = randcam_IdCamp()
 	s.IdTaux = randdos_IdTaux()
@@ -48,6 +53,7 @@ func randInscriptionParticipant() InscriptionParticipant {
 	s.DateNaissance = randsha_Date()
 	s.Sexe = randper_Sexe()
 	s.Nationnalite = randper_Nationnalite()
+	s.IsDoublon = randbool()
 
 	return s
 }
