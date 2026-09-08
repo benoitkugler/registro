@@ -37,48 +37,6 @@ type ParticipantPersonne struct {
 	Personne    pr.Personne
 }
 
-// StatistiquesInscrits détails le nombre d'inscriptions
-// sur un séjour
-type StatistiquesInscrits struct {
-	Inscriptions                            int // nombre total
-	InscriptionsFilles, InscriptionsSuisses int
-
-	Valides, ValidesFilles, ValidesSuisses int // inscrits confirmés
-
-	Refus, AStatuer, ListeAttente int
-}
-
-func (stats *StatistiquesInscrits) add(p ParticipantPersonne) {
-	stats.Inscriptions += 1
-
-	isFille := p.Personne.Sexe == pr.Woman
-	isSuisse := p.Personne.Nationnalite.IsSuisse
-
-	if isFille {
-		stats.InscriptionsFilles += 1
-	}
-	if isSuisse {
-		stats.InscriptionsSuisses += 1
-	}
-
-	switch p.Participant.Statut {
-	case Refuse:
-		stats.Refus += 1
-	case AStatuer:
-		stats.AStatuer += 1
-	case Inscrit:
-		stats.Valides += 1
-		if isFille {
-			stats.ValidesFilles += 1
-		}
-		if isSuisse {
-			stats.ValidesSuisses += 1
-		}
-	default:
-		stats.ListeAttente += 1
-	}
-}
-
 type CampsData struct {
 	Camps        Camps
 	participants map[IdCamp]Participants // covering [camps]
@@ -177,24 +135,106 @@ func (cd CampData) Personnes(onlyInscrits bool) pr.Personnes {
 	return out
 }
 
-func (cd CampData) Stats() StatistiquesInscrits {
-	var stats StatistiquesInscrits
-	for _, p := range cd.Participants(false) {
-		stats.add(p)
+// StatistiquesInscrits détails le nombre d'inscriptions
+// sur un séjour
+type StatistiquesInscrits struct {
+	// nombre total de participants
+	Inscriptions                            int
+	InscriptionsFilles, InscriptionsSuisses int
+
+	Valides, ValidesFilles, ValidesSuisses int // inscriptions acceptées
+
+	ListeAttente int // inscription not refused or accepted
+	Refus        int // refus définif, not really in "liste d'attente"
+
+	AStatuerRegular, AStatuerException int // as hinted
+}
+
+func (stats *StatistiquesInscrits) add(p ParticipantPersonne) {
+	stats.Inscriptions += 1
+
+	isFille := p.Personne.Sexe == pr.Woman
+	isSuisse := p.Personne.Nationnalite.IsSuisse
+
+	if isFille {
+		stats.InscriptionsFilles += 1
 	}
+	if isSuisse {
+		stats.InscriptionsSuisses += 1
+	}
+
+	switch p.Participant.Statut {
+	case Inscrit:
+		stats.Valides += 1
+		if isFille {
+			stats.ValidesFilles += 1
+		}
+		if isSuisse {
+			stats.ValidesSuisses += 1
+		}
+	case AttenteProfilInvalide, AttenteCampComplet, EnAttenteReponse:
+		stats.ListeAttente += 1
+	case Refuse:
+		stats.Refus += 1
+	default: // AStatuer : handled in a second pass
+	}
+}
+
+func (cd CampData) inscritsCount() (garcons, filles int) {
+	for _, p := range cd.Participants(true) {
+		if p.Personne.Sexe == pr.Woman {
+			filles += 1
+		} else {
+			garcons += 1
+		}
+	}
+	return
+}
+
+func (cd CampData) Stats() StatistiquesInscrits {
+	// We performs two passes :
+	// - a first pass for "simple" stats
+	// - a second pass for AStatuer :
+	// computing the correct hint requires to group participants by dossier
+
+	var stats StatistiquesInscrits
+	all := cd.Participants(false)
+	aStatuerByDossier := make(map[ds.IdDossier][]pr.Personne)
+
+	// first pass
+	for _, p := range all {
+		stats.add(p)
+
+		if p.Participant.Statut == AStatuer {
+			aStatuerByDossier[p.Participant.IdDossier] = append(aStatuerByDossier[p.Participant.IdDossier], p.Personne)
+		}
+	}
+
+	// second pass
+	garcons, filles := cd.inscritsCount()
+	for _, participants := range aStatuerByDossier {
+		hints := cd.statusCached(garcons, filles, participants)
+		for _, hint := range hints {
+			if statut := hint.Hint(); statut == Inscrit {
+				stats.AStatuerRegular += 1
+			} else {
+				stats.AStatuerException += 1
+			}
+		}
+	}
+
 	return stats
 }
 
 // restePlace vaut `true` si l'ajout de participants
 // ne dépasse pas le nombre de places autorisées
-func (cd *Camp) restePlace(stats StatistiquesInscrits, participants []pr.Personne) bool {
-	current := stats.Valides
-	return current+len(participants) <= cd.Places
+func (cd *Camp) restePlace(inscritsCount int, participants []pr.Personne) bool {
+	return inscritsCount+len(participants) <= cd.Places
 }
 
 // keepEquilibreGF renvoie `true` si l'ajout des [participants]
 // ne perturbe pas l'équilibre G/F (ou si le séjour ne demande pas d'équilibre).
-func (cd *Camp) keepEquilibreGF(stats StatistiquesInscrits, participants []pr.Personne) bool {
+func (cd *Camp) keepEquilibreGF(garconsInscritsCount, fillesInscritsCount int, participants []pr.Personne) bool {
 	if !cd.NeedEquilibreGF {
 		return true
 	}
@@ -206,11 +246,10 @@ func (cd *Camp) keepEquilibreGF(stats StatistiquesInscrits, participants []pr.Pe
 			newG += 1
 		}
 	}
-	currentG, currentF := stats.Valides-stats.ValidesFilles, stats.ValidesFilles
 	// on utilise l'heuristique suivante :
 	// dépasser 60% des places prévues détruit l'équilibre
 	seuil := cd.Places * 6 / 10
-	return currentG+newG <= seuil && currentF+newF <= seuil
+	return garconsInscritsCount+newG <= seuil && fillesInscritsCount+newF <= seuil
 }
 
 // StatutCauses expose une série de critère
@@ -235,10 +274,13 @@ func (s StatutCauses) Hint() StatutParticipant {
 // Status détermine la validité de l'inscription des personnes
 // données par [participants], renvoyant une liste de la même longueur
 func (cd CampData) Status(participants []pr.Personne) []StatutCauses {
-	stats := cd.Stats()
+	garcons, filles := cd.inscritsCount()
+	return cd.statusCached(garcons, filles, participants)
+}
 
-	restePlace := cd.Camp.restePlace(stats, participants)
-	equilibreGF := cd.Camp.keepEquilibreGF(stats, participants)
+func (cd CampData) statusCached(garcons, filles int, participants []pr.Personne) []StatutCauses {
+	restePlace := cd.Camp.restePlace(garcons+filles, participants)
+	equilibreGF := cd.Camp.keepEquilibreGF(garcons, filles, participants)
 
 	out := make([]StatutCauses, len(participants))
 	for i, part := range participants {

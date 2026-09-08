@@ -2,7 +2,10 @@
   <v-card title="Statut des inscriptions">
     <v-card-text>
       <v-list density="compact">
-        <v-list-item title="Demandes d'inscriptions">
+        <v-list-item
+          title="Demandes d'inscriptions"
+          subtitle="Tous status confondus "
+        >
           <template #append>
             {{ props.stats.Inscriptions }}
           </template>
@@ -13,7 +16,7 @@
             {{
               pourcentS(
                 props.stats.InscriptionsFilles,
-                props.stats.Inscriptions
+                props.stats.Inscriptions,
               )
             }}
           </template>
@@ -24,12 +27,12 @@
             {{
               pourcentS(
                 props.stats.InscriptionsSuisses,
-                props.stats.Inscriptions
+                props.stats.Inscriptions,
               )
             }}
           </template>
         </v-list-item>
-        <v-list-item title="Inscriptions confirmées">
+        <v-list-item title="Inscriptions acceptées">
           <template #append>
             {{ props.stats.Valides }}
             {{ pourcentS(props.stats.Valides, props.stats.Inscriptions) }}
@@ -47,22 +50,40 @@
             {{ pourcentS(props.stats.ValidesSuisses, props.stats.Valides) }}
           </template>
         </v-list-item>
-        <v-list-item title="A statuer">
-          <template #append>
-            {{ props.stats.AStatuer }}
-            {{ pourcentS(props.stats.AStatuer, props.stats.Inscriptions) }}
-          </template>
-        </v-list-item>
-        <v-list-item title="Liste d'attente">
+        <v-list-item
+          title="Liste d'attente"
+          subtitle="Inscriptions statuées et placées en attente"
+        >
           <template #append>
             {{ props.stats.ListeAttente }}
             {{ pourcentS(props.stats.ListeAttente, props.stats.Inscriptions) }}
           </template>
         </v-list-item>
-        <v-list-item title="Refus définitif">
+        <v-list-item
+          title="Refus définitif"
+          subtitle="Inscriptions statuées et refusées"
+        >
           <template #append>
             {{ props.stats.Refus }}
             {{ pourcentS(props.stats.Refus, props.stats.Inscriptions) }}
+          </template>
+        </v-list-item>
+        <v-list-item title="Demandes à statuer">
+          <template #append>
+            {{ props.stats.AStatuerRegular + props.stats.AStatuerException }}
+          </template>
+        </v-list-item>
+        <v-list-item subtitle="Dont profils réguliers" prepend-icon="mdi-blank">
+          <template #append>
+            {{ props.stats.AStatuerRegular }}
+          </template>
+        </v-list-item>
+        <v-list-item
+          subtitle="Dont profils exceptionnels"
+          prepend-icon="mdi-blank"
+        >
+          <template #append>
+            {{ props.stats.AStatuerException }}
           </template>
         </v-list-item>
       </v-list>

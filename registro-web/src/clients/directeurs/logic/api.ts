@@ -635,9 +635,10 @@ export interface StatistiquesInscrits {
   Valides: Int;
   ValidesFilles: Int;
   ValidesSuisses: Int;
-  Refus: Int;
-  AStatuer: Int;
   ListeAttente: Int;
+  Refus: Int;
+  AStatuerRegular: Int;
+  AStatuerException: Int;
 }
 // registro/sql/camps.StatutCamp
 export const StatutCamp = {

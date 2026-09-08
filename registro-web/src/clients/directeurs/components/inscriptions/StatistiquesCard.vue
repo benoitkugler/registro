@@ -48,7 +48,14 @@
       <v-row class="my-1" no-gutters justify="space-between">
         <v-col> A statuer </v-col>
         <v-col cols="auto">
-          <v-badge color="grey" inline :content="props.statistiques.AStatuer">
+          <v-badge
+            color="grey"
+            inline
+            :content="
+              props.statistiques.AStatuerRegular +
+              props.statistiques.AStatuerException
+            "
+          >
           </v-badge>
         </v-col>
       </v-row>
@@ -91,7 +98,7 @@ const props = defineProps<{
 const birthdays = computed(
   () =>
     props.participants.filter(
-      (p) => p.Participant.Statut == StatutParticipant.Inscrit && p.HasBirthday
-    ).length
+      (p) => p.Participant.Statut == StatutParticipant.Inscrit && p.HasBirthday,
+    ).length,
 );
 </script>
