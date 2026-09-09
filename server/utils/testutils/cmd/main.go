@@ -172,7 +172,7 @@ func addInscriptions(db *sql.DB, smtp config.SMTP, asso config.Asso, count int) 
 		return err
 	})
 	check(err)
-	_, err = api.ConfirmeInscription(db, insc.Id)
+	_, _, err = api.ConfirmeInscription(db, insc.Id)
 	check(err)
 
 	fmt.Println("Added insc. with participants", count)

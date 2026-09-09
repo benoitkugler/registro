@@ -80,7 +80,7 @@ func (ct *Controller) getCamps(host string) ([]CampHeader, error) {
 		return nil, err
 	}
 
-	directeurs, err := loadDirecteurs(ct.db, ids)
+	directeurs, err := logic.LoadDirecteurs(ct.db, ids)
 	if err != nil {
 		return nil, err
 	}
@@ -99,24 +99,6 @@ func (ct *Controller) getCamps(host string) ([]CampHeader, error) {
 		preselectionURL := utils.BuildUrl(host, inscriptions.EndpointInscription, utils.QP(inscriptions.PreselectionQueryParam, camp.Slug))
 		directeurURL := directeurURL(ct.key, host, id)
 		out[i] = CampHeader{camp, taux[loader.Camp.IdTaux], loader.Stats(), files.Stats(), hasDirecteur, preselectionURL, directeurURL}
-	}
-	return out, nil
-}
-
-// error is wrapped
-func loadDirecteurs(db cps.DB, camps []cps.IdCamp) (map[cps.IdCamp]pr.Personne, error) {
-	tmp, personnes, _, err := cps.LoadEquipiersByCamps(db, camps...)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-	equipiersByCamp := tmp.ByIdCamp()
-
-	out := map[cps.IdCamp]pr.Personne{}
-	for _, camp := range camps {
-		dir, ok := equipiersByCamp[camp].Directeur()
-		if ok {
-			out[camp] = personnes[dir.IdPersonne]
-		}
 	}
 	return out, nil
 }
@@ -576,7 +558,7 @@ func (ct *Controller) loadProjetSpi(idCamp cps.IdCamp) (ProjetSpiOut, error) {
 	}
 	projet.IdCamp = idCamp // for empty structs
 
-	dirs, err := loadDirecteurs(ct.db, []cps.IdCamp{idCamp})
+	dirs, err := logic.LoadDirecteurs(ct.db, []cps.IdCamp{idCamp})
 	if err != nil {
 		return ProjetSpiOut{}, err
 	}

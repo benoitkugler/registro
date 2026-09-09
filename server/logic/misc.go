@@ -154,3 +154,22 @@ func NewPublicFile(key crypto.Encrypter, file fs.File) PublicFile {
 		File: file,
 	}
 }
+
+// LoadDirecteurs returns the directors for each camp,
+// wrapping any error.
+func LoadDirecteurs(db cps.DB, camps []cps.IdCamp) (map[cps.IdCamp]pr.Personne, error) {
+	tmp, personnes, _, err := cps.LoadEquipiersByCamps(db, camps...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	equipiersByCamp := tmp.ByIdCamp()
+
+	out := map[cps.IdCamp]pr.Personne{}
+	for _, camp := range camps {
+		dir, ok := equipiersByCamp[camp].Directeur()
+		if ok {
+			out[camp] = personnes[dir.IdPersonne]
+		}
+	}
+	return out, nil
+}

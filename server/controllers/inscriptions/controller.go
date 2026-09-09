@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"html/template"
 	"log"
+	"maps"
 	"slices"
 	"sort"
 	"strings"
@@ -566,54 +567,68 @@ func (ct *Controller) ConfirmeInscription(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	dossier, err := ConfirmeInscription(ct.db, id)
+	dossier, notifications, err := ConfirmeInscription(ct.db, id)
 	if err != nil {
 		return err
 	}
+	// try and send notifs, not blocking the validation
+	// if any error occurs
+	go func() {
+		err := ct.sendNotifications(notifications, c.Request().Host)
+		if err != nil {
+			log.Printf("error in sendNotifications: %s", err)
+		}
+	}()
+
 	url := logic.EspacePersoURL(ct.key, c.Request().Host, dossier.Id, utils.QP("from-inscription", "true"))
 	return c.Redirect(307, url)
 }
 
 // ConfirmeInscription transforme l'inscription en dossier,
 // et rapproche (automatiquement) les profils.
+// Les camps à notifiés sont renvoyés.
 //
 // Si l'inscription a déjà été validée, le dossier correspondant est simplement renvoyé.
-func ConfirmeInscription(db *sql.DB, id in.IdInscription) (ds.Dossier, error) {
+func ConfirmeInscription(db *sql.DB, id in.IdInscription) (ds.Dossier, map[cps.IdCamp][]string, error) {
 	insc, err := in.SelectInscription(db, id)
 	if err != nil {
-		return ds.Dossier{}, utils.SQLError(err)
+		return ds.Dossier{}, nil, utils.SQLError(err)
 	}
 	participants, err := in.SelectInscriptionParticipantsByIdInscriptions(db, id)
 	if err != nil {
-		return ds.Dossier{}, utils.SQLError(err)
+		return ds.Dossier{}, nil, utils.SQLError(err)
 	}
 
 	if insc.ConfirmedAsDossier.Valid {
 		// Just redirect:
 		dossier, err := ds.SelectDossier(db, insc.ConfirmedAsDossier.Id)
 		if err != nil {
-			return ds.Dossier{}, utils.SQLError(err)
+			return ds.Dossier{}, nil, utils.SQLError(err)
 		}
-		return dossier, nil
+		return dossier, nil, nil
 	}
 
 	// on charge l'index une fois pour toutes ...
 	index, err := search.SelectAllFieldsForSimilaires(db)
 	if err != nil {
-		return ds.Dossier{}, utils.SQLError(err)
+		return ds.Dossier{}, nil, utils.SQLError(err)
 	}
 	// ... et les camps et groupes
 	camps, err := cps.SelectCamps(db, participants.IdCamps()...)
 	if err != nil {
-		return ds.Dossier{}, utils.SQLError(err)
+		return ds.Dossier{}, nil, utils.SQLError(err)
 	}
 	tmp, err := cps.SelectGroupesByIdCamps(db, camps.IDs()...)
 	if err != nil {
-		return ds.Dossier{}, utils.SQLError(err)
+		return ds.Dossier{}, nil, utils.SQLError(err)
 	}
 	groupesByCamp := tmp.ByIdCamp()
 
-	var dossier ds.Dossier
+	var (
+		dossier ds.Dossier
+		// camp -> participants
+		notifsByCamp = map[cps.IdCamp][]string{}
+	)
 	err = utils.InTx(db, func(tx *sql.Tx) error {
 		// mise à jour (ou création) des personnes
 		responsable := pr.Identite{
@@ -690,6 +705,8 @@ func ConfirmeInscription(db *sql.DB, id in.IdInscription) (ds.Dossier, error) {
 					return err
 				}
 			}
+
+			notifsByCamp[participant.IdCamp] = append(notifsByCamp[participant.IdCamp], personne.PrenomNOM())
 		}
 
 		// on insert le message du formulaire
@@ -704,10 +721,52 @@ func ConfirmeInscription(db *sql.DB, id in.IdInscription) (ds.Dossier, error) {
 		// tag the inscription as confirmed
 		insc.ConfirmedAsDossier = dossier.Id.Opt()
 		_, err = insc.Update(tx)
+
 		return err
 	})
 
-	return dossier, err
+	return dossier, notifsByCamp, err
+}
+
+func (ct *Controller) sendNotifications(notifsByCamp map[cps.IdCamp][]string, host string) error {
+	ids := slices.Collect(maps.Keys(notifsByCamp))
+	camps, err := cps.SelectCamps(ct.db, ids...)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	directeurs, err := logic.LoadDirecteurs(ct.db, ids)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	pool, err := mails.NewPool(ct.smtp, ct.asso.MailsSettings, nil)
+	if err != nil {
+		return err
+	}
+	defer pool.Close()
+
+	urlDirecteur := utils.BuildUrl(host, "/directeurs")
+
+	for idCamp, participants := range notifsByCamp {
+		directeur, ok := directeurs[idCamp]
+		if !ok { // nothing to do
+			continue
+		}
+		salutations := mails.NewContact(&directeur).Salutations()
+		content := fmt.Sprintf(`%s <br/><br/>
+		
+		Une nouvelle demande d'inscription sur le séjour %s a été enregistrée, pour %s. <br/><br/>
+
+		Elle est visible sur <a href="%s">l'espace directeur</a>. <br/><br/>
+
+		<i>Ceci est un mail automatique, merci de ne pas y répondre.</i>
+		`, salutations, camps[idCamp].Label(), strings.Join(participants, ", "), urlDirecteur,
+		)
+		err = pool.SendMail(directeur.Mail, "Nouvelle inscription", content, nil, nil)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // rapprochePersonne effectue un rattachement automatique avec les profils connus :

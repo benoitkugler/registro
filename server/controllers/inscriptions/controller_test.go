@@ -187,21 +187,21 @@ func TestController_saveInscription(t *testing.T) {
 	tu.AssertNoErr(t, err)
 }
 
-func buildAndConfirme(ct *Controller, publicInsc Inscription) (in.Inscription, ds.Dossier, error) {
+func buildAndConfirme(ct *Controller, publicInsc Inscription) (in.Inscription, ds.Dossier, map[cps.IdCamp][]string, error) {
 	insc, participants, err := ct.BuildInscription(publicInsc)
 	if err != nil {
-		return insc, ds.Dossier{}, err
+		return insc, ds.Dossier{}, nil, err
 	}
 	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
 		insc, err = in.Create(tx, insc, participants)
 		return err
 	})
 	if err != nil {
-		return insc, ds.Dossier{}, err
+		return insc, ds.Dossier{}, nil, err
 	}
 
-	out, err := ConfirmeInscription(ct.db, insc.Id)
-	return insc, out, err
+	out, notifs, err := ConfirmeInscription(ct.db, insc.Id)
+	return insc, out, notifs, err
 }
 
 func TestController_confirmeInscription(t *testing.T) {
@@ -210,7 +210,7 @@ func TestController_confirmeInscription(t *testing.T) {
 		"../../migrations/init.sql")
 	defer db.Remove()
 
-	cfg, creds := loadEnv(t)
+	cfg, smtp := loadEnv(t)
 
 	camp, err := cps.Camp{IdTaux: 1, DateDebut: shared.NewDateFrom(time.Now()), Duree: 3, Statut: cps.Ouvert}.Insert(db)
 	tu.AssertNoErr(t, err)
@@ -219,20 +219,28 @@ func TestController_confirmeInscription(t *testing.T) {
 	_, err = cps.Groupe{IdCamp: camp.Id, Fin: shared.NewDateFrom(time.Now().Add(-50 * 24 * time.Hour))}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	ct := NewController(db.DB, crypto.Encrypter{}, creds, cfg)
+	dir, err := pr.Personne{Identite: pr.Identite{Mail: "dummy"}}.Insert(db)
+	tu.AssertNoErr(t, err)
+	_, err = cps.Equipier{IdCamp: camp.Id, IdPersonne: dir.Id, Roles: cps.Roles{cps.Direction}}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	ct := NewController(db.DB, crypto.Encrypter{}, smtp, cfg)
 
 	t.Run("simple", func(t *testing.T) {
-		insc, dossier, err := buildAndConfirme(ct, Inscription{
+		insc, dossier, notifs, err := buildAndConfirme(ct, Inscription{
 			Responsable: in.ResponsableLegal{
 				Nom: "Kug", Prenom: "Ben",
 				DateNaissance: shared.NewDate(2000, 1, 1),
 			},
 			Participants: []Participant{
-				{IdCamp: camp.Id, DateNaissance: shared.Date(time.Now())},
-				{IdCamp: camp.Id, DateNaissance: shared.Date(time.Now())},
+				{IdCamp: camp.Id, DateNaissance: shared.Date(time.Now()), Nom: "Kug", Prenom: "Loic"},
+				{IdCamp: camp.Id, DateNaissance: shared.Date(time.Now()), Nom: "Kug", Prenom: "Sandra"},
 			},
 			Message: "Haha joli !",
 		})
+		tu.AssertNoErr(t, err)
+
+		err = ct.sendNotifications(notifs, "localhost")
 		tu.AssertNoErr(t, err)
 
 		tu.Assert(t, dossier.MomentInscription.Equal(insc.DateHeure))
@@ -251,7 +259,7 @@ func TestController_confirmeInscription(t *testing.T) {
 		tu.Assert(t, len(events) == 1) //  message
 
 		// already confirmed : just redirect
-		dossier, err = ConfirmeInscription(ct.db, insc.Id)
+		dossier, _, err = ConfirmeInscription(ct.db, insc.Id)
 		tu.AssertNoErr(t, err)
 
 		// check we are allowed to delete the dossier
@@ -270,7 +278,7 @@ func TestController_confirmeInscription(t *testing.T) {
 		p2 := p1
 		p2.IdCamp = camp2.Id
 
-		_, dossier, err := buildAndConfirme(ct, Inscription{
+		_, dossier, _, err := buildAndConfirme(ct, Inscription{
 			Responsable:  resp,
 			Participants: []Participant{p1, p2},
 		})
@@ -294,7 +302,7 @@ func TestController_confirmeInscription(t *testing.T) {
 		p1 := Participant{IdCamp: camp.Id, Nom: resp.Nom, Prenom: resp.Prenom, Sexe: resp.Sexe, DateNaissance: resp.DateNaissance}
 		p2 := p1
 
-		_, dossier, err := buildAndConfirme(ct, Inscription{
+		_, dossier, _, err := buildAndConfirme(ct, Inscription{
 			Responsable:  resp,
 			Participants: []Participant{p1, p2},
 		})

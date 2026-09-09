@@ -225,8 +225,8 @@ func setupClientApps(e *echo.Echo, asso string) {
 	e.GET("/dons", serveStaticAsso("/dons/index.html"), middleware.Gzip(), noCache)
 	e.GET("/dons/*", serveStaticAsso("/dons/index.html"), middleware.Gzip(), noCache)
 
-	e.GET("/directeurs", serveStaticAsso("/directeurs/index.html"), middleware.Gzip(), noCache)
-	e.GET("/directeurs/*", serveStaticAsso("/directeurs/index.html"), middleware.Gzip(), noCache)
+	e.GET(directeurs.EndpointDirecteur, serveStaticAsso("/directeurs/index.html"), middleware.Gzip(), noCache)
+	e.GET(directeurs.EndpointDirecteur+"/*", serveStaticAsso("/directeurs/index.html"), middleware.Gzip(), noCache)
 
 	e.GET(directeurs.EndpointEquipier, serveStaticAsso("/equipier/index.html"), middleware.Gzip(), noCache, noIndex)
 	e.GET(directeurs.EndpointEquipier+"/*", serveStaticAsso("/equipier/index.html"), middleware.Gzip(), noCache, noIndex)
