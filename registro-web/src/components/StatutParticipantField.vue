@@ -10,7 +10,11 @@
     :rules="props.rules"
   >
     <template #item="{ item, props: menuProps }">
-      <v-list-item v-bind="menuProps" :title="item.title">
+      <v-list-item
+        v-bind="menuProps"
+        :title="item.title"
+        :subtitle="subtitles[item.raw.value]"
+      >
         <template #prepend>
           <v-icon :color="item.raw.format.color">{{
             item.raw.format.icon
@@ -52,14 +56,25 @@ const items = computed(() =>
     .filter(
       (s) =>
         props.restrictItems === undefined ||
-        props.restrictItems.includes(s.value)
+        props.restrictItems.includes(s.value),
     )
     .map((statut) => ({
       value: statut.value,
       title: statut.title,
       format: Formatters.statutParticipant(statut.value),
-    }))
+    })),
 );
+
+const subtitles = {
+  [StatutParticipant.AStatuer]: "",
+  [StatutParticipant.Refuse]: "Refuser définitivement l'inscription",
+  [StatutParticipant.AttenteProfilInvalide]:
+    "Placer l'inscription en liste d'attente",
+  [StatutParticipant.AttenteCampComplet]:
+    "Placer l'inscription en liste d'attente",
+  [StatutParticipant.EnAttenteReponse]: "",
+  [StatutParticipant.Inscrit]: "Accepter l'inscription",
+};
 </script>
 
 <style scoped></style>
