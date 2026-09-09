@@ -90,31 +90,50 @@ type Nationnalite struct {
 	IsSuisse bool
 }
 
+// Formation professionnelle jugée équivalente
+type FormationRepere uint8
+
+const (
+	FRAucun                      FormationRepere = iota //
+	FRCfcAssistantESocioEducatif                        // CFC assistant(e) socio-éducatif
+	FRMaitreSocioProfessionnel                          // Maitre socio-professionnel
+	FREnseignementScolaire                              // Enseignement scolaire
+	FRTravailSocial                                     // Travail social
+)
+
 type Diplome uint8
 
 const (
-	DAucun      Diplome = iota // Aucun
-	DBafa                      // BAFA Titulaire
-	DBafaStag                  // BAFA Stagiaire
-	DBafd                      // BAFD titulaire
-	DBafdStag                  // BAFD stagiaire
-	DCap                       // CAP petit enfance
-	DAssSociale                // Assitante Sociale
-	DEducSpe                   // Educ. spé.
-	DMonEduc                   // Moniteur educateur
-	DInstit                    // Professeur des écoles
-	DProf                      // Enseignant du secondaire
-	DAgreg                     // Agrégé
-	DBjeps                     // BPJEPS
-	DDut                       // DUT carrière sociale
-	DEje                       // EJE
-	DDeug                      // DEUG
-	DStaps                     // STAPS
-	DBapaat                    // BAPAAT
-	DBeatep                    // BEATEP
-	DZzautre                   // AUTRE
+	DAucun          Diplome = iota // Aucun
+	DAcveBafa                      // BAFA Titulaire
+	DAcveBafaStag                  // BAFA Stagiaire
+	DAcveBafd                      // BAFD titulaire
+	DAcveBafdStag                  // BAFD stagiaire
+	DAcveCap                       // CAP petit enfance
+	DAcveAssSociale                // Assitante Sociale
+	DAcveEducSpe                   // Educ. spé.
+	DAcveMonEduc                   // Moniteur educateur
+	DAcveInstit                    // Professeur des écoles
+	DAcveProf                      // Enseignant du secondaire
+	DAcveAgreg                     // Agrégé
+	DAcveBjeps                     // BPJEPS
+	DAcveDut                       // DUT carrière sociale
+	DAcveEje                       // EJE
+	DAcveDeug                      // DEUG
+	DAcveStaps                     // STAPS
+	DAcveBapaat                    // BAPAAT
+	DAcveBeatep                    // BEATEP
+
+	DRepereJsMoniteur  // Formation JS Moniteur
+	DRepereJsDirecteur // Formation JS Directeur
+	DRepereBafa        // BAFA
+	DRepereBafd        // BAFD
+	DRepereForje       // Formation Forje (GLAJ)
+
+	DAutre // Autre (à préciser)
 )
 
+// TODO: probably remove (see https://github.com/benoitkugler/registro/issues/6)
 type Approfondissement uint8
 
 const (

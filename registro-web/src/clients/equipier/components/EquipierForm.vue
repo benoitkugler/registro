@@ -33,7 +33,7 @@
   <!-- Nom Prénom Sexe DateNaissance Adresse CodePostal Ville Pays Mail -->
   <v-card title="Informations personnelles">
     <v-card-text>
-      <v-form class="my-6">
+      <v-form class="my-4">
         <v-row>
           <v-col md="3" sm="6">
             <v-text-field
@@ -64,7 +64,7 @@
               v-model="innerBase.DateNaissance"
               :rule="
                 FormRules.requiredDate(
-                  'Merci de préciser ta date de naissance.'
+                  'Merci de préciser ta date de naissance.',
                 )
               "
             ></DateNaissanceField>
@@ -119,7 +119,7 @@
               type="email"
               :rules="[
                 FormRules.required(
-                  'Ton adresse mail est utile pour partager les photos du séjour.'
+                  'Ton adresse mail est utile pour partager les photos du séjour.',
                 ),
               ]"
             ></v-text-field>
@@ -152,7 +152,7 @@
             <IntField
               label="Nombre d'enfants"
               v-model="innerDetails.NombreEnfants"
-              :min="(0 as Int)"
+              :min="0 as Int"
             ></IntField>
           </v-col>
         </v-row>
@@ -160,11 +160,37 @@
     </v-card-text>
   </v-card>
 
+  <v-card title="Formation" class="my-2">
+    <v-card-text class="mt-2">
+      <v-row>
+        <v-col>
+          <DiplomeField v-model="innerDetails.Diplome"></DiplomeField>
+        </v-col>
+        <v-col v-if="asso == 'repere'">
+          <FormationRepereField
+            v-model="innerDetails.FormationRepere"
+          ></FormationRepereField>
+        </v-col>
+      </v-row>
+      <v-row>
+        <v-col>
+          <v-text-field
+            label="Formation"
+            variant="outlined"
+            density="compact"
+            hint="Jeunesse et Sport, BAFA, cuisine, autres..."
+            v-model="innerDetails.Formation"
+            :rules="[FormRules.required('Merci de décrire ta formation.')]"
+          ></v-text-field>
+        </v-col>
+      </v-row>
+    </v-card-text>
+  </v-card>
   <!-- Champs ACVE -->
   <!-- Diplome Approfondissement SecuriteSociale Fonctionnaire-->
   <!-- TODO -->
 
-  <v-card v-if="asso == 'acve'">
+  <v-card v-if="asso == 'acve'" class="my-2">
     <v-row>
       <v-col>
         <DiplomeField v-model="innerDetails.Diplome"></DiplomeField>
@@ -219,21 +245,8 @@
   <!-- Champs Repère -->
   <template v-if="asso == 'repere'">
     <v-card title="Expérience" class="my-2">
-      <v-card-text>
+      <v-card-text class="mt-2">
         <v-form>
-          <v-row>
-            <v-col>
-              <v-textarea
-                label="Formation"
-                variant="outlined"
-                density="compact"
-                hint="Jeunesse et Sport, BAFA, cuisine, autres..."
-                v-model="innerDetails.Formation"
-                rows="2"
-                :rules="[FormRules.required('Merci de décrire ta formation.')]"
-              ></v-textarea>
-            </v-col>
-          </v-row>
           <v-row>
             <v-col>
               <v-text-field
@@ -265,7 +278,7 @@
     </v-card>
 
     <v-card title="Expérience spirituelle">
-      <v-card-text>
+      <v-card-text class="mt-2">
         <v-row>
           <v-col>
             <v-textarea
@@ -300,7 +313,7 @@
       subtitle="Indique un responsable de ton église locale qui peut te recommander"
       class="my-2"
     >
-      <v-card-text>
+      <v-card-text class="mt-2">
         <v-row>
           <v-col>
             <v-text-field
@@ -343,7 +356,7 @@
     </v-card>
 
     <v-card title="Santé">
-      <v-card-text>
+      <v-card-text class="mt-2">
         <v-row>
           <v-col>
             <v-textarea
@@ -393,7 +406,7 @@
     </v-card>
 
     <v-card title="Membre de l'association" class="my-2">
-      <v-card-text>
+      <v-card-text class="mt-2">
         <v-row>
           <v-col>
             <v-checkbox
@@ -574,14 +587,14 @@ const demandes = computed(() => {
       // hide CasierJudicaire for Suisse people
       (d) =>
         d.Demande.Categorie != Categorie.ExtraitCasierJudiciaire ||
-        !hideCasierJudiciaire
+        !hideCasierJudiciaire,
     );
   out.sort((a, b) =>
     a.Optionnelle == b.Optionnelle
       ? a.Demande.Id - b.Demande.Id
       : a.Optionnelle
-      ? 1
-      : -1
+        ? 1
+        : -1,
   );
   return out;
 });
@@ -610,10 +623,10 @@ async function deleteFile(file: PublicFile, idDemande: IdDemande) {
 
 const missingFiles = computed(() => {
   const bafa = demandesL.value.find(
-    (p) => p.Demande.Categorie == Categorie.Bafa
+    (p) => p.Demande.Categorie == Categorie.Bafa,
   );
   const bafd = demandesL.value.find(
-    (p) => p.Demande.Categorie == Categorie.Bafd
+    (p) => p.Demande.Categorie == Categorie.Bafd,
   );
 
   return demandes.value
@@ -662,7 +675,7 @@ const isFormValid = computed(
         ((asso == "repere" && isFormRepereValid()) ||
           (asso == "acve" && isFormAcveValid()))
       )
-    )
+    ),
 );
 
 function isFormRepereValid() {

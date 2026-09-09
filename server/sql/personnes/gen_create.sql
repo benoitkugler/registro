@@ -18,12 +18,12 @@ CREATE TYPE Publicite AS (
 CREATE TABLE ficheequipiers (
     IdPersonne integer NOT NULL,
     SecuriteSociale text NOT NULL,
+    Diplome smallint CHECK (Diplome IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24)) NOT NULL,
+    Formation text NOT NULL,
     Fonctionnaire boolean NOT NULL,
-    Diplome smallint CHECK (Diplome IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19)) NOT NULL,
     Approfondissement smallint CHECK (Approfondissement IN (0, 1, 2, 3, 4, 5)) NOT NULL,
     EtatCivil smallint CHECK (EtatCivil IN (0, 1, 2)) NOT NULL,
     NombreEnfants integer NOT NULL,
-    Formation text NOT NULL,
     Profession text NOT NULL,
     ExperienceTravailJeunes text NOT NULL,
     ParcoursSpirituel text NOT NULL,
@@ -33,6 +33,7 @@ CREATE TABLE ficheequipiers (
     AssuranceMaladie text NOT NULL,
     AssuranceAccident text NOT NULL,
     DemandeMembreAssoPermanent boolean NOT NULL,
+    FormationRepere smallint CHECK (FormationRepere IN (0, 1, 2, 3, 4)) NOT NULL,
     guard boolean NOT NULL
 );
 

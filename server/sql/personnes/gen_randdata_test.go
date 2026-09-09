@@ -23,7 +23,7 @@ func randAr2_string() [2]string {
 }
 
 func randDiplome() Diplome {
-	choix := [...]Diplome{DAucun, DBafa, DBafaStag, DBafd, DBafdStag, DCap, DAssSociale, DEducSpe, DMonEduc, DInstit, DProf, DAgreg, DBjeps, DDut, DEje, DDeug, DStaps, DBapaat, DBeatep, DZzautre}
+	choix := [...]Diplome{DAucun, DAcveBafa, DAcveBafaStag, DAcveBafd, DAcveBafdStag, DAcveCap, DAcveAssSociale, DAcveEducSpe, DAcveMonEduc, DAcveInstit, DAcveProf, DAcveAgreg, DAcveBjeps, DAcveDut, DAcveEje, DAcveDeug, DAcveStaps, DAcveBapaat, DAcveBeatep, DRepereJsMoniteur, DRepereJsDirecteur, DRepereBafa, DRepereBafd, DRepereForje, DAutre}
 	i := rand.Intn(len(choix))
 	return choix[i]
 }
@@ -38,12 +38,12 @@ func randFicheequipier() Ficheequipier {
 	var s Ficheequipier
 	s.IdPersonne = randIdPersonne()
 	s.SecuriteSociale = randstring()
-	s.Fonctionnaire = randbool()
 	s.Diplome = randDiplome()
+	s.Formation = randstring()
+	s.Fonctionnaire = randbool()
 	s.Approfondissement = randApprofondissement()
 	s.EtatCivil = randEtatCivil()
 	s.NombreEnfants = randint()
-	s.Formation = randstring()
 	s.Profession = randstring()
 	s.ExperienceTravailJeunes = randstring()
 	s.ParcoursSpirituel = randstring()
@@ -53,6 +53,7 @@ func randFicheequipier() Ficheequipier {
 	s.AssuranceMaladie = randstring()
 	s.AssuranceAccident = randstring()
 	s.DemandeMembreAssoPermanent = randbool()
+	s.FormationRepere = randFormationRepere()
 
 	return s
 }
@@ -69,6 +70,12 @@ func randFichesanitaire() Fichesanitaire {
 	s.Owners = randMails()
 
 	return s
+}
+
+func randFormationRepere() FormationRepere {
+	choix := [...]FormationRepere{FRAucun, FRCfcAssistantESocioEducatif, FRMaitreSocioProfessionnel, FREnseignementScolaire, FRTravailSocial}
+	i := rand.Intn(len(choix))
+	return choix[i]
 }
 
 func randIdPersonne() IdPersonne {

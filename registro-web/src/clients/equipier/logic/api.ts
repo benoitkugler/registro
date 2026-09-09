@@ -202,49 +202,59 @@ export const ApprofondissementLabels: Record<Approfondissement, string> = {
 // registro/sql/personnes.Diplome
 export const Diplome = {
   DAucun: 0,
-  DBafa: 1,
-  DBafaStag: 2,
-  DBafd: 3,
-  DBafdStag: 4,
-  DCap: 5,
-  DAssSociale: 6,
-  DEducSpe: 7,
-  DMonEduc: 8,
-  DInstit: 9,
-  DProf: 10,
-  DAgreg: 11,
-  DBjeps: 12,
-  DDut: 13,
-  DEje: 14,
-  DDeug: 15,
-  DStaps: 16,
-  DBapaat: 17,
-  DBeatep: 18,
-  DZzautre: 19,
+  DAcveBafa: 1,
+  DAcveBafaStag: 2,
+  DAcveBafd: 3,
+  DAcveBafdStag: 4,
+  DAcveCap: 5,
+  DAcveAssSociale: 6,
+  DAcveEducSpe: 7,
+  DAcveMonEduc: 8,
+  DAcveInstit: 9,
+  DAcveProf: 10,
+  DAcveAgreg: 11,
+  DAcveBjeps: 12,
+  DAcveDut: 13,
+  DAcveEje: 14,
+  DAcveDeug: 15,
+  DAcveStaps: 16,
+  DAcveBapaat: 17,
+  DAcveBeatep: 18,
+  DRepereJsMoniteur: 19,
+  DRepereJsDirecteur: 20,
+  DRepereBafa: 21,
+  DRepereBafd: 22,
+  DRepereForje: 23,
+  DAutre: 24,
 } as const;
 export type Diplome = (typeof Diplome)[keyof typeof Diplome];
 
 export const DiplomeLabels: Record<Diplome, string> = {
   [Diplome.DAucun]: "Aucun",
-  [Diplome.DBafa]: "BAFA Titulaire",
-  [Diplome.DBafaStag]: "BAFA Stagiaire",
-  [Diplome.DBafd]: "BAFD titulaire",
-  [Diplome.DBafdStag]: "BAFD stagiaire",
-  [Diplome.DCap]: "CAP petit enfance",
-  [Diplome.DAssSociale]: "Assitante Sociale",
-  [Diplome.DEducSpe]: "Educ. spé.",
-  [Diplome.DMonEduc]: "Moniteur educateur",
-  [Diplome.DInstit]: "Professeur des écoles",
-  [Diplome.DProf]: "Enseignant du secondaire",
-  [Diplome.DAgreg]: "Agrégé",
-  [Diplome.DBjeps]: "BPJEPS",
-  [Diplome.DDut]: "DUT carrière sociale",
-  [Diplome.DEje]: "EJE",
-  [Diplome.DDeug]: "DEUG",
-  [Diplome.DStaps]: "STAPS",
-  [Diplome.DBapaat]: "BAPAAT",
-  [Diplome.DBeatep]: "BEATEP",
-  [Diplome.DZzautre]: "AUTRE",
+  [Diplome.DAcveBafa]: "BAFA Titulaire",
+  [Diplome.DAcveBafaStag]: "BAFA Stagiaire",
+  [Diplome.DAcveBafd]: "BAFD titulaire",
+  [Diplome.DAcveBafdStag]: "BAFD stagiaire",
+  [Diplome.DAcveCap]: "CAP petit enfance",
+  [Diplome.DAcveAssSociale]: "Assitante Sociale",
+  [Diplome.DAcveEducSpe]: "Educ. spé.",
+  [Diplome.DAcveMonEduc]: "Moniteur educateur",
+  [Diplome.DAcveInstit]: "Professeur des écoles",
+  [Diplome.DAcveProf]: "Enseignant du secondaire",
+  [Diplome.DAcveAgreg]: "Agrégé",
+  [Diplome.DAcveBjeps]: "BPJEPS",
+  [Diplome.DAcveDut]: "DUT carrière sociale",
+  [Diplome.DAcveEje]: "EJE",
+  [Diplome.DAcveDeug]: "DEUG",
+  [Diplome.DAcveStaps]: "STAPS",
+  [Diplome.DAcveBapaat]: "BAPAAT",
+  [Diplome.DAcveBeatep]: "BEATEP",
+  [Diplome.DRepereJsMoniteur]: "Formation JS Moniteur",
+  [Diplome.DRepereJsDirecteur]: "Formation JS Directeur",
+  [Diplome.DRepereBafa]: "BAFA",
+  [Diplome.DRepereBafd]: "BAFD",
+  [Diplome.DRepereForje]: "Formation Forje (GLAJ)",
+  [Diplome.DAutre]: "Autre (à préciser)",
 };
 
 // registro/sql/personnes.EtatCivil
@@ -265,12 +275,12 @@ export const EtatCivilLabels: Record<EtatCivil, string> = {
 export interface Ficheequipier {
   IdPersonne: IdPersonne;
   SecuriteSociale: string;
-  Fonctionnaire: boolean;
   Diplome: Diplome;
+  Formation: string;
+  Fonctionnaire: boolean;
   Approfondissement: Approfondissement;
   EtatCivil: EtatCivil;
   NombreEnfants: Int;
-  Formation: string;
   Profession: string;
   ExperienceTravailJeunes: string;
   ParcoursSpirituel: string;
@@ -280,7 +290,28 @@ export interface Ficheequipier {
   AssuranceMaladie: string;
   AssuranceAccident: string;
   DemandeMembreAssoPermanent: boolean;
+  FormationRepere: FormationRepere;
 }
+// registro/sql/personnes.FormationRepere
+export const FormationRepere = {
+  FRAucun: 0,
+  FRCfcAssistantESocioEducatif: 1,
+  FRMaitreSocioProfessionnel: 2,
+  FREnseignementScolaire: 3,
+  FRTravailSocial: 4,
+} as const;
+export type FormationRepere =
+  (typeof FormationRepere)[keyof typeof FormationRepere];
+
+export const FormationRepereLabels: Record<FormationRepere, string> = {
+  [FormationRepere.FRAucun]: "",
+  [FormationRepere.FRCfcAssistantESocioEducatif]:
+    "CFC assistant(e) socio-éducatif",
+  [FormationRepere.FRMaitreSocioProfessionnel]: "Maitre socio-professionnel",
+  [FormationRepere.FREnseignementScolaire]: "Enseignement scolaire",
+  [FormationRepere.FRTravailSocial]: "Travail social",
+};
+
 export type IdPersonne = Int & { __opaque_int__: "IdPersonne" };
 // registro/sql/personnes.Identite
 export interface Identite {

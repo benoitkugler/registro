@@ -95,43 +95,43 @@ func diplome(v rd.Diplome) pr.Diplome {
 	default:
 		return pr.DAucun
 	case rd.DBafa:
-		return pr.DBafa
+		return pr.DAcveBafa
 	case rd.DBafaStag:
-		return pr.DBafaStag
+		return pr.DAcveBafaStag
 	case rd.DBafd:
-		return pr.DBafd
+		return pr.DAcveBafd
 	case rd.DBafdStag:
-		return pr.DBafdStag
+		return pr.DAcveBafdStag
 	case rd.DCap:
-		return pr.DCap
+		return pr.DAcveCap
 	case rd.DAssSociale:
-		return pr.DAssSociale
+		return pr.DAcveAssSociale
 	case rd.DEducSpe:
-		return pr.DEducSpe
+		return pr.DAcveEducSpe
 	case rd.DMonEduc:
-		return pr.DMonEduc
+		return pr.DAcveMonEduc
 	case rd.DInstit:
-		return pr.DInstit
+		return pr.DAcveInstit
 	case rd.DProf:
-		return pr.DProf
+		return pr.DAcveProf
 	case rd.DAgreg:
-		return pr.DAgreg
+		return pr.DAcveAgreg
 	case rd.DBjeps:
-		return pr.DBjeps
+		return pr.DAcveBjeps
 	case rd.DDut:
-		return pr.DDut
+		return pr.DAcveDut
 	case rd.DEje:
-		return pr.DEje
+		return pr.DAcveEje
 	case rd.DDeug:
-		return pr.DDeug
+		return pr.DAcveDeug
 	case rd.DStaps:
-		return pr.DStaps
+		return pr.DAcveStaps
 	case rd.DBapaat:
-		return pr.DBapaat
+		return pr.DAcveBapaat
 	case rd.DBeatep:
-		return pr.DBeatep
+		return pr.DAcveBeatep
 	case rd.DZzautre:
-		return pr.DZzautre
+		return pr.DAutre
 	}
 }
 

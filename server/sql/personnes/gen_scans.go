@@ -31,12 +31,12 @@ func scanOneFicheequipier(row scanner) (Ficheequipier, error) {
 	err := row.Scan(
 		&item.IdPersonne,
 		&item.SecuriteSociale,
-		&item.Fonctionnaire,
 		&item.Diplome,
+		&item.Formation,
+		&item.Fonctionnaire,
 		&item.Approfondissement,
 		&item.EtatCivil,
 		&item.NombreEnfants,
-		&item.Formation,
 		&item.Profession,
 		&item.ExperienceTravailJeunes,
 		&item.ParcoursSpirituel,
@@ -46,6 +46,7 @@ func scanOneFicheequipier(row scanner) (Ficheequipier, error) {
 		&item.AssuranceMaladie,
 		&item.AssuranceAccident,
 		&item.DemandeMembreAssoPermanent,
+		&item.FormationRepere,
 	)
 	return item, err
 }
@@ -54,7 +55,7 @@ func ScanFicheequipier(row *sql.Row) (Ficheequipier, error) { return scanOneFich
 
 // SelectAll returns all the items in the ficheequipiers table.
 func SelectAllFicheequipiers(db DB) (Ficheequipiers, error) {
-	rows, err := db.Query("SELECT idpersonne, securitesociale, fonctionnaire, diplome, approfondissement, etatcivil, nombreenfants, formation, profession, experiencetravailjeunes, parcoursspirituel, eglise, recommandation, sante, assurancemaladie, assuranceaccident, demandemembreassopermanent FROM ficheequipiers")
+	rows, err := db.Query("SELECT idpersonne, securitesociale, diplome, formation, fonctionnaire, approfondissement, etatcivil, nombreenfants, profession, experiencetravailjeunes, parcoursspirituel, eglise, recommandation, sante, assurancemaladie, assuranceaccident, demandemembreassopermanent, formationrepere FROM ficheequipiers")
 	if err != nil {
 		return nil, err
 	}
@@ -90,11 +91,11 @@ func ScanFicheequipiers(rs *sql.Rows) (Ficheequipiers, error) {
 
 func (item Ficheequipier) Insert(db DB) error {
 	_, err := db.Exec(`INSERT INTO ficheequipiers (
-			idpersonne, securitesociale, fonctionnaire, diplome, approfondissement, etatcivil, nombreenfants, formation, profession, experiencetravailjeunes, parcoursspirituel, eglise, recommandation, sante, assurancemaladie, assuranceaccident, demandemembreassopermanent
+			idpersonne, securitesociale, diplome, formation, fonctionnaire, approfondissement, etatcivil, nombreenfants, profession, experiencetravailjeunes, parcoursspirituel, eglise, recommandation, sante, assurancemaladie, assuranceaccident, demandemembreassopermanent, formationrepere
 			) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17
+			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18
 			);
-			`, item.IdPersonne, item.SecuriteSociale, item.Fonctionnaire, item.Diplome, item.Approfondissement, item.EtatCivil, item.NombreEnfants, item.Formation, item.Profession, item.ExperienceTravailJeunes, item.ParcoursSpirituel, item.Eglise, item.Recommandation, item.Sante, item.AssuranceMaladie, item.AssuranceAccident, item.DemandeMembreAssoPermanent)
+			`, item.IdPersonne, item.SecuriteSociale, item.Diplome, item.Formation, item.Fonctionnaire, item.Approfondissement, item.EtatCivil, item.NombreEnfants, item.Profession, item.ExperienceTravailJeunes, item.ParcoursSpirituel, item.Eglise, item.Recommandation, item.Sante, item.AssuranceMaladie, item.AssuranceAccident, item.DemandeMembreAssoPermanent, item.FormationRepere)
 	if err != nil {
 		return err
 	}
@@ -111,12 +112,12 @@ func InsertManyFicheequipiers(tx *sql.Tx, items ...Ficheequipier) error {
 	stmt, err := tx.Prepare(pq.CopyIn("ficheequipiers",
 		"idpersonne",
 		"securitesociale",
-		"fonctionnaire",
 		"diplome",
+		"formation",
+		"fonctionnaire",
 		"approfondissement",
 		"etatcivil",
 		"nombreenfants",
-		"formation",
 		"profession",
 		"experiencetravailjeunes",
 		"parcoursspirituel",
@@ -126,13 +127,14 @@ func InsertManyFicheequipiers(tx *sql.Tx, items ...Ficheequipier) error {
 		"assurancemaladie",
 		"assuranceaccident",
 		"demandemembreassopermanent",
+		"formationrepere",
 	))
 	if err != nil {
 		return err
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdPersonne, item.SecuriteSociale, item.Fonctionnaire, item.Diplome, item.Approfondissement, item.EtatCivil, item.NombreEnfants, item.Formation, item.Profession, item.ExperienceTravailJeunes, item.ParcoursSpirituel, item.Eglise, item.Recommandation, item.Sante, item.AssuranceMaladie, item.AssuranceAccident, item.DemandeMembreAssoPermanent)
+		_, err = stmt.Exec(item.IdPersonne, item.SecuriteSociale, item.Diplome, item.Formation, item.Fonctionnaire, item.Approfondissement, item.EtatCivil, item.NombreEnfants, item.Profession, item.ExperienceTravailJeunes, item.ParcoursSpirituel, item.Eglise, item.Recommandation, item.Sante, item.AssuranceMaladie, item.AssuranceAccident, item.DemandeMembreAssoPermanent, item.FormationRepere)
 		if err != nil {
 			return err
 		}
@@ -177,7 +179,7 @@ func (items Ficheequipiers) IdPersonnes() []IdPersonne {
 
 // SelectFicheequipierByIdPersonne return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectFicheequipierByIdPersonne(tx DB, idPersonne IdPersonne) (item Ficheequipier, found bool, err error) {
-	row := tx.QueryRow("SELECT idpersonne, securitesociale, fonctionnaire, diplome, approfondissement, etatcivil, nombreenfants, formation, profession, experiencetravailjeunes, parcoursspirituel, eglise, recommandation, sante, assurancemaladie, assuranceaccident, demandemembreassopermanent FROM ficheequipiers WHERE idpersonne = $1", idPersonne)
+	row := tx.QueryRow("SELECT idpersonne, securitesociale, diplome, formation, fonctionnaire, approfondissement, etatcivil, nombreenfants, profession, experiencetravailjeunes, parcoursspirituel, eglise, recommandation, sante, assurancemaladie, assuranceaccident, demandemembreassopermanent, formationrepere FROM ficheequipiers WHERE idpersonne = $1", idPersonne)
 	item, err = ScanFicheequipier(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
@@ -186,7 +188,7 @@ func SelectFicheequipierByIdPersonne(tx DB, idPersonne IdPersonne) (item Ficheeq
 }
 
 func SelectFicheequipiersByIdPersonnes(tx DB, idPersonnes_ ...IdPersonne) (Ficheequipiers, error) {
-	rows, err := tx.Query("SELECT idpersonne, securitesociale, fonctionnaire, diplome, approfondissement, etatcivil, nombreenfants, formation, profession, experiencetravailjeunes, parcoursspirituel, eglise, recommandation, sante, assurancemaladie, assuranceaccident, demandemembreassopermanent FROM ficheequipiers WHERE idpersonne = ANY($1)", IdPersonneArrayToPQ(idPersonnes_))
+	rows, err := tx.Query("SELECT idpersonne, securitesociale, diplome, formation, fonctionnaire, approfondissement, etatcivil, nombreenfants, profession, experiencetravailjeunes, parcoursspirituel, eglise, recommandation, sante, assurancemaladie, assuranceaccident, demandemembreassopermanent, formationrepere FROM ficheequipiers WHERE idpersonne = ANY($1)", IdPersonneArrayToPQ(idPersonnes_))
 	if err != nil {
 		return nil, err
 	}
@@ -194,7 +196,7 @@ func SelectFicheequipiersByIdPersonnes(tx DB, idPersonnes_ ...IdPersonne) (Fiche
 }
 
 func DeleteFicheequipiersByIdPersonnes(tx DB, idPersonnes_ ...IdPersonne) (Ficheequipiers, error) {
-	rows, err := tx.Query("DELETE FROM ficheequipiers WHERE idpersonne = ANY($1) RETURNING idpersonne, securitesociale, fonctionnaire, diplome, approfondissement, etatcivil, nombreenfants, formation, profession, experiencetravailjeunes, parcoursspirituel, eglise, recommandation, sante, assurancemaladie, assuranceaccident, demandemembreassopermanent", IdPersonneArrayToPQ(idPersonnes_))
+	rows, err := tx.Query("DELETE FROM ficheequipiers WHERE idpersonne = ANY($1) RETURNING idpersonne, securitesociale, diplome, formation, fonctionnaire, approfondissement, etatcivil, nombreenfants, profession, experiencetravailjeunes, parcoursspirituel, eglise, recommandation, sante, assurancemaladie, assuranceaccident, demandemembreassopermanent, formationrepere", IdPersonneArrayToPQ(idPersonnes_))
 	if err != nil {
 		return nil, err
 	}

@@ -83,10 +83,12 @@ type Ficheequipier struct {
 
 	SecuriteSociale string // ou numéro AVS pour la configuration Repere
 
+	Diplome   Diplome
+	Formation string // permet de préciser si besoin
+
 	// champs ACVE
 
 	Fonctionnaire     bool
-	Diplome           Diplome
 	Approfondissement Approfondissement
 
 	// VilleNaissance et DepartementNaissance sont calculés automatiquement
@@ -96,9 +98,9 @@ type Ficheequipier struct {
 
 	// champs Repère
 
-	EtatCivil                  EtatCivil
-	NombreEnfants              int
-	Formation                  string
+	EtatCivil     EtatCivil
+	NombreEnfants int
+
 	Profession                 string
 	ExperienceTravailJeunes    string
 	ParcoursSpirituel          string // étapes de découverte de la foi, relation avec Dieu, conversion, étapes d'engagement, doutes...) - (5-10 lignes)
@@ -108,6 +110,8 @@ type Ficheequipier struct {
 	AssuranceMaladie           string
 	AssuranceAccident          string
 	DemandeMembreAssoPermanent bool
+
+	FormationRepere FormationRepere
 
 	guard bool `gomacro-sql-guard:"false"`
 }
