@@ -187,7 +187,8 @@ func loadDocuments(db ds.DB, key crypto.Encrypter, dossier logic.Dossier) (Docum
 			}
 			item.Generated = append(item.Generated, doc)
 		}
-		if camp.DocumentsToShow.ListeParticipants {
+		// hide adresses when opt out of sharing
+		if camp.DocumentsToShow.ListeParticipants && dossier.Dossier.PartageAdressesOK {
 			doc, err := filesAPI.CampDocument(key, camp, filesAPI.ListeParticipants)
 			if err != nil {
 				return Documents{}, err
