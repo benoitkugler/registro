@@ -137,7 +137,7 @@ var repere = Asso{
 		ShowFondSoutien:           true,
 		ShowCharteConduite:        true,
 		AskNationnalite:           true,
-		ShowInscriptionRapide:     false, // pour la première année
+		ShowInscriptionRapide:     true, // false pour la première année, actif maintenant
 		ShowAutorisationVehicules: false,
 		ShowAnnulationConditions:  true,
 	},
