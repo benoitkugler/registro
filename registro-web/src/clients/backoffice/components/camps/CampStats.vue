@@ -73,13 +73,13 @@
             {{ props.stats.AStatuerRegular + props.stats.AStatuerException }}
           </template>
         </v-list-item>
-        <v-list-item subtitle="Dont profils réguliers" prepend-icon="mdi-blank">
+        <v-list-item subtitle="Dont demandes normales" prepend-icon="mdi-blank">
           <template #append>
             {{ props.stats.AStatuerRegular }}
           </template>
         </v-list-item>
         <v-list-item
-          subtitle="Dont profils exceptionnels"
+          subtitle="Dont demandes en exception"
           prepend-icon="mdi-blank"
         >
           <template #append>
