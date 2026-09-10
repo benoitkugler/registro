@@ -10,7 +10,7 @@
         "
         prepend-icon="mdi-cash-plus"
       >
-        Régler
+        Payer
       </v-btn>
       <v-btn
         size="small"
@@ -112,7 +112,7 @@ async function createAide(aide: Aide, file: File) {
   const res = await controller.CreateAide(file, aide, { token: props.token });
   if (res === undefined) return;
   controller.showMessage(
-    "Aide ajoutée avec succès (validation à venir). Merci !"
+    "Aide ajoutée avec succès (validation à venir). Merci !",
   );
   emit("refresh");
 }
