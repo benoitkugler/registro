@@ -22,6 +22,8 @@ const (
 	Attestation  // Facture acquittée ou attestation de présence
 	Sondage      // Avis sur le séjour
 
+	ChangementCamp // Changement de séjour
+
 )
 
 type Acteur uint8

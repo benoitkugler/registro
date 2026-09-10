@@ -49,8 +49,18 @@ func randEventCampDocs() EventCampDocs {
 	return s
 }
 
+func randEventChangementCamp() EventChangementCamp {
+	var s EventChangementCamp
+	s.IdEvent = randIdEvent()
+	s.IdParticipant = randcam_IdParticipant()
+	s.Old = randcam_IdCamp()
+	s.New = randcam_IdCamp()
+
+	return s
+}
+
 func randEventKind() EventKind {
-	choix := [...]EventKind{Supprime, Statuation, Message, PlaceLiberee, Facture, CampDocs, Attestation, Sondage}
+	choix := [...]EventKind{Supprime, Statuation, Message, PlaceLiberee, Facture, CampDocs, Attestation, Sondage, ChangementCamp}
 	i := rand.Intn(len(choix))
 	return choix[i]
 }

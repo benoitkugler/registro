@@ -175,6 +175,15 @@ export interface CampDocsEvt {
   IdCamp: IdCamp;
   CampLabel: string;
 }
+// registro/logic.ChangementCampEvt
+export interface ChangementCampEvt {
+  IdParticipant: IdParticipant;
+  ParticipantLabel: string;
+  OldIdCamp: IdCamp;
+  NewIdCamp: IdCamp;
+  OldCampLabel: string;
+  NewCampLabel: string;
+}
 // registro/logic.DossierExt
 export interface DossierExt {
   Dossier: Dossier;
@@ -197,6 +206,7 @@ export interface Event {
 export const EventContentKind = {
   AttestationEvt: "AttestationEvt",
   CampDocsEvt: "CampDocsEvt",
+  ChangementCampEvt: "ChangementCampEvt",
   FactureEvt: "FactureEvt",
   MessageEvt: "MessageEvt",
   PlaceLibereeEvt: "PlaceLibereeEvt",
@@ -211,6 +221,7 @@ export type EventContentKind =
 export type EventContent =
   | { Kind: "AttestationEvt"; Data: AttestationEvt }
   | { Kind: "CampDocsEvt"; Data: CampDocsEvt }
+  | { Kind: "ChangementCampEvt"; Data: ChangementCampEvt }
   | { Kind: "FactureEvt"; Data: FactureEvt }
   | { Kind: "MessageEvt"; Data: MessageEvt }
   | { Kind: "PlaceLibereeEvt"; Data: PlaceLibereeEvt }

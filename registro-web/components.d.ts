@@ -28,6 +28,7 @@ declare module 'vue' {
     EtatcivilField: typeof import('./src/components/EtatcivilField.vue')['default']
     EventAttestationV: typeof import('./src/components/events/EventAttestationV.vue')['default']
     EventCampDocsV: typeof import('./src/components/events/EventCampDocsV.vue')['default']
+    EventChangementCampV: typeof import('./src/components/events/EventChangementCampV.vue')['default']
     EventFactureV: typeof import('./src/components/events/EventFactureV.vue')['default']
     EventInscriptionTimeV: typeof import('./src/components/events/EventInscriptionTimeV.vue')['default']
     EventItem: typeof import('./src/components/events/EventItem.vue')['default']
@@ -71,8 +72,6 @@ declare module 'vue' {
     StringList: typeof import('./src/components/StringList.vue')['default']
     TelField: typeof import('./src/components/TelField.vue')['default']
     TelsField: typeof import('./src/components/TelsField.vue')['default']
-    TelsField2: typeof import('./src/components/TelsField2.vue')['default']
-    TelsField3: typeof import('./src/components/TelsField3.vue')['default']
     TimeField: typeof import('./src/components/TimeField.vue')['default']
   }
 }

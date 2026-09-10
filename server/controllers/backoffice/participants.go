@@ -265,6 +265,7 @@ type ParticipantsMoveIn struct {
 
 // ParticipantsMove change le participant donné de camp,
 // calculant automatiquement un groupe et un statut.
+// Un évenement est aussi ajouté sur le fil de suivi.
 func (ct *Controller) ParticipantsMove(c echo.Context) error {
 	var args ParticipantsMoveIn
 	if err := c.Bind(&args); err != nil {
@@ -286,8 +287,9 @@ func (ct *Controller) moveParticipant(args ParticipantsMoveIn) error {
 	if err != nil {
 		return utils.SQLError(err)
 	}
+	oldIdCamp := participant.IdCamp
 
-	if participant.IdCamp == args.Target {
+	if oldIdCamp == args.Target {
 		return errors.New("same Camp")
 	}
 
@@ -333,6 +335,16 @@ func (ct *Controller) moveParticipant(args ParticipantsMoveIn) error {
 				return err
 			}
 		}
+
+		ev, err := evs.Event{IdDossier: participant.IdDossier, Kind: evs.ChangementCamp, Created: time.Now()}.Insert(tx)
+		if err != nil {
+			return err
+		}
+		err = evs.EventChangementCamp{IdEvent: ev.Id, IdParticipant: participant.Id, Old: oldIdCamp, New: args.Target}.Insert(tx)
+		if err != nil {
+			return err
+		}
+
 		return nil
 	})
 }

@@ -139,3 +139,15 @@ type EventAttestation struct {
 
 	guard EventKind `gomacro-sql-guard:"#[EventKind.Attestation]"`
 }
+
+// EventChangementCamp rappelle quand un participant a changé de camp
+//
+// gomacro:SQL ADD UNIQUE(IdEvent)
+// gomacro:SQL ADD FOREIGN KEY (IdEvent, guard) REFERENCES Event(Id,Kind) ON DELETE CASCADE
+type EventChangementCamp struct {
+	IdEvent       IdEvent `gomacro-sql-on-delete:"CASCADE"`
+	IdParticipant cps.IdParticipant
+	Old, New      cps.IdCamp
+
+	guard EventKind `gomacro-sql-guard:"#[EventKind.ChangementCamp]"`
+}

@@ -85,6 +85,15 @@
     :user="props.event.User"
     @go-to-sondage="(id) => emit('goToSondage', id)"
   ></EventSondageV>
+  <EventChangementCampV
+    v-else-if="
+      props.event.Kind == 'event' &&
+      props.event.Event.Content.Kind == EventContentKind.ChangementCampEvt
+    "
+    :event="props.event.Event"
+    :content="props.event.Event.Content.Data"
+    :user="props.event.User"
+  ></EventChangementCampV>
 </template>
 
 <script setup lang="ts">
@@ -102,8 +111,9 @@ import EventFactureV from "./events/EventFactureV.vue";
 import EventCampDocsV from "./events/EventCampDocsV.vue";
 import EventAttestationV from "./events/EventAttestationV.vue";
 import EventSondageV from "./events/EventSondageV.vue";
-import type { PseudoEvent } from "@/utils";
 import EventStatuationV from "./events/EventStatuationV.vue";
+import EventChangementCampV from "./events/EventChangementCampV.vue";
+import type { PseudoEvent } from "@/utils";
 
 const props = defineProps<{
   event: PseudoEvent;

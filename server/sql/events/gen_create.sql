@@ -2,7 +2,7 @@
 CREATE TABLE events (
     Id serial PRIMARY KEY,
     IdDossier integer NOT NULL,
-    Kind smallint CHECK (Kind IN (0, 1, 2, 3, 4, 5, 6, 7)) NOT NULL,
+    Kind smallint CHECK (Kind IN (0, 1, 2, 3, 4, 5, 6, 7, 8)) NOT NULL,
     Created timestamp(0) with time zone NOT NULL
 );
 
@@ -16,6 +16,14 @@ CREATE TABLE event_attestations (
 CREATE TABLE event_camp_docss (
     IdEvent integer NOT NULL,
     IdCamp integer NOT NULL,
+    guard smallint NOT NULL
+);
+
+CREATE TABLE event_changement_camps (
+    IdEvent integer NOT NULL,
+    IdParticipant integer NOT NULL,
+    Old integer NOT NULL,
+    New integer NOT NULL,
     guard smallint NOT NULL
 );
 
@@ -222,4 +230,31 @@ ALTER TABLE event_attestations
 ALTER TABLE event_attestations
     ADD CHECK (guard = 6
     /* EventKind.Attestation */);
+
+ALTER TABLE event_changement_camps
+    ADD UNIQUE (IdEvent);
+
+ALTER TABLE event_changement_camps
+    ADD FOREIGN KEY (IdEvent, guard) REFERENCES events (Id, Kind) ON DELETE CASCADE;
+
+ALTER TABLE event_changement_camps
+    ADD FOREIGN KEY (IdEvent) REFERENCES events ON DELETE CASCADE;
+
+ALTER TABLE event_changement_camps
+    ADD FOREIGN KEY (IdParticipant) REFERENCES participants;
+
+ALTER TABLE event_changement_camps
+    ADD FOREIGN KEY (Old) REFERENCES camps;
+
+ALTER TABLE event_changement_camps
+    ADD FOREIGN KEY (New) REFERENCES camps;
+
+ALTER TABLE event_changement_camps
+    ALTER COLUMN guard SET DEFAULT 8
+    /* EventKind.ChangementCamp */
+;
+
+ALTER TABLE event_changement_camps
+    ADD CHECK (guard = 8
+    /* EventKind.ChangementCamp */);
 

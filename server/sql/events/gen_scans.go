@@ -462,6 +462,265 @@ func DeleteEventCampDocssByIdCamps(tx DB, idCamps_ ...camps.IdCamp) (EventCampDo
 	return ScanEventCampDocss(rows)
 }
 
+func scanOneEventChangementCamp(row scanner) (EventChangementCamp, error) {
+	var item EventChangementCamp
+	err := row.Scan(
+		&item.IdEvent,
+		&item.IdParticipant,
+		&item.Old,
+		&item.New,
+	)
+	return item, err
+}
+
+func ScanEventChangementCamp(row *sql.Row) (EventChangementCamp, error) {
+	return scanOneEventChangementCamp(row)
+}
+
+// SelectAll returns all the items in the event_changement_camps table.
+func SelectAllEventChangementCamps(db DB) (EventChangementCamps, error) {
+	rows, err := db.Query("SELECT idevent, idparticipant, old, new FROM event_changement_camps")
+	if err != nil {
+		return nil, err
+	}
+	return ScanEventChangementCamps(rows)
+}
+
+type EventChangementCamps []EventChangementCamp
+
+func ScanEventChangementCamps(rs *sql.Rows) (EventChangementCamps, error) {
+	var (
+		item EventChangementCamp
+		err  error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(EventChangementCamps, 0, 16)
+	for rs.Next() {
+		item, err = scanOneEventChangementCamp(rs)
+		if err != nil {
+			return nil, err
+		}
+		structs = append(structs, item)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+func (item EventChangementCamp) Insert(db DB) error {
+	_, err := db.Exec(`INSERT INTO event_changement_camps (
+			idevent, idparticipant, old, new
+			) VALUES (
+			$1, $2, $3, $4
+			);
+			`, item.IdEvent, item.IdParticipant, item.Old, item.New)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Insert the links EventChangementCamp in the database.
+// It is a no-op if 'items' is empty.
+func InsertManyEventChangementCamps(tx *sql.Tx, items ...EventChangementCamp) error {
+	if len(items) == 0 {
+		return nil
+	}
+
+	stmt, err := tx.Prepare(pq.CopyIn("event_changement_camps",
+		"idevent",
+		"idparticipant",
+		"old",
+		"new",
+	))
+	if err != nil {
+		return err
+	}
+
+	for _, item := range items {
+		_, err = stmt.Exec(item.IdEvent, item.IdParticipant, item.Old, item.New)
+		if err != nil {
+			return err
+		}
+	}
+
+	if _, err = stmt.Exec(); err != nil {
+		return err
+	}
+
+	if err = stmt.Close(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Delete the link EventChangementCamp from the database.
+// Only the foreign keys IdEvent, IdParticipant, Old, New fields are used in 'item'.
+func (item EventChangementCamp) Delete(tx DB) error {
+	_, err := tx.Exec(`DELETE FROM event_changement_camps WHERE IdEvent = $1 AND IdParticipant = $2 AND Old = $3 AND New = $4;`, item.IdEvent, item.IdParticipant, item.Old, item.New)
+	return err
+}
+
+// ByIdEvent returns a map with 'IdEvent' as keys.
+func (items EventChangementCamps) ByIdEvent() map[IdEvent]EventChangementCamp {
+	out := make(map[IdEvent]EventChangementCamp, len(items))
+	for _, target := range items {
+		out[target.IdEvent] = target
+	}
+	return out
+}
+
+// IdEvents returns the list of ids of IdEvent
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items EventChangementCamps) IdEvents() []IdEvent {
+	out := make([]IdEvent, len(items))
+	for index, target := range items {
+		out[index] = target.IdEvent
+	}
+	return out
+}
+
+// SelectEventChangementCampByIdEvent return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectEventChangementCampByIdEvent(tx DB, idEvent IdEvent) (item EventChangementCamp, found bool, err error) {
+	row := tx.QueryRow("SELECT idevent, idparticipant, old, new FROM event_changement_camps WHERE idevent = $1", idEvent)
+	item, err = ScanEventChangementCamp(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
+}
+
+func SelectEventChangementCampsByIdEvents(tx DB, idEvents_ ...IdEvent) (EventChangementCamps, error) {
+	rows, err := tx.Query("SELECT idevent, idparticipant, old, new FROM event_changement_camps WHERE idevent = ANY($1)", IdEventArrayToPQ(idEvents_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanEventChangementCamps(rows)
+}
+
+func DeleteEventChangementCampsByIdEvents(tx DB, idEvents_ ...IdEvent) (EventChangementCamps, error) {
+	rows, err := tx.Query("DELETE FROM event_changement_camps WHERE idevent = ANY($1) RETURNING idevent, idparticipant, old, new", IdEventArrayToPQ(idEvents_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanEventChangementCamps(rows)
+}
+
+// ByIdParticipant returns a map with 'IdParticipant' as keys.
+func (items EventChangementCamps) ByIdParticipant() map[camps.IdParticipant]EventChangementCamps {
+	out := make(map[camps.IdParticipant]EventChangementCamps)
+	for _, target := range items {
+		out[target.IdParticipant] = append(out[target.IdParticipant], target)
+	}
+	return out
+}
+
+// IdParticipants returns the list of ids of IdParticipant
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items EventChangementCamps) IdParticipants() []camps.IdParticipant {
+	out := make([]camps.IdParticipant, len(items))
+	for index, target := range items {
+		out[index] = target.IdParticipant
+	}
+	return out
+}
+
+func SelectEventChangementCampsByIdParticipants(tx DB, idParticipants_ ...camps.IdParticipant) (EventChangementCamps, error) {
+	rows, err := tx.Query("SELECT idevent, idparticipant, old, new FROM event_changement_camps WHERE idparticipant = ANY($1)", camps.IdParticipantArrayToPQ(idParticipants_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanEventChangementCamps(rows)
+}
+
+func DeleteEventChangementCampsByIdParticipants(tx DB, idParticipants_ ...camps.IdParticipant) (EventChangementCamps, error) {
+	rows, err := tx.Query("DELETE FROM event_changement_camps WHERE idparticipant = ANY($1) RETURNING idevent, idparticipant, old, new", camps.IdParticipantArrayToPQ(idParticipants_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanEventChangementCamps(rows)
+}
+
+// ByOld returns a map with 'Old' as keys.
+func (items EventChangementCamps) ByOld() map[camps.IdCamp]EventChangementCamps {
+	out := make(map[camps.IdCamp]EventChangementCamps)
+	for _, target := range items {
+		out[target.Old] = append(out[target.Old], target)
+	}
+	return out
+}
+
+// Olds returns the list of ids of Old
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items EventChangementCamps) Olds() []camps.IdCamp {
+	out := make([]camps.IdCamp, len(items))
+	for index, target := range items {
+		out[index] = target.Old
+	}
+	return out
+}
+
+func SelectEventChangementCampsByOlds(tx DB, olds_ ...camps.IdCamp) (EventChangementCamps, error) {
+	rows, err := tx.Query("SELECT idevent, idparticipant, old, new FROM event_changement_camps WHERE old = ANY($1)", camps.IdCampArrayToPQ(olds_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanEventChangementCamps(rows)
+}
+
+func DeleteEventChangementCampsByOlds(tx DB, olds_ ...camps.IdCamp) (EventChangementCamps, error) {
+	rows, err := tx.Query("DELETE FROM event_changement_camps WHERE old = ANY($1) RETURNING idevent, idparticipant, old, new", camps.IdCampArrayToPQ(olds_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanEventChangementCamps(rows)
+}
+
+// ByNew returns a map with 'New' as keys.
+func (items EventChangementCamps) ByNew() map[camps.IdCamp]EventChangementCamps {
+	out := make(map[camps.IdCamp]EventChangementCamps)
+	for _, target := range items {
+		out[target.New] = append(out[target.New], target)
+	}
+	return out
+}
+
+// News returns the list of ids of New
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items EventChangementCamps) News() []camps.IdCamp {
+	out := make([]camps.IdCamp, len(items))
+	for index, target := range items {
+		out[index] = target.New
+	}
+	return out
+}
+
+func SelectEventChangementCampsByNews(tx DB, news_ ...camps.IdCamp) (EventChangementCamps, error) {
+	rows, err := tx.Query("SELECT idevent, idparticipant, old, new FROM event_changement_camps WHERE new = ANY($1)", camps.IdCampArrayToPQ(news_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanEventChangementCamps(rows)
+}
+
+func DeleteEventChangementCampsByNews(tx DB, news_ ...camps.IdCamp) (EventChangementCamps, error) {
+	rows, err := tx.Query("DELETE FROM event_changement_camps WHERE new = ANY($1) RETURNING idevent, idparticipant, old, new", camps.IdCampArrayToPQ(news_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanEventChangementCamps(rows)
+}
+
 func scanOneEventMessage(row scanner) (EventMessage, error) {
 	var item EventMessage
 	err := row.Scan(

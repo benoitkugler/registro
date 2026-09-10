@@ -56,7 +56,7 @@
               <v-divider></v-divider>
               <v-list-item
                 title="Changer de camp..."
-                prepend-icon="mdi-file-move"
+                prepend-icon="mdi-swap-horizontal"
                 @click="
                   moveArgs = {
                     Id: p.Participant.Id,

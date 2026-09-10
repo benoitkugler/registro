@@ -71,14 +71,15 @@ type EventContent interface {
 	kind() evs.EventKind
 }
 
-func (SupprimeEvt) kind() evs.EventKind     { return evs.Supprime }
-func (StatuationEvt) kind() evs.EventKind   { return evs.Statuation }
-func (MessageEvt) kind() evs.EventKind      { return evs.Message }
-func (FactureEvt) kind() evs.EventKind      { return evs.Facture }
-func (CampDocsEvt) kind() evs.EventKind     { return evs.CampDocs }
-func (PlaceLibereeEvt) kind() evs.EventKind { return evs.PlaceLiberee }
-func (AttestationEvt) kind() evs.EventKind  { return evs.Attestation }
-func (SondageEvt) kind() evs.EventKind      { return evs.Sondage }
+func (SupprimeEvt) kind() evs.EventKind       { return evs.Supprime }
+func (StatuationEvt) kind() evs.EventKind     { return evs.Statuation }
+func (MessageEvt) kind() evs.EventKind        { return evs.Message }
+func (FactureEvt) kind() evs.EventKind        { return evs.Facture }
+func (CampDocsEvt) kind() evs.EventKind       { return evs.CampDocs }
+func (PlaceLibereeEvt) kind() evs.EventKind   { return evs.PlaceLiberee }
+func (AttestationEvt) kind() evs.EventKind    { return evs.Attestation }
+func (SondageEvt) kind() evs.EventKind        { return evs.Sondage }
+func (ChangementCampEvt) kind() evs.EventKind { return evs.ChangementCamp }
 
 type SupprimeEvt struct{}
 
@@ -157,8 +158,8 @@ type PlaceLibereeEvt struct {
 func (ld *eventsContent) newPlaceLiberee(ev evs.Event) PlaceLibereeEvt {
 	m := ld.placeLiberees[ev.Id]
 	participant := ld.participants[m.IdParticipant]
-	camp := ld.camps[participant.IdCamp]
 	pers := ld.personnes[participant.IdPersonne]
+	camp := ld.camps[participant.IdCamp]
 	return PlaceLibereeEvt{
 		m.Accepted,
 		m.IdParticipant, participant.IdCamp,
@@ -191,18 +192,35 @@ func (ld *eventsContent) newSondage(ev evs.Event) SondageEvt {
 	return SondageEvt{IdCamp: m.IdCamp, CampLabel: camp.Label()}
 }
 
+type ChangementCampEvt struct {
+	IdParticipant    cps.IdParticipant
+	ParticipantLabel string
+
+	OldIdCamp, NewIdCamp       cps.IdCamp
+	OldCampLabel, NewCampLabel string
+}
+
+func (ld *eventsContent) newChangementCamp(ev evs.Event) ChangementCampEvt {
+	m := ld.changementCamps[ev.Id]
+	participant := ld.participants[m.IdParticipant]
+	pers := ld.personnes[participant.IdPersonne]
+	oldCamp, newCamp := ld.camps[m.Old], ld.camps[m.New]
+	return ChangementCampEvt{participant.Id, pers.PrenomN(), m.Old, m.New, oldCamp.Label(), newCamp.Label()}
+}
+
 type eventsContent struct {
 	camps        cps.Camps
 	participants cps.Participants
 	personnes    pr.Personnes
 
-	statuations   map[evs.IdEvent]evs.EventStatuation
-	messages      map[evs.IdEvent]evs.EventMessage
-	vupars        map[evs.IdEvent]evs.EventMessageVus
-	campDocs      map[evs.IdEvent]evs.EventCampDocs
-	placeLiberees map[evs.IdEvent]evs.EventPlaceLiberee
-	attestations  map[evs.IdEvent]evs.EventAttestation
-	sondages      map[evs.IdEvent]evs.EventSondage
+	statuations     map[evs.IdEvent]evs.EventStatuation
+	messages        map[evs.IdEvent]evs.EventMessage
+	vupars          map[evs.IdEvent]evs.EventMessageVus
+	campDocs        map[evs.IdEvent]evs.EventCampDocs
+	placeLiberees   map[evs.IdEvent]evs.EventPlaceLiberee
+	attestations    map[evs.IdEvent]evs.EventAttestation
+	sondages        map[evs.IdEvent]evs.EventSondage
+	changementCamps map[evs.IdEvent]evs.EventChangementCamp
 }
 
 // loadEventsContent loads the data required to build the given events.
@@ -251,12 +269,18 @@ func loadEventsContent(db evs.DB, ids ...evs.IdEvent) (out eventsContent, _ erro
 	}
 	out.sondages = tmp5.ByIdEvent()
 
-	idParticipants := slices.Concat(tmp3.IdParticipants(), tmp20.IdParticipants())
+	tmp6, err := evs.SelectEventChangementCampsByIdEvents(db, ids...)
+	if err != nil {
+		return eventsContent{}, utils.SQLError(err)
+	}
+	out.changementCamps = tmp6.ByIdEvent()
+
+	idParticipants := slices.Concat(tmp3.IdParticipants(), tmp20.IdParticipants(), tmp6.IdParticipants())
 	out.participants, err = cps.SelectParticipants(db, idParticipants...)
 	if err != nil {
 		return eventsContent{}, utils.SQLError(err)
 	}
-	idCamps := slices.Concat(tmp1.OrigineCamps(), tmp20.IdCamps(), tmp1bis.IdCamps(), tmp2.IdCamps(), tmp5.IdCamps(), out.participants.IdCamps())
+	idCamps := slices.Concat(tmp1.OrigineCamps(), tmp20.IdCamps(), tmp1bis.IdCamps(), tmp2.IdCamps(), tmp5.IdCamps(), tmp6.Olds(), tmp6.News(), out.participants.IdCamps())
 	out.camps, err = cps.SelectCamps(db, idCamps...)
 	if err != nil {
 		return eventsContent{}, utils.SQLError(err)
@@ -288,6 +312,8 @@ func (ec *eventsContent) build(event evs.Event, dossierEvents evs.Events) Event 
 		out.Content = ec.newAttestation(event)
 	case evs.Sondage:
 		out.Content = ec.newSondage(event)
+	case evs.ChangementCamp:
+		out.Content = ec.newChangementCamp(event)
 	}
 	return out
 }

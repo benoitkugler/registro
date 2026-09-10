@@ -24,7 +24,9 @@ func TestEvents(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	camp2, err := cps.Camp{IdTaux: 1}.Insert(db)
 	tu.AssertNoErr(t, err)
-	pa, err := cps.Participant{IdCamp: camp1.Id, IdPersonne: pe.Id, IdDossier: do.Id, IdTaux: ta.Id}.Insert(db)
+	camp3, err := cps.Camp{IdTaux: 1}.Insert(db)
+	tu.AssertNoErr(t, err)
+	pa, err := cps.Participant{IdCamp: camp2.Id, IdPersonne: pe.Id, IdDossier: do.Id, IdTaux: ta.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	event, err := Event{IdDossier: 1, Kind: Message, Created: time.Now()}.Insert(db)
@@ -48,7 +50,7 @@ func TestEvents(t *testing.T) {
 
 	event, err = Event{IdDossier: 1, Kind: Statuation, Created: time.Now()}.Insert(db)
 	tu.AssertNoErr(t, err)
-	err = EventStatuation{IdEvent: event.Id, IdCamp: pa.IdCamp, IsBackoffice: true, IdParticipant: pa.Id, Statut: cps.AttenteCampComplet}.Insert(db)
+	err = EventStatuation{IdEvent: event.Id, IdCamp: camp2.Id, IsBackoffice: true, IdParticipant: pa.Id, Statut: cps.AttenteCampComplet}.Insert(db)
 	tu.AssertNoErr(t, err)
 	event, err = Event{IdDossier: 1, Kind: Statuation, Created: time.Now()}.Insert(db)
 	tu.AssertNoErr(t, err)
@@ -57,6 +59,11 @@ func TestEvents(t *testing.T) {
 
 	_, err = cps.DeleteCampById(db, camp1.Id)
 	tu.AssertNoErr(t, err) // cascade
+
+	event, err = Event{IdDossier: 1, Kind: ChangementCamp, Created: time.Now()}.Insert(db)
+	tu.AssertNoErr(t, err)
+	err = EventChangementCamp{IdEvent: event.Id, IdParticipant: pa.Id, Old: camp2.Id, New: camp3.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
 
 	event, err = Event{IdDossier: 1, Kind: Attestation, Created: time.Now()}.Insert(db)
 	tu.AssertNoErr(t, err)

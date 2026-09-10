@@ -1,13 +1,13 @@
 <template>
   <EventItem color="#ad9726" icon="mdi-cash" :time="props.paiement.Time">
-    <v-row>
-      <v-col align-self="center">
+    <v-row justify="space-between">
+      <v-col align-self="center" cols="10">
         <v-list-item-title>
           {{ props.paiement.IsRemboursement ? "Remboursement" : "Paiement" }}
           <template v-if="!props.paiement.IsRemboursement">
             de <i>{{ props.paiement.Payeur }}</i>
           </template>
-          :
+          : <br />
           <b> {{ Formatters.montant(props.paiement.Montant) }} </b>
         </v-list-item-title>
         <v-list-item-subtitle>
