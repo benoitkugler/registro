@@ -314,26 +314,29 @@ ALTER TABLE events
 ALTER TABLE events
     ADD FOREIGN KEY (IdDossier) REFERENCES dossiers ON DELETE CASCADE;
 
-ALTER TABLE event_validations
+ALTER TABLE event_statuations
     ADD UNIQUE (IdEvent);
 
-ALTER TABLE event_validations
+ALTER TABLE event_statuations
     ADD FOREIGN KEY (IdEvent, guard) REFERENCES events (Id, Kind) ON DELETE CASCADE;
 
-ALTER TABLE event_validations
-    ADD FOREIGN KEY (IdEvent) REFERENCES events;
+ALTER TABLE event_statuations
+    ADD FOREIGN KEY (IdEvent) REFERENCES events ON DELETE CASCADE;
 
-ALTER TABLE event_validations
+ALTER TABLE event_statuations
     ADD FOREIGN KEY (IdCamp) REFERENCES camps;
 
-ALTER TABLE event_validations
+ALTER TABLE event_statuations
+    ADD FOREIGN KEY (IdParticipant) REFERENCES participants ON DELETE CASCADE;
+
+ALTER TABLE event_statuations
     ALTER COLUMN guard SET DEFAULT 1
-    /* EventKind.Validation */
+    /* EventKind.Statuation */
 ;
 
-ALTER TABLE event_validations
+ALTER TABLE event_statuations
     ADD CHECK (guard = 1
-    /* EventKind.Validation */);
+    /* EventKind.Statuation */);
 
 ALTER TABLE event_messages
     ADD UNIQUE (IdEvent);

@@ -311,9 +311,10 @@ func ValideInscription(db *sql.DB, key crypto.Encrypter, smtp config.SMTP, asso 
 	}
 
 	err = utils.InTx(db, func(tx *sql.Tx) error {
+		now := time.Now()
 		var (
 			inscrits, attente, refuses, astatuer []mails.Participant
-			validatedCamp                        = utils.Set[cps.IdCamp]{}
+			statuationEv                         evs.Event // register the last Statuation event for the notification link
 		)
 		for _, pExt := range loader.ParticipantsExt() {
 			participant := pExt.Participant
@@ -342,8 +343,19 @@ func ValideInscription(db *sql.DB, key crypto.Encrypter, smtp config.SMTP, asso 
 			if err != nil {
 				return err
 			}
-			// mark for event registration
-			validatedCamp.Add(participant.IdCamp)
+
+			// mark the validation (if [acteur] is valid, [validatedCamp] contains only that id)...
+			statuationEv, err = evs.Event{IdDossier: dossier.Id, Kind: evs.Statuation, Created: now}.Insert(tx)
+			if err != nil {
+				return err
+			}
+			err = evs.EventStatuation{
+				IdEvent: statuationEv.Id, IdCamp: participant.IdCamp, IsBackoffice: !acteur.Valid,
+				IdParticipant: participant.Id, Statut: newStatut,
+			}.Insert(tx)
+			if err != nil {
+				return err
+			}
 
 			// update loader, used below
 			loader.Participants[participant.Id] = participant
@@ -357,28 +369,10 @@ func ValideInscription(db *sql.DB, key crypto.Encrypter, smtp config.SMTP, asso 
 			}
 		}
 
-		if len(validatedCamp) == 0 {
-			return errors.New("internal error: no validation performed")
-		}
-
-		// mark the validation (if [acteur] is valid, [validatedCamp] contains only that id)...
-		now := time.Now()
-		var ev evs.Event // register the last for the notification
-		for idCamp := range validatedCamp {
-			ev, err = evs.Event{IdDossier: dossier.Id, Kind: evs.Validation, Created: now}.Insert(tx)
-			if err != nil {
-				return err
-			}
-			err = evs.EventValidation{IdEvent: ev.Id, IdCamp: idCamp, IsBackoffice: !acteur.Valid}.Insert(tx)
-			if err != nil {
-				return err
-			}
-		}
-
 		// ... and notify if required
 		if args.SendMail {
 			resp := loader.Responsable()
-			url := EspacePersoURL(key, host, dossier.Id, utils.QPInt("idEvent", ev.Id))
+			url := EspacePersoURL(key, host, dossier.Id, utils.QPInt("idEvent", statuationEv.Id))
 			html, err := mails.ConfirmationInscription(asso, mails.NewContact(&resp), url, inscrits, attente, refuses, astatuer)
 			if err != nil {
 				return err

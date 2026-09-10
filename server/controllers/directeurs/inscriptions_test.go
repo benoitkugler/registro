@@ -73,7 +73,7 @@ func Test_inscriptions(t *testing.T) {
 		data, err := logic.LoadDossier(db, dossier1.Id)
 		tu.AssertNoErr(t, err)
 
-		tu.Assert(t, len(logic.EventsBy[logic.ValidationEvt](data.Events)) == 1)
+		tu.Assert(t, len(logic.EventsBy[logic.StatuationEvt](data.Events)) == 1)
 
 		out, err := ct.getInscriptions(camp1.Id)
 		tu.AssertNoErr(t, err)

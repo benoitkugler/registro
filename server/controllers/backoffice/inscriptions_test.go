@@ -93,7 +93,9 @@ func TestValideInscription(t *testing.T) {
 		tu.Assert(t, part.Statut == cps.AttenteProfilInvalide)
 	}
 
-	tu.Assert(t, len(logic.EventsBy[logic.ValidationEvt](data.Events)) == 2) // 2 camps
+	events := logic.EventsBy[logic.StatuationEvt](data.Events)
+	tu.Assert(t, len(events) == 3) // 3 participants
+	tu.Assert(t, events[0].Content.Statut == cps.AttenteProfilInvalide)
 
 	err = ct.deleteDossier(data.Dossier.Id)
 	tu.AssertNoErr(t, err)

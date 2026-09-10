@@ -38,9 +38,9 @@
                 >{{ props.camp.Stats.Valides }}/{{
                   props.camp.Camp.Camp.Places
                 }}
-                <span v-if="props.camp.Stats.AStatuer > 0">
+                <span v-if="aStatuerCount > 0">
                   (+
-                  {{ props.camp.Stats.AStatuer }})</span
+                  {{ aStatuerCount }})</span
                 >
               </strong>
               <v-icon class="ml-2">mdi-account-multiple</v-icon>
@@ -83,7 +83,7 @@
                     {{ demande.InscritsCount }} ({{
                       Formatters.pourcent(
                         demande.UploadedCount,
-                        demande.InscritsCount
+                        demande.InscritsCount,
                       )
                     }}
                     %)
@@ -153,7 +153,7 @@
               :href="
                 controller.CampsDownloadEquipiers(
                   props.camp.Camp.Camp.Id,
-                  controller.authToken
+                  controller.authToken,
                 )
               "
             ></v-list-item>
@@ -284,6 +284,10 @@ const periodeColor = computed(() => {
       return "rgb(190, 228, 100)";
   }
 });
+
+const aStatuerCount = computed(
+  () => props.camp.Stats.AStatuerRegular + props.camp.Stats.AStatuerException,
+);
 
 const showAddDirecteur = ref(false);
 const idDirecteur = ref(0 as IdPersonne);

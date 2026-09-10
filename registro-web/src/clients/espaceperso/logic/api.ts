@@ -201,8 +201,8 @@ export const EventContentKind = {
   MessageEvt: "MessageEvt",
   PlaceLibereeEvt: "PlaceLibereeEvt",
   SondageEvt: "SondageEvt",
+  StatuationEvt: "StatuationEvt",
   SupprimeEvt: "SupprimeEvt",
-  ValidationEvt: "ValidationEvt",
 } as const;
 export type EventContentKind =
   (typeof EventContentKind)[keyof typeof EventContentKind];
@@ -215,8 +215,8 @@ export type EventContent =
   | { Kind: "MessageEvt"; Data: MessageEvt }
   | { Kind: "PlaceLibereeEvt"; Data: PlaceLibereeEvt }
   | { Kind: "SondageEvt"; Data: SondageEvt }
-  | { Kind: "SupprimeEvt"; Data: SupprimeEvt }
-  | { Kind: "ValidationEvt"; Data: ValidationEvt };
+  | { Kind: "StatuationEvt"; Data: StatuationEvt }
+  | { Kind: "SupprimeEvt"; Data: SupprimeEvt };
 
 // registro/logic.Events
 export type Events = Event[] | null;
@@ -252,6 +252,13 @@ export interface SondageEvt {
   IdCamp: IdCamp;
   CampLabel: string;
 }
+// registro/logic.StatuationEvt
+export interface StatuationEvt {
+  OriginCamp: string;
+  IsBackoffice: boolean;
+  Participant: string;
+  Statut: StatutParticipant;
+}
 // registro/logic.StatutPaiement
 export const StatutPaiement = {
   Complet: 3,
@@ -269,11 +276,6 @@ export const StatutPaiementLabels: Record<StatutPaiement, string> = {
 
 // registro/logic.SupprimeEvt
 export type SupprimeEvt = Record<string, never>;
-// registro/logic.ValidationEvt
-export interface ValidationEvt {
-  ForCamp: string;
-  IsBackoffice: boolean;
-}
 // registro/sql/camps.Aide
 export interface Aide {
   Id: IdAide;

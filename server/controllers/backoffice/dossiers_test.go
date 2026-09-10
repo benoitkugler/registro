@@ -241,7 +241,7 @@ func TestController_mergeDossiers(t *testing.T) {
 
 	_, err = events.Event{Kind: events.Message, IdDossier: d2.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
-	_, err = events.Event{Kind: events.Validation, IdDossier: d2.Id}.Insert(db)
+	_, err = events.Event{Kind: events.Statuation, IdDossier: d2.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
 	_, err = events.Event{Kind: events.PlaceLiberee, IdDossier: d2.Id}.Insert(db)
 	tu.AssertNoErr(t, err)

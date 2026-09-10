@@ -49,12 +49,12 @@ func (out *EventContentWrapper) UnmarshalJSON(src []byte) error {
 		var data SondageEvt
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
-	case "SupprimeEvt":
-		var data SupprimeEvt
+	case "StatuationEvt":
+		var data StatuationEvt
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
-	case "ValidationEvt":
-		var data ValidationEvt
+	case "SupprimeEvt":
+		var data SupprimeEvt
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 
@@ -83,10 +83,10 @@ func (item EventContentWrapper) MarshalJSON() ([]byte, error) {
 		wr = wrapper{Kind: "PlaceLibereeEvt", Data: data}
 	case SondageEvt:
 		wr = wrapper{Kind: "SondageEvt", Data: data}
+	case StatuationEvt:
+		wr = wrapper{Kind: "StatuationEvt", Data: data}
 	case SupprimeEvt:
 		wr = wrapper{Kind: "SupprimeEvt", Data: data}
-	case ValidationEvt:
-		wr = wrapper{Kind: "ValidationEvt", Data: data}
 
 	default:
 		panic("exhaustive switch")
@@ -101,8 +101,8 @@ const (
 	MessageEvtEvKind      = "MessageEvt"
 	PlaceLibereeEvtEvKind = "PlaceLibereeEvt"
 	SondageEvtEvKind      = "SondageEvt"
+	StatuationEvtEvKind   = "StatuationEvt"
 	SupprimeEvtEvKind     = "SupprimeEvt"
-	ValidationEvtEvKind   = "ValidationEvt"
 )
 
 func (item Event) MarshalJSON() ([]byte, error) {

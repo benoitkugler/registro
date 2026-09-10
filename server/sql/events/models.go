@@ -5,7 +5,7 @@ package events
 import (
 	"time"
 
-	"registro/sql/camps"
+	cps "registro/sql/camps"
 	"registro/sql/dossiers"
 )
 
@@ -17,7 +17,7 @@ type IdEvent int64
 // Requis pour référence
 // gomacro:SQL ADD UNIQUE(Id, Kind)
 //
-// gomacro:QUERY SwitchValidationAndMessageDossier UPDATE Event SET IdDossier = $to$ WHERE IdDossier = $from$ AND (Kind = #[EventKind.Message] OR Kind = #[EventKind.Validation]);
+// gomacro:QUERY SwitchValidationAndMessageDossier UPDATE Event SET IdDossier = $to$ WHERE IdDossier = $from$ AND (Kind = #[EventKind.Message] OR Kind = #[EventKind.Statuation]);
 type Event struct {
 	Id        IdEvent
 	IdDossier dossiers.IdDossier `gomacro-sql-on-delete:"CASCADE"`
@@ -25,16 +25,22 @@ type Event struct {
 	Created   time.Time
 }
 
-// EventValidation indicates the origin and camp of the validation
+// EventStatuation indicates the origin and camp of the validation
 //
 // gomacro:SQL ADD UNIQUE(IdEvent)
 // gomacro:SQL ADD FOREIGN KEY (IdEvent, guard) REFERENCES Event(Id,Kind) ON DELETE CASCADE
-type EventValidation struct {
-	IdEvent      IdEvent
-	IdCamp       camps.IdCamp
+type EventStatuation struct {
+	IdEvent IdEvent `gomacro-sql-on-delete:"CASCADE"`
+
+	// le camp du participant (au moment de la validation)
+	IdCamp cps.IdCamp
+	// true si la validation a été effectuée par le centre
 	IsBackoffice bool
 
-	guard EventKind `gomacro-sql-guard:"#[EventKind.Validation]"`
+	IdParticipant cps.IdParticipant     `gomacro-sql-on-delete:"CASCADE"`
+	Statut        cps.StatutParticipant // the decision at statuation time
+
+	guard EventKind `gomacro-sql-guard:"#[EventKind.Statuation]"`
 }
 
 // EventMessage stocke le contenu d'un message libre
@@ -79,8 +85,8 @@ func CreateMessage(db DB, idDossier dossiers.IdDossier, created time.Time, messa
 // gomacro:SQL ADD FOREIGN KEY (IdEvent, guard) REFERENCES Event(Id,Kind) ON DELETE CASCADE
 // gomacro:SQL ADD UNIQUE(IdEvent, IdCamp)
 type EventMessageVu struct {
-	IdEvent IdEvent      `gomacro-sql-on-delete:"CASCADE"`
-	IdCamp  camps.IdCamp `gomacro-sql-on-delete:"CASCADE"`
+	IdEvent IdEvent    `gomacro-sql-on-delete:"CASCADE"`
+	IdCamp  cps.IdCamp `gomacro-sql-on-delete:"CASCADE"`
 
 	guard EventKind `gomacro-sql-guard:"#[EventKind.Message]"`
 }
@@ -91,7 +97,7 @@ type EventMessageVu struct {
 // gomacro:SQL ADD FOREIGN KEY (IdEvent, guard) REFERENCES Event(Id,Kind) ON DELETE CASCADE
 type EventCampDocs struct {
 	IdEvent IdEvent `gomacro-sql-on-delete:"CASCADE"`
-	IdCamp  camps.IdCamp
+	IdCamp  cps.IdCamp
 
 	guard EventKind `gomacro-sql-guard:"#[EventKind.CampDocs]"`
 }
@@ -102,7 +108,7 @@ type EventCampDocs struct {
 // gomacro:SQL ADD FOREIGN KEY (IdEvent, guard) REFERENCES Event(Id,Kind) ON DELETE CASCADE
 type EventSondage struct {
 	IdEvent IdEvent `gomacro-sql-on-delete:"CASCADE"`
-	IdCamp  camps.IdCamp
+	IdCamp  cps.IdCamp
 
 	guard EventKind `gomacro-sql-guard:"#[EventKind.Sondage]"`
 }
@@ -113,7 +119,7 @@ type EventSondage struct {
 // gomacro:SQL ADD FOREIGN KEY (IdEvent, guard) REFERENCES Event(Id,Kind) ON DELETE CASCADE
 type EventPlaceLiberee struct {
 	IdEvent       IdEvent `gomacro-sql-on-delete:"CASCADE"`
-	IdParticipant camps.IdParticipant
+	IdParticipant cps.IdParticipant
 	Accepted      bool
 
 	guard EventKind `gomacro-sql-guard:"#[EventKind.PlaceLiberee]"`

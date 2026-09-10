@@ -72,7 +72,7 @@ type EventContent interface {
 }
 
 func (SupprimeEvt) kind() evs.EventKind     { return evs.Supprime }
-func (ValidationEvt) kind() evs.EventKind   { return evs.Validation }
+func (StatuationEvt) kind() evs.EventKind   { return evs.Statuation }
 func (MessageEvt) kind() evs.EventKind      { return evs.Message }
 func (FactureEvt) kind() evs.EventKind      { return evs.Facture }
 func (CampDocsEvt) kind() evs.EventKind     { return evs.CampDocs }
@@ -82,17 +82,20 @@ func (SondageEvt) kind() evs.EventKind      { return evs.Sondage }
 
 type SupprimeEvt struct{}
 
-type ValidationEvt struct {
-	ForCamp      string
+type StatuationEvt struct {
+	OriginCamp   string
 	IsBackoffice bool
+	Participant  string
+	Statut       cps.StatutParticipant
 }
 
-// m must have kind [ValidationEvt]
-func (ld *eventsContent) newValidation(ev evs.Event) ValidationEvt {
-	m := ld.validations[ev.Id]
+// m must have kind [StatuationEvt]
+func (ld *eventsContent) newStatuation(ev evs.Event) StatuationEvt {
+	m := ld.statuations[ev.Id]
 	camp := ld.camps[m.IdCamp]
-	label := camp.Label()
-	return ValidationEvt{label, m.IsBackoffice}
+	participant := ld.participants[m.IdParticipant]
+	personne := ld.personnes[participant.IdPersonne]
+	return StatuationEvt{camp.Label(), m.IsBackoffice, personne.PrenomN(), m.Statut}
 }
 
 type MessageEvt struct {
@@ -193,7 +196,7 @@ type eventsContent struct {
 	participants cps.Participants
 	personnes    pr.Personnes
 
-	validations   map[evs.IdEvent]evs.EventValidation
+	statuations   map[evs.IdEvent]evs.EventStatuation
 	messages      map[evs.IdEvent]evs.EventMessage
 	vupars        map[evs.IdEvent]evs.EventMessageVus
 	campDocs      map[evs.IdEvent]evs.EventCampDocs
@@ -218,11 +221,11 @@ func loadEventsContent(db evs.DB, ids ...evs.IdEvent) (out eventsContent, _ erro
 	}
 	out.vupars = tmp1bis.ByIdEvent()
 
-	tmp20, err := evs.SelectEventValidationsByIdEvents(db, ids...)
+	tmp20, err := evs.SelectEventStatuationsByIdEvents(db, ids...)
 	if err != nil {
 		return eventsContent{}, utils.SQLError(err)
 	}
-	out.validations = tmp20.ByIdEvent()
+	out.statuations = tmp20.ByIdEvent()
 
 	tmp2, err := evs.SelectEventCampDocssByIdEvents(db, ids...)
 	if err != nil {
@@ -248,7 +251,8 @@ func loadEventsContent(db evs.DB, ids ...evs.IdEvent) (out eventsContent, _ erro
 	}
 	out.sondages = tmp5.ByIdEvent()
 
-	out.participants, err = cps.SelectParticipants(db, tmp3.IdParticipants()...)
+	idParticipants := slices.Concat(tmp3.IdParticipants(), tmp20.IdParticipants())
+	out.participants, err = cps.SelectParticipants(db, idParticipants...)
 	if err != nil {
 		return eventsContent{}, utils.SQLError(err)
 	}
@@ -270,8 +274,8 @@ func (ec *eventsContent) build(event evs.Event, dossierEvents evs.Events) Event 
 	switch event.Kind {
 	case evs.Supprime:
 		out.Content = SupprimeEvt{}
-	case evs.Validation:
-		out.Content = ec.newValidation(event)
+	case evs.Statuation:
+		out.Content = ec.newStatuation(event)
 	case evs.Message:
 		out.Content = ec.newMessage(event)
 	case evs.PlaceLiberee:

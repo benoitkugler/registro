@@ -124,7 +124,7 @@
                 :class="{
                   'my-2': true,
                   [Formatters.statutParticipantColorClass(
-                    participant.Participant.Statut
+                    participant.Participant.Statut,
                   )]: true,
                 }"
               >
@@ -133,12 +133,12 @@
                     variant="elevated"
                     :color="
                       Formatters.statutParticipant(
-                        participant.Participant.Statut
+                        participant.Participant.Statut,
                       ).color
                     "
                     :prepend-icon="
                       Formatters.statutParticipant(
-                        participant.Participant.Statut
+                        participant.Participant.Statut,
                       ).icon
                     "
                   >
@@ -229,7 +229,7 @@
     <DocumentsCard
       :token="token"
       @close="showDocuments = false"
-      @update-notifs="v => data!.DocumentsToReadOrFillCount = v"
+      @update-notifs="(v) => (data!.DocumentsToReadOrFillCount = v)"
     ></DocumentsCard>
   </v-dialog>
 
@@ -351,17 +351,17 @@ async function fetchData() {
 const events = computed(() =>
   data.value == null
     ? []
-    : buildPseudoEvents(data.value.Dossier, Acteur.Espaceperso)
+    : buildPseudoEvents(data.value.Dossier, Acteur.Espaceperso),
 );
 
 function handleFromEvent(fromIdEvent: IdEvent) {
   if (!data.value) return;
   const event = (data.value.Dossier.Events || []).find(
-    (ev) => ev.Id == fromIdEvent
+    (ev) => ev.Id == fromIdEvent,
   );
   if (!event) return;
   switch (event.Content.Kind) {
-    case EventContentKind.ValidationEvt:
+    case EventContentKind.StatuationEvt:
       showValidation.value = true;
       return;
     case EventContentKind.FactureEvt:

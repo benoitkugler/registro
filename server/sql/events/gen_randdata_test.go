@@ -50,7 +50,7 @@ func randEventCampDocs() EventCampDocs {
 }
 
 func randEventKind() EventKind {
-	choix := [...]EventKind{Supprime, Validation, Message, PlaceLiberee, Facture, CampDocs, Attestation, Sondage}
+	choix := [...]EventKind{Supprime, Statuation, Message, PlaceLiberee, Facture, CampDocs, Attestation, Sondage}
 	i := rand.Intn(len(choix))
 	return choix[i]
 }
@@ -94,11 +94,13 @@ func randEventSondage() EventSondage {
 	return s
 }
 
-func randEventValidation() EventValidation {
-	var s EventValidation
+func randEventStatuation() EventStatuation {
+	var s EventStatuation
 	s.IdEvent = randIdEvent()
 	s.IdCamp = randcam_IdCamp()
 	s.IsBackoffice = randbool()
+	s.IdParticipant = randcam_IdParticipant()
+	s.Statut = randcam_StatutParticipant()
 
 	return s
 }
@@ -118,6 +120,12 @@ func randcam_IdCamp() camps.IdCamp {
 
 func randcam_IdParticipant() camps.IdParticipant {
 	return camps.IdParticipant(randint64())
+}
+
+func randcam_StatutParticipant() camps.StatutParticipant {
+	choix := [...]camps.StatutParticipant{camps.AStatuer, camps.Refuse, camps.AttenteProfilInvalide, camps.AttenteCampComplet, camps.EnAttenteReponse, camps.Inscrit}
+	i := rand.Intn(len(choix))
+	return choix[i]
 }
 
 func randdos_IdDossier() dossiers.IdDossier {

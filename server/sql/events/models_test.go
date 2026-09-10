@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"registro/sql/camps"
+	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
 	"registro/sql/personnes"
 	tu "registro/utils/testutils"
@@ -14,15 +14,17 @@ func TestEvents(t *testing.T) {
 	db := tu.NewTestDB(t, "../personnes/gen_create.sql", "../dossiers/gen_create.sql", "../camps/gen_create.sql", "gen_create.sql")
 	defer db.Remove()
 
-	_, err := personnes.Personne{}.Insert(db)
+	pe, err := personnes.Personne{}.Insert(db)
 	tu.AssertNoErr(t, err)
-	_, err = ds.Taux{Euros: 1000}.Insert(db)
+	ta, err := ds.Taux{Euros: 1000}.Insert(db)
 	tu.AssertNoErr(t, err)
-	_, err = ds.Dossier{IdTaux: 1, IdResponsable: 1}.Insert(db)
+	do, err := ds.Dossier{IdTaux: 1, IdResponsable: 1}.Insert(db)
 	tu.AssertNoErr(t, err)
-	camp1, err := camps.Camp{IdTaux: 1}.Insert(db)
+	camp1, err := cps.Camp{IdTaux: 1}.Insert(db)
 	tu.AssertNoErr(t, err)
-	camp2, err := camps.Camp{IdTaux: 1}.Insert(db)
+	camp2, err := cps.Camp{IdTaux: 1}.Insert(db)
+	tu.AssertNoErr(t, err)
+	pa, err := cps.Participant{IdCamp: camp1.Id, IdPersonne: pe.Id, IdDossier: do.Id, IdTaux: ta.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	event, err := Event{IdDossier: 1, Kind: Message, Created: time.Now()}.Insert(db)
@@ -44,16 +46,16 @@ func TestEvents(t *testing.T) {
 	err = EventMessageVu{IdEvent: event.Id, IdCamp: camp2.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	event, err = Event{IdDossier: 1, Kind: Validation, Created: time.Now()}.Insert(db)
+	event, err = Event{IdDossier: 1, Kind: Statuation, Created: time.Now()}.Insert(db)
 	tu.AssertNoErr(t, err)
-	err = EventValidation{IdEvent: event.Id, IdCamp: camp2.Id, IsBackoffice: true}.Insert(db)
+	err = EventStatuation{IdEvent: event.Id, IdCamp: pa.IdCamp, IsBackoffice: true, IdParticipant: pa.Id, Statut: cps.AttenteCampComplet}.Insert(db)
 	tu.AssertNoErr(t, err)
-	event, err = Event{IdDossier: 1, Kind: Validation, Created: time.Now()}.Insert(db)
+	event, err = Event{IdDossier: 1, Kind: Statuation, Created: time.Now()}.Insert(db)
 	tu.AssertNoErr(t, err)
-	err = EventValidation{IdEvent: event.Id, IdCamp: camp2.Id, IsBackoffice: false}.Insert(db)
+	err = EventStatuation{IdEvent: event.Id, IdParticipant: pa.Id, IdCamp: camp2.Id, IsBackoffice: false}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	_, err = camps.DeleteCampById(db, camp1.Id)
+	_, err = cps.DeleteCampById(db, camp1.Id)
 	tu.AssertNoErr(t, err) // cascade
 
 	event, err = Event{IdDossier: 1, Kind: Attestation, Created: time.Now()}.Insert(db)
@@ -66,25 +68,27 @@ func TestSwitchDossier(t *testing.T) {
 	db := tu.NewTestDB(t, "../personnes/gen_create.sql", "../dossiers/gen_create.sql", "../camps/gen_create.sql", "gen_create.sql")
 	defer db.Remove()
 
-	_, err := personnes.Personne{}.Insert(db)
+	pe, err := personnes.Personne{}.Insert(db)
 	tu.AssertNoErr(t, err)
-	_, err = ds.Taux{Euros: 1000}.Insert(db)
+	ta, err := ds.Taux{Euros: 1000}.Insert(db)
 	tu.AssertNoErr(t, err)
 	d1, err := ds.Dossier{IdTaux: 1, IdResponsable: 1}.Insert(db)
 	tu.AssertNoErr(t, err)
 	d2, err := ds.Dossier{IdTaux: 1, IdResponsable: 1}.Insert(db)
 	tu.AssertNoErr(t, err)
-	camp1, err := camps.Camp{IdTaux: 1}.Insert(db)
+	camp1, err := cps.Camp{IdTaux: 1}.Insert(db)
+	tu.AssertNoErr(t, err)
+	pa, err := cps.Participant{IdCamp: camp1.Id, IdPersonne: pe.Id, IdDossier: d1.Id, IdTaux: ta.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	event, err := Event{IdDossier: d1.Id, Kind: Validation, Created: time.Now()}.Insert(db)
+	event, err := Event{IdDossier: d1.Id, Kind: Statuation, Created: time.Now()}.Insert(db)
 	tu.AssertNoErr(t, err)
-	err = EventValidation{IdEvent: event.Id, IdCamp: camp1.Id, IsBackoffice: true}.Insert(db)
+	err = EventStatuation{IdEvent: event.Id, IdCamp: camp1.Id, IsBackoffice: true, IdParticipant: pa.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	event, err = Event{IdDossier: d1.Id, Kind: Validation, Created: time.Now()}.Insert(db)
+	event, err = Event{IdDossier: d1.Id, Kind: Statuation, Created: time.Now()}.Insert(db)
 	tu.AssertNoErr(t, err)
-	err = EventValidation{IdEvent: event.Id, IdCamp: camp1.Id}.Insert(db)
+	err = EventStatuation{IdEvent: event.Id, IdCamp: camp1.Id, IsBackoffice: false, IdParticipant: pa.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	err = SwitchValidationAndMessageDossier(db, d1.Id, d2.Id)

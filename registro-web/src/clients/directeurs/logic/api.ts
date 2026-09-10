@@ -760,7 +760,7 @@ export interface Event {
 // registro/sql/events.EventKind
 export const EventKind = {
   Supprime: 0,
-  Validation: 1,
+  Statuation: 1,
   Message: 2,
   PlaceLiberee: 3,
   Facture: 4,
@@ -772,7 +772,7 @@ export type EventKind = (typeof EventKind)[keyof typeof EventKind];
 
 export const EventKindLabels: Record<EventKind, string> = {
   [EventKind.Supprime]: "Message supprimé",
-  [EventKind.Validation]: "Inscription validée",
+  [EventKind.Statuation]: "Inscription validée",
   [EventKind.Message]: "Message",
   [EventKind.PlaceLiberee]: "Place libérée",
   [EventKind.Facture]: "Facture",

@@ -18,16 +18,16 @@
     :event="props.event.Event"
     :content="props.event.Event.Content.Data"
   ></EventSupprimeV>
-  <EventValidationV
+  <EventStatuationV
     v-else-if="
       props.event.Kind == 'event' &&
-      props.event.Event.Content.Kind == EventContentKind.ValidationEvt
+      props.event.Event.Content.Kind == EventContentKind.StatuationEvt
     "
     :event="props.event.Event"
     :content="props.event.Event.Content.Data"
     :user="props.event.User"
     @go-to-validation="emit('goToValidation')"
-  ></EventValidationV>
+  ></EventStatuationV>
   <EventMessageV
     v-else-if="
       props.event.Kind == 'event' &&
@@ -98,12 +98,12 @@ import {
 import EventMessageV from "./events/EventMessageV.vue";
 import EventPlaceLibereeV from "./events/EventPlaceLibereeV.vue";
 import EventSupprimeV from "./events/EventSupprimeV.vue";
-import EventValidationV from "./events/EventValidationV.vue";
 import EventFactureV from "./events/EventFactureV.vue";
 import EventCampDocsV from "./events/EventCampDocsV.vue";
 import EventAttestationV from "./events/EventAttestationV.vue";
 import EventSondageV from "./events/EventSondageV.vue";
 import type { PseudoEvent } from "@/utils";
+import EventStatuationV from "./events/EventStatuationV.vue";
 
 const props = defineProps<{
   event: PseudoEvent;
