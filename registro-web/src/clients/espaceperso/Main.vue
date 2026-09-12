@@ -56,7 +56,7 @@
         >
           <template #append>
             <v-btn
-              @click="showCreateMessage = { content: '', toFondSoutien: false }"
+              @click="showCreateMessage = { toFondSoutien: false }"
               prepend-icon="mdi-email"
               :size="smAndDown ? 'small' : undefined"
             >
@@ -74,7 +74,7 @@
                   @go-to-validation="showValidation = true"
                   @accept-place-liberee="(id) => handleFromEvent(id)"
                   @reply-fond-soutien="
-                    showCreateMessage = { content: '', toFondSoutien: true }
+                    showCreateMessage = { toFondSoutien: true }
                   "
                 >
                 </EventSwitch>
@@ -179,34 +179,11 @@
     @update:model-value="showCreateMessage = null"
     max-width="600px"
   >
-    <v-card
+    <NewMessageCard
       v-if="showCreateMessage"
-      title="Nouveau message"
-      :subtitle="
-        showCreateMessage.toFondSoutien
-          ? 'Ce message ne sera visible que par le fonds de soutien.'
-          : 'Ce message sera visible par le centre et les directeurs.'
-      "
-    >
-      <v-card-text>
-        <v-textarea
-          autofocus
-          placeholder="Rédigez votre message..."
-          v-model="showCreateMessage.content"
-          rows="10"
-        ></v-textarea>
-      </v-card-text>
-      <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn
-          :disabled="!showCreateMessage.content.length"
-          @click="sendMessage"
-          prepend-icon="mdi-send"
-        >
-          Envoyer</v-btn
-        >
-      </v-card-actions>
-    </v-card>
+      :to-fond-soutien="showCreateMessage.toFondSoutien"
+      @send="sendMessage"
+    ></NewMessageCard>
   </v-dialog>
 
   <v-dialog
@@ -293,14 +270,12 @@ import { controller } from "./logic/logic";
 import {
   Acteur,
   EventContentKind,
-  StatutParticipant,
   StatutParticipantLabels,
   type Data,
   type Event,
   type IdCamp,
   type IdEvent,
   type Participant,
-  type ParticipantCamp,
   type SendMessageIn,
 } from "./logic/api";
 import { buildPseudoEvents, Camps, Formatters, Personnes } from "@/utils";
@@ -313,6 +288,7 @@ import FinancesReglementCard from "./components/FinancesReglementCard.vue";
 import PresentationCard from "./components/PresentationCard.vue";
 import ValidationInscriptionCard from "./components/ValidationInscriptionCard.vue";
 import { useDisplay } from "vuetify";
+import NewMessageCard from "./components/NewMessageCard.vue";
 
 const { smAndDown } = useDisplay();
 
@@ -382,16 +358,21 @@ function handleFromEvent(fromIdEvent: IdEvent) {
   }
 }
 
-const showCreateMessage = ref<{
-  content: string;
-  toFondSoutien: boolean;
-} | null>(null);
-async function sendMessage() {
+const showCreateMessage = ref<{ toFondSoutien: boolean } | null>(null);
+async function sendMessage(
+  content: string,
+  destinataire: "fond-soutien" | IdCamp | null,
+) {
   if (!showCreateMessage.value || !data.value) return;
+  const toCampValid = destinataire !== "fond-soutien" && destinataire != null;
   const args: SendMessageIn = {
     Token: token.value,
-    Message: showCreateMessage.value.content,
-    OnlyToFondSoutien: showCreateMessage.value.toFondSoutien,
+    Message: content,
+    OnlyToFondSoutien: destinataire == "fond-soutien",
+    OnlyToCamp: {
+      Valid: toCampValid,
+      Id: toCampValid ? destinataire : (0 as IdCamp),
+    },
   };
   showCreateMessage.value = null;
   const res = await controller.SendMessage(args);

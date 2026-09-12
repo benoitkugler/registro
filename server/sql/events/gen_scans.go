@@ -732,6 +732,7 @@ func scanOneEventMessage(row scanner) (EventMessage, error) {
 		&item.VuEspaceperso,
 		&item.VuFondSoutien,
 		&item.OnlyToFondSoutien,
+		&item.OnlyToCamp,
 	)
 	return item, err
 }
@@ -740,7 +741,7 @@ func ScanEventMessage(row *sql.Row) (EventMessage, error) { return scanOneEventM
 
 // SelectAll returns all the items in the event_messages table.
 func SelectAllEventMessages(db DB) (EventMessages, error) {
-	rows, err := db.Query("SELECT idevent, contenu, origine, originecamp, vubackoffice, vuespaceperso, vufondsoutien, onlytofondsoutien FROM event_messages")
+	rows, err := db.Query("SELECT idevent, contenu, origine, originecamp, vubackoffice, vuespaceperso, vufondsoutien, onlytofondsoutien, onlytocamp FROM event_messages")
 	if err != nil {
 		return nil, err
 	}
@@ -776,11 +777,11 @@ func ScanEventMessages(rs *sql.Rows) (EventMessages, error) {
 
 func (item EventMessage) Insert(db DB) error {
 	_, err := db.Exec(`INSERT INTO event_messages (
-			idevent, contenu, origine, originecamp, vubackoffice, vuespaceperso, vufondsoutien, onlytofondsoutien
+			idevent, contenu, origine, originecamp, vubackoffice, vuespaceperso, vufondsoutien, onlytofondsoutien, onlytocamp
 			) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8
+			$1, $2, $3, $4, $5, $6, $7, $8, $9
 			);
-			`, item.IdEvent, item.Contenu, item.Origine, item.OrigineCamp, item.VuBackoffice, item.VuEspaceperso, item.VuFondSoutien, item.OnlyToFondSoutien)
+			`, item.IdEvent, item.Contenu, item.Origine, item.OrigineCamp, item.VuBackoffice, item.VuEspaceperso, item.VuFondSoutien, item.OnlyToFondSoutien, item.OnlyToCamp)
 	if err != nil {
 		return err
 	}
@@ -803,13 +804,14 @@ func InsertManyEventMessages(tx *sql.Tx, items ...EventMessage) error {
 		"vuespaceperso",
 		"vufondsoutien",
 		"onlytofondsoutien",
+		"onlytocamp",
 	))
 	if err != nil {
 		return err
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdEvent, item.Contenu, item.Origine, item.OrigineCamp, item.VuBackoffice, item.VuEspaceperso, item.VuFondSoutien, item.OnlyToFondSoutien)
+		_, err = stmt.Exec(item.IdEvent, item.Contenu, item.Origine, item.OrigineCamp, item.VuBackoffice, item.VuEspaceperso, item.VuFondSoutien, item.OnlyToFondSoutien, item.OnlyToCamp)
 		if err != nil {
 			return err
 		}
@@ -826,9 +828,9 @@ func InsertManyEventMessages(tx *sql.Tx, items ...EventMessage) error {
 }
 
 // Delete the link EventMessage from the database.
-// Only the foreign keys IdEvent, OrigineCamp fields are used in 'item'.
+// Only the foreign keys IdEvent, OrigineCamp, OnlyToCamp fields are used in 'item'.
 func (item EventMessage) Delete(tx DB) error {
-	_, err := tx.Exec(`DELETE FROM event_messages WHERE IdEvent = $1 AND ((OrigineCamp IS NULL AND $2 IS NULL) OR OrigineCamp = $2);`, item.IdEvent, item.OrigineCamp)
+	_, err := tx.Exec(`DELETE FROM event_messages WHERE IdEvent = $1 AND ((OrigineCamp IS NULL AND $2 IS NULL) OR OrigineCamp = $2) AND ((OnlyToCamp IS NULL AND $3 IS NULL) OR OnlyToCamp = $3);`, item.IdEvent, item.OrigineCamp, item.OnlyToCamp)
 	return err
 }
 
@@ -1035,7 +1037,7 @@ func (items EventMessages) IdEvents() []IdEvent {
 
 // SelectEventMessageByIdEvent return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectEventMessageByIdEvent(tx DB, idEvent IdEvent) (item EventMessage, found bool, err error) {
-	row := tx.QueryRow("SELECT idevent, contenu, origine, originecamp, vubackoffice, vuespaceperso, vufondsoutien, onlytofondsoutien FROM event_messages WHERE idevent = $1", idEvent)
+	row := tx.QueryRow("SELECT idevent, contenu, origine, originecamp, vubackoffice, vuespaceperso, vufondsoutien, onlytofondsoutien, onlytocamp FROM event_messages WHERE idevent = $1", idEvent)
 	item, err = ScanEventMessage(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
@@ -1044,7 +1046,7 @@ func SelectEventMessageByIdEvent(tx DB, idEvent IdEvent) (item EventMessage, fou
 }
 
 func SelectEventMessagesByIdEvents(tx DB, idEvents_ ...IdEvent) (EventMessages, error) {
-	rows, err := tx.Query("SELECT idevent, contenu, origine, originecamp, vubackoffice, vuespaceperso, vufondsoutien, onlytofondsoutien FROM event_messages WHERE idevent = ANY($1)", IdEventArrayToPQ(idEvents_))
+	rows, err := tx.Query("SELECT idevent, contenu, origine, originecamp, vubackoffice, vuespaceperso, vufondsoutien, onlytofondsoutien, onlytocamp FROM event_messages WHERE idevent = ANY($1)", IdEventArrayToPQ(idEvents_))
 	if err != nil {
 		return nil, err
 	}
@@ -1052,7 +1054,7 @@ func SelectEventMessagesByIdEvents(tx DB, idEvents_ ...IdEvent) (EventMessages, 
 }
 
 func DeleteEventMessagesByIdEvents(tx DB, idEvents_ ...IdEvent) (EventMessages, error) {
-	rows, err := tx.Query("DELETE FROM event_messages WHERE idevent = ANY($1) RETURNING idevent, contenu, origine, originecamp, vubackoffice, vuespaceperso, vufondsoutien, onlytofondsoutien", IdEventArrayToPQ(idEvents_))
+	rows, err := tx.Query("DELETE FROM event_messages WHERE idevent = ANY($1) RETURNING idevent, contenu, origine, originecamp, vubackoffice, vuespaceperso, vufondsoutien, onlytofondsoutien, onlytocamp", IdEventArrayToPQ(idEvents_))
 	if err != nil {
 		return nil, err
 	}
@@ -1073,7 +1075,7 @@ func (items EventMessages) OrigineCamps() []camps.IdCamp {
 }
 
 func SelectEventMessagesByOrigineCamps(tx DB, origineCamps_ ...camps.IdCamp) (EventMessages, error) {
-	rows, err := tx.Query("SELECT idevent, contenu, origine, originecamp, vubackoffice, vuespaceperso, vufondsoutien, onlytofondsoutien FROM event_messages WHERE originecamp = ANY($1)", camps.IdCampArrayToPQ(origineCamps_))
+	rows, err := tx.Query("SELECT idevent, contenu, origine, originecamp, vubackoffice, vuespaceperso, vufondsoutien, onlytofondsoutien, onlytocamp FROM event_messages WHERE originecamp = ANY($1)", camps.IdCampArrayToPQ(origineCamps_))
 	if err != nil {
 		return nil, err
 	}
@@ -1081,7 +1083,36 @@ func SelectEventMessagesByOrigineCamps(tx DB, origineCamps_ ...camps.IdCamp) (Ev
 }
 
 func DeleteEventMessagesByOrigineCamps(tx DB, origineCamps_ ...camps.IdCamp) (EventMessages, error) {
-	rows, err := tx.Query("DELETE FROM event_messages WHERE originecamp = ANY($1) RETURNING idevent, contenu, origine, originecamp, vubackoffice, vuespaceperso, vufondsoutien, onlytofondsoutien", camps.IdCampArrayToPQ(origineCamps_))
+	rows, err := tx.Query("DELETE FROM event_messages WHERE originecamp = ANY($1) RETURNING idevent, contenu, origine, originecamp, vubackoffice, vuespaceperso, vufondsoutien, onlytofondsoutien, onlytocamp", camps.IdCampArrayToPQ(origineCamps_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanEventMessages(rows)
+}
+
+// OnlyToCamps returns the list of non null OnlyToCamp
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items EventMessages) OnlyToCamps() []camps.IdCamp {
+	var out []camps.IdCamp
+	for _, target := range items {
+		if id := target.OnlyToCamp; id.Valid {
+			out = append(out, id.Id)
+		}
+	}
+	return out
+}
+
+func SelectEventMessagesByOnlyToCamps(tx DB, onlyToCamps_ ...camps.IdCamp) (EventMessages, error) {
+	rows, err := tx.Query("SELECT idevent, contenu, origine, originecamp, vubackoffice, vuespaceperso, vufondsoutien, onlytofondsoutien, onlytocamp FROM event_messages WHERE onlytocamp = ANY($1)", camps.IdCampArrayToPQ(onlyToCamps_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanEventMessages(rows)
+}
+
+func DeleteEventMessagesByOnlyToCamps(tx DB, onlyToCamps_ ...camps.IdCamp) (EventMessages, error) {
+	rows, err := tx.Query("DELETE FROM event_messages WHERE onlytocamp = ANY($1) RETURNING idevent, contenu, origine, originecamp, vubackoffice, vuespaceperso, vufondsoutien, onlytofondsoutien, onlytocamp", camps.IdCampArrayToPQ(onlyToCamps_))
 	if err != nil {
 		return nil, err
 	}

@@ -355,10 +355,23 @@ ALTER TABLE event_messages
         OR OrigineCamp IS NULL);
 
 ALTER TABLE event_messages
+    ADD CHECK (OnlyToFondSoutien = FALSE
+        OR OnlyToCamp IS NULL);
+
+ALTER TABLE event_messages
+    ADD CHECK ((OnlyToFondSoutien = FALSE
+        AND OnlyToCamp IS NULL)
+        OR Origine = 0
+        /* Acteur.Espaceperso */);
+
+ALTER TABLE event_messages
     ADD FOREIGN KEY (IdEvent) REFERENCES events ON DELETE CASCADE;
 
 ALTER TABLE event_messages
     ADD FOREIGN KEY (OrigineCamp) REFERENCES camps;
+
+ALTER TABLE event_messages
+    ADD FOREIGN KEY (OnlyToCamp) REFERENCES camps;
 
 ALTER TABLE event_messages
     ALTER COLUMN guard SET DEFAULT 2

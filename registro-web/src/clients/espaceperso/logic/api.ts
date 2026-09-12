@@ -106,6 +106,7 @@ export interface SendMessageIn {
   Token: string;
   Message: string;
   OnlyToFondSoutien: boolean;
+  OnlyToCamp: OptID_IdCamp;
 }
 // registro/controllers/espaceperso.SondageExt
 export interface SondageExt {
@@ -239,6 +240,7 @@ export interface FactureEvt {
 export interface MessageEvt {
   Message: EventMessage;
   OrigineCampLabel: string;
+  TargetCampLabel: string;
   VuParCampsIDs: IdCamp[] | null;
   VuParCamps: string[] | null;
 }
@@ -676,6 +678,7 @@ export interface EventMessage {
   VuEspaceperso: boolean;
   VuFondSoutien: boolean;
   OnlyToFondSoutien: boolean;
+  OnlyToCamp: OptID_IdCamp;
 }
 export type IdEvent = Int & { __opaque_int__: "IdEvent" };
 // registro/sql/files.Categorie

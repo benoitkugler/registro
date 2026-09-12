@@ -116,6 +116,7 @@ type SendMessageIn struct {
 
 	Message           string
 	OnlyToFondSoutien bool
+	OnlyToCamp        cps.OptIdCamp
 }
 
 // SendMessage inscrit un nouveau message et envoie un
@@ -129,15 +130,32 @@ func (ct *Controller) SendMessage(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	out, err := ct.sendMessage(c.Request().Host, id, args.Message, args.OnlyToFondSoutien)
+	out, err := ct.sendMessage(c.Request().Host, id, args)
 	if err != nil {
 		return err
 	}
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) sendMessage(host string, id ds.IdDossier, contenu string, onlyToFondsSoutien bool) (logic.Event, error) {
-	event, message, err := evs.CreateMessage(ct.db, id, time.Now(), evs.EventMessage{Contenu: contenu, Origine: evs.Espaceperso, OnlyToFondSoutien: onlyToFondsSoutien})
+func (ct *Controller) sendMessage(host string, id ds.IdDossier, args SendMessageIn) (logic.Event, error) {
+	// consistency check
+	if args.OnlyToFondSoutien && args.OnlyToCamp.Valid {
+		return logic.Event{}, errors.New("internal error: invalid SendMessageIn")
+	}
+
+	var targetCampLabel string
+	if toCamp := args.OnlyToCamp; toCamp.Valid {
+		camp, err := cps.SelectCamp(ct.db, toCamp.Id)
+		if err != nil {
+			return logic.Event{}, err
+		}
+		targetCampLabel = camp.Label()
+	}
+
+	event, message, err := evs.CreateMessage(ct.db, id, time.Now(), evs.EventMessage{
+		Contenu: args.Message, Origine: evs.Espaceperso,
+		OnlyToFondSoutien: args.OnlyToFondSoutien, OnlyToCamp: args.OnlyToCamp,
+	})
 	if err != nil {
 		return logic.Event{}, utils.SQLError(err)
 	}
@@ -153,7 +171,8 @@ func (ct *Controller) sendMessage(host string, id ds.IdDossier, contenu string, 
 		Id:      event.Id,
 		Created: event.Created,
 		Content: logic.MessageEvt{
-			Message: message,
+			Message:         message,
+			TargetCampLabel: targetCampLabel,
 		},
 	}, nil
 }
@@ -176,7 +195,11 @@ func (ct *Controller) notifieMessageByMail(host string, idDossier ds.IdDossier, 
 		}
 	} else {
 		// notifie directeurs
-		equipiers, personnes, _, err := cps.LoadEquipiersByCamps(ct.db, dossier.Participants.IdCamps()...)
+		camps := dossier.Participants.IdCamps()
+		if toCamp := message.OnlyToCamp; toCamp.Valid {
+			camps = []cps.IdCamp{toCamp.Id}
+		}
+		equipiers, personnes, _, err := cps.LoadEquipiersByCamps(ct.db, camps...)
 		if err != nil {
 			return err
 		}

@@ -123,7 +123,7 @@ func (b BasicMailer) SendMail(to, subject, htmlBody string, ccs []string, replyT
 	return b.SendMailToMany([]string{to}, subject, htmlBody, ccs, replyTo)
 }
 
-// SendMailToMany envoie un mail directement.
+// SendMailToMany envoie un mail directement, à plusieurs adresses.
 func (b BasicMailer) SendMailToMany(to []string, subject, htmlBody string, ccs []string, replyTo ReplyTo) (err error) {
 	e, err := newMail(to, subject, htmlBody, ccs, replyTo, nil, b.smtp, b.settings)
 	if err != nil {

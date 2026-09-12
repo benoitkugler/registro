@@ -300,11 +300,17 @@ func Test_sendMessage(t *testing.T) {
 
 	ct := Controller{db: db.DB, asso: asso, smtp: smtp}
 
-	_, err = ct.sendMessage("localhost", dossier.Id, "test \n sdlsmkdm", true)
+	_, err = ct.sendMessage("localhost", dossier.Id, SendMessageIn{"", "test \n sdlsmkdm", false, cps.OptIdCamp{}})
 	tu.AssertNoErr(t, err)
 
-	_, err = ct.sendMessage("localhost", dossier.Id, "test \n sdlsmkdm", false)
+	_, err = ct.sendMessage("localhost", dossier.Id, SendMessageIn{"", "test \n sdlsmkdm", true, cps.OptIdCamp{}})
 	tu.AssertNoErr(t, err)
 
-	time.Sleep(200 * time.Millisecond) // finish notification
+	_, err = ct.sendMessage("localhost", dossier.Id, SendMessageIn{"", "test \n sdlsmkdm", false, camp1.Id.Opt()})
+	tu.AssertNoErr(t, err)
+
+	_, err = ct.sendMessage("localhost", dossier.Id, SendMessageIn{"", "test \n sdlsmkdm", true, camp1.Id.Opt()})
+	tu.AssertErr(t, err)
+
+	time.Sleep(200 * time.Millisecond) // finish notification mail, to be manually checked
 }

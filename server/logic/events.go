@@ -102,8 +102,10 @@ func (ld *eventsContent) newStatuation(ev evs.Event) StatuationEvt {
 type MessageEvt struct {
 	Message          evs.EventMessage
 	OrigineCampLabel string // optionnel
-	VuParCampsIDs    []cps.IdCamp
-	VuParCamps       []string // labels
+	TargetCampLabel  string // optionnel
+
+	VuParCampsIDs []cps.IdCamp
+	VuParCamps    []string // labels
 }
 
 // m must have kind [MessageEvt]
@@ -112,6 +114,9 @@ func (ld *eventsContent) newMessage(ev evs.Event) MessageEvt {
 	out := MessageEvt{Message: m}
 	if m.OrigineCamp.Valid {
 		out.OrigineCampLabel = ld.camps[m.OrigineCamp.Id].Label()
+	}
+	if m.OnlyToCamp.Valid {
+		out.TargetCampLabel = ld.camps[m.OnlyToCamp.Id].Label()
 	}
 	for _, vu := range ld.vupars[m.IdEvent] {
 		out.VuParCampsIDs = append(out.VuParCampsIDs, vu.IdCamp)
@@ -280,7 +285,7 @@ func loadEventsContent(db evs.DB, ids ...evs.IdEvent) (out eventsContent, _ erro
 	if err != nil {
 		return eventsContent{}, utils.SQLError(err)
 	}
-	idCamps := slices.Concat(tmp1.OrigineCamps(), tmp20.IdCamps(), tmp1bis.IdCamps(), tmp2.IdCamps(), tmp5.IdCamps(), tmp6.Olds(), tmp6.News(), out.participants.IdCamps())
+	idCamps := slices.Concat(tmp1.OrigineCamps(), tmp1.OnlyToCamps(), tmp20.IdCamps(), tmp1bis.IdCamps(), tmp2.IdCamps(), tmp5.IdCamps(), tmp6.Olds(), tmp6.News(), out.participants.IdCamps())
 	out.camps, err = cps.SelectCamps(db, idCamps...)
 	if err != nil {
 		return eventsContent{}, utils.SQLError(err)

@@ -75,6 +75,7 @@ func randEventMessage() EventMessage {
 	s.VuEspaceperso = randbool()
 	s.VuFondSoutien = randbool()
 	s.OnlyToFondSoutien = randbool()
+	s.OnlyToCamp = randsha_OptID_cam_IdCamp()
 
 	return s
 }

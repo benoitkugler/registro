@@ -375,6 +375,7 @@ CREATE TABLE event_messages (
     VuEspaceperso boolean NOT NULL,
     VuFondSoutien boolean NOT NULL,
     OnlyToFondSoutien boolean NOT NULL,
+    OnlyToCamp integer,
     guard smallint NOT NULL
 );
 

@@ -50,6 +50,9 @@ type EventStatuation struct {
 //
 // gomacro:SQL ADD CHECK(Origine <> #[Acteur.Directeur] OR OrigineCamp IS NOT NULL)
 // gomacro:SQL ADD CHECK(Origine = #[Acteur.Directeur] OR OrigineCamp IS NULL)
+//
+// gomacro:SQL ADD CHECK(OnlyToFondSoutien = False OR OnlyToCamp IS NULL)
+// gomacro:SQL ADD CHECK((OnlyToFondSoutien = False AND OnlyToCamp IS NULL) OR Origine = #[Acteur.Espaceperso])
 type EventMessage struct {
 	IdEvent IdEvent `gomacro-sql-on-delete:"CASCADE"`
 
@@ -65,6 +68,10 @@ type EventMessage struct {
 	// au fonds de soutien.
 	// Ce champ n'est utilisé que pour les messages avec Origine == Espaceperso
 	OnlyToFondSoutien bool
+	// OnlyToCamp est utilisé pour restreindre la visibilité d'un message
+	// à un seul directeur (et au centre)
+	// Ce champ n'est utilisé que pour les messages avec Origine == Espaceperso
+	OnlyToCamp OptIdCamp `gomacro-sql-foreign:"Camp"`
 
 	guard EventKind `gomacro-sql-guard:"#[EventKind.Message]"`
 }
