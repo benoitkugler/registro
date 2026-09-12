@@ -38,9 +38,9 @@ func TestDossierFinance_Bilan(t *testing.T) {
 	}
 	tu.Assert(t, reflect.DeepEqual(df.Bilan(), BilanFinances{
 		map[cps.IdParticipant]BilanParticipant{
-			1: {eur(200), "", cps.Remises{}, nil},
-			2: {chf(150), "", cps.Remises{}, nil},
-			3: {chf(150), "", cps.Remises{}, nil},
+			1: {eur(200), eur(200), "", cps.Remises{}, nil},
+			2: {chf(150), chf(150), "", cps.Remises{}, nil},
+			3: {chf(150), chf(150), "", cps.Remises{}, nil},
 		},
 		40000, 15000, 35000, 0, 0, ds.FrancsSuisse,
 	}))
@@ -61,9 +61,9 @@ func TestDossierFinance_Bilan(t *testing.T) {
 	}
 	tu.Assert(t, reflect.DeepEqual(df.Bilan(), BilanFinances{
 		map[cps.IdParticipant]BilanParticipant{
-			1: {eur(200), "", cps.Remises{}, []AideResolved{{"", eur(20)}, {"", chf(20)}}},
-			2: {chf(150), "", cps.Remises{}, nil},
-			3: {chf(150), "", cps.Remises{}, nil},
+			1: {eur(200), eur(200), "", cps.Remises{}, []AideResolved{{"", eur(20)}, {"", chf(20)}}},
+			2: {chf(150), chf(150), "", cps.Remises{}, nil},
+			3: {chf(150), chf(150), "", cps.Remises{}, nil},
 		},
 		40000 - 1000 - 200*10, 15000, 35000, 0, 1000 + 200*10, ds.FrancsSuisse,
 	}))
@@ -82,13 +82,13 @@ func TestDossierFinance_Bilan(t *testing.T) {
 	df.aides = nil
 	tu.Assert(t, reflect.DeepEqual(df.Bilan(), BilanFinances{
 		map[cps.IdParticipant]BilanParticipant{
-			1: {eur(200), "", cps.Remises{
+			1: {eur(200), eur(200), "", cps.Remises{
 				Speciale:  eur(10),
 				Equipiers: 10,
 				Famille:   5,
 			}, nil},
-			2: {chf(150), "", cps.Remises{}, nil},
-			3: {chf(150), "", cps.Remises{}, nil},
+			2: {chf(150), chf(150), "", cps.Remises{}, nil},
+			3: {chf(150), chf(150), "", cps.Remises{}, nil},
 		},
 		40000 - 500 - 1500, 15000, 35000, 0, 0, ds.FrancsSuisse,
 	}))
@@ -108,7 +108,7 @@ func TestDossierFinance_Bilan(t *testing.T) {
 	}
 	tu.Assert(t, reflect.DeepEqual(df.Bilan(), BilanFinances{
 		map[cps.IdParticipant]BilanParticipant{
-			1: {eur(200), "", cps.Remises{
+			1: {eur(200), eur(200), "", cps.Remises{
 				Speciale:  eur(10),
 				Equipiers: 5,
 				Famille:   5,
@@ -131,7 +131,7 @@ func TestDossierFinance_Bilan(t *testing.T) {
 	}
 	tu.Assert(t, reflect.DeepEqual(df.Bilan(), BilanFinances{
 		map[cps.IdParticipant]BilanParticipant{
-			1: {eur(200), "", cps.Remises{}, nil},
+			1: {eur(200), eur(200), "", cps.Remises{}, nil},
 		},
 		10000, 0, 35000, 5000, 0, ds.FrancsSuisse,
 	}))

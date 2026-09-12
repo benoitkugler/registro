@@ -1,5 +1,7 @@
 <template>
-  <NavBar :title="`${controller.camp?.Label} - Communication`">
+  <NavBar
+    :title="`${controller.camp ? Camps.label(controller.camp) : ''} - Communication`"
+  >
     <v-tabs
       :model-value="currentTab"
       @update:model-value="(v) => setTab(v as DocumentsTab)"
@@ -56,6 +58,7 @@ import PannelLettre from "../components/documents/PannelLettre.vue";
 import PannelDocuments from "../components/documents/PannelDocuments.vue";
 import PannelVetements from "../components/documents/PannelVetements.vue";
 import PannelForms from "../components/documents/PannelForms.vue";
+import { Camps } from "@/utils.ts";
 
 const router = useRouter();
 

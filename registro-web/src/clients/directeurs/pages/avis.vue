@@ -1,5 +1,8 @@
 <template>
-  <NavBar :title="`${controller.camp?.Label} - Avis sur le séjour`"> </NavBar>
+  <NavBar
+    :title="`${controller.camp ? Camps.label(controller.camp) : ''} - Avis sur le séjour`"
+  >
+  </NavBar>
 
   <div v-if="data == null" class="text-center my-6">
     <v-progress-circular indeterminate></v-progress-circular>
@@ -15,6 +18,7 @@ import NavBar from "../components/NavBar.vue";
 import { controller } from "../logic/logic";
 import type { CampSondages } from "../logic/api";
 import CampSondagesV from "@/components/sondages/CampSondagesV.vue";
+import { Camps } from "@/utils.ts";
 
 onMounted(loadData);
 

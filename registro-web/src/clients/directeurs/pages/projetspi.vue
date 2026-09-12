@@ -1,5 +1,8 @@
 <template>
-  <NavBar :title="`${controller.camp?.Label} - Projet spirituel`"> </NavBar>
+  <NavBar
+    :title="`${controller.camp ? Camps.label(controller.camp) : ''} - Projet spirituel`"
+  >
+  </NavBar>
 
   <div v-if="data == null" class="text-center my-6">
     <v-progress-circular indeterminate></v-progress-circular>
@@ -62,6 +65,7 @@ import { computed, onMounted, ref } from "vue";
 import NavBar from "../components/NavBar.vue";
 import { controller } from "../logic/logic";
 import { type ProjetSpi } from "../logic/api";
+import { Camps } from "@/utils.ts";
 
 onMounted(loadData);
 

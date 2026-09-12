@@ -10,18 +10,22 @@ import (
 	ds "registro/sql/dossiers"
 	fs "registro/sql/files"
 	pr "registro/sql/personnes"
+	sh "registro/sql/shared"
 	"registro/utils"
 )
 
 type CampItem struct {
-	Id    cps.IdCamp
-	Label string
+	Id        cps.IdCamp
+	Nom       string
+	DateDebut sh.Date
+	Duree     int
+
 	IsOld bool // true if the end is passed by 45 jours
 }
 
 func NewCampItem(camp cps.Camp) CampItem {
 	const deltaOld = 45
-	return CampItem{camp.Id, camp.Label(), camp.IsPassedBy(deltaOld)}
+	return CampItem{camp.Id, camp.Nom, camp.DateDebut, camp.Duree, camp.IsPassedBy(deltaOld)}
 }
 
 func NewCampItems(camps cps.Camps) []CampItem {

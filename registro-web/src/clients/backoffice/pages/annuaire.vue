@@ -32,7 +32,7 @@
         </v-list-item>
         <v-list-item
           v-for="personne in list"
-          :title="personne.Label"
+          :title="Personnes.label(personne)"
           :subtitle="Formatters.dateNaissance(personne.DateNaissance)"
           :prepend-icon="Formatters.sexeIcon(personne.Sexe)"
         >
@@ -101,7 +101,7 @@ import { goToPersonne, parseQueryURLPersonnes } from "../plugins/router";
 import type { IdPersonne, Personne, PersonneHeader } from "../logic/api";
 import PersonneEdit from "../components/annuaire/PersonneEdit.vue";
 import { controller } from "../logic/logic";
-import { Formatters } from "@/utils";
+import { Formatters, Personnes } from "@/utils";
 import FichesanitairePannel from "../components/annuaire/FichesanitairePannel.vue";
 
 const router = useRouter();

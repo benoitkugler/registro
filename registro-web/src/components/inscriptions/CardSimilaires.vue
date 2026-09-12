@@ -30,7 +30,7 @@
           <v-list-item
             v-for="(pers, i) in manualSearchCandidates"
             :key="i"
-            :title="pers.Label"
+            :title="Personnes.label(pers)"
             :subtitle="Formatters.dateNaissance(pers.DateNaissance)"
             :append-icon="Formatters.sexeIcon(pers.Sexe)"
             @click="rattacheTo(pers.Id)"
@@ -49,7 +49,7 @@
         <v-list-item
           v-for="(pers, i) in suggestedCandidats"
           :key="i"
-          :title="pers.Personne.Label"
+          :title="Personnes.label(pers.Personne)"
           :subtitle="Formatters.dateNaissance(pers.Personne.DateNaissance)"
           :prepend-icon="Formatters.sexeIcon(pers.Personne.Sexe)"
           @click="rattacheTo(pers.Personne.Id)"
@@ -95,7 +95,7 @@ import type {
   PersonneHeader,
   ScoredPersonne,
 } from "../../clients/backoffice/logic/api";
-import { Formatters } from "@/utils";
+import { Formatters, Personnes } from "@/utils";
 import type { SimilairesAPI } from "../types";
 
 const props = defineProps<{

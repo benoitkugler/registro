@@ -338,6 +338,7 @@ export interface BilanFinancesPub {
 }
 // registro/logic.BilanParticipantPub
 export interface BilanParticipantPub {
+  PrixCamp: Montant;
   AvecOption: Montant;
   AvecOptionDescription: string;
   Remises: Remises;
@@ -353,7 +354,9 @@ export interface CampDocsEvt {
 // registro/logic.CampItem
 export interface CampItem {
   Id: IdCamp;
-  Label: string;
+  Nom: string;
+  DateDebut: Date;
+  Duree: Int;
   IsOld: boolean;
 }
 // registro/logic.CampSondages
@@ -375,7 +378,7 @@ export interface DossierExt {
   Dossier: Dossier;
   IdResponsable: IdPersonne;
   Responsable: string;
-  Participants: ParticipantCamp[] | null;
+  Participants: PublicParticipantCamp[] | null;
   Aides: Record<IdParticipant, Aides> | null;
   AidesFiles: Record<IdAide, PublicFile> | null;
   Events: Events;
@@ -452,6 +455,7 @@ export interface InscriptionsValideIn {
 export interface MessageEvt {
   Message: EventMessage;
   OrigineCampLabel: string;
+  TargetCampLabel: string;
   VuParCampsIDs: IdCamp[] | null;
   VuParCamps: string[] | null;
 }
@@ -478,6 +482,14 @@ export interface PublicFile {
   Taille: Int;
   NomClient: string;
   Uploaded: Time;
+}
+// registro/logic.PublicParticipantCamp
+export interface PublicParticipantCamp {
+  Participant: Participant;
+  Camp: CampItem;
+  CampOption: OptionPrixCamp;
+  CampQuotientFamilial: PrixQuotientFamilial;
+  Personne: PersonneHeader;
 }
 // registro/logic.SondageEvt
 export interface SondageEvt {
@@ -536,7 +548,8 @@ export type SupprimeEvt = Record<string, never>;
 // registro/logic/search.PersonneHeader
 export interface PersonneHeader {
   Id: IdPersonne;
-  Label: string;
+  Nom: string;
+  Prenom: string;
   Sexe: Sexe;
   DateNaissance: Date;
   IsTemp: boolean;
@@ -1003,6 +1016,7 @@ export interface EventMessage {
   VuEspaceperso: boolean;
   VuFondSoutien: boolean;
   OnlyToFondSoutien: boolean;
+  OnlyToCamp: OptID_IdCamp;
 }
 export type IdEvent = Int & { __opaque_int__: "IdEvent" };
 export type IdFile = Int & { __opaque_int__: "IdFile" };

@@ -43,6 +43,7 @@
         </template>
         <ParticipantOptionPrix
           :camp="props.participant.Camp"
+          :option-camp="props.participant.CampOption"
           :option-and-qf="{
             options: props.participant.Participant.OptionPrix,
             quotientFamilial: props.participant.Participant.QuotientFamilial,
@@ -262,6 +263,7 @@ import {
   type Participant,
   type ParticipantCamp,
   type PublicFile,
+  type PublicParticipantCamp,
   type Structureaides,
 } from "@/clients/backoffice/logic/api";
 import { Camps, Formatters, Personnes } from "@/utils";
@@ -273,7 +275,7 @@ import { goToParticipant } from "@/clients/backoffice/plugins/router";
 import StructuresPannel from "../StructuresPannel.vue";
 
 const props = defineProps<{
-  participant: ParticipantCamp;
+  participant: PublicParticipantCamp;
   aides: Aides;
   aidesFiles: Record<IdAide, PublicFile>;
   hasManyParticipants: boolean;
@@ -302,14 +304,12 @@ const sortedAides = computed(() => {
 
 const campNoOption = computed(
   () =>
-    props.participant.Camp.OptionPrix.Active == OptionPrixKind.NoOption &&
-    !Camps.isQuotientFamilialActive(
-      props.participant.Camp.OptionQuotientFamilial
-    )
+    props.participant.CampOption.Active == OptionPrixKind.NoOption &&
+    !Camps.isQuotientFamilialActive(props.participant.CampQuotientFamilial),
 );
 
 function formatOption(opt: OptionPrixParticipant) {
-  switch (props.participant.Camp.OptionPrix.Active) {
+  switch (props.participant.CampOption.Active) {
     case OptionPrixKind.NoOption:
       return "Séjour sans option";
     case OptionPrixKind.PrixJour:
@@ -317,8 +317,8 @@ function formatOption(opt: OptionPrixParticipant) {
       if (count == 0) return "Présent tous les jours";
       return `Présent ${count} jour${count > 1 ? "s" : ""}`;
     case OptionPrixKind.PrixStatut:
-      const statut = props.participant.Camp.OptionPrix.Statuts?.find(
-        (s) => s.Id == opt.IdStatut
+      const statut = props.participant.CampOption.Statuts?.find(
+        (s) => s.Id == opt.IdStatut,
       );
       return statut ? `Statut ${statut.Label}` : "Pas d'option.";
   }
@@ -330,7 +330,7 @@ const showConfirmeDelete = ref(false);
 const structureItems = computed(() =>
   Object.values(structures.value)
     .map((s) => ({ value: s.Id, title: s.Nom }))
-    .sort((a, b) => a.title.localeCompare(b.title))
+    .sort((a, b) => a.title.localeCompare(b.title)),
 );
 const aideToCreate = ref<AidesCreateIn | null>(null);
 const aideToUpdate = ref<Aide | null>(null);

@@ -220,7 +220,9 @@ export type AlbumID = string;
 // registro/logic.CampItem
 export interface CampItem {
   Id: IdCamp;
-  Label: string;
+  Nom: string;
+  DateDebut: Date;
+  Duree: Int;
   IsOld: boolean;
 }
 // registro/logic.CampSondages
@@ -258,6 +260,7 @@ export interface InscriptionsValideIn {
 export interface MessageEvt {
   Message: EventMessage;
   OrigineCampLabel: string;
+  TargetCampLabel: string;
   VuParCampsIDs: IdCamp[] | null;
   VuParCamps: string[] | null;
 }
@@ -320,7 +323,8 @@ export const StatutPaiementLabels: Record<StatutPaiement, string> = {
 // registro/logic/search.PersonneHeader
 export interface PersonneHeader {
   Id: IdPersonne;
-  Label: string;
+  Nom: string;
+  Prenom: string;
   Sexe: Sexe;
   DateNaissance: Date;
   IsTemp: boolean;
@@ -797,6 +801,7 @@ export interface EventMessage {
   VuEspaceperso: boolean;
   VuFondSoutien: boolean;
   OnlyToFondSoutien: boolean;
+  OnlyToCamp: OptID_IdCamp;
 }
 export type IdEvent = Int & { __opaque_int__: "IdEvent" };
 // registro/sql/files.Categorie

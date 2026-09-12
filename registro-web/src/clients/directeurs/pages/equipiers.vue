@@ -1,5 +1,7 @@
 <template>
-  <NavBar :title="`${controller.camp?.Label} - Equipiers`">
+  <NavBar
+    :title="`${controller.camp ? Camps.label(controller.camp) : ''} - Equipiers`"
+  >
     <v-btn @click="showDocuments = true" prepend-icon="mdi-file">
       Documents
     </v-btn>
@@ -168,7 +170,7 @@ import {
 } from "../logic/api";
 import DocumentsTable from "../components/equipiers/DocumentsTable.vue";
 import AddEquipierCard from "../components/equipiers/AddEquipierCard.vue";
-import { nullableToOpt } from "@/utils";
+import { Camps, nullableToOpt } from "@/utils";
 import StatistiquesCard from "../components/equipiers/StatistiquesCard.vue";
 
 const router = useRouter();

@@ -241,6 +241,9 @@ type pc struct {
 //   - applique les aides extérieureurs
 //   - applique les remises internes
 type BilanParticipant struct {
+	// Prix de base du séjour
+	PrixCamp ds.Montant
+
 	AvecOption            cps.Montant // prend en compte une éventuelle option et le quotient familial
 	AvecOptionDescription string      // courte description affichée dans la facture
 
@@ -295,6 +298,8 @@ type AideResolved struct {
 func (ar AideResolved) String() string { return fmt.Sprintf("%s : %s", ar.Structure, ar.Montant) }
 
 func (p pc) bilan() (out BilanParticipant) {
+	out.PrixCamp = p.Camp.Prix
+
 	out.AvecOption, out.AvecOptionDescription = p.prixBase()
 	out.Remises = p.Participant.Remises
 

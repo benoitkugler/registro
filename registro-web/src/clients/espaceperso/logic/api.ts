@@ -164,6 +164,7 @@ export interface BilanFinancesPub {
 }
 // registro/logic.BilanParticipantPub
 export interface BilanParticipantPub {
+  PrixCamp: Montant;
   AvecOption: Montant;
   AvecOptionDescription: string;
   Remises: Remises;
@@ -175,6 +176,14 @@ export interface BilanParticipantPub {
 export interface CampDocsEvt {
   IdCamp: IdCamp;
   CampLabel: string;
+}
+// registro/logic.CampItem
+export interface CampItem {
+  Id: IdCamp;
+  Nom: string;
+  DateDebut: Date;
+  Duree: Int;
+  IsOld: boolean;
 }
 // registro/logic.ChangementCampEvt
 export interface ChangementCampEvt {
@@ -190,7 +199,7 @@ export interface DossierExt {
   Dossier: Dossier;
   IdResponsable: IdPersonne;
   Responsable: string;
-  Participants: ParticipantCamp[] | null;
+  Participants: PublicParticipantCamp[] | null;
   Aides: Record<IdParticipant, Aides> | null;
   AidesFiles: Record<IdAide, PublicFile> | null;
   Events: Events;
@@ -260,6 +269,14 @@ export interface PublicFile {
   NomClient: string;
   Uploaded: Time;
 }
+// registro/logic.PublicParticipantCamp
+export interface PublicParticipantCamp {
+  Participant: Participant;
+  Camp: CampItem;
+  CampOption: OptionPrixCamp;
+  CampQuotientFamilial: PrixQuotientFamilial;
+  Personne: PersonneHeader;
+}
 // registro/logic.SondageEvt
 export interface SondageEvt {
   IdCamp: IdCamp;
@@ -289,6 +306,15 @@ export const StatutPaiementLabels: Record<StatutPaiement, string> = {
 
 // registro/logic.SupprimeEvt
 export type SupprimeEvt = Record<string, never>;
+// registro/logic/search.PersonneHeader
+export interface PersonneHeader {
+  Id: IdPersonne;
+  Nom: string;
+  Prenom: string;
+  Sexe: Sexe;
+  DateNaissance: Date;
+  IsTemp: boolean;
+}
 // registro/sql/camps.Aide
 export interface Aide {
   Id: IdAide;
@@ -301,35 +327,6 @@ export interface Aide {
 }
 // registro/sql/camps.Aides
 export type Aides = Record<IdAide, Aide> | null;
-// registro/sql/camps.Camp
-export interface Camp {
-  Id: IdCamp;
-  IdTaux: IdTaux;
-  Nom: string;
-  DateDebut: Date;
-  Duree: Int;
-  Lieu: string;
-  Agrement: string;
-  ImageURL: string;
-  Description: string;
-  Navette: OptionNavette;
-  Places: Int;
-  AgeMin: Int;
-  AgeMax: Int;
-  NeedEquilibreGF: boolean;
-  InscriptionExterne: boolean;
-  Statut: StatutCamp;
-  Prix: Montant;
-  OptionPrix: OptionPrixCamp;
-  OptionQuotientFamilial: PrixQuotientFamilial;
-  Password: string;
-  DocumentsReady: boolean;
-  DocumentsToShow: DocumentsToShow;
-  Vetements: ListeVetements;
-  AlbumID: string;
-  Meta: Meta;
-  IsAlbumVisible: boolean;
-}
 // registro/sql/camps.Champ
 export interface Champ {
   Titre: string;
@@ -376,13 +373,6 @@ export interface ChampTexte {
 }
 // registro/sql/camps.Champs
 export type Champs = Champ[] | null;
-// registro/sql/camps.DocumentsToShow
-export interface DocumentsToShow {
-  LettreDirecteur: boolean;
-  ListeVetements: boolean;
-  ListeParticipants: boolean;
-  CharteParticipant: boolean;
-}
 // registro/sql/camps.Form
 export interface Form {
   Id: IdForm;
@@ -401,18 +391,6 @@ export type IdSondage = Int & { __opaque_int__: "IdSondage" };
 export type IdStructureaide = Int & { __opaque_int__: "IdStructureaide" };
 // registro/sql/camps.Jours
 export type Jours = Int[] | null;
-// registro/sql/camps.ListeVetements
-export interface ListeVetements {
-  Vetements: Vetement[] | null;
-  Complement: string;
-}
-// registro/sql/camps.Meta
-export type Meta = Record<string, string> | null;
-// registro/sql/camps.OptionNavette
-export interface OptionNavette {
-  Actif: boolean;
-  Commentaire: string;
-}
 // registro/sql/camps.OptionPrixCamp
 export interface OptionPrixCamp {
   Active: OptionPrixKind;
@@ -450,12 +428,6 @@ export interface Participant {
   Remises: Remises;
   QuotientFamilial: Int;
   OptionPrix: OptionPrixParticipant;
-}
-// registro/sql/camps.ParticipantCamp
-export interface ParticipantCamp {
-  Camp: Camp;
-  Participant: Participant;
-  Personne: Personne;
 }
 // registro/sql/camps.PrixParStatut
 export interface PrixParStatut {
@@ -522,20 +494,6 @@ export interface Sondage {
   MessageEnfant: string;
   MessageResponsable: string;
 }
-// registro/sql/camps.StatutCamp
-export const StatutCamp = {
-  Ferme: 0,
-  VisibleFerme: 1,
-  Ouvert: 2,
-} as const;
-export type StatutCamp = (typeof StatutCamp)[keyof typeof StatutCamp];
-
-export const StatutCampLabels: Record<StatutCamp, string> = {
-  [StatutCamp.Ferme]: "Caché et fermé",
-  [StatutCamp.VisibleFerme]: "Visible mais fermé",
-  [StatutCamp.Ouvert]: "Visible et ouvert",
-};
-
 // registro/sql/camps.StatutParticipant
 export const StatutParticipant = {
   AStatuer: 0,
@@ -566,12 +524,6 @@ export interface Structureaide {
 }
 // registro/sql/camps.Structureaides
 export type Structureaides = Record<IdStructureaide, Structureaide> | null;
-// registro/sql/camps.Vetement
-export interface Vetement {
-  Quantite: Int;
-  Description: string;
-  Important: boolean;
-}
 // registro/sql/dossiers.Currency
 export const Currency = {
   Euros: 0,
@@ -762,42 +714,10 @@ export const FichesanitaireStateLabels: Record<FichesanitaireState, string> = {
 export type IdPersonne = Int & { __opaque_int__: "IdPersonne" };
 // registro/sql/personnes.Mails
 export type Mails = string[] | null;
-// registro/sql/personnes.Nationnalite
-export interface Nationnalite {
-  IsSuisse: boolean;
-}
 // registro/sql/personnes.NomTel
 export interface NomTel {
   Nom: string;
   Tel: Tel;
-}
-// registro/sql/personnes.Pays
-export type Pays = string;
-// registro/sql/personnes.Personne
-export interface Personne {
-  Id: IdPersonne;
-  Nom: string;
-  Prenom: string;
-  Sexe: Sexe;
-  DateNaissance: Date;
-  Nationnalite: Nationnalite;
-  Tels: Tels;
-  Mail: string;
-  Adresse: string;
-  CodePostal: string;
-  Ville: string;
-  Pays: Pays;
-  Publicite: Publicite;
-  CharteAccepted: Time;
-  IsTemp: boolean;
-}
-// registro/sql/personnes.Publicite
-export interface Publicite {
-  VersionPapier: boolean;
-  PubHiver: boolean;
-  PubEte: boolean;
-  EchoRocher: boolean;
-  Eonews: boolean;
 }
 // registro/sql/personnes.Sexe
 export const Sexe = {

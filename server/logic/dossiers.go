@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"registro/crypto"
+	"registro/logic/search"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
 	pr "registro/sql/personnes"
@@ -217,13 +218,21 @@ func (de *Dossier) LastEventTime() time.Time {
 	return last
 }
 
+type PublicParticipantCamp struct {
+	Participant          cps.Participant
+	Camp                 CampItem
+	CampOption           cps.OptionPrixCamp
+	CampQuotientFamilial cps.PrixQuotientFamilial
+	Personne             search.PersonneHeader
+}
+
 // DossierExt is the public version of a [Dossier],
 // with all information resolved.
 type DossierExt struct {
 	Dossier       ds.Dossier
 	IdResponsable pr.IdPersonne
 	Responsable   string
-	Participants  []cps.ParticipantCamp
+	Participants  []PublicParticipantCamp
 	Aides         map[cps.IdParticipant]cps.Aides
 	AidesFiles    map[cps.IdAide]PublicFile // optionnel
 
@@ -310,7 +319,20 @@ func (d DossierFinance) Publish(key crypto.Encrypter) DossierExt {
 			}
 		}
 	}
-	return DossierExt{d.Dossier.Dossier, d.Responsable().Id, d.Responsable().PrenomNOM(), d.ParticipantsExt(), d.aides, aideFiles, d.Events, d.paiements, bilan}
+
+	parts := d.ParticipantsExt()
+	publicParticipants := make([]PublicParticipantCamp, len(parts))
+	for i, p := range parts {
+		publicParticipants[i] = PublicParticipantCamp{
+			p.Participant,
+			NewCampItem(p.Camp),
+			p.Camp.OptionPrix,
+			p.Camp.OptionQuotientFamilial,
+			search.NewPersonneHeader(p.Personne),
+		}
+	}
+
+	return DossierExt{d.Dossier.Dossier, d.Responsable().Id, d.Responsable().PrenomNOM(), publicParticipants, d.aides, aideFiles, d.Events, d.paiements, bilan}
 }
 
 // LoadByMail renvoie les dossiers dont le responsable a le mail fourni. Ignore les responsables temporaires.

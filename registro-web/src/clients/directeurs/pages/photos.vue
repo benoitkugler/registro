@@ -1,5 +1,8 @@
 <template>
-  <NavBar :title="`${controller.camp?.Label} - Album photos`"> </NavBar>
+  <NavBar
+    :title="`${controller.camp ? Camps.label(controller.camp) : ''} - Album photos`"
+  >
+  </NavBar>
 
   <div v-if="data == null" class="text-center my-6">
     <v-progress-circular indeterminate></v-progress-circular>
@@ -123,7 +126,7 @@
 import { onMounted, ref } from "vue";
 import NavBar from "../components/NavBar.vue";
 import { controller } from "../logic/logic";
-import { Formatters, readJSONStream } from "@/utils";
+import { Camps, Formatters, readJSONStream } from "@/utils";
 import type { Photos, PhotosInviteIn, SendProgress } from "../logic/api";
 
 onMounted(loadData);

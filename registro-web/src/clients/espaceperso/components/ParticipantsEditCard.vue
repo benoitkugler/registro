@@ -32,10 +32,10 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { type Participant } from "@/clients/backoffice/logic/api";
-import type { ParticipantCamp } from "../logic/api";
+import type { PublicParticipantCamp } from "../logic/api";
 import { Camps, Personnes } from "@/utils";
 const props = defineProps<{
-  participants: ParticipantCamp[];
+  participants: PublicParticipantCamp[];
 }>();
 const emit = defineEmits<{
   (e: "save", participants: Participant[]): void;

@@ -1,8 +1,10 @@
 <template>
-  <NavBar :title="`${controller.camp?.Label} - Suivi des inscriptions`">
+  <NavBar
+    :title="`${controller.camp ? Camps.label(controller.camp) : ''} - Suivi des inscriptions`"
+  >
     <v-tabs
       :model-value="currentTab"
-      @update:model-value="v => setTab(v as InscriptionsTab)"
+      @update:model-value="(v) => setTab(v as InscriptionsTab)"
     >
       <v-tab value="inscriptions">Inscriptions en attente</v-tab>
       <v-tab value="participants">Liste des participants</v-tab>
@@ -38,11 +40,12 @@ import PannelInscriptions from "../components/inscriptions/PannelInscriptions.vu
 import { controller } from "../logic/logic";
 import PannelParticipants from "../components/inscriptions/PannelParticipants.vue";
 import type { IdDossier } from "../logic/api";
+import { Camps } from "@/utils.ts";
 
 const router = useRouter();
 
 const query = computed(() =>
-  parseQueryURLInscriptions(router.currentRoute.value.query)
+  parseQueryURLInscriptions(router.currentRoute.value.query),
 );
 
 onMounted(async () => {

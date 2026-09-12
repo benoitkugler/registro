@@ -36,7 +36,7 @@
 
 <script setup lang="ts">
 import type { CampItem, IdCamp } from "@/clients/backoffice/logic/api";
-import { nullableToZeroable, zeroableToNullable } from "@/utils";
+import { Camps, nullableToZeroable, zeroableToNullable } from "@/utils";
 import { computed, ref, watch } from "vue";
 const props = defineProps<{
   label: string;
@@ -51,7 +51,7 @@ const showTerminatedCamps = ref(false);
 const campItems = computed(() =>
   props.camps
     .filter((c) => (showTerminatedCamps.value ? true : !c.IsOld))
-    .map((c) => ({ title: c.Label, value: c.Id }))
+    .map((c) => ({ title: Camps.label(c), value: c.Id })),
 );
 </script>
 

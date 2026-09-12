@@ -29,19 +29,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
-import {
-  type ChampReponse,
-  type ChampReponseQCM,
-  type ChampReponseTexte,
-  type FormReponses,
-  type IdCamp,
-} from "../logic/api.ts";
-import { copy } from "@/utils";
+import { type CampItem, type IdCamp } from "../logic/api.ts";
 
 const props = defineProps<{
   toFondSoutien: boolean; // if true, destinataire is read-only
-  camps:
+  camps: CampItem[];
 }>();
 
 const emit = defineEmits<{

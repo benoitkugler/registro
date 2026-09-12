@@ -106,7 +106,7 @@ export function copy<T>(v: T): T {
 
 export function recordEntries<S extends number, T>(data: Record<S, T> | null) {
   return Object.entries(data || {}).map(
-    (entry) => [Number(entry[0]) as S, entry[1] as T] as const
+    (entry) => [Number(entry[0]) as S, entry[1] as T] as const,
   );
 }
 
@@ -115,7 +115,7 @@ export function mapFromObject<S extends number, T extends { Id: S }>(
     | {
         [key in T["Id"]]: T;
       }
-    | null
+    | null,
 ) {
   return new Map<S, T>(recordEntries(data));
 }
@@ -137,7 +137,7 @@ export function selectItems<T extends number | string>(
   labels: {
     [key in T]: string;
   },
-  sort?: boolean
+  sort?: boolean,
 ) {
   const out: { value: T; title: string }[] = [];
   for (const value in labels) {
@@ -165,7 +165,7 @@ export function optToNullable<T extends number>(opt: {
 }
 
 export function nullableToOpt<T extends number>(
-  id: T | null
+  id: T | null,
 ): { Id: T; Valid: boolean } {
   return id === null ? { Valid: false, Id: 0 as T } : { Valid: true, Id: id };
 }
@@ -256,7 +256,7 @@ export namespace Camps {
 
   export function match(
     camp: Camp & { Lieu: string },
-    normalizedPattern: string
+    normalizedPattern: string,
   ) {
     if (normalizedPattern == "") return true;
     const str = normalize(label(camp) + camp.Lieu);
@@ -270,8 +270,10 @@ export namespace Camps {
   export function toItem(c: CampExt): CampItem {
     return {
       Id: c.Camp.Id,
+      Nom: c.Camp.Nom,
+      DateDebut: c.Camp.DateDebut,
+      Duree: c.Camp.Duree,
       IsOld: c.IsTerminated,
-      Label: label(c.Camp),
     };
   }
 }
@@ -325,7 +327,7 @@ export namespace Formatters {
   export function date(
     date: Date_ | Time,
     showYear = false,
-    showWeekday = true
+    showWeekday = true,
   ) {
     if (isDateZero(date)) {
       return "";
@@ -511,7 +513,7 @@ export function buildPseudoEvents(dossier: DossierExt, user: Acteur) {
     .filter((ev) =>
       ev.Content.Kind == EventContentKind.MessageEvt
         ? isMessageVisibleBy(ev.Content.Data.Message, user)
-        : true
+        : true,
     )
     .map((ev) => ({
       Kind: "event",
@@ -523,7 +525,7 @@ export function buildPseudoEvents(dossier: DossierExt, user: Acteur) {
       Kind: "paiement",
       Paiement: p,
       User: user,
-    })
+    }),
   );
   const out: PseudoEvent[] = [
     {
@@ -535,7 +537,7 @@ export function buildPseudoEvents(dossier: DossierExt, user: Acteur) {
   ];
   // last event first
   out.sort(
-    (a, b) => pseudoEventTime(b).valueOf() - pseudoEventTime(a).valueOf()
+    (a, b) => pseudoEventTime(b).valueOf() - pseudoEventTime(a).valueOf(),
   );
   return out;
 }
@@ -570,7 +572,7 @@ export namespace Participants {
     if (sa != sb) return sb - sa;
     // By name :
     return Personnes.NOMPrenom(a.Personne).localeCompare(
-      Personnes.NOMPrenom(b.Personne)
+      Personnes.NOMPrenom(b.Personne),
     );
   }
 }
@@ -710,7 +712,7 @@ export type JSONStreamResponse<T> = Response & { __tag__: T };
 export async function readJSONStream<R>(
   response: JSONStreamResponse<R>,
   onValue: (v: R) => void,
-  onError: (err: string) => void
+  onError: (err: string) => void,
 ) {
   const readableStream = response.body;
   if (!readableStream) return;

@@ -19,7 +19,9 @@
               v-if="query.IdCamp.Valid"
               prepend-icon="mdi-bed"
             >
-              {{ props.camps.find((c) => c.Id == query.IdCamp.Id)?.Label }}
+              {{
+                Camps.label(props.camps.find((c) => c.Id == query.IdCamp.Id)!)
+              }}
             </v-chip>
             <v-chip
               class="ml-1"
@@ -67,7 +69,7 @@
                         @update:model-value="
                           (id) => {
                             query.IdCamp = nullableToOpt(
-                              zeroableToNullable(id)
+                              zeroableToNullable(id),
                             );
                             searchDossiers();
                           }
@@ -180,6 +182,7 @@ import {
 } from "@/clients/backoffice/logic/api";
 import { controller } from "@/clients/backoffice/logic/logic";
 import {
+  Camps,
   nullableToOpt,
   nullableToZeroable,
   optToNullable,

@@ -4,7 +4,7 @@
     :subtitle="
       listeAttente.length
         ? `Les participants en liste d'attente (${listeAttente.join(
-            ', '
+            ', ',
           )}) ne sont pas pris en compte.`
         : ''
     "
@@ -40,7 +40,7 @@
             cols="2"
             class="text-center"
             v-if="!hideOptionsAndAides"
-            >{{ Formatters.montant(part.Prix) }}</v-col
+            >{{ Formatters.montant(part.Bilan.PrixCamp) }}</v-col
           >
           <v-col
             v-if="!hideOptionsAndAides"
@@ -160,7 +160,7 @@ const props = defineProps<{
 const listeAttente = computed(() =>
   (props.dossier.Participants || [])
     .filter((p) => p.Participant.Statut != StatutParticipant.Inscrit)
-    .map((p) => Personnes.label(p.Personne))
+    .map((p) => Personnes.label(p.Personne)),
 );
 
 const participants = computed(() =>
@@ -169,9 +169,8 @@ const participants = computed(() =>
     .map((p) => ({
       Label: Personnes.label(p.Personne),
       Camp: Camps.label(p.Camp),
-      Prix: p.Camp.Prix, // prix de base du séjour
       Bilan: props.dossier.Bilan.Inscrits![p.Participant.Id], // licite pour un Inscrit
-    }))
+    })),
 );
 
 function hasRemise(b: BilanParticipantPub) {
@@ -202,8 +201,8 @@ const paiements = computed(() => {
 const hideOptionsAndAides = computed(() =>
   participants.value.every(
     (part) =>
-      Participants.montantEquals(part.Prix, part.Bilan.AvecOption) &&
-      !part.Bilan.Aides?.length
-  )
+      Participants.montantEquals(part.Bilan.PrixCamp, part.Bilan.AvecOption) &&
+      !part.Bilan.Aides?.length,
+  ),
 );
 </script>

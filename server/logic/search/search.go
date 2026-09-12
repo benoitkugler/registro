@@ -52,7 +52,7 @@ func FilterPersonnes(list pr.Personnes, pattern string) (out []PersonneHeader) {
 	}
 
 	slices.SortFunc(out, func(a, b PersonneHeader) int { return int(a.Id - b.Id) })
-	slices.SortStableFunc(out, func(a, b PersonneHeader) int { return strings.Compare(a.Label, b.Label) })
+	slices.SortStableFunc(out, func(a, b PersonneHeader) int { return strings.Compare(a.sortKey(), b.sortKey()) })
 
 	return out
 }

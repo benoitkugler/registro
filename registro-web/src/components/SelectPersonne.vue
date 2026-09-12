@@ -21,7 +21,7 @@
 
 <script setup lang="ts">
 import type { IdPersonne } from "@/clients/backoffice/logic/api";
-import { nullableToZeroable, zeroableToNullable } from "@/utils";
+import { nullableToZeroable, Personnes, zeroableToNullable } from "@/utils";
 import { ref } from "vue";
 import type { SelectPersonneAPI } from "./types";
 const props = defineProps<{
@@ -36,14 +36,17 @@ const modelValue = defineModel<IdPersonne>({ required: true });
 const items = ref<{ title: string; value: IdPersonne }[]>(
   modelValue.value == 0
     ? []
-    : [{ title: props.initialPersonne, value: modelValue.value }]
+    : [{ title: props.initialPersonne, value: modelValue.value }],
 );
 const search = ref("");
 async function doSearch() {
   if (!search.value) return;
   const res = await props.api.SelectPersonne({ search: search.value });
   if (res === undefined) return;
-  items.value = (res || []).map((p) => ({ title: p.Label, value: p.Id }));
+  items.value = (res || []).map((p) => ({
+    title: Personnes.label(p),
+    value: p.Id,
+  }));
 }
 
 // debounce feature for search

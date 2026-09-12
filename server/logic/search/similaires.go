@@ -118,20 +118,27 @@ func comparaison(p pr.Personne, in PatternsSimilarite) (score int) {
 
 type PersonneHeader struct {
 	Id            pr.IdPersonne
-	Label         string
+	Nom           string
+	Prenom        string
 	Sexe          pr.Sexe
 	DateNaissance shared.Date
-	IsTemp        bool
+
+	IsTemp bool
 }
 
 func NewPersonneHeader(p pr.Personne) PersonneHeader {
 	return PersonneHeader{
 		p.Id,
-		p.PrenomNOM(),
+		p.Nom,
+		p.Prenom,
 		p.Sexe,
 		p.DateNaissance,
 		p.IsTemp,
 	}
+}
+
+func (p *PersonneHeader) sortKey() string {
+	return p.Nom + p.Prenom
 }
 
 // Match vérifie si [in] est déjà présent dans la liste [personnes],

@@ -36,7 +36,8 @@ export interface YearTotal {
 // registro/logic/search.PersonneHeader
 export interface PersonneHeader {
   Id: IdPersonne;
-  Label: string;
+  Nom: string;
+  Prenom: string;
   Sexe: Sexe;
   DateNaissance: Date;
   IsTemp: boolean;

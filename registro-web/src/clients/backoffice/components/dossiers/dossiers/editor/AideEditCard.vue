@@ -2,7 +2,7 @@
   <v-card
     title="Modifier l'aide extérieure"
     :subtitle="`pour ${Personnes.label(
-      props.participant.Personne
+      props.participant.Personne,
     )} - ${Camps.label(props.participant.Camp)}`"
   >
     <template #append>
@@ -77,6 +77,7 @@ import {
   type Int,
   type ParticipantCamp,
   type PublicFile,
+  type PublicParticipantCamp,
   type Structureaides,
 } from "@/clients/backoffice/logic/api";
 import { Camps, copy, Personnes } from "@/utils";
@@ -86,7 +87,7 @@ const props = defineProps<{
   aide: Aide;
   file: PublicFile | undefined;
   structures: NonNullable<Structureaides>;
-  participant: ParticipantCamp;
+  participant: PublicParticipantCamp;
 }>();
 
 const emit = defineEmits<{
@@ -99,6 +100,6 @@ const emit = defineEmits<{
 const inner = ref(copy(props.aide));
 
 const structureItems = computed(() =>
-  Object.values(props.structures).map((s) => ({ value: s.Id, title: s.Nom }))
+  Object.values(props.structures).map((s) => ({ value: s.Id, title: s.Nom })),
 );
 </script>

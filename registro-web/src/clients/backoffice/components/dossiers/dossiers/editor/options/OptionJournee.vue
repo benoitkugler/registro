@@ -10,11 +10,11 @@
         color="primary"
         multiple
         :model-value="!modelValue?.length ? allDays : modelValue"
-        @update:model-value="(v) => (modelValue = v.length == allDays.length ? [] : v as Int[])"
+        @update:model-value="
+          (v) => (modelValue = v.length == allDays.length ? [] : (v as Int[]))
+        "
       >
-        <v-btn v-for="(_, i) in props.camp.OptionPrix.Jours"
-          >J {{ i + 1 }}</v-btn
-        >
+        <v-btn v-for="(_, i) in props.option.Jours">J {{ i + 1 }}</v-btn>
       </v-btn-toggle>
     </v-card-text>
   </v-card>
@@ -23,16 +23,17 @@
 <script setup lang="ts">
 import {
   type Camp,
+  type CampItem,
   type Int,
   type Jours,
+  type OptionPrixCamp,
 } from "@/clients/backoffice/logic/api";
 import { computed } from "vue";
 const props = defineProps<{
-  camp: Camp;
+  camp: CampItem;
+  option: OptionPrixCamp;
 }>();
 
 const modelValue = defineModel<Jours>({ required: true });
-const allDays = computed(() =>
-  (props.camp.OptionPrix.Jours || []).map((_, i) => i)
-);
+const allDays = computed(() => (props.option.Jours || []).map((_, i) => i));
 </script>

@@ -10,6 +10,7 @@
 
 <script setup lang="ts">
 import { type CampItem, type IdCamp } from "@/clients/backoffice/logic/api";
+import { Camps } from "@/utils";
 import { computed } from "vue";
 const props = defineProps<{
   allCamps: CampItem[];
@@ -17,6 +18,6 @@ const props = defineProps<{
 const model = defineModel<IdCamp[]>({ required: true });
 
 const items = computed(() =>
-  props.allCamps.map((c) => ({ title: c.Label, value: c.Id }))
+  props.allCamps.map((c) => ({ title: Camps.label(c), value: c.Id })),
 );
 </script>

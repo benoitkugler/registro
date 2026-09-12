@@ -14,15 +14,15 @@
 
         <v-col align-self="center" cols="8">
           <OptionJournee
-            v-if="props.camp.OptionPrix.Active == OptionPrixKind.PrixJour"
+            v-if="props.optionCamp.Active == OptionPrixKind.PrixJour"
             :camp="props.camp"
+            :option="props.optionCamp"
             v-model="inner.options.Jour"
           ></OptionJournee>
           <OptionStatut
-            v-else-if="
-              props.camp.OptionPrix.Active == OptionPrixKind.PrixStatut
-            "
+            v-else-if="props.optionCamp.Active == OptionPrixKind.PrixStatut"
             :camp="props.camp"
+            :option="props.optionCamp"
             v-model="inner.options.IdStatut"
           ></OptionStatut>
           <div v-else>Le camp ne propose pas d'option sur le prix.</div>
@@ -40,7 +40,9 @@
 import {
   OptionPrixKind,
   type Camp,
+  type CampItem,
   type Int,
+  type OptionPrixCamp,
   type OptionPrixParticipant,
 } from "@/clients/backoffice/logic/api";
 import OptionJournee from "./options/OptionJournee.vue";
@@ -54,7 +56,8 @@ type OptionPrixAndQF = {
 };
 
 const props = defineProps<{
-  camp: Camp;
+  camp: CampItem;
+  optionCamp: OptionPrixCamp;
   optionAndQf: OptionPrixAndQF;
 }>();
 
@@ -66,6 +69,6 @@ const inner = ref(copy(props.optionAndQf));
 
 watch(
   () => props.optionAndQf,
-  () => (inner.value = copy(props.optionAndQf))
+  () => (inner.value = copy(props.optionAndQf)),
 );
 </script>

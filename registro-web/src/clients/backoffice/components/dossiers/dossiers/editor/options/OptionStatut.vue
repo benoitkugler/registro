@@ -8,7 +8,7 @@
         :items="items"
         label="Statut"
         :model-value="isValid ? modelValue : null"
-        @update:model-value="(v) => (modelValue = v == null ? 0 as Int : v)"
+        @update:model-value="(v) => (modelValue = v == null ? (0 as Int) : v)"
         variant="outlined"
         density="comfortable"
         hide-details
@@ -26,23 +26,29 @@
 </template>
 
 <script setup lang="ts">
-import { type Camp, type Int } from "@/clients/backoffice/logic/api";
+import {
+  type Camp,
+  type CampItem,
+  type Int,
+  type OptionPrixCamp,
+} from "@/clients/backoffice/logic/api";
 import { computed, watch } from "vue";
 const props = defineProps<{
-  camp: Camp;
+  camp: CampItem;
+  option: OptionPrixCamp;
 }>();
 
 const modelValue = defineModel<Int>({ required: true });
 
 const items = computed(() =>
-  (props.camp.OptionPrix.Statuts || []).map((s) => ({
+  (props.option.Statuts || []).map((s) => ({
     value: s.Id,
     title: s.Label,
     subtitle: s.Description,
-  }))
+  })),
 );
 
 const isValid = computed(() =>
-  items.value.map((item) => item.value).includes(modelValue.value)
+  items.value.map((item) => item.value).includes(modelValue.value),
 );
 </script>
