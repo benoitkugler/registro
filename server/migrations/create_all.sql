@@ -1572,7 +1572,7 @@ ALTER TABLE event_changement_camps
     ADD FOREIGN KEY (IdEvent) REFERENCES events ON DELETE CASCADE;
 
 ALTER TABLE event_changement_camps
-    ADD FOREIGN KEY (IdParticipant) REFERENCES participants;
+    ADD FOREIGN KEY (IdParticipant) REFERENCES participants ON DELETE CASCADE;
 
 ALTER TABLE event_changement_camps
     ADD FOREIGN KEY (Old) REFERENCES camps;
