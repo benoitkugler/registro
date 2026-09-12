@@ -181,6 +181,8 @@
   >
     <NewMessageCard
       v-if="showCreateMessage"
+      :camps="camps"
+      :allow-fond-soutien="data?.Dossier.Dossier.DemandeFondSoutien || false"
       :to-fond-soutien="showCreateMessage.toFondSoutien"
       @send="sendMessage"
     ></NewMessageCard>
@@ -287,8 +289,8 @@ import DocumentsCard from "./components/DocumentsCard.vue";
 import FinancesReglementCard from "./components/FinancesReglementCard.vue";
 import PresentationCard from "./components/PresentationCard.vue";
 import ValidationInscriptionCard from "./components/ValidationInscriptionCard.vue";
-import { useDisplay } from "vuetify";
 import NewMessageCard from "./components/NewMessageCard.vue";
+import { useDisplay } from "vuetify";
 
 const { smAndDown } = useDisplay();
 
@@ -323,6 +325,16 @@ async function fetchData() {
   if (res === undefined) return;
   data.value = res;
 }
+
+const camps = computed(() => {
+  if (!data.value) return [];
+  const campsL = (data.value.Dossier.Participants || []).map(
+    (p) => [p.Camp.Id, p.Camp] as const,
+  );
+  // ensure unicity
+  const m = new Map(campsL);
+  return Array.from(m.values());
+});
 
 const events = computed(() =>
   data.value == null
@@ -361,10 +373,10 @@ function handleFromEvent(fromIdEvent: IdEvent) {
 const showCreateMessage = ref<{ toFondSoutien: boolean } | null>(null);
 async function sendMessage(
   content: string,
-  destinataire: "fond-soutien" | IdCamp | null,
+  destinataire: "fond-soutien" | "all" | IdCamp,
 ) {
   if (!showCreateMessage.value || !data.value) return;
-  const toCampValid = destinataire !== "fond-soutien" && destinataire != null;
+  const toCampValid = destinataire !== "fond-soutien" && destinataire != "all";
   const args: SendMessageIn = {
     Token: token.value,
     Message: content,

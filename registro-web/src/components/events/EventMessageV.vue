@@ -1,10 +1,15 @@
 <template>
   <EventItem
-    :icon="fromUs ? 'mdi-email-arrow-right' : 'mdi-email-arrow-left'"
+    :icon="isSent ? 'mdi-email-arrow-right' : 'mdi-email-arrow-left'"
     color="light-blue-darken-3"
     :time="props.event.Created"
     size="x-large"
   >
+    <v-row v-if="context"
+      ><v-col>
+        <v-list-subheader>{{ context }}</v-list-subheader>
+      </v-col></v-row
+    >
     <v-row no-gutters>
       <v-col align-self="center">
         <v-card :class="colorClass">
@@ -88,7 +93,7 @@ const colorClass = computed(() =>
 const allowDelete = computed(
   () =>
     props.user == Acteur.Backoffice ||
-    (props.user == Acteur.FondSoutien && fromUs),
+    (props.user == Acteur.FondSoutien && isSent),
 );
 
 function origineToColor(or: Acteur) {
@@ -107,7 +112,14 @@ function origineToColor(or: Acteur) {
 const showConfirme = ref(false);
 
 /** true if message is sent by the current user */
-const fromUs = computed(() => props.content.Message.Origine == props.user);
+const isSent = computed(() => props.content.Message.Origine == props.user);
+
+const context = computed(() => {
+  const m = props.content.Message;
+  if (m.OnlyToFondSoutien) return "Message envoyé au fonds de soutien.";
+  if (m.OnlyToCamp.Valid)
+    return `Message envoyé au séjour ${props.content.TargetCampLabel}.`;
+});
 </script>
 
 <style scoped></style>

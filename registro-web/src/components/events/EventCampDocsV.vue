@@ -11,6 +11,7 @@
           @click="emit('goToDocuments', props.content.IdCamp)"
           v-if="props.user == Acteur.Espaceperso"
           class="mr-2"
+          prepend-icon="mdi-eye"
         >
           Lire
         </v-btn>

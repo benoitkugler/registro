@@ -210,9 +210,14 @@ func (ct *Controller) loadMessages(idCamp cps.IdCamp) (Messages, error) {
 	for idDossier := range dossiers.Dossiers {
 		dossier := dossiers.For(idDossier)
 
-		// hide fonds de soutien
+		// restrict by visibility
 		for _, message := range logic.EventsBy[logic.MessageEvt](dossier.Events) {
-			if message.Content.Message.Origine == evs.FondSoutien || message.Content.Message.OnlyToFondSoutien {
+			m := message.Content.Message
+			fromFondSoutien := m.Origine == evs.FondSoutien
+			toFondSoutien := m.OnlyToFondSoutien
+			fromOtherCamp := m.Origine == evs.Directeur && !(m.OrigineCamp.Is(idCamp))
+			toOtherCamp := m.OnlyToCamp.Valid && m.OnlyToCamp.Id != idCamp
+			if fromFondSoutien || toFondSoutien || fromOtherCamp || toOtherCamp {
 				continue
 			}
 			out.Messages = append(out.Messages, message)

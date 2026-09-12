@@ -22,21 +22,27 @@
         </template>
       </v-tooltip>
     </v-col>
-    <v-col
-      align-self="center"
-      :class="{
-        'rounded-lg': true,
-        'font-weight-bold': isNew,
-        'bg-purple-lighten-4': isFromUs,
-        'bg-green-lighten-4': isFromBackoffice,
-        'bg-blue-lighten-4': !(isFromUs || isFromBackoffice),
-      }"
-      style="font-size: smaller"
-    >
-      <MultilineText
-        :text="props.message.Content.Message.Contenu"
-      ></MultilineText>
+    <v-col>
+      <v-list-subheader v-if="context">{{ context }}</v-list-subheader>
+      <v-row
+        no-gutters
+        :class="{
+          'pa-2': true,
+          rounded: true,
+          'font-weight-bold': isNew,
+          'bg-purple-lighten-4': isFromUs,
+          'bg-green-lighten-4': isFromBackoffice,
+          'bg-blue-lighten-4': !(isFromUs || isFromBackoffice),
+        }"
+      >
+        <v-col align-self="center" style="font-size: smaller">
+          <MultilineText
+            :text="props.message.Content.Message.Contenu"
+          ></MultilineText>
+        </v-col>
+      </v-row>
     </v-col>
+
     <v-col align-self="center" cols="2" class="text-grey">
       {{ Formatters.time(props.message.Event.Created) }}
     </v-col>
@@ -63,5 +69,10 @@ const isFromUs = computed(() => isMessageFromUs(props.message));
 const isFromBackoffice = computed(() => {
   const o = props.message.Content.Message.Origine;
   return o == Acteur.Backoffice || o == Acteur.FondSoutien;
+});
+
+const context = computed(() => {
+  const m = props.message.Content.Message;
+  if (m.OnlyToCamp.Valid) return "Message envoyé à ce séjour uniquement.";
 });
 </script>
