@@ -103,7 +103,7 @@ func renderListeParticipants(db *sql.DB, asso config.Asso, id cps.IdCamp) ([]byt
 	if err != nil {
 		return nil, "", err
 	}
-	dossiers, err := dossiers.SelectDossiers(db, camp.IdDossiers()...)
+	dossiers, err := dossiers.SelectDossiers(db, camp.IdDossiers(true).Keys()...)
 	if err != nil {
 		return nil, "", utils.SQLError(err)
 	}

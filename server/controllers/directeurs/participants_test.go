@@ -73,11 +73,17 @@ func TestMessages(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	pe1, err := pr.Personne{}.Insert(db)
 	tu.AssertNoErr(t, err)
+	pe2, err := pr.Personne{}.Insert(db)
+	tu.AssertNoErr(t, err)
 
 	dossier, err := ds.Dossier{IdTaux: 1, IdResponsable: pe1.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
+	dossier2, err := ds.Dossier{IdTaux: 1, IdResponsable: pe1.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
 
-	_, err = cps.Participant{IdCamp: camp.Id, IdTaux: 1, IdDossier: dossier.Id, IdPersonne: pe1.Id}.Insert(db)
+	_, err = cps.Participant{IdCamp: camp.Id, IdTaux: 1, IdDossier: dossier.Id, IdPersonne: pe1.Id, Statut: cps.Inscrit}.Insert(db)
+	tu.AssertNoErr(t, err)
+	_, err = cps.Participant{IdCamp: camp.Id, IdTaux: 1, IdDossier: dossier2.Id, IdPersonne: pe2.Id, Statut: cps.Inscrit}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	ev, err := events.Event{IdDossier: dossier.Id, Kind: events.Message}.Insert(db)
@@ -87,7 +93,7 @@ func TestMessages(t *testing.T) {
 
 	ct := Controller{db: db.DB, asso: asso, smtp: smtp}
 
-	_, err = ct.loadMessages(camp.Id)
+	messages1, err := ct.loadMessages(camp.Id)
 	tu.AssertNoErr(t, err)
 
 	out, err := ct.setMessageSeen(camp.Id, ev.Id, true)
@@ -99,8 +105,17 @@ func TestMessages(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, slices.Equal(out.Content.VuParCampsIDs, []cps.IdCamp(nil)))
 
-	_, err = ct.createMessage("", camp.Id, CreateMessageIn{Contenu: "dmlqsd", IdDossier: dossier.Id})
+	_, err = ct.createMessage("", camp.Id, CreateMessageIn{Contenu: "dmlqsd de la part du directeur", IdDossier: dossier.Id})
 	tu.AssertNoErr(t, err)
+
+	it, err := ct.createManyMessages("", camp.Id, CreateManyMessageIn{"Un super message \n OK \n\n Bye"})
+	tu.AssertNoErr(t, err)
+	for _, err := range it {
+		tu.AssertNoErr(t, err)
+	}
+	messages2, err := ct.loadMessages(camp.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(messages2.Messages) == len(messages1.Messages)+1+2)
 }
 
 func TestGroupes(t *testing.T) {

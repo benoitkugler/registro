@@ -4,10 +4,12 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"iter"
 	"slices"
 	"strings"
 	"time"
 
+	"registro/controllers/backoffice"
 	fsAPI "registro/controllers/files"
 	"registro/generators/pdfcreator"
 	"registro/generators/sheets"
@@ -80,7 +82,7 @@ func (ct *Controller) loadFichesSanitaires(user cps.IdCamp) ([]FicheSanitaireExt
 	if err != nil {
 		return nil, err
 	}
-	dossiers, err := ds.SelectDossiers(ct.db, camp.IdDossiers()...)
+	dossiers, err := ds.SelectDossiers(ct.db, camp.IdDossiers(true).Keys()...)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
@@ -200,7 +202,7 @@ func (ct *Controller) loadMessages(idCamp cps.IdCamp) (Messages, error) {
 	if err != nil {
 		return Messages{}, err
 	}
-	dossiers, err := logic.LoadDossiers(ct.db, camp.IdDossiers())
+	dossiers, err := logic.LoadDossiers(ct.db, camp.IdDossiers(false).Keys())
 	if err != nil {
 		return Messages{}, err
 	}
@@ -333,6 +335,71 @@ func (ct *Controller) createMessage(host string, idCamp cps.IdCamp, args CreateM
 	return loadMessage(ct.db, event.Id)
 }
 
+type CreateManyMessageIn struct {
+	Contenu string
+}
+
+func (ct *Controller) ParticipantsMessagesCreateMany(c echo.Context) error {
+	user := JWTUser(c)
+	var args CreateManyMessageIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+	iter, err := ct.createManyMessages(c.Request().Host, user, args)
+	if err != nil {
+		return err
+	}
+	return utils.StreamJSON(c.Response(), iter)
+}
+
+// send the same content to all inscrits
+func (ct *Controller) createManyMessages(host string, idCamp cps.IdCamp, args CreateManyMessageIn) (iter.Seq2[backoffice.SendProgress, error], error) {
+	camp, err := cps.LoadCamp(ct.db, idCamp)
+	if err != nil {
+		return nil, err
+	}
+	ids := camp.IdDossiers(true).Keys()
+	dossiers, err := logic.LoadDossiers(ct.db, ids)
+	if err != nil {
+		return nil, err
+	}
+	pool, err := mails.NewPool(ct.smtp, ct.asso.MailsSettings, nil)
+	if err != nil {
+		return nil, err
+	}
+	return func(yield func(backoffice.SendProgress, error) bool) {
+		defer pool.Close()
+
+		now := time.Now()
+		for index, idDossier := range ids {
+			dossier := dossiers.For(idDossier)
+			resp := dossier.Responsable()
+
+			err = utils.InTx(ct.db, func(tx *sql.Tx) error {
+				_, _, err := evs.CreateMessage(tx, idDossier, now, evs.EventMessage{
+					Contenu:     args.Contenu,
+					Origine:     evs.Directeur,
+					OrigineCamp: idCamp.Opt(),
+				})
+				if err != nil {
+					return err
+				}
+
+				url := logic.EspacePersoURL(ct.key, host, idDossier)
+				body, err := mails.NotifieMessage(ct.asso, mails.NewContact(&resp), args.Contenu, url, false)
+				if err != nil {
+					return err
+				}
+				err = pool.SendMail(resp.Mail, "Nouveau message", body, dossier.Dossier.CopiesMails, nil)
+				return err
+			})
+			if !yield(backoffice.SendProgress{Current: index + 1, Total: len(ids)}, err) {
+				return
+			}
+		}
+	}, nil
+}
+
 func (ct *Controller) ParticipantsDownloadListe(c echo.Context) error {
 	user := JWTUser(c)
 	content, name, err := ct.exportListeParticipants(user)
@@ -370,7 +437,7 @@ func (ct *Controller) exportListeParticipants(user cps.IdCamp) ([]byte, string, 
 	for _, participant := range participants {
 		participantToFiches[participant.Participant.Id] = fiches[participant.Participant.IdPersonne]
 	}
-	dossiers, err := logic.LoadDossiers(ct.db, camp.IdDossiers())
+	dossiers, err := logic.LoadDossiers(ct.db, camp.IdDossiers(false).Keys())
 	if err != nil {
 		return nil, "", err
 	}

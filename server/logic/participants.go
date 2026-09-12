@@ -32,7 +32,7 @@ func LoadParticipants(db cps.DB, id cps.IdCamp) ([]ParticipantExt, ds.Dossiers, 
 		return nil, nil, cps.CampData{}, err
 	}
 
-	dossiers, err := ds.SelectDossiers(db, camp.IdDossiers()...)
+	dossiers, err := ds.SelectDossiers(db, camp.IdDossiers(false).Keys()...)
 	if err != nil {
 		return nil, nil, cps.CampData{}, utils.SQLError(err)
 	}

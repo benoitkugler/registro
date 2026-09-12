@@ -86,7 +86,7 @@ func (ct *Controller) sendMailInvitePhotos(idCamp cps.IdCamp, args PhotosInviteI
 	}
 
 	// load mails
-	dossiers, err := dossiers.SelectDossiers(ct.db, camp.IdDossiers()...)
+	dossiers, err := dossiers.SelectDossiers(ct.db, camp.IdDossiers(true).Keys()...)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}

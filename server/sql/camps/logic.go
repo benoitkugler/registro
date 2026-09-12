@@ -119,8 +119,16 @@ func (cd CampData) Participants(onlyInscrits bool) []ParticipantPersonne {
 	return out
 }
 
-func (cd CampData) IdDossiers() []ds.IdDossier {
-	return cd.participants.IdDossiers()
+// IdDossiers returns the unique dossiers.
+// If [onlyInscrit] is true, only dossier with at least one inscrit is returned.
+func (cd CampData) IdDossiers(onlyInscrit bool) utils.Set[ds.IdDossier] {
+	out := make(utils.Set[ds.IdDossier])
+	for _, part := range cd.participants {
+		if !onlyInscrit || part.Statut == Inscrit {
+			out.Add(part.IdDossier)
+		}
+	}
+	return out
 }
 
 // Personnes returns the [Personne]s for all [Participant]s

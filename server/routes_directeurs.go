@@ -54,6 +54,7 @@ func setupRoutesDirecteurs(e *echo.Echo, ct *directeurs.Controller) {
 	// Messages
 	gr.GET("/api/v1/directeurs/participants/messages", ct.ParticipantsMessagesLoad)
 	gr.PUT("/api/v1/directeurs/participants/messages", ct.ParticipantsMessagesCreate)
+	gr.PUT("/api/v1/directeurs/participants/many-messages", ct.ParticipantsMessagesCreateMany)
 	gr.POST("/api/v1/directeurs/participants/messages/seen", ct.ParticipantsMessageSetSeen)
 
 	// Equipiers

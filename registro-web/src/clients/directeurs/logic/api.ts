@@ -25,6 +25,10 @@ export interface SendProgress {
   Current: Int;
   Total: Int;
 }
+// registro/controllers/directeurs.CreateManyMessageIn
+export interface CreateManyMessageIn {
+  Contenu: string;
+}
 // registro/controllers/directeurs.CreateMessageIn
 export interface CreateMessageIn {
   Contenu: string;
@@ -767,6 +771,7 @@ export const EventKind = {
   CampDocs: 5,
   Attestation: 6,
   Sondage: 7,
+  ChangementCamp: 8,
 } as const;
 export type EventKind = (typeof EventKind)[keyof typeof EventKind];
 
@@ -779,6 +784,7 @@ export const EventKindLabels: Record<EventKind, string> = {
   [EventKind.CampDocs]: "Document des camps",
   [EventKind.Attestation]: "Facture acquittée ou attestation de présence",
   [EventKind.Sondage]: "Avis sur le séjour",
+  [EventKind.ChangementCamp]: "Changement de séjour",
 };
 
 // registro/sql/events.EventMessage
@@ -1322,6 +1328,27 @@ export abstract class AbstractAPI {
         { headers: this.getHeaders() },
       );
       return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** ParticipantsMessagesCreateMany return a streaming Response (JSON line format) */
+  async ParticipantsMessagesCreateMany(params: CreateManyMessageIn) {
+    const fullUrl =
+      this.baseURL + "/api/v1/directeurs/participants/many-messages";
+    this.startRequest();
+    try {
+      const response = await fetch(fullUrl, {
+        method: "PUT",
+        headers: {
+          ...this.getHeaders(),
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(params),
+      });
+      return response as JSONStreamResponse<SendProgress>;
     } catch (error) {
       this.handleError(error);
     }

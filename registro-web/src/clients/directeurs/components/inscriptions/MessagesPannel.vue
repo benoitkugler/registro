@@ -107,6 +107,19 @@
         @send="sendMessage"
       ></NewMessageCard>
     </v-dialog>
+
+    <!-- monitor message sending -->
+    <v-dialog
+      :model-value="sendingProgress != null"
+      max-width="400px"
+      persistent
+    >
+      <RequestProgressCard
+        v-if="sendingProgress"
+        title="Envoi des messages en cours"
+        :progress="sendingProgress"
+      ></RequestProgressCard>
+    </v-dialog>
   </v-card>
   <v-skeleton-loader v-else type="card"></v-skeleton-loader>
 </template>
@@ -118,10 +131,13 @@ import type {
   EventExt_MessageEvt,
   IdDossier,
   IdEvent,
+  Int,
   Messages,
+  SendProgress,
 } from "../../logic/api";
 import MessageRow from "./MessageRow.vue";
 import NewMessageCard from "./NewMessageCard.vue";
+import { readJSONStream } from "@/utils.ts";
 
 const props = defineProps<{}>();
 
@@ -196,21 +212,41 @@ async function setMessageSeen(idEvent: IdEvent, seen: boolean) {
 const showCreateMessage = ref(false);
 const createMessageTo = ref<IdDossier | null>(null);
 
-// async function sendMessage(destinataire: IdDossier, message: string) {
-//   const idDossier = createMessageTo.value;
-//   if (!data.value || !idDossier) return;
-//   createMessageTo.value = null;
-//   const res = await controller.ParticipantsMessagesCreate({
-//     Contenu: newMessage.value,
-//     IdDossier: idDossier,
-//   });
-//   if (res === undefined) return;
-//   controller.showMessage("Message envoyé avec succès.");
-//   data.value.Messages = [res].concat(data.value.Messages || []);
-// }
-
-async function sendMessage(destinataire: IdDossier, message: string) {
+function sendMessage(destinataire: IdDossier | "all", message: string) {
   showCreateMessage.value = false;
+  if (destinataire === "all") {
+    sendManyMessages(message);
+  } else {
+    sendOneMessage(destinataire, message);
+  }
+}
+
+const sendingProgress = ref<SendProgress | null>(null);
+async function sendManyMessages(message: string) {
+  // start with initial 0 progress
+  sendingProgress.value = {
+    Current: 0 as Int,
+    Total: 0 as Int, // not known just yet
+  };
+  const res = await controller.ParticipantsMessagesCreateMany({
+    Contenu: message,
+  });
+  if (res === undefined) {
+    sendingProgress.value = null;
+    return;
+  }
+
+  await readJSONStream(
+    res,
+    (v) => (sendingProgress.value = v),
+    (err) => controller.onError("Envoi des messages", err),
+  );
+  sendingProgress.value = null;
+  controller.showMessage("Messages envoyés avec succès.");
+  loadMessages();
+}
+
+async function sendOneMessage(destinataire: IdDossier, message: string) {
   const res = await controller.ParticipantsMessagesCreate({
     Contenu: message,
     IdDossier: destinataire,

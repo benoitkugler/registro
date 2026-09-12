@@ -549,7 +549,7 @@ func (ct *Controller) renderFichesSanitaires(user cps.IdCamp) ([]byte, string, e
 	if err != nil {
 		return nil, "", err
 	}
-	dossiers, err := ds.SelectDossiers(ct.db, camp.IdDossiers()...)
+	dossiers, err := ds.SelectDossiers(ct.db, camp.IdDossiers(true).Keys()...)
 	if err != nil {
 		return nil, "", utils.SQLError(err)
 	}

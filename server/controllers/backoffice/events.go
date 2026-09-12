@@ -221,16 +221,13 @@ func (ct *Controller) previewSendDocumentsCamp(idCamp cps.IdCamp) (SendDocuments
 	if err != nil {
 		return SendDocumentsCampPreview{}, err
 	}
-	dossiers, err := logic.LoadDossiers(ct.db, camp.IdDossiers())
+	dossiers, err := logic.LoadDossiers(ct.db, camp.IdDossiers(true).Keys())
 	if err != nil {
 		return SendDocumentsCampPreview{}, err
 	}
 	var out SendDocumentsCampPreview
 	for id := range dossiers.Dossiers {
 		dossier := dossiers.For(id)
-		if _, hasInscrit := dossier.CampsInscrits()[idCamp]; !hasInscrit {
-			continue
-		}
 		out.Dossiers = append(out.Dossiers, DossierDocumentsState{
 			Id:            id,
 			Responsable:   dossier.Responsable().PrenomNOM(),
@@ -258,17 +255,19 @@ func (ct *Controller) EventsSendDocumentsCamp(c echo.Context) error {
 	return utils.StreamJSON(c.Response(), it)
 }
 
-// SendDocumentsCamp is also used by the "directeur" controller
+// SendDocumentsCamp is shared with [controllers/directeur]
 func SendDocumentsCamp(db *sql.DB, key crypto.Encrypter, asso config.Asso, smtp config.SMTP, host string, args SendDocumentsCampIn) (iter.Seq2[SendProgress, error], error) {
 	camp, err := cps.SelectCamp(db, args.IdCamp)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
+
 	dossiers, err := logic.LoadDossiers(db, args.IdDossiers)
 	if err != nil {
 		return nil, err
 	}
-	ids := dossiers.Dossiers.IDs() // ensure unicity
+	ids := dossiers.Dossiers.IDs() // ensure unicity : args.IdDossiers might have repetitions
+
 	pool, err := mails.NewPool(smtp, asso.MailsSettings, nil)
 	if err != nil {
 		return nil, err
@@ -317,11 +316,11 @@ func (ct *Controller) EventsSendSondages(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	it, err := ct.sendSondages(c.Request().Host, idCamp)
+	iter, err := ct.sendSondages(c.Request().Host, idCamp)
 	if err != nil {
 		return err
 	}
-	return utils.StreamJSON(c.Response(), it)
+	return utils.StreamJSON(c.Response(), iter)
 }
 
 func (ct *Controller) sendSondages(host string, idCamp cps.IdCamp) (iter.Seq2[SendProgress, error], error) {
@@ -329,11 +328,11 @@ func (ct *Controller) sendSondages(host string, idCamp cps.IdCamp) (iter.Seq2[Se
 	if err != nil {
 		return nil, err
 	}
-	dossiers, err := logic.LoadDossiers(ct.db, camp.IdDossiers())
+	ids := camp.IdDossiers(true).Keys()
+	dossiers, err := logic.LoadDossiers(ct.db, ids)
 	if err != nil {
 		return nil, err
 	}
-	ids := dossiers.Dossiers.IDs() // ensure unicity
 	pool, err := mails.NewPool(ct.smtp, ct.asso.MailsSettings, nil)
 	if err != nil {
 		return nil, err
@@ -344,9 +343,6 @@ func (ct *Controller) sendSondages(host string, idCamp cps.IdCamp) (iter.Seq2[Se
 
 		for index, idDossier := range ids {
 			dossier := dossiers.For(idDossier)
-			if _, hasInscrit := dossier.CampsInscrits()[idCamp]; !hasInscrit {
-				continue
-			}
 			responsable := dossier.Responsable()
 			err = utils.InTx(ct.db, func(tx *sql.Tx) error {
 				event, err := evs.Event{IdDossier: idDossier, Kind: evs.Sondage, Created: time.Now()}.Insert(tx)
