@@ -43,6 +43,7 @@ export interface CampExt {
   AgeMax: Int;
   Meta: Meta;
   Prix: string;
+  OptionPrix: OptionPrixExt;
   Direction: string;
   InscriptionExterne: boolean;
   IsClosed: boolean;
@@ -62,6 +63,16 @@ export interface Inscription {
   PartageAdressesOK: boolean;
   DemandeFondSoutien: boolean;
   Participants: Participant[] | null;
+}
+// registro/controllers/inscriptions.InscriptionRapideExt
+export interface InscriptionRapideExt {
+  Limite: Date;
+  Prix: string;
+}
+// registro/controllers/inscriptions.OptionPrixExt
+export interface OptionPrixExt {
+  Active: OptionPrixKind;
+  InscriptionRapide: InscriptionRapideExt;
 }
 // registro/controllers/inscriptions.Participant
 export interface Participant {
@@ -91,6 +102,23 @@ export interface OptionNavette {
   Actif: boolean;
   Commentaire: string;
 }
+// registro/sql/camps.OptionPrixKind
+export const OptionPrixKind = {
+  NoOption: 0,
+  PrixInscriptionRapide: 1,
+  PrixStatut: 2,
+  PrixJour: 3,
+} as const;
+export type OptionPrixKind =
+  (typeof OptionPrixKind)[keyof typeof OptionPrixKind];
+
+export const OptionPrixKindLabels: Record<OptionPrixKind, string> = {
+  [OptionPrixKind.NoOption]: "Aucune",
+  [OptionPrixKind.PrixInscriptionRapide]: "Remise pour inscription rapide",
+  [OptionPrixKind.PrixStatut]: "Prix par statut",
+  [OptionPrixKind.PrixJour]: "Prix à la journée",
+};
+
 // registro/sql/inscriptions.ResponsableLegal
 export interface ResponsableLegal {
   Nom: string;

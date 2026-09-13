@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"registro/sql/dossiers"
-	"registro/sql/shared"
+	sh "registro/sql/shared"
 	"registro/utils"
 )
 
@@ -15,12 +15,12 @@ import (
 
 type Montant = dossiers.Montant
 
-type OptIdCamp = shared.OptID[IdCamp]
+type OptIdCamp = sh.OptID[IdCamp]
 
 func (id IdCamp) Opt() OptIdCamp { return OptIdCamp{Id: id, Valid: true} }
 
-func (id IdEquipier) Opt() shared.OptID[IdEquipier] {
-	return shared.OptID[IdEquipier]{Id: id, Valid: true}
+func (id IdEquipier) Opt() sh.OptID[IdEquipier] {
+	return sh.OptID[IdEquipier]{Id: id, Valid: true}
 }
 
 type StatutCamp uint8
@@ -129,13 +129,13 @@ func (js Jours) NbJours(campDuree int) int {
 }
 
 // ClosestPlage renvoie la plage englobant les jours de présence
-func (js Jours) ClosestPlage(datesCamp shared.Plage) shared.Plage {
+func (js Jours) ClosestPlage(datesCamp sh.Plage) sh.Plage {
 	sorted := js.sorted()
 	if len(sorted) == 0 { // zero value : tout le séjour
 		return datesCamp
 	}
 	indexMin, indexMax := sorted[0], sorted[len(js)-1]
-	return shared.Plage{From: datesCamp.From.AddDays(indexMin), Duree: indexMax - indexMin + 1}
+	return sh.Plage{From: datesCamp.From.AddDays(indexMin), Duree: indexMax - indexMin + 1}
 }
 
 // CalculePrix somme les prix des journées de présence
@@ -153,7 +153,7 @@ func (js Jours) CalculePrix(prixParJour []int, currency dossiers.Currency) Monta
 }
 
 // Description renvoie les jours de présence au camp
-func (js Jours) Description(datesCamp shared.Plage) string {
+func (js Jours) Description(datesCamp sh.Plage) string {
 	sorted := js.sorted()
 	if len(sorted) == 0 || len(sorted) == datesCamp.Duree {
 		return "Tout le séjour"
@@ -170,15 +170,18 @@ func (js Jours) Description(datesCamp shared.Plage) string {
 type OptionPrixKind uint8
 
 const (
-	NoOption   OptionPrixKind = iota // Aucune
-	PrixStatut                       // Prix par statut
-	PrixJour                         // Prix à la journée
+	NoOption              OptionPrixKind = iota // Aucune
+	PrixInscriptionRapide                       // Remise pour inscription rapide
+	PrixStatut                                  // Prix par statut
+	PrixJour                                    // Prix à la journée
 )
 
 // OptionPrixCamp stocke une option sur le prix d'un camp. Une seule est effective,
 // déterminée par Active
 type OptionPrixCamp struct {
 	Active OptionPrixKind
+
+	InscriptionRapide InscriptionRapide
 
 	Statuts []PrixParStatut
 
@@ -196,9 +199,14 @@ type PrixParStatut struct {
 	Description string // longue description
 }
 
+type InscriptionRapide struct {
+	Limite sh.Date // date limite d'inscripion, incluse
+	Prix   int     // prix préférentiel, en centimes (le montant est celui du prix original)
+}
+
 // OptionPrixParticipant répond à OptionPrixCamp. L'option est active si :
 //   - elle est active dans le séjour
-//   - elle est non nulle dans le participant
+//   - elle est non nulle sur le participant
 type OptionPrixParticipant struct {
 	IdStatut int16
 	Jour     Jours

@@ -27,12 +27,11 @@
 
 <script setup lang="ts">
 import {
-  type Camp,
   type CampItem,
   type Int,
   type OptionPrixCamp,
 } from "@/clients/backoffice/logic/api";
-import { computed, watch } from "vue";
+import { computed } from "vue";
 const props = defineProps<{
   camp: CampItem;
   option: OptionPrixCamp;

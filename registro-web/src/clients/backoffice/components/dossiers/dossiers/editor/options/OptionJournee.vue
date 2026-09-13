@@ -22,7 +22,6 @@
 
 <script setup lang="ts">
 import {
-  type Camp,
   type CampItem,
   type Int,
   type Jours,

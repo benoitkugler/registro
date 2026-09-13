@@ -653,6 +653,11 @@ export type IdEquipier = Int & { __opaque_int__: "IdEquipier" };
 export type IdParticipant = Int & { __opaque_int__: "IdParticipant" };
 export type IdSondage = Int & { __opaque_int__: "IdSondage" };
 export type IdStructureaide = Int & { __opaque_int__: "IdStructureaide" };
+// registro/sql/camps.InscriptionRapide
+export interface InscriptionRapide {
+  Limite: Date;
+  Prix: Int;
+}
 // registro/sql/camps.Jours
 export type Jours = Int[] | null;
 // registro/sql/camps.ListeVetements
@@ -670,20 +675,23 @@ export interface OptionNavette {
 // registro/sql/camps.OptionPrixCamp
 export interface OptionPrixCamp {
   Active: OptionPrixKind;
+  InscriptionRapide: InscriptionRapide;
   Statuts: PrixParStatut[] | null;
   Jours: Int[] | null;
 }
 // registro/sql/camps.OptionPrixKind
 export const OptionPrixKind = {
   NoOption: 0,
-  PrixStatut: 1,
-  PrixJour: 2,
+  PrixInscriptionRapide: 1,
+  PrixStatut: 2,
+  PrixJour: 3,
 } as const;
 export type OptionPrixKind =
   (typeof OptionPrixKind)[keyof typeof OptionPrixKind];
 
 export const OptionPrixKindLabels: Record<OptionPrixKind, string> = {
   [OptionPrixKind.NoOption]: "Aucune",
+  [OptionPrixKind.PrixInscriptionRapide]: "Remise pour inscription rapide",
   [OptionPrixKind.PrixStatut]: "Prix par statut",
   [OptionPrixKind.PrixJour]: "Prix à la journée",
 };

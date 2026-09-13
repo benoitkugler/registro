@@ -3,9 +3,11 @@ package logic
 import (
 	"reflect"
 	"testing"
+	"time"
 
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
+	sh "registro/sql/shared"
 	tu "registro/utils/testutils"
 )
 
@@ -140,6 +142,7 @@ func TestDossierFinance_Bilan(t *testing.T) {
 func Test_pc_prixBase(t *testing.T) {
 	status := []cps.PrixParStatut{{Id: 1, Prix: 8000, Label: "Enfant", Description: ""}, {Id: 2, Prix: 9000, Label: "Adulte", Description: ""}}
 	jours := []int{1000, 2000, 3000, 4000}
+	inscription := time.Now()
 	type fields struct {
 		optPart cps.OptionPrixParticipant
 		optCamp cps.OptionPrixCamp
@@ -162,6 +165,10 @@ func Test_pc_prixBase(t *testing.T) {
 		{fields{prix: eur(100), optQF: cps.PrixQuotientFamilial{20, 40, 60, 100}, qf: 400}, eur(40), "QF 400"},
 		{fields{prix: eur(100), optQF: cps.PrixQuotientFamilial{20, 40, 60, 100}, qf: 600}, eur(60), "QF 600"},
 		{fields{prix: eur(100), optQF: cps.PrixQuotientFamilial{20, 40, 60, 100}, qf: 1000}, eur(100), "QF 1000"},
+		// Option rapide
+		{fields{prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixInscriptionRapide, InscriptionRapide: cps.InscriptionRapide{Prix: 8000, Limite: sh.Date(inscription.Add(-5 * 24 * time.Hour))}}}, eur(100), ""},
+		{fields{prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixInscriptionRapide, InscriptionRapide: cps.InscriptionRapide{Prix: 8000, Limite: sh.Date(inscription)}}}, eur(80), "Inscription rapide"},
+		{fields{prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixInscriptionRapide, InscriptionRapide: cps.InscriptionRapide{Prix: 8000, Limite: sh.Date(inscription.Add(5 * 24 * time.Hour))}}}, eur(80), "Inscription rapide"},
 		// Option statut
 		{fields{prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixStatut, Statuts: status}}, eur(100), ""},
 		{fields{prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixStatut, Statuts: status}, optPart: cps.OptionPrixParticipant{IdStatut: 1}}, eur(80), "Enfant"},
@@ -181,13 +188,14 @@ func Test_pc_prixBase(t *testing.T) {
 		}, // 40 * 20%
 	}
 	for _, tt := range tests {
-		p := pc{
+		p := partExt{
 			Participant: cps.Participant{OptionPrix: tt.fields.optPart, QuotientFamilial: tt.fields.qf},
 			Camp: cps.Camp{
 				OptionPrix:             tt.fields.optCamp,
 				OptionQuotientFamilial: tt.fields.optQF,
 				Prix:                   tt.fields.prix, Duree: tt.fields.duree,
 			},
+			inscription: inscription,
 		}
 		got, got1 := p.prixBase()
 		tu.Assert(t, got == tt.want)

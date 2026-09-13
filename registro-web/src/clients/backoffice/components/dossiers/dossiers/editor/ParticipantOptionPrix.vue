@@ -13,8 +13,15 @@
         <v-divider thickness="2" vertical></v-divider>
 
         <v-col align-self="center" cols="8">
+          <OptionInscriptionRapide
+            v-if="
+              props.optionCamp.Active == OptionPrixKind.PrixInscriptionRapide
+            "
+            :camp="props.camp"
+            :option="props.optionCamp"
+          ></OptionInscriptionRapide>
           <OptionJournee
-            v-if="props.optionCamp.Active == OptionPrixKind.PrixJour"
+            v-else-if="props.optionCamp.Active == OptionPrixKind.PrixJour"
             :camp="props.camp"
             :option="props.optionCamp"
             v-model="inner.options.Jour"
@@ -39,7 +46,6 @@
 <script setup lang="ts">
 import {
   OptionPrixKind,
-  type Camp,
   type CampItem,
   type Int,
   type OptionPrixCamp,
@@ -49,6 +55,7 @@ import OptionJournee from "./options/OptionJournee.vue";
 import OptionStatut from "./options/OptionStatut.vue";
 import { ref, watch } from "vue";
 import { copy } from "@/utils";
+import OptionInscriptionRapide from "./options/OptionInscriptionRapide.vue";
 
 type OptionPrixAndQF = {
   options: OptionPrixParticipant;

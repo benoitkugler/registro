@@ -45,13 +45,33 @@
           </v-alert>
         </v-col>
       </v-row>
+      <v-row
+        v-if="
+          props.camp.OptionPrix.Active == OptionPrixKind.PrixInscriptionRapide
+        "
+      >
+        <v-col>
+          <v-alert color="info" icon="mdi-currency-eur">
+            Vous bénéficier d'un tarif préférentiel de
+            <b>{{ props.camp.OptionPrix.InscriptionRapide.Prix }}</b> pour une
+            inscription jusqu'au
+            <b>{{
+              Formatters.date(
+                camp.OptionPrix.InscriptionRapide.Limite,
+                true,
+                true,
+              )
+            }}</b>
+          </v-alert>
+        </v-col>
+      </v-row>
     </v-card-text>
   </v-card>
 </template>
 
 <script lang="ts" setup>
-import type { CampExt } from "../logic/api";
-import { Camps } from "@/utils";
+import { OptionPrixKind, type CampExt } from "../logic/api";
+import { Camps, Formatters } from "@/utils";
 
 const props = defineProps<{
   camp: CampExt;

@@ -1,5 +1,8 @@
 <template>
-  <v-card title="Modifier le dossier">
+  <v-card
+    title="Détails du dossier"
+    :subtitle="`Inscription ${Formatters.time(props.dossier.Dossier.Dossier.MomentInscription, true)}`"
+  >
     <template v-slot:append>
       <v-btn
         @click="
@@ -121,6 +124,7 @@ import {
 import DossierEditCard from "./DossierEditCard.vue";
 import DossierParticipantRow from "./DossierParticipantRow.vue";
 import { controller } from "@/clients/backoffice/logic/logic";
+import { Formatters } from "@/utils.ts";
 
 const props = defineProps<{
   dossier: DossierDetails;

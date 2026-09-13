@@ -78,6 +78,7 @@
             :items="kindItems"
             label="Option sur le prix"
             v-model="innerOption.Active"
+            @update:model-value="onKindChange"
           ></v-select>
         </v-col>
         <v-col align-self="center">
@@ -87,6 +88,11 @@
           >
             <i>Aucune modification sur le prix de base.</i>
           </div>
+          <OptionInscriptionRapide
+            v-if="innerOption.Active == OptionPrixKind.PrixInscriptionRapide"
+            :camp="props.camp"
+            v-model="innerOption.InscriptionRapide"
+          ></OptionInscriptionRapide>
           <OptionStatut
             v-else-if="innerOption.Active == OptionPrixKind.PrixStatut"
             :camp="props.camp"
@@ -116,6 +122,8 @@ import {
 import { Camps, selectItems } from "@/utils";
 import OptionStatut from "./options/OptionStatut.vue";
 import OptionJournee from "./options/OptionJournee.vue";
+import OptionInscriptionRapide from "./options/OptionInscriptionRapide.vue";
+import { isDateZero } from "@/components/date.ts";
 const props = defineProps<{
   camp: Camp;
 }>();
@@ -128,8 +136,21 @@ const innerQF = defineModel<PrixQuotientFamilial>("optionQf", {
 });
 
 const isQFActive = computed(() =>
-  Camps.isQuotientFamilialActive(innerQF.value)
+  Camps.isQuotientFamilialActive(innerQF.value),
 );
 
 const kindItems = selectItems(OptionPrixKindLabels);
+
+// used to set better default values
+function onKindChange(newKind: OptionPrixKind) {
+  if (newKind == OptionPrixKind.PrixInscriptionRapide) {
+    const opt = innerOption.value.InscriptionRapide;
+    if (isDateZero(opt.Limite) && opt.Prix == 0) {
+      innerOption.value.InscriptionRapide = {
+        Limite: props.camp.DateDebut,
+        Prix: props.camp.Prix.Cent,
+      };
+    }
+  }
+}
 </script>

@@ -219,6 +219,14 @@ func randIdStructureaide() IdStructureaide {
 	return IdStructureaide(randint64())
 }
 
+func randInscriptionRapide() InscriptionRapide {
+	var s InscriptionRapide
+	s.Limite = randsha_Date()
+	s.Prix = randint()
+
+	return s
+}
+
 func randJours() Jours {
 	return Jours(randSliceint32())
 }
@@ -275,6 +283,7 @@ func randOptionNavette() OptionNavette {
 func randOptionPrixCamp() OptionPrixCamp {
 	var s OptionPrixCamp
 	s.Active = randOptionPrixKind()
+	s.InscriptionRapide = randInscriptionRapide()
 	s.Statuts = randSlicePrixParStatut()
 	s.Jours = randSliceint()
 
@@ -282,7 +291,7 @@ func randOptionPrixCamp() OptionPrixCamp {
 }
 
 func randOptionPrixKind() OptionPrixKind {
-	choix := [...]OptionPrixKind{NoOption, PrixStatut, PrixJour}
+	choix := [...]OptionPrixKind{NoOption, PrixInscriptionRapide, PrixStatut, PrixJour}
 	i := rand.Intn(len(choix))
 	return choix[i]
 }

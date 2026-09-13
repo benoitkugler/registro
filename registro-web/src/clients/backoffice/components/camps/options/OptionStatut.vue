@@ -36,7 +36,7 @@
                   Cent: toEdit.Prix,
                   Currency: props.camp.Prix.Currency,
                 }"
-                @update:model-value="m => toEdit!.Prix = m.Cent"
+                @update:model-value="(m) => (toEdit!.Prix = m.Cent)"
                 label="Prix"
                 readonly-currency
               ></MontantField>
@@ -93,12 +93,11 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import {
-  CurrencyLabels,
   type Camp,
   type Int,
   type PrixParStatut,
 } from "@/clients/backoffice/logic/api";
-import { copy, Formatters } from "@/utils";
+import { Formatters } from "@/utils";
 const props = defineProps<{
   camp: Camp;
 }>();

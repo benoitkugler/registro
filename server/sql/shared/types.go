@@ -56,6 +56,15 @@ func (d Date) String() string {
 	return fmt.Sprintf("%02d/%02d/%04d", da.Day(), da.Month(), da.Year())
 }
 
+// AfterOrEqual returns true if d >= t.
+// t is compared as date, ignoring hours, minutes, seconds, etc..
+func (d Date) AfterOrEqual(t time.Time) bool {
+	const day = 24 * time.Hour
+	// set d as the next day 0:00
+	next := d.Time().Add(day).Truncate(day)
+	return next.After(t)
+}
+
 // avantNoYear renvoie true si le jour et le mois de 'd1' sont avantNoYear (au sens large) le jour et le mois de 'd2',
 // même si les années sont différentes
 func avantNoYear(d1, d2 time.Time) bool {

@@ -261,7 +261,6 @@ import {
   type IdStructureaide,
   type OptionPrixParticipant,
   type Participant,
-  type ParticipantCamp,
   type PublicFile,
   type PublicParticipantCamp,
   type Structureaides,

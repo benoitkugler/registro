@@ -3,6 +3,7 @@ package logic
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
@@ -136,7 +137,7 @@ func (df DossierFinance) Bilan() BilanFinances {
 			demandeEnAttente.Add(camp.Prix)
 			continue
 		}
-		data := pc{participant, camp, df.aides[participant.Id], df.structures}
+		data := partExt{participant, camp, df.Dossier.Dossier.MomentInscription, df.aides[participant.Id], df.structures}
 		bilan := data.bilan()
 		inscrits[participant.Id] = bilan
 		demande.Add(bilan.net(df.Taux))
@@ -226,9 +227,11 @@ func (b BilanFinances) StatutPaiement() StatutPaiement {
 	}
 }
 
-type pc struct {
+type partExt struct {
 	cps.Participant
 	cps.Camp
+
+	inscription time.Time
 
 	aides      cps.Aides
 	structures cps.Structureaides // enough for [aides]
@@ -297,7 +300,7 @@ type AideResolved struct {
 
 func (ar AideResolved) String() string { return fmt.Sprintf("%s : %s", ar.Structure, ar.Montant) }
 
-func (p pc) bilan() (out BilanParticipant) {
+func (p partExt) bilan() (out BilanParticipant) {
 	out.PrixCamp = p.Camp.Prix
 
 	out.AvecOption, out.AvecOptionDescription = p.prixBase()
@@ -317,7 +320,7 @@ func (p pc) bilan() (out BilanParticipant) {
 
 // duree renvoie le nombre de jours de présence du participant
 // en prenant en compte une éventuelle option JOUR.
-func (p pc) duree() int {
+func (p partExt) duree() int {
 	options := p.Camp.OptionPrix
 	optPart := p.Participant.OptionPrix
 
@@ -330,13 +333,18 @@ func (p pc) duree() int {
 
 // prixBase renvoie le prix du séjour, en prenant en compte une éventuelle option et le quotient familial
 // une courte description est aussi renvoyée
-func (p pc) prixBase() (cps.Montant, string) {
+func (p partExt) prixBase() (cps.Montant, string) {
 	optPart := p.Participant.OptionPrix
 	optCamp := p.Camp.OptionPrix
 
 	prix := p.Camp.Prix
 	descOption, descQF := "", ""
 	switch optCamp.Active {
+	case cps.PrixInscriptionRapide:
+		if optCamp.InscriptionRapide.Limite.AfterOrEqual(p.inscription) {
+			descOption = "Inscription rapide"
+			prix.Cent = optCamp.InscriptionRapide.Prix
+		}
 	case cps.PrixStatut:
 		for _, info := range optCamp.Statuts {
 			if info.Id == optPart.IdStatut {

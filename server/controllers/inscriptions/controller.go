@@ -17,12 +17,13 @@ import (
 	"registro/logic"
 	"registro/logic/search"
 	"registro/mails"
+	"registro/sql/camps"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
 	"registro/sql/events"
 	in "registro/sql/inscriptions"
 	pr "registro/sql/personnes"
-	"registro/sql/shared"
+	sh "registro/sql/shared"
 	"registro/utils"
 
 	"github.com/labstack/echo/v4"
@@ -74,13 +75,41 @@ func (ct *Controller) InitInscription(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-// CampExt is a public version of [cps.Camp]
+// Public version of camps.OptionPrixCamp
+type OptionPrixExt struct {
+	Active cps.OptionPrixKind
+
+	InscriptionRapide InscriptionRapideExt
+}
+
+type InscriptionRapideExt struct {
+	Limite sh.Date
+	Prix   string // Formatted, possibly including several currencies
+}
+
+func newOptionPrixExt(opt camps.OptionPrixCamp, prix ds.Montant, taux ds.Taux) OptionPrixExt {
+	switch opt.Active {
+	case camps.PrixInscriptionRapide:
+		return OptionPrixExt{
+			Active: opt.Active,
+			InscriptionRapide: InscriptionRapideExt{
+				Limite: opt.InscriptionRapide.Limite,
+				Prix:   taux.Convertible(ds.Montant{Currency: prix.Currency, Cent: opt.InscriptionRapide.Prix}).String(),
+			},
+		}
+	default:
+		return OptionPrixExt{}
+	}
+}
+
+// CampExt is a public version of [cps.Camp], consumed
+// by our inscription frontend, and exposed as external API
 type CampExt struct {
 	Id   cps.IdCamp
 	Slug string
 
 	Nom         string
-	DateDebut   shared.Date
+	DateDebut   sh.Date
 	Duree       int // nombre de jours date et fin inclus
 	Lieu        string
 	ImageURL    string // affichée sur le formulaire d'inscription
@@ -92,8 +121,8 @@ type CampExt struct {
 
 	Meta cps.Meta
 
-	// Formatted, possibly including several currencies
-	Prix string
+	Prix       string // Formatted, possibly including several currencies
+	OptionPrix OptionPrixExt
 
 	// Nom et prénom du directeur et ses adjoints
 	Direction string
@@ -139,7 +168,8 @@ func newCampExt(camp cps.Camp, taux ds.Taux, direction []pr.Personne, participan
 		AgeMax:      camp.AgeMax,
 		Meta:        camp.Meta,
 
-		Prix: taux.Convertible(camp.Prix).String(),
+		Prix:       taux.Convertible(camp.Prix).String(),
+		OptionPrix: newOptionPrixExt(camp.OptionPrix, camp.Prix, taux),
 
 		Direction: dir,
 
@@ -315,7 +345,7 @@ type Participant struct {
 
 	Nom           string
 	Prenom        string
-	DateNaissance shared.Date
+	DateNaissance sh.Date
 	Sexe          pr.Sexe
 	Nationnalite  pr.Nationnalite
 }

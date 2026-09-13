@@ -186,3 +186,23 @@ func TestPlage_HasBirthday(t *testing.T) {
 		tu.Assert(t, pl.HasBirthday(tt.d) == tt.want)
 	}
 }
+
+func TestDate_AfterOrEqual(t *testing.T) {
+	tests := []struct {
+		year  int
+		month time.Month
+		day   int
+		t     time.Time
+		want  bool
+	}{
+		{2000, 1, 1, time.Now(), false},
+		{2000, 1, 1, time.Time(NewDate(2000, 1, 1)), true},
+		{1999, 1, 1, time.Time(NewDate(2000, 1, 1)), false},
+		{2000, 1, 1, time.Date(2000, 1, 1, 10, 0, 0, 0, time.UTC), true},
+		{2000, 1, 1, time.Date(2000, 1, 2, 10, 0, 0, 0, time.UTC), false},
+	}
+	for _, tt := range tests {
+		d := NewDate(tt.year, tt.month, tt.day)
+		tu.Assert(t, d.AfterOrEqual(tt.t) == tt.want)
+	}
+}
