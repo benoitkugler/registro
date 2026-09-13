@@ -793,19 +793,6 @@ function splitBySize2(a: string) {
 }
 
 export namespace Phones {
-  /** list all known countries, mapping the indicatif (including "+")
-   * to flag and name
-   */
-  const countries = Object.fromEntries(
-    Object.entries(indicatifToCountry).map((v) => [
-      "+" + v[0],
-      {
-        flag: countryFlags[v[1]],
-        name: countryNames[v[1]],
-      },
-    ]),
-  );
-
   export const PaysToIndicatif = new Map<Pays, string>(
     Object.entries(indicatifToCountry).map((e) => [e[1], "+" + e[0]]),
   );

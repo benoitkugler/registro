@@ -51,35 +51,26 @@ func (s Sexe) Accord() string {
 	return ""
 }
 
-const innerTelSep = " "
-
-func (t Tel) String() string { return formatTelSep(string(t), innerTelSep) }
-
 // StripTel return the number without spaces or delimiters
 func StripTel(t string) string { return reSepTel.ReplaceAllString(t, "") }
 
-func formatTelSep(t string, separator string) string {
-	t = StripTel(t)
-	if len(t) < 8 {
-		return t
-	}
-	start := len(t) - 8
-	chunks := []string{t[:start]}
-	for i := 0; i < 4; i++ {
-		chunks = append(chunks, t[start+2*i:start+2*i+2])
-	}
-	return strings.Join(chunks, separator)
+func renderTels(t Tels, outerSep string) string {
+	return strings.Join(t.NonEmpty(), outerSep)
 }
 
-func renderTels(t Tels, innerSep, outerSep string) string {
-	fmted := make([]string, len(t))
-	for index, tel := range t {
-		fmted[index] = formatTelSep(tel, innerSep)
+func (t Tels) NonEmpty() []string {
+	// reuse t buffer is OK because we just copied the array
+	out := t[:0]
+	if n := t[0]; n != "" {
+		out = append(out, n)
 	}
-	return strings.Join(fmted, outerSep)
+	if n := t[1]; n != "" {
+		out = append(out, n)
+	}
+	return out
 }
 
-func (t Tels) String() string { return renderTels(t, innerTelSep, ";") }
+func (t Tels) String() string { return renderTels(t, ";") }
 
 // StringLines renvoie une chaine sur plusieurs lignes, au format HTML
-func (t Tels) StringHTML() string { return renderTels(t, innerTelSep, "<br/>") }
+func (t Tels) StringHTML() string { return renderTels(t, "<br/>") }

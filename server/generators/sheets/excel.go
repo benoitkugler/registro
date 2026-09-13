@@ -458,6 +458,7 @@ func ListeParticipantsCamp(camp cps.Camp, inscrits []cps.ParticipantPersonne, do
 		"Responsable",
 		"Mail",
 		"Tel.",
+		"Autre contact",
 		"Tel. contact",
 		"Adresse",
 		"Code postal",
@@ -514,14 +515,15 @@ func ListeParticipantsCamp(camp cps.Camp, inscrits []cps.ParticipantPersonne, do
 		}
 		// responsable
 		var row2 [len(headersResponsable)]Cell = [...]Cell{
-			{Value: responsable.NOMPrenom()},         // Responsable
-			{Value: responsable.Mail},                // Mail
-			{Value: responsable.Tels.String()},       // Tel.
-			{Value: fiche.AutreContact.Tel.String()}, // Tel contact
-			{Value: responsable.Adresse},             // Adresse
-			{Value: responsable.CodePostal},          // Code postal
-			{Value: responsable.Ville},               // Ville
-			{Value: string(responsable.Pays)},        // Pays
+			{Value: responsable.NOMPrenom()},        // Responsable
+			{Value: responsable.Mail},               // Mail
+			{Value: responsable.Tels.String()},      // Tel.
+			{Value: fiche.AutreContact.Nom},         // Autre contact
+			{Value: string(fiche.AutreContact.Tel)}, // Tel contact
+			{Value: responsable.Adresse},            // Adresse
+			{Value: responsable.CodePostal},         // Code postal
+			{Value: responsable.Ville},              // Ville
+			{Value: string(responsable.Pays)},       // Pays
 		}
 		rows[i] = slices.Concat(row1[:], nationalite, formValues, row2[:])
 	}

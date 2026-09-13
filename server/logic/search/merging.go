@@ -38,7 +38,8 @@ func cmpString[T interface{ ~string }](s1, s2 T) diff {
 	return conflict
 }
 
-func cmpTels(t1, t2 pr.Tels) diff {
+func cmpTels(t1_, t2_ pr.Tels) diff {
+	t1, t2 := t1_.NonEmpty(), t2_.NonEmpty()
 	if len(t1) == 0 {
 		return entrantEmpty
 	}

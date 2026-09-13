@@ -87,7 +87,7 @@ func TestListeParticipants(t *testing.T) {
 		1: dossiers.Dossier{MomentInscription: time.Now(), IdResponsable: 2},
 	}}
 	fiches := map[cps.IdParticipant]pr.Fichesanitaire{
-		1: {AutreContact: pr.NomTel{Tel: "0682084101"}},
+		1: {AutreContact: pr.NomTel{Nom: "La grand-mère", Tel: "0682084101"}},
 	}
 	forms := []Form{
 		{
