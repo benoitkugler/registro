@@ -56,9 +56,6 @@ export default defineConfig(({ command }) => ({
     // https://github.com/vuetifyjs/vuetify-loader/tree/master/packages/vite-plugin#readme
     Vuetify({
       autoImport: true,
-      styles: {
-        configFile: "src/styles/settings.scss",
-      },
     }),
     // only auto import shared components
     Components({ dts: true }),
@@ -87,7 +84,7 @@ export default defineConfig(({ command }) => ({
     port: 3000,
   },
   build: {
-    rollupOptions: {
+    rolldownOptions: {
       input: {
         backoffice: resolve(__dirname, "src/clients/backoffice/index.html"),
         directeurs: resolve(__dirname, "src/clients/directeurs/index.html"),
