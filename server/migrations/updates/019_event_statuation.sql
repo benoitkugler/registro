@@ -58,13 +58,11 @@ WHERE
 
 -- delete all existing Validation event and the table
 -- now we have saved them in  __migration_19
+DROP TABLE event_validations;
 DELETE FROM
     events
 WHERE
     Kind = 1;
-
--- empty now, by cascade
-DROP TABLE event_validations;
 
 -- create the new table 
 CREATE TABLE event_statuations (
