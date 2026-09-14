@@ -138,7 +138,6 @@
                 <v-text-field
                   variant="outlined"
                   density="compact"
-                  readonly
                   v-model="inner.AutreContact.Nom"
                   label="Autre contact"
                   hint="Nom et prénom d'une autre personne à contacter en cas d'urgence."
@@ -222,12 +221,12 @@ const subtitle = computed(() =>
   props.fiche.State == FichesanitaireState.NoFiche
     ? "A remplir"
     : `Dernière modification : ${Formatters.time(
-        props.fiche.Fichesanitaire.Modified
+        props.fiche.Fichesanitaire.Modified,
       )} / Propriétaire(s) :
-         ${ownerMails.value.join(" ; ")}`
+         ${ownerMails.value.join(" ; ")}`,
 );
 
 const difficultesSanteEnabled = ref(
-  props.fiche.Fichesanitaire.DifficultesSante != ""
+  props.fiche.Fichesanitaire.DifficultesSante != "",
 );
 </script>
