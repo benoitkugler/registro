@@ -33,7 +33,7 @@
               v-model="respo.Sexe"
               :rules="[
                 FormRules.required(
-                  'Nous avons besoin de votre sexe pour personnaliser nos courriels.'
+                  'Nous avons besoin de votre sexe pour personnaliser nos courriels.',
                 ),
               ]"
             ></SexeField>
@@ -56,7 +56,7 @@
               rows="2"
               :rules="[
                 FormRules.required(
-                  `L'adresse est requise pour l'émission d'une facture.`
+                  `L'adresse est requise pour l'émission d'une facture.`,
                 ),
               ]"
             >
@@ -70,7 +70,7 @@
               label="Code postal"
               :rules="[
                 FormRules.required(
-                  `Le code postal est requis pour l'émission d'une facture.`
+                  `Le code postal est requis pour l'émission d'une facture.`,
                 ),
               ]"
             ></v-text-field>
@@ -83,7 +83,7 @@
               label="Ville"
               :rules="[
                 FormRules.required(
-                  `La ville est requise pour l'émission d'une facture.`
+                  `La ville est requise pour l'émission d'une facture.`,
                 ),
               ]"
             ></v-text-field>
@@ -106,7 +106,7 @@
               type="email"
               :rules="[
                 FormRules.required(
-                  'Une adresse mail est nécessaire pour recevoir les informations sur le suivi de votre inscription.'
+                  'Une adresse mail est nécessaire pour recevoir les informations sur le suivi de votre inscription.',
                 ),
               ]"
             ></v-text-field>
@@ -116,7 +116,7 @@
               v-model="respo.Tels"
               :rules="[
                 FormRules.requiredTel(
-                  `Merci de fournir un numéro en cas d'urgence.`
+                  `Merci de fournir un numéro en cas d'urgence.`,
                 ),
                 (_) => true,
               ]"
@@ -133,9 +133,14 @@ import type { Date_, Pays, ResponsableLegal } from "../logic/api";
 import { ageFrom, isDateZero } from "@/components/date";
 import { Phones } from "@/phones";
 import { FormRules } from "@/utils";
+import { onMounted } from "vue";
 import { useDisplay } from "vuetify";
 
 const respo = defineModel<ResponsableLegal>({ required: true });
+
+onMounted(() => {
+  onChangePays(respo.value.Pays);
+});
 
 function checkDateNaissance(d: Date_) {
   if (isDateZero(d)) {

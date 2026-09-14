@@ -19,35 +19,6 @@
       ></TelField>
     </v-col>
   </v-row>
-  <!-- <v-row>
-    <v-col>
-      <v-row v-for="(tel, index) in modelValue">
-        <v-col align-self="center">
-          <TelField
-            label="Téléphone"
-            v-model="modelValue![index]"
-            hide-details
-          ></TelField>
-        </v-col>
-        <v-col cols="auto" align-self="center">
-          <v-btn
-            icon="mdi-delete"
-            size="x-small"
-            color="red"
-            @click="modelValue?.splice(index, 1)"
-          ></v-btn>
-        </v-col>
-      </v-row>
-    </v-col>
-    <v-col cols="auto" align-self="center">
-      <v-btn
-        icon="mdi-plus"
-        size="x-small"
-        color="green"
-        @click="modelValue?.push('')"
-      ></v-btn>
-    </v-col>
-  </v-row> -->
 </template>
 
 <script setup lang="ts">

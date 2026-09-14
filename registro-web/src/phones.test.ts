@@ -18,66 +18,70 @@ test("lookupIndicatif", () => {
 });
 
 test("Phones._parse", () => {
-  expect(Phones._parse("")).toEqual({
+  expect(Phones.parse("")).toEqual({
     indicatif: "",
     localNumber: "",
     flag: "",
     tel: "",
+    country: null,
   });
-  expect(Phones._parse("0685194578")).toEqual({
+  expect(Phones.parse("0685194578")).toEqual({
     indicatif: "",
     localNumber: "0685194578",
     flag: "",
     tel: "0685194578",
+    country: null,
   });
-  expect(Phones._parse("+")).toEqual({
+  expect(Phones.parse("+")).toEqual({
     indicatif: "",
     localNumber: "+",
     flag: "",
     tel: "+",
+    country: null,
   });
-  expect(Phones._parse("+2")).toEqual({
+  expect(Phones.parse("+2")).toEqual({
     indicatif: "",
     localNumber: "+2",
     flag: "",
     tel: "+2",
+    country: null,
   });
-  expect(Phones._parse("+1")).toEqual({
+  expect(Phones.parse("+1")).toEqual({
     indicatif: "+1",
     localNumber: "",
     flag: "🇺🇸",
     tel: "+1",
     country: "US",
   });
-  expect(Phones._parse("+123789")).toEqual({
+  expect(Phones.parse("+123789")).toEqual({
     indicatif: "+1",
     localNumber: "23789",
     flag: "🇺🇸",
     tel: "+123789",
     country: "US",
   });
-  expect(Phones._parse("+33456")).toEqual({
+  expect(Phones.parse("+33456")).toEqual({
     indicatif: "+33",
     localNumber: "456",
     flag: "🇫🇷",
     tel: "+33456",
     country: "FR",
   });
-  expect(Phones._parse("+41")).toEqual({
+  expect(Phones.parse("+41")).toEqual({
     indicatif: "+41",
     localNumber: "",
     flag: "🇨🇭",
     tel: "+41",
     country: "CH",
   });
-  expect(Phones._parse("+413")).toEqual({
+  expect(Phones.parse("+413")).toEqual({
     indicatif: "+41",
     localNumber: "3",
     flag: "🇨🇭",
     tel: "+413",
     country: "CH",
   });
-  expect(Phones._parse("+41684958956")).toEqual({
+  expect(Phones.parse("+41684958956")).toEqual({
     indicatif: "+41",
     localNumber: "684958956",
     flag: "🇨🇭",

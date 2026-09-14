@@ -485,7 +485,7 @@ const indicatifToCountry = {
   "998": "UZ", // ),
 } as const;
 
-const countryFlags = {
+export const CountryFlags = {
   AC: "🇦🇨",
   AD: "🇦🇩",
   AE: "🇦🇪",
@@ -742,10 +742,10 @@ const countryFlags = {
   "GB-WLS": "🏴󠁧󠁢󠁷󠁬󠁳󠁿",
 } as const;
 
-type knownCountry = keyof typeof countryFlags;
+export type KnownCountry = keyof typeof CountryFlags;
 
 /** expects 'tel' to be normalized; and to starts with + or 00, otherwise return undefined */
-export function _lookupIndicatif(tel: Tel): [number, knownCountry] | undefined {
+export function _lookupIndicatif(tel: Tel): [number, KnownCountry] | undefined {
   let symbolLength: number;
   if (tel.startsWith("+")) {
     symbolLength = 1;
@@ -793,23 +793,35 @@ function splitBySize2(a: string) {
 }
 
 export namespace Phones {
+  export const CountryItems = Object.entries(indicatifToCountry).map((e) => ({
+    country: e[1],
+    flag: CountryFlags[e[1]],
+    indicatif: "+" + e[0],
+    name: countryNames[e[1]],
+  }));
   export const PaysToIndicatif = new Map<Pays, string>(
-    Object.entries(indicatifToCountry).map((e) => [e[1], "+" + e[0]]),
+    CountryItems.map((e) => [e.country, e.indicatif]),
   );
 
   /** parse normalizes the input and splits it according to <indicatif><local number> */
-  export function _parse(tel: Tel) {
+  export function parse(tel: Tel) {
     tel = normalizeTel(tel);
 
     const indicatifLocation = _lookupIndicatif(tel);
     if (indicatifLocation === undefined)
-      return { indicatif: "", localNumber: tel, flag: "", tel: tel }; // no indicatif found
+      return {
+        indicatif: "",
+        localNumber: tel,
+        flag: "",
+        tel: tel,
+        country: null,
+      }; // no indicatif found
     const [length, country] = indicatifLocation;
     const indicatif = tel.substring(0, length); // including + or 00
     return {
       indicatif: indicatif,
       localNumber: tel.substring(length),
-      flag: countryFlags[country],
+      flag: CountryFlags[country],
       country: country,
       tel: tel,
     };
@@ -817,26 +829,33 @@ export namespace Phones {
 
   /** returns true if the local part is empty */
   export function isEmpty(tel: Tel) {
-    const parsed = _parse(tel);
+    const parsed = parse(tel);
     return parsed.localNumber == "";
+  }
+
+  export function formatLocal(
+    localNumber: string,
+    country: KnownCountry | null,
+  ) {
+    switch (country) {
+      case "FR":
+        return telFr(localNumber);
+      case "CH":
+        return telCh(localNumber);
+      default:
+        return splitBySize2(localNumber).join(" ");
+    }
   }
 
   /** returns an equivalent number, formatted using local rules  */
   export function format(tel: Tel) {
-    const parsed = _parse(tel);
-    switch (parsed.country) {
-      case "FR":
-        return parsed.indicatif + " " + telFr(parsed.localNumber);
-      case "CH":
-        return parsed.indicatif + " " + telCh(parsed.localNumber);
-      default:
-        const local = splitBySize2(parsed.localNumber).join(" ");
-        if (parsed.indicatif) {
-          return parsed.indicatif + " " + local;
-        } else {
-          // do not add a spurious space
-          return local;
-        }
+    const parsed = parse(tel);
+    const local = formatLocal(parsed.localNumber, parsed.country);
+    if (parsed.indicatif) {
+      return parsed.indicatif + " " + local;
+    } else {
+      // do not add a spurious space
+      return local;
     }
   }
 
@@ -884,9 +903,5 @@ export namespace Phones {
             local.substring(9),
           ];
     return chunks.filter((c) => c).join(" ");
-  }
-
-  export function parseFlag(tel: Tel) {
-    return _parse(tel).flag;
   }
 }
