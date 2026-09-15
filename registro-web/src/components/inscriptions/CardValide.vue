@@ -1,7 +1,7 @@
 <template>
   <v-card
     title="Valider l'inscription"
-    subtitle="Un mail de confirmation va être envoyé."
+    subtitle="Choisir le statut des participants (inscrit, liste d'attente ou refus)."
   >
     <v-card-text>
       <CardValideParticipantRow
@@ -46,8 +46,8 @@ const participants = computed(() =>
   (props.inscription.Participants || []).filter((p) =>
     props.idParticipants
       ? props.idParticipants.includes(p.Participant.Id)
-      : true
-  )
+      : true,
+  ),
 );
 
 // start with server hints (if validable), restricted if needed to validable participants
@@ -57,7 +57,7 @@ const inner = ref<Statuts>(
       .filter(
         (p) =>
           (props.inscription.StatutHints || {})[p.Participant.Id]
-            .AllowedValidation?.length
+            .AllowedValidation?.length,
       )
       .map((p) => {
         const serverHint = (props.inscription.StatutHints || {})[
@@ -70,8 +70,8 @@ const inner = ref<Statuts>(
         // which is non empty here
         const statut = allowed.includes(serverHint) ? serverHint : allowed[0];
         return [p.Participant.Id, statut];
-      })
-  ) satisfies Statuts
+      }),
+  ) satisfies Statuts,
 );
 
 type Statuts = { [key in IdParticipant]: StatutParticipant };

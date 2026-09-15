@@ -198,7 +198,6 @@ func (dossier Dossier) StatutHints(camps cps.CampsData, bypass StatutBypassRight
 
 // StatutBypassRights grants the rights to validate a participant,
 // and override the default (computed) hint.
-// Currently, the right to refuse a participant is always (implicitely) granted.
 type StatutBypassRights struct {
 	ProfilInvalide bool
 	CampComplet    bool
@@ -222,7 +221,6 @@ type StatutExt struct {
 
 // IsAllowed returns 'true' if the bypass rights allow the given statut to be
 // applied.
-// [Refuse] is always allowed.
 func (st StatutExt) IsAllowed(statut cps.StatutParticipant) bool {
 	return slices.Contains(st.AllowedValidation, statut)
 }
@@ -237,23 +235,21 @@ func (bp StatutBypassRights) resolve(st cps.StatutCauses, currentStatut cps.Stat
 	switch out.Hint {
 	case cps.AttenteProfilInvalide:
 		if bp.ProfilInvalide { // allow override
-			out.AllowedValidation = []cps.StatutParticipant{cps.Inscrit, out.Hint}
+			out.AllowedValidation = []cps.StatutParticipant{cps.Inscrit, out.Hint, cps.Refuse}
 		}
 	case cps.AttenteCampComplet:
 		if bp.CampComplet { // allow override
-			out.AllowedValidation = []cps.StatutParticipant{cps.Inscrit, out.Hint}
+			out.AllowedValidation = []cps.StatutParticipant{cps.Inscrit, out.Hint, cps.Refuse}
 		}
 	case cps.Inscrit:
 		if bp.Inscrit { // allow override
-			out.AllowedValidation = []cps.StatutParticipant{cps.Inscrit, cps.AttenteProfilInvalide, cps.AttenteCampComplet}
+			out.AllowedValidation = []cps.StatutParticipant{cps.Inscrit, cps.AttenteProfilInvalide, cps.AttenteCampComplet, cps.Refuse}
 		} else {
-			out.AllowedValidation = []cps.StatutParticipant{cps.Inscrit}
+			// always enable acceptation if there is no issue
+			out.AllowedValidation = []cps.StatutParticipant{cps.Inscrit, cps.Refuse}
 		}
 	default: // should not happen
 	}
-
-	// always add Refuse
-	out.AllowedValidation = append(out.AllowedValidation, cps.Refuse)
 
 	return out
 }

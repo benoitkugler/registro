@@ -14,9 +14,6 @@
       >
         {{ formatStatutCauses(props.statut.Causes) }}
       </v-chip>
-      <v-chip v-if="props.statut.AllowedValidation?.length == 1" size="small">
-        Seul le centre peut accepter cette inscription.
-      </v-chip>
     </v-col>
     <v-col align-self="center">
       <StatutParticipantField
@@ -32,6 +29,9 @@
         size="small"
       >
         Inscription déjà validée.
+      </v-chip>
+      <v-chip v-else size="small">
+        Seul le centre peut agir sur cette inscription.
       </v-chip>
     </v-col>
   </v-row>
