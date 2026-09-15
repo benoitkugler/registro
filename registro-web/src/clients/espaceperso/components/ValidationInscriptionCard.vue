@@ -1,5 +1,5 @@
 <template>
-  <v-card title="Inscription confirmée">
+  <v-card title="Statut de votre inscription">
     <v-card-text>
       <div class="mb-4">
         Nous avons bien reçu votre demande d'inscription, et nous vous en
@@ -42,7 +42,7 @@
         elevation="2"
         :color="
           Formatters.statutParticipantColorClass(
-            StatutParticipant.AttenteCampComplet
+            StatutParticipant.AttenteCampComplet,
           )
         "
         :icon="
@@ -135,26 +135,26 @@ const emit = defineEmits<{
 
 const inscrits = computed(() =>
   (props.dossier.Participants || []).filter(
-    (p) => p.Participant.Statut == StatutParticipant.Inscrit
-  )
+    (p) => p.Participant.Statut == StatutParticipant.Inscrit,
+  ),
 );
 const attente = computed(() =>
   (props.dossier.Participants || []).filter(
     (p) =>
       p.Participant.Statut != StatutParticipant.Inscrit &&
       p.Participant.Statut != StatutParticipant.AStatuer &&
-      p.Participant.Statut != StatutParticipant.Refuse
-  )
+      p.Participant.Statut != StatutParticipant.Refuse,
+  ),
 );
 const refuses = computed(() =>
   (props.dossier.Participants || []).filter(
-    (p) => p.Participant.Statut == StatutParticipant.Refuse
-  )
+    (p) => p.Participant.Statut == StatutParticipant.Refuse,
+  ),
 );
 const aStatuer = computed(() =>
   (props.dossier.Participants || []).filter(
-    (p) => p.Participant.Statut == StatutParticipant.AStatuer
-  )
+    (p) => p.Participant.Statut == StatutParticipant.AStatuer,
+  ),
 );
 </script>
 
