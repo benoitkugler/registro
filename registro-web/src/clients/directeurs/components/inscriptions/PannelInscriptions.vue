@@ -175,7 +175,7 @@ async function valideInsc(
   });
   if (res === undefined) return;
 
-  controller.showMessage("Inscription validée avec succès.", "", {
+  controller.showMessage("Statut pris en compte avec succès.", "", {
     title: "Aller aux participants",
     action: () => emit("goTo"),
   });

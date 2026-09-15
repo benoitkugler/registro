@@ -159,14 +159,15 @@ const displayed = computed(() => {
       (Personnes.match(insc.Responsable, pattern) ||
         insc.Participants?.some(
           (p) =>
-            Personnes.match(p.Personne, pattern) || Camps.match(p.Camp, pattern)
+            Personnes.match(p.Personne, pattern) ||
+            Camps.match(p.Camp, pattern),
         )) &&
       (!restrictToAStatuerAndInvalid.value ||
         insc.Participants?.some((p) =>
           Participants.requiresAttention(
             p,
-            (insc.StatutHints || {})[p.Participant.Id]
-          )
+            (insc.StatutHints || {})[p.Participant.Id],
+          ),
         ))
     );
   });
@@ -177,8 +178,8 @@ const currentPageIndex = ref(1);
 const currentPage = computed(() =>
   displayed.value.slice(
     (currentPageIndex.value - 1) * pageSize,
-    currentPageIndex.value * pageSize
-  )
+    currentPageIndex.value * pageSize,
+  ),
 );
 
 // ensure currentPageIndex stays valid
@@ -188,7 +189,7 @@ watch(
     if (currentPageIndex.value >= pagesCount.value) {
       currentPageIndex.value = pagesCount.value;
     }
-  }
+  },
 );
 
 async function identifie(id: IdDossier, target: IdentTarget) {
@@ -210,7 +211,7 @@ const inscToValid = ref<{
 
 async function valideInscription(
   statuts: Record<IdParticipant, StatutParticipant>,
-  sendMail: boolean
+  sendMail: boolean,
 ) {
   if (!inscToValid.value) return;
   const id = inscToValid.value.inscription.Dossier.Id;
@@ -223,7 +224,7 @@ async function valideInscription(
   if (res === undefined) return;
 
   if (res.IsValidated) {
-    controller.showMessage("Inscription validée avec succès.", "", {
+    controller.showMessage("Statut pris en compte avec succès.", "", {
       title: "Aller au dossier",
       action: () => emit("goTo", id),
     });
@@ -231,7 +232,7 @@ async function valideInscription(
     // delete from this view
     data.value = data.value.filter((val) => val.Dossier.Id != id);
   } else {
-    controller.showMessage("Participant validé avec succès.");
+    controller.showMessage("Statut pris en compte avec succès.");
     // just update the data
     const index = data.value.findIndex((insc) => insc.Dossier.Id == id);
     data.value[index] = res;
@@ -257,7 +258,7 @@ async function deleteParticipant(idDossier: IdDossier, id: IdParticipant) {
   // delete from this view
   const dossier = data.value.find((val) => val.Dossier.Id == idDossier)!;
   dossier.Participants = (dossier.Participants || []).filter(
-    (p) => p.Participant.Id != id
+    (p) => p.Participant.Id != id,
   );
 }
 
