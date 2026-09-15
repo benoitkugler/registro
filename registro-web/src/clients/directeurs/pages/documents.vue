@@ -19,12 +19,6 @@
         </template>
         Vêtements</v-tab
       >
-      <v-tab :value="'forms' satisfies DocumentsTab">
-        <template #prepend>
-          <v-icon>mdi-format-list-checks</v-icon>
-        </template>
-        Formulaires</v-tab
-      >
     </v-tabs>
   </NavBar>
 
@@ -37,9 +31,6 @@
     </v-tabs-window-item>
     <v-tabs-window-item :value="'vetements' satisfies DocumentsTab">
       <PannelVetements></PannelVetements>
-    </v-tabs-window-item>
-    <v-tabs-window-item :value="'forms' satisfies DocumentsTab">
-      <PannelForms></PannelForms>
     </v-tabs-window-item>
   </v-tabs-window>
 </template>
@@ -57,7 +48,6 @@ import { controller } from "../logic/logic";
 import PannelLettre from "../components/documents/PannelLettre.vue";
 import PannelDocuments from "../components/documents/PannelDocuments.vue";
 import PannelVetements from "../components/documents/PannelVetements.vue";
-import PannelForms from "../components/documents/PannelForms.vue";
 import { Camps } from "@/utils.ts";
 
 const router = useRouter();

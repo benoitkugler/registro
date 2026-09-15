@@ -104,7 +104,7 @@
           </v-col>
         </v-row>
         <v-list-item v-if="!data.FilesToDownload?.length">
-          <i>Aucun document.</i>
+          <i>Il n'y a encore aucun document à lire pour ce séjour.</i>
         </v-list-item>
         <v-list-item
           v-for="file in data.FilesToDownload"
@@ -133,9 +133,8 @@
             </v-btn>
           </v-col>
         </v-row>
-
         <v-list-item v-if="!data.CampDemandes?.length">
-          <i>Aucun document.</i>
+          <i>Il n'y a encore aucun document à remplir pour ce séjour.</i>
         </v-list-item>
         <v-list-item
           v-for="demande in data.CampDemandes"
@@ -147,6 +146,11 @@
             </v-btn>
           </template>
         </v-list-item>
+
+        <v-divider thickness="1" class="my-2"></v-divider>
+
+        <!-- custom forms -->
+        <ListForms @update-forms-count="(v) => (formsCount = v)"></ListForms>
       </v-list>
     </v-card-text>
 
@@ -261,6 +265,7 @@ import AddDemandeCard from "./AddDemandeCard.vue";
 import { Formatters, readJSONStream } from "@/utils";
 import type { Int } from "@/urls";
 import RequestProgressCard from "@/components/RequestProgressCard.vue";
+import ListForms from "./ListForms.vue";
 
 const props = defineProps<{}>();
 
@@ -269,6 +274,9 @@ const emit = defineEmits<{
 }>();
 
 onMounted(fetchData);
+
+// data is in a separated component which expose the count
+const formsCount = ref(0);
 
 const data = ref<DocumentsOut | null>(null);
 async function fetchData() {
@@ -306,7 +314,7 @@ async function deleteFile() {
   });
   if (res === undefined) return;
   data.value.FilesToDownload = (data.value.FilesToDownload || []).filter(
-    (f) => f.Key != toDelete.Key
+    (f) => f.Key != toDelete.Key,
   );
   controller.showMessage("Document supprimé avec succès.");
 }
@@ -328,11 +336,11 @@ async function onCreateDemande(d: DemandeDirecteur) {
 function onUpdateDemande(demande: DemandeDirecteur) {
   if (!data.value) return;
   const index1 = (data.value!.AvailableDemandes || []).findIndex(
-    (dd) => dd.Demande.Id == demande.Demande.Id
+    (dd) => dd.Demande.Id == demande.Demande.Id,
   );
   data.value.AvailableDemandes![index1] = demande;
   const index2 = (data.value!.CampDemandes || []).findIndex(
-    (dd) => dd.Demande.Id == demande.Demande.Id
+    (dd) => dd.Demande.Id == demande.Demande.Id,
   );
   data.value.CampDemandes![index2] = demande;
 }
@@ -340,10 +348,10 @@ function onUpdateDemande(demande: DemandeDirecteur) {
 function onDeleteDemande(d: Demande) {
   if (!data.value) return;
   data.value.AvailableDemandes = (data.value.AvailableDemandes || []).filter(
-    (dd) => dd.Demande.Id != d.Id
+    (dd) => dd.Demande.Id != d.Id,
   );
   data.value.CampDemandes = (data.value.CampDemandes || []).filter(
-    (dd) => dd.Demande.Id != d.Id
+    (dd) => dd.Demande.Id != d.Id,
   );
 }
 
@@ -364,7 +372,7 @@ async function unapplyDemande(demande: Demande) {
   if (res === undefined) return;
   controller.showMessage("Demande retirée avec succès.");
   data.value.CampDemandes = (data.value?.CampDemandes || []).filter(
-    (d) => d.Demande.Id != demande.Id
+    (d) => d.Demande.Id != demande.Id,
   );
 }
 
@@ -380,6 +388,9 @@ const allDocumentsToShow = computed(() => {
   if (d.ToShow.ListeParticipants) out.push("Liste des participants");
   d.FilesToDownload?.forEach((doc) => out.push(doc.NomClient));
   d.CampDemandes?.forEach((doc) => out.push(Formatters.demande(doc.Demande)));
+
+  if (formsCount.value) out.push(`Formulaire(s) : ${formsCount.value}`);
+
   return out;
 });
 
@@ -407,7 +418,7 @@ async function unlockAndSendDocuments() {
   await readJSONStream(
     res,
     (v) => (sendingProgress.value = v),
-    (err) => controller.onError("Envoi d'une notification", err)
+    (err) => controller.onError("Envoi d'une notification", err),
   );
   sendingProgress.value = null;
   showSendDialog.value = false;

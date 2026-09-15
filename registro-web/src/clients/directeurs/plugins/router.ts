@@ -62,7 +62,7 @@ export function parseQueryURLInscriptions(
   return { tab: q.tab };
 }
 
-export type DocumentsTab = "documents" | "lettre" | "vetements" | "forms";
+export type DocumentsTab = "documents" | "lettre" | "vetements";
 
 export type QueryURLDocuments = {
   tab?: DocumentsTab;
