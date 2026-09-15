@@ -116,7 +116,13 @@ func TestPreinscription(t *testing.T) {
 		{"Jean claude", "https://zmldz?454=46"},
 	})
 	tu.AssertNoErr(t, err)
-	tu.Write(t, "Preinscription.html", []byte(html))
+	tu.Write(t, "Preinscription1.html", []byte(html))
+
+	html, err = Preinscription(cfg, "xxx.ben@free.fr", []RespoWithLink{
+		{"Ben kug", "https://zmldz?454=46"},
+	})
+	tu.AssertNoErr(t, err)
+	tu.Write(t, "Preinscription2.html", []byte(html))
 }
 
 func TestValidationMailInscription(t *testing.T) {

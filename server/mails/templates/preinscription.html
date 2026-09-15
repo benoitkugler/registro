@@ -1,7 +1,14 @@
 {{ define "content" }}
 <p>
-    Votre adresse mail <b>{{ .Mail }}</b> est présente dans nos données. Vous pouvez remplir le formulaire d'inscription
-    en choisissant le responsable légal parmi la liste ci-dessous.
+    Votre adresse mail <b>{{ .Mail }}</b> est présente dans nos données. 
+    {{ if eq (len .Responsables) 1 }}
+        Cliquez sur le responsable si dessous pour compléter le formulaire avec ses coordonnées, que vous pourrez également modifier. <br/>
+    {{ else }}
+        Nous avons plusieurs responsables légaux rattachés à cette adresse mail, vous avez probablement déjà rempli plusieurs demandes d'inscription. <br/>
+        Pour cette nouvelle inscription, cliquez sur le responsable légal que vous souhaitez utiliser 
+        et cela complètera le formulaire d'inscription à partir de ses coordonnées, que vous pourrez également modifier. <br/>
+    {{ end }}
+ 
     <ul>
         {{ range .Responsables }}
         <li>
@@ -12,6 +19,6 @@
 </p>
 
 <p>
-    Les participants associés seront aussi importés.
+    Le formulaire sera aussi pré-rempli à partir des données des participants que vous avez déjà inscrit sur nos séjours.
 </p>
 {{ end }}
