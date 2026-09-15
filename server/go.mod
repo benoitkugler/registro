@@ -1,6 +1,6 @@
 module registro
 
-go 1.24.1
+go 1.25.0
 
 require (
 	github.com/benoitkugler/go-weasyprint v0.0.14
@@ -18,8 +18,8 @@ require (
 	github.com/microcosm-cc/bluemonday v1.0.27
 	github.com/stripe/stripe-go/v81 v81.4.0
 	github.com/xuri/excelize/v2 v2.9.1
-	golang.org/x/net v0.47.0
-	golang.org/x/text v0.31.0
+	golang.org/x/net v0.54.0
+	golang.org/x/text v0.37.0
 )
 
 require (
@@ -39,8 +39,8 @@ require (
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/xuri/efp v0.0.1 // indirect
 	github.com/xuri/nfp v0.0.1 // indirect
-	golang.org/x/crypto v0.45.0 // indirect
+	golang.org/x/crypto v0.52.0 // indirect
 	golang.org/x/image v0.29.0 // indirect
-	golang.org/x/sys v0.38.0 // indirect
+	golang.org/x/sys v0.45.0 // indirect
 	golang.org/x/time v0.11.0 // indirect
 )
