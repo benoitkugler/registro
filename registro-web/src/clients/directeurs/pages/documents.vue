@@ -1,6 +1,6 @@
 <template>
   <NavBar
-    :title="`${controller.camp ? Camps.label(controller.camp) : ''} - Communication`"
+    :title="`${controller.camp ? Camps.label(controller.camp) : ''} - Documents`"
   >
     <v-tabs
       :model-value="currentTab"
