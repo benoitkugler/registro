@@ -4,7 +4,7 @@
     :model-value="!props.hideMenu"
     expand-on-hover
     permanent
-    rail
+    v-model:rail="rail"
   >
     <v-list-item prepend-icon="mdi-menu" :title="`Registro ${version}`">
     </v-list-item>
@@ -24,8 +24,9 @@
       link
       :to="{ path: '/documents' }"
       color="primary"
+      title="Documents"
+      :subtitle="rail ? '' : 'Configuration des documents à envoyer'"
     >
-      Documents
     </v-list-item>
     <v-divider></v-divider>
     <v-list-item
@@ -120,4 +121,6 @@ const props = defineProps<{
 const logo = `${import.meta.env.BASE_URL}${import.meta.env.VITE_ASSO}/logo.png`;
 
 const version = `v${VITE_APP_VERSION}`;
+
+const rail = ref(true);
 </script>
