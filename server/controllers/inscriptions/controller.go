@@ -83,8 +83,9 @@ type OptionPrixExt struct {
 }
 
 type InscriptionRapideExt struct {
-	Limite sh.Date
-	Prix   string // Formatted, possibly including several currencies
+	Limite    sh.Date
+	Prix      string // Formatted, possibly including several currencies
+	Effective bool   // [true] si now <= Limite
 }
 
 func newOptionPrixExt(opt camps.OptionPrixCamp, prix ds.Montant, taux ds.Taux) OptionPrixExt {
@@ -93,8 +94,9 @@ func newOptionPrixExt(opt camps.OptionPrixCamp, prix ds.Montant, taux ds.Taux) O
 		return OptionPrixExt{
 			Active: opt.Active,
 			InscriptionRapide: InscriptionRapideExt{
-				Limite: opt.InscriptionRapide.Limite,
-				Prix:   taux.Convertible(ds.Montant{Currency: prix.Currency, Cent: opt.InscriptionRapide.Prix}).String(),
+				Limite:    opt.InscriptionRapide.Limite,
+				Prix:      taux.Convertible(ds.Montant{Currency: prix.Currency, Cent: opt.InscriptionRapide.Prix}).String(),
+				Effective: opt.InscriptionRapide.Limite.AfterOrEqual(time.Now()),
 			},
 		}
 	default:

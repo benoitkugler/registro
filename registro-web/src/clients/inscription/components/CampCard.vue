@@ -47,12 +47,14 @@
       </v-row>
       <v-row
         v-if="
-          props.camp.OptionPrix.Active == OptionPrixKind.PrixInscriptionRapide
+          props.camp.OptionPrix.Active ==
+            OptionPrixKind.PrixInscriptionRapide &&
+          props.camp.OptionPrix.InscriptionRapide.Effective
         "
       >
         <v-col>
           <v-alert color="info" icon="mdi-currency-eur">
-            Vous bénéficier d'un tarif préférentiel de
+            Vous bénéficiez d'un tarif préférentiel de
             <b>{{ props.camp.OptionPrix.InscriptionRapide.Prix }}</b> pour une
             inscription jusqu'au
             <b>{{

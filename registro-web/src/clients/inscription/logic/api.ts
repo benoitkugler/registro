@@ -68,6 +68,7 @@ export interface Inscription {
 export interface InscriptionRapideExt {
   Limite: Date;
   Prix: string;
+  Effective: boolean;
 }
 // registro/controllers/inscriptions.OptionPrixExt
 export interface OptionPrixExt {
