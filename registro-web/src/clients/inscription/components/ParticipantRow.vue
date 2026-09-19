@@ -134,22 +134,18 @@ function checkDateNaissance(d: Date_) {
 }
 
 const selectedCamp = computed(() =>
-  props.camps.find((c) => c.Id == participant.value.IdCamp)
+  props.camps.find((c) => c.Id == participant.value.IdCamp),
 );
 
 watch(
   () => [participant.value.DateNaissance, participant.value.IdCamp],
-  refreshCheck
+  refreshCheck,
+  { immediate: true },
 );
 
 // renvoie l'âge en début de camp s'il est invalide, null sinon
 const avertissementAge = ref<StatutParticipantOut | null>(null);
 async function refreshCheck() {
-  console.log(
-    isDateZero(participant.value.DateNaissance),
-    participant.value.DateNaissance
-  );
-
   if (
     isDateZero(participant.value.DateNaissance) ||
     participant.value.IdCamp == 0
