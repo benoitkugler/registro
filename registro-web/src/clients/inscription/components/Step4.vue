@@ -17,10 +17,11 @@
   >
     <v-card-text>
       <v-checkbox
+        density="compact"
         color="primary"
         v-model="fondSoutien"
         label="Je souhaite être contacté par le fonds de soutien pour éviter que le prix du séjour ne soit un obstacle à l'inscription."
-        hide-details
+        :hint="fondSoutien ? `Une réponse vous sera donnée sous 10 jours.` : ''"
       >
       </v-checkbox>
     </v-card-text>
@@ -122,8 +123,9 @@
       </ul>
 
       <v-checkbox
-        label="J'accepte la charte"
+        density="compact"
         color="primary"
+        label="J'accepte la charte"
         v-model="isCharteOK"
         :rules="[FormRules.required(`Merci d'accepter la charte.`)]"
       ></v-checkbox>
@@ -161,7 +163,7 @@ const isCharteOK = defineModel<boolean>("charte", {
 });
 
 const hrefRetraitMedia = computed(
-  () => `mailto:${props.settings.EmailRetraitMedia}`
+  () => `mailto:${props.settings.EmailRetraitMedia}`,
 );
 
 const autorisationVehicules = defineModel<boolean>("autorisationVehicules", {
