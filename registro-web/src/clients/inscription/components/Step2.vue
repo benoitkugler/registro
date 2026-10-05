@@ -101,12 +101,13 @@ function nationnaliteFromPays(s: Pays): Nationnalite {
 // et copie Nom et Nationnalite
 function newParticipant() {
   const out: Participant = {
+    IdCamp: props.preselected,
     Nom: props.responsable.Nom,
     Prenom: "",
     DateNaissance: "0001-01-01" as Date_,
     Sexe: Sexe.NoSexe,
     Nationnalite: nationnaliteFromPays(props.responsable.Pays),
-    IdCamp: props.preselected,
+    Mail: "",
   };
   return out;
 }
@@ -118,6 +119,7 @@ function startWith(mode: "own" | "one") {
       newP.Prenom = props.responsable.Prenom;
       newP.DateNaissance = props.responsable.DateNaissance;
       newP.Sexe = props.responsable.Sexe;
+      newP.Mail = props.responsable.Mail;
       participants.value = [newP];
       break;
     case "one":

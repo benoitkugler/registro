@@ -53,6 +53,7 @@ func randInscriptionParticipant() InscriptionParticipant {
 	s.DateNaissance = randsha_Date()
 	s.Sexe = randper_Sexe()
 	s.Nationnalite = randper_Nationnalite()
+	s.Mail = randstring()
 	s.IsDoublon = randbool()
 
 	return s

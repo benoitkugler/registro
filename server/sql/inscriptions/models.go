@@ -60,6 +60,7 @@ type InscriptionParticipant struct {
 	DateNaissance shared.Date
 	Sexe          pr.Sexe
 	Nationnalite  pr.Nationnalite
+	Mail          string
 
 	// IsDoublon may be checked to mark this inscription
 	// and ignore it in later processing.
@@ -73,6 +74,7 @@ func (part InscriptionParticipant) Identite() pr.Identite {
 		Sexe:          part.Sexe,
 		DateNaissance: part.DateNaissance,
 		Nationnalite:  part.Nationnalite,
+		Mail:          part.Mail,
 	}
 }
 

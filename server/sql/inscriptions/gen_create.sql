@@ -21,6 +21,7 @@ CREATE TABLE inscription_participants (
     DateNaissance date NOT NULL,
     Sexe smallint CHECK (Sexe IN (0, 1, 2)) NOT NULL,
     Nationnalite Nationnalite NOT NULL,
+    Mail text NOT NULL,
     IsDoublon boolean NOT NULL
 );
 

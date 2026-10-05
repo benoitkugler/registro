@@ -83,6 +83,7 @@ export interface Participant {
   DateNaissance: Date;
   Sexe: Sexe;
   Nationnalite: Nationnalite;
+  Mail: string;
 }
 // registro/controllers/inscriptions.SearchHistoryOut
 export interface SearchHistoryOut {

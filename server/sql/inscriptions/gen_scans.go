@@ -152,6 +152,7 @@ func scanOneInscriptionParticipant(row scanner) (InscriptionParticipant, error) 
 		&item.DateNaissance,
 		&item.Sexe,
 		&item.Nationnalite,
+		&item.Mail,
 		&item.IsDoublon,
 	)
 	return item, err
@@ -163,7 +164,7 @@ func ScanInscriptionParticipant(row *sql.Row) (InscriptionParticipant, error) {
 
 // SelectAll returns all the items in the inscription_participants table.
 func SelectAllInscriptionParticipants(db DB) (InscriptionParticipants, error) {
-	rows, err := db.Query("SELECT id, idinscription, idcamp, idtaux, nom, prenom, datenaissance, sexe, nationnalite, isdoublon FROM inscription_participants")
+	rows, err := db.Query("SELECT id, idinscription, idcamp, idtaux, nom, prenom, datenaissance, sexe, nationnalite, mail, isdoublon FROM inscription_participants")
 	if err != nil {
 		return nil, err
 	}
@@ -172,13 +173,13 @@ func SelectAllInscriptionParticipants(db DB) (InscriptionParticipants, error) {
 
 // SelectInscriptionParticipant returns the entry matching 'id'.
 func SelectInscriptionParticipant(tx DB, id IdInscriptionParticipant) (InscriptionParticipant, error) {
-	row := tx.QueryRow("SELECT id, idinscription, idcamp, idtaux, nom, prenom, datenaissance, sexe, nationnalite, isdoublon FROM inscription_participants WHERE id = $1", id)
+	row := tx.QueryRow("SELECT id, idinscription, idcamp, idtaux, nom, prenom, datenaissance, sexe, nationnalite, mail, isdoublon FROM inscription_participants WHERE id = $1", id)
 	return ScanInscriptionParticipant(row)
 }
 
 // SelectInscriptionParticipants returns the entry matching the given 'ids'.
 func SelectInscriptionParticipants(tx DB, ids ...IdInscriptionParticipant) (InscriptionParticipants, error) {
-	rows, err := tx.Query("SELECT id, idinscription, idcamp, idtaux, nom, prenom, datenaissance, sexe, nationnalite, isdoublon FROM inscription_participants WHERE id = ANY($1)", IdInscriptionParticipantArrayToPQ(ids))
+	rows, err := tx.Query("SELECT id, idinscription, idcamp, idtaux, nom, prenom, datenaissance, sexe, nationnalite, mail, isdoublon FROM inscription_participants WHERE id = ANY($1)", IdInscriptionParticipantArrayToPQ(ids))
 	if err != nil {
 		return nil, err
 	}
@@ -223,28 +224,28 @@ func ScanInscriptionParticipants(rs *sql.Rows) (InscriptionParticipants, error) 
 // Insert one InscriptionParticipant in the database and returns the item with id filled.
 func (item InscriptionParticipant) Insert(tx DB) (out InscriptionParticipant, err error) {
 	row := tx.QueryRow(`INSERT INTO inscription_participants (
-		idinscription, idcamp, idtaux, nom, prenom, datenaissance, sexe, nationnalite, isdoublon
+		idinscription, idcamp, idtaux, nom, prenom, datenaissance, sexe, nationnalite, mail, isdoublon
 		) VALUES (
-		$1, $2, $3, $4, $5, $6, $7, $8, $9
-		) RETURNING id, idinscription, idcamp, idtaux, nom, prenom, datenaissance, sexe, nationnalite, isdoublon;
-		`, item.IdInscription, item.IdCamp, item.IdTaux, item.Nom, item.Prenom, item.DateNaissance, item.Sexe, item.Nationnalite, item.IsDoublon)
+		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10
+		) RETURNING id, idinscription, idcamp, idtaux, nom, prenom, datenaissance, sexe, nationnalite, mail, isdoublon;
+		`, item.IdInscription, item.IdCamp, item.IdTaux, item.Nom, item.Prenom, item.DateNaissance, item.Sexe, item.Nationnalite, item.Mail, item.IsDoublon)
 	return ScanInscriptionParticipant(row)
 }
 
 // Update InscriptionParticipant in the database and returns the new version.
 func (item InscriptionParticipant) Update(tx DB) (out InscriptionParticipant, err error) {
 	row := tx.QueryRow(`UPDATE inscription_participants SET (
-		idinscription, idcamp, idtaux, nom, prenom, datenaissance, sexe, nationnalite, isdoublon
+		idinscription, idcamp, idtaux, nom, prenom, datenaissance, sexe, nationnalite, mail, isdoublon
 		) = (
-		$1, $2, $3, $4, $5, $6, $7, $8, $9
-		) WHERE id = $10 RETURNING id, idinscription, idcamp, idtaux, nom, prenom, datenaissance, sexe, nationnalite, isdoublon;
-		`, item.IdInscription, item.IdCamp, item.IdTaux, item.Nom, item.Prenom, item.DateNaissance, item.Sexe, item.Nationnalite, item.IsDoublon, item.Id)
+		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10
+		) WHERE id = $11 RETURNING id, idinscription, idcamp, idtaux, nom, prenom, datenaissance, sexe, nationnalite, mail, isdoublon;
+		`, item.IdInscription, item.IdCamp, item.IdTaux, item.Nom, item.Prenom, item.DateNaissance, item.Sexe, item.Nationnalite, item.Mail, item.IsDoublon, item.Id)
 	return ScanInscriptionParticipant(row)
 }
 
 // Deletes the InscriptionParticipant and returns the item
 func DeleteInscriptionParticipantById(tx DB, id IdInscriptionParticipant) (InscriptionParticipant, error) {
-	row := tx.QueryRow("DELETE FROM inscription_participants WHERE id = $1 RETURNING id, idinscription, idcamp, idtaux, nom, prenom, datenaissance, sexe, nationnalite, isdoublon;", id)
+	row := tx.QueryRow("DELETE FROM inscription_participants WHERE id = $1 RETURNING id, idinscription, idcamp, idtaux, nom, prenom, datenaissance, sexe, nationnalite, mail, isdoublon;", id)
 	return ScanInscriptionParticipant(row)
 }
 
@@ -283,7 +284,7 @@ func (items InscriptionParticipants) IdInscriptions() []IdInscription {
 }
 
 func SelectInscriptionParticipantsByIdInscriptions(tx DB, idInscriptions_ ...IdInscription) (InscriptionParticipants, error) {
-	rows, err := tx.Query("SELECT id, idinscription, idcamp, idtaux, nom, prenom, datenaissance, sexe, nationnalite, isdoublon FROM inscription_participants WHERE idinscription = ANY($1)", IdInscriptionArrayToPQ(idInscriptions_))
+	rows, err := tx.Query("SELECT id, idinscription, idcamp, idtaux, nom, prenom, datenaissance, sexe, nationnalite, mail, isdoublon FROM inscription_participants WHERE idinscription = ANY($1)", IdInscriptionArrayToPQ(idInscriptions_))
 	if err != nil {
 		return nil, err
 	}
@@ -291,7 +292,7 @@ func SelectInscriptionParticipantsByIdInscriptions(tx DB, idInscriptions_ ...IdI
 }
 
 func DeleteInscriptionParticipantsByIdInscriptions(tx DB, idInscriptions_ ...IdInscription) (InscriptionParticipants, error) {
-	rows, err := tx.Query("DELETE FROM inscription_participants WHERE idinscription = ANY($1) RETURNING id, idinscription, idcamp, idtaux, nom, prenom, datenaissance, sexe, nationnalite, isdoublon", IdInscriptionArrayToPQ(idInscriptions_))
+	rows, err := tx.Query("DELETE FROM inscription_participants WHERE idinscription = ANY($1) RETURNING id, idinscription, idcamp, idtaux, nom, prenom, datenaissance, sexe, nationnalite, mail, isdoublon", IdInscriptionArrayToPQ(idInscriptions_))
 	if err != nil {
 		return nil, err
 	}
@@ -324,7 +325,7 @@ func (items InscriptionParticipants) IdCamps() []camps.IdCamp {
 }
 
 func SelectInscriptionParticipantsByIdCamps(tx DB, idCamps_ ...camps.IdCamp) (InscriptionParticipants, error) {
-	rows, err := tx.Query("SELECT id, idinscription, idcamp, idtaux, nom, prenom, datenaissance, sexe, nationnalite, isdoublon FROM inscription_participants WHERE idcamp = ANY($1)", camps.IdCampArrayToPQ(idCamps_))
+	rows, err := tx.Query("SELECT id, idinscription, idcamp, idtaux, nom, prenom, datenaissance, sexe, nationnalite, mail, isdoublon FROM inscription_participants WHERE idcamp = ANY($1)", camps.IdCampArrayToPQ(idCamps_))
 	if err != nil {
 		return nil, err
 	}
@@ -332,7 +333,7 @@ func SelectInscriptionParticipantsByIdCamps(tx DB, idCamps_ ...camps.IdCamp) (In
 }
 
 func DeleteInscriptionParticipantsByIdCamps(tx DB, idCamps_ ...camps.IdCamp) (InscriptionParticipants, error) {
-	rows, err := tx.Query("DELETE FROM inscription_participants WHERE idcamp = ANY($1) RETURNING id, idinscription, idcamp, idtaux, nom, prenom, datenaissance, sexe, nationnalite, isdoublon", camps.IdCampArrayToPQ(idCamps_))
+	rows, err := tx.Query("DELETE FROM inscription_participants WHERE idcamp = ANY($1) RETURNING id, idinscription, idcamp, idtaux, nom, prenom, datenaissance, sexe, nationnalite, mail, isdoublon", camps.IdCampArrayToPQ(idCamps_))
 	if err != nil {
 		return nil, err
 	}
@@ -365,7 +366,7 @@ func (items InscriptionParticipants) IdTauxs() []dossiers.IdTaux {
 }
 
 func SelectInscriptionParticipantsByIdTauxs(tx DB, idTauxs_ ...dossiers.IdTaux) (InscriptionParticipants, error) {
-	rows, err := tx.Query("SELECT id, idinscription, idcamp, idtaux, nom, prenom, datenaissance, sexe, nationnalite, isdoublon FROM inscription_participants WHERE idtaux = ANY($1)", dossiers.IdTauxArrayToPQ(idTauxs_))
+	rows, err := tx.Query("SELECT id, idinscription, idcamp, idtaux, nom, prenom, datenaissance, sexe, nationnalite, mail, isdoublon FROM inscription_participants WHERE idtaux = ANY($1)", dossiers.IdTauxArrayToPQ(idTauxs_))
 	if err != nil {
 		return nil, err
 	}
@@ -373,7 +374,7 @@ func SelectInscriptionParticipantsByIdTauxs(tx DB, idTauxs_ ...dossiers.IdTaux) 
 }
 
 func DeleteInscriptionParticipantsByIdTauxs(tx DB, idTauxs_ ...dossiers.IdTaux) (InscriptionParticipants, error) {
-	rows, err := tx.Query("DELETE FROM inscription_participants WHERE idtaux = ANY($1) RETURNING id, idinscription, idcamp, idtaux, nom, prenom, datenaissance, sexe, nationnalite, isdoublon", dossiers.IdTauxArrayToPQ(idTauxs_))
+	rows, err := tx.Query("DELETE FROM inscription_participants WHERE idtaux = ANY($1) RETURNING id, idinscription, idcamp, idtaux, nom, prenom, datenaissance, sexe, nationnalite, mail, isdoublon", dossiers.IdTauxArrayToPQ(idTauxs_))
 	if err != nil {
 		return nil, err
 	}

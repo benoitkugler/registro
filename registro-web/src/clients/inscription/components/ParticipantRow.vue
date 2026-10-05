@@ -46,6 +46,17 @@
               ></NationaliteField>
             </v-col>
           </v-row>
+          <v-row v-if="askMail">
+            <v-col>
+              <v-text-field
+                variant="outlined"
+                density="compact"
+                v-model="participant.Mail"
+                label="Adresse mail"
+                type="email"
+              ></v-text-field>
+            </v-col>
+          </v-row>
         </v-col>
         <v-divider vertical thickness="1"></v-divider>
         <v-col sm="8" cols="12" align-self="center">
@@ -111,7 +122,7 @@ import type {
   StatutParticipantOut,
 } from "../logic/api";
 import { Camps, FormRules, Personnes } from "@/utils";
-import { isDateZero } from "@/components/date";
+import { ageFrom, isDateZero } from "@/components/date";
 import CampCard from "./CampCard.vue";
 import { controller } from "../logic/logic";
 
@@ -155,4 +166,11 @@ async function refreshCheck() {
   if (res === undefined) return; // arg..
   avertissementAge.value = res;
 }
+
+// we only ask mail for participant with age >= 16
+const askMail = computed(() => {
+  const AgeMinMail = 16;
+  const age = ageFrom(participant.value.DateNaissance);
+  return age !== null && age >= AgeMinMail;
+});
 </script>

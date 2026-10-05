@@ -350,6 +350,7 @@ type Participant struct {
 	DateNaissance sh.Date
 	Sexe          pr.Sexe
 	Nationnalite  pr.Nationnalite
+	Mail          string
 }
 
 // newParticipant renvoie la personne comme un
@@ -361,6 +362,7 @@ func newParticipant(r pr.Identite) Participant {
 		Sexe:          r.Sexe,
 		DateNaissance: r.DateNaissance,
 		Nationnalite:  r.Nationnalite,
+		Mail:          r.Mail,
 	}
 }
 
@@ -525,6 +527,7 @@ func (ct *Controller) BuildInscription(publicInsc Inscription) (insc in.Inscript
 			DateNaissance: publicPart.DateNaissance,
 			Sexe:          publicPart.Sexe,
 			Nationnalite:  publicPart.Nationnalite,
+			Mail:          publicPart.Mail,
 		}
 		ps = append(ps, part)
 	}
