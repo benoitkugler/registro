@@ -338,6 +338,7 @@ func InviteEquipier(cfg config.Asso, labelCamp string, directeur string, equipie
 	return render(inviteEquipierT, args)
 }
 
+// TODO: not used for now, may be added on the backoffice UI (see https://github.com/benoitkugler/registro/issues/39)
 func NotifieModificationOptions(cfg config.Asso, directeur pr.Identite, camp string, participants []string, urlDirecteur string) (string, error) {
 	s := "Cher"
 	if directeur.Sexe == pr.Woman {

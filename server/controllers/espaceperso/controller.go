@@ -10,7 +10,6 @@ import (
 
 	"registro/config"
 	"registro/controllers/backoffice"
-	"registro/controllers/directeurs"
 	fsAPI "registro/controllers/files"
 	"registro/crypto"
 	"registro/generators/pdfcreator"
@@ -218,89 +217,6 @@ func (ct *Controller) notifieMessageByMail(host string, idDossier ds.IdDossier, 
 	}
 
 	return nil
-}
-
-type UpdateParticipantsIn struct {
-	Token        string
-	Participants []cps.Participant
-}
-
-// UpdateParticipants met à jour le champ [OptionPrix] de chaque participant donnés.
-//
-// Une notification est envoyée au directeur si le séjour approche.
-func (ct *Controller) UpdateParticipants(c echo.Context) error {
-	var args UpdateParticipantsIn
-	if err := c.Bind(&args); err != nil {
-		return err
-	}
-	err := ct.updateParticipants(c.Request().Host, args)
-	if err != nil {
-		return err
-	}
-	return c.NoContent(200)
-}
-
-func (ct *Controller) updateParticipants(host string, args UpdateParticipantsIn) error {
-	id, err := crypto.DecryptID[ds.IdDossier](ct.key, args.Token)
-	if err != nil {
-		return err
-	}
-	participants, err := cps.SelectParticipantsByIdDossiers(ct.db, id)
-	if err != nil {
-		return utils.SQLError(err)
-	}
-	camps, err := cps.SelectCamps(ct.db, participants.IdCamps()...)
-	if err != nil {
-		return utils.SQLError(err)
-	}
-	tmp, err := cps.SelectEquipiersByIdCamps(ct.db, camps.IDs()...)
-	if err != nil {
-		return utils.SQLError(err)
-	}
-	equipiersbyCamp := tmp.ByIdCamp()
-
-	personnes, err := pr.SelectPersonnes(ct.db, append(tmp.IdPersonnes(), participants.IdPersonnes()...)...)
-	if err != nil {
-		return utils.SQLError(err)
-	}
-
-	urlDirecteur := utils.BuildUrl(host, directeurs.EndpointDirecteur)
-
-	return utils.InTx(ct.db, func(tx *sql.Tx) error {
-		participantsByCamp := map[cps.IdCamp][]string{}
-		for _, newP := range args.Participants {
-			current, ok := participants[newP.Id]
-			if !ok {
-				return errors.New("access forbidden")
-			}
-			current.OptionPrix = newP.OptionPrix // TODO: sanitize
-			_, err = current.Update(tx)
-			if err != nil {
-				return err
-			}
-			participantsByCamp[current.IdCamp] = append(participantsByCamp[current.IdCamp], personnes[current.IdPersonne].PrenomNOM())
-		}
-
-		for idCamp, participants := range participantsByCamp {
-			camp := camps[idCamp]
-			dir, hasDir := equipiersbyCamp[camp.Id].Directeur()
-			if time.Until(camp.DateDebut.Time()) < updateLimitation && hasDir {
-				// send a notification
-				directeur := personnes[dir.IdPersonne]
-
-				html, err := mails.NotifieModificationOptions(ct.asso, directeur.Identite, camp.Label(), participants, urlDirecteur)
-				if err != nil {
-					return err
-				}
-				err = mails.NewMailer(ct.smtp, ct.asso.MailsSettings).SendMail(directeur.Mail, "Modification des options", html, nil, nil)
-				if err != nil {
-					return err
-				}
-			}
-		}
-
-		return nil
-	})
 }
 
 func (ct *Controller) GetStructureaides(c echo.Context) error {

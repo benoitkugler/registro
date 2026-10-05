@@ -16,7 +16,6 @@ func setupRoutesEspaceperso(e *echo.Echo, ct *espaceperso.Controller) {
 	// JSON API
 	e.GET("/api/v1/espaceperso", ct.Load)
 	e.POST("/api/v1/espaceperso/message", ct.SendMessage)
-	e.POST("/api/v1/espaceperso/participants", ct.UpdateParticipants)
 	e.POST("/api/v1/espaceperso/aide", ct.CreateAide)
 	e.GET("/api/v1/espaceperso/structureaides", ct.GetStructureaides)
 

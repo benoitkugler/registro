@@ -105,14 +105,6 @@
                 Documents
               </v-badge>
             </v-btn>
-
-            <!-- TODO -->
-            <!-- <v-btn @click="showEditOptions = true" size="small">
-              <template #prepend>
-                <v-icon>mdi-pencil</v-icon>
-              </template>
-              Options
-            </v-btn> -->
           </template>
           <v-card-text>
             <v-list class="pa-0">
@@ -163,14 +155,6 @@
         ></FinancesCard>
       </v-col>
     </v-row>
-
-    <!-- option edit -->
-    <v-dialog v-model="showEditOptions">
-      <ParticipantsEditCard
-        :participants="data.Dossier.Participants || []"
-        @save="updateParticipants"
-      ></ParticipantsEditCard>
-    </v-dialog>
   </v-container>
 
   <!-- new message -->
@@ -277,11 +261,9 @@ import {
   type Event,
   type IdCamp,
   type IdEvent,
-  type Participant,
   type SendMessageIn,
 } from "./logic/api";
 import { buildPseudoEvents, Camps, Formatters, Personnes } from "@/utils";
-import ParticipantsEditCard from "./components/ParticipantsEditCard.vue";
 import FinancesCard from "./components/FinancesCard.vue";
 import PhotosCard from "./components/PhotosCard.vue";
 import SondagesCard from "./components/SondagesCard.vue";
@@ -391,17 +373,6 @@ async function sendMessage(
   if (res === undefined) return;
   controller.showMessage("Message envoyé avec succès.");
   data.value.Dossier.Events = (data.value.Dossier.Events || []).concat(res);
-}
-
-const showEditOptions = ref(false);
-async function updateParticipants(params: Participant[]) {
-  showEditOptions.value = false;
-  const res = await controller.UpdateParticipants({
-    Token: token.value,
-    Participants: params,
-  });
-  if (res === undefined) return;
-  controller.showMessage("Modifications enregistrées avec succès. Merci !");
 }
 
 const showSondages = ref<IdCamp | null>(null);

@@ -1055,6 +1055,7 @@ export interface InscriptionParticipant {
   DateNaissance: Date;
   Sexe: Sexe;
   Nationnalite: Nationnalite;
+  Mail: string;
   IsDoublon: boolean;
 }
 // registro/sql/inscriptions.InscriptionParticipants
