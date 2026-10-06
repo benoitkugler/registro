@@ -125,11 +125,6 @@ export interface UpdateFormIn {
   IdForm: IdForm;
   Reponses: FormReponses;
 }
-// registro/controllers/espaceperso.UpdateParticipantsIn
-export interface UpdateParticipantsIn {
-  Token: string;
-  Participants: Participant[] | null;
-}
 // registro/controllers/espaceperso.UpdateSondageIn
 export interface UpdateSondageIn {
   Token: string;
@@ -653,12 +648,10 @@ export const Categorie = {
   CarteVitale: 7,
   Vaccins: 8,
   Haccp: 9,
-  BafdEquiv: 10,
-  BafaEquiv: 11,
-  CertMedicalCuisine: 12,
-  PhotoIdentite: 13,
-  ExtraitCasierJudiciaire: 14,
-  Autre: 15,
+  CertMedicalCuisine: 10,
+  PhotoIdentite: 11,
+  ExtraitCasierJudiciaire: 12,
+  Autre: 13,
 } as const;
 export type Categorie = (typeof Categorie)[keyof typeof Categorie];
 
@@ -673,8 +666,6 @@ export const CategorieLabels: Record<Categorie, string> = {
   [Categorie.CarteVitale]: "Carte Vitale",
   [Categorie.Vaccins]: "Vaccins",
   [Categorie.Haccp]: "Cuisine (HACCP)",
-  [Categorie.BafdEquiv]: "Equivalent BAFD",
-  [Categorie.BafaEquiv]: "Equivalent BAFA",
   [Categorie.CertMedicalCuisine]: "Certificat médical cuisine",
   [Categorie.PhotoIdentite]: "Photo d'identité",
   [Categorie.ExtraitCasierJudiciaire]: "Extrait du casier judiciaire",
@@ -820,18 +811,6 @@ export abstract class AbstractAPI {
         headers: this.getHeaders(),
       });
       return rep.data;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  /** UpdateParticipants performs the request and handles the error */
-  async UpdateParticipants(params: UpdateParticipantsIn) {
-    const fullUrl = this.baseURL + "/api/v1/espaceperso/participants";
-    this.startRequest();
-    try {
-      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-      return true;
     } catch (error) {
       this.handleError(error);
     }

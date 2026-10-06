@@ -36,12 +36,7 @@
 </template>
 
 <script setup lang="ts">
-import {
-  Categorie,
-  CategorieLabels,
-  type Demande,
-  type PublicFile,
-} from "@/clients/equipier/logic/api";
+import { type Demande, type PublicFile } from "@/clients/equipier/logic/api";
 import { Formatters } from "@/utils";
 import { computed } from "vue";
 

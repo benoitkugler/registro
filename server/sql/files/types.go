@@ -24,8 +24,6 @@ const (
 	CarteVitale             // Carte Vitale
 	Vaccins                 // Vaccins
 	Haccp                   // Cuisine (HACCP)
-	BafdEquiv               // Equivalent BAFD
-	BafaEquiv               // Equivalent BAFA
 	CertMedicalCuisine      // Certificat médical cuisine
 	PhotoIdentite           // Photo d'identité
 	ExtraitCasierJudiciaire // Extrait du casier judiciaire
@@ -55,10 +53,6 @@ func (c Categorie) String() string {
 		return "Vaccins"
 	case Haccp:
 		return "Cuisine (HACCP)"
-	case BafdEquiv:
-		return "Equivalent BAFD"
-	case BafaEquiv:
-		return "Equivalent BAFA"
 	case CertMedicalCuisine:
 		return "Certificat médical cuisine"
 	case PhotoIdentite:
@@ -137,9 +131,9 @@ type optionalCategorie struct {
 }
 
 var defaultDemandesACVE = [cp.NbRoles][]Categorie{
-	cp.Direction:     {CarteId, Permis, SB, Bafa, Bafd, CarteVitale, Vaccins, BafdEquiv},
+	cp.Direction:     {CarteId, Permis, SB, Bafa, Bafd, CarteVitale, Vaccins},
 	cp.Adjoint:       {CarteId, Permis, SB, CarteVitale, Vaccins},
-	cp.Animation:     {CarteId, Permis, SB, Bafa, BafaEquiv, CarteVitale, Vaccins},
+	cp.Animation:     {CarteId, Permis, SB, Bafa, CarteVitale, Vaccins},
 	cp.Menage:        {CarteId, CarteVitale, Vaccins},
 	cp.Cuisine:       {CarteId, CarteVitale, Vaccins, Haccp, CertMedicalCuisine},
 	cp.Intendance:    {CarteId, CarteVitale, Vaccins, Haccp},
@@ -191,8 +185,6 @@ func defaultRepere(_ cp.Roles) []optionalCategorie {
 		{Secourisme, true},
 		{Bafa, true},
 		{Bafd, true},
-		{BafaEquiv, true},
-		{BafdEquiv, true},
 		{ExtraitCasierJudiciaire, false},
 	}
 }

@@ -622,28 +622,9 @@ async function deleteFile(file: PublicFile, idDemande: IdDemande) {
 }
 
 const missingFiles = computed(() => {
-  const bafa = demandesL.value.find(
-    (p) => p.Demande.Categorie == Categorie.Bafa,
-  );
-  const bafd = demandesL.value.find(
-    (p) => p.Demande.Categorie == Categorie.Bafd,
-  );
-
   return demandes.value
     .filter((dem) => !dem.Optionnelle) // contraintes bloquantes uniquement
-    .filter((dem) => {
-      // doc nons remplis
-      const notOK = (dem.Files || []).length == 0;
-      // cas spécial pour les catégories équivalent bafa et équivalent bafd,
-      let okByEquiv = false;
-      if (dem.Demande.Categorie == Categorie.BafaEquiv) {
-        okByEquiv = bafa != undefined && (bafa.Files || []).length != 0;
-      }
-      if (dem.Demande.Categorie == Categorie.BafdEquiv) {
-        okByEquiv = bafd != undefined && (bafd.Files || []).length != 0;
-      }
-      return notOK && !okByEquiv;
-    });
+    .filter((dem) => (dem.Files || []).length == 0); // doc nons remplis
 });
 
 function onChangePays(p: Pays) {
