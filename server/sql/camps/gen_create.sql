@@ -51,7 +51,8 @@ CREATE TABLE camps (
     Vetements jsonb NOT NULL,
     AlbumID text NOT NULL,
     Meta jsonb NOT NULL,
-    IsAlbumVisible boolean NOT NULL
+    IsAlbumVisible boolean NOT NULL,
+    PlacesReservees integer NOT NULL
 );
 
 CREATE TABLE equipiers (

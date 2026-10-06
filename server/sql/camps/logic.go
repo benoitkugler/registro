@@ -237,7 +237,7 @@ func (cd CampData) Stats() StatistiquesInscrits {
 // restePlace vaut `true` si l'ajout de participants
 // ne dépasse pas le nombre de places autorisées
 func (cd *Camp) restePlace(inscritsCount int, participants []pr.Personne) bool {
-	return inscritsCount+len(participants) <= cd.Places
+	return inscritsCount+cd.PlacesReservees+len(participants) <= cd.Places
 }
 
 // keepEquilibreGF renvoie `true` si l'ajout des [participants]
@@ -418,6 +418,9 @@ func (c *Camp) Check() error {
 		if len(c.OptionPrix.Statuts) == 0 {
 			return errors.New("invalid OptionPrix.Status length")
 		}
+	}
+	if c.PlacesReservees < 0 || c.PlacesReservees > c.Places {
+		return errors.New("invalid PlacesReservees")
 	}
 	return nil
 }

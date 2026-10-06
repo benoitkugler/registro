@@ -599,6 +599,7 @@ export interface Camp {
   AlbumID: string;
   Meta: Meta;
   IsAlbumVisible: boolean;
+  PlacesReservees: Int;
 }
 // registro/sql/camps.CampExt
 export interface CampExt {

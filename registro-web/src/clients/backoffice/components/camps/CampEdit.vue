@@ -155,6 +155,17 @@
               ></BoolField>
             </v-col>
           </v-row>
+          <v-row>
+            <v-col>
+              <IntField
+                label="Places réservées"
+                v-model="inner.PlacesReservees"
+                persistent-hint
+                hint="Influence le passage en liste d'attente proposé lors de la validation (basé sur le remplissage)."
+                :min="0 as Int"
+              ></IntField>
+            </v-col>
+          </v-row>
         </v-card-text>
       </v-card>
 
@@ -265,6 +276,7 @@ import {
   OptionPrixKindLabels,
   StatutCampLabels,
   type Camp,
+  type Int,
 } from "@/clients/backoffice/logic/api";
 import { Camps, copy, copyToClipboard, selectItems } from "@/utils";
 import CampOptionsPrix from "./CampOptionsPrix.vue";
@@ -284,6 +296,8 @@ const areFieldsValid = computed(
   () =>
     new Date(inner.value.DateDebut).getFullYear() >= 2020 &&
     inner.value.Places >= 1 &&
+    inner.value.PlacesReservees >= 0 &&
+    inner.value.PlacesReservees <= inner.value.Places &&
     inner.value.Nom != "" &&
     inner.value.AgeMax >= inner.value.AgeMin &&
     inner.value.OptionQuotientFamilial.every((p) => 0 <= p && p <= 100) &&

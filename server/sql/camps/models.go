@@ -78,6 +78,10 @@ type Camp struct {
 	// IsAlbumVisible vaut true pour afficher le lien
 	// Inscrits sur les espaces de suivi.
 	IsAlbumVisible bool
+
+	// PlacesReservees influence le calcul du nombre de
+	// places restantes.
+	PlacesReservees int
 }
 
 // ProjetSpi est une extension de la table [Camp],

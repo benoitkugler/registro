@@ -95,6 +95,15 @@ func TestCampLoader_Status(t *testing.T) {
 		DateDebut:       now,
 		Duree:           1,
 	}
+	campPlacesRes := Camp{
+		AgeMin:          6,
+		AgeMax:          12,
+		Places:          5,
+		PlacesReservees: 4,
+		NeedEquilibreGF: false,
+		DateDebut:       now,
+		Duree:           1,
+	}
 	personnes := pr.Personnes{1: pers(pr.Man, pr.Nationnalite{}), 2: pers(pr.Woman, pr.Nationnalite{})}
 	participants := Participants{
 		1: part(1, Inscrit), 2: part(2, Inscrit), 3: part(2, Inscrit), // 3 inscrits
@@ -130,6 +139,11 @@ func TestCampLoader_Status(t *testing.T) {
 			campNoGF,
 			[]pr.Personne{pers2(pr.Man, now, 10), pers2(pr.Man, now, 10), pers2(pr.Man, now, 10)},
 			[]StatutCauses{{true, true, false, CauseAge{}}, {true, true, false, CauseAge{}}, {true, true, false, CauseAge{}}},
+		},
+		{ // places manquantes
+			campPlacesRes,
+			[]pr.Personne{pers2(pr.Man, now, 10), pers2(pr.Man, now, 10)},
+			[]StatutCauses{{true, true, false, CauseAge{}}, {true, true, false, CauseAge{}}},
 		},
 		{
 			campGF,

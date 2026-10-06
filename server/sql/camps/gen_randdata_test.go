@@ -60,6 +60,7 @@ func randCamp() Camp {
 	s.AlbumID = randstring()
 	s.Meta = randMeta()
 	s.IsAlbumVisible = randbool()
+	s.PlacesReservees = randint()
 
 	return s
 }
