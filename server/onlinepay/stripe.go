@@ -1,4 +1,4 @@
-package stripe
+package onlinepay
 
 import (
 	"encoding/json"
