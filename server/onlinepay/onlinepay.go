@@ -11,19 +11,20 @@ import (
 	"io"
 	"net/http"
 
-	"registro/sql/dossiers"
-	"registro/sql/personnes"
+	ds "registro/sql/dossiers"
 )
 
 // GatewayStart stores the input parameters required
 // to start a payment session
 type GatewayStart struct {
-	IdDossier   dossiers.IdDossier
-	Responsable personnes.Identite
-	// If true, the [Responsable.Mail] is used,
-	// otherwise it is empty and must be filled in the provider page.
-	UserProvidedMail bool
-	Montant          dossiers.Montant
+	IdDossier ds.IdDossier
+
+	// [ResponsableMail] is either the responsable mail, or
+	// it is empty and must be filled in the provider's page.
+	ResponsableMail string
+
+	Montant ds.Montant
+
 	// Links to our espaceperso pages
 	SuccesURL, CancelURL string
 }
@@ -38,5 +39,6 @@ type Provider interface {
 	// ReceivePayment decodes the request send by the provider when a payment is concluded.
 	// It returns [false] for other notifications, or an error if the
 	// request is invalid.
-	ReceivePayment(body io.ReadCloser, headers http.Header) (dossiers.Paiement, bool, error)
+	// [db] is only read, the returned [ds.Paiement] is not wrote yet.
+	ReceivePayment(db ds.DB, body io.ReadCloser, headers http.Header) (ds.Paiement, bool, error)
 }
