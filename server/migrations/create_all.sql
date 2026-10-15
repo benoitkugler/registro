@@ -158,7 +158,8 @@ CREATE TABLE camps (
     Vetements jsonb NOT NULL,
     AlbumID text NOT NULL,
     Meta jsonb NOT NULL,
-    IsAlbumVisible boolean NOT NULL
+    IsAlbumVisible boolean NOT NULL,
+    PlacesReservees integer NOT NULL
 );
 
 CREATE TABLE equipiers (
@@ -271,7 +272,7 @@ CREATE TABLE demandes (
     Id serial PRIMARY KEY,
     IdFile integer,
     IdDirecteur integer,
-    Categorie smallint CHECK (Categorie IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)) NOT NULL,
+    Categorie smallint CHECK (Categorie IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13)) NOT NULL,
     Description text NOT NULL,
     MaxDocs integer NOT NULL,
     JoursValide integer NOT NULL
@@ -335,6 +336,7 @@ CREATE TABLE inscription_participants (
     DateNaissance date NOT NULL,
     Sexe smallint CHECK (Sexe IN (0, 1, 2)) NOT NULL,
     Nationnalite Nationnalite NOT NULL,
+    Mail text NOT NULL,
     IsDoublon boolean NOT NULL
 );
 

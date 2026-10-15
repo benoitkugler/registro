@@ -1,7 +1,6 @@
 package onlinepay
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,9 +12,8 @@ import (
 	ds "registro/sql/dossiers"
 	"registro/utils"
 
-	"github.com/stripe/stripe-go/v81"
-	"github.com/stripe/stripe-go/v81/checkout/session"
-	"github.com/stripe/stripe-go/v81/webhook"
+	"github.com/stripe/stripe-go/v87"
+	"github.com/stripe/stripe-go/v87/checkout/session"
 )
 
 type stripeApi config.Stripe
@@ -23,8 +21,8 @@ type stripeApi config.Stripe
 // entrées des metadatas
 const metadataKey = "id_dossier"
 
-// StartSession should be called to start a paiement session.
-func (config stripeApi) StartSession(start GatewayStart) (sessionID string, _ error) {
+// StartGateway should be called to start a paiement session.
+func (config stripeApi) StartGateway(start GatewayStart) (sessionID string, _ error) {
 	stripe.Key = config.Key
 
 	// only fill if not using custom mail
@@ -48,10 +46,7 @@ func (config stripeApi) StartSession(start GatewayStart) (sessionID string, _ er
 			metadataKey: strconv.Itoa(int(start.IdDossier)),
 		},
 		CustomerEmail: customerEmail,
-		PaymentMethodTypes: stripe.StringSlice([]string{
-			"card",
-		}),
-		Mode: stripe.String(string(stripe.CheckoutSessionModePayment)),
+		Mode:          stripe.String(string(stripe.CheckoutSessionModePayment)),
 		LineItems: []*stripe.CheckoutSessionLineItemParams{
 			{
 				PriceData: &stripe.CheckoutSessionLineItemPriceDataParams{
@@ -67,42 +62,52 @@ func (config stripeApi) StartSession(start GatewayStart) (sessionID string, _ er
 		SuccessURL: stripe.String(start.SuccesURL),
 		CancelURL:  stripe.String(start.CancelURL),
 	}
-	session, err := session.New(params)
+	out, err := session.New(params)
 	if err != nil {
 		return "", err
 	}
-
-	return session.ID, nil
+	return out.ID, nil
 }
 
-// ReceivePaiement decodes the request send by Stripe when a payment is concluded.
-// It returns [false] for other notifications.
+// ReceivePaiement implements [Provider]
 func (config stripeApi) ReceivePaiement(db ds.DB, body io.ReadCloser, headers http.Header) (ds.Paiement, bool, error) {
-	stripe.Key = config.Key
-
 	payload, err := io.ReadAll(body)
 	if err != nil {
 		return ds.Paiement{}, false, fmt.Errorf("error reading request body from Stripe notification: %v", err)
 	}
 	_ = body.Close()
 
-	// Pass the request body and Stripe-Signature header to ConstructEvent, along with the webhook signing key
+	stripeSignature := headers.Get("Stripe-Signature")
+
+	return config.receivePaiement(db, payload, stripeSignature)
+}
+
+// receivePaiement decodes the request send by Stripe when a payment is concluded.
+// It returns [false] for other notifications.
+func (config stripeApi) receivePaiement(db ds.DB, payload []byte, stripeSignature string) (ds.Paiement, bool, error) {
+	stripe.Key = config.Key
+
+	client := stripe.NewClient(config.Key)
+	// Pass the request body and Stripe-Signature header to ParseEventNotification, along with the webhook signing key
 	// You can find your endpoint's secret in your webhook settings
-	event, err := webhook.ConstructEvent(payload, headers.Get("Stripe-Signature"), config.Webhook)
+	event, err := client.ParseEventNotification(payload, stripeSignature, config.Webhook)
 	if err != nil {
 		return ds.Paiement{}, false, fmt.Errorf("invalid request on Stripe notification endpoint: %v", err)
 	}
 
-	// Handle the checkout.session.completed event
-	if event.Type == "checkout.session.completed" {
-		var session stripe.CheckoutSession
-		err := json.Unmarshal(event.Data.Raw, &session)
-		if err != nil {
-			return ds.Paiement{}, false, fmt.Errorf("error parsing webhook JSON: %v", err)
-		}
-		p, err := parseStripePaiement(db, &session)
-		return p, true, err
-	}
+	fmt.Println(event.GetEventNotification().Type)
+
+	// // Handle the checkout.session.completed event
+	// fmt.Println(event.Type)
+	// if event.Type == stripe.EventTypeCheckoutSessionCompleted {
+	// 	var session stripe.CheckoutSession
+	// 	err := json.Unmarshal(event.Data.Raw, &session)
+	// 	if err != nil {
+	// 		return ds.Paiement{}, false, fmt.Errorf("error parsing webhook JSON: %v", err)
+	// 	}
+	// 	p, err := parseStripePaiement(db, &session)
+	// 	return p, true, err
+	// }
 
 	return ds.Paiement{}, false, nil
 }
