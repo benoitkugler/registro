@@ -1,4 +1,4 @@
-package helloasso
+package dons
 
 import pr "registro/sql/personnes"
 

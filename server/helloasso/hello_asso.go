@@ -1,6 +1,7 @@
 package helloasso
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,10 +11,6 @@ import (
 	"time"
 
 	"registro/config"
-	"registro/sql/dons"
-	"registro/sql/dossiers"
-	pr "registro/sql/personnes"
-	"registro/sql/shared"
 )
 
 type Api struct {
@@ -22,19 +19,17 @@ type Api struct {
 	token string // see loadAccessToken
 }
 
-func NewApi(config config.Helloasso) Api { return Api{config, ""} }
+func NewApi(config config.Helloasso) (Api, error) {
+	api := Api{config, ""}
+	err := api.loadAccessToken()
+	return api, err
+}
 
 func (api *Api) baseURL() string {
 	if api.config.Sandbox {
 		return "https://api.helloasso-sandbox.com"
 	}
 	return "https://api.helloasso.com"
-}
-
-// Ping effectue une requête de test et renvoie l'éventuelle erreur.
-func (api Api) Ping() error {
-	err := api.loadAccessToken()
-	return err
 }
 
 func (api *Api) loadAccessToken() error {
@@ -106,76 +101,31 @@ func (api *Api) getJSON(endpoint string, out interface{}) error {
 	return err
 }
 
-// It returns [false] for other notifications.
-func (api *Api) HandleDonNotification(payload io.Reader) (DonDonateur, bool, error) {
-	notif, err := parseDonNotification(payload)
-	if err != nil {
-		return DonDonateur{}, false, err
-	}
-	if notif.State != "Authorized" {
-		return DonDonateur{}, false, nil
-	}
-
-	if err := api.loadAccessToken(); err != nil {
-		return DonDonateur{}, false, err
-	}
-	payment, err := api.loadPayment(notif.Id)
-	if err != nil {
-		return DonDonateur{}, false, err
-	}
-	out, err := newDonFromPayment(payment)
-	if err != nil {
-		return DonDonateur{}, false, err
-	}
-	return out, true, err
-}
-
-func (api *Api) loadPayment(id int32) (paymentHelloAsso, error) {
-	var out paymentHelloAsso
+func (api *Api) LoadPayment(id int32) (Payment, error) {
+	var out Payment
 	err := api.getJSON(fmt.Sprintf("/v5/payments/%d", id), &out)
 	if err != nil {
-		return paymentHelloAsso{}, err
+		return Payment{}, err
 	}
 	return out, nil
 }
 
-type donNotification struct {
-	Id    int32  `json:"id"`
-	State string `json:"state"`
+type Payer struct {
+	FirstName   string    `json:"firstName"`
+	LastName    string    `json:"lastName"`
+	Email       string    `json:"email"`
+	DateOfBirth time.Time `json:"dateOfBirth"`
+	Address     string    `json:"address"`
+	City        string    `json:"city"`
+	ZipCode     string    `json:"zipCode"`
+	Country     string    `json:"country"`
 }
 
-func parseDonNotification(payload io.Reader) (donNotification, error) {
-	var n struct {
-		EventType string          `json:"eventType"`
-		Data      json.RawMessage `json:"data"`
-	}
-	if err := json.NewDecoder(payload).Decode(&n); err != nil {
-		return donNotification{}, err
-	}
-	if n.EventType != "Payment" {
-		return donNotification{}, nil
-	}
-	var payment donNotification
-	if err := json.Unmarshal(n.Data, &payment); err != nil {
-		return donNotification{}, err
-	}
-	return payment, nil
-}
-
-type paymentHelloAsso struct {
+type Payment struct {
 	Order struct {
 		FormSlug string `json:"formSlug"`
 	} `json:"order"`
-	Payer struct {
-		FirstName   string    `json:"firstName"`
-		LastName    string    `json:"lastName"`
-		Address     string    `json:"address"`
-		ZipCode     string    `json:"zipCode"`
-		City        string    `json:"city"`
-		Country     string    `json:"country"`
-		Email       string    `json:"email"`
-		DateOfBirth time.Time `json:"dateOfBirth"`
-	} `json:"payer"`
+	Payer  Payer     `json:"payer"`
 	Date   time.Time `json:"date"`
 	Id     int32     `json:"id"`
 	Amount int       `json:"amount"` // Montant en centimes
@@ -186,29 +136,51 @@ type paymentHelloAsso struct {
 	State string `json:"state"`
 }
 
-type DonDonateur struct {
-	Don      dons.Don
-	Donateur pr.Identite
+// send and receive JSON
+func (api *Api) post(endpoint string, in, out interface{}) error {
+	body, err := json.Marshal(in)
+	if err != nil {
+		return err
+	}
+	req, err := http.NewRequest(http.MethodPost, api.baseURL()+endpoint, bytes.NewReader(body))
+	if err != nil {
+		return fmt.Errorf("internal error in HelloAsso request : %s", err)
+	}
+	req.Header.Set("Authorization", "Bearer "+api.token)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("La requête vers HelloAsso a échoué : %s", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		b, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("La requête vers HelloAsso a échoué : %s. Détail : %s", resp.Status, b)
+	}
+
+	err = json.NewDecoder(resp.Body).Decode(out)
+	return err
 }
 
-func newDonFromPayment(payment paymentHelloAsso) (DonDonateur, error) {
-	don := dons.Don{
-		// Hello asso is a french service that only support Euros
-		Montant:      dossiers.Montant{Cent: payment.Amount, Currency: dossiers.Euros},
-		Date:         shared.NewDateFrom(payment.Date),
-		ModePaiement: dossiers.Helloasso,
-		Affectation:  payment.Order.FormSlug,
-		Details:      fmt.Sprintf("%d", payment.Id), // pourra être modifié
-	}
-	donateur := pr.Identite{
-		Prenom:        payment.Payer.FirstName,
-		Nom:           payment.Payer.LastName,
-		Adresse:       payment.Payer.Address,
-		CodePostal:    payment.Payer.ZipCode,
-		Ville:         payment.Payer.City,
-		Pays:          newPays(payment.Payer.Country),
-		Mail:          payment.Payer.Email,
-		DateNaissance: shared.NewDateFrom(payment.Payer.DateOfBirth),
-	}
-	return DonDonateur{Don: don, Donateur: donateur}, nil
+type InitCheckout struct {
+	TotalAmount      int32  `json:"totalAmount"`
+	InitialAmount    int32  `json:"initialAmount"`
+	ItemName         string `json:"itemName"`
+	BackUrl          string `json:"backUrl"`
+	ErrorUrl         string `json:"errorUrl"`
+	ReturnUrl        string `json:"returnUrl"`
+	ContainsDonation bool   `json:"containsDonation"`
+	Metadata         any    `json:"metadata"`
+}
+
+type CheckoutIntent struct {
+	Id          int32  `json:"id"`          // Id of the checkout intent
+	RedirectUrl string `json:"redirectUrl"` // Url where the contributor must be redirected to
+}
+
+func (api *Api) InitCheckout(args InitCheckout) (CheckoutIntent, error) {
+	var response CheckoutIntent
+	err := api.post(fmt.Sprintf("/v5/organizations/%s/checkout-intents", api.config.Slug), args, &response)
+	return response, err
 }

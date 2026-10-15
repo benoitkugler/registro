@@ -13,6 +13,7 @@ import (
 	"registro/crypto"
 	"registro/generators/sheets"
 	"registro/helloasso"
+	"registro/helloasso/dons"
 	"registro/logic"
 	"registro/logic/search"
 	"registro/mails"
@@ -47,14 +48,18 @@ func (ct *Controller) HandleDonHelloasso(c echo.Context) error {
 	if ct.helloasso.ID == "" {
 		return errors.New("HelloAsso is not supported")
 	}
-	api := helloasso.NewApi(ct.helloasso)
+	api, err := helloasso.NewApi(ct.helloasso)
+	if err != nil {
+		return err
+	}
+
 	req := c.Request()
 	if req.Body == nil {
 		return errors.New("missing Body")
 	}
 	defer req.Body.Close()
 
-	don, ok, err := api.HandleDonNotification(req.Body)
+	don, ok, err := dons.HandleDonNotification(api, req.Body)
 	if err != nil {
 		return err
 	}
