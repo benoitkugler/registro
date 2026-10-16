@@ -111,14 +111,14 @@ func (api *Api) LoadPayment(id int32) (Payment, error) {
 }
 
 type Payer struct {
-	FirstName   string    `json:"firstName"`
-	LastName    string    `json:"lastName"`
-	Email       string    `json:"email"`
-	DateOfBirth time.Time `json:"dateOfBirth"`
-	Address     string    `json:"address"`
-	City        string    `json:"city"`
-	ZipCode     string    `json:"zipCode"`
-	Country     string    `json:"country"`
+	FirstName   string    `json:"firstName,omitempty"`
+	LastName    string    `json:"lastName,omitempty"`
+	Email       string    `json:"email,omitempty"`
+	DateOfBirth time.Time `json:"dateOfBirth,omitzero"`
+	Address     string    `json:"address,omitempty"`
+	City        string    `json:"city,omitempty"`
+	ZipCode     string    `json:"zipCode,omitempty"`
+	Country     string    `json:"country,omitempty"`
 }
 
 type Payment struct {
@@ -147,6 +147,8 @@ func (api *Api) post(endpoint string, in, out interface{}) error {
 		return fmt.Errorf("internal error in HelloAsso request : %s", err)
 	}
 	req.Header.Set("Authorization", "Bearer "+api.token)
+	req.Header.Add("content-type", "application/json-patch+json")
+	req.Header.Add("accept", "application/json")
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -171,6 +173,7 @@ type InitCheckout struct {
 	ErrorUrl         string `json:"errorUrl"`
 	ReturnUrl        string `json:"returnUrl"`
 	ContainsDonation bool   `json:"containsDonation"`
+	Payer            Payer  `json:"payer"`
 	Metadata         any    `json:"metadata"`
 }
 
@@ -183,4 +186,40 @@ func (api *Api) InitCheckout(args InitCheckout) (CheckoutIntent, error) {
 	var response CheckoutIntent
 	err := api.post(fmt.Sprintf("/v5/organizations/%s/checkout-intents", api.config.Slug), args, &response)
 	return response, err
+}
+
+type Checkout struct {
+	CheckoutIntent
+	Order    Order `json:"order"`
+	Metadata any   `json:"metadata"`
+}
+
+// IsCompleted returns true if at least one payment is Authorized
+func (ch Checkout) IsCompleted() bool {
+	for _, payment := range ch.Order.Payments {
+		if payment.State == "Authorized" {
+			return true
+		}
+	}
+	return false
+}
+
+type Order struct {
+	Id     int32 `json:"id"`
+	Amount struct {
+		Total    int32 `json:"total"`    // Total amount in cents
+		Vat      int32 `json:"vat"`      // Vat amount in cents
+		Discount int32 `json:"discount"` // Discount amount in cents
+	} `json:"amount"`
+	Payments []struct {
+		Id     int32  `json:"id"`
+		Amount int    `json:"amount"` // Montant en centimes
+		State  string `json:"state"`
+	} `json:"payments"`
+}
+
+func (api *Api) LoadCheckout(checkoutIntentId int32) (Checkout, error) {
+	var out Checkout
+	err := api.getJSON(fmt.Sprintf("/v5/organizations/%s/checkout-intents/%d", api.config.Slug, checkoutIntentId), &out)
+	return out, err
 }
