@@ -90,3 +90,24 @@ func NewHelloasso() (out Helloasso, err error) {
 
 	return out, nil
 }
+
+type Horizon struct {
+	HorizonKey string // authentify incomming requests
+	RelaisKey  string // authentify responses
+}
+
+// NewHorizon uses env variables to build Horizon credentials :
+// HORIZON_HORIZON_KEY, HORIZON_RELAS_KEY
+func NewHorizon() (out Horizon, err error) {
+	out.HorizonKey = os.Getenv("HELLOASSO_HORIZON_KEY")
+	if out.HorizonKey == "" {
+		return Horizon{}, errors.New("missing env HELLOASSO_HORIZON_KEY")
+	}
+
+	out.RelaisKey = os.Getenv("HELLOASSO_RELAIS_KEY")
+	if out.RelaisKey == "" {
+		return Horizon{}, errors.New("missing env HELLOASSO_RELAIS_KEY")
+	}
+
+	return out, nil
+}

@@ -123,6 +123,7 @@ type Payer struct {
 
 type Payment struct {
 	Order struct {
+		Id       int32  `json:"id"`
 		FormSlug string `json:"formSlug"`
 	} `json:"order"`
 	Payer  Payer     `json:"payer"`
@@ -190,8 +191,8 @@ func (api *Api) InitCheckout(args InitCheckout) (CheckoutIntent, error) {
 
 type Checkout struct {
 	CheckoutIntent
-	Order    Order `json:"order"`
-	Metadata any   `json:"metadata"`
+	Order    Order           `json:"order"`
+	Metadata json.RawMessage `json:"metadata"`
 }
 
 // IsCompleted returns true if at least one payment is Authorized
@@ -216,10 +217,52 @@ type Order struct {
 		Amount int    `json:"amount"` // Montant en centimes
 		State  string `json:"state"`
 	} `json:"payments"`
+	CheckoutIntentId int32 `json:"checkoutIntentId,omitempty"`
 }
 
 func (api *Api) LoadCheckout(checkoutIntentId int32) (Checkout, error) {
 	var out Checkout
 	err := api.getJSON(fmt.Sprintf("/v5/organizations/%s/checkout-intents/%d", api.config.Slug, checkoutIntentId), &out)
 	return out, err
+}
+
+func (api *Api) LoadOrder(orderId int32) (Order, error) {
+	var out Order
+	err := api.getJSON(fmt.Sprintf("/v5/orders/%d", orderId), &out)
+	return out, err
+}
+
+// PaymentNotification is send by Helloasso on the global webhook endpoint registered
+// for the association. We only care for donations and checkouts.
+type PaymentNotification struct {
+	Data struct {
+		Id    int32  `json:"id"` // Payment id
+		State string `json:"state"`
+		Order struct {
+			Id       int32  `json:"id"`
+			FormType string `json:"formType"` // "Donation" or "Checkout"
+		} `json:"order"`
+	}
+	Metadata json.RawMessage // to be decoded based on the notification type
+}
+
+// ParseNotification parse any HelloAsso notification, but returns false for notifications
+// other than "Payment".
+func ParseNotification(payload io.Reader) (PaymentNotification, bool, error) {
+	var n struct {
+		EventType string          `json:"eventType"`
+		Data      json.RawMessage `json:"data"`
+		Metadata  json.RawMessage `json:"metadata"`
+	}
+	if err := json.NewDecoder(payload).Decode(&n); err != nil {
+		return PaymentNotification{}, false, err
+	}
+	if n.EventType != "Payment" {
+		return PaymentNotification{}, false, nil
+	}
+	payment := PaymentNotification{Metadata: n.Metadata}
+	if err := json.Unmarshal(n.Data, &payment.Data); err != nil {
+		return PaymentNotification{}, true, err
+	}
+	return payment, true, nil
 }
