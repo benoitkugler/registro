@@ -10,17 +10,20 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"registro/config"
-	"registro/helloasso"
 	"strconv"
 	"strings"
+
+	"registro/config"
+	"registro/helloasso"
 
 	"github.com/labstack/echo/v4"
 )
 
 // reference, type
-const baseHorizonCallbackURL = "https://www.horizon-evenements.com/paiement/retour?ref=%s&type=%s"
-const horizonNotificationURL = "https://www.horizon-evenements.com/api/helloasso/relais"
+const (
+	baseHorizonCallbackURL = "https://www.horizon-evenements.com/paiement/retour?ref=%s&type=%s"
+	horizonNotificationURL = "https://www.horizon-evenements.com/api/helloasso/relais"
+)
 
 type Controller struct {
 	Helloasso config.Helloasso
@@ -174,6 +177,25 @@ func (ct *Controller) GetCheckout(c echo.Context) error {
 	return c.JSON(200, checkout)
 }
 
+// check the validity of the notification, by retrieving the checkoutIntentId
+// Only the order seems to have the CheckoutIntentId field set
+func (ct *Controller) buildHorizonNotification(notif helloasso.PaymentNotification) (checkoutOut, error) {
+	api, err := helloasso.NewApi(ct.Helloasso)
+	if err != nil {
+		return checkoutOut{}, fmt.Errorf("internal error: %s", err)
+	}
+	order, err := api.LoadOrder(notif.Data.Order.Id)
+	if err != nil {
+		return checkoutOut{}, fmt.Errorf("internal error: %s", err)
+	}
+
+	out, _, err := loadCheckout(api, order.CheckoutIntentId)
+	if err != nil {
+		return checkoutOut{}, fmt.Errorf("internal error: %s", err)
+	}
+	return out, nil
+}
+
 // HandleNotification should be called in the the main handler
 func (ct *Controller) HandleNotification(c echo.Context, notif helloasso.PaymentNotification) error {
 	// be defensive here, in case the main handler is lazy
@@ -184,21 +206,10 @@ func (ct *Controller) HandleNotification(c echo.Context, notif helloasso.Payment
 	if _, ok := isHorizon(notif.Metadata); !ok {
 		return nil
 	}
-	// now, we check the validity of the notification,
-	// by retrieving the checkoutIntentId
-	// Only the order seems to have the CheckoutIntentId field set
-	api, err := helloasso.NewApi(ct.Helloasso)
-	if err != nil {
-		return fmt.Errorf("internal error: %s", err)
-	}
-	order, err := api.LoadOrder(notif.Data.Order.Id)
-	if err != nil {
-		return fmt.Errorf("internal error: %s", err)
-	}
 
-	out, _, err := loadCheckout(api, order.CheckoutIntentId)
+	out, err := ct.buildHorizonNotification(notif)
 	if err != nil {
-		return fmt.Errorf("internal error: %s", err)
+		return err
 	}
 
 	// create a POST request on Horizon endpoint
