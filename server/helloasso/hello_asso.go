@@ -79,8 +79,9 @@ func (api *Api) loadAccessToken() error {
 	return nil
 }
 
-func (api *Api) getJSON(endpoint string, out interface{}) error {
-	req, err := http.NewRequest(http.MethodGet, api.baseURL()+endpoint, nil)
+func (api *Api) getJSON(endpoint string, out any) error {
+	fullURL := api.baseURL() + endpoint
+	req, err := http.NewRequest(http.MethodGet, fullURL, nil)
 	if err != nil {
 		return fmt.Errorf("internal error in HelloAsso request : %s", err)
 	}
@@ -88,13 +89,13 @@ func (api *Api) getJSON(endpoint string, out interface{}) error {
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("La requête vers HelloAsso a échoué : %s", err)
+		return fmt.Errorf("La requête GET vers HelloAsso (%s) a échoué : %s", fullURL, err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
 		b, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("La requête vers HelloAsso a échoué : %s. Détail : %s", resp.Status, b)
+		return fmt.Errorf("La requête GET vers HelloAsso (%s) a échoué : %s. Détail : %s", fullURL, resp.Status, b)
 	}
 
 	err = json.NewDecoder(resp.Body).Decode(out)
@@ -138,12 +139,13 @@ type Payment struct {
 }
 
 // send and receive JSON
-func (api *Api) post(endpoint string, in, out interface{}) error {
+func (api *Api) post(endpoint string, in, out any) error {
 	body, err := json.Marshal(in)
 	if err != nil {
 		return err
 	}
-	req, err := http.NewRequest(http.MethodPost, api.baseURL()+endpoint, bytes.NewReader(body))
+	fullURL := api.baseURL() + endpoint
+	req, err := http.NewRequest(http.MethodPost, fullURL, bytes.NewReader(body))
 	if err != nil {
 		return fmt.Errorf("internal error in HelloAsso request : %s", err)
 	}
@@ -153,13 +155,13 @@ func (api *Api) post(endpoint string, in, out interface{}) error {
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("La requête vers HelloAsso a échoué : %s", err)
+		return fmt.Errorf("La requête POST vers HelloAsso (%s) a échoué : %s", fullURL, err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
 		b, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("La requête vers HelloAsso a échoué : %s. Détail : %s", resp.Status, b)
+		return fmt.Errorf("La requête POST vers HelloAsso (%s) a échoué : %s. Détail : %s", fullURL, resp.Status, b)
 	}
 
 	err = json.NewDecoder(resp.Body).Decode(out)
