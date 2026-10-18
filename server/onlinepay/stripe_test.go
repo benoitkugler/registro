@@ -84,7 +84,7 @@ type stripePayload struct {
 
 func TestStripeReceivePaiement(t *testing.T) {
 	// this test requires stripe CLI forwarding, setup with
-	// stripe listen --all-snapshot --forward-to localhost:1324/stripe_test -l
+	// stripe listen --all-thin --forward-to localhost:1324/stripe_test -l
 
 	// initial setup
 	tu.LoadEnv(t, "../env.sh")

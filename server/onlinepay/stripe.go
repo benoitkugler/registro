@@ -1,6 +1,7 @@
 package onlinepay
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -95,19 +96,15 @@ func (config stripeApi) receivePaiement(db ds.DB, payload []byte, stripeSignatur
 		return ds.Paiement{}, false, fmt.Errorf("invalid request on Stripe notification endpoint: %v", err)
 	}
 
-	fmt.Println(event.GetEventNotification().Type)
-
-	// // Handle the checkout.session.completed event
-	// fmt.Println(event.Type)
-	// if event.Type == stripe.EventTypeCheckoutSessionCompleted {
-	// 	var session stripe.CheckoutSession
-	// 	err := json.Unmarshal(event.Data.Raw, &session)
-	// 	if err != nil {
-	// 		return ds.Paiement{}, false, fmt.Errorf("error parsing webhook JSON: %v", err)
-	// 	}
-	// 	p, err := parseStripePaiement(db, &session)
-	// 	return p, true, err
-	// }
+	// Handle the checkout.session.completed notif
+	if notif, ok := event.(*stripe.V1CheckoutSessionCompletedEventNotification); ok {
+		session, err := notif.FetchRelatedObject(context.Background())
+		if err != nil {
+			return ds.Paiement{}, false, fmt.Errorf("failed to retrieve Stripe event: %s", err)
+		}
+		p, err := parseStripePaiement(db, session)
+		return p, true, err
+	}
 
 	return ds.Paiement{}, false, nil
 }
