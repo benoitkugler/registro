@@ -111,3 +111,8 @@ func NewHorizon() (out Horizon, err error) {
 
 	return out, nil
 }
+
+type Payrexx struct {
+	Instance string
+	ApiKey   string
+}

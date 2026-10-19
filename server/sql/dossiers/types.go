@@ -71,4 +71,15 @@ func (c Currency) String() string {
 	}
 }
 
+func (c Currency) IsoLower() string {
+	switch c {
+	case Euros:
+		return "eur"
+	case FrancsSuisse:
+		return "chf"
+	default:
+		return "<invalid currency>"
+	}
+}
+
 const PayeurFondSoutien = "Fonds de soutien"
