@@ -71,6 +71,8 @@ func (config stripeApi) StartGateway(start GatewayStart) (sessionID string, _ er
 }
 
 // ReceivePaiement implements [Provider]
+// receivePaiement decodes the request send by Stripe when a payment is concluded.
+// It returns [false] for other notifications.
 func (config stripeApi) ReceivePaiement(db ds.DB, body io.ReadCloser, headers http.Header) (ds.Paiement, bool, error) {
 	payload, err := io.ReadAll(body)
 	if err != nil {
@@ -80,12 +82,6 @@ func (config stripeApi) ReceivePaiement(db ds.DB, body io.ReadCloser, headers ht
 
 	stripeSignature := headers.Get("Stripe-Signature")
 
-	return config.receivePaiement(db, payload, stripeSignature)
-}
-
-// receivePaiement decodes the request send by Stripe when a payment is concluded.
-// It returns [false] for other notifications.
-func (config stripeApi) receivePaiement(db ds.DB, payload []byte, stripeSignature string) (ds.Paiement, bool, error) {
 	stripe.Key = config.Key
 
 	client := stripe.NewClient(config.Key)

@@ -31,11 +31,6 @@ func TestStripeStart(t *testing.T) {
 	fmt.Println(id)
 }
 
-type stripePayload struct {
-	Payload   []byte
-	Signature string
-}
-
 func TestStripeReceivePaiement(t *testing.T) {
 	// this test requires stripe CLI forwarding, setup with
 	// stripe listen --all-thin --forward-to localhost:1324/stripe_test -l
@@ -58,14 +53,20 @@ func TestStripeReceivePaiement(t *testing.T) {
 
 	api := stripeApi(cfg)
 
-	_, _, err = api.receivePaiement(db, nil, "")
+	_, _, err = api.ReceivePaiement(db, io.NopCloser(bytes.NewReader(nil)), http.Header{})
 	tu.AssertErr(t, err)
 
+	type stripePayload struct {
+		Payload []byte
+		Headers http.Header
+	}
 	events := make(chan stripePayload)
 	http.HandleFunc("/stripe_test", func(w http.ResponseWriter, r *http.Request) {
-		signature := r.Header.Get("Stripe-Signature")
-		b, _ := io.ReadAll(r.Body)
-		events <- stripePayload{b, signature}
+		content, err := io.ReadAll(r.Body)
+		if err != nil {
+			panic(err)
+		}
+		events <- stripePayload{content, r.Header}
 	})
 
 	go func() {
@@ -90,10 +91,10 @@ func TestStripeReceivePaiement(t *testing.T) {
 			event := <-events
 			isSessionCompleted := bytes.Contains(event.Payload, []byte("checkout.session.completed"))
 
-			_, _, err = api.receivePaiement(db, event.Payload, "") // missing signature
+			_, _, err = api.ReceivePaiement(db, io.NopCloser(bytes.NewReader(event.Payload)), http.Header{}) // missing signature
 			tu.AssertErr(t, err)
 
-			paiement, ok, err := api.receivePaiement(db, event.Payload, event.Signature)
+			paiement, ok, err := api.ReceivePaiement(db, io.NopCloser(bytes.NewReader(event.Payload)), event.Headers)
 			tu.AssertNoErr(t, err) // all event should success
 			tu.Assert(t, ok == isSessionCompleted)
 			if isSessionCompleted {

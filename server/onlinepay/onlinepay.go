@@ -39,6 +39,6 @@ type Provider interface {
 	// ReceivePayment decodes the request send by the provider when a payment is concluded.
 	// It returns [false] for other notifications, or an error if the
 	// request is invalid.
-	// [db] is only read, the returned [ds.Paiement] is not wrote yet.
+	// [db] is only read, the returned [ds.Paiement] is not written yet.
 	ReceivePayment(db ds.DB, body io.ReadCloser, headers http.Header) (ds.Paiement, bool, error)
 }
