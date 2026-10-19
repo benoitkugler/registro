@@ -315,11 +315,6 @@ function formatOption(opt: OptionPrixParticipant) {
       const count = opt.Jour?.length || 0;
       if (count == 0) return "Présent tous les jours";
       return `Présent ${count} jour${count > 1 ? "s" : ""}`;
-    case OptionPrixKind.PrixStatut:
-      const statut = props.participant.CampOption.Statuts?.find(
-        (s) => s.Id == opt.IdStatut,
-      );
-      return statut ? `Statut ${statut.Label}` : "Pas d'option.";
   }
 }
 

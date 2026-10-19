@@ -468,8 +468,8 @@ export interface InscriptionRapide {
   Limite: Date;
   Prix: Int;
 }
-// registro/sql/camps.Jours
-export type Jours = Int[] | null;
+// registro/sql/camps.JoursPresence
+export type JoursPresence = Int[] | null;
 // registro/sql/camps.Lettredirecteur
 export interface Lettredirecteur {
   IdCamp: IdCamp;
@@ -494,15 +494,13 @@ export interface OptionNavette {
 export interface OptionPrixCamp {
   Active: OptionPrixKind;
   InscriptionRapide: InscriptionRapide;
-  Statuts: PrixParStatut[] | null;
-  Jours: Int[] | null;
+  PrixParJour: Int;
 }
 // registro/sql/camps.OptionPrixKind
 export const OptionPrixKind = {
   NoOption: 0,
   PrixInscriptionRapide: 1,
-  PrixStatut: 2,
-  PrixJour: 3,
+  PrixJour: 2,
 } as const;
 export type OptionPrixKind =
   (typeof OptionPrixKind)[keyof typeof OptionPrixKind];
@@ -510,14 +508,12 @@ export type OptionPrixKind =
 export const OptionPrixKindLabels: Record<OptionPrixKind, string> = {
   [OptionPrixKind.NoOption]: "Aucune",
   [OptionPrixKind.PrixInscriptionRapide]: "Remise pour inscription rapide",
-  [OptionPrixKind.PrixStatut]: "Prix par statut",
   [OptionPrixKind.PrixJour]: "Prix à la journée",
 };
 
 // registro/sql/camps.OptionPrixParticipant
 export interface OptionPrixParticipant {
-  IdStatut: Int;
-  Jour: Jours;
+  Jour: JoursPresence;
 }
 // registro/sql/camps.Participant
 export interface Participant {
@@ -541,13 +537,6 @@ export interface ParticipantCamp {
 export interface PresenceOffsets {
   Debut: Int;
   Fin: Int;
-}
-// registro/sql/camps.PrixParStatut
-export interface PrixParStatut {
-  Id: Int;
-  Prix: Int;
-  Label: string;
-  Description: string;
 }
 // registro/sql/camps.PrixQuotientFamilial
 export type PrixQuotientFamilial = Ar4_Int;

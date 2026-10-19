@@ -91,13 +91,13 @@ type Remises struct {
 	Speciale  Montant
 }
 
-// Jours stocke les indexes (0-based) des jours de présence
+// JoursPresence stocke les indexes (0-based) des jours de présence
 // d'un participant à un séjour
 // Une liste vide indique la présence sur TOUT le séjour.
-type Jours []int32
+type JoursPresence []int32
 
 // sorted renvoie une liste triée et unique
-func (js Jours) sorted() []int {
+func (js JoursPresence) sorted() []int {
 	set := map[int]bool{}
 	for _, index := range js {
 		set[int(index)] = true
@@ -108,7 +108,7 @@ func (js Jours) sorted() []int {
 }
 
 // Sanitize vérifie que les jours sont valides
-func (js Jours) Sanitize(duree int) error {
+func (js JoursPresence) Sanitize(duree int) error {
 	if len(js.sorted()) != len(js) {
 		return fmt.Errorf("jours de présences invalides: %v", js)
 	}
@@ -121,7 +121,7 @@ func (js Jours) Sanitize(duree int) error {
 }
 
 // NbJours renvoie le nombre de jours de présence
-func (js Jours) NbJours(campDuree int) int {
+func (js JoursPresence) NbJours(campDuree int) int {
 	if len(js) == 0 {
 		return campDuree
 	}
@@ -129,7 +129,7 @@ func (js Jours) NbJours(campDuree int) int {
 }
 
 // ClosestPlage renvoie la plage englobant les jours de présence
-func (js Jours) ClosestPlage(datesCamp sh.Plage) sh.Plage {
+func (js JoursPresence) ClosestPlage(datesCamp sh.Plage) sh.Plage {
 	sorted := js.sorted()
 	if len(sorted) == 0 { // zero value : tout le séjour
 		return datesCamp
@@ -139,21 +139,13 @@ func (js Jours) ClosestPlage(datesCamp sh.Plage) sh.Plage {
 }
 
 // CalculePrix somme les prix des journées de présence
-func (js Jours) CalculePrix(prixParJour []int, currency dossiers.Currency) Montant {
-	total := Montant{Currency: currency}
-	for _, i := range js.sorted() {
-		// npeut arriver si la durée d'un séjour est réduite
-		// après avoir déclaré une option sur un participant
-		if i >= len(prixParJour) {
-			continue
-		}
-		total.Cent += prixParJour[i]
-	}
-	return total
+func (js JoursPresence) CalculePrix(prixParJour int, currency dossiers.Currency) Montant {
+	uniq := js.sorted()
+	return Montant{Currency: currency, Cent: len(uniq) * prixParJour}
 }
 
 // Description renvoie les jours de présence au camp
-func (js Jours) Description(datesCamp sh.Plage) string {
+func (js JoursPresence) Description(datesCamp sh.Plage) string {
 	sorted := js.sorted()
 	if len(sorted) == 0 || len(sorted) == datesCamp.Duree {
 		return "Tout le séjour"
@@ -172,7 +164,6 @@ type OptionPrixKind uint8
 const (
 	NoOption              OptionPrixKind = iota // Aucune
 	PrixInscriptionRapide                       // Remise pour inscription rapide
-	PrixStatut                                  // Prix par statut
 	PrixJour                                    // Prix à la journée
 )
 
@@ -183,20 +174,11 @@ type OptionPrixCamp struct {
 
 	InscriptionRapide InscriptionRapide
 
-	Statuts []PrixParStatut
-
-	// Prix de chaque jour (0-based) du séjour (souvent constant), en centimes.
+	// Prix de chaque jour du séjour, en centimes.
 	// L'unité est celle du séjour associé.
 	// Le champ [Prix] du séjour peut être inférieur à la somme
 	// pour une remise.
-	Jours []int
-}
-
-type PrixParStatut struct {
-	Id          int16
-	Prix        int // prix en centimes (l'unité est celle du séjour)
-	Label       string
-	Description string // longue description
+	PrixParJour int
 }
 
 type InscriptionRapide struct {
@@ -208,16 +190,13 @@ type InscriptionRapide struct {
 //   - elle est active dans le séjour
 //   - elle est non nulle sur le participant
 type OptionPrixParticipant struct {
-	IdStatut int16
-	Jour     Jours
+	Jour JoursPresence
 }
 
 // IsEmpty renvoie `true` si aucune option n'est active
 // pour la catégorie demandée.
 func (op OptionPrixParticipant) IsEmpty(kind OptionPrixKind) bool {
 	switch kind {
-	case PrixStatut:
-		return op.IdStatut == 0
 	case PrixJour:
 		return len(op.Jour) == 0
 	default:

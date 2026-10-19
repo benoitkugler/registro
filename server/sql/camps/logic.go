@@ -410,13 +410,8 @@ func (c *Camp) Check() error {
 		}
 	}
 	if c.OptionPrix.Active == PrixJour {
-		if c.Duree != len(c.OptionPrix.Jours) {
-			return errors.New("invalid OptionPrix.Jour length")
-		}
-	}
-	if c.OptionPrix.Active == PrixStatut {
-		if len(c.OptionPrix.Statuts) == 0 {
-			return errors.New("invalid OptionPrix.Status length")
+		if c.OptionPrix.PrixParJour == 0 {
+			return errors.New("invalid OptionPrix.PrixParJour")
 		}
 	}
 	if c.PlacesReservees < 0 || c.PlacesReservees > c.Places {

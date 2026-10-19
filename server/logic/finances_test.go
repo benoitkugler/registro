@@ -140,8 +140,6 @@ func TestDossierFinance_Bilan(t *testing.T) {
 }
 
 func Test_pc_prixBase(t *testing.T) {
-	status := []cps.PrixParStatut{{Id: 1, Prix: 8000, Label: "Enfant", Description: ""}, {Id: 2, Prix: 9000, Label: "Adulte", Description: ""}}
-	jours := []int{1000, 2000, 3000, 4000}
 	inscription := time.Now()
 	type fields struct {
 		optPart cps.OptionPrixParticipant
@@ -169,20 +167,16 @@ func Test_pc_prixBase(t *testing.T) {
 		{fields{prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixInscriptionRapide, InscriptionRapide: cps.InscriptionRapide{Prix: 8000, Limite: sh.Date(inscription.Add(-5 * 24 * time.Hour))}}}, eur(100), ""},
 		{fields{prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixInscriptionRapide, InscriptionRapide: cps.InscriptionRapide{Prix: 8000, Limite: sh.Date(inscription)}}}, eur(80), "Inscription rapide"},
 		{fields{prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixInscriptionRapide, InscriptionRapide: cps.InscriptionRapide{Prix: 8000, Limite: sh.Date(inscription.Add(5 * 24 * time.Hour))}}}, eur(80), "Inscription rapide"},
-		// Option statut
-		{fields{prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixStatut, Statuts: status}}, eur(100), ""},
-		{fields{prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixStatut, Statuts: status}, optPart: cps.OptionPrixParticipant{IdStatut: 1}}, eur(80), "Enfant"},
-		{fields{prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixStatut, Statuts: status}, optPart: cps.OptionPrixParticipant{IdStatut: 2}}, eur(90), "Adulte"},
 		// Option jours
-		{fields{prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixJour, Jours: jours}}, eur(100), ""},
-		{fields{prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixJour, Jours: jours}, optPart: cps.OptionPrixParticipant{Jour: cps.Jours{}}}, eur(100), ""},
-		{fields{prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixJour, Jours: jours}, optPart: cps.OptionPrixParticipant{Jour: cps.Jours{0, 1, 2, 3}}}, eur(100), ""},
-		{fields{prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixJour, Jours: jours}, optPart: cps.OptionPrixParticipant{Jour: cps.Jours{0, 2}}}, eur(40), "2 jours"},
+		{fields{prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixJour, PrixParJour: 2000}}, eur(100), ""},
+		{fields{prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixJour, PrixParJour: 2000}, optPart: cps.OptionPrixParticipant{Jour: cps.JoursPresence{}}}, eur(100), ""},
+		{fields{prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixJour, PrixParJour: 2000}, optPart: cps.OptionPrixParticipant{Jour: cps.JoursPresence{0, 1, 2, 3}}}, eur(80), "4 jours"},
+		{fields{prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixJour, PrixParJour: 2000}, optPart: cps.OptionPrixParticipant{Jour: cps.JoursPresence{0, 2}}}, eur(40), "2 jours"},
 		// Mélange
 		{
 			fields{
-				prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixJour, Jours: jours},
-				optPart: cps.OptionPrixParticipant{Jour: cps.Jours{0, 2}},
+				prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixJour, PrixParJour: 2000},
+				optPart: cps.OptionPrixParticipant{Jour: cps.JoursPresence{0, 2}},
 				optQF:   cps.PrixQuotientFamilial{20, 40, 60, 100}, qf: 100,
 			}, eur(8), "2 jours - QF 100",
 		}, // 40 * 20%

@@ -228,8 +228,8 @@ func randInscriptionRapide() InscriptionRapide {
 	return s
 }
 
-func randJours() Jours {
-	return Jours(randSliceint32())
+func randJoursPresence() JoursPresence {
+	return JoursPresence(randSliceint32())
 }
 
 func randLettreImage() LettreImage {
@@ -285,22 +285,20 @@ func randOptionPrixCamp() OptionPrixCamp {
 	var s OptionPrixCamp
 	s.Active = randOptionPrixKind()
 	s.InscriptionRapide = randInscriptionRapide()
-	s.Statuts = randSlicePrixParStatut()
-	s.Jours = randSliceint()
+	s.PrixParJour = randint()
 
 	return s
 }
 
 func randOptionPrixKind() OptionPrixKind {
-	choix := [...]OptionPrixKind{NoOption, PrixInscriptionRapide, PrixStatut, PrixJour}
+	choix := [...]OptionPrixKind{NoOption, PrixInscriptionRapide, PrixJour}
 	i := rand.Intn(len(choix))
 	return choix[i]
 }
 
 func randOptionPrixParticipant() OptionPrixParticipant {
 	var s OptionPrixParticipant
-	s.IdStatut = randint16()
-	s.Jour = randJours()
+	s.Jour = randJoursPresence()
 
 	return s
 }
@@ -334,16 +332,6 @@ func randPresenceOffsets() PresenceOffsets {
 	var s PresenceOffsets
 	s.Debut = randint()
 	s.Fin = randint()
-
-	return s
-}
-
-func randPrixParStatut() PrixParStatut {
-	var s PrixParStatut
-	s.Id = randint16()
-	s.Prix = randint()
-	s.Label = randstring()
-	s.Description = randstring()
 
 	return s
 }
@@ -409,15 +397,6 @@ func randSliceChampReponse() []ChampReponse {
 	out := make([]ChampReponse, l)
 	for i := range out {
 		out[i] = randChampReponse()
-	}
-	return out
-}
-
-func randSlicePrixParStatut() []PrixParStatut {
-	l := 3 + rand.Intn(5)
-	out := make([]PrixParStatut, l)
-	for i := range out {
-		out[i] = randPrixParStatut()
 	}
 	return out
 }
@@ -563,10 +542,6 @@ func randdos_Montant() dossiers.Montant {
 
 func randint() int {
 	return int(rand.Intn(1000000))
-}
-
-func randint16() int16 {
-	return int16(rand.Intn(1000000))
 }
 
 func randint32() int32 {

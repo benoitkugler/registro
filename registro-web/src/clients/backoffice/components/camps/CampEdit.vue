@@ -302,12 +302,8 @@ const areFieldsValid = computed(
     inner.value.AgeMax >= inner.value.AgeMin &&
     inner.value.OptionQuotientFamilial.every((p) => 0 <= p && p <= 100) &&
     !(
-      inner.value.OptionPrix.Active == OptionPrixKind.PrixStatut &&
-      !inner.value.OptionPrix.Statuts?.length
-    ) &&
-    !(
       inner.value.OptionPrix.Active == OptionPrixKind.PrixJour &&
-      inner.value.OptionPrix.Jours?.length != inner.value.Duree
+      inner.value.OptionPrix.PrixParJour == 0
     ),
 );
 

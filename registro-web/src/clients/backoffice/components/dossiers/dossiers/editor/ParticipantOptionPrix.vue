@@ -26,12 +26,6 @@
             :option="props.optionCamp"
             v-model="inner.options.Jour"
           ></OptionJournee>
-          <OptionStatut
-            v-else-if="props.optionCamp.Active == OptionPrixKind.PrixStatut"
-            :camp="props.camp"
-            :option="props.optionCamp"
-            v-model="inner.options.IdStatut"
-          ></OptionStatut>
           <div v-else>Le camp ne propose pas d'option sur le prix.</div>
         </v-col>
       </v-row>
@@ -52,10 +46,9 @@ import {
   type OptionPrixParticipant,
 } from "@/clients/backoffice/logic/api";
 import OptionJournee from "./options/OptionJournee.vue";
-import OptionStatut from "./options/OptionStatut.vue";
+import OptionInscriptionRapide from "./options/OptionInscriptionRapide.vue";
 import { ref, watch } from "vue";
 import { copy } from "@/utils";
-import OptionInscriptionRapide from "./options/OptionInscriptionRapide.vue";
 
 type OptionPrixAndQF = {
   options: OptionPrixParticipant;

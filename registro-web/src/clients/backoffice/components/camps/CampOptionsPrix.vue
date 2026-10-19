@@ -93,15 +93,10 @@
             :camp="props.camp"
             v-model="innerOption.InscriptionRapide"
           ></OptionInscriptionRapide>
-          <OptionStatut
-            v-else-if="innerOption.Active == OptionPrixKind.PrixStatut"
-            :camp="props.camp"
-            v-model="innerOption.Statuts"
-          ></OptionStatut>
           <OptionJournee
             v-else-if="innerOption.Active == OptionPrixKind.PrixJour"
             :camp="props.camp"
-            v-model="innerOption.Jours"
+            v-model="innerOption.PrixParJour"
           ></OptionJournee>
         </v-col>
       </v-row>
@@ -120,7 +115,6 @@ import {
   type PrixQuotientFamilial,
 } from "@/clients/backoffice/logic/api";
 import { Camps, selectItems } from "@/utils";
-import OptionStatut from "./options/OptionStatut.vue";
 import OptionJournee from "./options/OptionJournee.vue";
 import OptionInscriptionRapide from "./options/OptionInscriptionRapide.vue";
 import { isDateZero } from "@/components/date.ts";

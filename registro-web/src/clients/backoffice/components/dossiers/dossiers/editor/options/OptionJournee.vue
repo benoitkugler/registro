@@ -14,7 +14,7 @@
           (v) => (modelValue = v.length == allDays.length ? [] : (v as Int[]))
         "
       >
-        <v-btn v-for="(_, i) in props.option.Jours">J {{ i + 1 }}</v-btn>
+        <v-btn v-for="(_, i) in allDays">J {{ i + 1 }}</v-btn>
       </v-btn-toggle>
     </v-card-text>
   </v-card>
@@ -24,7 +24,7 @@
 import {
   type CampItem,
   type Int,
-  type Jours,
+  type JoursPresence,
   type OptionPrixCamp,
 } from "@/clients/backoffice/logic/api";
 import { computed } from "vue";
@@ -33,6 +33,8 @@ const props = defineProps<{
   option: OptionPrixCamp;
 }>();
 
-const modelValue = defineModel<Jours>({ required: true });
-const allDays = computed(() => (props.option.Jours || []).map((_, i) => i));
+const modelValue = defineModel<JoursPresence>({ required: true });
+const allDays = computed(() =>
+  Array.from({ length: props.camp.Duree }).map((_, i) => i),
+);
 </script>

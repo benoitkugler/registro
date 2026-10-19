@@ -345,17 +345,10 @@ func (p partExt) prixBase() (cps.Montant, string) {
 			descOption = "Inscription rapide"
 			prix.Cent = optCamp.InscriptionRapide.Prix
 		}
-	case cps.PrixStatut:
-		for _, info := range optCamp.Statuts {
-			if info.Id == optPart.IdStatut {
-				prix.Cent = info.Prix
-				descOption = info.Label
-			}
-		}
 	case cps.PrixJour:
 		nbJours := optPart.Jour.NbJours(p.Camp.Duree)
-		prixJours := optCamp.Jours
-		if nbJours == 0 || nbJours >= len(prixJours) {
+		prixJours := optCamp.PrixParJour
+		if nbJours == 0 {
 			// invalide -> camp entier
 			// potentiellement < somme(prixJours)
 		} else {

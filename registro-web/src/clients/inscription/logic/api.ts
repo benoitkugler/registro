@@ -108,8 +108,7 @@ export interface OptionNavette {
 export const OptionPrixKind = {
   NoOption: 0,
   PrixInscriptionRapide: 1,
-  PrixStatut: 2,
-  PrixJour: 3,
+  PrixJour: 2,
 } as const;
 export type OptionPrixKind =
   (typeof OptionPrixKind)[keyof typeof OptionPrixKind];
@@ -117,7 +116,6 @@ export type OptionPrixKind =
 export const OptionPrixKindLabels: Record<OptionPrixKind, string> = {
   [OptionPrixKind.NoOption]: "Aucune",
   [OptionPrixKind.PrixInscriptionRapide]: "Remise pour inscription rapide",
-  [OptionPrixKind.PrixStatut]: "Prix par statut",
   [OptionPrixKind.PrixJour]: "Prix à la journée",
 };
 
