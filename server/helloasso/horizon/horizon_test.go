@@ -29,15 +29,17 @@ func TestCheckout(t *testing.T) {
 	tu.AssertErr(t, err)
 	_, err = ct.createCheckout(createCheckoutIn{AmountCents: 1_000_000_000})
 	tu.AssertErr(t, err)
-	_, err = ct.createCheckout(createCheckoutIn{AmountCents: 1000, ItemName: "xxx"})
+	_, err = ct.createCheckout(createCheckoutIn{AmountCents: 1000, ItemName: "Horizon 27"})
+	tu.AssertErr(t, err)
+	_, err = ct.createCheckout(createCheckoutIn{AmountCents: 6*90*100 + 1, ItemName: "Horizon 27"})
 	tu.AssertErr(t, err)
 
-	intent, err := ct.createCheckout(createCheckoutIn{Reference: "1234-1234-1234-1234", AmountCents: 1000, ItemName: "Horizon 27"})
+	intent, err := ct.createCheckout(createCheckoutIn{Reference: "1234-1234-1234-1234", AmountCents: 90 * 100, ItemName: "Horizon 27"})
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, intent.CheckoutIntentId != 0 && intent.RedirectUrl != "")
 
 	intent, err = ct.createCheckout(createCheckoutIn{
-		Reference: "1234-1234-1234-1234", AmountCents: 1000, ItemName: "Horizon 27",
+		Reference: "1234-1234-1234-1234", AmountCents: 2 * 90 * 100, ItemName: "Horizon 27",
 		Payer: helloasso.Payer{FirstName: "1234"},
 	})
 	tu.AssertNoErr(t, err) // we have retried without name

@@ -79,8 +79,13 @@ func (ct *Controller) CreateCheckout(c echo.Context) error {
 }
 
 func (ct *Controller) createCheckout(args createCheckoutIn) (createCheckoutOut, error) {
-	if args.AmountCents < 0 || args.AmountCents > 6*9000 {
-		return createCheckoutOut{}, errors.New("invalid amountCents field")
+	const prixUnePlace = 90 * 100 // en centimes
+	if args.AmountCents%prixUnePlace != 0 {
+		return createCheckoutOut{}, errors.New("invalid amountCents field (not a multiple of 9000)")
+	}
+	nbPlaces := args.AmountCents / prixUnePlace
+	if nbPlaces < 1 || nbPlaces > 6 {
+		return createCheckoutOut{}, errors.New("invalid amountCents field (wrong quantity)")
 	}
 	if !strings.HasPrefix(args.ItemName, "Horizon") {
 		return createCheckoutOut{}, errors.New("invalid itemName field: missing Horizon")
