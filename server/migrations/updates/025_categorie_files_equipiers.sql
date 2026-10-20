@@ -4,7 +4,7 @@ BEGIN;
 
 -- This migration assumes there is actually no 
 -- file with catégorie equivalent bafa or equivalent bafd
--- we cant to preserve the id = categorie implicit invariant (might be useful in the future)...
+-- we want to preserve the id = categorie implicit invariant (might be useful in the future)...
 -- so we have to adjust the related tables
 UPDATE
     demande_equipiers
