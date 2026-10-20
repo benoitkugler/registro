@@ -44,6 +44,7 @@ func NewController(db *sql.DB, key crypto.Encrypter, password string, asso confi
 
 // HandleDonHelloasso is the webhook trigerred by Helloasso
 // See https://dev.helloasso.com/docs/notifications-webhook
+// TODO: check Horizon integration
 func (ct *Controller) HandleDonHelloasso(c echo.Context) error {
 	if ct.helloasso.ID == "" {
 		return errors.New("HelloAsso is not supported")
