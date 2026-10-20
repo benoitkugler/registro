@@ -21,7 +21,6 @@ import (
 	dn "registro/sql/dons"
 	ds "registro/sql/dossiers"
 	pr "registro/sql/personnes"
-	"registro/sql/shared"
 	"registro/utils"
 
 	"github.com/labstack/echo/v4"
@@ -111,7 +110,7 @@ func (ct *Controller) identifieAddDon(don dn.Don, donateur pr.Identite) (pr.IdPe
 	return idDonateur, err
 }
 
-func (ct *Controller) SearchPersonnes(c echo.Context) error {
+func (ct *Controller) SelectPersonnes(c echo.Context) error {
 	search := c.QueryParam("search")
 	out, err := logic.SelectPersonne(ct.db, search, true)
 	if err != nil {
@@ -120,7 +119,7 @@ func (ct *Controller) SearchPersonnes(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) SearchOrganismes(c echo.Context) error {
+func (ct *Controller) SelectOrganismes(c echo.Context) error {
 	search := c.QueryParam("search")
 	out, err := ct.searchOrganismes(search)
 	if err != nil {
@@ -228,12 +227,9 @@ func (ct *Controller) loadDons() (DonsOut, error) {
 	return out, nil
 }
 
-type PersonneD struct {
+type PersonneDonateur struct {
 	Nom    string
 	Prenom string
-	Sexe   pr.Sexe
-
-	DateNaissance shared.Date
 
 	Mail string
 
@@ -243,22 +239,20 @@ type PersonneD struct {
 	Pays       pr.Pays
 }
 
-func (p PersonneD) personne() pr.Personne {
+func (p PersonneDonateur) personne() pr.Personne {
 	return pr.Personne{Identite: pr.Identite{
-		Nom:           p.Nom,
-		Prenom:        p.Prenom,
-		Sexe:          p.Sexe,
-		DateNaissance: p.DateNaissance,
-		Mail:          p.Mail,
-		Adresse:       p.Adresse,
-		CodePostal:    p.CodePostal,
-		Ville:         p.Ville,
-		Pays:          p.Pays,
+		Nom:        p.Nom,
+		Prenom:     p.Prenom,
+		Mail:       p.Mail,
+		Adresse:    p.Adresse,
+		CodePostal: p.CodePostal,
+		Ville:      p.Ville,
+		Pays:       p.Pays,
 	}}
 }
 
 func (ct *Controller) CreatePersonneDonateur(c echo.Context) error {
-	var args PersonneD
+	var args PersonneDonateur
 	if err := c.Bind(&args); err != nil {
 		return err
 	}

@@ -1,9 +1,26 @@
 <template>
-  <v-card title="Modifier le don">
+  <v-card
+    :title="mode == 'create' ? 'Ajouter un don' : 'Modifier le don'"
+    :subtitle="
+      mode == 'create' ? 'Un mail de notification sera envoyé au donateur.' : ''
+    "
+  >
     <template #append> </template>
     <v-card-text>
-      <v-row>
-        <v-col></v-col>
+      <v-row v-if="mode == 'create'">
+        <v-col>
+          <SelectPersonne
+            label="Donateur"
+            initial-personne=""
+            v-model="inner.IdPersonne.Id"
+            :api="{
+              SelectPersonne: controller.SelectPersonnes.bind(controller),
+            }"
+            enable-create
+            @create="showCreatePersonne = true"
+            ref="select-personne"
+          ></SelectPersonne>
+        </v-col>
       </v-row>
       <v-row>
         <v-col>
@@ -50,13 +67,19 @@
       <v-spacer></v-spacer>
       <v-btn @click="emit('save', inner)">Enregistrer</v-btn>
     </v-card-actions>
+
+    <v-dialog v-model="showCreatePersonne" max-width="800">
+      <CreatePersonneCard @save="createPersonne"></CreatePersonneCard>
+    </v-dialog>
   </v-card>
 </template>
 
 <script lang="ts" setup>
-import { ref } from "vue";
-import { type Don } from "../logic/api";
-import { copy } from "@/utils";
+import { computed, ref, useTemplateRef } from "vue";
+import { type Don, type PersonneDonateur } from "../logic/api";
+import { copy, Personnes } from "@/utils";
+import { controller } from "../logic/logic";
+import CreatePersonneCard from "./CreatePersonneCard.vue";
 
 const props = defineProps<{
   don: Don;
@@ -68,4 +91,18 @@ const emit = defineEmits<{
 }>();
 
 const inner = ref(copy(props.don));
+
+const mode = computed(() => (props.don.Id == 0 ? "create" : "edit"));
+
+const selectPersonne = useTemplateRef("select-personne");
+
+const showCreatePersonne = ref(false);
+async function createPersonne(personne: PersonneDonateur) {
+  showCreatePersonne.value = false;
+  const res = await controller.CreatePersonneDonateur(personne);
+  if (res === undefined) return;
+  controller.showMessage("Profil créé avec succès.");
+
+  selectPersonne.value?.setWithTitle(res.Id, Personnes.label(res));
+}
 </script>

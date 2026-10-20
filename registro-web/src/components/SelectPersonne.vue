@@ -11,12 +11,34 @@
     v-model:search="search"
     @update:search="updateSearch"
     clearable
-    :no-data-text="
-      search.length
-        ? 'Aucun profil ne correspond à votre recherche.'
-        : 'Veuillez entrer une recherche.'
-    "
-  ></v-autocomplete>
+  >
+    <template #no-data>
+      <v-list-item
+        :title="
+          search.trim().length
+            ? 'Aucun profil ne correspond à votre recherche.'
+            : 'Veuillez entrer une recherche.'
+        "
+      >
+        <template
+          #append
+          v-if="props.enableCreate && !props.readonly && search.trim().length"
+        >
+          <v-btn size="small" prepend-icon="mdi-plus" @click="emit('create')"
+            >Créer...</v-btn
+          >
+        </template>
+      </v-list-item>
+    </template>
+    <template #item="{ item, props: innerProps }">
+      <v-list-item
+        v-bind="innerProps"
+        :title="item.title"
+        :subtitle="`ID : ${item.value}`"
+        :value="item.value"
+      ></v-list-item>
+    </template>
+  </v-autocomplete>
 </template>
 
 <script setup lang="ts">
@@ -29,14 +51,21 @@ const props = defineProps<{
   initialPersonne: string;
   api: SelectPersonneAPI;
   readonly?: boolean;
+  enableCreate?: boolean;
 }>();
 
 const modelValue = defineModel<IdPersonne>({ required: true });
 
+const emit = defineEmits<{
+  (e: "create"): void;
+}>();
+
+defineExpose({ setWithTitle });
+
 const items = ref<{ title: string; value: IdPersonne }[]>(
-  modelValue.value == 0
-    ? []
-    : [{ title: props.initialPersonne, value: modelValue.value }],
+  modelValue.value
+    ? [{ title: props.initialPersonne, value: modelValue.value }]
+    : [],
 );
 const search = ref("");
 async function doSearch() {
@@ -60,6 +89,11 @@ function updateSearch(s: string | null) {
 
   // delay new call
   timerId = setTimeout(doSearch, debounceDelay);
+}
+
+function setWithTitle(id: IdPersonne, title: string) {
+  items.value = [{ title, value: id }];
+  modelValue.value = id;
 }
 </script>
 

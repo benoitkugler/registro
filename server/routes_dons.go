@@ -19,8 +19,11 @@ func setupRoutesDons(e *echo.Echo, ct *dons.Controller) {
 	gr.PUT("/api/v1/dons", ct.CreateDon)
 	gr.DELETE("/api/v1/dons", ct.DeleteDon)
 
-	gr.GET("/api/v1/dons/search-personnes", ct.SearchPersonnes)
-	gr.GET("/api/v1/dons/search-organismes", ct.SearchOrganismes)
+	gr.GET("/api/v1/dons/search-personnes", ct.SelectPersonnes)
+	gr.GET("/api/v1/dons/search-organismes", ct.SelectOrganismes)
+
+	gr.POST("/api/v1/dons/personnes", ct.CreatePersonneDonateur)
+	gr.POST("/api/v1/dons/organismes", ct.CreateOrganisme)
 
 	e.GET("/api/v1/dons/download-recus-fiscaux", ct.DownloadRecusFiscaux, ct.JWTMiddlewareForQuery()) // url-only
 	e.GET("/api/v1/dons/download-dons", ct.DownloadDonsExcel, ct.JWTMiddlewareForQuery())             // url-only

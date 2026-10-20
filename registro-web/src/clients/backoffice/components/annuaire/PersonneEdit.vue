@@ -118,8 +118,7 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
 import { type Personne } from "@/clients/backoffice/logic/api";
-import { copy, Formatters } from "@/utils";
-import StringList from "@/components/StringList.vue";
+import { copy } from "@/utils";
 const props = defineProps<{
   personne: Personne;
 }>();
@@ -129,6 +128,6 @@ const emit = defineEmits<{
 const inner = ref(copy(props.personne));
 
 const areFieldsValid = computed(
-  () => !!(inner.value.Nom && inner.value.Prenom)
+  () => !!(inner.value.Nom && inner.value.Prenom),
 );
 </script>

@@ -3,10 +3,16 @@
 import type { AxiosResponse } from "axios";
 import Axios from "axios";
 
+export type Ar2_string = [string, string];
+
 // AAAA-MM-YY date format
 export type Date_ = string & { __opaque__: "Date" };
 
 export type Int = number & { __opaque__: "Int" };
+
+// ISO date-time string
+export type Time = string & { __opaque__: "Time" };
+
 // registro/controllers/dons.DonExt
 export interface DonExt {
   Don: Don;
@@ -27,6 +33,16 @@ export interface LogginOut {
 export interface OrganismeHeader {
   Id: IdOrganisme;
   Nom: string;
+}
+// registro/controllers/dons.PersonneDonateur
+export interface PersonneDonateur {
+  Nom: string;
+  Prenom: string;
+  Mail: string;
+  Adresse: string;
+  CodePostal: string;
+  Ville: string;
+  Pays: Pays;
 }
 // registro/controllers/dons.YearTotal
 export interface YearTotal {
@@ -56,6 +72,16 @@ export interface Don {
 }
 export type IdDon = Int & { __opaque_int__: "IdDon" };
 export type IdOrganisme = Int & { __opaque_int__: "IdOrganisme" };
+// registro/sql/dons.Organisme
+export interface Organisme {
+  Id: IdOrganisme;
+  Nom: string;
+  Mail: string;
+  Adresse: string;
+  CodePostal: string;
+  Ville: string;
+  Pays: Pays;
+}
 // registro/sql/dossiers.Currency
 export const Currency = {
   Euros: 0,
@@ -94,6 +120,38 @@ export interface Montant {
   Currency: Currency;
 }
 export type IdPersonne = Int & { __opaque_int__: "IdPersonne" };
+// registro/sql/personnes.Nationnalite
+export interface Nationnalite {
+  IsSuisse: boolean;
+}
+// registro/sql/personnes.Pays
+export type Pays = string;
+// registro/sql/personnes.Personne
+export interface Personne {
+  Id: IdPersonne;
+  Nom: string;
+  Prenom: string;
+  Sexe: Sexe;
+  DateNaissance: Date;
+  Nationnalite: Nationnalite;
+  Tels: Tels;
+  Mail: string;
+  Adresse: string;
+  CodePostal: string;
+  Ville: string;
+  Pays: Pays;
+  Publicite: Publicite;
+  CharteAccepted: Time;
+  IsTemp: boolean;
+}
+// registro/sql/personnes.Publicite
+export interface Publicite {
+  VersionPapier: boolean;
+  PubHiver: boolean;
+  PubEte: boolean;
+  EchoRocher: boolean;
+  Eonews: boolean;
+}
 // registro/sql/personnes.Sexe
 export const Sexe = {
   NoSexe: 0,
@@ -108,6 +166,8 @@ export const SexeLabels: Record<Sexe, string> = {
   [Sexe.Man]: "Homme",
 };
 
+// registro/sql/personnes.Tels
+export type Tels = Ar2_string;
 // registro/sql/shared.Date
 export type Date = Date_;
 // registro/sql/shared.OptID[registro/sql/dons.IdOrganisme]
@@ -208,8 +268,8 @@ export abstract class AbstractAPI {
     }
   }
 
-  /** SearchPersonnes performs the request and handles the error */
-  async SearchPersonnes(params: { search: string }) {
+  /** SelectPersonnes performs the request and handles the error */
+  async SelectPersonnes(params: { search: string }) {
     const fullUrl = this.baseURL + "/api/v1/dons/search-personnes";
     this.startRequest();
     try {
@@ -223,8 +283,8 @@ export abstract class AbstractAPI {
     }
   }
 
-  /** SearchOrganismes performs the request and handles the error */
-  async SearchOrganismes(params: { search: string }) {
+  /** SelectOrganismes performs the request and handles the error */
+  async SelectOrganismes(params: { search: string }) {
     const fullUrl = this.baseURL + "/api/v1/dons/search-organismes";
     this.startRequest();
     try {
@@ -232,6 +292,34 @@ export abstract class AbstractAPI {
         fullUrl,
         { headers: this.getHeaders(), params: { search: params["search"] } },
       );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** CreatePersonneDonateur performs the request and handles the error */
+  async CreatePersonneDonateur(params: PersonneDonateur) {
+    const fullUrl = this.baseURL + "/api/v1/dons/personnes";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<Personne> = await Axios.post(fullUrl, params, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** CreateOrganisme performs the request and handles the error */
+  async CreateOrganisme(params: Organisme) {
+    const fullUrl = this.baseURL + "/api/v1/dons/organismes";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<Organisme> = await Axios.post(fullUrl, params, {
+        headers: this.getHeaders(),
+      });
       return rep.data;
     } catch (error) {
       this.handleError(error);

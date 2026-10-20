@@ -42,6 +42,16 @@
             hide-details
           ></v-select>
         </v-col>
+        <v-divider vertical thickness="1"></v-divider>
+        <v-col>
+          <v-btn
+            prepend-icon="mdi-plus"
+            color="green"
+            @click="toCreate = newDon()"
+          >
+            Ajouter
+          </v-btn>
+        </v-col>
       </v-row>
     </template>
     <v-card-text class="mt-2">
@@ -128,6 +138,20 @@
     </v-dialog>
 
     <v-dialog
+      :model-value="toCreate != null"
+      @update:model-value="toCreate = null"
+      max-width="600px"
+    >
+      <DonPannel
+        v-if="toCreate"
+        :don="toCreate"
+        :affectation-hints="affectationsHints"
+        @save="createDon"
+      >
+      </DonPannel>
+    </v-dialog>
+
+    <v-dialog
       :model-value="toDelete != null"
       @update:model-value="toDelete = null"
       max-width="600px"
@@ -151,14 +175,20 @@
 import { ref, computed, onMounted, reactive } from "vue";
 import { controller } from "../logic/logic";
 import {
+  Currency,
+  ModePaiement,
   ModePaiementLabels,
   type Don,
   type DonExt,
   type DonsOut,
+  type IdDon,
   type Int,
+  type OptID_IdOrganisme,
 } from "../logic/api";
 import { Formatters, normalize } from "@/utils";
 import DonPannel from "./DonPannel.vue";
+import { newDate_ } from "@/components/date.ts";
+import type { OptID_IdPersonne } from "@/clients/directeurs/logic/api.ts";
 
 const emit = defineEmits<{
   (e: "update:selectedYear", year: Int): void;
@@ -174,7 +204,7 @@ const data = ref<DonsOut | null>(null);
 const affectationsHints = computed(() =>
   Array.from(new Set(data.value?.Dons?.map((d) => d.Don.Affectation)).keys())
     .filter((s) => s != "")
-    .sort()
+    .sort(),
 );
 
 const filter = reactive({
@@ -190,7 +220,7 @@ const filteredDons = computed(() => {
       new Date(don.Don.Date).getFullYear() == filter.year &&
       (pattern == "" ||
         normalize(don.Donateur).includes(pattern) ||
-        normalize(don.Don.Details).includes(pattern))
+        normalize(don.Don.Details).includes(pattern)),
   );
   // most recent first
   out.sort((a, b) => {
@@ -203,8 +233,8 @@ const filteredDons = computed(() => {
 const paginatedDons = computed(() =>
   filteredDons.value.slice(
     (currentPage.value - 1) * pageSize,
-    currentPage.value * pageSize
-  )
+    currentPage.value * pageSize,
+  ),
 );
 
 function ensurePageValid() {
@@ -215,7 +245,7 @@ function ensurePageValid() {
 
 const pageSize = 16;
 const pagesCount = computed(() =>
-  Math.max(Math.ceil(filteredDons.value.length / pageSize), 1)
+  Math.max(Math.ceil(filteredDons.value.length / pageSize), 1),
 );
 const currentPage = ref(1); // 1-based
 
@@ -234,7 +264,7 @@ const totals = computed(
     (data.value?.YearTotals || {})[filter.year] || {
       Particuliers: "",
       Organismes: "",
-    }
+    },
 );
 
 async function fetchDons() {
@@ -244,16 +274,29 @@ async function fetchDons() {
   ensurePageValid();
 }
 
-// async function create() {
-//   isLoading.value = true;
-//   const res = await controller.CampsCreate();
-//   isLoading.value = false;
-//   if (res === undefined) return;
+const toCreate = ref<Don | null>(null);
+function newDon(): Don {
+  return {
+    Id: 0 as IdDon,
+    IdPersonne: { Valid: true } as OptID_IdPersonne,
+    IdOrganisme: { Valid: false } as OptID_IdOrganisme,
+    Montant: { Currency: Currency.Euros, Cent: 1000 as Int },
+    ModePaiement: ModePaiement.Cheque,
+    Date: newDate_(new Date(Date.now())),
+    Affectation: "",
+    Details: "",
+    Remercie: false,
+  };
+}
 
-//   controller.showMessage("Camp ajouté avec succès.");
-//   campsData.set(res.Camp.Camp.Id, res);
-//   toEdit.value = res;
-// }
+async function createDon(don: Don) {
+  toCreate.value = null;
+  const res = await controller.CreateDon(don);
+  if (res === undefined) return;
+
+  controller.showMessage("Don ajouté avec succès.");
+  fetchDons();
+}
 
 const toEdit = ref<Don | null>(null);
 async function updateDon(don: Don) {
