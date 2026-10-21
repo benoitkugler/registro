@@ -1,4 +1,4 @@
--- v0.12.1
+-- v0.12.3
 BEGIN;
 
 ALTER TABLE

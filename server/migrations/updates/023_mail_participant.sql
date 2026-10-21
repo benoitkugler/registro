@@ -1,4 +1,4 @@
--- v0.12.1
+-- v0.12.3
 -- ajout champ Mail sur formulaire d'inscription
 BEGIN;
 
