@@ -188,27 +188,6 @@ export interface Demande {
 }
 export type IdDemande = Int & { __opaque_int__: "IdDemande" };
 export type IdFile = Int & { __opaque_int__: "IdFile" };
-// registro/sql/personnes.Approfondissement
-export const Approfondissement = {
-  AAucun: 0,
-  AAutre: 1,
-  ASb: 2,
-  ACanoe: 3,
-  AVoile: 4,
-  AMoto: 5,
-} as const;
-export type Approfondissement =
-  (typeof Approfondissement)[keyof typeof Approfondissement];
-
-export const ApprofondissementLabels: Record<Approfondissement, string> = {
-  [Approfondissement.AAucun]: "Non effectué",
-  [Approfondissement.AAutre]: "Approfondissement",
-  [Approfondissement.ASb]: "Surveillant de baignade",
-  [Approfondissement.ACanoe]: "Canoë - Kayak",
-  [Approfondissement.AVoile]: "Voile",
-  [Approfondissement.AMoto]: "Loisirs motocyclistes",
-};
-
 // registro/sql/personnes.Diplome
 export const Diplome = {
   DAucun: 0,
@@ -288,7 +267,7 @@ export interface Ficheequipier {
   Diplome: Diplome;
   Formation: string;
   Fonctionnaire: boolean;
-  Approfondissement: Approfondissement;
+  Qualifications: Qualifications;
   EtatCivil: EtatCivil;
   NombreEnfants: Int;
   Profession: string;
@@ -343,6 +322,12 @@ export interface Nationnalite {
 }
 // registro/sql/personnes.Pays
 export type Pays = string;
+// registro/sql/personnes.Qualifications
+export interface Qualifications {
+  SB: boolean;
+  Canoe: boolean;
+  Voile: boolean;
+}
 // registro/sql/personnes.Recommandation
 export interface Recommandation {
   Nom: string;

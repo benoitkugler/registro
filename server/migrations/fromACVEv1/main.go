@@ -135,20 +135,16 @@ func diplome(v rd.Diplome) pr.Diplome {
 	}
 }
 
-func approfondissement(v rd.Approfondissement) pr.Approfondissement {
+func qualification(v rd.Approfondissement) pr.Qualifications {
 	switch v {
 	default:
-		return pr.AAucun
-	case rd.AAutre:
-		return pr.AAutre
+		return pr.Qualifications{}
 	case rd.ASb:
-		return pr.ASb
+		return pr.Qualifications{SB: true}
 	case rd.ACanoe:
-		return pr.ACanoe
+		return pr.Qualifications{Canoe: true}
 	case rd.AVoile:
-		return pr.AVoile
-	case rd.AMoto:
-		return pr.AMoto
+		return pr.Qualifications{Voile: true}
 	}
 }
 

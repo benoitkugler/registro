@@ -16,6 +16,14 @@ CREATE TYPE Publicite AS (
     Eonews boolean
 );
 
+DROP TYPE IF EXISTS Qualifications;
+
+CREATE TYPE Qualifications AS (
+    SB boolean,
+    Canoe boolean,
+    Voile boolean
+);
+
 DROP TYPE IF EXISTS Montant;
 
 CREATE TYPE Montant AS (
@@ -45,7 +53,7 @@ CREATE TABLE ficheequipiers (
     Diplome smallint CHECK (Diplome IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24)) NOT NULL,
     Formation text NOT NULL,
     Fonctionnaire boolean NOT NULL,
-    Approfondissement smallint CHECK (Approfondissement IN (0, 1, 2, 3, 4, 5)) NOT NULL,
+    Qualifications Qualifications NOT NULL,
     EtatCivil smallint CHECK (EtatCivil IN (0, 1, 2)) NOT NULL,
     NombreEnfants integer NOT NULL,
     Profession text NOT NULL,
@@ -540,29 +548,6 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION gomacro_validate_json_array_camp_PrixParStatut (data jsonb)
-    RETURNS boolean
-    AS $$
-BEGIN
-    IF jsonb_typeof(data) = 'null' THEN
-        RETURN TRUE;
-    END IF;
-    IF jsonb_typeof(data) != 'array' THEN
-        RETURN FALSE;
-    END IF;
-    IF jsonb_array_length(data) = 0 THEN
-        RETURN TRUE;
-    END IF;
-    RETURN (
-        SELECT
-            bool_and(gomacro_validate_json_camp_PrixParStatut (value))
-        FROM
-            jsonb_array_elements(data));
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
 CREATE OR REPLACE FUNCTION gomacro_validate_json_array_camp_Vetement (data jsonb)
     RETURNS boolean
     AS $$
@@ -828,13 +813,12 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(KEY IN ('Active', 'InscriptionRapide', 'Statuts', 'Jours'))
+            bool_and(KEY IN ('Active', 'InscriptionRapide', 'PrixParJour'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_camp_OptionPrixKind (data -> 'Active')
         AND gomacro_validate_json_camp_InscriptionRapide (data -> 'InscriptionRapide')
-        AND gomacro_validate_json_array_camp_PrixParStatut (data -> 'Statuts')
-        AND gomacro_validate_json_array_number (data -> 'Jours');
+        AND gomacro_validate_json_number (data -> 'PrixParJour');
     RETURN is_valid;
 END;
 $$
@@ -846,7 +830,7 @@ CREATE OR REPLACE FUNCTION gomacro_validate_json_camp_OptionPrixKind (data jsonb
     AS $$
 DECLARE
     is_valid boolean := jsonb_typeof(data) = 'number'
-    AND data::int IN (0, 1, 2, 3);
+    AND data::int IN (0, 1, 2);
 BEGIN
     IF NOT is_valid THEN
         RAISE WARNING '% is not a camp_OptionPrixKind', data;
@@ -868,35 +852,10 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(KEY IN ('IdStatut', 'Jour'))
+            bool_and(KEY IN ('Jour'))
         FROM
             jsonb_each(data))
-        AND gomacro_validate_json_number (data -> 'IdStatut')
         AND gomacro_validate_json_array_number (data -> 'Jour');
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION gomacro_validate_json_camp_PrixParStatut (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean;
-BEGIN
-    IF jsonb_typeof(data) != 'object' THEN
-        RETURN FALSE;
-    END IF;
-    is_valid := (
-        SELECT
-            bool_and(KEY IN ('Id', 'Prix', 'Label', 'Description'))
-        FROM
-            jsonb_each(data))
-        AND gomacro_validate_json_number (data -> 'Id')
-        AND gomacro_validate_json_number (data -> 'Prix')
-        AND gomacro_validate_json_string (data -> 'Label')
-        AND gomacro_validate_json_string (data -> 'Description');
     RETURN is_valid;
 END;
 $$

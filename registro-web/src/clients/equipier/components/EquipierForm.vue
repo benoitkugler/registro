@@ -30,7 +30,7 @@
   </v-alert>
 
   <!-- formulaire commun ACVE/Repere -->
-  <!-- Nom Prénom Sexe DateNaissance Adresse CodePostal Ville Pays Mail -->
+  <!-- Nom Prénom Sexe DateNaissance Mail Tels Adresse CodePostal Ville Pays -->
   <v-card title="Informations personnelles">
     <v-card-text>
       <v-form class="my-4">
@@ -193,7 +193,13 @@
         <v-col>
           <DiplomeField v-model="innerDetails.Diplome"></DiplomeField>
         </v-col>
-        <v-col v-if="asso == 'repere'">
+
+        <v-col v-if="asso == 'acve'">
+          <QualificationsField
+            v-model="innerDetails.Qualifications"
+          ></QualificationsField>
+        </v-col>
+        <v-col v-else-if="asso == 'repere'">
           <FormationRepereField
             v-model="innerDetails.FormationRepere"
           ></FormationRepereField>
@@ -213,40 +219,6 @@
           ></v-text-field>
         </v-col>
       </v-row>
-    </v-card-text>
-  </v-card>
-  <!-- Champs ACVE -->
-  <!-- Diplome Approfondissement SecuriteSociale Fonctionnaire-->
-  <!-- TODO -->
-
-  <v-card v-if="asso == 'acve'" class="my-2">
-    <v-card-text>
-      <v-row>
-        <v-col>
-          <DiplomeField v-model="innerDetails.Diplome"></DiplomeField>
-        </v-col>
-        <v-col>
-          <ApprofondissementField
-            v-model="innerDetails.Approfondissement"
-          ></ApprofondissementField>
-        </v-col>
-      </v-row>
-
-      <!-- <v-row>
-          <v-col>
-            <v-text-field
-              variant="outlined"
-              density="compact"
-              v-model="innerDetails.Profession"
-              label="Profession"
-              :rules="[FormRules.required(`Merci de préciser ta profession.`)]"
-            ></v-text-field>
-          </v-col>
-         
-        </v-row>
-        <v-row>
-          
-        </v-row> -->
     </v-card-text>
   </v-card>
 
@@ -566,13 +538,14 @@ import {
   type Int,
   type Pays,
 } from "../logic/api";
-import { Camps, copy, Formatters, FormRules } from "@/utils";
+import { Camps, copy, FormRules } from "@/utils";
 import { controller } from "../logic/logic";
 import { isDateZero } from "@/components/date";
 import CharteEquipierACVE from "./CharteEquipierACVE.vue";
 import CharteEquipierRepere from "./CharteEquipierRepere.vue";
 import { Phones } from "@/phones";
 import SecuriteSocialeField from "./SecuriteSocialeField.vue";
+import QualificationsField from "./QualificationsField.vue";
 
 const props = defineProps<{
   token: string;
@@ -687,7 +660,10 @@ function isFormRepereValid() {
 }
 
 function isFormAcveValid() {
-  // TODO
+  const d = innerDetails.value;
+  if (props.equipier.IsAuPair) {
+    return d.SecuriteSociale != "";
+  }
   return true;
 }
 

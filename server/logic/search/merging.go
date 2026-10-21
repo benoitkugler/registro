@@ -88,7 +88,7 @@ func cmpDate(in, out shared.Date) diff {
 }
 
 type fieldEnum interface {
-	pr.Sexe | pr.Approfondissement | pr.Diplome
+	pr.Sexe
 }
 
 func cmpEnum[T fieldEnum](in, out T) diff {
@@ -143,8 +143,6 @@ func cmpGeneric[T fields](entrant, existant T) diff {
 		return cmpString(v1.(string), v2.(string))
 	case shared.Date:
 		return cmpDate(v1.(shared.Date), v2.(shared.Date))
-	case pr.Departement:
-		return cmpString(v1.(pr.Departement), v2.(pr.Departement))
 	case pr.Sexe:
 		return cmpEnum(v1.(pr.Sexe), v2.(pr.Sexe))
 	case pr.Tels:
@@ -153,10 +151,6 @@ func cmpGeneric[T fields](entrant, existant T) diff {
 		return cmpString(v1.(pr.Pays), v2.(pr.Pays))
 	case bool:
 		return cmpBool(v1.(bool), v2.(bool))
-	case pr.Diplome:
-		return cmpEnum(v1.(pr.Diplome), v2.(pr.Diplome))
-	case pr.Approfondissement:
-		return cmpEnum(v1.(pr.Approfondissement), v2.(pr.Approfondissement))
 	case pr.Nationnalite:
 		return cmpBool(v1.(pr.Nationnalite).IsSuisse, v2.(pr.Nationnalite).IsSuisse)
 	default:
@@ -187,8 +181,6 @@ func Merge(entrant pr.Identite, existant pr.Identite) (merged pr.Identite, confl
 	merged.Prenom, conflicts.Prenom = choose(entrant.Prenom, existant.Prenom)
 	merged.Sexe, conflicts.Sexe = choose(entrant.Sexe, existant.Sexe)
 	merged.DateNaissance, conflicts.DateNaissance = choose(entrant.DateNaissance, existant.DateNaissance)
-	// merged.VilleNaissance, conflicts.VilleNaissance = choose(entrant.VilleNaissance, existant.VilleNaissance)
-	// merged.DepartementNaissance, conflicts.DepartementNaissance = choose(entrant.DepartementNaissance, existant.DepartementNaissance)
 	merged.Nationnalite, conflicts.Nationnalite = choose(entrant.Nationnalite, existant.Nationnalite)
 	merged.Tels, conflicts.Tels = choose(entrant.Tels, existant.Tels)
 	merged.Mail, conflicts.Mail = choose(entrant.Mail, existant.Mail)
@@ -196,13 +188,6 @@ func Merge(entrant pr.Identite, existant pr.Identite) (merged pr.Identite, confl
 	merged.CodePostal, conflicts.CodePostal = choose(entrant.CodePostal, existant.CodePostal)
 	merged.Ville, conflicts.Ville = choose(entrant.Ville, existant.Ville)
 	merged.Pays, conflicts.Pays = choose(entrant.Pays, existant.Pays)
-	// merged.NomJeuneFille, conflicts.NomJeuneFille = choose(entrant.NomJeuneFille, existant.NomJeuneFille)
-	// merged.Profession, conflicts.Profession = choose(entrant.Profession, existant.Profession)
-	// merged.Etudiant, conflicts.Etudiant = choose(entrant.Etudiant, existant.Etudiant)
-	// merged.Fonctionnaire, conflicts.Fonctionnaire = choose(entrant.Fonctionnaire, existant.Fonctionnaire)
-	// merged.Diplome, conflicts.Diplome = choose(entrant.Diplome, existant.Diplome)
-	// merged.Approfondissement, conflicts.Approfondissement = choose(entrant.Approfondissement, existant.Approfondissement)
-	// merged.SecuriteSociale, conflicts.SecuriteSociale = choose(entrant.SecuriteSociale, existant.SecuriteSociale)
 
 	return merged, conflicts
 }

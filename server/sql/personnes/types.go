@@ -133,17 +133,11 @@ const (
 	DAutre // Autre (à préciser)
 )
 
-// TODO: probably remove (see https://github.com/benoitkugler/registro/issues/6)
-type Approfondissement uint8
-
-const (
-	AAucun Approfondissement = iota // Non effectué
-	AAutre                          // Approfondissement
-	ASb                             // Surveillant de baignade
-	ACanoe                          // Canoë - Kayak
-	AVoile                          // Voile
-	AMoto                           // Loisirs motocyclistes
-)
+type Qualifications struct {
+	SB    bool // Surveillant de baignade
+	Canoe bool // Canoë - Kayak
+	Voile bool // Voile
+}
 
 type Mails []string
 

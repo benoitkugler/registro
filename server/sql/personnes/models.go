@@ -88,13 +88,12 @@ type Ficheequipier struct {
 
 	// champs ACVE
 
-	Fonctionnaire     bool
-	Approfondissement Approfondissement
+	Fonctionnaire bool
+
+	Qualifications Qualifications
 
 	// VilleNaissance et DepartementNaissance sont calculés automatiquement
 	// à partir du numéro de sécurité sociale
-	// VilleNaissance       string
-	// DepartementNaissance Departement
 
 	// champs Repère
 
