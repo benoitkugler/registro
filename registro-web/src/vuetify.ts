@@ -19,11 +19,11 @@ const colorScheme =
   asso == "acve"
     ? {
         primary: "#c8db30",
-        "on-primary": "black",
-        text: "black",
+        "on-primary": "#000000",
+        text: "#000000",
 
         accent: "#ffd100",
-        "on-accent": "black",
+        "on-accent": "#000000",
       }
     : {
         primary: "#216442",
