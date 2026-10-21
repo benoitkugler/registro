@@ -11,6 +11,7 @@
     :rules="props.rule ? [rule] : undefined"
     :hide-details="props.hideDetails"
     @blur="onBlur"
+    autocomplete="bday"
   >
   </v-text-field>
 </template>
@@ -35,7 +36,7 @@ const adapter = useDate();
 const inner = ref(
   isDateZero(modelValue.value)
     ? ""
-    : (adapter.parseISO(modelValue.value) as Date).toLocaleDateString()
+    : (adapter.parseISO(modelValue.value) as Date).toLocaleDateString(),
 );
 
 function onType(s: string) {

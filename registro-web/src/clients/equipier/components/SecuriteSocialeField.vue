@@ -1,35 +1,28 @@
 <template>
-  <v-row>
-    <v-col align-self="center">
-      <v-text-field
-        variant="outlined"
-        density="compact"
-        v-model="modelValue"
-        @blur="checkSecuriteSociale"
-        label="Sécurité sociale"
-        :rules="[
-          FormRules.required(
-            `Merci de préciser ton numéro de Sécurité Sociale.`,
-          ),
-        ]"
-        :error-messages="infered?.Err ? [infered.Err] : undefined"
+  <v-text-field
+    variant="outlined"
+    density="compact"
+    v-model="modelValue"
+    @blur="checkSecuriteSociale"
+    label="Sécurité sociale"
+    :rules="[
+      FormRules.required(`Merci de préciser ton numéro de Sécurité Sociale.`),
+    ]"
+    :error-messages="infered?.Err ? [infered.Err] : undefined"
+  >
+    <template #append-inner>
+      <v-chip
+        v-if="infered && !infered.Err"
+        color="green"
+        prepend-icon="mdi-check"
       >
-        <template #append-inner>
-          <v-chip
-            v-if="infered && !infered.Err"
-            color="green"
-            prepend-icon="mdi-check"
-          >
-            <span>Né{{ Formatters.accord(props.sexe) }} à&nbsp</span
-            ><b>
-              {{ infered.CommuneNaissance }} ;
-              {{ infered.DepartementNaissance }}</b
-            >
-          </v-chip>
-        </template>
-      </v-text-field>
-    </v-col>
-  </v-row>
+        <span>Né{{ Formatters.accord(props.sexe) }} à&nbsp</span
+        ><b>
+          {{ infered.CommuneNaissance }} ; {{ infered.DepartementNaissance }}</b
+        >
+      </v-chip>
+    </template>
+  </v-text-field>
 </template>
 
 <script lang="ts" setup>

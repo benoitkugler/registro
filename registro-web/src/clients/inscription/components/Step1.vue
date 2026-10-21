@@ -17,6 +17,7 @@
               v-model="respo.Nom"
               label="Nom"
               :rules="[FormRules.required('Merci de remplir votre nom.')]"
+              autocomplete="family-name"
             ></v-text-field>
           </v-col>
           <v-col md="3" sm="6" cols="12">
@@ -26,6 +27,7 @@
               v-model="respo.Prenom"
               label="Prénom"
               :rules="[FormRules.required('Merci de remplir votre prénom.')]"
+              autocomplete="given-name"
             ></v-text-field>
           </v-col>
           <v-col md="3" sm="4" cols="12">
@@ -59,6 +61,7 @@
                   `L'adresse est requise pour l'émission d'une facture.`,
                 ),
               ]"
+              autocomplete="street-address"
             >
             </v-textarea>
           </v-col>
@@ -73,6 +76,7 @@
                   `Le code postal est requis pour l'émission d'une facture.`,
                 ),
               ]"
+              autocomplete="postal-code"
             ></v-text-field>
           </v-col>
           <v-col md="3" sm="6" cols="12">
@@ -109,6 +113,7 @@
                   'Une adresse mail est nécessaire pour recevoir les informations sur le suivi de votre inscription.',
                 ),
               ]"
+              autocomplete="email"
             ></v-text-field>
           </v-col>
           <v-col md="6" cols="12">

@@ -42,6 +42,7 @@
               v-model="innerBase.Nom"
               label="Nom"
               :rules="[FormRules.required('Merci de remplir ton nom.')]"
+              autocomplete="family-name"
             ></v-text-field>
           </v-col>
           <v-col md="3" sm="6">
@@ -51,6 +52,7 @@
               v-model="innerBase.Prenom"
               label="Prénom"
               :rules="[FormRules.required('Merci de remplir ton prénom.')]"
+              autocomplete="given-name"
             ></v-text-field>
           </v-col>
           <v-col md="2" sm="4">
@@ -84,6 +86,7 @@
                   'Ton adresse mail est utile pour partager les photos du séjour.',
                 ),
               ]"
+              autocomplete="email"
             ></v-text-field>
           </v-col>
           <v-col md="7" sm="6">
@@ -106,6 +109,7 @@
               label="Adresse"
               rows="2"
               :rules="[FormRules.required(`Merci de préciser ton adresse.`)]"
+              autocomplete="street-address"
             >
             </v-textarea>
           </v-col>
@@ -118,6 +122,7 @@
               :rules="[
                 FormRules.required(`Merci de préciser ton code postal.`),
               ]"
+              autocomplete="postal-code"
             ></v-text-field>
           </v-col>
           <v-col md="3" sm="6">
@@ -138,13 +143,24 @@
         </v-row>
 
         <!-- champs ACVE -->
-        <SecuriteSocialeRow
-          v-if="asso == 'acve' && props.equipier.IsAuPair"
-          :token="props.token"
-          :sexe="innerBase.Sexe"
-          :date-naissance="innerBase.DateNaissance"
-          v-model="innerDetails.SecuriteSociale"
-        ></SecuriteSocialeRow>
+        <v-row v-if="asso == 'acve' && props.equipier.IsAuPair">
+          <v-col cols="8">
+            <SecuriteSocialeField
+              :token="props.token"
+              :sexe="innerBase.Sexe"
+              :date-naissance="innerBase.DateNaissance"
+              v-model="innerDetails.SecuriteSociale"
+            ></SecuriteSocialeField>
+          </v-col>
+          <v-col cols="4">
+            <v-checkbox
+              density="compact"
+              hide-details
+              v-model="innerDetails.Fonctionnaire"
+              label="Je suis fonctionnaire"
+            ></v-checkbox>
+          </v-col>
+        </v-row>
 
         <!-- champs Repère -->
         <v-row v-if="asso == 'repere'">
@@ -229,14 +245,7 @@
          
         </v-row>
         <v-row>
-          <v-col>
-            <v-checkbox
-              density="compact"
-              hide-details
-              v-model="innerDetails.Fonctionnaire"
-              label="Je suis fonctionnaire"
-            ></v-checkbox>
-          </v-col>
+          
         </v-row> -->
     </v-card-text>
   </v-card>
@@ -563,7 +572,7 @@ import { isDateZero } from "@/components/date";
 import CharteEquipierACVE from "./CharteEquipierACVE.vue";
 import CharteEquipierRepere from "./CharteEquipierRepere.vue";
 import { Phones } from "@/phones";
-import SecuriteSocialeRow from "./SecuriteSocialeRow.vue";
+import SecuriteSocialeField from "./SecuriteSocialeField.vue";
 
 const props = defineProps<{
   token: string;
