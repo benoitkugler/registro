@@ -144,7 +144,7 @@
 
         <!-- champs ACVE -->
         <v-row v-if="asso == 'acve' && props.equipier.IsAuPair">
-          <v-col cols="8">
+          <v-col md="8" cols="12">
             <SecuriteSocialeField
               :token="props.token"
               :sexe="innerBase.Sexe"
@@ -152,7 +152,7 @@
               v-model="innerDetails.SecuriteSociale"
             ></SecuriteSocialeField>
           </v-col>
-          <v-col cols="4">
+          <v-col md="4" cols="12">
             <v-checkbox
               density="compact"
               hide-details
