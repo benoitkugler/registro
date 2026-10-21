@@ -2,11 +2,12 @@ package equipier
 
 import (
 	"fmt"
-	"registro/controllers/equipier/communes"
-	pr "registro/sql/personnes"
 	"strconv"
 	"strings"
 	"time"
+
+	"registro/controllers/equipier/communes"
+	pr "registro/sql/personnes"
 )
 
 type SecuriteSocialeCheck struct {
@@ -14,7 +15,7 @@ type SecuriteSocialeCheck struct {
 	DepartementNaissance, CommuneNaissance string // computed
 }
 
-func checkSecuriteSociale(sexe pr.Sexe, dateNaissance time.Time, securiteSociale string) SecuriteSocialeCheck {
+func ParseSecuriteSociale(sexe pr.Sexe, dateNaissance time.Time, securiteSociale string) SecuriteSocialeCheck {
 	securiteSociale = strings.ToUpper(strings.ReplaceAll(securiteSociale, " ", ""))
 	if len(securiteSociale) != 15 {
 		return SecuriteSocialeCheck{Err: "Merci de renseigner les 15 chiffres."}

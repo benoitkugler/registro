@@ -19,7 +19,7 @@ func TestEquipiers(t *testing.T) {
 		"../../migrations/init.sql")
 	defer db.Remove()
 
-	pe1, err := pr.Personne{Identite: pr.Identite{Nom: "Banaza", Mail: "sdlsmd@dummy.fr"}}.Insert(db)
+	pe1, err := pr.Personne{Identite: pr.Identite{Nom: "Banaza", Mail: "sdlsmd@dummy.fr", Sexe: pr.Man, DateNaissance: shared.NewDate(1994, time.May, 5)}}.Insert(db)
 	tu.AssertNoErr(t, err)
 	pe2, err := pr.Personne{Identite: pr.Identite{Nom: "Kfdmlg"}}.Insert(db)
 	tu.AssertNoErr(t, err)
@@ -41,7 +41,15 @@ func TestEquipiers(t *testing.T) {
 	_, err = ct.createEquipier(CreateEquipierIn{pe3.Id, camp.Camp.Camp.Id, cps.Roles{cps.Chauffeur, cps.Cuisine}})
 	tu.AssertNoErr(t, err)
 
+	err = pr.Ficheequipier{IdPersonne: pe1.Id, SecuriteSociale: "194057855126891", Fonctionnaire: true}.Insert(ct.db)
+	tu.AssertNoErr(t, err)
+
 	b, name, err := ct.exportListeEquipiers(camp.Camp.Camp.Id)
 	tu.AssertNoErr(t, err)
-	tu.Write(t, name, b)
+	tu.Write(t, "acve_"+name, b)
+
+	ct.asso.ID = "repere"
+	b, name, err = ct.exportListeEquipiers(camp.Camp.Camp.Id)
+	tu.AssertNoErr(t, err)
+	tu.Write(t, "repere_"+name, b)
 }

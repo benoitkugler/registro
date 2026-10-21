@@ -342,7 +342,7 @@ func (ct *Controller) ParseSecuriteSociale(c echo.Context) error {
 		return err
 	}
 
-	out := checkSecuriteSociale(args.Sexe, args.DateNaissance.Time(), args.SecuriteSociale)
+	out := ParseSecuriteSociale(args.Sexe, args.DateNaissance.Time(), args.SecuriteSociale)
 
 	return c.JSON(200, out)
 }

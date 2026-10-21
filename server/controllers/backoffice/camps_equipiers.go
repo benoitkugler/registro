@@ -6,6 +6,7 @@ import (
 	"slices"
 	"strings"
 
+	eqAPI "registro/controllers/equipier"
 	fsAPI "registro/controllers/files"
 	"registro/generators/sheets"
 	cps "registro/sql/camps"
@@ -84,22 +85,31 @@ func (ct *Controller) CampsDownloadEquipiers(c echo.Context) error {
 	return c.Blob(200, mimeType, content)
 }
 
+func formatBool(b bool) string {
+	if b {
+		return "Oui"
+	}
+	return "Non"
+}
+
 // export equpiers for the given camp
 func (ct *Controller) exportListeEquipiers(idCamp cps.IdCamp) ([]byte, string, error) {
 	camp, err := cps.SelectCamp(ct.db, idCamp)
 	if err != nil {
 		return nil, "", utils.SQLError(err)
 	}
-	equipiers, personnes, _, err := cps.LoadEquipiersByCamps(ct.db, idCamp)
+	equipiers, personnes, details, err := cps.LoadEquipiersByCamps(ct.db, idCamp)
 	if err != nil {
 		return nil, "", err
 	}
 
-	header := [...]string{"Nom", "Prénom", "Sexe", "Date de naissance", "Rôle", "Adresse", "Code postal", "Ville", "Pays", "Mail"}
+	headerCommun := [...]string{"Nom", "Prénom", "Sexe", "Date de naissance", "Rôle", "Adresse", "Code postal", "Ville", "Pays", "Mail"}
+	headerACVE := [...]string{"Au pair ?", "Securite sociale", "Commune de naissance", "Département de naissance", "Fonctionnaire ?"}
 	rows := make([][]sheets.Cell, 0, len(equipiers))
 	for _, equipier := range equipiers {
 		pe := personnes[equipier.IdPersonne]
-		row := [len(header)]sheets.Cell{
+		detail := details[equipier.IdPersonne]
+		var rowCommun [len(headerCommun)]sheets.Cell = [...]sheets.Cell{
 			{Value: pe.FNom()},
 			{Value: pe.FPrenom()},
 			{Value: pe.Sexe.String()},
@@ -111,12 +121,33 @@ func (ct *Controller) exportListeEquipiers(idCamp cps.IdCamp) ([]byte, string, e
 			{Value: string(pe.Pays)},
 			{Value: pe.Mail},
 		}
-		rows = append(rows, row[:])
+		row := rowCommun[:]
+		if ct.asso.ID == "acve" {
+			infered := eqAPI.ParseSecuriteSociale(pe.Sexe, pe.DateNaissance.Time(), detail.SecuriteSociale)
+			auPair := equipier.Roles.IsAuPair()
+			var rowACVE [len(headerACVE)]sheets.Cell = [...]sheets.Cell{
+				{Value: formatBool(auPair)},
+				{Value: detail.SecuriteSociale},
+				{Value: infered.CommuneNaissance},
+				{Value: infered.DepartementNaissance},
+				{Value: formatBool(detail.Fonctionnaire)},
+			}
+			if !auPair { // we do not ask for these fields, hide the values
+				rowACVE[1], rowACVE[2], rowACVE[3], rowACVE[4] = sheets.Cell{}, sheets.Cell{}, sheets.Cell{}, sheets.Cell{}
+			}
+			row = append(row, rowACVE[:]...)
+		}
+
+		rows = append(rows, row)
 	}
 
 	slices.SortFunc(rows, func(a, b []sheets.Cell) int { return strings.Compare(a[0].Value, b[0].Value) })
 
-	content, err := sheets.CreateTable(header[:], rows)
+	header := headerCommun[:]
+	if ct.asso.ID == "acve" {
+		header = append(header, headerACVE[:]...)
+	}
+	content, err := sheets.CreateTable(header, rows)
 	if err != nil {
 		return nil, "", err
 	}

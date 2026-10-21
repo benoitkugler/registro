@@ -32,7 +32,7 @@ func Test_checkSecuriteSociale(t *testing.T) {
 		{pr.Man, d(1994, 5), "2 94 05 78 551 268 91", true},
 	}
 	for _, tt := range tests {
-		got := checkSecuriteSociale(tt.sexe, tt.dateNaissance, tt.securiteSociale)
+		got := ParseSecuriteSociale(tt.sexe, tt.dateNaissance, tt.securiteSociale)
 		if (got.Err != "") != tt.wantErr {
 			t.Errorf("checkSecuriteSociale(%s) = %v", tt.securiteSociale, got)
 		}
