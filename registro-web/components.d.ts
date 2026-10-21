@@ -11,7 +11,6 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    ApprofondissementField: typeof import('./src/components/ApprofondissementField.vue')['default']
     BoolField: typeof import('./src/components/BoolField.vue')['default']
     CampSondagesV: typeof import('./src/components/sondages/CampSondagesV.vue')['default']
     CardSimilaires: typeof import('./src/components/inscriptions/CardSimilaires.vue')['default']
