@@ -25,7 +25,6 @@ const modelValue = defineModel<Diplome>({ required: true });
 const asso = import.meta.env.VITE_ASSO;
 
 // Keep in sync with the server Diplome enum
-
 const plage =
   asso == "acve"
     ? ([Diplome.DAcveBafa, Diplome.DAcveBeatep] as const)

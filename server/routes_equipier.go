@@ -16,4 +16,6 @@ func setupRoutesEquipier(e *echo.Echo, ct *equipier.Controller) {
 	e.POST("/api/v1/equipier/charte", ct.UpdateCharte)
 	e.PUT("/api/v1/equipier/upload", ct.UploadDocument)
 	e.DELETE("/api/v1/equipier/upload", ct.DeleteDocument)
+
+	e.POST("/api/v1/equipier/securite-sociale", ct.ParseSecuriteSociale)
 }

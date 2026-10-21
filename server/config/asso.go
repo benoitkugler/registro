@@ -10,7 +10,7 @@ import (
 )
 
 type Asso struct {
-	ID string
+	ID string // "acve" or "repere"
 
 	Title, Infos string // used in documents footer
 

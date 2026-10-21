@@ -58,6 +58,7 @@ type DemandeEquipier struct {
 
 type EquipierExt struct {
 	Equipier cps.Equipier
+	IsAuPair bool
 
 	PersonneBase    pr.Identite
 	PersonneDetails pr.Ficheequipier
@@ -107,7 +108,14 @@ func (ct *Controller) load(id cps.IdEquipier) (EquipierExt, error) {
 		}
 	}
 
-	out := EquipierExt{equipier, personneBase.Identite, personneDetails, Camp{camp.Nom, camp.DateDebut, camp.Duree}, demandes}
+	out := EquipierExt{
+		equipier,
+		equipier.Roles.IsAuPair(),
+		personneBase.Identite,
+		personneDetails,
+		Camp{camp.Nom, camp.DateDebut, camp.Duree},
+		demandes,
+	}
 	return out, nil
 }
 
@@ -310,4 +318,31 @@ func (ct *Controller) DeleteDocument(c echo.Context) error {
 		return err
 	}
 	return c.NoContent(200)
+}
+
+type SecuriteSocialeIn struct {
+	Token string
+
+	// this fields may be edited on the client,
+	// and not saved yet in DB
+	Sexe            pr.Sexe
+	DateNaissance   shared.Date
+	SecuriteSociale string
+}
+
+// ParseSecuriteSociale loads the album photos data,
+// which may be quite slow
+func (ct *Controller) ParseSecuriteSociale(c echo.Context) error {
+	if ct.assoID != "acve" { // should not happen
+		return c.NoContent(200)
+	}
+
+	var args SecuriteSocialeIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	out := checkSecuriteSociale(args.Sexe, args.DateNaissance.Time(), args.SecuriteSociale)
+
+	return c.JSON(200, out)
 }

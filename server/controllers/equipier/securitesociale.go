@@ -70,7 +70,7 @@ func checkSecuriteSociale(sexe pr.Sexe, dateNaissance time.Time, securiteSociale
 	}
 	expControle := int(97 - number%97)
 	if expControle != gotControle {
-		return SecuriteSocialeCheck{Err: fmt.Sprintf("Le numéro de contrôle ne correspond pas (%d %d).", gotControle, expControle)}
+		return SecuriteSocialeCheck{Err: fmt.Sprintf("Le numéro de contrôle ne correspond pas (%d au lieu de %d).", gotControle, expControle)}
 	}
 
 	return SecuriteSocialeCheck{DepartementNaissance: departement, CommuneNaissance: commune}

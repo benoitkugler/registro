@@ -70,6 +70,33 @@
             ></DateNaissanceField>
           </v-col>
         </v-row>
+
+        <v-row>
+          <v-col md="5" sm="6">
+            <v-text-field
+              variant="outlined"
+              density="compact"
+              v-model="innerBase.Mail"
+              label="Adresse mail"
+              type="email"
+              :rules="[
+                FormRules.required(
+                  'Ton adresse mail est utile pour partager les photos du séjour.',
+                ),
+              ]"
+            ></v-text-field>
+          </v-col>
+          <v-col md="7" sm="6">
+            <TelsField
+              v-model="innerBase.Tels"
+              :rules="[
+                FormRules.requiredTel(`Merci d'indiquer ton numéro.`),
+                (_) => true,
+              ]"
+            ></TelsField>
+          </v-col>
+        </v-row>
+
         <v-row>
           <v-col md="3" sm="6">
             <v-textarea
@@ -109,31 +136,15 @@
             ></PaysField>
           </v-col>
         </v-row>
-        <v-row>
-          <v-col md="5" sm="6">
-            <v-text-field
-              variant="outlined"
-              density="compact"
-              v-model="innerBase.Mail"
-              label="Adresse mail"
-              type="email"
-              :rules="[
-                FormRules.required(
-                  'Ton adresse mail est utile pour partager les photos du séjour.',
-                ),
-              ]"
-            ></v-text-field>
-          </v-col>
-          <v-col md="7" sm="6">
-            <TelsField
-              v-model="innerBase.Tels"
-              :rules="[
-                FormRules.requiredTel(`Merci d'indiquer ton numéro.`),
-                (_) => true,
-              ]"
-            ></TelsField>
-          </v-col>
-        </v-row>
+
+        <!-- champs ACVE -->
+        <SecuriteSocialeRow
+          v-if="asso == 'acve' && props.equipier.IsAuPair"
+          :token="props.token"
+          :sexe="innerBase.Sexe"
+          :date-naissance="innerBase.DateNaissance"
+          v-model="innerDetails.SecuriteSociale"
+        ></SecuriteSocialeRow>
 
         <!-- champs Repère -->
         <v-row v-if="asso == 'repere'">
@@ -172,7 +183,9 @@
           ></FormationRepereField>
         </v-col>
       </v-row>
-      <v-row>
+
+      <!-- Repère -->
+      <v-row v-if="asso == 'repere'">
         <v-col>
           <v-text-field
             label="Formation"
@@ -191,34 +204,19 @@
   <!-- TODO -->
 
   <v-card v-if="asso == 'acve'" class="my-2">
-    <v-row>
-      <v-col>
-        <DiplomeField v-model="innerDetails.Diplome"></DiplomeField>
-      </v-col>
-      <v-col>
-        <ApprofondissementField
-          v-model="innerDetails.Approfondissement"
-        ></ApprofondissementField>
-      </v-col>
-    </v-row>
+    <v-card-text>
+      <v-row>
+        <v-col>
+          <DiplomeField v-model="innerDetails.Diplome"></DiplomeField>
+        </v-col>
+        <v-col>
+          <ApprofondissementField
+            v-model="innerDetails.Approfondissement"
+          ></ApprofondissementField>
+        </v-col>
+      </v-row>
 
-    <!-- <v-row>
-          <v-col md="6">
-            <v-text-field
-              variant="outlined"
-              density="compact"
-              v-model="innerDetails.SecuriteSociale"
-              label="Sécurité sociale"
-              :rules="[
-                FormRules.required(
-                  `Merci de préciser ton numéro de Sécurité Sociale.`
-                ),
-              ]"
-            ></v-text-field>
-          </v-col>
-        </v-row> -->
-
-    <!-- <v-row>
+      <!-- <v-row>
           <v-col>
             <v-text-field
               variant="outlined"
@@ -240,6 +238,7 @@
             ></v-checkbox>
           </v-col>
         </v-row> -->
+    </v-card-text>
   </v-card>
 
   <!-- Champs Repère -->
@@ -564,6 +563,7 @@ import { isDateZero } from "@/components/date";
 import CharteEquipierACVE from "./CharteEquipierACVE.vue";
 import CharteEquipierRepere from "./CharteEquipierRepere.vue";
 import { Phones } from "@/phones";
+import SecuriteSocialeRow from "./SecuriteSocialeRow.vue";
 
 const props = defineProps<{
   token: string;

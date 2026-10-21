@@ -33,6 +33,7 @@ export interface DemandeEquipier {
 // registro/controllers/equipier.EquipierExt
 export interface EquipierExt {
   Equipier: Equipier;
+  IsAuPair: boolean;
   PersonneBase: Identite;
   PersonneDetails: Ficheequipier;
   Camp: Camp;
@@ -42,6 +43,19 @@ export interface EquipierExt {
 export interface Photos {
   HasAlbum: boolean;
   URL: string;
+}
+// registro/controllers/equipier.SecuriteSocialeCheck
+export interface SecuriteSocialeCheck {
+  Err: string;
+  DepartementNaissance: string;
+  CommuneNaissance: string;
+}
+// registro/controllers/equipier.SecuriteSocialeIn
+export interface SecuriteSocialeIn {
+  Token: string;
+  Sexe: Sexe;
+  DateNaissance: Date;
+  SecuriteSociale: string;
 }
 // registro/controllers/equipier.UpdateIn
 export interface UpdateIn {
@@ -481,6 +495,22 @@ export abstract class AbstractAPI {
         params: { key: params["key"] },
       });
       return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** ParseSecuriteSociale performs the request and handles the error */
+  async ParseSecuriteSociale(params: SecuriteSocialeIn) {
+    const fullUrl = this.baseURL + "/api/v1/equipier/securite-sociale";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<SecuriteSocialeCheck> = await Axios.post(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }

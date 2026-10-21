@@ -305,7 +305,7 @@ func (r Role) String() string {
 }
 
 // IsAuPair renvoie `true` si le rôle est considéré
-// comme au pair.
+// comme au pair : Direction, Adjoint, Animation et AideAnimation.
 func (r Role) IsAuPair() bool {
 	switch r {
 	case Direction, Adjoint, Animation, AideAnimation:
