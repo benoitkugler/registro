@@ -128,7 +128,7 @@ const subtitle = computed(() => {
   if (!file) return "";
   if (file.Id == 0) return "En attente de création";
   return `Enregistrée le ${Formatters.time(
-    file.Uploaded
+    file.Uploaded,
   )} (taille : ${Formatters.size(file.Taille)})`;
 });
 
@@ -189,10 +189,19 @@ async function saveOptions(options: LettreOptions) {
 
 const showPreview = ref(false);
 const urlPreviewPDF = computed(() =>
-  data.value ? endpoints.LoadDocument(data.value.File.Key) : ""
+  data.value ? endpoints.LoadDocument(data.value.File.Key) : "",
 );
 
 // Bloc à ajouter à la lettre.
 // Attention, en cas de modification, vérifier la mise à page via tinmyce + htmltopdf
-const paveEspacePerso = `<p><span style="font-size: 12pt; color: #3598db;" data-mce-style="font-size: 12pt; color: #3598db;">ESPACE PERSONNEL</span></p><p>Lors de votre inscription, un espace personnel de suivi vous a été attribué et un lien vers celui-ci envoyé dans le mail de confirmation (<span style="background-color: #ffffff;" data-mce-style="background-color: #ffffff;">Mon</span> <span style="background-color: #ffffff;" data-mce-style="background-color: #ffffff;">Dossier</span>). Dans cet espace vous trouverez :</p><ul><li>le <strong>suivi financier</strong> : vous pourrez alors joindre en ligne les aides auxquelles vous avez droit</li><li>les <strong>documents liés au séjour</strong> : liste de vêtement, lettre aux parents, plan d’accès au site ...</li><li>les <strong>documents à compléter</strong> ou joindre en ligne : test d'aisance aquatique si besoin ...</li><li>l'<strong>album photo</strong> du séjour</li><li>la <strong>fiche sanitaire</strong> à compléter en ligne</li></ul><p><em>TOUTES LES INFOS ET DOCUMENTS DU SÉJOUR SE TROUVENT DANS VOTRE ESPACE DÉDIÉ.</em></p>`;
+const paveEspacePerso = `<p><span style="font-size: 12pt; color: #3598db;" data-mce-style="font-size: 12pt; color: #3598db;">ESPACE PERSONNEL</span></p>
+<p>Lors de votre inscription, un espace personnel de suivi vous a été attribué et un lien vers celui-ci envoyé dans le mail de confirmation (MON ESPACE). 
+Dans cet espace vous trouverez :</p>
+<ul>
+<li>le <strong>suivi financier</strong> de votre inscription</li>
+<li>les <strong>documents liés au séjour</strong> : liste de vêtement, lettre aux parents, plan d’accès au site ...</li>
+<li>les <strong>documents à compléter</strong> ou joindre en ligne : test d'aisance aquatique si besoin ...</li>
+<li>la <strong>fiche sanitaire</strong> à compléter en ligne</li></ul>
+<li>l'<strong>album photo</strong> du séjour</li>
+<p><em>TOUTES LES INFOS ET DOCUMENTS DU SÉJOUR SE TROUVENT DANS VOTRE ESPACE DÉDIÉ.</em></p>`;
 </script>
