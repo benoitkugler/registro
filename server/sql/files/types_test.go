@@ -25,16 +25,12 @@ func TestBuiltins(t *testing.T) {
 		9:  {Id: 9, Categorie: 9},
 		10: {Id: 10, Categorie: 10},
 		11: {Id: 11, Categorie: 11},
-		12: {Id: 12, Categorie: 12},
-		13: {Id: 13, Categorie: 13},
-		14: {Id: 14, Categorie: 14},
-		15: {Id: 15, Categorie: 15},
 	}.builtins()
 	tu.AssertNoErr(t, err)
 }
 
 func TestBuiltins_Defaut(t *testing.T) {
-	b := Builtins{{Id: 0}, {Id: 1}, {Id: 2}, {Id: 3}, {Id: 4}, {Id: 5}, {Id: 6}, {Id: 7}, {Id: 8}, {Id: 9}, {Id: 10}, {Id: 11}, {Id: 12}, {Id: 13}}
+	b := Builtins{{Id: 0}, {Id: 1}, {Id: 2}, {Id: 3}, {Id: 4}, {Id: 5}, {Id: 6}, {Id: 7}, {Id: 8}, {Id: 9}, {Id: 10}, {Id: 11}}
 
 	// ACVE
 	tests := []struct {

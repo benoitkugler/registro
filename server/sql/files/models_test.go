@@ -41,10 +41,10 @@ func TestSQL(t *testing.T) {
 
 	// demandes
 	_, err = Demande{MaxDocs: 1, Categorie: Vaccins}.Insert(db)
-	tu.AssertNoErr(t, err)
-	_, err = Demande{MaxDocs: 1, Categorie: Vaccins}.Insert(db)
 	tu.AssertErr(t, err) // unique
-	_, err = Demande{MaxDocs: 1, Categorie: 0}.Insert(db)
+	_, err = Demande{MaxDocs: 1, Categorie: NoBuiltin}.Insert(db)
+	tu.AssertNoErr(t, err)
+	_, err = Demande{MaxDocs: 1, Categorie: NoBuiltin}.Insert(db)
 	tu.AssertNoErr(t, err) // shared constraints
 	_, err = Demande{MaxDocs: 1, Categorie: 0, IdDirecteur: pers.Id.Opt()}.Insert(db)
 	tu.AssertNoErr(t, err)

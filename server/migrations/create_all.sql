@@ -280,7 +280,7 @@ CREATE TABLE demandes (
     Id serial PRIMARY KEY,
     IdFile integer,
     IdDirecteur integer,
-    Categorie smallint CHECK (Categorie IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13)) NOT NULL,
+    Categorie smallint CHECK (Categorie IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)) NOT NULL,
     Description text NOT NULL,
     MaxDocs integer NOT NULL,
     JoursValide integer NOT NULL
@@ -1288,6 +1288,9 @@ WHERE
     Categorie <> 0;
 
 ALTER TABLE demandes
+    ADD CONSTRAINT constraint_categorie_is_id CHECK (Categorie = 0 OR Categorie = Id);
+
+ALTER TABLE demandes
     ADD FOREIGN KEY (IdFile) REFERENCES files ON DELETE SET NULL;
 
 ALTER TABLE demandes
@@ -1630,17 +1633,13 @@ INSERT INTO demandes (Categorie, Description, MaxDocs, JoursValide)
         --
         (9, 'Certificat délivré sur place après une formation.', 1, 0),
         --
-        (10, '', 1, 0),
+        (10, 'Non contre-indication à la cuisine de collectivité, à demander à son médecin traitant.', 1, 90),
         --
         (11, '', 1, 0),
         --
-        (12, 'Non contre-indication à la cuisine de collectivité, à demander à son médecin traitant.', 1, 90),
+        (12, '', 1, 0),
         --
-        (13, '', 1, 0),
-        --
-        (14, '', 1, 0),
-        --
-        (15, '', 1, 0);
+        (13, '', 1, 0);
 
 SELECT
     setval('demandes_id_seq', (

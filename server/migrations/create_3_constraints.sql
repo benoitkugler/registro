@@ -212,6 +212,9 @@ WHERE
     Categorie <> 0;
 
 ALTER TABLE demandes
+    ADD CONSTRAINT constraint_categorie_is_id CHECK (Categorie = 0 OR Categorie = Id);
+
+ALTER TABLE demandes
     ADD FOREIGN KEY (IdFile) REFERENCES files ON DELETE SET NULL;
 
 ALTER TABLE demandes

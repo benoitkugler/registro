@@ -43,6 +43,7 @@ func (id IdFile) Opt() OptIdFile { return OptIdFile{Id: id, Valid: true} }
 // gomacro:SQL ADD CONSTRAINT constraint_maxdocs CHECK(MaxDocs >= 1)
 // gomacro:SQL CREATE UNIQUE INDEX ON Demande(Categorie) WHERE Categorie <> 0
 //
+// Id = Categorie, useful to simplify migrations
 // gomacro:SQL ADD CONSTRAINT constraint_categorie_is_id CHECK(Categorie = 0 OR Categorie = Id)
 //
 // gomacro:QUERY SwitchDemandePersonne UPDATE Demande SET IdDirecteur = $target$ WHERE IdDirecteur = $temporaire$;

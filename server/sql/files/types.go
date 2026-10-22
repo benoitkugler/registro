@@ -23,8 +23,6 @@ const (
 	Bafd                    // BAFD
 	CarteVitale             // Carte Vitale
 	Vaccins                 // Vaccins
-	Haccp                   // Cuisine (HACCP)
-	CertMedicalCuisine      // Certificat médical cuisine
 	PhotoIdentite           // Photo d'identité
 	ExtraitCasierJudiciaire // Extrait du casier judiciaire
 	Autre                   // Autre
@@ -51,10 +49,6 @@ func (c Categorie) String() string {
 		return "Carte Vitale"
 	case Vaccins:
 		return "Vaccins"
-	case Haccp:
-		return "Cuisine (HACCP)"
-	case CertMedicalCuisine:
-		return "Certificat médical cuisine"
 	case PhotoIdentite:
 		return "Photo d'identité"
 	case ExtraitCasierJudiciaire:
@@ -135,8 +129,8 @@ var defaultDemandesACVE = [cp.NbRoles][]Categorie{
 	cp.Adjoint:       {CarteId, Permis, SB, CarteVitale, Vaccins},
 	cp.Animation:     {CarteId, Permis, SB, Bafa, CarteVitale, Vaccins},
 	cp.Menage:        {CarteId, CarteVitale, Vaccins},
-	cp.Cuisine:       {CarteId, CarteVitale, Vaccins, Haccp, CertMedicalCuisine},
-	cp.Intendance:    {CarteId, CarteVitale, Vaccins, Haccp},
+	cp.Cuisine:       {CarteId, CarteVitale, Vaccins},
+	cp.Intendance:    {CarteId, CarteVitale, Vaccins},
 	cp.Infirmerie:    {CarteId, Secourisme, CarteVitale, Vaccins},
 	cp.AideAnimation: {CarteId, CarteVitale, Vaccins},
 	cp.Lingerie:      {CarteId, CarteVitale, Vaccins},
@@ -171,9 +165,6 @@ func defaultACVE(roles cp.Roles) []optionalCategorie {
 func isDemandeOptACVE(cat Categorie, roles cp.Roles) bool {
 	// un certificat de secourisme est obligatoire pour l'infirmerie
 	if roles.Is(cp.Infirmerie) && cat == Secourisme {
-		return false
-	}
-	if roles.Is(cp.Cuisine) && cat == CertMedicalCuisine {
 		return false
 	}
 	return true

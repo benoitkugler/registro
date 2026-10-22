@@ -3,7 +3,7 @@ CREATE TABLE demandes (
     Id serial PRIMARY KEY,
     IdFile integer,
     IdDirecteur integer,
-    Categorie smallint CHECK (Categorie IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13)) NOT NULL,
+    Categorie smallint CHECK (Categorie IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)) NOT NULL,
     Description text NOT NULL,
     MaxDocs integer NOT NULL,
     JoursValide integer NOT NULL
@@ -55,6 +55,9 @@ ALTER TABLE demandes
 CREATE UNIQUE INDEX ON demandes (Categorie)
 WHERE
     Categorie <> 0;
+
+ALTER TABLE demandes
+    ADD CONSTRAINT constraint_categorie_is_id CHECK (Categorie = 0 OR Categorie = Id);
 
 ALTER TABLE demandes
     ADD FOREIGN KEY (IdFile) REFERENCES files ON DELETE SET NULL;
