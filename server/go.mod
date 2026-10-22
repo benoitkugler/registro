@@ -1,47 +1,47 @@
 module registro
 
-go 1.24.1
+go 1.26.5
 
 require (
-	github.com/benoitkugler/go-weasyprint v0.0.14
+	github.com/benoitkugler/go-weasyprint v0.0.15
 	github.com/benoitkugler/num2words v1.0.1
 	github.com/benoitkugler/pdf v0.0.15
-	github.com/benoitkugler/textprocessing v0.0.5
-	github.com/benoitkugler/webrender v0.0.14
+	github.com/benoitkugler/textprocessing v0.0.6
+	github.com/benoitkugler/webrender v0.0.15
 	github.com/disintegration/imaging v1.6.2
-	github.com/golang-jwt/jwt/v5 v5.2.2
+	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/jordan-wright/email v4.0.1-0.20210109023952-943e75fe5223+incompatible
-	github.com/k3a/html2text v1.2.1
-	github.com/labstack/echo-jwt/v4 v4.3.1
-	github.com/labstack/echo/v4 v4.13.4
-	github.com/lib/pq v1.10.9
+	github.com/k3a/html2text v1.5.1
+	github.com/labstack/echo-jwt/v4 v4.4.0
+	github.com/labstack/echo/v4 v4.16.0
+	github.com/lib/pq v1.12.3
 	github.com/microcosm-cc/bluemonday v1.0.27
 	github.com/stripe/stripe-go/v87 v87.0.0
-	github.com/xuri/excelize/v2 v2.9.1
-	golang.org/x/net v0.47.0
-	golang.org/x/text v0.31.0
+	github.com/xuri/excelize/v2 v2.11.0
+	golang.org/x/net v0.61.0
+	golang.org/x/text v0.43.0
 )
 
 require (
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/benoitkugler/pstokenizer v1.0.1 // indirect
 	github.com/benoitkugler/textlayout v0.3.2 // indirect
-	github.com/go-text/typesetting v0.3.1-0.20250404103358-86159049fd02 // indirect
+	github.com/go-text/typesetting v0.3.6-0.20261001104650-7f66441ebcc8 // indirect
 	github.com/gorilla/css v1.0.1 // indirect
-	github.com/hhrutter/lzw v1.0.0 // indirect
-	github.com/labstack/gommon v0.4.2 // indirect
-	github.com/mattn/go-colorable v0.1.14 // indirect
-	github.com/mattn/go-isatty v0.0.20 // indirect
-	github.com/richardlehane/mscfb v1.0.4 // indirect
-	github.com/richardlehane/msoleps v1.0.4 // indirect
-	github.com/shopspring/decimal v1.4.0 // indirect
-	github.com/tiendc/go-deepcopy v1.6.0 // indirect
+	github.com/hhrutter/lzw v1.0.1 // indirect
+	github.com/labstack/gommon v0.5.0 // indirect
+	github.com/mattn/go-colorable v0.1.16 // indirect
+	github.com/mattn/go-isatty v0.0.24 // indirect
+	github.com/richardlehane/mscfb v1.0.9 // indirect
+	github.com/richardlehane/msoleps v1.0.6 // indirect
+	github.com/shopspring/decimal v1.6.0 // indirect
+	github.com/tiendc/go-deepcopy v1.7.2 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
-	github.com/xuri/efp v0.0.1 // indirect
-	github.com/xuri/nfp v0.0.1 // indirect
-	golang.org/x/crypto v0.45.0 // indirect
-	golang.org/x/image v0.29.0 // indirect
-	golang.org/x/sys v0.38.0 // indirect
-	golang.org/x/time v0.11.0 // indirect
+	github.com/xuri/efp v0.0.2 // indirect
+	github.com/xuri/nfp v0.0.2-0.20250530014748-2ddeb826f9a9 // indirect
+	golang.org/x/crypto v0.58.0 // indirect
+	golang.org/x/image v0.47.0 // indirect
+	golang.org/x/sys v0.49.0 // indirect
+	golang.org/x/time v0.16.0 // indirect
 )
