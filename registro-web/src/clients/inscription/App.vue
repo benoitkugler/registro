@@ -7,7 +7,9 @@
             <v-col align-self="center" cols="auto">
               <v-img width="150" :src="logo" />
             </v-col>
-            <v-col align-self="center"> Portail des inscriptions </v-col>
+            <v-col align-self="center">
+              {{ mdAndUp ? "Portail des inscriptions" : "Inscriptions" }}
+            </v-col>
           </v-row>
         </v-app-bar-title>
 
@@ -28,7 +30,7 @@
               Vous avez déjà participé à un de nos séjours ? Pré-remplissez ce
               formulaire en fournissant votre adresse e-mail !
             </v-col>
-            <v-col align-self="center" cols="6" sm="3">
+            <v-col align-self="center" cols="7" sm="3">
               <v-text-field
                 variant="outlined"
                 density="compact"
@@ -41,7 +43,7 @@
               >
               </v-text-field>
             </v-col>
-            <v-col align-self="center" cols="6" sm="auto">
+            <v-col align-self="center" cols="5" sm="3">
               <v-btn
                 variant="outlined"
                 :disabled="search.length < 3"
@@ -186,7 +188,7 @@ const version = `v${VITE_APP_VERSION}`;
 
 onMounted(onLoad);
 
-const { smAndUp } = useDisplay();
+const { smAndUp, mdAndUp } = useDisplay();
 
 const preselected = ref<IdCamp>(0 as IdCamp);
 const isLoading = ref(true);
@@ -234,7 +236,7 @@ async function initWithCamp(id: IdCamp) {
 const data = ref<Data | null>(null);
 async function initInscription(
   preinscription: string,
-  preselected: IdCamp | null
+  preselected: IdCamp | null,
 ) {
   const res = await controller.InitInscription({ preinscription });
   if (res === undefined) return;
@@ -244,7 +246,7 @@ async function initInscription(
   // apply preselected
   if (preselected !== null) {
     res.InitialInscription.Participants.forEach(
-      (p) => (p.IdCamp = preselected)
+      (p) => (p.IdCamp = preselected),
     );
   }
   data.value = res;

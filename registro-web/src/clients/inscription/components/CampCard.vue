@@ -8,7 +8,7 @@
           </v-chip>
         </v-col>
 
-        <v-col cols="12" sm="4" class="text-right">
+        <v-col cols="12" sm="4" :class="{ 'text-right': true, 'mt-1': xs }">
           <v-chip prepend-icon="mdi-currency-eur">
             {{ props.camp.Prix }}
           </v-chip>
@@ -18,7 +18,7 @@
         <v-col cols="12" sm="8">
           <v-chip prepend-icon="mdi-map-marker"> {{ props.camp.Lieu }}</v-chip>
         </v-col>
-        <v-col cols="12" sm="4" class="text-right">
+        <v-col cols="12" sm="4" :class="{ 'text-right': true, 'mt-1': xs }">
           <v-chip prepend-icon="mdi-human-child">
             de {{ props.camp.AgeMin }} à {{ props.camp.AgeMax }} ans
           </v-chip>
@@ -72,10 +72,13 @@
 </template>
 
 <script lang="ts" setup>
+import { useDisplay } from "vuetify";
 import { OptionPrixKind, type CampExt } from "../logic/api";
 import { Camps, Formatters } from "@/utils";
 
 const props = defineProps<{
   camp: CampExt;
 }>();
+
+const { xs } = useDisplay();
 </script>

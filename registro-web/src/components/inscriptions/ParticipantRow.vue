@@ -1,6 +1,6 @@
 <template>
   <v-row no-gutters :class="cl">
-    <v-col align-self="center" cols="3">
+    <v-col align-self="center" cols="12" sm="3">
       <v-list-item
         :title="Personnes.NOMPrenom(props.participant.Personne)"
         class="px-0"
@@ -13,12 +13,12 @@
       </v-list-item>
     </v-col>
 
-    <v-col align-self="center" cols="1" class="text-center">
+    <v-col align-self="center" cols="6" sm="1" class="text-center">
       <v-icon class="ma-2 mr-4">
         {{ Formatters.sexeIcon(props.participant.Personne.Sexe) }}
       </v-icon>
     </v-col>
-    <v-col align-self="center" cols="1">
+    <v-col align-self="center" cols="6" sm="1">
       <v-row no-gutters>
         <v-col align-self="end" class="text-center">
           {{
@@ -37,10 +37,10 @@
         </v-col>
       </v-row>
     </v-col>
-    <v-col align-self="center" cols="1" class="text-center">
+    <v-col align-self="center" cols="3" sm="1" class="text-center">
       {{ props.participant.Age }} ans
     </v-col>
-    <v-col cols="2" align-self="center" class="text-center">
+    <v-col cols="6" sm="2" align-self="center" class="text-center">
       {{ Formatters.time(props.participant.MomentInscription) }}
     </v-col>
     <slot name="append"></slot>

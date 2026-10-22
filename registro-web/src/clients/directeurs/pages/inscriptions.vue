@@ -1,13 +1,24 @@
 <template>
   <NavBar
-    :title="`${controller.camp ? Camps.label(controller.camp) : ''} - Suivi des inscriptions`"
+    :title="
+      smAndUp
+        ? `${controller.camp ? Camps.label(controller.camp) : ''} - Suivi des inscriptions`
+        : `Inscriptions`
+    "
   >
     <v-tabs
       :model-value="currentTab"
       @update:model-value="(v) => setTab(v as InscriptionsTab)"
+      :stacked="!smAndUp"
     >
-      <v-tab value="inscriptions">Inscriptions en attente</v-tab>
-      <v-tab value="participants">Liste des participants</v-tab>
+      <v-tab value="inscriptions">
+        <v-icon icon="mdi-clock"></v-icon>
+        {{ smAndUp ? "Inscriptions en attente" : "" }}
+      </v-tab>
+      <v-tab value="participants">
+        <v-icon icon="mdi-view-list"></v-icon>
+        {{ smAndUp ? "Liste des participants" : "" }}
+      </v-tab>
     </v-tabs>
   </NavBar>
 
@@ -41,8 +52,10 @@ import { controller } from "../logic/logic";
 import PannelParticipants from "../components/inscriptions/PannelParticipants.vue";
 import type { IdDossier } from "../logic/api";
 import { Camps } from "@/utils.ts";
+import { useDisplay } from "vuetify";
 
 const router = useRouter();
+const { smAndUp } = useDisplay();
 
 const query = computed(() =>
   parseQueryURLInscriptions(router.currentRoute.value.query),

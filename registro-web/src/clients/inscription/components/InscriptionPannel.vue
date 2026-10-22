@@ -35,7 +35,7 @@
         ></v-stepper-item>
       </v-stepper-header>
 
-      <v-stepper-window class="mb-0">
+      <v-stepper-window class="ma-1 mb-0">
         <v-stepper-window-item :value="1">
           <Step1 v-model="inner.Responsable"></Step1>
         </v-stepper-window-item>

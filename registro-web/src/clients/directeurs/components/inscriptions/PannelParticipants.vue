@@ -14,22 +14,22 @@
     </template>
     <template #append>
       <v-btn @click="showMessages = true" class="mx-1" prepend-icon="mdi-email">
-        Messages</v-btn
-      >
+        {{ smAndUp ? "Messages" : "" }}
+      </v-btn>
       <v-btn
         @click="showDocuments = true"
         class="mx-1"
         prepend-icon="mdi-folder"
       >
-        Documents</v-btn
-      >
+        {{ smAndUp ? "Documents" : "" }}
+      </v-btn>
       <v-btn
         @click="showGroupes = true"
         class="mx-1"
         prepend-icon="mdi-account-group"
       >
-        Groupes</v-btn
-      >
+        {{ smAndUp ? "Groupes" : "" }}
+      </v-btn>
 
       <v-divider thickness="1" vertical class="mx-1"></v-divider>
 
@@ -74,7 +74,7 @@
     <v-card-text class="mt-4">
       <v-skeleton-loader type="table" v-if="isLoading"></v-skeleton-loader>
       <div v-else>
-        <ParticipantRowHeader>
+        <ParticipantRowHeader v-if="smAndUp">
           <template #append v-if="hasGroupes">
             <v-col class="font-weight-bold text-center" align-self="center"
               >Groupe</v-col
@@ -305,10 +305,8 @@ import {
   type GroupesOut,
   type IdDossier,
   type IdGroupe,
-  type Participant,
   type ParticipantExt,
   type ParticipantsOut,
-  type Personne,
 } from "../../logic/api";
 import { Formatters, Participants, Personnes } from "@/utils";
 import FichesSanitairesPannel from "./FichesSanitairesPannel.vue";
@@ -316,6 +314,9 @@ import DocumentsPannel from "./DocumentsPannel.vue";
 import MessagesPannel from "./MessagesPannel.vue";
 import StatistiquesCard from "./StatistiquesCard.vue";
 import GroupesPannel from "./GroupesPannel.vue";
+import { useDisplay } from "vuetify";
+
+const { smAndUp } = useDisplay();
 
 const props = defineProps<{}>();
 

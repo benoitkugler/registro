@@ -1,5 +1,9 @@
 <template>
-  <NavBar title="Connection à la page Directeur" hide-menu> </NavBar>
+  <NavBar
+    :title="mdAndUp ? 'Connection à la page Directeur' : 'Directeurs'"
+    hide-menu
+  >
+  </NavBar>
 
   <v-container class="fill-height">
     <v-card title="Connection" class="mx-auto" width="400px">
@@ -55,8 +59,10 @@ import NavBar from "../components/NavBar.vue";
 import { onMounted, ref } from "vue";
 import { CachedTokens, controller, isBackofficeLoggin } from "../logic/logic";
 import type { CampItem, IdCamp } from "../logic/api";
+import { useDisplay } from "vuetify";
 
 const router = useRouter();
+const { mdAndUp } = useDisplay();
 
 onMounted(() => {
   handleBackofficeLoggin();

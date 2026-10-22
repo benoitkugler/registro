@@ -45,7 +45,7 @@
     </v-card-text>
   </v-card>
 
-  <v-card class="my-1 border-primary border-lg" title="Autorisations">
+  <v-card class="my-2 border-primary border-lg" title="Autorisations">
     <v-card-text>
       <v-checkbox
         density="comfortable"
