@@ -35,8 +35,8 @@ func sortParticipants(insc logic.InscriptionExt, user cps.IdCamp) {
 }
 
 type InscriptionsOut struct {
-	PendingCount int // number of not confirmed inscription
-	Inscriptions []logic.InscriptionExt
+	PendingCount int                    // number of not confirmed inscription
+	Inscriptions []logic.InscriptionExt // confirmed inscription (maybe not validated)
 }
 
 func getPendingCount(db in.DB, idCamp cps.IdCamp) (int, error) {

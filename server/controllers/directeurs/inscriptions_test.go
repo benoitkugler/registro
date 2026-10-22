@@ -83,10 +83,11 @@ func Test_inscriptions(t *testing.T) {
 			IdDossier: dossier1.Id,
 			Statuts:   values,
 		}, camp2.Id)
-		tu.AssertErr(t, err) // not validable because of age
+		tu.AssertNoErr(t, err) // no validation performed because of age
 
 		out, err = ct.getInscriptions(camp2.Id)
 		tu.AssertNoErr(t, err)
 		tu.Assert(t, len(out.Inscriptions) == 1)
+		tu.Assert(t, !out.Inscriptions[0].IsValidated)
 	})
 }

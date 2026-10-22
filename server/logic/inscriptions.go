@@ -215,7 +215,6 @@ type StatutExt struct {
 	// AllowedValidation contains the statuts one
 	// can apply.
 	// [Hint] may be missing to disabled positive validation.
-	// Currently, it always contains [Refuse]
 	AllowedValidation []cps.StatutParticipant
 }
 

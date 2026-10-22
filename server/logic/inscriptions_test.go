@@ -59,8 +59,8 @@ func TestStatutBypassRights_resolve(t *testing.T) {
 		args   cps.StatutCauses
 		want   StatutExt
 	}{
-		// problème d'age
-		{directorRights, cps.StatutCauses{Age: false}, StatutExt{AllowedValidation: []cps.StatutParticipant{cps.Refuse}}},
+		// problème d'age : le directeur ne peut ni accepter ni refuser
+		{directorRights, cps.StatutCauses{Age: false}, StatutExt{AllowedValidation: nil}},
 		// problème de place -> OK
 		{directorRights, cps.StatutCauses{Age: true}, StatutExt{AllowedValidation: []cps.StatutParticipant{cps.Inscrit, cps.AttenteCampComplet, cps.Refuse}}},
 		// valide

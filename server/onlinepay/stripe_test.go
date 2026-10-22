@@ -34,6 +34,7 @@ func TestStripeStart(t *testing.T) {
 func TestStripeReceivePaiement(t *testing.T) {
 	// this test requires stripe CLI forwarding, setup with
 	// stripe listen --all-thin --forward-to localhost:1324/stripe_test -l
+	t.Skip("requires stripe CLI")
 
 	// initial setup
 	tu.LoadEnv(t, "../env.sh")
