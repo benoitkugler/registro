@@ -18,7 +18,10 @@
       >
         <span>Né{{ Formatters.accord(props.sexe) }} à&nbsp</span
         ><b>
-          {{ infered.CommuneNaissance }} ; {{ infered.DepartementNaissance }}</b
+          {{ infered.CommuneNaissance }} ;
+          {{ infered.DepartementNaissance }} ({{
+            infered.DepartementNaissanceCode
+          }})</b
         >
       </v-chip>
     </template>

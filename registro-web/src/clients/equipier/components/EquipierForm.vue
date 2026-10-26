@@ -472,7 +472,9 @@
     </v-col>
     <v-spacer></v-spacer>
     <v-col cols="6">
-      <v-btn block color="green" @click="save"> Enregistrer</v-btn>
+      <v-btn block color="green" @click="save" :disabled="!mandatoryFieldsOK">
+        Enregistrer</v-btn
+      >
     </v-col>
   </v-row>
 
@@ -620,20 +622,29 @@ function onChangePays(p: Pays) {
 const showIncompleteFormDialog = ref(false);
 const showCharteDialog = ref(false);
 
+// a few basic fields are mandatory :
+// Nom Prénom Sexe DateNaissance Mail
+const mandatoryFieldsOK = computed(
+  () =>
+    !!(
+      innerBase.value.Nom &&
+      innerBase.value.Prenom &&
+      innerBase.value.Sexe != Sexe.NoSexe &&
+      !isDateZero(innerBase.value.DateNaissance) &&
+      innerBase.value.Mail
+    ),
+);
+
 const isFormValid = computed(
   () =>
+    mandatoryFieldsOK.value &&
     !!(
       // champs communs ACVE/Repere
       (
-        innerBase.value.Nom &&
-        innerBase.value.Prenom &&
-        innerBase.value.Sexe != Sexe.NoSexe &&
-        !isDateZero(innerBase.value.DateNaissance) &&
         innerBase.value.Adresse &&
         innerBase.value.CodePostal &&
         innerBase.value.Ville &&
         innerBase.value.Pays &&
-        innerBase.value.Mail &&
         innerBase.value.Tels?.length &&
         ((asso == "repere" && isFormRepereValid()) ||
           (asso == "acve" && isFormAcveValid()))

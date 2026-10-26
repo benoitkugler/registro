@@ -11,8 +11,8 @@ import (
 )
 
 type SecuriteSocialeCheck struct {
-	Err                                    string // empty if valid
-	DepartementNaissance, CommuneNaissance string // computed
+	Err                                                              string // empty if valid
+	DepartementNaissance, DepartementNaissanceCode, CommuneNaissance string // computed
 }
 
 func ParseSecuriteSociale(sexe pr.Sexe, dateNaissance time.Time, securiteSociale string) SecuriteSocialeCheck {
@@ -47,7 +47,7 @@ func ParseSecuriteSociale(sexe pr.Sexe, dateNaissance time.Time, securiteSociale
 		return SecuriteSocialeCheck{Err: fmt.Sprintf("Le mois de naissance ne correspond pas (%d).", month)}
 	}
 
-	departement, commune, err := communes.CommuneByCode(inseeC)
+	departement, departementCode, commune, err := communes.CommuneByCode(inseeC)
 	if err != nil {
 		return SecuriteSocialeCheck{Err: fmt.Sprintf("Le code de la commune de naissance est invalide (%s).", err)}
 	}
@@ -74,5 +74,5 @@ func ParseSecuriteSociale(sexe pr.Sexe, dateNaissance time.Time, securiteSociale
 		return SecuriteSocialeCheck{Err: fmt.Sprintf("Le numéro de contrôle ne correspond pas (%d au lieu de %d).", gotControle, expControle)}
 	}
 
-	return SecuriteSocialeCheck{DepartementNaissance: departement, CommuneNaissance: commune}
+	return SecuriteSocialeCheck{DepartementNaissance: departement, DepartementNaissanceCode: departementCode, CommuneNaissance: commune}
 }

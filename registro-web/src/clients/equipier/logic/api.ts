@@ -48,6 +48,7 @@ export interface Photos {
 export interface SecuriteSocialeCheck {
   Err: string;
   DepartementNaissance: string;
+  DepartementNaissanceCode: string;
   CommuneNaissance: string;
 }
 // registro/controllers/equipier.SecuriteSocialeIn

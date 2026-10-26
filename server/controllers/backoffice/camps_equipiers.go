@@ -104,7 +104,7 @@ func (ct *Controller) exportListeEquipiers(idCamp cps.IdCamp) ([]byte, string, e
 	}
 
 	headerCommun := [...]string{"Nom", "Prénom", "Sexe", "Date de naissance", "Rôle", "Adresse", "Code postal", "Ville", "Pays", "Mail"}
-	headerACVE := [...]string{"Au pair ?", "Securite sociale", "Commune de naissance", "Département de naissance", "Fonctionnaire ?"}
+	headerACVE := [...]string{"Au pair ?", "Securite sociale", "Commune de naissance", "Département de naissance", "Département de naissance - Code", "Fonctionnaire ?"}
 	rows := make([][]sheets.Cell, 0, len(equipiers))
 	for _, equipier := range equipiers {
 		pe := personnes[equipier.IdPersonne]
@@ -130,10 +130,11 @@ func (ct *Controller) exportListeEquipiers(idCamp cps.IdCamp) ([]byte, string, e
 				{Value: detail.SecuriteSociale},
 				{Value: infered.CommuneNaissance},
 				{Value: infered.DepartementNaissance},
+				{Value: infered.DepartementNaissanceCode},
 				{Value: formatBool(detail.Fonctionnaire)},
 			}
 			if !auPair { // we do not ask for these fields, hide the values
-				rowACVE[1], rowACVE[2], rowACVE[3], rowACVE[4] = sheets.Cell{}, sheets.Cell{}, sheets.Cell{}, sheets.Cell{}
+				rowACVE[1], rowACVE[2], rowACVE[3], rowACVE[4], rowACVE[5] = sheets.Cell{}, sheets.Cell{}, sheets.Cell{}, sheets.Cell{}, sheets.Cell{}
 			}
 			row = append(row, rowACVE[:]...)
 		}

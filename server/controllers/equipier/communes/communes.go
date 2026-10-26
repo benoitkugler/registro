@@ -1,10 +1,9 @@
 package communes
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
-
-	"fmt"
 )
 
 func IsCorse(departement string) (is2A, is2B bool) {
@@ -17,13 +16,29 @@ func IsCorse(departement string) (is2A, is2B bool) {
 	return false, false
 }
 
+// return the usage code for the given departement,
+// handling 97X and corse
+func departementCode(dep, commune int) string {
+	if dep == 100 {
+		return "2A"
+	} else if dep == 101 {
+		return "2B"
+	} else if dep == 97 {
+		nextDigit := commune / 100
+		return fmt.Sprintf("97%d", nextDigit)
+	} else {
+		return strconv.Itoa(dep)
+	}
+}
+
 // CommuneByCode returns the departement and commune defined by the given
 // INSEE 5 letters code
-func CommuneByCode(insee string) (string, string, error) {
+func CommuneByCode(insee string) (departementName string, depCode, commune string, _ error) {
 	departementNb, communeNb, err := ParseCommuneCode(insee)
 	if err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
+	depCode = departementCode(departementNb, communeNb)
 	departement := departementsFrancais[departementNb] // sanitized in ParseCommuneCode
 	// properly handle outre mer
 	if departementNb == 97 {
@@ -37,9 +52,9 @@ func CommuneByCode(insee string) (string, string, error) {
 	communeNb -= 1
 	l := communesFrancaises[departementNb] // sanitized in ParseCommuneCode
 	if communeNb >= len(l) {
-		return departement, "", nil
+		return departement, depCode, "", nil
 	}
-	return departement, l[communeNb], nil
+	return departement, depCode, l[communeNb], nil
 }
 
 // ParseCommuneCode parse the INSEE commune code, handling special cases
