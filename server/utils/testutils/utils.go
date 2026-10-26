@@ -85,6 +85,8 @@ var PngData = []byte("\x89\x50\x4E\x47\x0D\x0A\x1A\x0A\x00\x00\x00\x0D\x49\x48\x
 	"\x00\xBE\x0D\x21\x00\x00\x01\x9A\x60\xE1\xD5\x00\x00\x00\x00\x49" +
 	"\x45\x4E\x44\xAE\x42\x60\x82")
 
+const ImageURL = "https://acve.fr/static/bv/img/icon.d6d14cd6.png"
+
 // DateFor renvoie une date de naissance donnant un âge de [age]
 // au moment actuel
 func DateFor(age int) time.Time {

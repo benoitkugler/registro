@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"slices"
 
 	"registro/immich"
@@ -83,33 +84,48 @@ func (ct *Controller) CampsCreateAlbums(c echo.Context) error {
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
-	out, err := ct.createAlbums(args)
+	out, thumbnails, err := ct.createAlbums(args)
 	if err != nil {
 		return err
 	}
+
+	// Best effort to setup the thumbnail, in the background
+	go func() {
+		err := ct.uploadAlbumThumbnails(thumbnails)
+		if err != nil {
+			log.Println("backoffice.CampsCreateAlbums:", err)
+		}
+	}()
+
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) createAlbums(args CreateAlbumsIn) (map[cps.IdCamp]immich.AlbumAndLinks, error) {
+type imageForThumbnail struct {
+	imageURL string
+	albumID  immich.AlbumID
+}
+
+func (ct *Controller) createAlbums(args CreateAlbumsIn) (map[cps.IdCamp]immich.AlbumAndLinks, []imageForThumbnail, error) {
 	camps, err := cps.SelectCamps(ct.db, args.IdCamps...)
 	if err != nil {
-		return nil, utils.SQLError(err)
+		return nil, nil, utils.SQLError(err)
 	}
 
 	// safety check : disallow duplicate album
 	for _, camp := range camps {
 		if camp.AlbumID != "" {
-			return nil, fmt.Errorf("internal error: %s already has a photo album", camp.Label())
+			return nil, nil, fmt.Errorf("internal error: %s already has a photo album", camp.Label())
 		}
 	}
 
 	api := immich.NewApi(ct.immich)
 
 	out := make(map[cps.IdCamp]immich.AlbumAndLinks)
+	var thumbnails []imageForThumbnail
 	for _, camp := range camps {
 		album, err := api.CreateAlbum(camp.Label())
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		out[camp.Id] = album
 
@@ -117,11 +133,26 @@ func (ct *Controller) createAlbums(args CreateAlbumsIn) (map[cps.IdCamp]immich.A
 		camp.AlbumID = string(album.Id)
 		_, err = camp.Update(ct.db)
 		if err != nil {
-			return nil, utils.SQLError(err)
+			return nil, nil, utils.SQLError(err)
+		}
+
+		if camp.ImageURL != "" {
+			thumbnails = append(thumbnails, imageForThumbnail{camp.ImageURL, album.Id})
 		}
 	}
 
-	return out, nil
+	return out, thumbnails, nil
+}
+
+func (ct *Controller) uploadAlbumThumbnails(l []imageForThumbnail) error {
+	api := immich.NewApi(ct.immich)
+	for _, album := range l {
+		err := api.SetAlbumThumbnail(album.albumID, album.imageURL)
+		if err != nil {
+			return fmt.Errorf("setting thumbnail %s for album %s: %s", album.imageURL, album.albumID, err)
+		}
+	}
+	return nil
 }
 
 func (ct *Controller) CampsDeleteAlbum(c echo.Context) error {

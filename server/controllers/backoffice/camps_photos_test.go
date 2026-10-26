@@ -36,17 +36,26 @@ func TestPhotos(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	idCamp1, idCamp2 := camp1.Camp.Camp.Id, camp2.Camp.Camp.Id
 
-	m, err := ct.createAlbums(CreateAlbumsIn{IdCamps: []cps.IdCamp{idCamp1, idCamp2}})
+	camp1.Camp.Camp.ImageURL = tu.ImageURL
+	_, err = camp1.Camp.Camp.Update(db)
+	tu.AssertNoErr(t, err)
+
+	m, thumbnails, err := ct.createAlbums(CreateAlbumsIn{IdCamps: []cps.IdCamp{idCamp1, idCamp2}})
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(m) == 2)
+	tu.Assert(t, len(thumbnails) == 1)
 
 	albums, err = ct.loadAlbums()
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(albums) == 3)
 	tu.Assert(t, albums[0].Album.Id != "")
 	tu.Assert(t, albums[1].Album.Id != "")
+	tu.Assert(t, albums[2].Album.Id == "")
 
-	// cleanup
+	err = ct.uploadAlbumThumbnails(thumbnails)
+	tu.AssertNoErr(t, err)
+
+	// cleanup : the thumbnail must be deleted manually
 	api := immich.NewApi(cfg)
 	err = api.DeleteAlbum(albums[0].Album.Id)
 	tu.AssertNoErr(t, err)

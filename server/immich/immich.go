@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"mime/multipart"
 	"net/http"
 	"net/url"
+	"path"
 	"time"
 
 	"registro/config"
@@ -15,6 +17,7 @@ import (
 
 // See documentation at https://api.immich.app/endpoints
 
+// Api is safe for concurrent use.
 type Api struct {
 	config config.Immich
 }
@@ -27,8 +30,7 @@ func (api *Api) shareURL(key string) string {
 	return copy.String()
 }
 
-// if [dst] is non nil, the response body is read as JSON into [dst]
-func (api *Api) request(method string, endpoint string, query map[string]string, body any, dst any) error {
+func (api *Api) buildURL(endpoint string, query map[string]string) string {
 	queryParams := url.Values{}
 	// always add apiKey
 	queryParams.Set("apiKey", api.config.ApiKey)
@@ -40,6 +42,33 @@ func (api *Api) request(method string, endpoint string, query map[string]string,
 	copy.Path = "api" + endpoint
 	copy.RawQuery = queryParams.Encode()
 	fullURL := copy.String()
+	return fullURL
+}
+
+func doRequest(fullURL string, req *http.Request, dst any) error {
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("error sending request: %s", err)
+	}
+	defer resp.Body.Close()
+
+	if !(200 <= resp.StatusCode && resp.StatusCode < 300) {
+		b, _ := io.ReadAll(resp.Body)
+		log.Println("immich error: ", resp.StatusCode, string(b))
+		return fmt.Errorf("immich API at %s returned status code: %d", fullURL, resp.StatusCode)
+	}
+
+	if dst == nil {
+		return nil
+	}
+
+	err = json.NewDecoder(resp.Body).Decode(dst)
+	return err
+}
+
+// if [dst] is non nil, the response body is read as JSON into [dst]
+func (api *Api) request(method string, endpoint string, query map[string]string, body any, dst any) error {
+	fullURL := api.buildURL(endpoint, query)
 
 	var bodyReader io.Reader
 	if body != nil {
@@ -58,24 +87,48 @@ func (api *Api) request(method string, endpoint string, query map[string]string,
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json; charset=utf-8")
 	}
-	resp, err := http.DefaultClient.Do(req)
+
+	return doRequest(fullURL, req, dst)
+}
+
+type formFile struct {
+	fieldName string
+	fileName  string
+	content   []byte
+}
+
+func (api *Api) binaryPOSTRequest(endpoint string, query map[string]string, bodyParams map[string]string, file formFile, dst any) error {
+	fullURL := api.buildURL(endpoint, query)
+
+	var buf bytes.Buffer
+	mw := multipart.NewWriter(&buf)
+	part, err := mw.CreateFormFile(file.fieldName, file.fileName)
 	if err != nil {
-		return fmt.Errorf("error sending request: %s", err)
+		return fmt.Errorf("setting up binary request: %s", err)
 	}
-	defer resp.Body.Close()
-
-	if !(200 <= resp.StatusCode && resp.StatusCode < 300) {
-		b, _ := io.ReadAll(resp.Body)
-		log.Println(string(b))
-		return fmt.Errorf("Immich API at %s returned status code: %d", fullURL, resp.StatusCode)
+	_, err = part.Write(file.content)
+	if err != nil {
+		return fmt.Errorf("setting up binary request: %s", err)
 	}
 
-	if dst == nil {
-		return nil
+	for k, v := range bodyParams {
+		err = mw.WriteField(k, v)
+		if err != nil {
+			return fmt.Errorf("setting up binary request: %s", err)
+		}
 	}
 
-	err = json.NewDecoder(resp.Body).Decode(dst)
-	return err
+	if err = mw.Close(); err != nil {
+		return fmt.Errorf("setting up binary request: %s", err)
+	}
+
+	req, err := http.NewRequest(http.MethodPost, fullURL, &buf)
+	if err != nil {
+		return fmt.Errorf("internal error: %s", err)
+	}
+	req.Header.Set("Content-Type", mw.FormDataContentType())
+
+	return doRequest(fullURL, req, dst)
 }
 
 type Album struct {
@@ -261,4 +314,58 @@ func (api *Api) LoadAlbums(ids []AlbumID) (map[AlbumID]AlbumAndLinks, error) {
 func (api *Api) DeleteAlbum(id AlbumID) error {
 	err := api.request(http.MethodDelete, fmt.Sprintf("/albums/%s", id), nil, nil, nil)
 	return err
+}
+
+type AssetID string
+
+// fileName must contain a valid extension
+func (api *Api) uploadAsset(content []byte, fileName string) (AssetID, error) {
+	type uploadOut struct {
+		Id AssetID `json:"id"`
+		// status
+	}
+	var out uploadOut
+	err := api.binaryPOSTRequest("/assets", nil, map[string]string{
+		"fileCreatedAt":  time.Now().Format(time.RFC3339),
+		"fileModifiedAt": time.Now().Format(time.RFC3339),
+	}, formFile{fieldName: "assetData", fileName: fileName, content: content}, &out)
+	if err != nil {
+		return "", err
+	}
+	return out.Id, nil
+}
+
+func (api *Api) SetAlbumThumbnail(albumID AlbumID, imageURL string) error {
+	img, err := http.Get(imageURL)
+	if err != nil {
+		return fmt.Errorf("failed to load image at %s: %s", imageURL, err)
+	}
+	defer img.Body.Close()
+	content, err := io.ReadAll(img.Body)
+	if err != nil {
+		return fmt.Errorf("failed to read image at %s: %s", imageURL, err)
+	}
+
+	assetID, err := api.uploadAsset(content, path.Base(imageURL))
+	if err != nil {
+		return err
+	}
+
+	type args struct {
+		Ids []AssetID `json:"ids"`
+	}
+	err = api.request(http.MethodPut, fmt.Sprintf("/albums/%s/assets", albumID), nil, args{[]AssetID{assetID}}, nil)
+	if err != nil {
+		return fmt.Errorf("adding thumbnail to album: %s", err)
+	}
+
+	type updateArgs struct {
+		AlbumThumbnailAssetId AssetID `json:"albumThumbnailAssetId"`
+	}
+	err = api.request(http.MethodPatch, fmt.Sprintf("/albums/%s", albumID), nil, updateArgs{assetID}, nil)
+	if err != nil {
+		return fmt.Errorf("adding thumbnail to album: %s", err)
+	}
+
+	return nil
 }
