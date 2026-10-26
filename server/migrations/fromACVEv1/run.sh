@@ -4,6 +4,6 @@ dropdb --if-exists test &&
 createdb test && 
 echo "Setup tables and add predeclared items..." && 
 psql -v ON_ERROR_STOP=1 test < ../create_all.sql &&
-echo "Launching migration script..." &&
+echo "Launching migration script main.go..." &&
 source env.sh &&
 go run *.go

@@ -1631,15 +1631,11 @@ INSERT INTO demandes (Categorie, Description, MaxDocs, JoursValide)
         --
         (8, 'Vaccins', 5, 0),
         --
-        (9, 'Certificat délivré sur place après une formation.', 1, 0),
+        (9, '', 1, 0),
         --
-        (10, 'Non contre-indication à la cuisine de collectivité, à demander à son médecin traitant.', 1, 90),
+        (10, '', 1, 0),
         --
-        (11, '', 1, 0),
-        --
-        (12, '', 1, 0),
-        --
-        (13, '', 1, 0);
+        (11, '', 1, 0);
 
 SELECT
     setval('demandes_id_seq', (

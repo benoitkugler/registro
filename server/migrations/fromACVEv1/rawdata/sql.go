@@ -3,7 +3,6 @@ package rawdata
 import (
 	"database/sql"
 	"database/sql/driver"
-	"fmt"
 	"time"
 
 	"github.com/lib/pq"
@@ -108,21 +107,8 @@ func (s Cotisation) Value() (driver.Value, error) {
 	return (pq.Int64Array)(s).Value()
 }
 
-func (s *OptionQuotientFamilial) Scan(src interface{}) error {
-	var tmp pq.Float64Array
-	if err := tmp.Scan(src); err != nil {
-		return err
-	}
-	if len(tmp) != 4 {
-		return fmt.Errorf("invalid length for type OptionQuotientFamilial: %d", len(tmp))
-	}
-	copy(s[:], tmp)
-	return nil
-}
-
-func (s OptionQuotientFamilial) Value() (driver.Value, error) {
-	return (pq.Float64Array)(s[:]).Value()
-}
+func (s *OptionQuotientFamilial) Scan(src interface{}) error  { return loadJSON(s, src) }
+func (s OptionQuotientFamilial) Value() (driver.Value, error) { return dumpJSON(s) }
 
 func (rs *Roles) Scan(src interface{}) error {
 	var tmp pq.StringArray

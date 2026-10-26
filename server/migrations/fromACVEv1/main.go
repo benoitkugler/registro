@@ -8,6 +8,7 @@ package main
 
 import (
 	"database/sql"
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -37,25 +38,37 @@ func check(err error) {
 }
 
 func main() {
+	commit := flag.Bool("commit", false, "actually write the v2 DB")
+	flag.Parse()
+
+	fmt.Println("Connecting to v1...")
 	dbV1, err := connectV1()
 	check(err)
 	defer dbV1.Close()
-
-	dbV2, err := connectV2()
-	check(err)
-	defer dbV2.Close()
-
-	fmt.Println("Connected.")
+	fmt.Println("Done.")
 
 	fmt.Println("Loading v1 data...")
 	originV1, err := loadV1(dbV1)
 	check(err)
 	fmt.Println("Done. Trimming...")
 	trimmedV1 := originV1.trim()
-	fmt.Println("Done. Inserting in v2...")
-	err = insert(dbV2, originV1, trimmedV1)
-	check(err)
 	fmt.Println("Done.")
+
+	if *commit {
+		fmt.Println("Connecting to v2...")
+		dbV2, err := connectV2()
+		check(err)
+		defer dbV2.Close()
+		fmt.Println("Done.")
+
+		fmt.Println("Inserting in v2...")
+		err = insert(dbV2, originV1, trimmedV1)
+		check(err)
+		fmt.Println("Done.")
+	} else {
+		fmt.Println(len(trimmedV1.personnes), "personnes")
+		fmt.Println(len(trimmedV1.documents), "files")
+	}
 }
 
 func euros(v rd.Euros) ds.Montant { return ds.NewEuros(float64(v)) }
@@ -157,34 +170,40 @@ type baseV1 struct {
 	camps rd.Camps
 
 	equipiers rd.Equipiers
+
+	documents rd.Documents
+	// documentsPersonnes
 }
 
 func loadV1(db *sql.DB) (out baseV1, err error) {
 	out.personnes, err = rd.SelectAllPersonnes(db)
 	if err != nil {
-		return baseV1{}, err
+		return baseV1{}, fmt.Errorf("table personnes: %s", err)
 	}
 	out.dons, err = rd.SelectAllDons(db)
 	if err != nil {
-		return baseV1{}, err
+		return baseV1{}, fmt.Errorf("table dons: %s", err)
 	}
 	out.donateurs, err = rd.SelectAllDonDonateurs(db)
 	if err != nil {
-		return baseV1{}, err
+		return baseV1{}, fmt.Errorf("table donateurs: %s", err)
 	}
 	out.organismes, err = rd.SelectAllOrganismes(db)
 	if err != nil {
-		return baseV1{}, err
+		return baseV1{}, fmt.Errorf("table organismes: %s", err)
 	}
 	out.camps, err = rd.SelectAllCamps(db)
 	if err != nil {
-		return baseV1{}, err
+		return baseV1{}, fmt.Errorf("table camps: %s", err)
 	}
 	out.equipiers, err = rd.SelectAllEquipiers(db)
 	if err != nil {
-		return baseV1{}, err
+		return baseV1{}, fmt.Errorf("table equipiers: %s", err)
 	}
-
+	out.documents, err = rd.SelectAllDocuments(db)
+	if err != nil {
+		return baseV1{}, fmt.Errorf("table documents: %s", err)
+	}
 	return
 }
 
@@ -194,6 +213,7 @@ func (b baseV1) trim() (out baseV1) {
 	out.organismes = trimOrganismes(out.dons, out.donateurs, b.organismes)
 	out.personnes = trimPersonnes(b.personnes, out)
 
+	out.documents = b.documents // TODO: filter unused categories
 	return out
 }
 

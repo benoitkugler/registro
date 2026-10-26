@@ -297,24 +297,16 @@ type OptionPrixCamp struct {
 // et détermine si on demande un acompte pour le camp donné.
 type SchemaPaiement string
 
+type Tranche struct {
+	QuotientMin Int
+	Pourcentage float64
+}
+
 // OptionQuotientFamilial applique un pourcentage sur prix de base,
 // pour les categories définie par `QuotientFamilial`
 // Par cohérence avec le prix de base, la dernière valeur vaut toujours 100
 // (sauf pour les entrées vides).
-type OptionQuotientFamilial [4]float64
-
-// GetRatio renvoie le pourcentage appliqué au prix de base pour le quotient
-// familial donné.
-func (q OptionQuotientFamilial) GetRatio(qf Int) float64 {
-	n := len(QuotientFamilial)
-	for i := 0; i < n-1; i++ {
-		q1, q2 := QuotientFamilial[i], QuotientFamilial[i+1]
-		if q1 < qf && qf <= q2 {
-			return q[i]
-		}
-	}
-	return 100
-}
+type OptionQuotientFamilial [4]Tranche
 
 type BuiltinContrainte string
 
