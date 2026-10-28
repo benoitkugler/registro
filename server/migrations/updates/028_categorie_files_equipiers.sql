@@ -11,27 +11,33 @@ UPDATE
 SET
     IdDemande = IdDemande - 2
 WHERE
-    IdDemande >= 11;
+    IdDemande >= 11
+    AND IdDemande <= 13;
 
 UPDATE
     demande_camps
 SET
     IdDemande = IdDemande - 2
 WHERE
-    IdDemande >= 11;
+    IdDemande >= 11
+    AND IdDemande <= 13;
+
+;
 
 UPDATE
     file_personnes
 SET
     IdDemande = IdDemande - 2
 WHERE
-    IdDemande >= 11;
+    IdDemande >= 11
+    AND IdDemande <= 13;
 
 -- remove last demandes, unused right now
 DELETE FROM
     demandes
 WHERE
-    Categorie >= 12;
+    Categorie >= 12
+    AND Categorie <= 13;
 
 -- adjust constraint check
 ALTER TABLE
