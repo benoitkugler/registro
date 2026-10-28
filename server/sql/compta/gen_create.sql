@@ -3,6 +3,7 @@ CREATE TABLE compta_bankentrys (
     Id serial PRIMARY KEY,
     IdCamp integer NOT NULL,
     IsReceipe boolean NOT NULL,
+    SpentBy integer,
     Reviews jsonb NOT NULL,
     IsValidated boolean NOT NULL,
     Account smallint CHECK (Account IN (0, 1)) NOT NULL
@@ -37,6 +38,7 @@ CREATE TABLE compta_records (
     Description text NOT NULL,
     Mode smallint CHECK (Mode IN (0, 1, 2, 3, 4)) NOT NULL,
     Serial text NOT NULL,
+    Currency smallint CHECK (Currency IN (1, 2)) NOT NULL,
     Montants jsonb NOT NULL,
     IdFile integer
 );
@@ -61,6 +63,9 @@ ALTER TABLE compta_bankentrys
 
 ALTER TABLE compta_bankentrys
     ADD FOREIGN KEY (IdCamp) REFERENCES compta_camps ON DELETE CASCADE;
+
+ALTER TABLE compta_bankentrys
+    ADD FOREIGN KEY (SpentBy) REFERENCES equipiers;
 
 ALTER TABLE compta_records
     ADD FOREIGN KEY (IdBankentry) REFERENCES compta_bankentrys ON DELETE CASCADE;
@@ -233,12 +238,11 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(KEY IN ('Cent', 'Currency', 'V'))
+            bool_and(KEY IN ('Cent', 'Kind'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_number (data -> 'Cent')
-        AND gomacro_validate_json_doss_Currency (data -> 'Currency')
-        AND gomacro_validate_json_comp_Ventilation (data -> 'V');
+        AND gomacro_validate_json_comp_Ventilation (data -> 'Kind');
     RETURN is_valid;
 END;
 $$
@@ -277,22 +281,6 @@ DECLARE
 BEGIN
     IF NOT is_valid THEN
         RAISE WARNING '% is not a comp_Ventilation', data;
-    END IF;
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION gomacro_validate_json_doss_Currency (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean := jsonb_typeof(data) = 'number'
-    AND data::int IN (0, 1);
-BEGIN
-    IF NOT is_valid THEN
-        RAISE WARNING '% is not a doss_Currency', data;
     END IF;
     RETURN is_valid;
 END;

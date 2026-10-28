@@ -53,6 +53,10 @@ type ComptaBankentry struct {
 	// IsReceipe is [true] if this operation was credited on the association bank.
 	IsReceipe bool
 
+	// the expense was made with private funds, and the asso
+	// must refund the equipier
+	SpentBy OptIdEquipier `gomacro-sql-foreign:"Equipier" `
+
 	Reviews     Reviews
 	IsValidated bool // rapprochement and validation by the admin
 
@@ -68,6 +72,8 @@ type ComptaRecord struct {
 	Mode        ModePaiementRecord // ignored for [ComptaBankentry.Account] == [AccountAsso]
 	Serial      string             // mandatory for [ComptaRecord.Mode] Cheque, ignored otherwise
 
+	// [Currency] is constant for one given record
+	Currency shared.Currency
 	Montants Montants // avec les ventilations
 
 	IdFile OptIdComptaFile `gomacro-sql-foreign:"ComptaFile" gomacro-sql-on-delete:"SET NULL"`

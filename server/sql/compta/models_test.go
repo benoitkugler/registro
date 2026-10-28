@@ -21,13 +21,18 @@ func TestSQL(t *testing.T) {
 	tu.AssertNoErr(t, err)
 
 	be := randComptaBankentry()
+	be.SpentBy = OptIdEquipier{}
 	be.IdCamp = compta.Id
 	be, err = be.Insert(db)
 	tu.AssertNoErr(t, err)
 
+	be.SpentBy = camps.IdEquipier(10).Opt() // does not exist
+	_, err = be.Update(db)
+	tu.AssertErr(t, err)
+
 	rec := randComptaRecord()
 	rec.IdBankentry = be.Id
-	_, err = be.Insert(db)
+	_, err = rec.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	ca := randComptaCampACVE()

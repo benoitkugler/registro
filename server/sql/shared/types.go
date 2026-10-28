@@ -16,15 +16,15 @@ type Currency uint8
 
 const (
 	_ Currency = iota
-	euros
-	francsSuisse
+	Euros
+	FrancsSuisse
 )
 
 func (c Currency) String() string {
 	switch c {
-	case euros:
+	case Euros:
 		return "€"
-	case francsSuisse:
+	case FrancsSuisse:
 		return "CHF"
 	default:
 		return "<invalid currency>"

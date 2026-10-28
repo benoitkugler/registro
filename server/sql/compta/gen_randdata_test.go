@@ -3,7 +3,6 @@ package compta
 import (
 	"math/rand"
 	"registro/sql/camps"
-	"registro/sql/dossiers"
 	"registro/sql/shared"
 	"time"
 )
@@ -43,6 +42,7 @@ func randComptaBankentry() ComptaBankentry {
 	s.Id = randIdComptaBankentry()
 	s.IdCamp = randIdComptaCamp()
 	s.IsReceipe = randbool()
+	s.SpentBy = randsha_OptID_cam_IdEquipier()
 	s.Reviews = randReviews()
 	s.IsValidated = randbool()
 	s.Account = randAccountKind()
@@ -89,6 +89,7 @@ func randComptaRecord() ComptaRecord {
 	s.Description = randstring()
 	s.Mode = randModePaiementRecord()
 	s.Serial = randstring()
+	s.Currency = randsha_Currency()
 	s.Montants = randMontants()
 	s.IdFile = randsha_OptID_IdComptaFile()
 
@@ -145,8 +146,7 @@ func randModePaiementRecord() ModePaiementRecord {
 func randMontantPart() MontantPart {
 	var s MontantPart
 	s.Cent = randint()
-	s.Currency = randdos_Currency()
-	s.V = randVentilation()
+	s.Kind = randVentilation()
 
 	return s
 }
@@ -216,10 +216,8 @@ func randcam_IdCamp() camps.IdCamp {
 	return camps.IdCamp(randint64())
 }
 
-func randdos_Currency() dossiers.Currency {
-	choix := [...]dossiers.Currency{dossiers.Euros, dossiers.FrancsSuisse}
-	i := rand.Intn(len(choix))
-	return choix[i]
+func randcam_IdEquipier() camps.IdEquipier {
+	return camps.IdEquipier(randint64())
 }
 
 func randint() int {
@@ -230,6 +228,12 @@ func randint64() int64 {
 	return int64(rand.Intn(1000000))
 }
 
+func randsha_Currency() shared.Currency {
+	choix := [...]shared.Currency{shared.Euros, shared.FrancsSuisse}
+	i := rand.Intn(len(choix))
+	return choix[i]
+}
+
 func randsha_Date() shared.Date {
 	return shared.Date(randtDate())
 }
@@ -237,6 +241,14 @@ func randsha_Date() shared.Date {
 func randsha_OptID_IdComptaFile() shared.OptID[IdComptaFile] {
 	var s shared.OptID[IdComptaFile]
 	s.Id = randIdComptaFile()
+	s.Valid = randbool()
+
+	return s
+}
+
+func randsha_OptID_cam_IdEquipier() shared.OptID[camps.IdEquipier] {
+	var s shared.OptID[camps.IdEquipier]
+	s.Id = randcam_IdEquipier()
 	s.Valid = randbool()
 
 	return s
