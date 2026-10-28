@@ -9,8 +9,8 @@ BEGIN;
 DELETE FROM
     demande_equipiers
 WHERE
-    IdDemande == 9
-    OR IdDemande == 10;
+    IdDemande = 9
+    OR IdDemande = 10;
 
 UPDATE
     demande_equipiers
