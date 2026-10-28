@@ -6,6 +6,12 @@ BEGIN;
 -- file with catégorie Haccp & CertMedicalCuisine (value 9 & 10)
 -- we want to preserve the id = categorie implicit invariant (might be useful in the future)...
 -- so we have to adjust the related tables
+DELETE FROM
+    demande_equipiers
+WHERE
+    IdDemande == 9
+    OR IdDemande == 10;
+
 UPDATE
     demande_equipiers
 SET
