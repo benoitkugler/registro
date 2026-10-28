@@ -520,3 +520,42 @@ ALTER TABLE dons
 ALTER TABLE dons
     ADD FOREIGN KEY (IdOrganisme) REFERENCES organismes;
 
+ALTER TABLE compta_camps
+    ADD UNIQUE (IdCamp);
+
+ALTER TABLE compta_camps
+    ADD FOREIGN KEY (IdCamp) REFERENCES camps ON DELETE CASCADE;
+
+ALTER TABLE compta_camp_acves
+    ADD FOREIGN KEY (IdComptaCamp) REFERENCES compta_camps ON DELETE CASCADE;
+
+ALTER TABLE compta_bankentrys
+    ADD UNIQUE (Id, IdCamp);
+
+ALTER TABLE compta_bankentrys
+    ADD FOREIGN KEY (IdCamp) REFERENCES compta_camps ON DELETE CASCADE;
+
+ALTER TABLE compta_records
+    ADD FOREIGN KEY (IdBankentry) REFERENCES compta_bankentrys ON DELETE CASCADE;
+
+ALTER TABLE compta_records
+    ADD FOREIGN KEY (IdFile) REFERENCES compta_files ON DELETE SET NULL;
+
+ALTER TABLE compta_record_buss
+    ADD UNIQUE (IdRecord);
+
+ALTER TABLE compta_record_buss
+    ADD FOREIGN KEY (IdCamp) REFERENCES compta_camps ON DELETE CASCADE;
+
+ALTER TABLE compta_record_buss
+    ADD FOREIGN KEY (IdRecord) REFERENCES compta_records ON DELETE CASCADE;
+
+ALTER TABLE compta_records
+    ADD CONSTRAINT Montants_gomacro CHECK (gomacro_validate_json_array_comp_MontantPart (Montants));
+
+ALTER TABLE compta_bankentrys
+    ADD CONSTRAINT Reviews_gomacro CHECK (gomacro_validate_json_array_comp_Review (Reviews));
+
+ALTER TABLE compta_camp_acves
+    ADD CONSTRAINT Fraismdr_gomacro CHECK (gomacro_validate_json_comp_FraismdrACVE (Fraismdr));
+

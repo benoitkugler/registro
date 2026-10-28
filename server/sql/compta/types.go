@@ -1,10 +1,10 @@
 package compta
 
 import (
-	"errors"
 	"time"
 
-	"github.com/benoitkugler/goACVE/server/shared"
+	"registro/sql/dossiers"
+	"registro/sql/shared"
 )
 
 // State is the global state of the compta. document
@@ -24,24 +24,6 @@ const (
 	Archive // Dossier archivé
 )
 
-func computeState(compta ComptaCamp, records Records) State {
-	if compta.State == ToBeValidated {
-		// are all records valid ?
-		if records.allValidated() {
-			return Valide
-		}
-	}
-	if compta.State == EnCours {
-		// resolve to Valide if all records exist and are valid
-		// even if the director has not ask for
-		if len(records) != 0 && records.allValidated() {
-			return Valide
-		}
-	}
-
-	return compta.State
-}
-
 func (st State) String() string {
 	switch st {
 	case EnCours:
@@ -57,15 +39,6 @@ func (st State) String() string {
 	}
 }
 
-func (records Records) allValidated() bool {
-	for _, rec := range records {
-		if !rec.IsValidated {
-			return false
-		}
-	}
-	return true
-}
-
 // Reviews is a simple conversation between
 // admin and director about one record
 type Reviews []Review
@@ -76,69 +49,11 @@ type Review struct {
 	Message string
 }
 
-type Montants []Montant
+type Montants []MontantPart
 
-func (ms Montants) equals(other Montants) bool {
-	if len(ms) != len(other) {
-		return false
-	}
-	for i := range ms {
-		if ms[i] != other[i] {
-			return false
-		}
-	}
-	return true
-}
-
-func (ms Montants) total() Cent {
-	var total Cent
-	for _, m := range ms {
-		total += m.Montant
-	}
-	return total
-}
-
-func (ms Montants) uniquify() Montants {
-	tmp := map[Ventilation]Cent{}
-	for _, m := range ms {
-		tmp[m.Kind] += m.Montant
-	}
-	out := make(Montants, 0, len(tmp))
-	for k, m := range tmp {
-		out = append(out, Montant{m, k})
-	}
-	return out
-}
-
-func (ms Montants) checkVentilations(isReceipe bool) error {
-	for _, m := range ms {
-		if m.Kind == NoVentilation {
-			return shared.FormatErr("Ventilation manquante", errors.New("Une ventilation doit être choisie."))
-		}
-		if m.Kind == PensionBenevole && !isReceipe {
-			return shared.FormatErr("Ventilation incorrecte", errors.New("La ventilation Pension bénévole n'est valide que pour une recette."))
-		}
-	}
-	return nil
-}
-
-type Montant struct {
-	Montant Cent // in cents
-	Kind    Ventilation
-}
-
-func (m Montant) toDepense(isReceipe, isOtherAccount bool) depenseTotale {
-	if isReceipe {
-		if isOtherAccount {
-			return depenseTotale{otherAccountRec: m.Montant}
-		}
-		return depenseTotale{ownAccountRec: m.Montant}
-	} else {
-		if isOtherAccount {
-			return depenseTotale{otherAccount: m.Montant}
-		}
-		return depenseTotale{ownAccount: m.Montant}
-	}
+type MontantPart struct {
+	dossiers.Montant
+	V Ventilation
 }
 
 type Ventilation uint8
@@ -187,16 +102,6 @@ var ventilationLabels = [Autre + 1]struct{ code, label string }{
 
 func (v Ventilation) forCars() bool {
 	return v == Carburant
-}
-
-func (rec *ComptaRecord) carExpenses() Cent {
-	var total Cent
-	for _, vent := range rec.Montants {
-		if vent.Kind.forCars() {
-			total += vent.Montant
-		}
-	}
-	return total
 }
 
 type ModePaiementRecord uint8

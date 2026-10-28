@@ -633,3 +633,256 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION gomacro_validate_json_array_comp_Bus (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) = 'null' THEN
+        RETURN TRUE;
+    END IF;
+    IF jsonb_typeof(data) != 'array' THEN
+        RETURN FALSE;
+    END IF;
+    IF jsonb_array_length(data) = 0 THEN
+        RETURN TRUE;
+    END IF;
+    RETURN (
+        SELECT
+            bool_and(gomacro_validate_json_comp_Bus (value))
+        FROM
+            jsonb_array_elements(data));
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_array_comp_MontantPart (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) = 'null' THEN
+        RETURN TRUE;
+    END IF;
+    IF jsonb_typeof(data) != 'array' THEN
+        RETURN FALSE;
+    END IF;
+    IF jsonb_array_length(data) = 0 THEN
+        RETURN TRUE;
+    END IF;
+    RETURN (
+        SELECT
+            bool_and(gomacro_validate_json_comp_MontantPart (value))
+        FROM
+            jsonb_array_elements(data));
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_array_comp_Review (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) = 'null' THEN
+        RETURN TRUE;
+    END IF;
+    IF jsonb_typeof(data) != 'array' THEN
+        RETURN FALSE;
+    END IF;
+    IF jsonb_array_length(data) = 0 THEN
+        RETURN TRUE;
+    END IF;
+    RETURN (
+        SELECT
+            bool_and(gomacro_validate_json_comp_Review (value))
+        FROM
+            jsonb_array_elements(data));
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_boolean (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean := jsonb_typeof(data) = 'boolean';
+BEGIN
+    IF NOT is_valid THEN
+        RAISE WARNING '% is not a boolean', data;
+    END IF;
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_comp_Bus (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(KEY IN ('Name', 'Kind', 'KmStart', 'KmEnd'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_string (data -> 'Name')
+        AND gomacro_validate_json_comp_CarKind (data -> 'Kind')
+        AND gomacro_validate_json_number (data -> 'KmStart')
+        AND gomacro_validate_json_number (data -> 'KmEnd');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_comp_CarKind (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean := jsonb_typeof(data) = 'number'
+    AND data::int IN (0, 1, 2, 3);
+BEGIN
+    IF NOT is_valid THEN
+        RAISE WARNING '% is not a comp_CarKind', data;
+    END IF;
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_comp_FraismdrACVE (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(KEY IN ('Bus'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_array_comp_Bus (data -> 'Bus');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_comp_MontantPart (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(KEY IN ('Cent', 'Currency', 'V'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_number (data -> 'Cent')
+        AND gomacro_validate_json_doss_Currency (data -> 'Currency')
+        AND gomacro_validate_json_comp_Ventilation (data -> 'V');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_comp_Review (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(KEY IN ('IsAdmin', 'Time', 'Message'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_boolean (data -> 'IsAdmin')
+        AND gomacro_validate_json_string (data -> 'Time')
+        AND gomacro_validate_json_string (data -> 'Message');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_comp_Ventilation (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean := jsonb_typeof(data) = 'number'
+    AND data::int IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
+BEGIN
+    IF NOT is_valid THEN
+        RAISE WARNING '% is not a comp_Ventilation', data;
+    END IF;
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_doss_Currency (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean := jsonb_typeof(data) = 'number'
+    AND data::int IN (0, 1);
+BEGIN
+    IF NOT is_valid THEN
+        RAISE WARNING '% is not a doss_Currency', data;
+    END IF;
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_number (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean := jsonb_typeof(data) = 'number';
+BEGIN
+    IF NOT is_valid THEN
+        RAISE WARNING '% is not a number', data;
+    END IF;
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_string (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean := jsonb_typeof(data) = 'string';
+BEGIN
+    IF NOT is_valid THEN
+        RAISE WARNING '% is not a string', data;
+    END IF;
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+

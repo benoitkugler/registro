@@ -65,8 +65,9 @@ const (
 
 const nbCarKind = CarCar + 1
 
-// CarsCosts stores the kilometric cost for each kind of cars
-type CarsCosts [nbCarKind]Cent
+// CarsCosts stores the kilometric cost for each kind of cars,
+// as Euros cents
+type CarsCosts [nbCarKind]int
 
 type CarsKms [nbCarKind]int32
 
