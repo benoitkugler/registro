@@ -1,27 +1,18 @@
 -- Code genererated by gomacro/generator/sql. DO NOT EDIT.
-CREATE TABLE compta_bankentrys (
-    Id serial PRIMARY KEY,
-    IdCamp integer NOT NULL,
-    IsReceipe boolean NOT NULL,
-    SpentBy integer,
-    Reviews jsonb NOT NULL,
-    IsValidated boolean NOT NULL,
-    Account smallint CHECK (Account IN (0, 1)) NOT NULL
-);
-
 CREATE TABLE compta_camps (
     Id serial PRIMARY KEY,
     IdCamp integer NOT NULL,
     FileStatus smallint CHECK (FileStatus IN (0, 1, 2)) NOT NULL,
     State smallint CHECK (State IN (0, 1, 2, 3)) NOT NULL,
     LastSentMailAdmin timestamp(0) with time zone NOT NULL,
-    LastSentMailDirecteur timestamp(0) with time zone NOT NULL
-);
-
-CREATE TABLE compta_camp_acves (
-    IdComptaCamp integer NOT NULL,
+    LastSentMailDirecteur timestamp(0) with time zone NOT NULL,
     Account smallint CHECK (Account IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)) NOT NULL,
     Fraismdr jsonb NOT NULL
+);
+
+CREATE TABLE compta_configs (
+    Id serial PRIMARY KEY,
+    Year integer NOT NULL
 );
 
 CREATE TABLE compta_files (
@@ -33,7 +24,22 @@ CREATE TABLE compta_files (
 
 CREATE TABLE compta_records (
     Id serial PRIMARY KEY,
-    IdBankentry integer NOT NULL,
+    IdCamp integer NOT NULL,
+    IsReceipe boolean NOT NULL,
+    SpentBy integer,
+    Reviews jsonb NOT NULL,
+    IsValidated boolean NOT NULL,
+    Account smallint CHECK (Account IN (0, 1)) NOT NULL
+);
+
+CREATE TABLE compta_record_buss (
+    IdCamp integer NOT NULL,
+    IdSubrecord integer NOT NULL
+);
+
+CREATE TABLE compta_subrecords (
+    Id serial PRIMARY KEY,
+    IdRecord integer NOT NULL,
     Date date NOT NULL,
     Description text NOT NULL,
     Mode smallint CHECK (Mode IN (0, 1, 2, 3, 4)) NOT NULL,
@@ -43,11 +49,6 @@ CREATE TABLE compta_records (
     IdFile integer
 );
 
-CREATE TABLE compta_record_buss (
-    IdCamp integer NOT NULL,
-    IdRecord integer NOT NULL
-);
-
 -- constraints
 ALTER TABLE compta_camps
     ADD UNIQUE (IdCamp);
@@ -55,32 +56,32 @@ ALTER TABLE compta_camps
 ALTER TABLE compta_camps
     ADD FOREIGN KEY (IdCamp) REFERENCES camps ON DELETE CASCADE;
 
-ALTER TABLE compta_camp_acves
-    ADD FOREIGN KEY (IdComptaCamp) REFERENCES compta_camps ON DELETE CASCADE;
-
-ALTER TABLE compta_bankentrys
+ALTER TABLE compta_records
     ADD UNIQUE (Id, IdCamp);
 
-ALTER TABLE compta_bankentrys
+ALTER TABLE compta_records
     ADD FOREIGN KEY (IdCamp) REFERENCES compta_camps ON DELETE CASCADE;
 
-ALTER TABLE compta_bankentrys
+ALTER TABLE compta_records
     ADD FOREIGN KEY (SpentBy) REFERENCES equipiers;
 
-ALTER TABLE compta_records
-    ADD FOREIGN KEY (IdBankentry) REFERENCES compta_bankentrys ON DELETE CASCADE;
+ALTER TABLE compta_subrecords
+    ADD FOREIGN KEY (IdRecord) REFERENCES compta_records ON DELETE CASCADE;
 
-ALTER TABLE compta_records
+ALTER TABLE compta_subrecords
     ADD FOREIGN KEY (IdFile) REFERENCES compta_files ON DELETE SET NULL;
 
 ALTER TABLE compta_record_buss
-    ADD UNIQUE (IdRecord);
+    ADD UNIQUE (IdSubrecord);
 
 ALTER TABLE compta_record_buss
     ADD FOREIGN KEY (IdCamp) REFERENCES compta_camps ON DELETE CASCADE;
 
 ALTER TABLE compta_record_buss
-    ADD FOREIGN KEY (IdRecord) REFERENCES compta_records ON DELETE CASCADE;
+    ADD FOREIGN KEY (IdSubrecord) REFERENCES compta_subrecords ON DELETE CASCADE;
+
+ALTER TABLE compta_configs
+    ADD UNIQUE (Year);
 
 CREATE OR REPLACE FUNCTION gomacro_validate_json_array_comp_Bus (data jsonb)
     RETURNS boolean
@@ -318,12 +319,12 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-ALTER TABLE compta_records
+ALTER TABLE compta_subrecords
     ADD CONSTRAINT Montants_gomacro CHECK (gomacro_validate_json_array_comp_MontantPart (Montants));
 
-ALTER TABLE compta_bankentrys
+ALTER TABLE compta_records
     ADD CONSTRAINT Reviews_gomacro CHECK (gomacro_validate_json_array_comp_Review (Reviews));
 
-ALTER TABLE compta_camp_acves
+ALTER TABLE compta_camps
     ADD CONSTRAINT Fraismdr_gomacro CHECK (gomacro_validate_json_comp_FraismdrACVE (Fraismdr));
 

@@ -6,6 +6,22 @@ import (
 	"path/filepath"
 )
 
+func checkDir(dirName string) (absolute string, _ error) {
+	dirName, err := filepath.Abs(dirName)
+	if err != nil {
+		return "", err
+	}
+	// check that the dir exists
+	dir, err := os.Stat(dirName)
+	if err != nil {
+		return "", err
+	}
+	if !dir.IsDir() {
+		return "", fmt.Errorf("invalid directory %s", dirName)
+	}
+	return dirName, nil
+}
+
 type Directories struct {
 	Files  string // storage for user files
 	Assets string // readonly directory to be used in HTML templates
@@ -21,19 +37,7 @@ func loadEnvDir(varname string, optional bool) (string, error) {
 		}
 		return "", fmt.Errorf("missing env. %s", varname)
 	}
-	dirName, err := filepath.Abs(dirName)
-	if err != nil {
-		return "", err
-	}
-	// check that the dir exists
-	dir, err := os.Stat(dirName)
-	if err != nil {
-		return "", err
-	}
-	if !dir.IsDir() {
-		return "", fmt.Errorf("invalid %s directory %s", varname, dirName)
-	}
-	return dirName, nil
+	return checkDir(dirName)
 }
 
 func NewDirectories() (Directories, error) {

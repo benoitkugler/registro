@@ -25,198 +25,6 @@ type DB interface {
 	Prepare(query string) (*sql.Stmt, error)
 }
 
-func scanOneComptaBankentry(row scanner) (ComptaBankentry, error) {
-	var item ComptaBankentry
-	err := row.Scan(
-		&item.Id,
-		&item.IdCamp,
-		&item.IsReceipe,
-		&item.SpentBy,
-		&item.Reviews,
-		&item.IsValidated,
-		&item.Account,
-	)
-	return item, err
-}
-
-func ScanComptaBankentry(row *sql.Row) (ComptaBankentry, error) { return scanOneComptaBankentry(row) }
-
-// SelectAll returns all the items in the compta_bankentrys table.
-func SelectAllComptaBankentrys(db DB) (ComptaBankentrys, error) {
-	rows, err := db.Query("SELECT id, idcamp, isreceipe, spentby, reviews, isvalidated, account FROM compta_bankentrys")
-	if err != nil {
-		return nil, err
-	}
-	return ScanComptaBankentrys(rows)
-}
-
-// SelectComptaBankentry returns the entry matching 'id'.
-func SelectComptaBankentry(tx DB, id IdComptaBankentry) (ComptaBankentry, error) {
-	row := tx.QueryRow("SELECT id, idcamp, isreceipe, spentby, reviews, isvalidated, account FROM compta_bankentrys WHERE id = $1", id)
-	return ScanComptaBankentry(row)
-}
-
-// SelectComptaBankentrys returns the entry matching the given 'ids'.
-func SelectComptaBankentrys(tx DB, ids ...IdComptaBankentry) (ComptaBankentrys, error) {
-	rows, err := tx.Query("SELECT id, idcamp, isreceipe, spentby, reviews, isvalidated, account FROM compta_bankentrys WHERE id = ANY($1)", IdComptaBankentryArrayToPQ(ids))
-	if err != nil {
-		return nil, err
-	}
-	return ScanComptaBankentrys(rows)
-}
-
-type ComptaBankentrys map[IdComptaBankentry]ComptaBankentry
-
-func (m ComptaBankentrys) IDs() []IdComptaBankentry {
-	out := make([]IdComptaBankentry, 0, len(m))
-	for i := range m {
-		out = append(out, i)
-	}
-	return out
-}
-
-func ScanComptaBankentrys(rs *sql.Rows) (ComptaBankentrys, error) {
-	var (
-		s   ComptaBankentry
-		err error
-	)
-	defer func() {
-		errClose := rs.Close()
-		if err == nil {
-			err = errClose
-		}
-	}()
-	structs := make(ComptaBankentrys, 16)
-	for rs.Next() {
-		s, err = scanOneComptaBankentry(rs)
-		if err != nil {
-			return nil, err
-		}
-		structs[s.Id] = s
-	}
-	if err = rs.Err(); err != nil {
-		return nil, err
-	}
-	return structs, nil
-}
-
-// Insert one ComptaBankentry in the database and returns the item with id filled.
-func (item ComptaBankentry) Insert(tx DB) (out ComptaBankentry, err error) {
-	row := tx.QueryRow(`INSERT INTO compta_bankentrys (
-		idcamp, isreceipe, spentby, reviews, isvalidated, account
-		) VALUES (
-		$1, $2, $3, $4, $5, $6
-		) RETURNING id, idcamp, isreceipe, spentby, reviews, isvalidated, account;
-		`, item.IdCamp, item.IsReceipe, item.SpentBy, item.Reviews, item.IsValidated, item.Account)
-	return ScanComptaBankentry(row)
-}
-
-// Update ComptaBankentry in the database and returns the new version.
-func (item ComptaBankentry) Update(tx DB) (out ComptaBankentry, err error) {
-	row := tx.QueryRow(`UPDATE compta_bankentrys SET (
-		idcamp, isreceipe, spentby, reviews, isvalidated, account
-		) = (
-		$1, $2, $3, $4, $5, $6
-		) WHERE id = $7 RETURNING id, idcamp, isreceipe, spentby, reviews, isvalidated, account;
-		`, item.IdCamp, item.IsReceipe, item.SpentBy, item.Reviews, item.IsValidated, item.Account, item.Id)
-	return ScanComptaBankentry(row)
-}
-
-// Deletes the ComptaBankentry and returns the item
-func DeleteComptaBankentryById(tx DB, id IdComptaBankentry) (ComptaBankentry, error) {
-	row := tx.QueryRow("DELETE FROM compta_bankentrys WHERE id = $1 RETURNING id, idcamp, isreceipe, spentby, reviews, isvalidated, account;", id)
-	return ScanComptaBankentry(row)
-}
-
-// Deletes the ComptaBankentry in the database and returns the ids.
-func DeleteComptaBankentrysByIDs(tx DB, ids ...IdComptaBankentry) ([]IdComptaBankentry, error) {
-	rows, err := tx.Query("DELETE FROM compta_bankentrys WHERE id = ANY($1) RETURNING id", IdComptaBankentryArrayToPQ(ids))
-	if err != nil {
-		return nil, err
-	}
-	return ScanIdComptaBankentryArray(rows)
-}
-
-// ByIdCamp returns a map with 'IdCamp' as keys.
-func (items ComptaBankentrys) ByIdCamp() map[IdComptaCamp]ComptaBankentrys {
-	out := make(map[IdComptaCamp]ComptaBankentrys)
-	for _, target := range items {
-		dict := out[target.IdCamp]
-		if dict == nil {
-			dict = make(ComptaBankentrys)
-		}
-		dict[target.Id] = target
-		out[target.IdCamp] = dict
-	}
-	return out
-}
-
-// IdCamps returns the list of ids of IdCamp
-// contained in this table.
-// They are not garanteed to be distinct.
-func (items ComptaBankentrys) IdCamps() []IdComptaCamp {
-	out := make([]IdComptaCamp, 0, len(items))
-	for _, target := range items {
-		out = append(out, target.IdCamp)
-	}
-	return out
-}
-
-func SelectComptaBankentrysByIdCamps(tx DB, idCamps_ ...IdComptaCamp) (ComptaBankentrys, error) {
-	rows, err := tx.Query("SELECT id, idcamp, isreceipe, spentby, reviews, isvalidated, account FROM compta_bankentrys WHERE idcamp = ANY($1)", IdComptaCampArrayToPQ(idCamps_))
-	if err != nil {
-		return nil, err
-	}
-	return ScanComptaBankentrys(rows)
-}
-
-func DeleteComptaBankentrysByIdCamps(tx DB, idCamps_ ...IdComptaCamp) (ComptaBankentrys, error) {
-	rows, err := tx.Query("DELETE FROM compta_bankentrys WHERE idcamp = ANY($1) RETURNING id, idcamp, isreceipe, spentby, reviews, isvalidated, account", IdComptaCampArrayToPQ(idCamps_))
-	if err != nil {
-		return nil, err
-	}
-	return ScanComptaBankentrys(rows)
-}
-
-// SpentBys returns the list of non null SpentBy
-// contained in this table.
-// They are not garanteed to be distinct.
-func (items ComptaBankentrys) SpentBys() []camps.IdEquipier {
-	var out []camps.IdEquipier
-	for _, target := range items {
-		if id := target.SpentBy; id.Valid {
-			out = append(out, id.Id)
-		}
-	}
-	return out
-}
-
-func SelectComptaBankentrysBySpentBys(tx DB, spentBys_ ...camps.IdEquipier) (ComptaBankentrys, error) {
-	rows, err := tx.Query("SELECT id, idcamp, isreceipe, spentby, reviews, isvalidated, account FROM compta_bankentrys WHERE spentby = ANY($1)", camps.IdEquipierArrayToPQ(spentBys_))
-	if err != nil {
-		return nil, err
-	}
-	return ScanComptaBankentrys(rows)
-}
-
-func DeleteComptaBankentrysBySpentBys(tx DB, spentBys_ ...camps.IdEquipier) (ComptaBankentrys, error) {
-	rows, err := tx.Query("DELETE FROM compta_bankentrys WHERE spentby = ANY($1) RETURNING id, idcamp, isreceipe, spentby, reviews, isvalidated, account", camps.IdEquipierArrayToPQ(spentBys_))
-	if err != nil {
-		return nil, err
-	}
-	return ScanComptaBankentrys(rows)
-}
-
-// SelectComptaBankentryByIdAndIdCamp return zero or one item, thanks to a UNIQUE SQL constraint.
-func SelectComptaBankentryByIdAndIdCamp(tx DB, id IdComptaBankentry, idCamp IdComptaCamp) (item ComptaBankentry, found bool, err error) {
-	row := tx.QueryRow("SELECT id, idcamp, isreceipe, spentby, reviews, isvalidated, account FROM compta_bankentrys WHERE Id = $1 AND IdCamp = $2", id, idCamp)
-	item, err = ScanComptaBankentry(row)
-	if err == sql.ErrNoRows {
-		return item, false, nil
-	}
-	return item, true, err
-}
-
 func scanOneComptaCamp(row scanner) (ComptaCamp, error) {
 	var item ComptaCamp
 	err := row.Scan(
@@ -226,6 +34,8 @@ func scanOneComptaCamp(row scanner) (ComptaCamp, error) {
 		&item.State,
 		&item.LastSentMailAdmin,
 		&item.LastSentMailDirecteur,
+		&item.Account,
+		&item.Fraismdr,
 	)
 	return item, err
 }
@@ -234,7 +44,7 @@ func ScanComptaCamp(row *sql.Row) (ComptaCamp, error) { return scanOneComptaCamp
 
 // SelectAll returns all the items in the compta_camps table.
 func SelectAllComptaCamps(db DB) (ComptaCamps, error) {
-	rows, err := db.Query("SELECT id, idcamp, filestatus, state, lastsentmailadmin, lastsentmaildirecteur FROM compta_camps")
+	rows, err := db.Query("SELECT id, idcamp, filestatus, state, lastsentmailadmin, lastsentmaildirecteur, account, fraismdr FROM compta_camps")
 	if err != nil {
 		return nil, err
 	}
@@ -243,13 +53,13 @@ func SelectAllComptaCamps(db DB) (ComptaCamps, error) {
 
 // SelectComptaCamp returns the entry matching 'id'.
 func SelectComptaCamp(tx DB, id IdComptaCamp) (ComptaCamp, error) {
-	row := tx.QueryRow("SELECT id, idcamp, filestatus, state, lastsentmailadmin, lastsentmaildirecteur FROM compta_camps WHERE id = $1", id)
+	row := tx.QueryRow("SELECT id, idcamp, filestatus, state, lastsentmailadmin, lastsentmaildirecteur, account, fraismdr FROM compta_camps WHERE id = $1", id)
 	return ScanComptaCamp(row)
 }
 
 // SelectComptaCamps returns the entry matching the given 'ids'.
 func SelectComptaCamps(tx DB, ids ...IdComptaCamp) (ComptaCamps, error) {
-	rows, err := tx.Query("SELECT id, idcamp, filestatus, state, lastsentmailadmin, lastsentmaildirecteur FROM compta_camps WHERE id = ANY($1)", IdComptaCampArrayToPQ(ids))
+	rows, err := tx.Query("SELECT id, idcamp, filestatus, state, lastsentmailadmin, lastsentmaildirecteur, account, fraismdr FROM compta_camps WHERE id = ANY($1)", IdComptaCampArrayToPQ(ids))
 	if err != nil {
 		return nil, err
 	}
@@ -294,28 +104,28 @@ func ScanComptaCamps(rs *sql.Rows) (ComptaCamps, error) {
 // Insert one ComptaCamp in the database and returns the item with id filled.
 func (item ComptaCamp) Insert(tx DB) (out ComptaCamp, err error) {
 	row := tx.QueryRow(`INSERT INTO compta_camps (
-		idcamp, filestatus, state, lastsentmailadmin, lastsentmaildirecteur
+		idcamp, filestatus, state, lastsentmailadmin, lastsentmaildirecteur, account, fraismdr
 		) VALUES (
-		$1, $2, $3, $4, $5
-		) RETURNING id, idcamp, filestatus, state, lastsentmailadmin, lastsentmaildirecteur;
-		`, item.IdCamp, item.FileStatus, item.State, item.LastSentMailAdmin, item.LastSentMailDirecteur)
+		$1, $2, $3, $4, $5, $6, $7
+		) RETURNING id, idcamp, filestatus, state, lastsentmailadmin, lastsentmaildirecteur, account, fraismdr;
+		`, item.IdCamp, item.FileStatus, item.State, item.LastSentMailAdmin, item.LastSentMailDirecteur, item.Account, item.Fraismdr)
 	return ScanComptaCamp(row)
 }
 
 // Update ComptaCamp in the database and returns the new version.
 func (item ComptaCamp) Update(tx DB) (out ComptaCamp, err error) {
 	row := tx.QueryRow(`UPDATE compta_camps SET (
-		idcamp, filestatus, state, lastsentmailadmin, lastsentmaildirecteur
+		idcamp, filestatus, state, lastsentmailadmin, lastsentmaildirecteur, account, fraismdr
 		) = (
-		$1, $2, $3, $4, $5
-		) WHERE id = $6 RETURNING id, idcamp, filestatus, state, lastsentmailadmin, lastsentmaildirecteur;
-		`, item.IdCamp, item.FileStatus, item.State, item.LastSentMailAdmin, item.LastSentMailDirecteur, item.Id)
+		$1, $2, $3, $4, $5, $6, $7
+		) WHERE id = $8 RETURNING id, idcamp, filestatus, state, lastsentmailadmin, lastsentmaildirecteur, account, fraismdr;
+		`, item.IdCamp, item.FileStatus, item.State, item.LastSentMailAdmin, item.LastSentMailDirecteur, item.Account, item.Fraismdr, item.Id)
 	return ScanComptaCamp(row)
 }
 
 // Deletes the ComptaCamp and returns the item
 func DeleteComptaCampById(tx DB, id IdComptaCamp) (ComptaCamp, error) {
-	row := tx.QueryRow("DELETE FROM compta_camps WHERE id = $1 RETURNING id, idcamp, filestatus, state, lastsentmailadmin, lastsentmaildirecteur;", id)
+	row := tx.QueryRow("DELETE FROM compta_camps WHERE id = $1 RETURNING id, idcamp, filestatus, state, lastsentmailadmin, lastsentmaildirecteur, account, fraismdr;", id)
 	return ScanComptaCamp(row)
 }
 
@@ -326,143 +136,6 @@ func DeleteComptaCampsByIDs(tx DB, ids ...IdComptaCamp) ([]IdComptaCamp, error) 
 		return nil, err
 	}
 	return ScanIdComptaCampArray(rows)
-}
-
-func scanOneComptaCampACVE(row scanner) (ComptaCampACVE, error) {
-	var item ComptaCampACVE
-	err := row.Scan(
-		&item.IdComptaCamp,
-		&item.Account,
-		&item.Fraismdr,
-	)
-	return item, err
-}
-
-func ScanComptaCampACVE(row *sql.Row) (ComptaCampACVE, error) { return scanOneComptaCampACVE(row) }
-
-// SelectAll returns all the items in the compta_camp_acves table.
-func SelectAllComptaCampACVEs(db DB) (ComptaCampACVEs, error) {
-	rows, err := db.Query("SELECT idcomptacamp, account, fraismdr FROM compta_camp_acves")
-	if err != nil {
-		return nil, err
-	}
-	return ScanComptaCampACVEs(rows)
-}
-
-type ComptaCampACVEs []ComptaCampACVE
-
-func ScanComptaCampACVEs(rs *sql.Rows) (ComptaCampACVEs, error) {
-	var (
-		item ComptaCampACVE
-		err  error
-	)
-	defer func() {
-		errClose := rs.Close()
-		if err == nil {
-			err = errClose
-		}
-	}()
-	structs := make(ComptaCampACVEs, 0, 16)
-	for rs.Next() {
-		item, err = scanOneComptaCampACVE(rs)
-		if err != nil {
-			return nil, err
-		}
-		structs = append(structs, item)
-	}
-	if err = rs.Err(); err != nil {
-		return nil, err
-	}
-	return structs, nil
-}
-
-func (item ComptaCampACVE) Insert(db DB) error {
-	_, err := db.Exec(`INSERT INTO compta_camp_acves (
-			idcomptacamp, account, fraismdr
-			) VALUES (
-			$1, $2, $3
-			);
-			`, item.IdComptaCamp, item.Account, item.Fraismdr)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// Insert the links ComptaCampACVE in the database.
-// It is a no-op if 'items' is empty.
-func InsertManyComptaCampACVEs(tx *sql.Tx, items ...ComptaCampACVE) error {
-	if len(items) == 0 {
-		return nil
-	}
-
-	stmt, err := tx.Prepare(pq.CopyIn("compta_camp_acves",
-		"idcomptacamp",
-		"account",
-		"fraismdr",
-	))
-	if err != nil {
-		return err
-	}
-
-	for _, item := range items {
-		_, err = stmt.Exec(item.IdComptaCamp, item.Account, item.Fraismdr)
-		if err != nil {
-			return err
-		}
-	}
-
-	if _, err = stmt.Exec(); err != nil {
-		return err
-	}
-
-	if err = stmt.Close(); err != nil {
-		return err
-	}
-	return nil
-}
-
-// Delete the link ComptaCampACVE from the database.
-// Only the foreign keys IdComptaCamp fields are used in 'item'.
-func (item ComptaCampACVE) Delete(tx DB) error {
-	_, err := tx.Exec(`DELETE FROM compta_camp_acves WHERE IdComptaCamp = $1;`, item.IdComptaCamp)
-	return err
-}
-
-// ByIdComptaCamp returns a map with 'IdComptaCamp' as keys.
-func (items ComptaCampACVEs) ByIdComptaCamp() map[IdComptaCamp]ComptaCampACVEs {
-	out := make(map[IdComptaCamp]ComptaCampACVEs)
-	for _, target := range items {
-		out[target.IdComptaCamp] = append(out[target.IdComptaCamp], target)
-	}
-	return out
-}
-
-// IdComptaCamps returns the list of ids of IdComptaCamp
-// contained in this table.
-// They are not garanteed to be distinct.
-func (items ComptaCampACVEs) IdComptaCamps() []IdComptaCamp {
-	out := make([]IdComptaCamp, len(items))
-	for index, target := range items {
-		out[index] = target.IdComptaCamp
-	}
-	return out
-}
-
-func SelectComptaCampACVEsByIdComptaCamps(tx DB, idComptaCamps_ ...IdComptaCamp) (ComptaCampACVEs, error) {
-	rows, err := tx.Query("SELECT idcomptacamp, account, fraismdr FROM compta_camp_acves WHERE idcomptacamp = ANY($1)", IdComptaCampArrayToPQ(idComptaCamps_))
-	if err != nil {
-		return nil, err
-	}
-	return ScanComptaCampACVEs(rows)
-}
-
-func DeleteComptaCampACVEsByIdComptaCamps(tx DB, idComptaCamps_ ...IdComptaCamp) (ComptaCampACVEs, error) {
-	rows, err := tx.Query("DELETE FROM compta_camp_acves WHERE idcomptacamp = ANY($1) RETURNING idcomptacamp, account, fraismdr", IdComptaCampArrayToPQ(idComptaCamps_))
-	if err != nil {
-		return nil, err
-	}
-	return ScanComptaCampACVEs(rows)
 }
 
 // ByIdCamp returns a map with 'IdCamp' as keys.
@@ -487,7 +160,7 @@ func (items ComptaCamps) IdCamps() []camps.IdCamp {
 
 // SelectComptaCampByIdCamp return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectComptaCampByIdCamp(tx DB, idCamp camps.IdCamp) (item ComptaCamp, found bool, err error) {
-	row := tx.QueryRow("SELECT id, idcamp, filestatus, state, lastsentmailadmin, lastsentmaildirecteur FROM compta_camps WHERE idcamp = $1", idCamp)
+	row := tx.QueryRow("SELECT id, idcamp, filestatus, state, lastsentmailadmin, lastsentmaildirecteur, account, fraismdr FROM compta_camps WHERE idcamp = $1", idCamp)
 	item, err = ScanComptaCamp(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
@@ -496,7 +169,7 @@ func SelectComptaCampByIdCamp(tx DB, idCamp camps.IdCamp) (item ComptaCamp, foun
 }
 
 func SelectComptaCampsByIdCamps(tx DB, idCamps_ ...camps.IdCamp) (ComptaCamps, error) {
-	rows, err := tx.Query("SELECT id, idcamp, filestatus, state, lastsentmailadmin, lastsentmaildirecteur FROM compta_camps WHERE idcamp = ANY($1)", camps.IdCampArrayToPQ(idCamps_))
+	rows, err := tx.Query("SELECT id, idcamp, filestatus, state, lastsentmailadmin, lastsentmaildirecteur, account, fraismdr FROM compta_camps WHERE idcamp = ANY($1)", camps.IdCampArrayToPQ(idCamps_))
 	if err != nil {
 		return nil, err
 	}
@@ -504,11 +177,128 @@ func SelectComptaCampsByIdCamps(tx DB, idCamps_ ...camps.IdCamp) (ComptaCamps, e
 }
 
 func DeleteComptaCampsByIdCamps(tx DB, idCamps_ ...camps.IdCamp) (ComptaCamps, error) {
-	rows, err := tx.Query("DELETE FROM compta_camps WHERE idcamp = ANY($1) RETURNING id, idcamp, filestatus, state, lastsentmailadmin, lastsentmaildirecteur", camps.IdCampArrayToPQ(idCamps_))
+	rows, err := tx.Query("DELETE FROM compta_camps WHERE idcamp = ANY($1) RETURNING id, idcamp, filestatus, state, lastsentmailadmin, lastsentmaildirecteur, account, fraismdr", camps.IdCampArrayToPQ(idCamps_))
 	if err != nil {
 		return nil, err
 	}
 	return ScanComptaCamps(rows)
+}
+
+func scanOneComptaConfig(row scanner) (ComptaConfig, error) {
+	var item ComptaConfig
+	err := row.Scan(
+		&item.Id,
+		&item.Year,
+	)
+	return item, err
+}
+
+func ScanComptaConfig(row *sql.Row) (ComptaConfig, error) { return scanOneComptaConfig(row) }
+
+// SelectAll returns all the items in the compta_configs table.
+func SelectAllComptaConfigs(db DB) (ComptaConfigs, error) {
+	rows, err := db.Query("SELECT id, year FROM compta_configs")
+	if err != nil {
+		return nil, err
+	}
+	return ScanComptaConfigs(rows)
+}
+
+// SelectComptaConfig returns the entry matching 'id'.
+func SelectComptaConfig(tx DB, id IdComptaConfig) (ComptaConfig, error) {
+	row := tx.QueryRow("SELECT id, year FROM compta_configs WHERE id = $1", id)
+	return ScanComptaConfig(row)
+}
+
+// SelectComptaConfigs returns the entry matching the given 'ids'.
+func SelectComptaConfigs(tx DB, ids ...IdComptaConfig) (ComptaConfigs, error) {
+	rows, err := tx.Query("SELECT id, year FROM compta_configs WHERE id = ANY($1)", IdComptaConfigArrayToPQ(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanComptaConfigs(rows)
+}
+
+type ComptaConfigs map[IdComptaConfig]ComptaConfig
+
+func (m ComptaConfigs) IDs() []IdComptaConfig {
+	out := make([]IdComptaConfig, 0, len(m))
+	for i := range m {
+		out = append(out, i)
+	}
+	return out
+}
+
+func ScanComptaConfigs(rs *sql.Rows) (ComptaConfigs, error) {
+	var (
+		s   ComptaConfig
+		err error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(ComptaConfigs, 16)
+	for rs.Next() {
+		s, err = scanOneComptaConfig(rs)
+		if err != nil {
+			return nil, err
+		}
+		structs[s.Id] = s
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+// Insert one ComptaConfig in the database and returns the item with id filled.
+func (item ComptaConfig) Insert(tx DB) (out ComptaConfig, err error) {
+	row := tx.QueryRow(`INSERT INTO compta_configs (
+		year
+		) VALUES (
+		$1
+		) RETURNING id, year;
+		`, item.Year)
+	return ScanComptaConfig(row)
+}
+
+// Update ComptaConfig in the database and returns the new version.
+func (item ComptaConfig) Update(tx DB) (out ComptaConfig, err error) {
+	row := tx.QueryRow(`UPDATE compta_configs SET (
+		year
+		) = (
+		$1
+		) WHERE id = $2 RETURNING id, year;
+		`, item.Year, item.Id)
+	return ScanComptaConfig(row)
+}
+
+// Deletes the ComptaConfig and returns the item
+func DeleteComptaConfigById(tx DB, id IdComptaConfig) (ComptaConfig, error) {
+	row := tx.QueryRow("DELETE FROM compta_configs WHERE id = $1 RETURNING id, year;", id)
+	return ScanComptaConfig(row)
+}
+
+// Deletes the ComptaConfig in the database and returns the ids.
+func DeleteComptaConfigsByIDs(tx DB, ids ...IdComptaConfig) ([]IdComptaConfig, error) {
+	rows, err := tx.Query("DELETE FROM compta_configs WHERE id = ANY($1) RETURNING id", IdComptaConfigArrayToPQ(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIdComptaConfigArray(rows)
+}
+
+// SelectComptaConfigByYear return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectComptaConfigByYear(tx DB, year int) (item ComptaConfig, found bool, err error) {
+	row := tx.QueryRow("SELECT id, year FROM compta_configs WHERE Year = $1", year)
+	item, err = ScanComptaConfig(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
 }
 
 func scanOneComptaFile(row scanner) (ComptaFile, error) {
@@ -624,14 +414,12 @@ func scanOneComptaRecord(row scanner) (ComptaRecord, error) {
 	var item ComptaRecord
 	err := row.Scan(
 		&item.Id,
-		&item.IdBankentry,
-		&item.Date,
-		&item.Description,
-		&item.Mode,
-		&item.Serial,
-		&item.Currency,
-		&item.Montants,
-		&item.IdFile,
+		&item.IdCamp,
+		&item.IsReceipe,
+		&item.SpentBy,
+		&item.Reviews,
+		&item.IsValidated,
+		&item.Account,
 	)
 	return item, err
 }
@@ -640,7 +428,7 @@ func ScanComptaRecord(row *sql.Row) (ComptaRecord, error) { return scanOneCompta
 
 // SelectAll returns all the items in the compta_records table.
 func SelectAllComptaRecords(db DB) (ComptaRecords, error) {
-	rows, err := db.Query("SELECT id, idbankentry, date, description, mode, serial, currency, montants, idfile FROM compta_records")
+	rows, err := db.Query("SELECT id, idcamp, isreceipe, spentby, reviews, isvalidated, account FROM compta_records")
 	if err != nil {
 		return nil, err
 	}
@@ -649,13 +437,13 @@ func SelectAllComptaRecords(db DB) (ComptaRecords, error) {
 
 // SelectComptaRecord returns the entry matching 'id'.
 func SelectComptaRecord(tx DB, id IdComptaRecord) (ComptaRecord, error) {
-	row := tx.QueryRow("SELECT id, idbankentry, date, description, mode, serial, currency, montants, idfile FROM compta_records WHERE id = $1", id)
+	row := tx.QueryRow("SELECT id, idcamp, isreceipe, spentby, reviews, isvalidated, account FROM compta_records WHERE id = $1", id)
 	return ScanComptaRecord(row)
 }
 
 // SelectComptaRecords returns the entry matching the given 'ids'.
 func SelectComptaRecords(tx DB, ids ...IdComptaRecord) (ComptaRecords, error) {
-	rows, err := tx.Query("SELECT id, idbankentry, date, description, mode, serial, currency, montants, idfile FROM compta_records WHERE id = ANY($1)", IdComptaRecordArrayToPQ(ids))
+	rows, err := tx.Query("SELECT id, idcamp, isreceipe, spentby, reviews, isvalidated, account FROM compta_records WHERE id = ANY($1)", IdComptaRecordArrayToPQ(ids))
 	if err != nil {
 		return nil, err
 	}
@@ -700,28 +488,28 @@ func ScanComptaRecords(rs *sql.Rows) (ComptaRecords, error) {
 // Insert one ComptaRecord in the database and returns the item with id filled.
 func (item ComptaRecord) Insert(tx DB) (out ComptaRecord, err error) {
 	row := tx.QueryRow(`INSERT INTO compta_records (
-		idbankentry, date, description, mode, serial, currency, montants, idfile
+		idcamp, isreceipe, spentby, reviews, isvalidated, account
 		) VALUES (
-		$1, $2, $3, $4, $5, $6, $7, $8
-		) RETURNING id, idbankentry, date, description, mode, serial, currency, montants, idfile;
-		`, item.IdBankentry, item.Date, item.Description, item.Mode, item.Serial, item.Currency, item.Montants, item.IdFile)
+		$1, $2, $3, $4, $5, $6
+		) RETURNING id, idcamp, isreceipe, spentby, reviews, isvalidated, account;
+		`, item.IdCamp, item.IsReceipe, item.SpentBy, item.Reviews, item.IsValidated, item.Account)
 	return ScanComptaRecord(row)
 }
 
 // Update ComptaRecord in the database and returns the new version.
 func (item ComptaRecord) Update(tx DB) (out ComptaRecord, err error) {
 	row := tx.QueryRow(`UPDATE compta_records SET (
-		idbankentry, date, description, mode, serial, currency, montants, idfile
+		idcamp, isreceipe, spentby, reviews, isvalidated, account
 		) = (
-		$1, $2, $3, $4, $5, $6, $7, $8
-		) WHERE id = $9 RETURNING id, idbankentry, date, description, mode, serial, currency, montants, idfile;
-		`, item.IdBankentry, item.Date, item.Description, item.Mode, item.Serial, item.Currency, item.Montants, item.IdFile, item.Id)
+		$1, $2, $3, $4, $5, $6
+		) WHERE id = $7 RETURNING id, idcamp, isreceipe, spentby, reviews, isvalidated, account;
+		`, item.IdCamp, item.IsReceipe, item.SpentBy, item.Reviews, item.IsValidated, item.Account, item.Id)
 	return ScanComptaRecord(row)
 }
 
 // Deletes the ComptaRecord and returns the item
 func DeleteComptaRecordById(tx DB, id IdComptaRecord) (ComptaRecord, error) {
-	row := tx.QueryRow("DELETE FROM compta_records WHERE id = $1 RETURNING id, idbankentry, date, description, mode, serial, currency, montants, idfile;", id)
+	row := tx.QueryRow("DELETE FROM compta_records WHERE id = $1 RETURNING id, idcamp, isreceipe, spentby, reviews, isvalidated, account;", id)
 	return ScanComptaRecord(row)
 }
 
@@ -738,7 +526,7 @@ func scanOneComptaRecordBus(row scanner) (ComptaRecordBus, error) {
 	var item ComptaRecordBus
 	err := row.Scan(
 		&item.IdCamp,
-		&item.IdRecord,
+		&item.IdSubrecord,
 	)
 	return item, err
 }
@@ -747,7 +535,7 @@ func ScanComptaRecordBus(row *sql.Row) (ComptaRecordBus, error) { return scanOne
 
 // SelectAll returns all the items in the compta_record_buss table.
 func SelectAllComptaRecordBuss(db DB) (ComptaRecordBuss, error) {
-	rows, err := db.Query("SELECT idcamp, idrecord FROM compta_record_buss")
+	rows, err := db.Query("SELECT idcamp, idsubrecord FROM compta_record_buss")
 	if err != nil {
 		return nil, err
 	}
@@ -783,11 +571,11 @@ func ScanComptaRecordBuss(rs *sql.Rows) (ComptaRecordBuss, error) {
 
 func (item ComptaRecordBus) Insert(db DB) error {
 	_, err := db.Exec(`INSERT INTO compta_record_buss (
-			idcamp, idrecord
+			idcamp, idsubrecord
 			) VALUES (
 			$1, $2
 			);
-			`, item.IdCamp, item.IdRecord)
+			`, item.IdCamp, item.IdSubrecord)
 	if err != nil {
 		return err
 	}
@@ -803,14 +591,14 @@ func InsertManyComptaRecordBuss(tx *sql.Tx, items ...ComptaRecordBus) error {
 
 	stmt, err := tx.Prepare(pq.CopyIn("compta_record_buss",
 		"idcamp",
-		"idrecord",
+		"idsubrecord",
 	))
 	if err != nil {
 		return err
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdCamp, item.IdRecord)
+		_, err = stmt.Exec(item.IdCamp, item.IdSubrecord)
 		if err != nil {
 			return err
 		}
@@ -827,9 +615,9 @@ func InsertManyComptaRecordBuss(tx *sql.Tx, items ...ComptaRecordBus) error {
 }
 
 // Delete the link ComptaRecordBus from the database.
-// Only the foreign keys IdCamp, IdRecord fields are used in 'item'.
+// Only the foreign keys IdCamp, IdSubrecord fields are used in 'item'.
 func (item ComptaRecordBus) Delete(tx DB) error {
-	_, err := tx.Exec(`DELETE FROM compta_record_buss WHERE IdCamp = $1 AND IdRecord = $2;`, item.IdCamp, item.IdRecord)
+	_, err := tx.Exec(`DELETE FROM compta_record_buss WHERE IdCamp = $1 AND IdSubrecord = $2;`, item.IdCamp, item.IdSubrecord)
 	return err
 }
 
@@ -854,7 +642,7 @@ func (items ComptaRecordBuss) IdCamps() []IdComptaCamp {
 }
 
 func SelectComptaRecordBussByIdCamps(tx DB, idCamps_ ...IdComptaCamp) (ComptaRecordBuss, error) {
-	rows, err := tx.Query("SELECT idcamp, idrecord FROM compta_record_buss WHERE idcamp = ANY($1)", IdComptaCampArrayToPQ(idCamps_))
+	rows, err := tx.Query("SELECT idcamp, idsubrecord FROM compta_record_buss WHERE idcamp = ANY($1)", IdComptaCampArrayToPQ(idCamps_))
 	if err != nil {
 		return nil, err
 	}
@@ -862,36 +650,36 @@ func SelectComptaRecordBussByIdCamps(tx DB, idCamps_ ...IdComptaCamp) (ComptaRec
 }
 
 func DeleteComptaRecordBussByIdCamps(tx DB, idCamps_ ...IdComptaCamp) (ComptaRecordBuss, error) {
-	rows, err := tx.Query("DELETE FROM compta_record_buss WHERE idcamp = ANY($1) RETURNING idcamp, idrecord", IdComptaCampArrayToPQ(idCamps_))
+	rows, err := tx.Query("DELETE FROM compta_record_buss WHERE idcamp = ANY($1) RETURNING idcamp, idsubrecord", IdComptaCampArrayToPQ(idCamps_))
 	if err != nil {
 		return nil, err
 	}
 	return ScanComptaRecordBuss(rows)
 }
 
-// ByIdRecord returns a map with 'IdRecord' as keys.
-func (items ComptaRecordBuss) ByIdRecord() map[IdComptaRecord]ComptaRecordBus {
-	out := make(map[IdComptaRecord]ComptaRecordBus, len(items))
+// ByIdSubrecord returns a map with 'IdSubrecord' as keys.
+func (items ComptaRecordBuss) ByIdSubrecord() map[IdComptaSubrecord]ComptaRecordBus {
+	out := make(map[IdComptaSubrecord]ComptaRecordBus, len(items))
 	for _, target := range items {
-		out[target.IdRecord] = target
+		out[target.IdSubrecord] = target
 	}
 	return out
 }
 
-// IdRecords returns the list of ids of IdRecord
+// IdSubrecords returns the list of ids of IdSubrecord
 // contained in this table.
 // They are not garanteed to be distinct.
-func (items ComptaRecordBuss) IdRecords() []IdComptaRecord {
-	out := make([]IdComptaRecord, len(items))
+func (items ComptaRecordBuss) IdSubrecords() []IdComptaSubrecord {
+	out := make([]IdComptaSubrecord, len(items))
 	for index, target := range items {
-		out[index] = target.IdRecord
+		out[index] = target.IdSubrecord
 	}
 	return out
 }
 
-// SelectComptaRecordBusByIdRecord return zero or one item, thanks to a UNIQUE SQL constraint.
-func SelectComptaRecordBusByIdRecord(tx DB, idRecord IdComptaRecord) (item ComptaRecordBus, found bool, err error) {
-	row := tx.QueryRow("SELECT idcamp, idrecord FROM compta_record_buss WHERE idrecord = $1", idRecord)
+// SelectComptaRecordBusByIdSubrecord return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectComptaRecordBusByIdSubrecord(tx DB, idSubrecord IdComptaSubrecord) (item ComptaRecordBus, found bool, err error) {
+	row := tx.QueryRow("SELECT idcamp, idsubrecord FROM compta_record_buss WHERE idsubrecord = $1", idSubrecord)
 	item, err = ScanComptaRecordBus(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
@@ -899,67 +687,261 @@ func SelectComptaRecordBusByIdRecord(tx DB, idRecord IdComptaRecord) (item Compt
 	return item, true, err
 }
 
-func SelectComptaRecordBussByIdRecords(tx DB, idRecords_ ...IdComptaRecord) (ComptaRecordBuss, error) {
-	rows, err := tx.Query("SELECT idcamp, idrecord FROM compta_record_buss WHERE idrecord = ANY($1)", IdComptaRecordArrayToPQ(idRecords_))
+func SelectComptaRecordBussByIdSubrecords(tx DB, idSubrecords_ ...IdComptaSubrecord) (ComptaRecordBuss, error) {
+	rows, err := tx.Query("SELECT idcamp, idsubrecord FROM compta_record_buss WHERE idsubrecord = ANY($1)", IdComptaSubrecordArrayToPQ(idSubrecords_))
 	if err != nil {
 		return nil, err
 	}
 	return ScanComptaRecordBuss(rows)
 }
 
-func DeleteComptaRecordBussByIdRecords(tx DB, idRecords_ ...IdComptaRecord) (ComptaRecordBuss, error) {
-	rows, err := tx.Query("DELETE FROM compta_record_buss WHERE idrecord = ANY($1) RETURNING idcamp, idrecord", IdComptaRecordArrayToPQ(idRecords_))
+func DeleteComptaRecordBussByIdSubrecords(tx DB, idSubrecords_ ...IdComptaSubrecord) (ComptaRecordBuss, error) {
+	rows, err := tx.Query("DELETE FROM compta_record_buss WHERE idsubrecord = ANY($1) RETURNING idcamp, idsubrecord", IdComptaSubrecordArrayToPQ(idSubrecords_))
 	if err != nil {
 		return nil, err
 	}
 	return ScanComptaRecordBuss(rows)
 }
 
-// ByIdBankentry returns a map with 'IdBankentry' as keys.
-func (items ComptaRecords) ByIdBankentry() map[IdComptaBankentry]ComptaRecords {
-	out := make(map[IdComptaBankentry]ComptaRecords)
+// ByIdCamp returns a map with 'IdCamp' as keys.
+func (items ComptaRecords) ByIdCamp() map[IdComptaCamp]ComptaRecords {
+	out := make(map[IdComptaCamp]ComptaRecords)
 	for _, target := range items {
-		dict := out[target.IdBankentry]
+		dict := out[target.IdCamp]
 		if dict == nil {
 			dict = make(ComptaRecords)
 		}
 		dict[target.Id] = target
-		out[target.IdBankentry] = dict
+		out[target.IdCamp] = dict
 	}
 	return out
 }
 
-// IdBankentrys returns the list of ids of IdBankentry
+// IdCamps returns the list of ids of IdCamp
 // contained in this table.
 // They are not garanteed to be distinct.
-func (items ComptaRecords) IdBankentrys() []IdComptaBankentry {
-	out := make([]IdComptaBankentry, 0, len(items))
+func (items ComptaRecords) IdCamps() []IdComptaCamp {
+	out := make([]IdComptaCamp, 0, len(items))
 	for _, target := range items {
-		out = append(out, target.IdBankentry)
+		out = append(out, target.IdCamp)
 	}
 	return out
 }
 
-func SelectComptaRecordsByIdBankentrys(tx DB, idBankentrys_ ...IdComptaBankentry) (ComptaRecords, error) {
-	rows, err := tx.Query("SELECT id, idbankentry, date, description, mode, serial, currency, montants, idfile FROM compta_records WHERE idbankentry = ANY($1)", IdComptaBankentryArrayToPQ(idBankentrys_))
+func SelectComptaRecordsByIdCamps(tx DB, idCamps_ ...IdComptaCamp) (ComptaRecords, error) {
+	rows, err := tx.Query("SELECT id, idcamp, isreceipe, spentby, reviews, isvalidated, account FROM compta_records WHERE idcamp = ANY($1)", IdComptaCampArrayToPQ(idCamps_))
 	if err != nil {
 		return nil, err
 	}
 	return ScanComptaRecords(rows)
 }
 
-func DeleteComptaRecordsByIdBankentrys(tx DB, idBankentrys_ ...IdComptaBankentry) (ComptaRecords, error) {
-	rows, err := tx.Query("DELETE FROM compta_records WHERE idbankentry = ANY($1) RETURNING id, idbankentry, date, description, mode, serial, currency, montants, idfile", IdComptaBankentryArrayToPQ(idBankentrys_))
+func DeleteComptaRecordsByIdCamps(tx DB, idCamps_ ...IdComptaCamp) (ComptaRecords, error) {
+	rows, err := tx.Query("DELETE FROM compta_records WHERE idcamp = ANY($1) RETURNING id, idcamp, isreceipe, spentby, reviews, isvalidated, account", IdComptaCampArrayToPQ(idCamps_))
 	if err != nil {
 		return nil, err
 	}
 	return ScanComptaRecords(rows)
+}
+
+// SpentBys returns the list of non null SpentBy
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items ComptaRecords) SpentBys() []camps.IdEquipier {
+	var out []camps.IdEquipier
+	for _, target := range items {
+		if id := target.SpentBy; id.Valid {
+			out = append(out, id.Id)
+		}
+	}
+	return out
+}
+
+func SelectComptaRecordsBySpentBys(tx DB, spentBys_ ...camps.IdEquipier) (ComptaRecords, error) {
+	rows, err := tx.Query("SELECT id, idcamp, isreceipe, spentby, reviews, isvalidated, account FROM compta_records WHERE spentby = ANY($1)", camps.IdEquipierArrayToPQ(spentBys_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanComptaRecords(rows)
+}
+
+func DeleteComptaRecordsBySpentBys(tx DB, spentBys_ ...camps.IdEquipier) (ComptaRecords, error) {
+	rows, err := tx.Query("DELETE FROM compta_records WHERE spentby = ANY($1) RETURNING id, idcamp, isreceipe, spentby, reviews, isvalidated, account", camps.IdEquipierArrayToPQ(spentBys_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanComptaRecords(rows)
+}
+
+// SelectComptaRecordByIdAndIdCamp return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectComptaRecordByIdAndIdCamp(tx DB, id IdComptaRecord, idCamp IdComptaCamp) (item ComptaRecord, found bool, err error) {
+	row := tx.QueryRow("SELECT id, idcamp, isreceipe, spentby, reviews, isvalidated, account FROM compta_records WHERE Id = $1 AND IdCamp = $2", id, idCamp)
+	item, err = ScanComptaRecord(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
+}
+
+func scanOneComptaSubrecord(row scanner) (ComptaSubrecord, error) {
+	var item ComptaSubrecord
+	err := row.Scan(
+		&item.Id,
+		&item.IdRecord,
+		&item.Date,
+		&item.Description,
+		&item.Mode,
+		&item.Serial,
+		&item.Currency,
+		&item.Montants,
+		&item.IdFile,
+	)
+	return item, err
+}
+
+func ScanComptaSubrecord(row *sql.Row) (ComptaSubrecord, error) { return scanOneComptaSubrecord(row) }
+
+// SelectAll returns all the items in the compta_subrecords table.
+func SelectAllComptaSubrecords(db DB) (ComptaSubrecords, error) {
+	rows, err := db.Query("SELECT id, idrecord, date, description, mode, serial, currency, montants, idfile FROM compta_subrecords")
+	if err != nil {
+		return nil, err
+	}
+	return ScanComptaSubrecords(rows)
+}
+
+// SelectComptaSubrecord returns the entry matching 'id'.
+func SelectComptaSubrecord(tx DB, id IdComptaSubrecord) (ComptaSubrecord, error) {
+	row := tx.QueryRow("SELECT id, idrecord, date, description, mode, serial, currency, montants, idfile FROM compta_subrecords WHERE id = $1", id)
+	return ScanComptaSubrecord(row)
+}
+
+// SelectComptaSubrecords returns the entry matching the given 'ids'.
+func SelectComptaSubrecords(tx DB, ids ...IdComptaSubrecord) (ComptaSubrecords, error) {
+	rows, err := tx.Query("SELECT id, idrecord, date, description, mode, serial, currency, montants, idfile FROM compta_subrecords WHERE id = ANY($1)", IdComptaSubrecordArrayToPQ(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanComptaSubrecords(rows)
+}
+
+type ComptaSubrecords map[IdComptaSubrecord]ComptaSubrecord
+
+func (m ComptaSubrecords) IDs() []IdComptaSubrecord {
+	out := make([]IdComptaSubrecord, 0, len(m))
+	for i := range m {
+		out = append(out, i)
+	}
+	return out
+}
+
+func ScanComptaSubrecords(rs *sql.Rows) (ComptaSubrecords, error) {
+	var (
+		s   ComptaSubrecord
+		err error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(ComptaSubrecords, 16)
+	for rs.Next() {
+		s, err = scanOneComptaSubrecord(rs)
+		if err != nil {
+			return nil, err
+		}
+		structs[s.Id] = s
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+// Insert one ComptaSubrecord in the database and returns the item with id filled.
+func (item ComptaSubrecord) Insert(tx DB) (out ComptaSubrecord, err error) {
+	row := tx.QueryRow(`INSERT INTO compta_subrecords (
+		idrecord, date, description, mode, serial, currency, montants, idfile
+		) VALUES (
+		$1, $2, $3, $4, $5, $6, $7, $8
+		) RETURNING id, idrecord, date, description, mode, serial, currency, montants, idfile;
+		`, item.IdRecord, item.Date, item.Description, item.Mode, item.Serial, item.Currency, item.Montants, item.IdFile)
+	return ScanComptaSubrecord(row)
+}
+
+// Update ComptaSubrecord in the database and returns the new version.
+func (item ComptaSubrecord) Update(tx DB) (out ComptaSubrecord, err error) {
+	row := tx.QueryRow(`UPDATE compta_subrecords SET (
+		idrecord, date, description, mode, serial, currency, montants, idfile
+		) = (
+		$1, $2, $3, $4, $5, $6, $7, $8
+		) WHERE id = $9 RETURNING id, idrecord, date, description, mode, serial, currency, montants, idfile;
+		`, item.IdRecord, item.Date, item.Description, item.Mode, item.Serial, item.Currency, item.Montants, item.IdFile, item.Id)
+	return ScanComptaSubrecord(row)
+}
+
+// Deletes the ComptaSubrecord and returns the item
+func DeleteComptaSubrecordById(tx DB, id IdComptaSubrecord) (ComptaSubrecord, error) {
+	row := tx.QueryRow("DELETE FROM compta_subrecords WHERE id = $1 RETURNING id, idrecord, date, description, mode, serial, currency, montants, idfile;", id)
+	return ScanComptaSubrecord(row)
+}
+
+// Deletes the ComptaSubrecord in the database and returns the ids.
+func DeleteComptaSubrecordsByIDs(tx DB, ids ...IdComptaSubrecord) ([]IdComptaSubrecord, error) {
+	rows, err := tx.Query("DELETE FROM compta_subrecords WHERE id = ANY($1) RETURNING id", IdComptaSubrecordArrayToPQ(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIdComptaSubrecordArray(rows)
+}
+
+// ByIdRecord returns a map with 'IdRecord' as keys.
+func (items ComptaSubrecords) ByIdRecord() map[IdComptaRecord]ComptaSubrecords {
+	out := make(map[IdComptaRecord]ComptaSubrecords)
+	for _, target := range items {
+		dict := out[target.IdRecord]
+		if dict == nil {
+			dict = make(ComptaSubrecords)
+		}
+		dict[target.Id] = target
+		out[target.IdRecord] = dict
+	}
+	return out
+}
+
+// IdRecords returns the list of ids of IdRecord
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items ComptaSubrecords) IdRecords() []IdComptaRecord {
+	out := make([]IdComptaRecord, 0, len(items))
+	for _, target := range items {
+		out = append(out, target.IdRecord)
+	}
+	return out
+}
+
+func SelectComptaSubrecordsByIdRecords(tx DB, idRecords_ ...IdComptaRecord) (ComptaSubrecords, error) {
+	rows, err := tx.Query("SELECT id, idrecord, date, description, mode, serial, currency, montants, idfile FROM compta_subrecords WHERE idrecord = ANY($1)", IdComptaRecordArrayToPQ(idRecords_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanComptaSubrecords(rows)
+}
+
+func DeleteComptaSubrecordsByIdRecords(tx DB, idRecords_ ...IdComptaRecord) (ComptaSubrecords, error) {
+	rows, err := tx.Query("DELETE FROM compta_subrecords WHERE idrecord = ANY($1) RETURNING id, idrecord, date, description, mode, serial, currency, montants, idfile", IdComptaRecordArrayToPQ(idRecords_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanComptaSubrecords(rows)
 }
 
 // IdFiles returns the list of non null IdFile
 // contained in this table.
 // They are not garanteed to be distinct.
-func (items ComptaRecords) IdFiles() []IdComptaFile {
+func (items ComptaSubrecords) IdFiles() []IdComptaFile {
 	var out []IdComptaFile
 	for _, target := range items {
 		if id := target.IdFile; id.Valid {
@@ -969,20 +951,20 @@ func (items ComptaRecords) IdFiles() []IdComptaFile {
 	return out
 }
 
-func SelectComptaRecordsByIdFiles(tx DB, idFiles_ ...IdComptaFile) (ComptaRecords, error) {
-	rows, err := tx.Query("SELECT id, idbankentry, date, description, mode, serial, currency, montants, idfile FROM compta_records WHERE idfile = ANY($1)", IdComptaFileArrayToPQ(idFiles_))
+func SelectComptaSubrecordsByIdFiles(tx DB, idFiles_ ...IdComptaFile) (ComptaSubrecords, error) {
+	rows, err := tx.Query("SELECT id, idrecord, date, description, mode, serial, currency, montants, idfile FROM compta_subrecords WHERE idfile = ANY($1)", IdComptaFileArrayToPQ(idFiles_))
 	if err != nil {
 		return nil, err
 	}
-	return ScanComptaRecords(rows)
+	return ScanComptaSubrecords(rows)
 }
 
-func DeleteComptaRecordsByIdFiles(tx DB, idFiles_ ...IdComptaFile) (ComptaRecords, error) {
-	rows, err := tx.Query("DELETE FROM compta_records WHERE idfile = ANY($1) RETURNING id, idbankentry, date, description, mode, serial, currency, montants, idfile", IdComptaFileArrayToPQ(idFiles_))
+func DeleteComptaSubrecordsByIdFiles(tx DB, idFiles_ ...IdComptaFile) (ComptaSubrecords, error) {
+	rows, err := tx.Query("DELETE FROM compta_subrecords WHERE idfile = ANY($1) RETURNING id, idrecord, date, description, mode, serial, currency, montants, idfile", IdComptaFileArrayToPQ(idFiles_))
 	if err != nil {
 		return nil, err
 	}
-	return ScanComptaRecords(rows)
+	return ScanComptaSubrecords(rows)
 }
 
 func loadJSON(out any, src any) error {
@@ -1004,33 +986,6 @@ func dumpJSON(s any) (driver.Value, error) {
 	return driver.Value(string(b)), nil
 }
 
-func IdComptaBankentryArrayToPQ(ids []IdComptaBankentry) pq.Int64Array {
-	out := make(pq.Int64Array, len(ids))
-	for i, v := range ids {
-		out[i] = int64(v)
-	}
-	return out
-}
-
-// ScanIdComptaBankentryArray scans the result of a query returning a
-// list of ID's.
-func ScanIdComptaBankentryArray(rs *sql.Rows) ([]IdComptaBankentry, error) {
-	defer rs.Close()
-	ints := make([]IdComptaBankentry, 0, 16)
-	var err error
-	for rs.Next() {
-		var s IdComptaBankentry
-		if err = rs.Scan(&s); err != nil {
-			return nil, err
-		}
-		ints = append(ints, s)
-	}
-	if err = rs.Err(); err != nil {
-		return nil, err
-	}
-	return ints, nil
-}
-
 func IdComptaCampArrayToPQ(ids []IdComptaCamp) pq.Int64Array {
 	out := make(pq.Int64Array, len(ids))
 	for i, v := range ids {
@@ -1047,6 +1002,33 @@ func ScanIdComptaCampArray(rs *sql.Rows) ([]IdComptaCamp, error) {
 	var err error
 	for rs.Next() {
 		var s IdComptaCamp
+		if err = rs.Scan(&s); err != nil {
+			return nil, err
+		}
+		ints = append(ints, s)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return ints, nil
+}
+
+func IdComptaConfigArrayToPQ(ids []IdComptaConfig) pq.Int64Array {
+	out := make(pq.Int64Array, len(ids))
+	for i, v := range ids {
+		out[i] = int64(v)
+	}
+	return out
+}
+
+// ScanIdComptaConfigArray scans the result of a query returning a
+// list of ID's.
+func ScanIdComptaConfigArray(rs *sql.Rows) ([]IdComptaConfig, error) {
+	defer rs.Close()
+	ints := make([]IdComptaConfig, 0, 16)
+	var err error
+	for rs.Next() {
+		var s IdComptaConfig
 		if err = rs.Scan(&s); err != nil {
 			return nil, err
 		}
@@ -1101,6 +1083,33 @@ func ScanIdComptaRecordArray(rs *sql.Rows) ([]IdComptaRecord, error) {
 	var err error
 	for rs.Next() {
 		var s IdComptaRecord
+		if err = rs.Scan(&s); err != nil {
+			return nil, err
+		}
+		ints = append(ints, s)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return ints, nil
+}
+
+func IdComptaSubrecordArrayToPQ(ids []IdComptaSubrecord) pq.Int64Array {
+	out := make(pq.Int64Array, len(ids))
+	for i, v := range ids {
+		out[i] = int64(v)
+	}
+	return out
+}
+
+// ScanIdComptaSubrecordArray scans the result of a query returning a
+// list of ID's.
+func ScanIdComptaSubrecordArray(rs *sql.Rows) ([]IdComptaSubrecord, error) {
+	defer rs.Close()
+	ints := make([]IdComptaSubrecord, 0, 16)
+	var err error
+	for rs.Next() {
+		var s IdComptaSubrecord
 		if err = rs.Scan(&s); err != nil {
 			return nil, err
 		}

@@ -789,12 +789,11 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(KEY IN ('Cent', 'Currency', 'V'))
+            bool_and(KEY IN ('Cent', 'Kind'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_number (data -> 'Cent')
-        AND gomacro_validate_json_doss_Currency (data -> 'Currency')
-        AND gomacro_validate_json_comp_Ventilation (data -> 'V');
+        AND gomacro_validate_json_comp_Ventilation (data -> 'Kind');
     RETURN is_valid;
 END;
 $$
@@ -833,22 +832,6 @@ DECLARE
 BEGIN
     IF NOT is_valid THEN
         RAISE WARNING '% is not a comp_Ventilation', data;
-    END IF;
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION gomacro_validate_json_doss_Currency (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean := jsonb_typeof(data) = 'number'
-    AND data::int IN (0, 1);
-BEGIN
-    IF NOT is_valid THEN
-        RAISE WARNING '% is not a doss_Currency', data;
     END IF;
     RETURN is_valid;
 END;

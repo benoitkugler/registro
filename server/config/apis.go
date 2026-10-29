@@ -116,3 +116,58 @@ type Payrexx struct {
 	Instance string
 	ApiKey   string
 }
+
+type Compta struct {
+	// Service account json file
+	GoogleDriveKeyFile string
+	// This folder must be shared with the service account
+	// defined in [ComptaStorage.GoogleDriveKeyFile]
+	GoogleDriveFolderId string
+	// Local folder
+	FilesDir      string
+	AdminPassword string
+	AdminMail     string
+}
+
+// NewCompta uses env variables to build Compta configuration:
+// COMPTA_GOOGLE_DRIVE_KEY_FILE, COMPTA_GOOGLE_DRIVE_FOLDER_ID, COMPTA_FILES_DIR,
+// COMPTA_ADMIN_PASSWORD, COMPTA_ADMIN_MAIL
+func NewCompta() (Compta, error) {
+	keyFile := os.Getenv("COMPTA_GOOGLE_DRIVE_KEY_FILE")
+	if keyFile == "" {
+		return Compta{}, errors.New("missing env COMPTA_GOOGLE_DRIVE_KEY_FILE")
+	}
+
+	folderID := os.Getenv("COMPTA_GOOGLE_DRIVE_FOLDER_ID")
+	if folderID == "" {
+		return Compta{}, errors.New("missing env COMPTA_GOOGLE_DRIVE_FOLDER_ID")
+	}
+
+	filesDir := os.Getenv("COMPTA_FILES_DIR")
+	if filesDir == "" {
+		return Compta{}, errors.New("missing env COMPTA_FILES_DIR")
+	}
+
+	adminPassword := os.Getenv("COMPTA_ADMIN_PASSWORD")
+	if adminPassword == "" {
+		return Compta{}, errors.New("missing env COMPTA_ADMIN_PASSWORD")
+	}
+
+	adminMail := os.Getenv("COMPTA_ADMIN_MAIL")
+	if adminMail == "" {
+		return Compta{}, errors.New("missing env COMPTA_ADMIN_MAIL")
+	}
+
+	filesDir, err := checkDir(filesDir)
+	if err != nil {
+		return Compta{}, err
+	}
+
+	return Compta{
+		GoogleDriveKeyFile:  keyFile,
+		GoogleDriveFolderId: folderID,
+		FilesDir:            filesDir,
+		AdminPassword:       adminPassword,
+		AdminMail:           adminMail,
+	}, nil
+}

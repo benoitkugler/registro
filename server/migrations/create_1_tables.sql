@@ -439,28 +439,20 @@ CREATE TABLE organismes (
     Pays text NOT NULL
 );
 
-CREATE TABLE compta_bankentrys (
-    Id serial PRIMARY KEY,
-    IdCamp integer NOT NULL,
-    IsReceipe boolean NOT NULL,
-    Reviews jsonb NOT NULL,
-    IsValidated boolean NOT NULL,
-    Account smallint CHECK (Account IN (0, 1)) NOT NULL
-);
-
 CREATE TABLE compta_camps (
     Id serial PRIMARY KEY,
     IdCamp integer NOT NULL,
     FileStatus smallint CHECK (FileStatus IN (0, 1, 2)) NOT NULL,
     State smallint CHECK (State IN (0, 1, 2, 3)) NOT NULL,
     LastSentMailAdmin timestamp(0) with time zone NOT NULL,
-    LastSentMailDirecteur timestamp(0) with time zone NOT NULL
-);
-
-CREATE TABLE compta_camp_acves (
-    IdComptaCamp integer NOT NULL,
+    LastSentMailDirecteur timestamp(0) with time zone NOT NULL,
     Account smallint CHECK (Account IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)) NOT NULL,
     Fraismdr jsonb NOT NULL
+);
+
+CREATE TABLE compta_configs (
+    Id serial PRIMARY KEY,
+    Year integer NOT NULL
 );
 
 CREATE TABLE compta_files (
@@ -472,17 +464,28 @@ CREATE TABLE compta_files (
 
 CREATE TABLE compta_records (
     Id serial PRIMARY KEY,
-    IdBankentry integer NOT NULL,
-    Date date NOT NULL,
-    Description text NOT NULL,
-    Mode smallint CHECK (Mode IN (0, 1, 2, 3, 4)) NOT NULL,
-    Serial text NOT NULL,
-    Montants jsonb NOT NULL,
-    IdFile integer
+    IdCamp integer NOT NULL,
+    IsReceipe boolean NOT NULL,
+    SpentBy integer,
+    Reviews jsonb NOT NULL,
+    IsValidated boolean NOT NULL,
+    Account smallint CHECK (Account IN (0, 1)) NOT NULL
 );
 
 CREATE TABLE compta_record_buss (
     IdCamp integer NOT NULL,
-    IdRecord integer NOT NULL
+    IdSubrecord integer NOT NULL
+);
+
+CREATE TABLE compta_subrecords (
+    Id serial PRIMARY KEY,
+    IdRecord integer NOT NULL,
+    Date date NOT NULL,
+    Description text NOT NULL,
+    Mode smallint CHECK (Mode IN (0, 1, 2, 3, 4)) NOT NULL,
+    Serial text NOT NULL,
+    Currency smallint CHECK (Currency IN (1, 2)) NOT NULL,
+    Montants jsonb NOT NULL,
+    IdFile integer
 );
 

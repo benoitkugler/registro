@@ -1,6 +1,8 @@
 package compta
 
-func (records ComptaBankentrys) AllValidated() bool {
+import "slices"
+
+func (records ComptaRecords) AllValidated() bool {
 	for _, rec := range records {
 		if !rec.IsValidated {
 			return false
@@ -9,7 +11,7 @@ func (records ComptaBankentrys) AllValidated() bool {
 	return true
 }
 
-func (ms Montants) equals(other Montants) bool {
+func (ms Montants) Equals(other Montants) bool {
 	if len(ms) != len(other) {
 		return false
 	}
@@ -39,5 +41,14 @@ func (ms Montants) Uniquify() Montants {
 	for k, m := range tmp {
 		out = append(out, MontantPart{m, k})
 	}
+	return out
+}
+
+func (m ComptaSubrecords) Sorted() []ComptaSubrecord {
+	out := make([]ComptaSubrecord, 0, len(m))
+	for _, v := range m {
+		out = append(out, v)
+	}
+	slices.SortFunc(out, func(a, b ComptaSubrecord) int { return int(a.Id - b.Id) })
 	return out
 }

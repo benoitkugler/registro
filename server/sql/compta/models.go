@@ -13,8 +13,8 @@ import (
 
 type (
 	IdComptaCamp      int64
-	IdComptaBankentry int64
 	IdComptaRecord    int64
+	IdComptaSubrecord int64
 	IdComptaConfig    int64
 	IdComptaFile      int64
 )
@@ -32,22 +32,19 @@ type ComptaCamp struct {
 	State State // see also [State] enum
 
 	LastSentMailAdmin, LastSentMailDirecteur time.Time // used to avoid spamming mails during a review
-}
 
-// ComptaCampACVE add informations only relevant for ACVE
-type ComptaCampACVE struct {
-	IdComptaCamp IdComptaCamp `gomacro-sql-on-delete:"CASCADE"`
+	// Fields only relevant for ACVE
 
 	Account  AccountACVE
 	Fraismdr FraismdrACVE
 }
 
-// ComptaBankentry is one financial operation, which may
-// consist of several records (for instance for refunds to equipiers)
+// ComptaRecord is one financial operation, which may
+// consist of several sub-records (for instance for refunds to equipiers)
 //
 // gomacro:SQL ADD UNIQUE(Id, IdCamp)
-type ComptaBankentry struct {
-	Id     IdComptaBankentry
+type ComptaRecord struct {
+	Id     IdComptaRecord
 	IdCamp IdComptaCamp `gomacro-sql-on-delete:"CASCADE"`
 
 	// IsReceipe is [true] if this operation was credited on the association bank.
@@ -63,13 +60,13 @@ type ComptaBankentry struct {
 	Account AccountKind // the default value is OK for Repère
 }
 
-type ComptaRecord struct {
-	Id          IdComptaRecord
-	IdBankentry IdComptaBankentry `gomacro-sql-on-delete:"CASCADE"`
+type ComptaSubrecord struct {
+	Id       IdComptaSubrecord
+	IdRecord IdComptaRecord `gomacro-sql-on-delete:"CASCADE"`
 
 	Date        shared.Date
 	Description string
-	Mode        ModePaiementRecord // ignored for [ComptaBankentry.Account] == [AccountAsso]
+	Mode        ModePaiementRecord // ignored for [ComptaRecord.Account] == [AccountAsso]
 	Serial      string             // mandatory for [ComptaRecord.Mode] Cheque, ignored otherwise
 
 	// [Currency] is constant for one given record
@@ -95,10 +92,10 @@ type ComptaFile struct {
 // bus expenses.
 // For such records, the ventilations related to cars will be deduced from the kilometric indemnity
 //
-// gomacro:SQL ADD UNIQUE(IdRecord)
+// gomacro:SQL ADD UNIQUE(IdSubrecord)
 type ComptaRecordBus struct {
-	IdCamp   IdComptaCamp   `gomacro-sql-on-delete:"CASCADE"`
-	IdRecord IdComptaRecord `gomacro-sql-on-delete:"CASCADE"`
+	IdCamp      IdComptaCamp      `gomacro-sql-on-delete:"CASCADE"`
+	IdSubrecord IdComptaSubrecord `gomacro-sql-on-delete:"CASCADE"`
 }
 
 // TODO
@@ -132,24 +129,24 @@ type ComptaRecordBus struct {
 // 	CarsMDRKms CarsKms
 // }
 
-// // Comptaconfig holds parameters used to compute the budget,
-// // which may change from one year to another.
-// // For now, we support (at most) one config per year
-// //
-// // gomacro:SQL ADD UNIQUE(Year)
-// type Comptaconfig struct {
-// 	Id   IdComptaConfig
-// 	Year int
+// ComptaConfig holds parameters used to compute the budget,
+// which may change from one year to another.
+// For now, we support (at most) one config per year
+//
+// gomacro:SQL ADD UNIQUE(Year)
+type ComptaConfig struct {
+	Id   IdComptaConfig
+	Year int
 
-// 	MealsCost          MealsCosts
-// 	SmallMealThreshold int
-// 	// additional percentage (typically 10) added to the meals
-// 	// if the number of participants is strictly lower than the [SmallMealThreshold]
-// 	SmallMealMajoration int
+	// 	MealsCost          MealsCosts
+	// 	SmallMealThreshold int
+	// 	// additional percentage (typically 10) added to the meals
+	// 	// if the number of participants is strictly lower than the [SmallMealThreshold]
+	// 	SmallMealMajoration int
 
-// 	ChauffageMDR Cent // cost for one day at MDR
-// 	EntretienMDR Cent // cost for one day and one participant or equipier at MDR
-// 	MaterielMDR  Cent // cost for one day and one participant at MDR
+	// 	ChauffageMDR Cent // cost for one day at MDR
+	// 	EntretienMDR Cent // cost for one day and one participant or equipier at MDR
+	// 	MaterielMDR  Cent // cost for one day and one participant at MDR
 
-// 	CarsMDR CarsCosts
-// }
+	// CarsMDR CarsCosts
+}

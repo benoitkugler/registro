@@ -2,12 +2,16 @@ package compta
 
 import (
 	"database/sql"
-	"encoding/json"
+	"errors"
+	"fmt"
 	"time"
 
+	"registro/config"
 	"registro/crypto"
+	cps "registro/sql/camps"
 	ca "registro/sql/compta"
-	"registro/sql/shared"
+	pe "registro/sql/personnes"
+	"registro/utils"
 
 	"github.com/golang-jwt/jwt/v5"
 	echojwt "github.com/labstack/echo-jwt/v4"
@@ -17,11 +21,28 @@ import (
 type Controller struct {
 	db *sql.DB
 
-	adminPassword string
-	key           crypto.Encrypter
+	key crypto.Encrypter
+
+	adminPassword         string
+	adminNotificationMail string
+	files                 filesAPI
+
+	smtp config.SMTP
+	asso config.Asso
 }
 
-const admin ca.IdComptaCamp = -1 // gomacro:no-enum
+func NewController(db *sql.DB, key crypto.Encrypter, compta config.Compta, smtp config.SMTP, asso config.Asso) (*Controller, error) {
+	files := filesAPI{googleDriveAPI{compta.GoogleDriveKeyFile, compta.GoogleDriveFolderId}, fileSystemAPI{compta.FilesDir}}
+
+	err := files.googleDrive.check()
+	if err != nil {
+		return nil, err
+	}
+
+	return &Controller{db, key, compta.AdminPassword, compta.AdminMail, files, smtp, asso}, nil
+}
+
+const userAdmin ca.IdComptaCamp = -1 // gomacro:no-enum
 
 // UserMeta are custom claims extending default ones.
 type UserMeta struct {
@@ -72,42 +93,99 @@ func JWTUser(c echo.Context) ca.IdComptaCamp {
 	return meta.User
 }
 
-func (ct *Controller) AdminURL(host string) string {
-	adminKey, err := shared.Encode(ct.key, UserKey{IsAdmin: true})
-	if err != nil {
-		panic(err)
-	}
-
-	url := shared.BuildUrl(host, "compta", map[string]string{"key": adminKey})
+// DirecteurURL builds the crypted URL for the given camp.
+func DirecteurURL(key crypto.Encrypter, host string, idCamp cps.IdCamp) string {
+	dirKey := crypto.EncryptID(key, idCamp)
+	url := utils.BuildUrl(host, "compta", utils.QP("key", dirKey))
 	return url
 }
 
-// DirecteurURL builds the crypted URL for the given camp.
-func DirecteurURL(key logs.Encrypteur, host string, idCamp int64) (string, error) {
-	dirKey, err := shared.Encode(key, UserKey{IsAdmin: false, IdCamp: idCamp})
-	if err != nil {
-		return "", err
-	}
-	url := shared.BuildUrl(host, "compta", map[string]string{"key": dirKey})
-	return url, nil
+type LogginOut struct {
+	Token    string
+	IsAdmin  bool
+	IdCompta ca.IdComptaCamp
 }
 
-func (ct *Controller) DevKeys() string {
-	adminKey, err := shared.Encode(ct.key, UserKey{IsAdmin: true})
+// Loggin parse the user key, detecting if the user is an admin
+// or a directeur.
+func (ct *Controller) Loggin(c echo.Context) error {
+	key := c.QueryParam("key")
+
+	out, err := ct.loggin(key)
 	if err != nil {
-		panic(err)
+		return err
 	}
-	dirKey, err := shared.Encode(ct.key, UserKey{IsAdmin: false, IdCamp: 184})
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) loggin(key string) (token LogginOut, err error) {
+	if key == "" {
+		return LogginOut{}, errors.New("Clé de connection manquante !")
+	}
+
+	if key == ct.adminPassword {
+		tk, err := ct.newToken(userAdmin)
+		if err != nil {
+			return LogginOut{}, err
+		}
+		return LogginOut{Token: tk, IsAdmin: true, IdCompta: userAdmin}, nil
+	}
+
+	idCamp, err := crypto.DecryptID[cps.IdCamp](ct.key, key)
 	if err != nil {
-		panic(err)
+		return LogginOut{}, errors.New("Clé de connection invalide")
 	}
-	creds := struct {
-		AdminKey string
-		DirKey   string
-	}{adminKey, dirKey}
-	b, err := json.Marshal(creds)
+
+	compta, err := ct.loadOrCreateCompta(idCamp)
 	if err != nil {
-		panic(err)
+		return LogginOut{}, err
 	}
-	return string(b)
+	tk, err := ct.newToken(compta.Id)
+	if err != nil {
+		return LogginOut{}, err
+	}
+	return LogginOut{Token: tk, IsAdmin: false, IdCompta: compta.Id}, nil
+}
+
+func (ct *Controller) loadOrCreateCompta(idCamp cps.IdCamp) (ca.ComptaCamp, error) {
+	camp, err := cps.SelectCamp(ct.db, idCamp)
+	if err != nil {
+		return ca.ComptaCamp{}, err
+	}
+
+	co, found, err := ca.SelectComptaCampByIdCamp(ct.db, camp.Id)
+	if err != nil {
+		return ca.ComptaCamp{}, err
+	}
+
+	if !found { // create a new compta entry for this camp
+		co, err = ca.ComptaCamp{IdCamp: camp.Id, FileStatus: ca.FileSystem}.Insert(ct.db)
+		if err != nil {
+			return ca.ComptaCamp{}, err
+		}
+	}
+
+	return co, nil
+}
+
+func director(db ca.DB, compta ca.ComptaCamp) (cps.Camp, string, bool, error) {
+	camp, err := cps.SelectCamp(db, compta.IdCamp)
+	if err != nil {
+		return cps.Camp{}, "", false, fmt.Errorf("Erreur SQL: %w", err)
+	}
+	equipiers, err := cps.SelectEquipiersByIdCamps(db, camp.Id)
+	if err != nil {
+		return cps.Camp{}, "", false, fmt.Errorf("Erreur SQL: %w", err)
+	}
+	directorE, hasDirector := equipiers.Directeur()
+	var director pe.Personne
+	if hasDirector {
+		director, err = pe.SelectPersonne(db, directorE.IdPersonne)
+		if err != nil {
+			return cps.Camp{}, "", false, fmt.Errorf("Erreur SQL: %w", err)
+		}
+		return camp, string(director.Mail), true, nil
+	}
+	return camp, "", false, nil
 }

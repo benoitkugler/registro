@@ -37,19 +37,6 @@ func randCarKind() CarKind {
 	return choix[i]
 }
 
-func randComptaBankentry() ComptaBankentry {
-	var s ComptaBankentry
-	s.Id = randIdComptaBankentry()
-	s.IdCamp = randIdComptaCamp()
-	s.IsReceipe = randbool()
-	s.SpentBy = randsha_OptID_cam_IdEquipier()
-	s.Reviews = randReviews()
-	s.IsValidated = randbool()
-	s.Account = randAccountKind()
-
-	return s
-}
-
 func randComptaCamp() ComptaCamp {
 	var s ComptaCamp
 	s.Id = randIdComptaCamp()
@@ -58,15 +45,16 @@ func randComptaCamp() ComptaCamp {
 	s.State = randState()
 	s.LastSentMailAdmin = randtTime()
 	s.LastSentMailDirecteur = randtTime()
+	s.Account = randAccountACVE()
+	s.Fraismdr = randFraismdrACVE()
 
 	return s
 }
 
-func randComptaCampACVE() ComptaCampACVE {
-	var s ComptaCampACVE
-	s.IdComptaCamp = randIdComptaCamp()
-	s.Account = randAccountACVE()
-	s.Fraismdr = randFraismdrACVE()
+func randComptaConfig() ComptaConfig {
+	var s ComptaConfig
+	s.Id = randIdComptaConfig()
+	s.Year = randint()
 
 	return s
 }
@@ -84,14 +72,12 @@ func randComptaFile() ComptaFile {
 func randComptaRecord() ComptaRecord {
 	var s ComptaRecord
 	s.Id = randIdComptaRecord()
-	s.IdBankentry = randIdComptaBankentry()
-	s.Date = randsha_Date()
-	s.Description = randstring()
-	s.Mode = randModePaiementRecord()
-	s.Serial = randstring()
-	s.Currency = randsha_Currency()
-	s.Montants = randMontants()
-	s.IdFile = randsha_OptID_IdComptaFile()
+	s.IdCamp = randIdComptaCamp()
+	s.IsReceipe = randbool()
+	s.SpentBy = randsha_OptID_cam_IdEquipier()
+	s.Reviews = randReviews()
+	s.IsValidated = randbool()
+	s.Account = randAccountKind()
 
 	return s
 }
@@ -99,7 +85,22 @@ func randComptaRecord() ComptaRecord {
 func randComptaRecordBus() ComptaRecordBus {
 	var s ComptaRecordBus
 	s.IdCamp = randIdComptaCamp()
+	s.IdSubrecord = randIdComptaSubrecord()
+
+	return s
+}
+
+func randComptaSubrecord() ComptaSubrecord {
+	var s ComptaSubrecord
+	s.Id = randIdComptaSubrecord()
 	s.IdRecord = randIdComptaRecord()
+	s.Date = randsha_Date()
+	s.Description = randstring()
+	s.Mode = randModePaiementRecord()
+	s.Serial = randstring()
+	s.Currency = randsha_Currency()
+	s.Montants = randMontants()
+	s.IdFile = randsha_OptID_IdComptaFile()
 
 	return s
 }
@@ -117,10 +118,6 @@ func randFraismdrACVE() FraismdrACVE {
 	return s
 }
 
-func randIdComptaBankentry() IdComptaBankentry {
-	return IdComptaBankentry(randint64())
-}
-
 func randIdComptaCamp() IdComptaCamp {
 	return IdComptaCamp(randint64())
 }
@@ -135,6 +132,10 @@ func randIdComptaFile() IdComptaFile {
 
 func randIdComptaRecord() IdComptaRecord {
 	return IdComptaRecord(randint64())
+}
+
+func randIdComptaSubrecord() IdComptaSubrecord {
+	return IdComptaSubrecord(randint64())
 }
 
 func randModePaiementRecord() ModePaiementRecord {
