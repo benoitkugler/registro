@@ -3,6 +3,7 @@ package compta
 import (
 	"math/rand"
 	"registro/sql/camps"
+	"registro/sql/dossiers"
 	"registro/sql/shared"
 	"time"
 )
@@ -229,8 +230,8 @@ func randint64() int64 {
 	return int64(rand.Intn(1000000))
 }
 
-func randsha_Currency() shared.Currency {
-	choix := [...]shared.Currency{shared.Euros, shared.FrancsSuisse}
+func randsha_Currency() dossiers.Currency {
+	choix := [...]dossiers.Currency{dossiers.Euros, dossiers.FrancsSuisse}
 	i := rand.Intn(len(choix))
 	return choix[i]
 }

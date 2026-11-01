@@ -3,12 +3,13 @@ package compta
 import (
 	"bytes"
 	"encoding/json"
+	"testing"
+	"time"
+
 	ca "registro/sql/compta"
 	"registro/sql/shared"
 	sh "registro/sql/shared"
 	tu "registro/utils/testutils"
-	"testing"
-	"time"
 )
 
 func TestRecords(t *testing.T) {
@@ -117,10 +118,10 @@ func TestReviews(t *testing.T) {
 	rec1, err := ct.createRecord(CreateRecordIn{co.Id, ca.AccountCamp})
 	tu.AssertNoErr(t, err)
 
-	_, err = ct.addRecordReview(AddRecordReviewIn{IdBankentry: rec1.Record.Id, Text: "Premier message"}, userAdmin)
+	_, err = ct.addRecordReview(AddRecordReviewIn{IdRecord: rec1.Record.Id, Text: "Premier message"}, userAdmin)
 	tu.AssertNoErr(t, err)
 
-	out, err := ct.addRecordReview(AddRecordReviewIn{IdBankentry: rec1.Record.Id, Text: "Réponse"}, co.Id)
+	out, err := ct.addRecordReview(AddRecordReviewIn{IdRecord: rec1.Record.Id, Text: "Réponse"}, co.Id)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(out.Reviews) == 2)
 }

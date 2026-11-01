@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"registro/sql/camps"
+	"registro/sql/dossiers"
 	"registro/sql/shared"
 )
 
@@ -70,7 +71,7 @@ type ComptaSubrecord struct {
 	Serial      string             // mandatory for [ComptaRecord.Mode] Cheque, ignored otherwise
 
 	// [Currency] is constant for one given record
-	Currency shared.Currency
+	Currency dossiers.Currency
 	Montants Montants // avec les ventilations
 
 	IdFile OptIdComptaFile `gomacro-sql-foreign:"ComptaFile" gomacro-sql-on-delete:"SET NULL"`

@@ -128,6 +128,25 @@ func (b *Builder) Finalize() (*bytes.Buffer, error) {
 	return b.file.WriteToBuffer()
 }
 
+// FitColsWidth adjust colums width to fit existing
+// content.
+func (b *Builder) FitColsWidth() {
+	cols, err := b.file.GetCols("Sheet1")
+	if err != nil {
+		b.err = err
+		return
+	}
+	for j, col := range cols {
+		width := 0.
+		for i, cell := range col {
+			if w := stringWidth(cell, i == 0); w > width {
+				width = w
+			}
+		}
+		b.SetColumnWidth(j+1, width)
+	}
+}
+
 func (b *Builder) MergeCells(startRow, startCol, endRow, endCol int) {
 	start, err := excelize.CoordinatesToCellName(startCol, startRow)
 	if err != nil {

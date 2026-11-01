@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"registro/crypto"
+	"registro/logic"
 	"registro/mails"
 	"registro/sql/camps"
 	cps "registro/sql/camps"
@@ -23,10 +24,8 @@ import (
 type Cent = int
 
 type CampHeader struct {
-	IdCamp cps.IdCamp
+	logic.CampItem
 
-	Name   string
-	Year   int
 	Serial string
 	AtMDR  bool
 
@@ -37,11 +36,9 @@ type CampHeader struct {
 
 func newCampHeader(camp cps.Camp, compta ca.ComptaCamp, entries ca.ComptaRecords, host string, enc crypto.Encrypter) CampHeader {
 	return CampHeader{
-		IdCamp: camp.Id,
-		Name:   string(camp.Nom),
-		Year:   camp.DateDebut.Time().Year(),
-		Serial: serial(camp),
-		AtMDR:  atMDR(string(camp.Lieu)),
+		CampItem: logic.NewCampItem(camp),
+		Serial:   serial(camp),
+		AtMDR:    atMDR(string(camp.Lieu)),
 		Compta: ComptaExt{
 			compta.Id,
 			computeState(compta, entries),
@@ -123,47 +120,47 @@ type CampDetails struct {
 	DepenseGraph DepenseGraph
 }
 
-// func (ld *comptaLoader) compile() CampDetails {
-// 	var out CampDetails
-// 	out.Label = string(ld.camp.Label())
-// 	out.Serial = serial(ld.camp)
-// 	out.Directeur = fmt.Sprintf("%s %s", ld.directeur.FPrenom(), ld.directeur.FNom())
-// 	out.Lieu = string(ld.camp.Lieu)
-// 	out.AtMDR = ld.atMDR()
-// 	out.DateDebut = Date(ld.camp.DateDebut)
-// 	out.DateFin = Date(ld.camp.DateFin)
-// 	out.Duree = ld.camp.Duree()
-// 	out.Inscrits = ld.inscrits()
-// 	out.Animateurs = len(ld.equipiers.FindAuPairs())
-// 	out.Equipiers = len(ld.equipiers)
-// 	out.Prix = ld.camp.Prix
+func (ld *comptaLoader) compile() CampDetails {
+	var out CampDetails
+	// 	out.Label = string(ld.camp.Label())
+	// 	out.Serial = serial(ld.camp)
+	// 	out.Directeur = fmt.Sprintf("%s %s", ld.directeur.FPrenom(), ld.directeur.FNom())
+	// 	out.Lieu = string(ld.camp.Lieu)
+	// 	out.AtMDR = ld.atMDR()
+	// 	out.DateDebut = Date(ld.camp.DateDebut)
+	// 	out.DateFin = Date(ld.camp.DateFin)
+	// 	out.Duree = ld.camp.Duree()
+	// 	out.Inscrits = ld.inscrits()
+	// 	out.Animateurs = len(ld.equipiers.FindAuPairs())
+	// 	out.Equipiers = len(ld.equipiers)
+	// 	out.Prix = ld.camp.Prix
 
-// 	out.Compta = ComptaExt{
-// 		Id:      ld.compta.Id,
-// 		State:   computeState(ld.compta, ld.records),
-// 		Account: ld.compta.Account,
-// 	}
+	// 	out.Compta = ComptaExt{
+	// 		Id:      ld.compta.Id,
+	// 		State:   computeState(ld.compta, ld.records),
+	// 		Account: ld.compta.Account,
+	// 	}
 
-// 	// finances
-// 	fraisMDR := ld.resolveFraismdr()
-// 	out.fraisMDRVehicule = fraisMDR.TotalBus
-// 	if fraisMDR.HasMateriel {
-// 		out.fraisMDRMateriel = fraisMDR.Materiel.Total
-// 	}
+	// 	// finances
+	// 	fraisMDR := ld.resolveFraismdr()
+	// 	out.fraisMDRVehicule = fraisMDR.TotalBus
+	// 	if fraisMDR.HasMateriel {
+	// 		out.fraisMDRMateriel = fraisMDR.Materiel.Total
+	// 	}
 
-// 	out.ventilations = ld.depenses(fraisMDR)
-// 	out.Budget = ld.computeRecette().euros()
-// 	out.Dons = ld.totalDons()
+	// 	out.ventilations = ld.depenses(fraisMDR)
+	// 	out.Budget = ld.computeRecette().euros()
+	// 	out.Dons = ld.totalDons()
 
-// 	out.fillFinances()
+	// 	out.fillFinances()
 
-// 	if ld.budget.IdCompta != 0 {
-// 		out.BudgetPrevisionnelReel = ld.resolveBudget(ld.budget, ld.config, false).Depenses
-// 		out.BudgetPrevisionnelSimule = ld.resolveBudget(ld.budget, ld.config, true).Depenses
-// 	}
+	// 	if ld.budget.IdCompta != 0 {
+	// 		out.BudgetPrevisionnelReel = ld.resolveBudget(ld.budget, ld.config, false).Depenses
+	// 		out.BudgetPrevisionnelSimule = ld.resolveBudget(ld.budget, ld.config, true).Depenses
+	// 	}
 
-// 	return out
-// }
+	return out
+}
 
 var months = [13]string{
 	time.January:   "Jan.",
@@ -639,4 +636,38 @@ func (ct *Controller) setComptaState(args SetComptaStateIn, user ca.IdComptaCamp
 	}
 
 	return out, nil
+}
+
+func (ct *Controller) GetCampDetails(c echo.Context) error {
+	user := JWTUser(c)
+
+	idCompta, err := utils.QueryParamInt[ca.IdComptaCamp](c, "IdCompta")
+	if err != nil {
+		return err
+	}
+
+	if user != userAdmin && user != idCompta {
+		return errAccess
+	}
+
+	out, err := ct.compileDetails(idCompta)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) compileDetails(idCompta ca.IdComptaCamp) (CampDetails, error) {
+	compta, err := ca.SelectComptaCamp(ct.db, idCompta)
+	if err != nil {
+		return CampDetails{}, utils.SQLError(err)
+	}
+
+	ld, err := newComptaLoader(ct.db, compta)
+	if err != nil {
+		return CampDetails{}, err
+	}
+
+	return ld.compile(), nil
 }

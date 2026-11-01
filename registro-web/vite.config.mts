@@ -20,6 +20,7 @@ function rewriteURL(url: string) {
     "/src/clients/equipier/",
     "/src/clients/espaceperso/",
     "/src/clients/inscription/",
+    "/src/clients/compta/",
     "/src/clients/services/",
   ]) {
     // we only want to filter initial "url" request
@@ -92,6 +93,7 @@ export default defineConfig(({ command }) => ({
         equipier: resolve(__dirname, "src/clients/equipier/index.html"),
         espaceperso: resolve(__dirname, "src/clients/espaceperso/index.html"),
         inscription: resolve(__dirname, "src/clients/inscription/index.html"),
+        compta: resolve(__dirname, "src/clients/compta/index.html"),
         services: resolve(__dirname, "src/clients/services/index.html"),
       },
     },

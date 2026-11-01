@@ -8,12 +8,13 @@ import (
 	"log"
 	"mime"
 	"path/filepath"
-	"registro/mails"
-	ca "registro/sql/compta"
-	"registro/sql/shared"
-	"registro/utils"
 	"sort"
 	"time"
+
+	"registro/mails"
+	ca "registro/sql/compta"
+	"registro/sql/dossiers"
+	"registro/utils"
 
 	"github.com/labstack/echo/v4"
 )
@@ -43,6 +44,44 @@ func (ct *Controller) GetRecords(c echo.Context) error {
 type RecordExt struct {
 	Record     ca.ComptaRecord
 	Subrecords []ca.ComptaSubrecord
+
+	Status RecordStatus
+}
+
+func newRecordExt(record ca.ComptaRecord, subrecords []ca.ComptaSubrecord) RecordExt {
+	return RecordExt{record, subrecords, recordStatus(record, subrecords)}
+}
+
+type RecordStatus uint8
+
+const (
+	Incomplete RecordStatus = iota
+	Complete
+	Validated
+)
+
+func recordStatus(record ca.ComptaRecord, subrecords []ca.ComptaSubrecord) RecordStatus {
+	if record.IsValidated {
+		return Validated
+	}
+
+	hasJustificatif, areSubrecordsValid := true, true
+	for _, sub := range subrecords {
+		if !sub.IdFile.Valid {
+			hasJustificatif = false
+		}
+		if sub.Mode == ca.Cheque && sub.Serial == "" {
+			areSubrecordsValid = false
+		}
+	}
+
+	isComplete :=
+		// justificatif is optional for other account
+		(record.Account == ca.AccountAsso || hasJustificatif) && areSubrecordsValid
+	if isComplete {
+		return Complete
+	}
+	return Incomplete
 }
 
 func getRecord(db ca.DB, id ca.IdComptaSubrecord) (ca.ComptaRecord, ca.ComptaSubrecord, error) {
@@ -78,7 +117,7 @@ func (ct *Controller) getRecords(id ca.IdComptaCamp) ([]RecordExt, error) {
 
 	out := make([]RecordExt, 0, len(recs))
 	for _, rec := range recs {
-		out = append(out, RecordExt{rec, subrecords[rec.Id].Sorted()})
+		out = append(out, newRecordExt(rec, subrecords[rec.Id].Sorted()))
 	}
 	// newer first
 	sort.Slice(out, func(i, j int) bool { return out[i].Record.Id > out[j].Record.Id })
@@ -113,19 +152,20 @@ func (ct *Controller) CreateRecord(c echo.Context) error {
 
 func (ct *Controller) createRecord(args CreateRecordIn) (out RecordExt, err error) {
 	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
-		out.Record, err = ca.ComptaRecord{IdCamp: args.IdCompta, Account: args.Account}.Insert(tx)
+		record, err := ca.ComptaRecord{IdCamp: args.IdCompta, Account: args.Account}.Insert(tx)
 		if err != nil {
 			return utils.SQLError(err)
 		}
 		sub, err := ca.ComptaSubrecord{
-			IdRecord: out.Record.Id,
+			IdRecord: record.Id,
 			Montants: ca.Montants{{Kind: ca.NoVentilation}},
-			Currency: shared.Euros,
+			Currency: dossiers.Euros,
 		}.Insert(tx)
 		if err != nil {
 			return utils.SQLError(err)
 		}
-		out.Subrecords = []ca.ComptaSubrecord{sub}
+
+		out = newRecordExt(record, []ca.ComptaSubrecord{sub})
 
 		return nil
 	})
@@ -161,8 +201,9 @@ func (ct *Controller) addSubrecord(record ca.IdComptaRecord, user ca.IdComptaCam
 
 	out, err := ca.ComptaSubrecord{
 		IdRecord: record,
-		Currency: shared.Euros,
-		Montants: ca.Montants{{Kind: ca.NoVentilation}}}.Insert(ct.db)
+		Currency: dossiers.Euros,
+		Montants: ca.Montants{{Kind: ca.NoVentilation}},
+	}.Insert(ct.db)
 	if err != nil {
 		return ca.ComptaSubrecord{}, utils.SQLError(err)
 	}
@@ -245,7 +286,7 @@ func (ct *Controller) updateRecord(in RecordExt, user ca.IdComptaCamp) (out Reco
 			return utils.SQLError(err)
 		}
 
-		out = RecordExt{currentGroup, currents.Sorted()}
+		out = newRecordExt(currentGroup, currents.Sorted())
 
 		return nil
 	})
@@ -327,7 +368,7 @@ func (ct *Controller) mergeRecordTo(args MergeRecordToIn, user ca.IdComptaCamp) 
 			return utils.SQLError(err)
 		}
 
-		out = RecordExt{target, m.Sorted()}
+		out = newRecordExt(target, m.Sorted())
 
 		return nil
 	})
@@ -335,8 +376,8 @@ func (ct *Controller) mergeRecordTo(args MergeRecordToIn, user ca.IdComptaCamp) 
 }
 
 type AddRecordReviewIn struct {
-	IdBankentry ca.IdComptaRecord
-	Text        string
+	IdRecord ca.IdComptaRecord
+	Text     string
 }
 
 func (ct *Controller) AddRecordReview(c echo.Context) error {
@@ -356,7 +397,7 @@ func (ct *Controller) AddRecordReview(c echo.Context) error {
 }
 
 func (ct *Controller) addRecordReview(args AddRecordReviewIn, user ca.IdComptaCamp) (ca.ComptaRecord, error) {
-	record, err := ca.SelectComptaRecord(ct.db, args.IdBankentry)
+	record, err := ca.SelectComptaRecord(ct.db, args.IdRecord)
 	if err != nil {
 		return ca.ComptaRecord{}, utils.SQLError(err)
 	}
@@ -479,7 +520,7 @@ func (ct *Controller) deleteSubrecord(id ca.IdComptaSubrecord, user ca.IdComptaC
 func (ct *Controller) UploadAndCreate(c echo.Context) error {
 	user := JWTUser(c)
 
-	idCompta, err := utils.ParseInt[ca.IdComptaCamp](c.FormValue("id-compta"))
+	idCompta, err := utils.FormValueInt[ca.IdComptaCamp](c, "idCompta")
 	if err != nil {
 		return fmt.Errorf("invalid ID parameter: %s", err)
 	}
@@ -521,21 +562,23 @@ func (ct *Controller) uploadAndCreate(idCompta ca.IdComptaCamp, fileName string,
 		}
 
 		// create the record
-		out.Record, err = ca.ComptaRecord{IdCamp: idCompta}.Insert(tx)
+		record, err := ca.ComptaRecord{IdCamp: idCompta}.Insert(tx)
 		if err != nil {
 			return utils.SQLError(err)
 		}
 		sub, err := ca.ComptaSubrecord{
-			IdRecord:    out.Record.Id,
+			IdRecord:    record.Id,
 			Montants:    ca.Montants{{Kind: ca.NoVentilation}},
 			Description: "A compléter",
-			Currency:    shared.Euros,
+			Currency:    dossiers.Euros,
 			IdFile:      ca.NewOptIdComptaFile(meta.Id),
 		}.Insert(tx)
 		if err != nil {
 			return utils.SQLError(err)
 		}
-		out.Subrecords = []ca.ComptaSubrecord{sub}
+
+		out = newRecordExt(record, []ca.ComptaSubrecord{sub})
+
 		return nil
 	})
 	return out, err
@@ -544,7 +587,7 @@ func (ct *Controller) uploadAndCreate(idCompta ca.IdComptaCamp, fileName string,
 func (ct *Controller) UploadJustificatif(c echo.Context) error {
 	user := JWTUser(c)
 
-	idRecord, err := utils.ParseInt[ca.IdComptaSubrecord](c.FormValue("id-subrecord"))
+	idRecord, err := utils.FormValueInt[ca.IdComptaSubrecord](c, "idSubrecord")
 	if err != nil {
 		return fmt.Errorf("invalid ID parameter: %s", err)
 	}

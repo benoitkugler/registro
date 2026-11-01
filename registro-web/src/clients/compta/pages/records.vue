@@ -1,0 +1,149 @@
+<template>
+  <v-responsive class="text-center fill-height mx-2">
+    <v-dialog
+      v-model="showHelp"
+      max-width="600"
+      @update:model-value="setRecordHelpSeen"
+    >
+      <v-card
+        title="Pour bien démarrer"
+        subtitle="Conseils pour l'enregistrement des dépenses"
+      >
+        <v-card-text>
+          Chaque <b>enregistrement</b> doit correspondre à
+          <b><u>une</u> opération bancaire</b>. <br /><br />
+
+          Une opération peut être composée de plusieurs sous-enregistrements; un
+          <b>sous-enregistrement</b> correspond à une
+          <b>pièce justificative</b>. <br /><br />
+
+          Par défaut, un enregistrement est composé d'un seul
+          sous-enregistrement; pour en ajouter, utiliser le bouton
+          <v-btn icon readonly size="small">
+            <v-icon color="green">mdi-receipt-text-plus</v-icon>
+          </v-btn>
+          . <br /><br />
+
+          Pour les remboursements, choisir l'équipier dans la liste déroulante
+          "Avancé par".
+          <br /><br />
+
+          <div class="font-italic">
+            Exemple :<br />
+            Un animateur achète pour 15€ à Super U et pour 10€ à Casino.
+            L'enregistrement du remboursement sera composée de deux
+            sous-enregistrements : Super U de 15€ et Casino de 10€.
+          </div>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+
+    <NoSelectedCamp
+      v-if="controller.idCompta == -1"
+      class="mt-2"
+    ></NoSelectedCamp>
+
+    <v-skeleton-loader v-else-if="camp == null"></v-skeleton-loader>
+    <div v-else>
+      <v-card title="Enregistrements" :subtitle="Camps.label(camp)">
+        <template #append>
+          <v-icon v-if="showMandatoryRecordsAlert" color="orange">
+            mdi-alert-circle
+          </v-icon>
+          <v-badge
+            v-if="notifRecords"
+            :content="notifRecords"
+            color="pink"
+            inline
+          >
+          </v-badge>
+        </template>
+        <v-card-text>
+          <RecordsList
+            :readonly="readonly"
+            :camp="camp"
+            v-model:direct-upload-file="fileForDirectUpload"
+            @update-state="(c) => (camp != null ? (camp.Compta = c) : null)"
+            @update-notif="
+              (v) => {
+                notifRecords = v;
+                fetchCompta();
+              }
+            "
+            @update-mandatory-records="(v) => (showMandatoryRecordsAlert = v)"
+            @show-help="showHelp = true"
+          ></RecordsList>
+        </v-card-text>
+      </v-card>
+    </div>
+
+    <v-dialog>
+      <!-- TODO -->
+      <!-- <FraismdrPannel
+                :at-mdr="camp.AtMDR"
+                :readonly="readonly"
+                @update-mandatory-expenses="
+                  (v) => (showMandatoryFraisMDRAlert = v)
+                "
+              ></FraismdrPannel> -->
+    </v-dialog>
+  </v-responsive>
+</template>
+
+<script lang="ts" setup>
+import { computed, onMounted, ref } from "vue";
+import {
+  controller,
+  setRecordHelpSeen,
+  wasRecordHelpSeen,
+} from "../logic/logic";
+import { State, type CampHeader } from "../logic/api";
+import { Camps } from "@/utils";
+import RecordsList from "../components/records/RecordsList.vue";
+
+const tab = ref(0);
+
+const notifRecords = ref(0);
+const showMandatoryRecordsAlert = ref(false);
+const showMandatoryFraisMDRAlert = ref(false);
+
+const readonly = computed(
+  () => !controller.isAdmin && camp.value?.Compta.State == State.Archive,
+);
+
+const camp = ref<CampHeader | null>(null);
+
+onMounted(() => {
+  showHelp.value = !controller.isAdmin && !wasRecordHelpSeen();
+  fetchCompta();
+  handleDirectUpload();
+});
+
+async function fetchCompta() {
+  const res = await controller.GetCompta({ IdCompta: controller.idCompta });
+  if (res === undefined) return;
+  camp.value = res;
+}
+
+const showHelp = ref(false);
+
+// PWA feature :
+// handle direct upload when the direct-upload query is set
+// to keep in sync with sw.ts
+const fileForDirectUpload = ref<File | null>(null);
+async function handleDirectUpload() {
+  const fileURL = "/tmp-direct-upload";
+  if (!location.search.includes("direct-upload")) return;
+
+  const cache = await caches.open("direct-upload-v1");
+  const fileResponse = await cache.match(fileURL);
+  if (!fileResponse) return;
+
+  const blob = await fileResponse.blob();
+  await cache.delete(fileURL);
+  const filename = fileResponse.headers.get("x-filename") || "";
+
+  const file = new File([blob], filename);
+  fileForDirectUpload.value = file;
+}
+</script>

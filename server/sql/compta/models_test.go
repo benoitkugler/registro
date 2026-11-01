@@ -6,7 +6,6 @@ import (
 
 	"registro/sql/camps"
 	"registro/sql/dossiers"
-	"registro/sql/shared"
 	tu "registro/utils/testutils"
 )
 
@@ -71,7 +70,7 @@ func TestSQLCompta(t *testing.T) {
 		}}.Insert(db)
 	tu.AssertNoErr(t, err)
 	_, err = ComptaSubrecord{IdRecord: rec.Id,
-		Currency: shared.Euros,
+		Currency: dossiers.Euros,
 		Montants: Montants{
 			{1000, Alimentation},
 			{80, Bank},

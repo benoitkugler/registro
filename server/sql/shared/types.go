@@ -12,25 +12,6 @@ import (
 	"github.com/lib/pq"
 )
 
-type Currency uint8
-
-const (
-	_ Currency = iota
-	Euros
-	FrancsSuisse
-)
-
-func (c Currency) String() string {
-	switch c {
-	case Euros:
-		return "€"
-	case FrancsSuisse:
-		return "CHF"
-	default:
-		return "<invalid currency>"
-	}
-}
-
 // Date is a date (without notion of time)
 type Date time.Time
 

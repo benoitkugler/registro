@@ -17,21 +17,24 @@ func TestConnectionLink(t *testing.T) {
 	enc := crypto.NewEncrypter("dummy")
 	ct := Controller{db: db.DB, key: enc, adminPassword: "HAHA"}
 
-	logged, err := ct.loggin("HAHA")
+	logged, err := ct.loggin(true, "HAHA")
 	tu.AssertNoErr(t, err)
-	tu.Assert(t, logged.IsAdmin && logged.IdCompta == -1)
+	tu.Assert(t, logged.IdCompta == -1)
 
 	key := crypto.EncryptID(enc, c1.Id)
-	logged, err = ct.loggin(key)
+	logged, err = ct.loggin(false, key)
 	tu.AssertNoErr(t, err)
-	tu.Assert(t, !logged.IsAdmin && logged.IdCompta > 0)
+	tu.Assert(t, logged.IdCompta > 0)
 
-	logged2, err := ct.loggin(key)
+	logged2, err := ct.loggin(false, key)
 	tu.AssertNoErr(t, err)
-	tu.Assert(t, !logged.IsAdmin && logged.IdCompta > 0)
+	tu.Assert(t, logged.IdCompta > 0)
 	tu.Assert(t, logged2.IdCompta == logged.IdCompta)
 
-	_, err = ct.loggin("XXX")
+	out, err := ct.loggin(true, "XXX")
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, !out.IsValid)
+	_, err = ct.loggin(false, "XXX")
 	tu.AssertErr(t, err)
 }
 

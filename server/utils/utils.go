@@ -72,6 +72,11 @@ func QueryParamBool(c echo.Context, name string) bool {
 	return value != ""
 }
 
+// FormValueInt calls c.FormValue(name) and parse it as int
+func FormValueInt[T interface{ ~int64 | int }](c echo.Context, name string) (T, error) {
+	return ParseInt[T](c.FormValue(name))
+}
+
 // FormValueJSON calls c.FormValue(name) and parse its JSON
 func FormValueJSON(c echo.Context, name string, out any) error {
 	content := c.FormValue(name)

@@ -18,7 +18,7 @@ const routes = [
   { path: "/annuaire", component: Annuaire },
 ];
 
-// TODO: check that
+
 const baseURL = import.meta.env.DEV ? "/src/clients/backoffice" : "/backoffice";
 
 const router = createRouter({

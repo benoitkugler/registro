@@ -101,17 +101,19 @@ func DirecteurURL(key crypto.Encrypter, host string, idCamp cps.IdCamp) string {
 }
 
 type LogginOut struct {
+	IsValid bool
+
 	Token    string
-	IsAdmin  bool
 	IdCompta ca.IdComptaCamp
 }
 
 // Loggin parse the user key, detecting if the user is an admin
 // or a directeur.
 func (ct *Controller) Loggin(c echo.Context) error {
+	isAdmin := utils.QueryParamBool(c, "isAdmin")
 	key := c.QueryParam("key")
 
-	out, err := ct.loggin(key)
+	out, err := ct.loggin(isAdmin, key)
 	if err != nil {
 		return err
 	}
@@ -119,17 +121,17 @@ func (ct *Controller) Loggin(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) loggin(key string) (token LogginOut, err error) {
-	if key == "" {
-		return LogginOut{}, errors.New("Clé de connection manquante !")
-	}
-
-	if key == ct.adminPassword {
-		tk, err := ct.newToken(userAdmin)
-		if err != nil {
-			return LogginOut{}, err
+func (ct *Controller) loggin(isAdmin bool, key string) (token LogginOut, err error) {
+	if isAdmin {
+		if key == ct.adminPassword {
+			tk, err := ct.newToken(userAdmin)
+			if err != nil {
+				return LogginOut{}, err
+			}
+			return LogginOut{IsValid: true, Token: tk, IdCompta: userAdmin}, nil
+		} else {
+			return LogginOut{IsValid: false}, nil
 		}
-		return LogginOut{Token: tk, IsAdmin: true, IdCompta: userAdmin}, nil
 	}
 
 	idCamp, err := crypto.DecryptID[cps.IdCamp](ct.key, key)
@@ -145,7 +147,7 @@ func (ct *Controller) loggin(key string) (token LogginOut, err error) {
 	if err != nil {
 		return LogginOut{}, err
 	}
-	return LogginOut{Token: tk, IsAdmin: false, IdCompta: compta.Id}, nil
+	return LogginOut{IsValid: true, Token: tk, IdCompta: compta.Id}, nil
 }
 
 func (ct *Controller) loadOrCreateCompta(idCamp cps.IdCamp) (ca.ComptaCamp, error) {

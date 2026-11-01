@@ -4,6 +4,40 @@ import ca "registro/sql/compta"
 
 // custom logic for ACVE
 
+var accountLabels = [ca.Aurore + 1]string{
+	ca.Empty: "Aucun",
+
+	ca.MaisonFamiliale: "Maison Familiale",
+	ca.Clairiere:       "La Clairiere",
+	ca.Rocher:          "Le Rocher",
+	ca.Montagne:        "La Montagne",
+	ca.Bergerie:        "La Bergerie",
+	ca.Ruisseau:        "Le Ruisseau",
+	ca.Glandasse:       "Le Glandasse",
+	ca.Vercors:         "Le Vercors",
+	ca.Source:          "La Source",
+
+	ca.Principal:      "Compte principal",
+	ca.CentreVacances: "Centre de vacances",
+	ca.Aurore:         "Aurore",
+}
+
+var accountColors = [ca.Aurore + 1]string{
+	ca.Empty:           "",
+	ca.MaisonFamiliale: "#c5e0b4",
+	ca.Clairiere:       "#ff6d6d",
+	ca.Rocher:          "#e575ff",
+	ca.Montagne:        "#ffcc00",
+	ca.Bergerie:        "#ffff00",
+	ca.Ruisseau:        "",
+	ca.Glandasse:       "#ffff99",
+	ca.Vercors:         "#66ff66",
+	ca.Source:          "#00ffff",
+	ca.Principal:       "",
+	ca.CentreVacances:  "",
+	ca.Aurore:          "",
+}
+
 type ResolvedBus struct {
 	ca.Bus
 	Kms       int
