@@ -17,6 +17,7 @@ import (
 	_ "github.com/lib/pq"
 
 	"registro/config"
+	comptaV1 "registro/migrations/fromACVEv1/compta"
 	rd "registro/migrations/fromACVEv1/rawdata"
 	"registro/sql/dons"
 	ds "registro/sql/dossiers"
@@ -28,7 +29,8 @@ import (
 // parameters from trimming
 
 const (
-	donFirstYear, donLastYear = 2025, 2026
+	donsStartYear  = 2025
+	campsStartYear = 2024
 )
 
 func check(err error) {
@@ -66,8 +68,13 @@ func main() {
 		check(err)
 		fmt.Println("Done.")
 	} else {
-		fmt.Println(len(trimmedV1.personnes), "personnes")
-		fmt.Println(len(trimmedV1.documents), "files")
+		fmt.Println(len(originV1.personnes), "->", len(trimmedV1.personnes), "personnes")
+		fmt.Println(len(originV1.documents), "->", len(trimmedV1.documents), "documents")
+		fmt.Println(len(originV1.camps), "->", len(trimmedV1.camps), "camps")
+		fmt.Println(len(originV1.comptas), "->", len(trimmedV1.comptas), "comptas")
+		fmt.Println(len(originV1.records), "->", len(trimmedV1.records), "records")
+		fmt.Println(len(originV1.subrecords), "->", len(trimmedV1.subrecords), "subrecords")
+		fmt.Println(len(originV1.filecomptas), "->", len(trimmedV1.filecomptas), "filecomptas")
 	}
 }
 
@@ -173,6 +180,11 @@ type baseV1 struct {
 
 	documents rd.Documents
 	// documentsPersonnes
+
+	comptas     comptaV1.Comptas
+	records     comptaV1.Records
+	subrecords  comptaV1.Subrecords
+	filecomptas comptaV1.Filecomptas
 }
 
 func loadV1(db *sql.DB) (out baseV1, err error) {
@@ -204,6 +216,22 @@ func loadV1(db *sql.DB) (out baseV1, err error) {
 	if err != nil {
 		return baseV1{}, fmt.Errorf("table documents: %s", err)
 	}
+	out.comptas, err = comptaV1.SelectAllComptas(db)
+	if err != nil {
+		return baseV1{}, fmt.Errorf("table comptas: %s", err)
+	}
+	out.records, err = comptaV1.SelectAllRecords(db)
+	if err != nil {
+		return baseV1{}, fmt.Errorf("table records: %s", err)
+	}
+	out.subrecords, err = comptaV1.SelectAllSubrecords(db)
+	if err != nil {
+		return baseV1{}, fmt.Errorf("table subrecords: %s", err)
+	}
+	out.filecomptas, err = comptaV1.SelectAllFilecomptas(db)
+	if err != nil {
+		return baseV1{}, fmt.Errorf("table subrecords: %s", err)
+	}
 	return
 }
 
@@ -214,17 +242,24 @@ func (b baseV1) trim() (out baseV1) {
 	out.personnes = trimPersonnes(b.personnes, out)
 
 	out.documents = b.documents // TODO: filter unused categories
+
+	out.camps = trimCamps(b.camps)
+
+	out.comptas = trimComptas(b.comptas, out)
+	out.records = trimRecords(b.records, out)
+	out.subrecords, out.filecomptas = trimSubrecords(b.subrecords, b.filecomptas, out)
+
 	return out
 }
 
-// only keep (current) and last year, also drop anonymous gifts
+// only keep recents year >= [donFirstYear], also drop anonymous gifts
 // properly trim link table
 func trimDons(dons rd.Dons, donateurs rd.DonDonateurs) (rd.Dons, rd.DonDonateurs) {
 	byDon := donateurs.ByIdDon()
 
 	outDons := make(rd.Dons)
 	for id, don := range dons {
-		if year := don.DateReception.Time().Year(); !(donFirstYear <= year && year <= donLastYear) {
+		if year := don.DateReception.Time().Year(); !(donsStartYear <= year) {
 			continue
 		} else if _, hasDonateur := byDon[id]; !hasDonateur {
 			continue
@@ -297,6 +332,59 @@ func (b baseV1) inferDiplomeAppro() map[int64]rd.Equipier {
 		}
 	}
 	return lastEquipier
+}
+
+func trimCamps(v1 rd.Camps) rd.Camps {
+	out := make(rd.Camps)
+
+	for id, c := range v1 {
+		if c.DateDebut.Time().Year() < campsStartYear {
+			continue
+		}
+		out[id] = c
+	}
+
+	return out
+}
+
+// remove unused camps
+func trimComptas(in comptaV1.Comptas, out baseV1) comptaV1.Comptas {
+	comptas := make(comptaV1.Comptas)
+	for i, c := range in {
+		_, has := out.camps[c.IdCamp]
+		if !has {
+			continue
+		}
+		comptas[i] = c
+	}
+	return comptas
+}
+
+func trimRecords(in comptaV1.Records, out baseV1) comptaV1.Records {
+	records := make(comptaV1.Records)
+	for i, r := range in {
+		_, has := out.comptas[r.IdCompta]
+		if !has {
+			continue
+		}
+		records[i] = r
+	}
+	return records
+}
+
+func trimSubrecords(in1 comptaV1.Subrecords, in2 comptaV1.Filecomptas, out baseV1) (comptaV1.Subrecords, comptaV1.Filecomptas) {
+	subrecords, files := make(comptaV1.Subrecords), make(comptaV1.Filecomptas)
+	for i, r := range in1 {
+		_, has := out.records[r.IdRecord]
+		if !has {
+			continue
+		}
+		subrecords[i] = r
+		if fId := r.IdFilecompta; fId.Valid {
+			files[fId.Id] = in2[fId.Id]
+		}
+	}
+	return subrecords, files
 }
 
 type (
