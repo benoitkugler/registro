@@ -1,5 +1,7 @@
 <template>
-  <v-responsive class="text-center fill-height mx-2">
+  <NavBar></NavBar>
+
+  <v-responsive class="fill-height mx-2">
     <v-dialog
       v-model="showHelp"
       max-width="600"
@@ -45,36 +47,20 @@
 
     <v-skeleton-loader v-else-if="camp == null"></v-skeleton-loader>
     <div v-else>
-      <v-card title="Enregistrements" :subtitle="Camps.label(camp)">
-        <template #append>
-          <v-icon v-if="showMandatoryRecordsAlert" color="orange">
-            mdi-alert-circle
-          </v-icon>
-          <v-badge
-            v-if="notifRecords"
-            :content="notifRecords"
-            color="pink"
-            inline
-          >
-          </v-badge>
-        </template>
-        <v-card-text>
-          <RecordsList
-            :readonly="readonly"
-            :camp="camp"
-            v-model:direct-upload-file="fileForDirectUpload"
-            @update-state="(c) => (camp != null ? (camp.Compta = c) : null)"
-            @update-notif="
-              (v) => {
-                notifRecords = v;
-                fetchCompta();
-              }
-            "
-            @update-mandatory-records="(v) => (showMandatoryRecordsAlert = v)"
-            @show-help="showHelp = true"
-          ></RecordsList>
-        </v-card-text>
-      </v-card>
+      <RecordsList
+        :readonly="readonly"
+        :camp="camp"
+        v-model:direct-upload-file="fileForDirectUpload"
+        @update-state="(c) => (camp != null ? (camp.Compta = c) : null)"
+        @update-notif="
+          (v) => {
+            notifRecords = v;
+            fetchCompta();
+          }
+        "
+        @update-mandatory-records="(v) => (showMandatoryRecordsAlert = v)"
+        @show-help="showHelp = true"
+      ></RecordsList>
     </div>
 
     <v-dialog>
@@ -98,10 +84,9 @@ import {
   wasRecordHelpSeen,
 } from "../logic/logic";
 import { State, type CampHeader } from "../logic/api";
-import { Camps } from "@/utils";
 import RecordsList from "../components/records/RecordsList.vue";
-
-const tab = ref(0);
+import NavBar from "../components/NavBar.vue";
+import NoSelectedCamp from "../components/NoSelectedCamp.vue";
 
 const notifRecords = ref(0);
 const showMandatoryRecordsAlert = ref(false);

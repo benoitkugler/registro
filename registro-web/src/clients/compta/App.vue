@@ -50,5 +50,6 @@ controller.showMessage = (s, color) => {
   messageColor.value = color || "success";
 };
 
+// TODO: better UX when reloading
 // TODO: handle direct connection with directeur link
 </script>

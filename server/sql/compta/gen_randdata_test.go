@@ -99,7 +99,7 @@ func randComptaSubrecord() ComptaSubrecord {
 	s.Description = randstring()
 	s.Mode = randModePaiementRecord()
 	s.Serial = randstring()
-	s.Currency = randsha_Currency()
+	s.Currency = randdos_Currency()
 	s.Montants = randMontants()
 	s.IdFile = randsha_OptID_IdComptaFile()
 
@@ -222,18 +222,18 @@ func randcam_IdEquipier() camps.IdEquipier {
 	return camps.IdEquipier(randint64())
 }
 
+func randdos_Currency() dossiers.Currency {
+	choix := [...]dossiers.Currency{dossiers.Euros, dossiers.FrancsSuisse}
+	i := rand.Intn(len(choix))
+	return choix[i]
+}
+
 func randint() int {
 	return int(rand.Intn(1000000))
 }
 
 func randint64() int64 {
 	return int64(rand.Intn(1000000))
-}
-
-func randsha_Currency() dossiers.Currency {
-	choix := [...]dossiers.Currency{dossiers.Euros, dossiers.FrancsSuisse}
-	i := rand.Intn(len(choix))
-	return choix[i]
 }
 
 func randsha_Date() shared.Date {

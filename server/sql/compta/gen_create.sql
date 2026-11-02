@@ -44,7 +44,7 @@ CREATE TABLE compta_subrecords (
     Description text NOT NULL,
     Mode smallint CHECK (Mode IN (0, 1, 2, 3, 4)) NOT NULL,
     Serial text NOT NULL,
-    Currency smallint CHECK (Currency IN (1, 2)) NOT NULL,
+    Currency smallint CHECK (Currency IN (0, 1)) NOT NULL,
     Montants jsonb NOT NULL,
     IdFile integer
 );

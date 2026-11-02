@@ -1,4 +1,6 @@
 <template>
+  <NavBar></NavBar>
+
   <v-responsive class="fill-height ma-2">
     <v-dialog v-model="showStateHelp" max-width="600">
       <v-card title="Explications" subtitle="Etat du dossier">
@@ -171,7 +173,7 @@
               <v-col cols="auto">
                 <v-chip
                   link
-                  :to="{ name: 'records' }"
+                  :to="{ path: '/records' }"
                   class="mx-0"
                   elevation="1"
                 >
@@ -314,6 +316,7 @@ import {
 } from "../logic/api";
 import { Formatters, selectItems } from "@/utils";
 import NoSelectedCamp from "../components/NoSelectedCamp.vue";
+import NavBar from "../components/NavBar.vue";
 
 ChartJS.register(
   Title,

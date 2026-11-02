@@ -1,5 +1,129 @@
 <template>
-  <v-card>
+  <v-card title="Enregistrements" :subtitle="Camps.label(props.camp)">
+    <template #append>
+      <v-row no-gutters class="my-2">
+        <v-col>
+          <!-- TODO -->
+          <v-icon v-if="showMandatoryRecordsAlert" color="orange">
+            mdi-alert-circle
+          </v-icon>
+          <v-badge v-if="notifs" :content="notifs" color="pink" inline>
+          </v-badge>
+        </v-col>
+
+        <v-col class="pr-2" v-if="!mobile">
+          <v-select
+            style="width: 120px"
+            density="compact"
+            label="Compte"
+            hide-details
+            :items="[
+              { title: 'Compte dédié', value: AccountKind.AccountCamp },
+              { title: 'Autre compte', value: AccountKind.AccountAsso },
+              { title: 'Tous', value: null },
+            ]"
+            v-model="showOtherAccount"
+          >
+          </v-select>
+        </v-col>
+        <v-col align-self="center" v-if="!mobile">
+          <v-text-field
+            style="width: 200px"
+            density="compact"
+            hide-details
+            append-inner-icon="mdi-magnify"
+            clearable
+            placeholder="Rechercher..."
+            v-model="search"
+          ></v-text-field>
+        </v-col>
+        <v-divider vertical thickness="1" class="ml-2"></v-divider>
+        <v-spacer v-if="!mobile"></v-spacer>
+        <v-col align-self="center" class="px-2">
+          <v-tooltip v-if="stateAction != null" location="top">
+            <template v-slot:activator="{ props }">
+              <v-btn
+                v-bind="props"
+                color="pink"
+                density="comfortable"
+                :disabled="stateAction.disabled"
+                @click="toogleState"
+              >
+                {{ stateAction.message }}
+              </v-btn>
+            </template>
+            <span v-html="stateAction.tooltip"></span>
+          </v-tooltip>
+        </v-col>
+        <v-col align-self="center">
+          <v-btn
+            density="comfortable"
+            color="success"
+            variant="elevated"
+            @click="createRecord"
+            :disabled="props.readonly"
+            :block="mobile"
+          >
+            <template v-slot:prepend>
+              <v-icon>mdi-plus</v-icon>
+            </template>
+            Ajouter
+          </v-btn>
+        </v-col>
+
+        <v-col align-self="center" cols="auto">
+          <v-menu>
+            <template v-slot:activator="{ isActive, props }">
+              <v-btn
+                v-on="{ isActive }"
+                v-bind="props"
+                icon
+                size="x-small"
+                class="mx-2"
+                title="Autres actions"
+              >
+                <v-icon>mdi-dots-vertical</v-icon>
+              </v-btn>
+            </template>
+            <v-list>
+              <v-list-item
+                prepend-icon="mdi-download"
+                :href="
+                  controller.DownloadRecords(
+                    controller.idCompta,
+                    controller.authToken,
+                  )
+                "
+                title="Télécharger la liste"
+                subtitle="Format Excel"
+              >
+              </v-list-item>
+              <v-list-item
+                prepend-icon="mdi-download"
+                :href="
+                  controller.DownloadRecordsAndFilesStream(
+                    controller.idCompta,
+                    controller.authToken,
+                  )
+                "
+                link
+                title="Télécharger la liste et les justificatifs"
+                subtitle="Format Zip"
+              >
+              </v-list-item>
+              <v-divider thickness="1"></v-divider>
+              <v-list-item
+                title="Aide"
+                prepend-icon="mdi-help"
+                @click="emit('showHelp')"
+              >
+              </v-list-item>
+            </v-list>
+          </v-menu>
+        </v-col>
+      </v-row>
+    </template>
+
     <v-dialog
       max-width="600"
       :model-value="toDelete != null"
@@ -58,118 +182,6 @@
     </v-dialog>
 
     <v-card-text>
-      <v-row no-gutters class="mb-2">
-        <v-col class="pr-2" v-if="!mobile" cols="2">
-          <v-select
-            variant="outlined"
-            density="compact"
-            label="Compte"
-            hide-details
-            :items="[
-              { title: 'Compte dédié', value: AccountKind.AccountCamp },
-              { title: 'Autre compte', value: AccountKind.AccountAsso },
-              { title: 'Tous', value: null },
-            ]"
-            v-model="showOtherAccount"
-          >
-          </v-select>
-        </v-col>
-        <v-col align-self="center" v-if="!mobile" cols="3">
-          <v-text-field
-            density="compact"
-            hide-details
-            append-inner-icon="mdi-magnify"
-            clearable
-            placeholder="Rechercher..."
-            v-model="search"
-          ></v-text-field>
-        </v-col>
-        <v-spacer v-if="!mobile"></v-spacer>
-        <v-col align-self="center" class="px-2">
-          <v-tooltip v-if="stateAction != null" location="top">
-            <template v-slot:activator="{ isActive, props }">
-              <v-btn
-                v-on="{ isActive }"
-                v-bind="props"
-                color="pink"
-                density="comfortable"
-                :disabled="stateAction.disabled"
-                @click="toogleState"
-              >
-                {{ stateAction.message }}
-              </v-btn>
-            </template>
-            <span v-html="stateAction.tooltip"></span>
-          </v-tooltip>
-        </v-col>
-        <v-col align-self="center">
-          <v-btn
-            density="comfortable"
-            color="success"
-            variant="elevated"
-            @click="createRecord"
-            :disabled="props.readonly"
-            :block="mobile"
-          >
-            <template v-slot:prepend>
-              <v-icon>mdi-plus</v-icon>
-            </template>
-            {{ mobile ? "Ajouter" : "Ajouter un enregistrement" }}
-          </v-btn>
-        </v-col>
-
-        <v-col align-self="center" cols="auto">
-          <v-menu>
-            <template v-slot:activator="{ isActive, props }">
-              <v-btn
-                v-on="{ isActive }"
-                v-bind="props"
-                icon
-                size="x-small"
-                class="mx-2"
-                title="Autres actions"
-              >
-                <v-icon>mdi-dots-vertical</v-icon>
-              </v-btn>
-            </template>
-            <v-list>
-              <v-list-item
-                prepend-icon="mdi-download"
-                :href="
-                  controller.DownloadRecords(
-                    controller.idCompta,
-                    controller.authToken,
-                  )
-                "
-                title="Télécharger la liste"
-                subtitle="Format Excel"
-              >
-              </v-list-item>
-              <v-list-item
-                prepend-icon="mdi-download"
-                :href="
-                  controller.DownloadRecordsAndFilesStream(
-                    controller.idCompta,
-                    controller.authToken,
-                  )
-                "
-                link
-                title="Télécharger la liste et les justificatifs"
-                subtitle="Format Zip"
-              >
-              </v-list-item>
-              <v-divider thickness="1"></v-divider>
-              <v-list-item
-                title="Aide"
-                prepend-icon="mdi-help"
-                @click="emit('showHelp')"
-              >
-              </v-list-item>
-            </v-list>
-          </v-menu>
-        </v-col>
-      </v-row>
-
       <template v-if="!records.length">
         <v-alert v-if="showMandatoryRecordsAlert" type="warning" class="my-4">
           Pour un séjour à la Maison du Rocher, ces dépenses doivent être
@@ -226,7 +238,7 @@ import {
   type RecordExt,
 } from "../../logic/api.ts";
 import { controller, type RecordExtModeOpt } from "../../logic/logic.ts";
-import { copy, normalize } from "../../../../utils";
+import { Camps, copy, normalize } from "../../../../utils";
 
 const props = defineProps<{
   camp: CampHeader;

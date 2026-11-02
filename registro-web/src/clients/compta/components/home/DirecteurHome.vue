@@ -19,6 +19,6 @@ import { useRouter } from "vue-router";
 const router = useRouter();
 
 function goToSejour() {
-  router.push({ name: "sejour" });
+  router.push({ path: "/summary" });
 }
 </script>

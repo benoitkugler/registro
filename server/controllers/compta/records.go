@@ -154,7 +154,7 @@ func (ct *Controller) createRecord(args CreateRecordIn) (out RecordExt, err erro
 	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
 		record, err := ca.ComptaRecord{IdCamp: args.IdCompta, Account: args.Account}.Insert(tx)
 		if err != nil {
-			return utils.SQLError(err)
+			return err
 		}
 		sub, err := ca.ComptaSubrecord{
 			IdRecord: record.Id,
@@ -162,7 +162,7 @@ func (ct *Controller) createRecord(args CreateRecordIn) (out RecordExt, err erro
 			Currency: dossiers.Euros,
 		}.Insert(tx)
 		if err != nil {
-			return utils.SQLError(err)
+			return err
 		}
 
 		out = newRecordExt(record, []ca.ComptaSubrecord{sub})
