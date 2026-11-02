@@ -220,6 +220,9 @@ type baseV1 struct {
 	records     comptaV1.Records
 	subrecords  comptaV1.Subrecords
 	filecomptas comptaV1.Filecomptas
+	// TODO:
+	budgets       comptaV1.ComptaBugdets
+	budgetConfigs comptaV1.Budgetconfigs
 }
 
 func loadV1(db *sql.DB) (out baseV1, err error) {

@@ -25,6 +25,149 @@ type DB interface {
 	Prepare(query string) (*sql.Stmt, error)
 }
 
+func scanOneComptaBugdet(row scanner) (ComptaBugdet, error) {
+	var item ComptaBugdet
+	err := row.Scan(
+		&item.IdCompta,
+	)
+	return item, err
+}
+
+func ScanComptaBugdet(row *sql.Row) (ComptaBugdet, error) { return scanOneComptaBugdet(row) }
+
+// SelectAll returns all the items in the compta_bugdets table.
+func SelectAllComptaBugdets(db DB) (ComptaBugdets, error) {
+	rows, err := db.Query("SELECT idcompta FROM compta_bugdets")
+	if err != nil {
+		return nil, err
+	}
+	return ScanComptaBugdets(rows)
+}
+
+type ComptaBugdets []ComptaBugdet
+
+func ScanComptaBugdets(rs *sql.Rows) (ComptaBugdets, error) {
+	var (
+		item ComptaBugdet
+		err  error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(ComptaBugdets, 0, 16)
+	for rs.Next() {
+		item, err = scanOneComptaBugdet(rs)
+		if err != nil {
+			return nil, err
+		}
+		structs = append(structs, item)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+func (item ComptaBugdet) Insert(db DB) error {
+	_, err := db.Exec(`INSERT INTO compta_bugdets (
+			idcompta
+			) VALUES (
+			$1
+			);
+			`, item.IdCompta)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Insert the links ComptaBugdet in the database.
+// It is a no-op if 'items' is empty.
+func InsertManyComptaBugdets(tx *sql.Tx, items ...ComptaBugdet) error {
+	if len(items) == 0 {
+		return nil
+	}
+
+	stmt, err := tx.Prepare(pq.CopyIn("compta_bugdets",
+		"idcompta",
+	))
+	if err != nil {
+		return err
+	}
+
+	for _, item := range items {
+		_, err = stmt.Exec(item.IdCompta)
+		if err != nil {
+			return err
+		}
+	}
+
+	if _, err = stmt.Exec(); err != nil {
+		return err
+	}
+
+	if err = stmt.Close(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Delete the link ComptaBugdet from the database.
+// Only the foreign keys IdCompta fields are used in 'item'.
+func (item ComptaBugdet) Delete(tx DB) error {
+	_, err := tx.Exec(`DELETE FROM compta_bugdets WHERE IdCompta = $1;`, item.IdCompta)
+	return err
+}
+
+// ByIdCompta returns a map with 'IdCompta' as keys.
+func (items ComptaBugdets) ByIdCompta() map[IdComptaCamp]ComptaBugdet {
+	out := make(map[IdComptaCamp]ComptaBugdet, len(items))
+	for _, target := range items {
+		out[target.IdCompta] = target
+	}
+	return out
+}
+
+// IdComptas returns the list of ids of IdCompta
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items ComptaBugdets) IdComptas() []IdComptaCamp {
+	out := make([]IdComptaCamp, len(items))
+	for index, target := range items {
+		out[index] = target.IdCompta
+	}
+	return out
+}
+
+// SelectComptaBugdetByIdCompta return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectComptaBugdetByIdCompta(tx DB, idCompta IdComptaCamp) (item ComptaBugdet, found bool, err error) {
+	row := tx.QueryRow("SELECT idcompta FROM compta_bugdets WHERE idcompta = $1", idCompta)
+	item, err = ScanComptaBugdet(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
+}
+
+func SelectComptaBugdetsByIdComptas(tx DB, idComptas_ ...IdComptaCamp) (ComptaBugdets, error) {
+	rows, err := tx.Query("SELECT idcompta FROM compta_bugdets WHERE idcompta = ANY($1)", IdComptaCampArrayToPQ(idComptas_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanComptaBugdets(rows)
+}
+
+func DeleteComptaBugdetsByIdComptas(tx DB, idComptas_ ...IdComptaCamp) (ComptaBugdets, error) {
+	rows, err := tx.Query("DELETE FROM compta_bugdets WHERE idcompta = ANY($1) RETURNING idcompta", IdComptaCampArrayToPQ(idComptas_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanComptaBugdets(rows)
+}
+
 func scanOneComptaCamp(row scanner) (ComptaCamp, error) {
 	var item ComptaCamp
 	err := row.Scan(

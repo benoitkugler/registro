@@ -550,6 +550,12 @@ ALTER TABLE compta_record_buss
 ALTER TABLE compta_record_buss
     ADD FOREIGN KEY (IdSubrecord) REFERENCES compta_subrecords ON DELETE CASCADE;
 
+ALTER TABLE compta_bugdets
+    ADD UNIQUE (IdCompta);
+
+ALTER TABLE compta_bugdets
+    ADD FOREIGN KEY (IdCompta) REFERENCES compta_camps ON DELETE CASCADE;
+
 ALTER TABLE compta_configs
     ADD UNIQUE (Year);
 

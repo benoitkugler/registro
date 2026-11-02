@@ -455,7 +455,7 @@ func (gs Groupes) TrouveGroupe(dateNaissance sh.Date) (Groupe, bool) {
 	// exemple : 2000 ; 2002 ; 2005
 	// now return the first groupe with dateNaissance <= Fin
 	for _, groupe := range sorted {
-		if !(groupe.Fin.Time().Before(dateNaissance.Time())) {
+		if !groupe.Fin.Time().Before(dateNaissance.Time()) {
 			return groupe, true
 		}
 	}
@@ -521,6 +521,18 @@ func (equipiers Equipiers) Direction() []Equipier {
 	return append(direction, adjoints...)
 }
 
+func (equipiers Equipiers) AuPairs() []Equipier {
+	var out []Equipier
+	for _, eq := range equipiers {
+		if eq.Roles.IsAuPair() {
+			out = append(out, eq)
+		}
+	}
+	slices.SortFunc(out, func(a, b Equipier) int { return int(a.Id - b.Id) })
+
+	return out
+}
+
 // Resolve renvoie :
 //   - le montant dans le cas d'une aide absolue
 //   - le montant fois le nombre de jours (en prenant en compte une éventuelle limite) sinon
@@ -531,7 +543,7 @@ func (ai Aide) Resolve(nbJours int) Montant {
 		if limite > 0 && limite < nbJours { // apply the limit
 			nbJours = limite
 		}
-		val.Cent = val.Cent * nbJours
+		val = val.Mult(nbJours)
 	}
 	return val
 }

@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"registro/mails"
+	cps "registro/sql/camps"
+	"registro/sql/compta"
 	ca "registro/sql/compta"
 	"registro/sql/dossiers"
 	"registro/utils"
@@ -20,6 +22,11 @@ import (
 )
 
 var errAccess = errors.New("access forbidden")
+
+type GetRecordsOut struct {
+	Equipiers map[cps.IdEquipier]string
+	Records   []RecordExt
+}
 
 func (ct *Controller) GetRecords(c echo.Context) error {
 	user := JWTUser(c)
@@ -108,10 +115,14 @@ func getRecords(db ca.DB, id ca.IdComptaCamp) (ca.ComptaRecords, ca.ComptaSubrec
 	return recs, subrecords, nil
 }
 
-func (ct *Controller) getRecords(id ca.IdComptaCamp) ([]RecordExt, error) {
+func (ct *Controller) getRecords(id ca.IdComptaCamp) (GetRecordsOut, error) {
+	camp, err := compta.SelectComptaCamp(ct.db, id)
+	if err != nil {
+		return GetRecordsOut{}, utils.SQLError(err)
+	}
 	recs, tmp, err := getRecords(ct.db, id)
 	if err != nil {
-		return nil, err
+		return GetRecordsOut{}, err
 	}
 	subrecords := tmp.ByIdRecord()
 
@@ -122,7 +133,16 @@ func (ct *Controller) getRecords(id ca.IdComptaCamp) ([]RecordExt, error) {
 	// newer first
 	sort.Slice(out, func(i, j int) bool { return out[i].Record.Id > out[j].Record.Id })
 
-	return out, nil
+	equipiers, personnes, _, err := cps.LoadEquipiersByCamps(ct.db, camp.IdCamp)
+	if err != nil {
+		return GetRecordsOut{}, err
+	}
+	m := make(map[cps.IdEquipier]string)
+	for _, eq := range equipiers {
+		m[eq.Id] = personnes[eq.IdPersonne].PrenomNOM()
+	}
+
+	return GetRecordsOut{m, out}, nil
 }
 
 type CreateRecordIn struct {
@@ -130,6 +150,7 @@ type CreateRecordIn struct {
 	Account  ca.AccountKind
 }
 
+// See also [Controller.UploadAndCreate]
 func (ct *Controller) CreateRecord(c echo.Context) error {
 	user := JWTUser(c)
 
@@ -280,6 +301,7 @@ func (ct *Controller) updateRecord(in RecordExt, user ca.IdComptaCamp) (out Reco
 		currentGroup.IsValidated = in.Record.IsValidated
 		currentGroup.Account = in.Record.Account
 		currentGroup.IsReceipe = in.Record.IsReceipe
+		currentGroup.SpentBy = in.Record.SpentBy
 
 		currentGroup, err = currentGroup.Update(tx)
 		if err != nil {

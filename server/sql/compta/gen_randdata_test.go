@@ -38,6 +38,13 @@ func randCarKind() CarKind {
 	return choix[i]
 }
 
+func randComptaBugdet() ComptaBugdet {
+	var s ComptaBugdet
+	s.IdCompta = randIdComptaCamp()
+
+	return s
+}
+
 func randComptaCamp() ComptaCamp {
 	var s ComptaCamp
 	s.Id = randIdComptaCamp()

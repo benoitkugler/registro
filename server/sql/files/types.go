@@ -124,7 +124,7 @@ type optionalCategorie struct {
 	Optionnelle bool
 }
 
-var defaultDemandesACVE = [cp.NbRoles][]Categorie{
+var defaultDemandesACVE = [cp.RolesCount][]Categorie{
 	cp.Direction:     {CarteId, Permis, SB, Bafa, Bafd, CarteVitale, Vaccins},
 	cp.Adjoint:       {CarteId, Permis, SB, CarteVitale, Vaccins},
 	cp.Animation:     {CarteId, Permis, SB, Bafa, CarteVitale, Vaccins},

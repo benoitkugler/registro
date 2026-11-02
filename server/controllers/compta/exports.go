@@ -13,7 +13,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// TODO: add tests
+// TODO: check the code, add tests
 // Export excels
 
 // DownloadEcritures renvoie un fichier Excel contenant les écritures comptables

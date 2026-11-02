@@ -4,11 +4,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
-	"registro/crypto"
-	"registro/logic"
 	"registro/mails"
 	"registro/sql/camps"
 	cps "registro/sql/camps"
@@ -23,141 +20,97 @@ import (
 
 type Cent = int
 
-type CampHeader struct {
-	logic.CampItem
-
-	Serial string
-	AtMDR  bool
-
-	Compta ComptaExt // optional, with Id = 0 when empty
-
-	DirecteurURL string
-}
-
-func newCampHeader(camp cps.Camp, compta ca.ComptaCamp, entries ca.ComptaRecords, host string, enc crypto.Encrypter) CampHeader {
-	return CampHeader{
-		CampItem: logic.NewCampItem(camp),
-		Serial:   serial(camp),
-		AtMDR:    atMDR(string(camp.Lieu)),
-		Compta: ComptaExt{
-			compta.Id,
-			computeState(compta, entries),
-			compta.Account,
-		},
-		DirecteurURL: DirecteurURL(enc, host, camp.Id),
-	}
-}
-
-func serial(camp cps.Camp) string {
-	return fmt.Sprintf("CPS %d-%d", camp.DateDebut.Time().Year()-2000, camp.Id)
-}
-
-func atMDR(lieu string) bool {
-	lieu = strings.ToLower(strings.TrimSpace(lieu))
-	switch lieu {
-	case "chamaloc", "la maison du rocher", "maison du rocher":
-		return true
-	default:
-		return false
-	}
-}
-
-type ComptaExt struct {
-	Id      ca.IdComptaCamp
-	State   ca.State
-	Account ca.AccountACVE
-}
-
 // CampDetails exposes several settings and statistics
 // about one sejour.
 type CampDetails struct {
 	Compta ComptaExt
 
-	Label      string
-	Serial     string
-	Directeur  string
-	Lieu       string
-	AtMDR      bool // deduce from `Lieu`
-	DateDebut  sh.Date
-	DateFin    sh.Date
-	Duree      int // number of days
-	Inscrits   int
-	Animateurs int
+	Label     string
+	Serial    string
+	Directeur string
+	Lieu      string
+	AtMDR     bool // deduce from `Lieu`
+	DateDebut sh.Date
+	Duree     int        // number of days
+	Prix      ds.Montant // prix de base, sans options ou remises
+
+	Inscrits   int // validés
+	Animateurs int // TODO: rename au pair
 	Equipiers  int // including animateurs/au pair
 
-	Prix ds.Montant // in €
-	// prixJournee rd.Euros
-
 	// finances
+
+	// Simple estimation computed by [Prix] * [Inscrits]
+	BudgetSansRemises ds.Montant // TODO: rename to Budget
+	// Computed from the pensions : amount asked + aides
+	Remises ds.Montant
+	// in %, computed from [Remises] and [BudgetSansRemises]
+	PercentageRemises int
+
+	BudgetPrevisionnel BudgetPrevisionnelSummary
+
+	// TODO:
+	// Fraismdr is the total of the expenses
+	// related to MDR (may be 0)
+	// fraisMDRVehicule float32
+	// fraisMDRMateriel float32 // only > 0 for camp at MDR
 
 	// total expenses, grouped by kind
 	// it also includes the additional expenses
 	// from FraisMDR
 	ventilations ventilations
 
-	// Simple estimation computed by [Prix] * [Inscrits]
-	BudgetSansRemises float32
-	// Computed from the pensions : amount asked + aides
-	Budget float32
-	// in %, computed from [Budget] and [BudgetSansRemises]
-	PercentageRemises float32
-
-	BudgetPrevisionnelReel   float32
-	BudgetPrevisionnelSimule float32
-
-	// Fraismdr is the total of the expenses
-	// related to MDR (may be 0)
-	fraisMDRVehicule float32
-	fraisMDRMateriel float32 // only > 0 for camp at MDR
-
 	// deduced from [ventilations], with remboursements deduced
 	// also includes FraisMDR
-	DepenseTotal, DepenseOwnAccount float32
-	Marge                           float32 // in %
-	DepenseJourneeInscrit           float32 // for one day and one inscrit
-	Dons                            float32 // as registred by the directeur
+	// TODO
+	// DepenseTotal, DepenseOwnAccount float32
+	// Marge                           float32 // in %
+	// DepenseJourneeInscrit           float32 // for one day and one inscrit
+	// prixJournee rd.Euros
 
 	DepenseGraph DepenseGraph
 }
 
 func (ld *comptaLoader) compile() CampDetails {
 	var out CampDetails
-	// 	out.Label = string(ld.camp.Label())
-	// 	out.Serial = serial(ld.camp)
-	// 	out.Directeur = fmt.Sprintf("%s %s", ld.directeur.FPrenom(), ld.directeur.FNom())
-	// 	out.Lieu = string(ld.camp.Lieu)
-	// 	out.AtMDR = ld.atMDR()
-	// 	out.DateDebut = Date(ld.camp.DateDebut)
-	// 	out.DateFin = Date(ld.camp.DateFin)
-	// 	out.Duree = ld.camp.Duree()
-	// 	out.Inscrits = ld.inscrits()
-	// 	out.Animateurs = len(ld.equipiers.FindAuPairs())
-	// 	out.Equipiers = len(ld.equipiers)
-	// 	out.Prix = ld.camp.Prix
 
-	// 	out.Compta = ComptaExt{
-	// 		Id:      ld.compta.Id,
-	// 		State:   computeState(ld.compta, ld.records),
-	// 		Account: ld.compta.Account,
-	// 	}
+	out.Label = ld.camp.Label()
+	out.Serial = serial(ld.camp)
+	out.Directeur = fmt.Sprintf("%s %s", ld.directeur.FPrenom(), ld.directeur.FNom())
+	out.Lieu = ld.camp.Lieu
+	out.AtMDR = ld.atMDR()
+	out.DateDebut = ld.camp.DateDebut
+	out.Duree = ld.camp.Duree
+	out.Prix = ld.camp.Prix
+	out.Inscrits = ld.inscrits()
+	out.Animateurs = len(ld.equipiers.AuPairs())
+	out.Equipiers = len(ld.equipiers)
 
-	// 	// finances
-	// 	fraisMDR := ld.resolveFraismdr()
-	// 	out.fraisMDRVehicule = fraisMDR.TotalBus
-	// 	if fraisMDR.HasMateriel {
-	// 		out.fraisMDRMateriel = fraisMDR.Materiel.Total
-	// 	}
+	out.Compta = ComptaExt{
+		Id:      ld.compta.Id,
+		State:   computeState(ld.compta, ld.records),
+		Account: ld.compta.Account,
+	}
 
-	// 	out.ventilations = ld.depenses(fraisMDR)
-	// 	out.Budget = ld.computeRecette().euros()
-	// 	out.Dons = ld.totalDons()
+	// finances
 
-	// 	out.fillFinances()
+	// TODO
+	// fraisMDR := ld.resolveFraismdr()
+	// out.fraisMDRVehicule = fraisMDR.TotalBus
+	// if fraisMDR.HasMateriel {
+	// 	out.fraisMDRMateriel = fraisMDR.Materiel.Total
+	// }
 
-	// 	if ld.budget.IdCompta != 0 {
-	// 		out.BudgetPrevisionnelReel = ld.resolveBudget(ld.budget, ld.config, false).Depenses
-	// 		out.BudgetPrevisionnelSimule = ld.resolveBudget(ld.budget, ld.config, true).Depenses
-	// 	}
+	out.ventilations = ld.depenses(ResolvedFraisMDR{})
+
+	out.Remises = ld.computeRemises()
+
+	out.fillFinances()
+
+	if ld.budget.IdCompta != 0 {
+		out.BudgetPrevisionnelReel = ld.resolveBudget(ld.budget, ld.config, false).Depenses
+		out.BudgetPrevisionnelSimule = ld.resolveBudget(ld.budget, ld.config, true).Depenses
+	}
 
 	return out
 }
@@ -182,13 +135,13 @@ func (c *CampDetails) fraisMDR() float32 { return c.fraisMDRMateriel + c.fraisMD
 // hors MDR: 80% du budget, MDR: 50%
 func (c *CampDetails) hintDepensesMax() float32 {
 	if c.AtMDR {
-		return c.Budget * 0.5
+		return c.Remises * 0.5
 	}
-	return c.Budget * 0.8
+	return c.Remises * 0.8
 }
 
 func (c *CampDetails) dates() string {
-	debut, fin := time.Time(c.DateDebut), time.Time(c.DateFin)
+	debut, fin := time.Time(c.DateDebut), sh.Plage{c.DateDebut, c.Duree}.To().Time()
 	dM, fM := debut.Month(), fin.Month()
 	if dM == fM { // condense
 		return fmt.Sprintf("du %d au %d %s", debut.Day(), fin.Day(), months[dM])
@@ -277,7 +230,8 @@ func (vs ventilations) add(other ventilations) {
 // 	return out
 // }
 
-type DepenseGraph = []VentilationMontant
+// DepenseGraph is the aggregated and converted sum of all expenses
+type DepenseGraph [ca.VentilationCount]ds.Montant
 
 type VentilationMontant struct {
 	Ventilation ca.Ventilation
@@ -287,10 +241,11 @@ type VentilationMontant struct {
 // TODO: cleanup names
 type comptaLoader struct {
 	compta ca.ComptaCamp
-	// budget ca.ComptaBugdet // may be empty
+	budget ca.ComptaBugdet // may be empty
 	config ca.ComptaConfig
 
 	camp         camps.Camp
+	taux         ds.Taux
 	factures     ds.Dossiers
 	personnes    pe.Personnes
 	participants camps.Participants
@@ -425,7 +380,7 @@ func (ld *comptaLoader) inscrits() int {
 }
 
 // a.k.a. (real) budget
-func (ld comptaLoader) computeRecette() Cent {
+func (ld comptaLoader) computeRemises() Cent {
 	// TODO
 	// aidesByP := map[int64][]composites.AideStructureaide{}
 	// for _, aide := range ld.aides {
@@ -475,24 +430,25 @@ func (ld *comptaLoader) depenses(fraisMDR ResolvedFraisMDR) ventilations {
 	return vs
 }
 
-// // fill computed values
-// func (out *CampDetails) fillFinances() {
-// 	out.DepenseTotal, out.DepenseOwnAccount = out.ventilations.total()
+// fill computed values
+func (out *CampDetails) fillFinances() {
+	// TODO
+	// out.DepenseTotal, out.DepenseOwnAccount = out.ventilations.total()
+	// out.prixJournee = out.Prix / rd.Euros(out.Duree)
+	// if di := out.Inscrits * out.Duree; di != 0 {
+	// 	out.DepenseJourneeInscrit = out.DepenseTotal / float32(di)
+	// }
+	// if out.Budget != 0 {
+	// 	out.Marge = 100 * (out.Budget - out.DepenseTotal) / out.Budget
+	// }
 
-// 	out.prixJournee = out.Prix / rd.Euros(out.Duree)
-// 	out.BudgetSansRemises = float32(out.Prix) * float32(out.Inscrits)
-// 	if out.BudgetSansRemises != 0 {
-// 		out.PercentageRemises = 100 * (out.BudgetSansRemises - out.Budget) / out.BudgetSansRemises
-// 	}
-// 	if di := out.Inscrits * out.Duree; di != 0 {
-// 		out.DepenseJourneeInscrit = out.DepenseTotal / float32(di)
-// 	}
-// 	if out.Budget != 0 {
-// 		out.Marge = 100 * (out.Budget - out.DepenseTotal) / out.Budget
-// 	}
-// 	// display both accounts
-// 	out.DepenseGraph = out.ventilations.sortedNet()
-// }
+	out.BudgetSansRemises = out.Prix.Mult(out.Inscrits)
+	if out.BudgetSansRemises.Cent != 0 {
+		out.PercentageRemises = out.Remises.Cent * 100 / out.BudgetSansRemises.Cent
+	}
+	// display both accounts
+	out.DepenseGraph = out.ventilations.sortedNet()
+}
 
 var ventilationLabels = [ca.Autre + 1]struct{ codeACVE, label string }{
 	ca.NoVentilation: {"", ""},

@@ -27,7 +27,8 @@ func TestRecords(t *testing.T) {
 
 	l, err := ct.getRecords(co.Id)
 	tu.AssertNoErr(t, err)
-	tu.Assert(t, len(l) == 0)
+	tu.Assert(t, len(l.Equipiers) == 1) // un directeur
+	tu.Assert(t, len(l.Records) == 0)
 
 	rec1, err := ct.createRecord(CreateRecordIn{co.Id, ca.AccountAsso})
 	tu.AssertNoErr(t, err)
@@ -36,7 +37,7 @@ func TestRecords(t *testing.T) {
 
 	l, err = ct.getRecords(co.Id)
 	tu.AssertNoErr(t, err)
-	tu.Assert(t, len(l) == 2)
+	tu.Assert(t, len(l.Records) == 2)
 
 	newDate := time.Date(2002, 1, 12, 0, 0, 0, 0, time.UTC)
 	rec1.Subrecords[0].Montants = ca.Montants{{Kind: ca.Activites}, {Kind: ca.Activites}, {Kind: ca.Camping}}

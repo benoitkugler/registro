@@ -2,15 +2,64 @@ package compta
 
 import (
 	"cmp"
+	"fmt"
 	"log"
 	"slices"
+	"strings"
 
+	"registro/crypto"
+	"registro/logic"
 	cps "registro/sql/camps"
 	ca "registro/sql/compta"
 	"registro/utils"
 
 	"github.com/labstack/echo/v4"
 )
+
+type CampHeader struct {
+	logic.CampItem
+
+	Serial string
+	AtMDR  bool
+
+	Compta ComptaExt // optional, with Id = 0 when empty
+
+	DirecteurURL string
+}
+
+func newCampHeader(camp cps.Camp, compta ca.ComptaCamp, entries ca.ComptaRecords, host string, enc crypto.Encrypter) CampHeader {
+	return CampHeader{
+		CampItem: logic.NewCampItem(camp),
+		Serial:   serial(camp),
+		AtMDR:    atMDR(string(camp.Lieu)),
+		Compta: ComptaExt{
+			compta.Id,
+			computeState(compta, entries),
+			compta.Account,
+		},
+		DirecteurURL: DirecteurURL(enc, host, camp.Id),
+	}
+}
+
+func serial(camp cps.Camp) string {
+	return fmt.Sprintf("CPS %d-%d", camp.DateDebut.Time().Year()-2000, camp.Id)
+}
+
+func atMDR(lieu string) bool {
+	lieu = strings.ToLower(strings.TrimSpace(lieu))
+	switch lieu {
+	case "chamaloc", "la maison du rocher", "maison du rocher":
+		return true
+	default:
+		return false
+	}
+}
+
+type ComptaExt struct {
+	Id      ca.IdComptaCamp
+	State   ca.State
+	Account ca.AccountACVE
+}
 
 // GetCamps returns the list of existing camps, even
 // the ones for which no compta entry exist yet.

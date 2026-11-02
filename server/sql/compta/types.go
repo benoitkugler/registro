@@ -81,6 +81,8 @@ const (
 	Autre                 // Autre
 )
 
+const VentilationCount = Autre + 1 // gomacro:no-enum
+
 type ModePaiementRecord uint8
 
 const (

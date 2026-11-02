@@ -99,36 +99,37 @@ type ComptaRecordBus struct {
 	IdSubrecord IdComptaSubrecord `gomacro-sql-on-delete:"CASCADE"`
 }
 
-// TODO
-// // ComptaBugdet is an 'extension' table for a camp,
-// // storing the estimated budget.
-// //
-// // gomacro:SQL ADD UNIQUE(IdCompta)
-// type ComptaBugdet struct {
-// 	IdCompta IdComptaCamp `gomacro-sql-on-delete:"CASCADE"`
+// ComptaBugdet is an 'extension' table for a camp,
+// storing the estimated budget.
+//
+// gomacro:SQL ADD UNIQUE(IdCompta)
+type ComptaBugdet struct {
+	IdCompta IdComptaCamp `gomacro-sql-on-delete:"CASCADE"`
 
-// 	BonusTeamPeople int // additional people present during the vacation
-// 	MealsInscrits   MealsCount
-// 	MealsEquipiers  MealsCount
+	// TODO
 
-// 	ExternalHost RentCosts
+	// 	BonusTeamPeople int // additional people present during the vacation
+	// 	MealsInscrits   MealsCount
+	// 	MealsEquipiers  MealsCount
 
-// 	Activities    Activities
-// 	MaterielPeda  Cent
-// 	ProduitPharma Cent
+	// 	ExternalHost RentCosts
 
-// 	TeamTrips       Cent
-// 	ExternalCarRent Cent
+	// 	Activities    Activities
+	// 	MaterielPeda  Cent
+	// 	ProduitPharma Cent
 
-// 	// the following fields may be set to forecast a budget
-// 	// before the real inscriptions are open
-// 	SimulatedInscrits  int
-// 	SimulatedEquipiers int
-// 	SimulatedReduc1    int // number of participants with one parent in the team
-// 	SimulatedReduc2    int // number of participants with two parents in the team
+	// 	TeamTrips       Cent
+	// 	ExternalCarRent Cent
 
-// 	CarsMDRKms CarsKms
-// }
+	// 	// the following fields may be set to forecast a budget
+	// 	// before the real inscriptions are open
+	// 	SimulatedInscrits  int
+	// 	SimulatedEquipiers int
+	// 	SimulatedReduc1    int // number of participants with one parent in the team
+	// 	SimulatedReduc2    int // number of participants with two parents in the team
+
+	// CarsMDRKms CarsKms
+}
 
 // ComptaConfig holds parameters used to compute the budget,
 // which may change from one year to another.

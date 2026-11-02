@@ -51,6 +51,8 @@ type Montant struct {
 func NewEuros(f float64) Montant        { return Montant{int(math.Round(f * 100)), Euros} }
 func NewFrancsuisses(f float64) Montant { return Montant{int(math.Round(f * 100)), FrancsSuisse} }
 
+func (m Montant) Mult(by int) Montant { return Montant{Cent: m.Cent * by, Currency: m.Currency} }
+
 type Currency uint8
 
 const (

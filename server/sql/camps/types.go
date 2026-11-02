@@ -51,7 +51,7 @@ const (
 )
 
 var (
-	_ json.Marshaler   = (StatutParticipant)(0)
+	_ json.Marshaler   = StatutParticipant(0)
 	_ json.Unmarshaler = (*StatutParticipant)(nil)
 )
 
@@ -269,7 +269,7 @@ const (
 	AutreRole                 // Autre
 )
 
-const NbRoles = AutreRole + 1 // gomacro:no-enum
+const RolesCount = AutreRole + 1 // gomacro:no-enum
 
 func (r Role) String() string {
 	switch r {
@@ -347,7 +347,7 @@ func (rs Roles) Is(r Role) bool {
 }
 
 var (
-	_ json.Marshaler   = (Role)(0)
+	_ json.Marshaler   = Role(0)
 	_ json.Unmarshaler = (*Role)(nil)
 )
 

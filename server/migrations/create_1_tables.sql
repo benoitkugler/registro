@@ -439,6 +439,10 @@ CREATE TABLE organismes (
     Pays text NOT NULL
 );
 
+CREATE TABLE compta_bugdets (
+    IdCompta integer NOT NULL
+);
+
 CREATE TABLE compta_camps (
     Id serial PRIMARY KEY,
     IdCamp integer NOT NULL,
