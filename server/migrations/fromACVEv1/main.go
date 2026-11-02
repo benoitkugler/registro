@@ -19,6 +19,8 @@ import (
 	"registro/config"
 	comptaV1 "registro/migrations/fromACVEv1/compta"
 	rd "registro/migrations/fromACVEv1/rawdata"
+	cps "registro/sql/camps"
+	"registro/sql/compta"
 	"registro/sql/dons"
 	ds "registro/sql/dossiers"
 	pr "registro/sql/personnes"
@@ -54,7 +56,14 @@ func main() {
 	check(err)
 	fmt.Println("Done. Trimming...")
 	trimmedV1 := originV1.trim()
-	fmt.Println("Done.")
+	fmt.Println("Done :")
+	fmt.Println("\tpersonnes:", len(originV1.personnes), "->", len(trimmedV1.personnes))
+	fmt.Println("\tdocuments:", len(originV1.documents), "->", len(trimmedV1.documents))
+	fmt.Println("\tcamps:", len(originV1.camps), "->", len(trimmedV1.camps))
+	fmt.Println("\tcomptas:", len(originV1.comptas), "->", len(trimmedV1.comptas))
+	fmt.Println("\trecords:", len(originV1.records), "->", len(trimmedV1.records))
+	fmt.Println("\tsubrecords:", len(originV1.subrecords), "->", len(trimmedV1.subrecords))
+	fmt.Println("\tfilecomptas:", len(originV1.filecomptas), "->", len(trimmedV1.filecomptas))
 
 	if *commit {
 		fmt.Println("Connecting to v2...")
@@ -67,14 +76,6 @@ func main() {
 		err = insert(dbV2, originV1, trimmedV1)
 		check(err)
 		fmt.Println("Done.")
-	} else {
-		fmt.Println(len(originV1.personnes), "->", len(trimmedV1.personnes), "personnes")
-		fmt.Println(len(originV1.documents), "->", len(trimmedV1.documents), "documents")
-		fmt.Println(len(originV1.camps), "->", len(trimmedV1.camps), "camps")
-		fmt.Println(len(originV1.comptas), "->", len(trimmedV1.comptas), "comptas")
-		fmt.Println(len(originV1.records), "->", len(trimmedV1.records), "records")
-		fmt.Println(len(originV1.subrecords), "->", len(trimmedV1.subrecords), "subrecords")
-		fmt.Println(len(originV1.filecomptas), "->", len(trimmedV1.filecomptas), "filecomptas")
 	}
 }
 
@@ -84,6 +85,8 @@ func md(v rd.ModePaiment) ds.ModePaiement {
 	switch v {
 	default:
 		panic("unsupported ModePaiement " + v)
+	case "": // unfortunate
+		return ds.Especes
 	case rd.MPVirement:
 		return ds.Virement
 	case rd.MPCheque:
@@ -108,6 +111,11 @@ func sexe(v rd.Sexe) pr.Sexe {
 	default:
 		return pr.NoSexe
 	}
+}
+
+func tels(tels rd.Tels) (out pr.Tels) {
+	copy(out[:], tels)
+	return
 }
 
 func diplome(v rd.Diplome) pr.Diplome {
@@ -166,6 +174,33 @@ func qualification(v rd.Approfondissement) pr.Qualifications {
 	case rd.AVoile:
 		return pr.Qualifications{Voile: true}
 	}
+}
+
+func navette(bus rd.BusCamp) cps.OptionNavette {
+	return cps.OptionNavette{Actif: bus.Actif, Commentaire: string(bus.Commentaire)}
+}
+
+func statutCamp(ouvert rd.Bool) cps.StatutCamp {
+	if ouvert {
+		return cps.Ouvert
+	}
+	return cps.Ferme
+}
+
+func reviews(rv comptaV1.Reviews) compta.Reviews {
+	out := make(compta.Reviews, len(rv))
+	for i, r := range rv {
+		out[i] = compta.Review(r)
+	}
+	return out
+}
+
+func montants(rv comptaV1.Montants) compta.Montants {
+	out := make(compta.Montants, len(rv))
+	for i, r := range rv {
+		out[i] = compta.MontantPart{Cent: compta.Cent(r.Montant), Kind: compta.Ventilation(r.Kind)}
+	}
+	return out
 }
 
 type baseV1 struct {
@@ -338,7 +373,7 @@ func trimCamps(v1 rd.Camps) rd.Camps {
 	out := make(rd.Camps)
 
 	for id, c := range v1 {
-		if c.DateDebut.Time().Year() < campsStartYear {
+		if c.InscriptionSimple || c.DateDebut.Time().Year() < campsStartYear {
 			continue
 		}
 		out[id] = c
@@ -388,8 +423,12 @@ func trimSubrecords(in1 comptaV1.Subrecords, in2 comptaV1.Filecomptas, out baseV
 }
 
 type (
-	organismesM map[int64]dons.IdOrganisme
-	personnesM  map[int64]pr.IdPersonne
+	organismesM  map[int64]dons.IdOrganisme
+	personnesM   map[int64]pr.IdPersonne
+	campsM       map[int64]cps.IdCamp
+	comptasM     map[comptaV1.IdCompta]compta.IdComptaCamp
+	recordsM     map[comptaV1.IdRecord]compta.IdComptaRecord
+	comptafilesM map[comptaV1.IdFilecompta]compta.IdComptaFile
 )
 
 // TODO: fiche sanitaire + fiche equipier
@@ -399,11 +438,15 @@ func insert(dbV2 *sql.DB, origin, trimmed baseV1) error {
 
 	pM := make(personnesM)
 	oM := make(organismesM)
+	cM := make(campsM)
+	coM := make(comptasM)
+	recordsM := make(recordsM)
+	comptafilesM := make(comptafilesM)
 	return utils.InTx(dbV2, func(tx *sql.Tx) error {
 		var err error
 
 		// insert personnes
-		fmt.Println("\t", len(trimmed.personnes), "personnes")
+		fmt.Println("\tpersonnes...")
 		for _, v1 := range trimmed.personnes {
 			// equipier := diplomeAppros[v1.Id]
 			v2 := pr.Personne{
@@ -415,7 +458,7 @@ func insert(dbV2 *sql.DB, origin, trimmed baseV1) error {
 					// VilleNaissance:       string(v1.VilleNaissance),
 					// DepartementNaissance: pr.Departement(v1.DepartementNaissance),
 					Nationnalite: pr.Nationnalite{},
-					Tels:         pr.Tels(v1.Tels),
+					Tels:         tels(v1.Tels),
 					Mail:         string(v1.Mail),
 					Adresse:      string(v1.Adresse),
 					CodePostal:   string(v1.CodePostal),
@@ -437,7 +480,7 @@ func insert(dbV2 *sql.DB, origin, trimmed baseV1) error {
 		}
 
 		// insert organismes
-		fmt.Println("\t", len(trimmed.organismes), "organismes")
+		fmt.Println("\torganismes...")
 		for _, v1 := range trimmed.organismes {
 			var coord rd.Coordonnees
 			if contact := v1.IdContactDon; contact.Valid {
@@ -466,7 +509,7 @@ func insert(dbV2 *sql.DB, origin, trimmed baseV1) error {
 
 		// insert dons
 		donateursByDon := origin.donateurs.ByIdDon()
-		fmt.Println("\t", len(trimmed.dons), "dons")
+		fmt.Println("\tdons...")
 		for _, v1 := range trimmed.dons {
 			details := string(v1.Details)
 			if v1.ModePaiement == rd.MPHelloasso {
@@ -485,6 +528,117 @@ func insert(dbV2 *sql.DB, origin, trimmed baseV1) error {
 				v2.IdPersonne = pM[idV1.Int64].Opt()
 			} else if idV1 := donateur.IdOrganisme; idV1.Valid {
 				v2.IdOrganisme = oM[idV1.Int64].Opt()
+			}
+			v2, err = v2.Insert(tx)
+			if err != nil {
+				return err
+			}
+		}
+
+		// insert camps
+		fmt.Println("\tcamps...")
+		for _, camp := range trimmed.camps {
+			v2 := cps.Camp{
+				IdTaux:                 1, // the default taux, already created
+				Nom:                    string(camp.Nom),
+				DateDebut:              shared.NewDateFrom(camp.DateDebut.Time()),
+				Duree:                  camp.Duree(),
+				Lieu:                   string(camp.Lieu),
+				Agrement:               string(camp.NumeroJS),
+				Description:            string(camp.Infos),
+				Navette:                navette(camp.Options.Bus),
+				Places:                 int(camp.NbPlaces),
+				AgeMin:                 int(camp.AgeMin),
+				AgeMax:                 int(camp.AgeMax),
+				NeedEquilibreGF:        bool(camp.NeedEquilibreGf),
+				Statut:                 statutCamp(camp.Ouvert),
+				Prix:                   cps.Montant{Cent: int(camp.Prix.Centimes()), Currency: ds.Euros},
+				OptionPrix:             cps.OptionPrixCamp{},       // TODO
+				OptionQuotientFamilial: cps.PrixQuotientFamilial{}, // TODO
+				Password:               string(camp.Password),
+				DocumentsReady:         !camp.Envois.Locked,
+				DocumentsToShow:        cps.DocumentsToShow{}, // TODO
+				Vetements:              cps.ListeVetements{},  // TODO
+				AlbumID:                "",                    // TODO: migration from Joomeo
+				IsAlbumVisible:         true,                  // TODO
+				PlacesReservees:        int(camp.NbPlacesReservees),
+			}
+			v2, err = v2.Insert(tx)
+			if err != nil {
+				return err
+			}
+			cM[camp.Id] = v2.Id
+		}
+
+		// insert comptas
+		fmt.Println("\tcomptas...")
+		for _, c := range trimmed.comptas {
+			v2 := compta.ComptaCamp{
+				IdCamp:                cM[c.IdCamp],
+				FileStatus:            compta.FileStatus(c.FileStatus),
+				State:                 compta.State(c.State),
+				LastSentMailAdmin:     c.LastReviewNotif,
+				LastSentMailDirecteur: c.LastReviewNotif,
+				Account:               compta.AccountACVE(c.Account),
+				// Fraismdr:              c.Fraismdr, // TODO:
+			}
+			v2, err = v2.Insert(tx)
+			if err != nil {
+				return err
+			}
+			coM[c.Id] = v2.Id
+		}
+
+		// insert record
+		fmt.Println("\trecords...")
+		for _, r := range trimmed.records {
+			account := compta.AccountCamp
+			if r.IsOtherAccount {
+				account = compta.AccountAsso
+			}
+			v2 := compta.ComptaRecord{
+				IdCamp:      coM[r.IdCompta],
+				IsReceipe:   r.IsReceipe,
+				SpentBy:     compta.OptIdEquipier{},
+				Reviews:     reviews(r.Reviews),
+				IsValidated: r.IsValidated,
+				Account:     account,
+			}
+			v2, err = v2.Insert(tx)
+			if err != nil {
+				return err
+			}
+			recordsM[r.Id] = v2.Id
+		}
+
+		// insert filecomptas, required for subrecords
+		fmt.Println("\tfilecomptas...")
+		// TODO: properly handle file content
+		// TODO: probably switch to drive mode
+		for _, f := range trimmed.filecomptas {
+			v2 := compta.ComptaFile{Name: f.Name, DriveID: f.DriveID, DriveIDMiniature: f.DriveIDMiniature}
+			v2, err = v2.Insert(tx)
+			if err != nil {
+				return err
+			}
+			comptafilesM[f.Id] = v2.Id
+		}
+		// insert subrecord
+		fmt.Println("\tsubrecords...")
+		for _, r := range trimmed.subrecords {
+			idFile := compta.OptIdComptaFile{}
+			if r.IdFilecompta.Valid {
+				idFile = compta.NewOptIdComptaFile(comptafilesM[r.IdFilecompta.Id])
+			}
+			v2 := compta.ComptaSubrecord{
+				IdRecord:    recordsM[r.IdRecord],
+				Date:        shared.NewDateFrom(r.Date.Time()),
+				Description: r.Title,
+				Mode:        compta.ModePaiementRecord(r.Mode),
+				Serial:      r.Serial,
+				Currency:    ds.Euros,
+				Montants:    montants(r.Montants),
+				IdFile:      idFile,
 			}
 			v2, err = v2.Insert(tx)
 			if err != nil {
