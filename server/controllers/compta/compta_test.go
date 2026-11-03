@@ -79,7 +79,7 @@ func TestDetails(t *testing.T) {
 	tu.Assert(t, details.Animateurs == 1)
 	tu.Assert(t, details.Duree == 7)
 	tu.Assert(t, details.Directeur == " ")
-	tu.Assert(t, details.Budget.Cent == 0)
+	tu.Assert(t, details.Recettes.Cent == 0)
 
 	_, _, err = ct.getEcritures(co.Id)
 	tu.AssertNoErr(t, err)

@@ -232,6 +232,7 @@ import {
   type ComptaExt,
   type ComptaRecord,
   type ComptaSubrecord,
+  type GetRecordsOut,
   type IdComptaRecord,
   type IdComptaSubrecord,
   type RecordAndSub,
@@ -242,6 +243,7 @@ import { Camps, copy, normalize } from "../../../../utils";
 
 const props = defineProps<{
   camp: CampHeader;
+  records: GetRecordsOut;
   readonly: boolean;
 }>();
 
@@ -252,13 +254,13 @@ const emit = defineEmits<{
   (e: "showHelp"): void;
 }>();
 
-onMounted(fetch);
+onMounted(emitNotifs);
 
 const { mobile } = useDisplay();
 
 const showOtherAccount = ref<AccountKind | null>(null);
 
-const records = ref<RecordExt[]>([]);
+const records = ref(copy(props.records.Records || []));
 const toDelete = ref<ComptaSubrecord | null>(null);
 const toEdit = ref<RecordExtModeOpt | null>(null);
 
@@ -272,16 +274,6 @@ const notifs = computed(() => {
 });
 
 const showMandatoryRecordsAlert = computed(() => props.camp.AtMDR);
-
-async function fetch() {
-  const res = await controller.GetRecords({
-    "id-compta": controller.idCompta,
-  });
-  if (res === undefined) return;
-  records.value = res || [];
-
-  emitNotifs();
-}
 
 function emitNotifs() {
   emit("updateNotif", notifs.value);

@@ -24,7 +24,7 @@ type Cent = int
 type CampDetails struct {
 	Compta ComptaExt
 
-	Label     string
+	Nom       string
 	Serial    string
 	Directeur string
 	Lieu      string
@@ -40,7 +40,7 @@ type CampDetails struct {
 	// finances
 
 	// Simple estimation computed by [Prix] * [Inscrits]
-	Budget ds.Montant // TODO: rename to Budget
+	Recettes ds.Montant
 	// Remises is the total remises applied to the pensions
 	// Note : the currency might be different from [BudgetSansRemises] due to convertions
 	Remises ds.Montant
@@ -60,12 +60,14 @@ type CampDetails struct {
 	// from FraisMDR
 	ventilations ventilations
 
+	// TODO
 	// deduced from [ventilations], with remboursements deduced
 	// also includes FraisMDR
-	// TODO
-	// DepenseTotal, DepenseOwnAccount float32
-	// Marge                           float32 // in %
-	// DepenseJourneeInscrit           float32 // for one day and one inscrit
+
+	// converted
+	DepensesTotal         ds.Montant
+	Marge                 int        // in %
+	DepenseJourneeInscrit ds.Montant // for one day and one inscrit
 	// prixJournee rd.Euros
 
 	DepenseGraph DepenseGraph
@@ -74,7 +76,7 @@ type CampDetails struct {
 func (ld *comptaLoader) compile() CampDetails {
 	var out CampDetails
 
-	out.Label = ld.camp.Label()
+	out.Nom = ld.camp.Nom
 	out.Serial = serial(ld.camp)
 	out.Directeur = fmt.Sprintf("%s %s", ld.directeur.FPrenom(), ld.directeur.FNom())
 	out.Lieu = ld.camp.Lieu
@@ -159,11 +161,12 @@ func (vs ventilations) sum() (out depenseTotale) {
 	return out
 }
 
-// func (vs ventilations) total() (bothAccounts, ownAccount float32) {
-// 	s := vs.sum()
-// 	own, other := s.net()
-// 	return (own + other).euros(), own.euros()
-// }
+func (vs ventilations) total(taux ds.Taux) ds.Montant {
+	s := vs.sum()
+	camp, asso := s.net()
+	total := camp.Add(asso)
+	return total.Agg(taux)
+}
 
 func (vs *ventilations) add(other ventilations) {
 	for v, m := range other {
@@ -357,20 +360,21 @@ func (ld *comptaLoader) depenses(fraisMDR ResolvedFraisMDR) ventilations {
 // fill computed values
 func (out *CampDetails) fillFinances(taux ds.Taux) {
 	// TODO
-	// out.DepenseTotal, out.DepenseOwnAccount = out.ventilations.total()
 	// out.prixJournee = out.Prix / rd.Euros(out.Duree)
-	// if di := out.Inscrits * out.Duree; di != 0 {
-	// 	out.DepenseJourneeInscrit = out.DepenseTotal / float32(di)
-	// }
-	// if out.Budget != 0 {
-	// 	out.Marge = 100 * (out.Budget - out.DepenseTotal) / out.Budget
-	// }
 
-	out.Budget = out.Prix.Mult(out.Inscrits)
-	if out.Budget.Cent != 0 {
-		budget := taux.Convertible(out.Budget).Convert(out.Remises.Currency)
-		out.PercentageRemises = out.Remises.Cent * 100 / budget.Cent
+	out.Recettes = out.Prix.Mult(out.Inscrits)
+	out.DepensesTotal = out.ventilations.total(taux)
+	if out.Recettes.Cent != 0 {
+		remises := taux.Convertible(out.Remises).Convert(out.Recettes.Currency)
+		depenses := taux.Convertible(out.DepensesTotal).Convert(out.Recettes.Currency)
+
+		out.PercentageRemises = remises.Cent * 100 / out.Recettes.Cent
+		out.Marge = (out.Recettes.Cent - depenses.Cent) * 100 / out.Recettes.Cent
 	}
+	if di := out.Inscrits * out.Duree; di != 0 {
+		out.DepenseJourneeInscrit = out.DepensesTotal.Div(di)
+	}
+
 	// display both accounts
 	out.DepenseGraph = out.ventilations.graph(taux)
 }

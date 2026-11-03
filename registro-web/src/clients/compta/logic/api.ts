@@ -3,6 +3,26 @@
 import type { AxiosResponse } from "axios";
 import Axios from "axios";
 
+export type Ar17_Int = [
+  Int,
+  Int,
+  Int,
+  Int,
+  Int,
+  Int,
+  Int,
+  Int,
+  Int,
+  Int,
+  Int,
+  Int,
+  Int,
+  Int,
+  Int,
+  Int,
+  Int,
+];
+
 // AAAA-MM-YY date format
 export type Date_ = string & { __opaque__: "Date" };
 
@@ -20,32 +40,33 @@ export interface AddRecordReviewIn {
 export interface BilanCampsIn {
   Ids: IdComptaCamp[] | null;
 }
+// registro/controllers/compta.BudgetPrevisionnelSummary
+export interface BudgetPrevisionnelSummary {
+  Reel: Montant;
+  Simule: Montant;
+}
 // registro/controllers/compta.CampDetails
 export interface CampDetails {
   Compta: ComptaExt;
-  Label: string;
+  Nom: string;
   Serial: string;
   Directeur: string;
   Lieu: string;
   AtMDR: boolean;
   DateDebut: Date;
-  DateFin: Date;
   Duree: Int;
+  Prix: Montant;
   Inscrits: Int;
   Animateurs: Int;
   Equipiers: Int;
-  Prix: Montant;
-  BudgetSansRemises: number;
-  Budget: number;
-  PercentageRemises: number;
-  BudgetPrevisionnelReel: number;
-  BudgetPrevisionnelSimule: number;
-  DepenseTotal: number;
-  DepenseOwnAccount: number;
-  Marge: number;
-  DepenseJourneeInscrit: number;
-  Dons: number;
-  DepenseGraph: VentilationMontant[] | null;
+  Recettes: Montant;
+  Remises: Montant;
+  PercentageRemises: Int;
+  BudgetPrevisionnel: BudgetPrevisionnelSummary;
+  DepensesTotal: Montant;
+  Marge: Int;
+  DepenseJourneeInscrit: Montant;
+  DepenseGraph: DepenseGraph;
 }
 // registro/controllers/compta.CampHeader
 export interface CampHeader {
@@ -69,6 +90,16 @@ export interface ComptaExt {
 export interface CreateRecordIn {
   IdCompta: IdComptaCamp;
   Account: AccountKind;
+}
+// registro/controllers/compta.DepenseGraph
+export interface DepenseGraph {
+  Currency: Currency;
+  Cents: Ar17_Int;
+}
+// registro/controllers/compta.GetRecordsOut
+export interface GetRecordsOut {
+  Equipiers: Record<IdEquipier, string> | null;
+  Records: RecordExt[] | null;
 }
 // registro/controllers/compta.LogginOut
 export interface LogginOut {
@@ -111,11 +142,6 @@ export interface SetComptaStateIn {
   IdCompta: IdComptaCamp;
   State: State;
   SendMail: boolean;
-}
-// registro/controllers/compta.VentilationMontant
-export interface VentilationMontant {
-  Ventilation: Ventilation;
-  Montant: number;
 }
 export type IdCamp = Int & { __opaque_int__: "IdCamp" };
 export type IdEquipier = Int & { __opaque_int__: "IdEquipier" };
@@ -503,7 +529,7 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseURL + "/api/v1/compta/records";
     this.startRequest();
     try {
-      const rep: AxiosResponse<RecordExt[] | null> = await Axios.get(fullUrl, {
+      const rep: AxiosResponse<GetRecordsOut> = await Axios.get(fullUrl, {
         headers: this.getHeaders(),
         params: { "id-compta": String(params["id-compta"]) },
       });

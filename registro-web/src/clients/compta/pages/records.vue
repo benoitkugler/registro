@@ -45,17 +45,20 @@
       class="mt-2"
     ></NoSelectedCamp>
 
-    <v-skeleton-loader v-else-if="camp == null"></v-skeleton-loader>
+    <v-skeleton-loader
+      v-else-if="camp == null || records == null"
+    ></v-skeleton-loader>
     <div v-else>
       <RecordsList
         :readonly="readonly"
         :camp="camp"
+        :records="records"
         v-model:direct-upload-file="fileForDirectUpload"
         @update-state="(c) => (camp != null ? (camp.Compta = c) : null)"
         @update-notif="
           (v) => {
             notifRecords = v;
-            fetchCompta();
+            fetchData();
           }
         "
         @update-mandatory-records="(v) => (showMandatoryRecordsAlert = v)"
@@ -83,7 +86,7 @@ import {
   setRecordHelpSeen,
   wasRecordHelpSeen,
 } from "../logic/logic";
-import { State, type CampHeader } from "../logic/api";
+import { State, type CampHeader, type GetRecordsOut } from "../logic/api";
 import RecordsList from "../components/records/RecordsList.vue";
 import NavBar from "../components/NavBar.vue";
 import NoSelectedCamp from "../components/NoSelectedCamp.vue";
@@ -100,14 +103,22 @@ const camp = ref<CampHeader | null>(null);
 
 onMounted(() => {
   showHelp.value = !controller.isAdmin && !wasRecordHelpSeen();
-  fetchCompta();
+  fetchData();
   handleDirectUpload();
 });
 
-async function fetchCompta() {
+const records = ref<GetRecordsOut | null>(null);
+async function fetchData() {
   const res = await controller.GetCompta({ IdCompta: controller.idCompta });
   if (res === undefined) return;
+
+  const res2 = await controller.GetRecords({
+    "id-compta": controller.idCompta,
+  });
+  if (res2 === undefined) return;
+
   camp.value = res;
+  records.value = res2;
 }
 
 const showHelp = ref(false);

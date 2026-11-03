@@ -55,7 +55,7 @@
     <v-skeleton-loader type="card" v-else-if="camp == null"></v-skeleton-loader>
     <v-card
       v-else
-      :title="camp.Label"
+      :title="Camps.label(camp)"
       :subtitle="`Numéro d'identification : ` + camp.Serial"
     >
       <v-card-text>
@@ -87,14 +87,14 @@
               </v-col>
               <v-col align-self="center" cols="12" md="5" class="text-right">
                 du <b>{{ Formatters.date(camp.DateDebut) }}</b> au
-                <b>{{ Formatters.date(camp.DateFin) }}</b> :
+                <b>{{ Formatters.date(Camps.dateFin(camp)) }}</b> :
                 <b>{{ camp.Duree }}</b> jours</v-col
               >
             </v-row>
             <v-row>
               <v-col cols="12" md="6">
                 <v-row no-gutters>
-                  <v-col>Prix : {{ camp.Prix }}€</v-col>
+                  <v-col>Prix : {{ Formatters.montant(camp.Prix) }}</v-col>
                   <v-col>Nombre d'inscrits : {{ camp.Inscrits }}</v-col></v-row
                 >
                 <v-row no-gutters>
@@ -163,8 +163,9 @@
                 <v-chip link class="mx-0" elevation="1">
                   <!-- TODO: :to="{ path: '/budget' }" -->
                   Budget prévisionnel :
-                  {{ camp.BudgetPrevisionnelReel.toFixed(2) }}€ (réel) /
-                  {{ camp.BudgetPrevisionnelSimule.toFixed(2) }}€ (simulé)
+                  {{ Formatters.montant(camp.BudgetPrevisionnel.Reel) }} (réel)
+                  / {{ Formatters.montant(camp.BudgetPrevisionnel.Simule) }}
+                  (simulé)
                 </v-chip>
               </v-col>
             </v-row>
@@ -188,101 +189,45 @@
                       </template>
                     </v-tooltip>
                   </template>
-                  Dépenses : {{ camp.DepenseTotal.toFixed(2) }}€
-                  <span class="d-none d-sm-inline ml-1">
-                    (compte dédié : {{ camp.DepenseOwnAccount.toFixed(2) }}€)
-                  </span>
+                  Dépenses : {{ Formatters.montant(camp.DepensesTotal) }}
                 </v-chip>
               </v-col>
             </v-row>
 
             <v-row justify="space-between">
               <v-col cols="auto">
-                <v-tooltip
-                  text="Recettes attendues provenant des pensions (factures et aides)"
-                >
+                <v-tooltip text="Recettes attendues provenant des pensions">
                   <template v-slot:activator="{ isActive, props }">
                     <div v-on="{ isActive }" v-bind="props">
-                      Budget total: <b>{{ camp.Budget.toFixed(2) }}€</b>
+                      Budget: <b>{{ Formatters.montant(camp.Recettes) }}</b>
                     </div>
                   </template>
                 </v-tooltip>
               </v-col>
               <v-col cols="auto">
-                Réductions : {{ camp.PercentageRemises.toFixed(1) }}%
-              </v-col>
-              <v-col cols="auto">
-                Sans réductions : {{ camp.BudgetSansRemises.toFixed(2) }}€
+                Remises : {{ camp.PercentageRemises }}% ({{
+                  Formatters.montant(camp.Remises)
+                }})
               </v-col>
             </v-row>
             <v-row>
-              <v-col align-self="center" cols="8" md="3"
-                >Contribution aux frais fixes:
+              <v-col align-self="center" cols="8" md="4"
+                >Contribution aux frais de l'association:
               </v-col>
               <v-col align-self="center" cols="4" md="auto"
-                >{{ camp.Marge.toFixed(2) }}%</v-col
+                >{{ camp.Marge }}%</v-col
               >
               <v-spacer></v-spacer>
               <v-col align-self="center" cols="8" md="4"
                 >Dépense moyenne par jour et par inscrit :</v-col
               >
               <v-col align-self="center" cols="4" md="auto">
-                {{ camp.DepenseJourneeInscrit.toFixed(2) }}€</v-col
+                {{ Formatters.montant(camp.DepenseJourneeInscrit) }}</v-col
               >
             </v-row>
           </v-col>
-          <v-col cols="12" md="2">
-            <Bar
-              :options="{
-                plugins: { legend: { display: false } },
-                aspectRatio: 0.6,
-              }"
-              :data="{
-                labels: [
-                  'Recettes (€)',
-                  'Budget réel(€)',
-                  'Budget simulé (€)',
-                  'Dépenses (€)',
-                ],
-                datasets: [
-                  {
-                    label: '',
-                    data: [
-                      camp.Budget,
-                      camp.BudgetPrevisionnelReel,
-                      camp.BudgetPrevisionnelSimule,
-                      camp.DepenseTotal,
-                    ],
-                    backgroundColor: ['teal', 'lightblue', 'lightblue', 'pink'],
-                  },
-                ],
-              }"
-            ></Bar>
-          </v-col>
-          <v-col cols="12" md="4">
-            <Pie
-              :options="{
-                plugins: {
-                  legend: { display: true },
-                  autocolors: {
-                    mode: 'data',
-                  },
-                },
-                aspectRatio: 1.4,
-              }"
-              :data="{
-                labels: (camp.DepenseGraph || []).map(
-                  (v) => VentilationLabels[v.Ventilation],
-                ),
-                datasets: [
-                  {
-                    label: 'Répartition des dépenses (€)',
-                    data: (camp.DepenseGraph || []).map((v) => v.Montant),
-                  },
-                ],
-              }"
-            ></Pie>
-          </v-col>
+
+          <SummaryGraphs :camp="camp"></SummaryGraphs>
         </v-row>
       </v-card-text>
     </v-card>
@@ -291,43 +236,18 @@
 
 <script lang="ts" setup>
 import { onMounted, ref } from "vue";
-import { Bar, Pie } from "vue-chartjs";
-
-import autocolors from "chartjs-plugin-autocolors";
-
-import {
-  Chart as ChartJS,
-  Title,
-  Tooltip,
-  Legend,
-  BarElement,
-  ArcElement,
-  CategoryScale,
-  LinearScale,
-} from "chart.js";
 import { controller, StateColors, StateIcons } from "../logic/logic";
 import {
   AccountACVE,
   AccountACVELabels,
   State,
   StateLabels,
-  VentilationLabels,
   type CampDetails,
 } from "../logic/api";
-import { Formatters, selectItems } from "@/utils";
+import { Camps, Formatters, selectItems } from "@/utils";
 import NoSelectedCamp from "../components/NoSelectedCamp.vue";
 import NavBar from "../components/NavBar.vue";
-
-ChartJS.register(
-  Title,
-  Tooltip,
-  Legend,
-  BarElement,
-  ArcElement,
-  CategoryScale,
-  LinearScale,
-  autocolors,
-);
+import SummaryGraphs from "../components/home/SummaryGraphs.vue";
 
 const camp = ref<CampDetails | null>(null);
 const showStateHelp = ref(false);
