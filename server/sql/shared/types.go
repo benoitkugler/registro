@@ -8,8 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"time"
-
-	"github.com/lib/pq"
 )
 
 // Date is a date (without notion of time)
@@ -138,7 +136,7 @@ func (d *Date) UnmarshalText(text []byte) error {
 }
 
 func (s *Date) Scan(src interface{}) error {
-	var tmp pq.NullTime
+	var tmp sql.NullTime
 	err := tmp.Scan(src)
 	if err != nil {
 		return err
@@ -148,7 +146,7 @@ func (s *Date) Scan(src interface{}) error {
 }
 
 func (s Date) Value() (driver.Value, error) {
-	return pq.NullTime{Time: s.Time(), Valid: true}.Value()
+	return sql.NullTime{Time: s.Time(), Valid: true}.Value()
 }
 
 type Plage struct {

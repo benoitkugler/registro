@@ -209,10 +209,10 @@ func (ct *Controller) loadDons() (DonsOut, error) {
 		var donateur string
 		if don.IdPersonne.Valid {
 			donateur = personnes[don.IdPersonne.Id].NOMPrenom()
-			total[0].Add(don.Montant)
+			total[0].AddM(don.Montant)
 		} else {
 			donateur = organismes[don.IdOrganisme.Id].Nom
-			total[1].Add(don.Montant)
+			total[1].AddM(don.Montant)
 		}
 
 		list = append(list, DonExt{don, don.Montant.String(), donateur})

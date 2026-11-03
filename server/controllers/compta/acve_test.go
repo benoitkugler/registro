@@ -1,5 +1,62 @@
 package compta
 
+import (
+	"testing"
+
+	tu "registro/utils/testutils"
+)
+
+func TestAtMDR(t *testing.T) {
+	atMDRL := [...]string{
+		"Chamaloc ",
+		"Chamaloc",
+		"maison du Rocher",
+		"Maison du Rocher ",
+		"Maison du Rocher",
+		"Maison du rocher",
+		"La Maison du Rocher",
+	}
+	notAtMDRL := [...]string{
+		"Var",
+		"Landes",
+		"Chambon/Lignon",
+		"St Julien St Alban",
+		"Chambon sur Lignon -",
+		"Chambon sur Lignon",
+		"Bandol",
+		"Hte Loire",
+		"A définir Alboussière ou Champis",
+		"Haute-Loire",
+		"Six-four les plages",
+		"Eglise quartier Moulin Champis",
+		"Cévennes",
+		"Champis",
+		"Six-Fours-les-Plages",
+		"landes",
+		"Menditte",
+		"Six-Four les plages",
+		"Grenoble",
+		"Zénica",
+		"Champfleuri",
+		"Corse",
+		"Beauvezer (04)",
+		"St Agnan en Vercors",
+		"Valence",
+		"St Julien",
+		"La Cadière d'Azur",
+		"Montmeyran",
+		"Roumagnan",
+		"Ardèche",
+		"Arcelet",
+	}
+	for _, lieu := range atMDRL {
+		tu.Assert(t, atMDR(lieu))
+	}
+	for _, lieu := range notAtMDRL {
+		tu.Assert(t, !atMDR(lieu))
+	}
+}
+
 // func TestFraismdr(t *testing.T) {
 // 	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
 // 		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",

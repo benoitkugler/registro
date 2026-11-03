@@ -287,8 +287,8 @@ type BilanFinancesPub struct {
 func (d DossierFinance) Publish(key crypto.Encrypter) DossierExt {
 	taux := d.Taux
 	b := d.Bilan()
-	inscrits := make(map[cps.IdParticipant]BilanParticipantPub, len(b.inscrits))
-	for k, v := range b.inscrits {
+	inscrits := make(map[cps.IdParticipant]BilanParticipantPub, len(b.Inscrits))
+	for k, v := range b.Inscrits {
 		inscrits[k] = v.publish(taux)
 	}
 

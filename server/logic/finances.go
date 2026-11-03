@@ -164,7 +164,7 @@ func (df DossierFinance) Bilan() BilanFinances {
 
 // BilanFinances résume l'état financier d'un dossier
 type BilanFinances struct {
-	inscrits map[cps.IdParticipant]BilanParticipant
+	Inscrits map[cps.IdParticipant]BilanParticipant
 
 	// totaux, en centimes
 
@@ -290,6 +290,16 @@ func (bp BilanParticipant) net(taux ds.Taux) cps.Montant {
 		val.Montant.Cent = 0
 	}
 	return val.Montant
+}
+
+// ResolvedRemises renvoie le total des remises appliquées à ce participant,
+// comptés positivement.
+func (bp BilanParticipant) ResolvedRemises(taux ds.Taux) cps.Montant {
+	before := bp.prixSansRemises(taux)
+	after := bp.net(taux)
+	// both montant have been converted to the same unit
+	before.Cent -= after.Cent
+	return before
 }
 
 // AideResolved shows resolved [AideResolved]

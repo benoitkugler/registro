@@ -1256,7 +1256,7 @@ func DeleteSubrecordsByIdFilecomptas(tx DB, idFilecomptas_ ...IdFilecompta) ([]I
 
 func loadJSON(out interface{}, src interface{}) error {
 	if src == nil {
-		return nil //zero value out
+		return nil // zero value out
 	}
 	bs, ok := src.([]byte)
 	if !ok {
@@ -1284,8 +1284,8 @@ func (s *CarsKms) Scan(src interface{}) error {
 	}
 	copy(s[:], tmp)
 	return nil
-
 }
+
 func (s CarsKms) Value() (driver.Value, error) {
 	return pq.Int32Array(s[:]).Value()
 }
@@ -1301,14 +1301,14 @@ func (s *MealsCount) Scan(src interface{}) error {
 	}
 	copy(s[:], tmp)
 	return nil
-
 }
+
 func (s MealsCount) Value() (driver.Value, error) {
 	return pq.Int32Array(s[:]).Value()
 }
 
 func (s *Date) Scan(src interface{}) error {
-	var tmp pq.NullTime
+	var tmp sql.NullTime
 	err := tmp.Scan(src)
 	if err != nil {
 		return err
@@ -1318,7 +1318,7 @@ func (s *Date) Scan(src interface{}) error {
 }
 
 func (s Date) Value() (driver.Value, error) {
-	return pq.NullTime{Time: s.Time(), Valid: true}.Value()
+	return sql.NullTime{Time: s.Time(), Valid: true}.Value()
 }
 
 func IdBudgetconfigArrayToPQ(ids []IdBudgetconfig) pq.Int64Array {
@@ -1695,5 +1695,6 @@ func (s *OptionnalIdFilecompta) Scan(src interface{}) error {
 func (s OptionnalIdFilecompta) Value() (driver.Value, error) {
 	return sql.NullInt64{
 		Int64: int64(s.Id),
-		Valid: s.Valid}.Value()
+		Valid: s.Valid,
+	}.Value()
 }

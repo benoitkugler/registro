@@ -38,7 +38,8 @@ func TestDossierFinance_Bilan(t *testing.T) {
 		3: cps.Participant{Id: 3, IdCamp: 2, Statut: cps.Inscrit},
 		4: cps.Participant{Id: 4, IdCamp: 2, Statut: cps.AStatuer},
 	}
-	tu.Assert(t, reflect.DeepEqual(df.Bilan(), BilanFinances{
+	bilan := df.Bilan()
+	tu.Assert(t, reflect.DeepEqual(bilan, BilanFinances{
 		map[cps.IdParticipant]BilanParticipant{
 			1: {eur(200), eur(200), "", cps.Remises{}, nil},
 			2: {chf(150), chf(150), "", cps.Remises{}, nil},
@@ -46,6 +47,7 @@ func TestDossierFinance_Bilan(t *testing.T) {
 		},
 		40000, 15000, 35000, 0, 0, ds.FrancsSuisse,
 	}))
+	tu.Assert(t, bilan.Inscrits[1].ResolvedRemises(taux) == chf(0))
 
 	// avec aides
 	df.Participants = cps.Participants{
@@ -61,7 +63,8 @@ func TestDossierFinance_Bilan(t *testing.T) {
 			3: cps.Aide{Valide: false, Valeur: chf(5)},
 		},
 	}
-	tu.Assert(t, reflect.DeepEqual(df.Bilan(), BilanFinances{
+	bilan = df.Bilan()
+	tu.Assert(t, reflect.DeepEqual(bilan, BilanFinances{
 		map[cps.IdParticipant]BilanParticipant{
 			1: {eur(200), eur(200), "", cps.Remises{}, []AideResolved{{"", eur(20)}, {"", chf(20)}}},
 			2: {chf(150), chf(150), "", cps.Remises{}, nil},
@@ -69,6 +72,7 @@ func TestDossierFinance_Bilan(t *testing.T) {
 		},
 		40000 - 1000 - 200*10, 15000, 35000, 0, 1000 + 200*10, ds.FrancsSuisse,
 	}))
+	tu.Assert(t, bilan.Inscrits[1].ResolvedRemises(taux) == chf(0))
 
 	// avec remises
 	df.Participants = cps.Participants{
@@ -82,7 +86,8 @@ func TestDossierFinance_Bilan(t *testing.T) {
 		4: cps.Participant{Id: 4, IdCamp: 2, Statut: cps.AStatuer},
 	}
 	df.aides = nil
-	tu.Assert(t, reflect.DeepEqual(df.Bilan(), BilanFinances{
+	bilan = df.Bilan()
+	tu.Assert(t, reflect.DeepEqual(bilan, BilanFinances{
 		map[cps.IdParticipant]BilanParticipant{
 			1: {eur(200), eur(200), "", cps.Remises{
 				Speciale:  eur(10),
@@ -94,6 +99,7 @@ func TestDossierFinance_Bilan(t *testing.T) {
 		},
 		40000 - 500 - 1500, 15000, 35000, 0, 0, ds.FrancsSuisse,
 	}))
+	tu.Assert(t, bilan.Inscrits[1].ResolvedRemises(taux) == chf(20))
 
 	// avec remises et aides
 	df.Participants = cps.Participants{
@@ -108,6 +114,7 @@ func TestDossierFinance_Bilan(t *testing.T) {
 			1: cps.Aide{Valide: true, Valeur: eur(20)},
 		},
 	}
+	bilan = df.Bilan()
 	tu.Assert(t, reflect.DeepEqual(df.Bilan(), BilanFinances{
 		map[cps.IdParticipant]BilanParticipant{
 			1: {eur(200), eur(200), "", cps.Remises{
@@ -118,6 +125,7 @@ func TestDossierFinance_Bilan(t *testing.T) {
 		},
 		10000 - 1000 - 500 - 900, 0, 35000, 0, 1000, ds.FrancsSuisse,
 	}))
+	tu.Assert(t, bilan.Inscrits[1].ResolvedRemises(taux) == chf(14))
 
 	// avec fond soutien
 	df = DossierFinance{

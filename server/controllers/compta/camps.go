@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"log"
 	"slices"
-	"strings"
+	"time"
 
 	"registro/crypto"
 	"registro/logic"
 	cps "registro/sql/camps"
 	ca "registro/sql/compta"
+	sh "registro/sql/shared"
 	"registro/utils"
 
 	"github.com/labstack/echo/v4"
@@ -45,14 +46,28 @@ func serial(camp cps.Camp) string {
 	return fmt.Sprintf("CPS %d-%d", camp.DateDebut.Time().Year()-2000, camp.Id)
 }
 
-func atMDR(lieu string) bool {
-	lieu = strings.ToLower(strings.TrimSpace(lieu))
-	switch lieu {
-	case "chamaloc", "la maison du rocher", "maison du rocher":
-		return true
-	default:
-		return false
+var months = [13]string{
+	time.January:   "Jan.",
+	time.February:  "Fév.",
+	time.March:     "Mars",
+	time.April:     "Avr.",
+	time.May:       "Mai",
+	time.June:      "Juin",
+	time.July:      "Juil",
+	time.August:    "Août",
+	time.September: "Sep.",
+	time.October:   "Oct.",
+	time.November:  "Nov.",
+	time.December:  "Déc.",
+}
+
+func (c *CampDetails) dates() string {
+	debut, fin := time.Time(c.DateDebut), sh.Plage{From: c.DateDebut, Duree: c.Duree}.To().Time()
+	dM, fM := debut.Month(), fin.Month()
+	if dM == fM { // condense
+		return fmt.Sprintf("du %d au %d %s", debut.Day(), fin.Day(), months[dM])
 	}
+	return fmt.Sprintf("du %d %s au %d %s", debut.Day(), months[dM], fin.Day(), months[fM])
 }
 
 type ComptaExt struct {

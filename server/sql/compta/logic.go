@@ -52,3 +52,13 @@ func (m ComptaSubrecords) Sorted() []ComptaSubrecord {
 	slices.SortFunc(out, func(a, b ComptaSubrecord) int { return int(a.Id - b.Id) })
 	return out
 }
+
+// Sorted returns the more recent configs first
+func (configs ComptaConfigs) Sorted() []ComptaConfig {
+	var sorted []ComptaConfig
+	for _, config := range configs {
+		sorted = append(sorted, config)
+	}
+	slices.SortFunc(sorted, func(i, j ComptaConfig) int { return j.Year - i.Year })
+	return sorted
+}

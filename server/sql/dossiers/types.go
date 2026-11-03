@@ -53,6 +53,11 @@ func NewFrancsuisses(f float64) Montant { return Montant{int(math.Round(f * 100)
 
 func (m Montant) Mult(by int) Montant { return Montant{Cent: m.Cent * by, Currency: m.Currency} }
 
+func (m Montant) Multi() (out MultiCurrencies) {
+	out[m.Currency] = m.Cent
+	return out
+}
+
 type Currency uint8
 
 const (

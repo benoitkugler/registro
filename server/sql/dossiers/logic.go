@@ -130,7 +130,25 @@ func (m MontantTaux) String() string {
 // typiquement utile pour des totaux.
 type MultiCurrencies [nbCurrencies]int
 
-func (mc *MultiCurrencies) Add(v Montant) { mc[v.Currency] += v.Cent }
+func (mc *MultiCurrencies) AddM(v Montant) { mc[v.Currency] += v.Cent }
+
+// Add renvoie [mc] + [other]
+func (mc MultiCurrencies) Add(other MultiCurrencies) MultiCurrencies {
+	return [...]int{mc[0] + other[0], mc[1] + other[1]}
+}
+
+// Sub renvoie [mc] - [other]
+func (mc MultiCurrencies) Sub(other MultiCurrencies) MultiCurrencies {
+	return [...]int{mc[0] - other[0], mc[1] - other[1]}
+}
+
+func (mc MultiCurrencies) Agg(taux Taux) Montant {
+	out := taux.Zero()
+	for cur, cent := range mc {
+		out.Add(Montant{cent, Currency(cur)})
+	}
+	return out.Montant
+}
 
 func (mc MultiCurrencies) String() string {
 	chunks := make([]string, 0, len(mc))

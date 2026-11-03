@@ -3,12 +3,11 @@ package compta
 import (
 	"archive/zip"
 	"bytes"
-	"os"
-	"path/filepath"
+	"testing"
+
 	"registro/config"
 	ca "registro/sql/compta"
 	tu "registro/utils/testutils"
-	"testing"
 )
 
 func devEnv(t *testing.T) (googleDriveAPI, fileSystemAPI, config.SMTP) {
@@ -46,11 +45,7 @@ func TestDriveAPI(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	err = archive.Close()
 	tu.AssertNoErr(t, err)
-	dir := os.TempDir()
-	path := filepath.Join(dir, "archive.zip")
-	err = os.WriteFile(path, content.Bytes(), os.ModePerm)
-	tu.AssertNoErr(t, err)
-	t.Log("Written in", path)
+	tu.Write(t, "archive_2.zip", content.Bytes())
 
 	err = api.remove(i1, i2)
 	tu.AssertNoErr(t, err)
@@ -90,7 +85,7 @@ func TestFilesAPI(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	err = archive.Close()
 	tu.AssertNoErr(t, err)
-	tu.Write(t, "archive.zip", content.Bytes())
+	tu.Write(t, "archive_1.zip", content.Bytes())
 
 	err = api.remove(1)
 	tu.AssertNoErr(t, err)

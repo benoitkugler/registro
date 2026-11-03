@@ -1,8 +1,24 @@
 package compta
 
-import ca "registro/sql/compta"
+import (
+	"strings"
+
+	ca "registro/sql/compta"
+)
 
 // custom logic for ACVE
+
+func (ld *comptaLoader) atMDR() bool { return atMDR(string(ld.camp.Lieu)) }
+
+func atMDR(lieu string) bool {
+	lieu = strings.ToLower(strings.TrimSpace(lieu))
+	switch lieu {
+	case "chamaloc", "la maison du rocher", "maison du rocher":
+		return true
+	default:
+		return false
+	}
+}
 
 var accountLabels = [ca.Aurore + 1]string{
 	ca.Empty: "Aucun",
@@ -84,7 +100,7 @@ type ResolvedFraisMDR struct {
 }
 
 func (ld *comptaLoader) resolveFraismdr() (out ResolvedFraisMDR) {
-	return resolve(ld.compta.Fraismdr, ld.config, ld.subrecords, ld.forBus, ld.camp.Duree, ld.inscrits(), len(ld.equipiers), ld.atMDR())
+	return resolve(ld.compta.Fraismdr, ld.config, ld.subrecords, ld.recordsForBus, ld.camp.Duree, ld.inscrits(), len(ld.equipiers), ld.atMDR())
 }
 
 func resolve(frais ca.FraismdrACVE, config ca.ComptaConfig, subrecords ca.ComptaSubrecords, links ca.ComptaRecordBuss, days, inscrits, equipiers int, atMDR bool) (out ResolvedFraisMDR) {
@@ -145,3 +161,13 @@ func resolve(frais ca.FraismdrACVE, config ca.ComptaConfig, subrecords ca.Compta
 
 	return out
 }
+
+// func (c *CampDetails) fraisMDR() float32 { return c.fraisMDRMateriel + c.fraisMDRVehicule }
+
+// // hors MDR: 80% du budget, MDR: 50%
+// func (c *CampDetails) hintDepensesMax() float32 {
+// 	if c.AtMDR {
+// 		return c.Remises * 0.5
+// 	}
+// 	return c.Remises * 0.8
+// }

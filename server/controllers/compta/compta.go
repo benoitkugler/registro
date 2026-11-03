@@ -4,10 +4,9 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"time"
 
+	"registro/logic"
 	"registro/mails"
-	"registro/sql/camps"
 	cps "registro/sql/camps"
 	ca "registro/sql/compta"
 	ds "registro/sql/dossiers"
@@ -41,8 +40,9 @@ type CampDetails struct {
 	// finances
 
 	// Simple estimation computed by [Prix] * [Inscrits]
-	BudgetSansRemises ds.Montant // TODO: rename to Budget
-	// Computed from the pensions : amount asked + aides
+	Budget ds.Montant // TODO: rename to Budget
+	// Remises is the total remises applied to the pensions
+	// Note : the currency might be different from [BudgetSansRemises] due to convertions
 	Remises ds.Montant
 	// in %, computed from [Remises] and [BudgetSansRemises]
 	PercentageRemises int
@@ -100,89 +100,56 @@ func (ld *comptaLoader) compile() CampDetails {
 	// if fraisMDR.HasMateriel {
 	// 	out.fraisMDRMateriel = fraisMDR.Materiel.Total
 	// }
-
 	out.ventilations = ld.depenses(ResolvedFraisMDR{})
 
 	out.Remises = ld.computeRemises()
 
-	out.fillFinances()
+	out.fillFinances(ld.taux)
 
 	if ld.budget.IdCompta != 0 {
-		out.BudgetPrevisionnelReel = ld.resolveBudget(ld.budget, ld.config, false).Depenses
-		out.BudgetPrevisionnelSimule = ld.resolveBudget(ld.budget, ld.config, true).Depenses
+		out.BudgetPrevisionnel = BudgetPrevisionnelSummary{
+			Reel:   ld.resolveBudget(ld.budget, ld.config, false).Depenses,
+			Simule: ld.resolveBudget(ld.budget, ld.config, true).Depenses,
+		}
 	}
 
 	return out
 }
 
-var months = [13]string{
-	time.January:   "Jan.",
-	time.February:  "Fév.",
-	time.March:     "Mars",
-	time.April:     "Avr.",
-	time.May:       "Mai",
-	time.June:      "Juin",
-	time.July:      "Juil",
-	time.August:    "Août",
-	time.September: "Sep.",
-	time.October:   "Oct.",
-	time.November:  "Nov.",
-	time.December:  "Déc.",
-}
-
-func (c *CampDetails) fraisMDR() float32 { return c.fraisMDRMateriel + c.fraisMDRVehicule }
-
-// hors MDR: 80% du budget, MDR: 50%
-func (c *CampDetails) hintDepensesMax() float32 {
-	if c.AtMDR {
-		return c.Remises * 0.5
-	}
-	return c.Remises * 0.8
-}
-
-func (c *CampDetails) dates() string {
-	debut, fin := time.Time(c.DateDebut), sh.Plage{c.DateDebut, c.Duree}.To().Time()
-	dM, fM := debut.Month(), fin.Month()
-	if dM == fM { // condense
-		return fmt.Sprintf("du %d au %d %s", debut.Day(), fin.Day(), months[dM])
-	}
-	return fmt.Sprintf("du %d %s au %d %s", debut.Day(), months[dM], fin.Day(), months[fM])
-}
-
-func montantToDepense(m ca.MontantPart, isReceipe, isOtherAccount bool) depenseTotale {
+func montantToDepense(m ds.Montant, isReceipe, isAccountAsso bool) depenseTotale {
 	if isReceipe {
-		if isOtherAccount {
-			return depenseTotale{otherAccountRec: m.Cent}
+		if isAccountAsso {
+			return depenseTotale{accAssoReceipes: m.Multi()}
 		}
-		return depenseTotale{ownAccountRec: m.Cent}
+		return depenseTotale{accCampReceipes: m.Multi()}
 	} else {
-		if isOtherAccount {
-			return depenseTotale{otherAccount: m.Cent}
+		if isAccountAsso {
+			return depenseTotale{accAssoDepenses: m.Multi()}
 		}
-		return depenseTotale{ownAccount: m.Cent}
+		return depenseTotale{accCampDepenses: m.Multi()}
 	}
 }
 
 type depenseTotale struct {
-	ownAccount, otherAccount       Cent // expense, in cents
-	ownAccountRec, otherAccountRec Cent // receipe, in cents
+	accCampDepenses, accAssoDepenses ds.MultiCurrencies // expense, in cents
+	accCampReceipes, accAssoReceipes ds.MultiCurrencies // receipe, in cents
 }
 
 // net substracts the receipe, for each account
-func (dep depenseTotale) net() (own, other Cent) {
-	return dep.ownAccount - dep.ownAccountRec, dep.otherAccount - dep.otherAccountRec
+func (dep depenseTotale) net() (camp, asso ds.MultiCurrencies) {
+	return dep.accCampDepenses.Sub(dep.accCampReceipes), dep.accAssoDepenses.Sub(dep.accAssoReceipes)
 }
 
 func (dep depenseTotale) add(other depenseTotale) depenseTotale {
 	return depenseTotale{
-		dep.ownAccount + other.ownAccount,
-		dep.otherAccount + other.otherAccount,
-		dep.ownAccountRec + other.ownAccountRec,
-		dep.otherAccountRec + other.otherAccountRec,
+		dep.accCampDepenses.Add(other.accCampDepenses),
+		dep.accAssoDepenses.Add(other.accAssoDepenses),
+		dep.accCampReceipes.Add(other.accCampReceipes),
+		dep.accAssoReceipes.Add(other.accAssoReceipes),
 	}
 }
 
-type ventilations map[ca.Ventilation]depenseTotale
+type ventilations [ca.VentilationCount]depenseTotale
 
 // aggregate all categories
 func (vs ventilations) sum() (out depenseTotale) {
@@ -198,17 +165,17 @@ func (vs ventilations) sum() (out depenseTotale) {
 // 	return (own + other).euros(), own.euros()
 // }
 
-func (vs ventilations) add(other ventilations) {
+func (vs *ventilations) add(other ventilations) {
 	for v, m := range other {
 		vs[v] = vs[v].add(m)
 	}
 }
 
-// func (vs ventilations) addMontants(ms ca.Montants, isReceipe, isOtherAccount bool) {
-// 	for _, m := range ms {
-// 		vs[m.Kind] = vs[m.Kind].add(m.toDepense(isReceipe, isOtherAccount))
-// 	}
-// }
+func (vs *ventilations) addRecord(record ca.ComptaRecord, subrecord ca.ComptaSubrecord) {
+	for _, m := range subrecord.Montants {
+		vs[m.Kind] = vs[m.Kind].add(montantToDepense(ds.Montant{Cent: m.Cent, Currency: subrecord.Currency}, record.IsReceipe, record.Account == ca.AccountAsso))
+	}
+}
 
 // func (vs ventilations) byAccount() (ownAccount, otherAccount map[ca.Ventilation]float32) {
 // 	ownAccount, otherAccount = make(map[ca.Ventilation]float32), make(map[ca.Ventilation]float32)
@@ -219,154 +186,124 @@ func (vs ventilations) add(other ventilations) {
 // 	return
 // }
 
-// return a sorted slice, adding both accounts
-// func (vs ventilations) sortedNet() (out []VentilationMontant) {
-// 	for k, v := range vs {
-// 		own, other := v.net()
-// 		m := own + other
-// 		out = append(out, VentilationMontant{k, m.euros()})
-// 	}
-// 	sort.Slice(out, func(i, j int) bool { return out[i].Ventilation < out[j].Ventilation })
-// 	return out
-// }
+// adds both accounts
+func (vs ventilations) graph(taux ds.Taux) (out DepenseGraph) {
+	out.Currency = taux.Zero().Currency
+	for k, v := range vs {
+		camp, asso := v.net()
+		m := camp.Add(asso).Agg(taux).Cent
+		out.Cents[k] = m
+	}
+	return out
+}
 
 // DepenseGraph is the aggregated and converted sum of all expenses
-type DepenseGraph [ca.VentilationCount]ds.Montant
+type DepenseGraph struct {
+	Currency ds.Currency
+	Cents    [ca.VentilationCount]Cent // might contains 0
+}
 
 type VentilationMontant struct {
 	Ventilation ca.Ventilation
 	Montant     float32
 }
 
-// TODO: cleanup names
 type comptaLoader struct {
+	camp cps.Camp
+	taux ds.Taux
+
 	compta ca.ComptaCamp
 	budget ca.ComptaBugdet // may be empty
 	config ca.ComptaConfig
 
-	camp         camps.Camp
-	taux         ds.Taux
-	factures     ds.Dossiers
-	personnes    pe.Personnes
-	participants camps.Participants
-	aides        camps.Aides
+	finances logic.DossiersFinances
 
-	equipiers camps.Equipiers
+	participants cps.Participants
+
+	equipiers cps.Equipiers
 	directeur pe.Personne // may be empty
 
-	records    ca.ComptaRecords
-	subrecords ca.ComptaSubrecords
-	forBus     ca.ComptaRecordBuss
+	records       ca.ComptaRecords
+	subrecords    ca.ComptaSubrecords
+	recordsForBus ca.ComptaRecordBuss
 }
 
 func newComptaLoaders(db *sql.DB, ids []ca.IdComptaCamp) ([]comptaLoader, error) {
-	tx, err := db.Begin()
-	if err != nil {
-		return nil, fmt.Errorf("Erreur SQL: %w", err)
-	}
-
-	comptas, err := ca.SelectComptaCamps(tx, ids...)
-	if err != nil {
-		return nil, fmt.Errorf("Erreur SQL: %w", err)
-	}
 	out := make([]comptaLoader, len(ids))
-	for index, id := range ids {
-		out[index], err = newComptaLoader(tx, comptas[id])
+
+	err := utils.InTx(db, func(tx *sql.Tx) error {
+		comptas, err := ca.SelectComptaCamps(tx, ids...)
 		if err != nil {
-			return nil, fmt.Errorf("Erreur SQL: %w", err)
+			return err
 		}
-	}
+		for index, id := range ids {
+			out[index], err = newComptaLoader(tx, comptas[id])
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 
-	_ = tx.Rollback()
-
-	return out, nil
+	return out, err
 }
 
 func newComptaLoader(db ca.DB, compta ca.ComptaCamp) (comptaLoader, error) {
-	// 	camp, err := rd.SelectCamp(db, compta.IdCamp)
-	// 	if err != nil {
-	// 		return comptaLoader{}, fmt.Errorf("Erreur SQL: %w", err)
-	// 	}
+	camp, err := cps.SelectCamp(db, compta.IdCamp)
+	if err != nil {
+		return comptaLoader{}, utils.SQLError(err)
+	}
+	taux, err := ds.SelectTaux(db, camp.IdTaux)
+	if err != nil {
+		return comptaLoader{}, utils.SQLError(err)
+	}
+	bugdet, _, err := ca.SelectComptaBugdetByIdCompta(db, compta.Id)
+	if err != nil {
+		return comptaLoader{}, utils.SQLError(err)
+	}
+	configs, err := ca.SelectAllComptaConfigs(db)
+	if err != nil {
+		return comptaLoader{}, utils.SQLError(err)
+	}
+	campYear := camp.DateDebut.Time().Year()
+	config, err := selectBudgetConfig(campYear, configs)
+	if err != nil {
+		return comptaLoader{}, err
+	}
 
-	// 	inscrits, err := rd.SelectParticipantsByIdCamps(db, camp.Id)
-	// 	if err != nil {
-	// 		return comptaLoader{}, fmt.Errorf("Erreur SQL: %w", err)
-	// 	}
-	// 	var (
-	// 		facturesIDs  = int64Set{}
-	// 		personnesIDs = int64Set{}
-	// 	)
-	// 	for _, inscrit := range inscrits {
-	// 		if inscrit.IdFacture.IsNotNil() {
-	// 			facturesIDs.Add(inscrit.IdFacture.Int64)
-	// 		}
-	// 	}
+	participants, err := cps.SelectParticipantsByIdCamps(db, camp.Id)
+	if err != nil {
+		return comptaLoader{}, utils.SQLError(err)
+	}
+	finances, err := logic.LoadDossiersFinances(db, participants.IdDossiers()...)
+	if err != nil {
+		return comptaLoader{}, err
+	}
 
-	// 	aides, err := rd.SelectAidesByIdParticipants(db, inscrits.Ids()...)
-	// 	if err != nil {
-	// 		return comptaLoader{}, fmt.Errorf("Erreur SQL: %w", err)
-	// 	}
+	records, subrecords, err := getRecords(db, compta.Id)
+	if err != nil {
+		return comptaLoader{}, utils.SQLError(err)
+	}
 
-	// 	factures, err := rd.SelectFactures(db, facturesIDs.Keys()...)
-	// 	if err != nil {
-	// 		return comptaLoader{}, fmt.Errorf("Erreur SQL: %w", err)
-	// 	}
-	// 	for _, fac := range factures {
-	// 		personnesIDs.Add(fac.IdPersonne)
-	// 	}
-	// 	personnes, err := rd.SelectPersonnes(db, personnesIDs.Keys()...)
-	// 	if err != nil {
-	// 		return comptaLoader{}, fmt.Errorf("Erreur SQL: %w", err)
-	// 	}
+	forBus, err := ca.SelectComptaRecordBussByIdCamps(db, compta.Id)
+	if err != nil {
+		return comptaLoader{}, utils.SQLError(err)
+	}
 
-	// 	records, subrecords, err := getRecords(db, compta.Id)
-	// 	if err != nil {
-	// 		return comptaLoader{}, sh.FormatErr("Erreur SQL", err)
-	// 	}
+	equipiers, err := cps.SelectEquipiersByIdCamps(db, compta.IdCamp)
+	if err != nil {
+		return comptaLoader{}, utils.SQLError(err)
+	}
+	var directeur pe.Personne
+	if dir, ok := equipiers.Directeur(); ok {
+		directeur, err = pe.SelectPersonne(db, dir.IdPersonne)
+		if err != nil {
+			return comptaLoader{}, utils.SQLError(err)
+		}
+	}
 
-	// 	forBus, err := SelectRecordBussByIdComptas(db, compta.Id)
-	// 	if err != nil {
-	// 		return comptaLoader{}, sh.FormatErr("Erreur SQL", err)
-	// 	}
-
-	// 	doncs, err := SelectDoncsByIdComptas(db, compta.Id)
-	// 	if err != nil {
-	// 		return comptaLoader{}, sh.FormatErr("Erreur SQL", err)
-	// 	}
-
-	// 	configs, err := SelectAllBudgetconfigs(db)
-	// 	if err != nil {
-	// 		return comptaLoader{}, sh.FormatErr("Erreur SQL", err)
-	// 	}
-	// 	campYear := camp.DateDebut.Time().Year()
-
-	// 	bConfig, err := selectBudgetConfig(campYear, configs)
-	// 	if err != nil {
-	// 		return comptaLoader{}, err
-	// 	}
-
-	// 	bugdet, _, err := SelectComptaBugdetByIdCompta(db, compta.Id)
-	// 	if err != nil {
-	// 		return comptaLoader{}, sh.FormatErr("Erreur SQL", err)
-	// 	}
-
-	// 	equipiers, err := rd.SelectEquipiersByIdCamps(db, compta.IdCamp)
-	// 	if err != nil {
-	// 		return comptaLoader{}, sh.FormatErr("Erreur SQL", err)
-	// 	}
-	// 	var directeur rd.Personne
-	// 	if dir, ok := equipiers.FindDirecteur(); ok {
-	// 		directeur, err = rd.SelectPersonne(db, dir.IdPersonne)
-	// 		if err != nil {
-	// 			return comptaLoader{}, sh.FormatErr("Erreur SQL", err)
-	// 		}
-	// 	}
-
-	// 	return comptaLoader{compta, bugdet, bConfig, camp, factures, personnes, inscrits, aides, equipiers, directeur, records, subrecords, forBus, doncs}, nil
-	return comptaLoader{}, nil
+	return comptaLoader{camp, taux, compta, bugdet, config, finances, participants, equipiers, directeur, records, subrecords, forBus}, nil
 }
-
-func (ld *comptaLoader) atMDR() bool { return atMDR(string(ld.camp.Lieu)) }
 
 // do not include waiting list
 func (ld *comptaLoader) inscrits() int {
@@ -379,46 +316,33 @@ func (ld *comptaLoader) inscrits() int {
 	return nbInscrits
 }
 
-// a.k.a. (real) budget
-func (ld comptaLoader) computeRemises() Cent {
-	// TODO
-	// aidesByP := map[int64][]composites.AideStructureaide{}
-	// for _, aide := range ld.aides {
-	// 	aidesByP[aide.Id] = append(aidesByP[aide.Id], composites.AideStructureaide{Aide: aide})
-	// }
-
-	// var totalAides, totalDemande rd.Euros
-	// for _, part := range ld.participants {
-	// 	if !part.ListeAttente.IsInscrit() {
-	// 		continue
-	// 	}
-
-	// 	aides := aidesByP[part.Id]
-	// 	var facture rd.Facture
-	// 	if part.IdFacture.IsNotNil() {
-	// 		facture = ld.factures[part.IdFacture.Int64]
-	// 	}
-	// 	pc := composites.ParticipantComplet{
-	// 		ParticipantCamp: composites.ParticipantCamp{Camp: ld.camp, Participant: part},
-	// 		FacturePersonne: composites.FacturePersonne{Facture: facture, Personne: ld.personnes[facture.IdPersonne]},
-	// 	}
-	// 	detailsPrix := pc.EtatFinancier(aides, false)
-	// 	totalAides += detailsPrix.TotalAides()
-	// 	totalDemande += detailsPrix.PrixNet()
-	// }
-
-	// return newCent(totalAides + totalDemande)
-	return 0
+func (ld comptaLoader) computeRemises() ds.Montant {
+	var out ds.Montant
+	for id := range ld.finances.Dossiers.Dossiers {
+		dossier := ld.finances.For(id)
+		bilan := dossier.Bilan()
+		for _, part := range dossier.Participants {
+			if !(part.IdCamp == ld.camp.Id && part.Statut == cps.Inscrit) {
+				continue
+			}
+			rem := bilan.Inscrits[part.Id].ResolvedRemises(dossier.Taux)
+			// by design, all camp in a dossier have the same taux
+			// so that the currency returned does not change
+			out.Currency = rem.Currency
+			out.Cent += rem.Cent
+		}
+	}
+	return out
 }
 
 // agregate all records
 func (ld *comptaLoader) depenses(fraisMDR ResolvedFraisMDR) ventilations {
-	vs := make(ventilations)
+	var vs ventilations
+	for _, r := range ld.subrecords {
+		group := ld.records[r.IdRecord]
+		vs.addRecord(group, r)
+	}
 	// TODO
-	// for _, r := range ld.subrecords {
-	// 	group := ld.records[r.IdBankentry]
-	// 	vs.addMontants(r.Montants, group.IsReceipe, group.IsOtherAccount)
-	// }
 	// // add fraisMDR to other account
 	// vs.add(ventilations{Carburant: depenseTotale{otherAccount: fraisMDR.totalBus}})
 	// if fraisMDR.HasMateriel {
@@ -431,7 +355,7 @@ func (ld *comptaLoader) depenses(fraisMDR ResolvedFraisMDR) ventilations {
 }
 
 // fill computed values
-func (out *CampDetails) fillFinances() {
+func (out *CampDetails) fillFinances(taux ds.Taux) {
 	// TODO
 	// out.DepenseTotal, out.DepenseOwnAccount = out.ventilations.total()
 	// out.prixJournee = out.Prix / rd.Euros(out.Duree)
@@ -442,12 +366,13 @@ func (out *CampDetails) fillFinances() {
 	// 	out.Marge = 100 * (out.Budget - out.DepenseTotal) / out.Budget
 	// }
 
-	out.BudgetSansRemises = out.Prix.Mult(out.Inscrits)
-	if out.BudgetSansRemises.Cent != 0 {
-		out.PercentageRemises = out.Remises.Cent * 100 / out.BudgetSansRemises.Cent
+	out.Budget = out.Prix.Mult(out.Inscrits)
+	if out.Budget.Cent != 0 {
+		budget := taux.Convertible(out.Budget).Convert(out.Remises.Currency)
+		out.PercentageRemises = out.Remises.Cent * 100 / budget.Cent
 	}
 	// display both accounts
-	out.DepenseGraph = out.ventilations.sortedNet()
+	out.DepenseGraph = out.ventilations.graph(taux)
 }
 
 var ventilationLabels = [ca.Autre + 1]struct{ codeACVE, label string }{
