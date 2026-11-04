@@ -3,9 +3,8 @@
     location="top"
     :text="props.record.IsReceipe ? 'Recette' : 'Dépense'"
   >
-    <template v-slot:activator="{ isActive, props: innerProps }">
+    <template v-slot:activator="{ props: innerProps }">
       <v-chip
-        v-on="{ isActive }"
         v-bind="innerProps"
         :color="props.record.IsReceipe ? 'green' : 'pink'"
         :append-icon="

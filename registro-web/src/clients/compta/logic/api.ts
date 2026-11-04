@@ -122,6 +122,7 @@ export interface RecordExt {
   Record: ComptaRecord;
   Subrecords: ComptaSubrecord[] | null;
   Status: RecordStatus;
+  Total: string;
 }
 // registro/controllers/compta.RecordStatus
 export const RecordStatus = {

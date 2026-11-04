@@ -326,7 +326,7 @@ export namespace Formatters {
 
   export function date(
     date: Date_ | Time,
-    showYear = false,
+    showYear: boolean | "short" = false,
     showWeekday = true,
   ) {
     if (isDateZero(date)) {
@@ -334,9 +334,9 @@ export namespace Formatters {
     }
     const da = new Date(date);
     const s = da.toLocaleString(undefined, {
-      year: showYear ? "numeric" : undefined,
+      year: showYear == "short" ? "2-digit" : showYear ? "numeric" : undefined,
       day: "numeric",
-      month: "short",
+      month: showYear == "short" ? "2-digit" : "short",
       // hour: "2-digit",
       // minute: showMinute ? "2-digit" : undefined,
     });

@@ -73,9 +73,8 @@
 
         <v-col align-self="center" cols="auto">
           <v-menu>
-            <template v-slot:activator="{ isActive, props }">
+            <template v-slot:activator="{ props }">
               <v-btn
-                v-on="{ isActive }"
                 v-bind="props"
                 icon
                 size="x-small"
@@ -193,13 +192,13 @@
       </template>
       <template v-for="item in recordsToShow" :key="item.record.Record.Id">
         <v-fade-transition hide-on-leave class="my-1">
-          <record-row-edit
+          <RecordRowEdit
             v-if="toEdit?.Record.Id == item.record.Record.Id"
             :record="toEdit"
             @save="updateRecord"
             @back="toEdit = null"
-          ></record-row-edit>
-          <record-row
+          ></RecordRowEdit>
+          <RecordRow
             v-else
             :readonly="props.readonly"
             :record="item.record"
@@ -212,7 +211,7 @@
             @upload-file="uploadJustificatif"
             @delete-file="deleteJustificatif"
             @add-review="(text: string) => addReview(item.record.Record, text)"
-          ></record-row>
+          ></RecordRow>
         </v-fade-transition>
       </template>
     </v-card-text>
@@ -240,6 +239,8 @@ import {
 } from "../../logic/api.ts";
 import { controller, type RecordExtModeOpt } from "../../logic/logic.ts";
 import { Camps, copy, normalize } from "../../../../utils";
+import RecordRow from "./RecordRow.vue";
+import RecordRowEdit from "./RecordRowEdit.vue";
 
 const props = defineProps<{
   camp: CampHeader;

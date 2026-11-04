@@ -15,7 +15,7 @@ import (
 	cps "registro/sql/camps"
 	"registro/sql/compta"
 	ca "registro/sql/compta"
-	"registro/sql/dossiers"
+	ds "registro/sql/dossiers"
 	"registro/utils"
 
 	"github.com/labstack/echo/v4"
@@ -53,10 +53,11 @@ type RecordExt struct {
 	Subrecords []ca.ComptaSubrecord
 
 	Status RecordStatus
+	Total  string // possibly multiples currencies
 }
 
 func newRecordExt(record ca.ComptaRecord, subrecords []ca.ComptaSubrecord) RecordExt {
-	return RecordExt{record, subrecords, recordStatus(record, subrecords)}
+	return RecordExt{record, subrecords, recordStatus(record, subrecords), recordTotal(subrecords).String()}
 }
 
 type RecordStatus uint8
@@ -89,6 +90,13 @@ func recordStatus(record ca.ComptaRecord, subrecords []ca.ComptaSubrecord) Recor
 		return Complete
 	}
 	return Incomplete
+}
+
+func recordTotal(subrecords []ca.ComptaSubrecord) (out ds.MultiCurrencies) {
+	for _, subrecord := range subrecords {
+		out.AddM(ds.Montant{Currency: subrecord.Currency, Cent: subrecord.Montants.Total()})
+	}
+	return out
 }
 
 func getRecord(db ca.DB, id ca.IdComptaSubrecord) (ca.ComptaRecord, ca.ComptaSubrecord, error) {
@@ -180,7 +188,7 @@ func (ct *Controller) createRecord(args CreateRecordIn) (out RecordExt, err erro
 		sub, err := ca.ComptaSubrecord{
 			IdRecord: record.Id,
 			Montants: ca.Montants{{Kind: ca.NoVentilation}},
-			Currency: dossiers.Euros,
+			Currency: ds.Euros,
 		}.Insert(tx)
 		if err != nil {
 			return err
@@ -222,7 +230,7 @@ func (ct *Controller) addSubrecord(record ca.IdComptaRecord, user ca.IdComptaCam
 
 	out, err := ca.ComptaSubrecord{
 		IdRecord: record,
-		Currency: dossiers.Euros,
+		Currency: ds.Euros,
 		Montants: ca.Montants{{Kind: ca.NoVentilation}},
 	}.Insert(ct.db)
 	if err != nil {
@@ -592,7 +600,7 @@ func (ct *Controller) uploadAndCreate(idCompta ca.IdComptaCamp, fileName string,
 			IdRecord:    record.Id,
 			Montants:    ca.Montants{{Kind: ca.NoVentilation}},
 			Description: "A compléter",
-			Currency:    dossiers.Euros,
+			Currency:    ds.Euros,
 			IdFile:      ca.NewOptIdComptaFile(meta.Id),
 		}.Insert(tx)
 		if err != nil {

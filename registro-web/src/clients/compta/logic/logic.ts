@@ -1,14 +1,19 @@
 import { baseURL, parseError } from "@/utils";
 import {
   AbstractAPI,
+  AccountKind,
+  ModePaiementRecord,
   State,
   Ventilation,
   VentilationLabels,
   type ComptaRecord,
   type ComptaSubrecord,
   type IdComptaCamp,
+  type Int,
   type MontantPart,
+  type RecordExt,
 } from "./api";
+import { isDateZero } from "@/components/date";
 
 class Controller extends AbstractAPI {
   public isAdmin: boolean = false;
@@ -39,6 +44,28 @@ export const controller = new Controller(
   (_, __) => {},
   baseURL(),
 );
+
+export namespace CachedTokens {
+  export function get() {
+    const cachedIdCompta =
+      window.localStorage.getItem("cachedIdComptaCompta") || "";
+    const cachedToken = window.localStorage.getItem("cachedTokenCompta") || "";
+    return {
+      idCompta: Number(cachedIdCompta) as IdComptaCamp,
+      token: cachedToken,
+    };
+  }
+
+  export function set(idCompta: IdComptaCamp, token: string) {
+    window.localStorage.setItem("cachedIdComptaCompta", String(idCompta));
+    window.localStorage.setItem("cachedTokenCompta", token);
+  }
+
+  export function clear() {
+    window.localStorage.removeItem("cachedIdComptaCompta");
+    window.localStorage.removeItem("cachedTokenCompta");
+  }
+}
 
 export const StateColors: { [key in State]: string } = {
   [State.EnCours]: "yellow-darken-3",
@@ -71,6 +98,12 @@ export function setRecordHelpSeen() {
   return localStorage.setItem("help-status", "seen");
 }
 
+export function montantTotal(rec: { Montants: MontantPart[] | null }) {
+  return (rec.Montants || [])
+    .map((v) => v.Cent)
+    .reduce((a, b) => a + b, 0) as Int;
+}
+
 type WithNullableField<T, Field> = {
   [K in keyof T]: K extends Field ? T[K] | null : T[K];
 };
@@ -82,8 +115,24 @@ export interface RecordExtModeOpt {
   Subrecords: SubrecordModeOpt[] | null;
 }
 
-export function montantTotal(rec: { Montants: MontantPart[] | null }) {
+export function isRecordValid(record: RecordExtModeOpt) {
+  return record.Subrecords?.every((sub) =>
+    isSubrecordValid(record.Record, sub),
+  );
+}
+
+function isSubrecordValid(record: ComptaRecord, sub: SubrecordModeOpt) {
+  // do not require anything for Mode and Serial for OtherAccount
+  const isModeValid =
+    record.Account == AccountKind.AccountAsso ||
+    (sub.Mode !== null &&
+      (sub.Mode != ModePaiementRecord.Cheque || !!sub.Serial));
   return (
-    (rec.Montants || []).map((v) => v.Cent).reduce((a, b) => a + b, 0) / 100
+    !!sub.Description &&
+    isModeValid &&
+    !isDateZero(sub.Date) &&
+    sub.Montants?.length &&
+    sub.Montants?.every((m) => m.Kind != Ventilation.NoVentilation) &&
+    montantTotal(sub) > 0
   );
 }

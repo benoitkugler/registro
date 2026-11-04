@@ -1,5 +1,9 @@
 <template>
-  <v-skeleton-loader type="card" v-if="!camps.length"></v-skeleton-loader>
+  <v-skeleton-loader
+    type="card"
+    v-if="!camps.length"
+    width="900px"
+  ></v-skeleton-loader>
 
   <v-card v-else title="Liste des séjours" class="mx-auto" width="900px">
     <!-- Confirm delete -->

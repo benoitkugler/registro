@@ -32,7 +32,8 @@
 
 <script lang="ts" setup>
 import { ref } from "vue";
-import { controller } from "./logic/logic";
+import { CachedTokens, controller } from "./logic/logic";
+import { useRouter } from "vue-router";
 
 const message = ref("");
 const messageColor = ref("primary");
@@ -49,7 +50,4 @@ controller.showMessage = (s, color) => {
   message.value = s;
   messageColor.value = color || "success";
 };
-
-// TODO: better UX when reloading
-// TODO: handle direct connection with directeur link
 </script>

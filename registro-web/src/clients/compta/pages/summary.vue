@@ -77,8 +77,8 @@
                   location="top"
                   text="Le bugdet prévisionnel et les dépenses sont ajustés pour un séjour à la Maison du Rocher."
                 >
-                  <template v-slot:activator="{ isActive, props }">
-                    <v-chip v-on="{ isActive }" v-bind="props" color="primary"
+                  <template v-slot:activator="{ props }">
+                    <v-chip v-bind="props" color="primary"
                       >Maison du Rocher</v-chip
                     >
                   </template>
@@ -182,8 +182,8 @@
                     <v-tooltip
                       text="Somme des dépenses enregistrées, les remboursements étant déduits"
                     >
-                      <template v-slot:activator="{ isActive, props }">
-                        <v-icon v-on="{ isActive }" v-bind="props" class="ml-2"
+                      <template v-slot:activator="{ props }">
+                        <v-icon v-bind="props" class="ml-2"
                           >mdi-help-circle-outline</v-icon
                         >
                       </template>
@@ -197,8 +197,8 @@
             <v-row justify="space-between">
               <v-col cols="auto">
                 <v-tooltip text="Recettes attendues provenant des pensions">
-                  <template v-slot:activator="{ isActive, props }">
-                    <div v-on="{ isActive }" v-bind="props">
+                  <template v-slot:activator="{ props }">
+                    <div v-bind="props">
                       Budget: <b>{{ Formatters.montant(camp.Recettes) }}</b>
                     </div>
                   </template>

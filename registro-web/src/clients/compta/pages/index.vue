@@ -37,15 +37,38 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from "vue";
-import { controller } from "../logic/logic";
+import { onMounted, ref } from "vue";
+import { CachedTokens, controller } from "../logic/logic";
 import { useRouter } from "vue-router";
 import NavBar from "../components/NavBar.vue";
+import type { IdComptaCamp } from "../logic/api.ts";
 
 const router = useRouter();
 
 // const emit = defineEmits<{
 //  }>();
+
+onMounted(init);
+
+// resolve loggin strategy :
+//  - give priority to director link (query param 'key')
+//  - otherwise, try to use a cached token
+//  - fallback to admin loggin screen
+async function init() {
+  const directorKey = (router.currentRoute.value.query["key"] || "") as string;
+  if (directorKey) {
+    const res = await controller.Loggin({ key: directorKey, isAdmin: false });
+    if (res === undefined) return;
+
+    onSuccessfullLoggin(res.IdCompta, res.Token);
+  } else {
+    const { idCompta, token } = CachedTokens.get();
+    if (token) {
+      onSuccessfullLoggin(idCompta, token);
+    }
+    // otherwise, just show the loggin screen
+  }
+}
 
 const showPassword = ref(false);
 const password = ref("");
@@ -55,12 +78,20 @@ async function loggin() {
   if (res === undefined) return;
 
   if (res.IsValid) {
-    controller.setToken(res.Token);
-    controller.isAdmin = true;
-    controller.showMessage("Bienvenue !");
-    router.push({ path: "/home" });
+    onSuccessfullLoggin(res.IdCompta, res.Token);
   } else {
     errors.value = ["Clé de connection incorrecte."];
   }
+}
+
+function onSuccessfullLoggin(idCompta: IdComptaCamp, token: string) {
+  CachedTokens.set(idCompta, token);
+
+  controller.setToken(token);
+  controller.isAdmin = idCompta == -1;
+  controller.idCompta = idCompta;
+
+  controller.showMessage("Bienvenue !");
+  router.push({ path: "/home" });
 }
 </script>

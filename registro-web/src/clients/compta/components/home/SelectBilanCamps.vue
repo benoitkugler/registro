@@ -36,9 +36,8 @@
         >
           <template v-slot:append>
             <v-tooltip text="Ajouter les autres années">
-              <template v-slot:activator="{ isActive, props }">
+              <template v-slot:activator="{ props }">
                 <v-btn
-                  v-on="{ isActive }"
                   v-bind="props"
                   class="mr-1"
                   icon="mdi-history"

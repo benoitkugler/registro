@@ -21,7 +21,12 @@
             </div>
           </template>
           <template v-slot:append>
-            {{ montantTotal(record.sub).toLocaleString() }}€
+            {{
+              Formatters.montant({
+                Currency: record.sub.Currency,
+                Cent: montantTotal(record.sub),
+              })
+            }}
           </template>
         </v-list-item>
       </v-list>
@@ -64,6 +69,6 @@ async function loadSubrecords() {
   showSubrecords.value = true;
   const res = await controller.GetRecords({ "id-compta": controller.idCompta });
   if (res === undefined) return;
-  records.value = res || [];
+  records.value = res.Records || [];
 }
 </script>
