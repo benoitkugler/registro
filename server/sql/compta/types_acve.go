@@ -54,6 +54,6 @@ type Bus struct {
 type AccountKind uint8
 
 const (
-	AccountCamp AccountKind = iota // the account chosen for the camp (see AccountACVE)
-	AccountAsso                    // the main asso account
+	AccountCamp AccountKind = iota // Compte dédié au séjour
+	AccountAsso                    // Compte de l'asso.
 )

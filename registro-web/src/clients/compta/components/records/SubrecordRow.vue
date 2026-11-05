@@ -21,6 +21,7 @@
     <v-col align-self="center" cols="auto">
       <FileBtn
         :record="props.subrecord"
+        :in-upload="props.inFileUpload"
         :readonly="props.readonly"
         @upload="(f: File) => emit('uploadFile', f)"
         @delete="emit('deleteFile')"
@@ -96,7 +97,6 @@ import {
   AccountKind,
   ModePaiementRecord,
   ModePaiementRecordLabels,
-  VentilationLabels,
   type ComptaSubrecord,
 } from "../../logic/api.ts";
 import { Formatters } from "@/utils.ts";
@@ -110,6 +110,7 @@ const props = defineProps<{
   boldSerial: boolean;
   readonly: boolean;
   inManySubrecords: boolean;
+  inFileUpload: boolean; // controlled by the root widget
 }>();
 
 const emit = defineEmits<{

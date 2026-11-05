@@ -147,7 +147,7 @@ func (ct *Controller) getRecords(id ca.IdComptaCamp) (GetRecordsOut, error) {
 	}
 	m := make(map[cps.IdEquipier]string)
 	for _, eq := range equipiers {
-		m[eq.Id] = personnes[eq.IdPersonne].PrenomNOM()
+		m[eq.Id] = personnes[eq.IdPersonne].PrenomN()
 	}
 
 	return GetRecordsOut{m, out}, nil

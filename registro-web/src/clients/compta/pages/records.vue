@@ -44,8 +44,10 @@
       v-if="controller.idCompta == -1"
       class="mt-2"
     ></NoSelectedCamp>
-
     <v-skeleton-loader
+      class="mx-auto"
+      width="600px"
+      type="table"
       v-else-if="camp == null || records == null"
     ></v-skeleton-loader>
     <div v-else>
@@ -55,13 +57,6 @@
         :records="records"
         v-model:direct-upload-file="fileForDirectUpload"
         @update-state="(c) => (camp != null ? (camp.Compta = c) : null)"
-        @update-notif="
-          (v) => {
-            notifRecords = v;
-            fetchData();
-          }
-        "
-        @update-mandatory-records="(v) => (showMandatoryRecordsAlert = v)"
         @show-help="showHelp = true"
       ></RecordsList>
     </div>
@@ -90,10 +85,6 @@ import { State, type CampHeader, type GetRecordsOut } from "../logic/api";
 import RecordsList from "../components/records/RecordsList.vue";
 import NavBar from "../components/NavBar.vue";
 import NoSelectedCamp from "../components/NoSelectedCamp.vue";
-
-const notifRecords = ref(0);
-const showMandatoryRecordsAlert = ref(false);
-const showMandatoryFraisMDRAlert = ref(false);
 
 const readonly = computed(
   () => !controller.isAdmin && camp.value?.Compta.State == State.Archive,

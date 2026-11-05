@@ -2,14 +2,17 @@
   <v-card title="Enregistrements" :subtitle="Camps.label(props.camp)">
     <template #append>
       <v-row no-gutters class="my-2">
-        <v-col>
-          <!-- TODO -->
-          <v-icon v-if="showMandatoryRecordsAlert" color="orange">
-            mdi-alert-circle
-          </v-icon>
-          <v-badge v-if="notifs" :content="notifs" color="pink" inline>
-          </v-badge>
+        <v-col v-if="itemsToHandle" align-self="center">
+          <v-chip prepend-icon="mdi-alert-circle" color="pink">
+            {{ itemsToHandle }} à vérifier
+          </v-chip>
         </v-col>
+        <v-divider
+          v-if="itemsToHandle"
+          vertical
+          thickness="1"
+          class="mx-2"
+        ></v-divider>
 
         <v-col class="pr-2" v-if="!mobile">
           <v-select
@@ -18,8 +21,14 @@
             label="Compte"
             hide-details
             :items="[
-              { title: 'Compte dédié', value: AccountKind.AccountCamp },
-              { title: 'Autre compte', value: AccountKind.AccountAsso },
+              {
+                title: AccountKindLabels[AccountKind.AccountCamp],
+                value: AccountKind.AccountCamp,
+              },
+              {
+                title: AccountKindLabels[AccountKind.AccountAsso],
+                value: AccountKind.AccountAsso,
+              },
               { title: 'Tous', value: null },
             ]"
             v-model="showOtherAccount"
@@ -123,14 +132,19 @@
       </v-row>
     </template>
 
+    <!-- confirm delete -->
     <v-dialog
       max-width="600"
       :model-value="toDelete != null"
       @update:model-value="toDelete = null"
     >
       <v-card title="Confirmer la suppression">
-        <v-card-text
-          >Confimez-vous la suppression de l'enregistrement ? <br />
+        <v-card-text v-if="toDelete">
+          Confimez-vous la suppression
+          {{
+            toDelete.hasMany ? "du sous-enregistrement" : "de l'enregistrement"
+          }}
+          ? <br />
           Cette opération est irréversible.
         </v-card-text>
         <v-card-actions>
@@ -181,15 +195,13 @@
     </v-dialog>
 
     <v-card-text>
-      <template v-if="!records.length">
-        <v-alert v-if="showMandatoryRecordsAlert" type="warning" class="my-4">
-          Pour un séjour à la Maison du Rocher, ces dépenses doivent être
-          fournies !
-        </v-alert>
-        <div v-else class="font-italic my-4">
-          Aucun enregistrement n'est encore déclaré.
-        </div>
-      </template>
+      <v-alert v-if="showMandatoryRecordsAlert" type="warning" class="my-4">
+        Pour un séjour à la Maison du Rocher, les dépenses du
+        <b>compte de l'association</b> doivent être fournies !
+      </v-alert>
+      <div v-if="!records.length" class="font-italic my-4">
+        Aucun enregistrement n'est encore déclaré.
+      </div>
       <template v-for="item in recordsToShow" :key="item.record.Record.Id">
         <v-fade-transition hide-on-leave class="my-1">
           <RecordRowEdit
@@ -200,12 +212,20 @@
           ></RecordRowEdit>
           <RecordRow
             v-else
-            :readonly="props.readonly"
+            :equipiers="props.records.Equipiers || {}"
             :record="item.record"
+            :in-file-upload="inUpload"
             :bold-titles="item.boldTitles"
             :bold-serials="item.boldSerials"
+            :readonly="props.readonly"
             @edit="toEdit = copy(item.record)"
-            @delete="(v: ComptaSubrecord) => (toDelete = v)"
+            @delete="
+              (v: ComptaSubrecord) =>
+                (toDelete = {
+                  hasMany: item.record.Subrecords!.length > 1,
+                  Subrecord: v,
+                })
+            "
             @add-subrecord="addSubrecord(item.record.Record)"
             @merge-record-to="recordToMerge = item.record.Record"
             @upload-file="uploadJustificatif"
@@ -224,6 +244,7 @@ import DirectUpload from "./DirectUpload.vue";
 import { useDisplay } from "vuetify";
 import {
   AccountKind,
+  AccountKindLabels,
   RecordStatus,
   State,
   StateLabels,
@@ -250,22 +271,20 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: "updateState", res: ComptaExt): void;
-  (e: "updateNotif", n: number): void;
-  (e: "updateMandatoryRecords", alert: boolean): void;
   (e: "showHelp"): void;
 }>();
-
-onMounted(emitNotifs);
 
 const { mobile } = useDisplay();
 
 const showOtherAccount = ref<AccountKind | null>(null);
 
 const records = ref(copy(props.records.Records || []));
-const toDelete = ref<ComptaSubrecord | null>(null);
+const toDelete = ref<{ hasMany: boolean; Subrecord: ComptaSubrecord } | null>(
+  null,
+);
 const toEdit = ref<RecordExtModeOpt | null>(null);
 
-const notifs = computed(() => {
+const itemsToHandle = computed(() => {
   // admin : items complets mais non valides
   // directeur : items incomplets
   const status = controller.isAdmin
@@ -274,15 +293,15 @@ const notifs = computed(() => {
   return records.value.filter((r) => r.Status == status).length;
 });
 
-const showMandatoryRecordsAlert = computed(() => props.camp.AtMDR);
+const showMandatoryRecordsAlert = computed(() => {
+  // this is only used for ACVE camps at MDR
+  if (!props.camp.AtMDR) return false;
 
-function emitNotifs() {
-  emit("updateNotif", notifs.value);
-  emit(
-    "updateMandatoryRecords",
-    showMandatoryRecordsAlert.value && !records.value.length,
+  return (
+    records.value.filter((r) => r.Record.Account == AccountKind.AccountAsso)
+      .length == 0
   );
-}
+});
 
 const search = ref<string | null>("");
 type recordWithBold = {
@@ -347,8 +366,6 @@ async function createRecord() {
   toEdit.value = copy(res);
   // start with empty mode to force a choice
   toEdit.value.Subrecords?.forEach((sub) => (sub.Mode = null));
-
-  emitNotifs();
 }
 
 async function updateRecord(rec: RecordExt) {
@@ -359,13 +376,11 @@ async function updateRecord(rec: RecordExt) {
   const index = records.value.findIndex((r) => r.Record.Id == res.Record.Id);
   records.value[index] = res;
   toEdit.value = null;
-
-  emitNotifs();
 }
 
 async function deleteSubrecord() {
   if (toDelete.value == null) return;
-  const idToDelete = toDelete.value.Id;
+  const idToDelete = toDelete.value.Subrecord.Id;
   const res = await controller.DeleteSubrecord({ id: idToDelete });
   if (res === undefined) return;
 
@@ -384,20 +399,20 @@ async function deleteSubrecord() {
     );
   }
   toDelete.value = null;
-
-  emitNotifs();
 }
 
+const inUpload = ref(new Set<IdComptaSubrecord>());
+
 async function uploadJustificatif(rec: ComptaSubrecord, file: File) {
+  inUpload.value.add(rec.Id);
   const res = await controller.UploadJustificatif(
     { idSubrecord: rec.Id },
     file,
   );
+  inUpload.value.delete(rec.Id);
   if (res === undefined) return;
   controller.showMessage("Justificatif téléversé avec succès.");
   applyRecordAndSub(res);
-
-  emitNotifs();
 }
 
 function applyRecordAndSub(v: RecordAndSub) {
@@ -420,8 +435,6 @@ async function addSubrecord(record: ComptaRecord) {
 
     toEdit.value = copy(records.value[index]);
   }
-
-  emitNotifs();
 }
 
 async function deleteJustificatif(rec: ComptaSubrecord) {
@@ -431,8 +444,6 @@ async function deleteJustificatif(rec: ComptaSubrecord) {
   if (res === undefined) return;
   controller.showMessage("Justificatif supprimé avec succès.");
   applyRecordAndSub(res);
-
-  emitNotifs();
 }
 
 async function addReview(rec: ComptaRecord, text: string) {
@@ -531,7 +542,6 @@ async function directUploadCreate() {
   controller.showMessage("Enregistrement créé avec succès.");
 
   records.value = [res].concat(records.value);
-  emitNotifs();
 }
 
 async function directUploadAddTo(subrecord: ComptaSubrecord) {

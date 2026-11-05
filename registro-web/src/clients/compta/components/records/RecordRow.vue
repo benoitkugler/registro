@@ -1,12 +1,13 @@
 <template>
-  <div class="py-1 rounded" :style="`border: 1px solid ${color}`">
+  <div class="py-1 rounded" :style="`border: 1px solid ${statusFormat.color}`">
     <!-- Review edit dialog -->
     <v-dialog v-model="showEditReview" max-width="800px">
       <v-card title="Ajouter un commentaire" height="80vh">
         <v-card-text>
           <div style="max-height: 50vh" class="overflow-y-auto">
-            <reviews-card :reviews="props.record.Record.Reviews"></reviews-card>
+            <ReviewsCard :reviews="props.record.Record.Reviews"></ReviewsCard>
           </div>
+          <v-divider horizontal thickness="1"></v-divider>
           <v-row justify="space-between" class="mt-2">
             <v-col>
               <v-textarea
@@ -32,7 +33,6 @@
     <v-row justify="space-evenly">
       <v-col
         align-self="center"
-        cols="4"
         md="auto"
         class="text-left pa-0 ma-0"
         v-if="!mobile"
@@ -40,7 +40,7 @@
         <RecordID :record="props.record.Record" />
       </v-col>
 
-      <v-col :cols="mobile ? 10 : 4" md="9">
+      <v-col :cols="mobile ? 10 : 4" md="8">
         <SubrecordRow
           v-for="(subrecord, index) in props.record.Subrecords"
           :key="index"
@@ -50,6 +50,7 @@
           :bold-title="props.boldTitles.get(subrecord.Id) || false"
           :readonly="props.readonly"
           :in-many-subrecords="hasManySubrecords"
+          :in-file-upload="props.inFileUpload.has(subrecord.Id)"
           @delete="emit('delete', subrecord)"
           @upload-file="(f) => emit('uploadFile', subrecord, f)"
           @delete-file="emit('deleteFile', subrecord)"
@@ -73,25 +74,22 @@
         </v-row>
       </v-col>
 
+      <v-col cols="6" md="1">
+        <v-chip v-if="props.record.Record.SpentBy.Valid">
+          {{ props.equipiers[props.record.Record.SpentBy.Id] }}
+        </v-chip>
+      </v-col>
+
       <v-col :cols="mobile ? 2 : 4" md="auto" align-self="center">
         <v-row no-gutters>
           <v-col align-self="center" :cols="mobile ? 12 : 4">
-            <v-tooltip
-              :text="
-                props.record.Record.IsValidated
-                  ? 'Validation effectuée'
-                  : 'Validation en attente'
-              "
-              location="top"
-            >
+            <v-tooltip :text="statusFormat.text" location="top">
               <template v-slot:activator="{ props: innerProps }">
                 <v-icon
                   class="mx-1"
                   v-bind="innerProps"
-                  :icon="
-                    props.record.Record.IsValidated ? 'mdi-check' : 'mdi-clock'
-                  "
-                  :color="props.record.Record.IsValidated ? 'green' : 'yellow'"
+                  :icon="statusFormat.icon"
+                  :color="statusFormat.color"
                 >
                 </v-icon>
               </template>
@@ -191,14 +189,17 @@ import {
   RecordStatus,
   type ComptaSubrecord,
   type IdComptaSubrecord,
+  type IdEquipier,
   type RecordExt,
 } from "../../logic/api.ts";
 
 const props = defineProps<{
+  equipiers: Record<IdEquipier, string>;
   record: RecordExt;
   boldTitles: Map<IdComptaSubrecord, boolean>;
   boldSerials: Map<IdComptaSubrecord, boolean>;
   readonly: boolean;
+  inFileUpload: Set<IdComptaSubrecord>;
 }>();
 
 const emit = defineEmits<{
@@ -213,14 +214,26 @@ const emit = defineEmits<{
 
 const { mobile } = useDisplay();
 
-const color = computed(() => {
+const statusFormat = computed(() => {
   switch (props.record.Status) {
     case RecordStatus.Incomplete:
-      return "red";
+      return {
+        color: "red",
+        text: "Enregistrement incomplet",
+        icon: "mdi-table-alert",
+      };
     case RecordStatus.Complete:
-      return "yellow";
-    default:
-      return "green";
+      return {
+        color: "yellow",
+        text: "Validation en attente",
+        icon: "mdi-clock",
+      };
+    case RecordStatus.Validated:
+      return {
+        color: "green",
+        text: "Validation effectuée",
+        icon: "mdi-check",
+      };
   }
 });
 

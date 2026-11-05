@@ -188,9 +188,8 @@ export const AccountKind = {
 export type AccountKind = (typeof AccountKind)[keyof typeof AccountKind];
 
 export const AccountKindLabels: Record<AccountKind, string> = {
-  [AccountKind.AccountCamp]:
-    "the account chosen for the camp (see AccountACVE)",
-  [AccountKind.AccountAsso]: "the main asso account",
+  [AccountKind.AccountCamp]: "Compte dédié au séjour",
+  [AccountKind.AccountAsso]: "Compte de l'asso.",
 };
 
 // registro/sql/compta.Bus

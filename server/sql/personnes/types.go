@@ -75,7 +75,7 @@ func (p Identite) PrenomNOM() string {
 }
 
 // PrenomN returns Prenom N.
-func (p *Identite) PrenomN() string {
+func (p Identite) PrenomN() string {
 	var initiale string
 	if nom := p.FNom(); nom != "" {
 		r, _ := utf8.DecodeRuneInString(nom)

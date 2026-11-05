@@ -29,7 +29,7 @@
       indeterminate
       :size="props.small ? '20px' : '40px'"
       width="6"
-      v-if="false"
+      v-if="props.inUpload"
     ></v-progress-circular>
 
     <v-menu v-else-if="props.record.IdFile.Valid">
@@ -70,6 +70,7 @@ import FilePreview from "./FilePreview.vue";
 
 const props = defineProps<{
   record: ComptaSubrecord;
+  inUpload: boolean;
   readonly: boolean;
   small?: boolean;
 }>();

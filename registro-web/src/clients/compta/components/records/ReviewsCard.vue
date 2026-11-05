@@ -1,5 +1,5 @@
 <template>
-  <div class="my-4">
+  <div class="my-2">
     <div v-if="!props.reviews?.length" class="text-center mb-4">
       <i>Aucun message.</i>
     </div>
