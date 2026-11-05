@@ -106,7 +106,7 @@
     v-if="props.settings.ShowCharteConduite"
   >
     <v-card-text style="line-height: 2em">
-      Je m’engage à m’intéresser et à respecter la foi en Jésus-Christ. <br />
+      Je m’engage à respecter la foi en Jésus-Christ. <br />
       Je m’engage à avoir une attitude constructive dans le séjour :
       <ul class="px-4">
         <li>en coopérant avec les encadrants et dans l’équipe</li>
@@ -118,7 +118,7 @@
         </li>
         <li>
           en vivant un temps « bonne santé » : renoncer à la consommation
-          d’alcool, de cigarettes, de drogues, d’internet.
+          d’alcool, de cigarettes, de drogues, d’internet, de réseaux sociaux....
         </li>
       </ul>
 
