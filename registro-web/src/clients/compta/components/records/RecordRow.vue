@@ -2,13 +2,13 @@
   <div class="py-1 rounded" :style="`border: 1px solid ${statusFormat.color}`">
     <!-- Review edit dialog -->
     <v-dialog v-model="showEditReview" max-width="800px">
-      <v-card title="Ajouter un commentaire" height="80vh">
+      <v-card title="Ajouter un commentaire">
         <v-card-text>
           <div style="max-height: 50vh" class="overflow-y-auto">
             <ReviewsCard :reviews="props.record.Record.Reviews"></ReviewsCard>
           </div>
           <v-divider horizontal thickness="1"></v-divider>
-          <v-row justify="space-between" class="mt-2">
+          <v-row class="mt-2">
             <v-col>
               <v-textarea
                 :disabled="props.readonly"
@@ -18,15 +18,16 @@
                 rows="3"
               ></v-textarea
             ></v-col>
-            <v-col cols="auto" align-self="center">
-              <v-btn
-                :disabled="props.readonly || !newReview.length"
-                @click="addReview"
-                >Envoyer</v-btn
-              >
-            </v-col>
           </v-row>
         </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            :disabled="props.readonly || !newReview.length"
+            @click="addReview"
+            >Envoyer</v-btn
+          >
+        </v-card-actions>
       </v-card>
     </v-dialog>
 
@@ -58,7 +59,7 @@
         </SubrecordRow>
         <v-row v-if="hasManySubrecords" no-gutters class="my-1 px-2 mx-2">
           <v-col class="text-right">
-            <v-chip variant="outlined">
+            <v-chip variant="outlined" label>
               <b>{{ "Total : " + props.record.Total }}</b>
             </v-chip>
           </v-col>
@@ -74,9 +75,17 @@
         </v-row>
       </v-col>
 
-      <v-col cols="6" md="1">
-        <v-chip v-if="props.record.Record.SpentBy.Valid">
+      <v-col cols="6" md="1" align-self="center" class="px-0 text-center mx-0">
+        <v-chip
+          size="small"
+          v-if="props.record.Record.SpentBy.Valid"
+          prepend-icon="mdi-account-hard-hat"
+        >
           {{ props.equipiers[props.record.Record.SpentBy.Id] }}
+          <v-tooltip activator="parent">
+            Cette dépense a été avancée par
+            {{ props.equipiers[props.record.Record.SpentBy.Id] }}
+          </v-tooltip>
         </v-chip>
       </v-col>
 

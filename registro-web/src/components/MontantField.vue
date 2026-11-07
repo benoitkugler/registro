@@ -2,6 +2,7 @@
   <v-row no-gutters>
     <v-col :cols="props.readonlyCurrency ? 12 : 6">
       <v-text-field
+        :autofocus="props.autofocus"
         class="mr-1"
         variant="outlined"
         density="compact"
@@ -50,6 +51,7 @@ const props = defineProps<{
   hideDetails?: boolean;
   readonlyCurrency?: boolean;
   disabled?: boolean;
+  autofocus?: boolean;
 }>();
 
 const modelValue = defineModel<Montant>({ required: true });

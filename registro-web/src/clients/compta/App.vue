@@ -32,7 +32,7 @@
 
 <script lang="ts" setup>
 import { ref } from "vue";
-import { CachedTokens, controller } from "./logic/logic";
+import { CachedTokens, controller, isDirectorLoggin } from "./logic/logic";
 import { useRouter } from "vue-router";
 
 const message = ref("");
@@ -50,4 +50,44 @@ controller.showMessage = (s, color) => {
   message.value = s;
   messageColor.value = color || "success";
 };
+
+// if we are not yet logged in,
+// redirect to the index page
+const router = useRouter();
+router.beforeEach(async (to, from) => {
+  // only trigger this path at application startup (including reload)
+  if (controller.authToken) return;
+
+  // resolve loggin strategy :
+  //  - give priority to director link (query param 'key')
+  //  - otherwise, try to use a cached token
+  //  - fallback to admin loggin screen
+
+  if (isDirectorLoggin(to)) return;
+
+  const { idCompta, token } = CachedTokens.get();
+  if (token) {
+    // check the token is still valid
+    const res = await controller.Loggin({
+      key: token,
+      isAdmin: idCompta == -1,
+    });
+    if (res && res.IsValid) {
+      controller.onSuccessfullLoggin(res.IdCompta, res.Token);
+      if (to.path == "/") {
+        // we are on the loggin page, dont stay here !
+        return { path: "/home" };
+      } else {
+        return; // do not redirect to login page
+      }
+    } else {
+      CachedTokens.clear();
+    }
+  }
+
+  if (to.path !== "/") {
+    // redirect the user to the login page
+    return { path: "/" };
+  }
+});
 </script>

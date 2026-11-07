@@ -11,9 +11,9 @@ import {
   type IdComptaCamp,
   type Int,
   type MontantPart,
-  type RecordExt,
 } from "./api";
 import { isDateZero } from "@/components/date";
+import type { RouteLocationNormalizedLoaded } from "vue-router";
 
 class Controller extends AbstractAPI {
   public isAdmin: boolean = false;
@@ -34,8 +34,14 @@ class Controller extends AbstractAPI {
 
   protected startRequest(): void {}
 
-  setToken(token: string) {
+  onSuccessfullLoggin(idCompta: IdComptaCamp, token: string) {
+    CachedTokens.set(idCompta, token);
+
     this.authToken = token;
+    this.isAdmin = idCompta == -1;
+    this.idCompta = idCompta;
+
+    this.showMessage("Bienvenue !");
   }
 }
 
@@ -64,6 +70,13 @@ export namespace CachedTokens {
   export function clear() {
     window.localStorage.removeItem("cachedIdComptaCompta");
     window.localStorage.removeItem("cachedTokenCompta");
+  }
+}
+
+export function isDirectorLoggin(router: RouteLocationNormalizedLoaded) {
+  const token = router.query["directeur-key"];
+  if (token) {
+    return token as string;
   }
 }
 
@@ -136,3 +149,23 @@ function isSubrecordValid(record: ComptaRecord, sub: SubrecordModeOpt) {
     montantTotal(sub) > 0
   );
 }
+
+export const VentilationsIcons = {
+  [Ventilation.NoVentilation]: "",
+  [Ventilation.Activites]: "mdi-ticket",
+  [Ventilation.Alimentation]: "mdi-food",
+  [Ventilation.FournitureEntretien]: "mdi-broom",
+  [Ventilation.FournitureAdmin]: "mdi-file-document-multiple-outline",
+  [Ventilation.FourniturePedagogique]: "mdi-book-education-outline",
+  [Ventilation.Medical]: "mdi-medical-bag",
+  [Ventilation.Hotelier]: "mdi-room-service",
+  [Ventilation.Camping]: "mdi-tent",
+  [Ventilation.Carburant]: "mdi-gas-station",
+  [Ventilation.MaintenanceVehic]: "mdi-car-wrench",
+  [Ventilation.Travels]: "mdi-map-marker-path",
+  [Ventilation.Telephone]: "mdi-phone",
+  [Ventilation.Poste]: "mdi-mailbox",
+  [Ventilation.Bank]: "mdi-bank",
+  [Ventilation.PensionBenevole]: "mdi-hand-heart",
+  [Ventilation.Autre]: "mdi-dots-horizontal-circle-outline",
+};

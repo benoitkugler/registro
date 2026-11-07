@@ -2,7 +2,7 @@
   <v-text-field
     v-if="props.readonly"
     class="center-text"
-    variant="outlined"
+    :variant="props.variant || 'outlined'"
     density="compact"
     :hide-details="props.hideDetails"
     :label="props.label"
@@ -15,18 +15,20 @@
       <v-text-field
         class="center-text"
         v-bind="innerProps"
-        variant="outlined"
+        :variant="props.variant || 'outlined'"
         density="compact"
         :hide-details="props.hideDetails"
         :label="props.label"
-        :model-value="(adapter.parseISO(modelValue) as Date).toLocaleDateString()"
+        :model-value="
+          (adapter.parseISO(modelValue) as Date).toLocaleDateString()
+        "
       >
       </v-text-field>
     </template>
 
     <v-date-picker
       :model-value="adapter.parseISO(modelValue)"
-      @update:model-value="d => onUpdate(d as Date)"
+      @update:model-value="(d) => onUpdate(d as Date)"
     ></v-date-picker>
   </v-menu>
 </template>
@@ -36,10 +38,12 @@ import type { Date_ } from "@/clients/backoffice/logic/api";
 import { ref } from "vue";
 import { useDate } from "vuetify";
 import { newDate_ } from "./date";
+import type { VTextField } from "vuetify/components";
 const props = defineProps<{
   label: string;
   hideDetails?: boolean;
   readonly?: boolean;
+  variant?: VTextField["variant"];
 }>();
 
 const modelValue = defineModel<Date_>({ required: true });

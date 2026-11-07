@@ -100,6 +100,8 @@ onMounted(() => {
 
 const records = ref<GetRecordsOut | null>(null);
 async function fetchData() {
+  if (controller.idCompta == -1) return;
+
   const res = await controller.GetCompta({ IdCompta: controller.idCompta });
   if (res === undefined) return;
 

@@ -71,6 +71,7 @@ controller.showMessage = (s, color, action) => {
 // redirect to the index page
 const router = useRouter();
 router.beforeEach(async (to, from) => {
+  // only trigger this path at application startup (including reload)
   if (controller.hasToken()) return;
 
   // comming from backoffice, give priority

@@ -1,7 +1,15 @@
 <template>
   <v-tooltip location="top" :text="VentilationLabels[props.montant.Kind]">
     <template v-slot:activator="{ props: innerProps }">
-      <v-chip v-bind="innerProps" :prepend-icon="icons[props.montant.Kind]">
+      <v-chip
+        label
+        v-bind="innerProps"
+        :prepend-icon="VentilationsIcons[props.montant.Kind]"
+        :size="props.small ? 'small' : undefined"
+        :closable="props.closable"
+        @click:close="emit('close')"
+        @[props.clickable&&`click`].stop="emit('clicked')"
+      >
         {{
           Formatters.montant({
             Currency: props.currency,
@@ -15,35 +23,19 @@
 
 <script lang="ts" setup>
 import { Formatters } from "@/utils";
-import {
-  Currency,
-  Ventilation,
-  VentilationLabels,
-  type MontantPart,
-} from "../../logic/api";
+import { Currency, VentilationLabels, type MontantPart } from "../../logic/api";
+import { VentilationsIcons } from "../../logic/logic";
 
 const props = defineProps<{
   currency: Currency;
   montant: MontantPart;
+  small?: boolean;
+  closable?: boolean;
+  clickable?: boolean;
 }>();
 
-const icons = {
-  [Ventilation.NoVentilation]: "",
-  [Ventilation.Activites]: "mdi-ticket",
-  [Ventilation.Alimentation]: "mdi-food",
-  [Ventilation.FournitureEntretien]: "mdi-broom",
-  [Ventilation.FournitureAdmin]: "mdi-file-document-multiple-outline",
-  [Ventilation.FourniturePedagogique]: "mdi-book-education-outline",
-  [Ventilation.Medical]: "mdi-medical-bag",
-  [Ventilation.Hotelier]: "mdi-room-service",
-  [Ventilation.Camping]: "mdi-tent",
-  [Ventilation.Carburant]: "mdi-gas-station",
-  [Ventilation.MaintenanceVehic]: "mdi-car-wrench",
-  [Ventilation.Travels]: "mdi-map-marker-path",
-  [Ventilation.Telephone]: "mdi-phone",
-  [Ventilation.Poste]: "mdi-mailbox",
-  [Ventilation.Bank]: "mdi-bank",
-  [Ventilation.PensionBenevole]: "mdi-hand-heart",
-  [Ventilation.Autre]: "mdi-dots-horizontal-circle-outline",
-};
+const emit = defineEmits<{
+  (e: "close"): void;
+  (e: "clicked"): void;
+}>();
 </script>

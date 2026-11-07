@@ -82,7 +82,7 @@
 
         <v-col align-self="center" cols="auto">
           <v-menu>
-            <template v-slot:activator="{ props }">
+            <template #activator="{ props }">
               <v-btn
                 v-bind="props"
                 icon
@@ -206,6 +206,7 @@
         <v-fade-transition hide-on-leave class="my-1">
           <RecordRowEdit
             v-if="toEdit?.Record.Id == item.record.Record.Id"
+            :equipiers="props.records.Equipiers || {}"
             :record="toEdit"
             @save="updateRecord"
             @back="toEdit = null"
