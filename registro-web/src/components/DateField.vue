@@ -6,7 +6,7 @@
     density="compact"
     :hide-details="props.hideDetails"
     :label="props.label"
-    :model-value="(adapter.parseISO(modelValue) as Date).toLocaleDateString()"
+    :model-value="Formatters.date(modelValue, true, false)"
     readonly
   >
   </v-text-field>
@@ -19,15 +19,18 @@
         density="compact"
         :hide-details="props.hideDetails"
         :label="props.label"
-        :model-value="
-          (adapter.parseISO(modelValue) as Date).toLocaleDateString()
+        :model-value="Formatters.date(modelValue, true, false)"
+        :rules="
+          props.required ? [FormRules.requiredDate('Date requise')] : undefined
         "
       >
       </v-text-field>
     </template>
 
     <v-date-picker
-      :model-value="adapter.parseISO(modelValue)"
+      :model-value="
+        isDateZero(modelValue) ? null : adapter.parseISO(modelValue)
+      "
       @update:model-value="(d) => onUpdate(d as Date)"
     ></v-date-picker>
   </v-menu>
@@ -37,13 +40,15 @@
 import type { Date_ } from "@/clients/backoffice/logic/api";
 import { ref } from "vue";
 import { useDate } from "vuetify";
-import { newDate_ } from "./date";
+import { isDateZero, newDate_ } from "./date";
 import type { VTextField } from "vuetify/components";
+import { Formatters, FormRules } from "@/utils";
 const props = defineProps<{
   label: string;
   hideDetails?: boolean;
   readonly?: boolean;
   variant?: VTextField["variant"];
+  required?: boolean;
 }>();
 
 const modelValue = defineModel<Date_>({ required: true });

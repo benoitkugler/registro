@@ -19,6 +19,7 @@
         :hide-details="mobile"
         @update:model-value="notif"
         variant="underlined"
+        required
       ></DateField>
     </v-col>
     <v-col
