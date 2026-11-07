@@ -14,27 +14,6 @@
           class="mx-2"
         ></v-divider>
 
-        <v-col class="pr-2" v-if="!mobile">
-          <v-select
-            style="width: 120px"
-            density="compact"
-            label="Compte"
-            hide-details
-            :items="[
-              {
-                title: AccountKindLabels[AccountKind.AccountCamp],
-                value: AccountKind.AccountCamp,
-              },
-              {
-                title: AccountKindLabels[AccountKind.AccountAsso],
-                value: AccountKind.AccountAsso,
-              },
-              { title: 'Tous', value: null },
-            ]"
-            v-model="showOtherAccount"
-          >
-          </v-select>
-        </v-col>
         <v-col align-self="center" v-if="!mobile">
           <v-text-field
             style="width: 200px"
@@ -45,6 +24,43 @@
             placeholder="Rechercher..."
             v-model="search"
           ></v-text-field>
+        </v-col>
+        <v-col cols="auto" align-self="center" class="mx-1">
+          <v-menu :close-on-content-click="false">
+            <template #activator="{ props: menuProps }">
+              <v-btn
+                v-bind="menuProps"
+                icon="mdi-filter"
+                size="x-small"
+              ></v-btn>
+            </template>
+            <v-card width="400px" subtitle="Filtrer les dépenses">
+              <v-card-text>
+                <v-row>
+                  <v-col>
+                    <v-select
+                      density="compact"
+                      label="Compte"
+                      hide-details
+                      :items="[
+                        {
+                          title: AccountKindLabels[AccountKind.AccountCamp],
+                          value: AccountKind.AccountCamp,
+                        },
+                        {
+                          title: AccountKindLabels[AccountKind.AccountAsso],
+                          value: AccountKind.AccountAsso,
+                        },
+                        { title: 'Tous', value: null },
+                      ]"
+                      v-model="showOtherAccount"
+                    >
+                    </v-select>
+                  </v-col>
+                </v-row>
+              </v-card-text>
+            </v-card>
+          </v-menu>
         </v-col>
         <v-divider vertical thickness="1" class="ml-2"></v-divider>
         <v-spacer v-if="!mobile"></v-spacer>
@@ -64,6 +80,7 @@
             <span v-html="stateAction.tooltip"></span>
           </v-tooltip>
         </v-col>
+        <v-divider vertical thickness="1" class="mr-2"></v-divider>
         <v-col align-self="center">
           <v-btn
             density="comfortable"

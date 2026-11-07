@@ -80,8 +80,10 @@ const emit = defineEmits<{
   (e: "delete"): void;
 }>();
 
-const miniatureURL = computed(() =>
-  controller.GetMiniature(props.record.Id, controller.authToken),
+const miniatureURL = computed(
+  () =>
+    controller.GetMiniature(props.record.Id, controller.authToken) +
+    `&t=${Date.now()}`, // disable cache, used when replacing a file
 );
 const downloadURL = computed(() =>
   controller.DownloadJustificatif(props.record.Id, controller.authToken),
@@ -98,10 +100,10 @@ function uploadJustificatif() {
   file.value = null;
 }
 
-function validateSize(fs: File[]) {
-  if (!fs.length) return true;
+function validateSize(fs: File | null) {
+  if (!fs) return true;
   return (
-    fs[0].size < MaxUploadSize ||
+    fs.size < MaxUploadSize ||
     `La taille d'un fichier est limitée à ${MaxUploadSize / (1024 * 1024)}M.`
   );
 }

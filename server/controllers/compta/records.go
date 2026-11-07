@@ -11,6 +11,7 @@ import (
 	"sort"
 	"time"
 
+	"registro/assets"
 	"registro/mails"
 	cps "registro/sql/camps"
 	"registro/sql/compta"
@@ -772,6 +773,8 @@ func (ct *Controller) DownloadJustificatif(c echo.Context) error {
 	return c.Blob(200, mime.TypeByExtension(filepath.Ext(filename)), fileBytes)
 }
 
+
+
 func (ct *Controller) GetMiniature(c echo.Context) error {
 	const pathMiniatureError = "static/images/default_miniature.png"
 
@@ -784,7 +787,8 @@ func (ct *Controller) GetMiniature(c echo.Context) error {
 
 	min, _, err := ct.getJustificatif(idR, user, true)
 	if err != nil {
-		return c.File(pathMiniatureError)
+		log.Println(err)
+		min = assets.DefaultMiniaturePNG
 	}
 
 	return c.Blob(200, mime.TypeByExtension(".png"), min)
