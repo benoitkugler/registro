@@ -85,6 +85,10 @@ func FormValueJSON(c echo.Context, name string, out any) error {
 
 // SQLError wraps [*pq.Error] errors only
 func SQLError(err error) error {
+	if err == sql.ErrNoRows {
+		//lint:ignore ST1005 Erreur utilisateur
+		return fmt.Errorf("La requête SQL a échoué : %s", err)
+	}
 	if errPq, ok := err.(*pq.Error); ok {
 		//lint:ignore ST1005 Erreur utilisateur
 		return fmt.Errorf("La requête SQL (table %s) a échoué : %s", errPq.Table, errPq)

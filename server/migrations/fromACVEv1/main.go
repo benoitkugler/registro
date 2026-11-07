@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
 
 	_ "github.com/lib/pq"
 
@@ -54,12 +53,13 @@ func main() {
 	fmt.Println("Loading v1 data...")
 	originV1, err := loadV1(dbV1)
 	check(err)
-	fmt.Println("Done. Trimming...")
+	fmt.Printf("Done. Trimming with CampStart = %d and DonsStart = %d...\n", campsStartYear, donsStartYear)
 	trimmedV1 := originV1.trim()
 	fmt.Println("Done :")
 	fmt.Println("\tpersonnes:", len(originV1.personnes), "->", len(trimmedV1.personnes))
 	fmt.Println("\tdocuments:", len(originV1.documents), "->", len(trimmedV1.documents))
 	fmt.Println("\tcamps:", len(originV1.camps), "->", len(trimmedV1.camps))
+	fmt.Println("\tequipiers:", len(originV1.equipiers), "->", len(trimmedV1.equipiers))
 	fmt.Println("\tcomptas:", len(originV1.comptas), "->", len(trimmedV1.comptas))
 	fmt.Println("\trecords:", len(originV1.records), "->", len(trimmedV1.records))
 	fmt.Println("\tsubrecords:", len(originV1.subrecords), "->", len(trimmedV1.subrecords))
@@ -187,6 +187,78 @@ func statutCamp(ouvert rd.Bool) cps.StatutCamp {
 	return cps.Ferme
 }
 
+func roles(roles rd.Roles) cps.Roles {
+	out := make(cps.Roles, len(roles))
+	for i, r := range roles {
+		switch r {
+		case rd.RDirecteur:
+			out[i] = cps.Direction
+		case rd.RAdjoint:
+			out[i] = cps.Adjoint
+		case rd.RAnimation:
+			out[i] = cps.Animation
+		case rd.RAideAnimation:
+			out[i] = cps.AideAnimation
+		case rd.RChauffeur:
+			out[i] = cps.Chauffeur
+		case rd.RIntend:
+			out[i] = cps.Intendance
+		case rd.RBabysiter:
+			out[i] = cps.Babysiter
+		case rd.RMen:
+			out[i] = cps.Menage
+		case rd.RFactotum:
+			out[i] = cps.Factotum
+		case rd.RInfirm:
+			out[i] = cps.Infirmerie
+		case rd.RCuis:
+			out[i] = cps.Cuisine
+		case rd.RLing:
+			out[i] = cps.Lingerie
+		case rd.RAutre:
+			out[i] = cps.AutreRole
+		default:
+			out[i] = cps.AutreRole
+		}
+	}
+	return out
+}
+
+func presenceOffsets(ps rd.OptionnalPlage, camp shared.Plage) cps.PresenceOffsets {
+	if !ps.Active {
+		return cps.PresenceOffsets{}
+	}
+	debutE, finE := ps.Plage.From.Time(), ps.Plage.To.Time()
+	diffDebut, diffFin := debutE.Sub(camp.From.Time()), finE.Sub(camp.To().Time())
+	return cps.PresenceOffsets{Debut: int(diffDebut.Hours() / 24), Fin: int(diffFin.Hours() / 24)}
+}
+
+func nullBool(optionnalBool rd.OptionnalBool) sql.NullBool {
+	switch optionnalBool {
+	case rd.OBNon:
+		return sql.NullBool{Valid: true, Bool: false}
+	case rd.OBOui:
+		return sql.NullBool{Valid: true, Bool: true}
+	case rd.OBPeutEtre:
+		return sql.NullBool{Valid: false}
+	default:
+		panic("exhaustive switch")
+	}
+}
+
+func formStatusEquipier(invitationEquipier rd.InvitationEquipier) cps.FormStatusEquipier {
+	switch invitationEquipier {
+	case rd.NonInvite:
+		return cps.NotSend
+	case rd.Invite:
+		return cps.Pending
+	case rd.Verifie:
+		return cps.Answered
+	default:
+		panic("exhaustive switch")
+	}
+}
+
 func reviews(rv comptaV1.Reviews) compta.Reviews {
 	out := make(compta.Reviews, len(rv))
 	for i, r := range rv {
@@ -277,17 +349,30 @@ func loadV1(db *sql.DB) (out baseV1, err error) {
 func (b baseV1) trim() (out baseV1) {
 	out.dons, out.donateurs = trimDons(b.dons, b.donateurs)
 	out.organismes = trimOrganismes(out.dons, out.donateurs, b.organismes)
-	out.personnes = trimPersonnes(b.personnes, out)
 
 	out.documents = b.documents // TODO: filter unused categories
 
 	out.camps = trimCamps(b.camps)
+
+	out.equipiers = trimEquipiers(b.equipiers, out)
+
+	out.personnes = trimPersonnes(b.personnes, out)
 
 	out.comptas = trimComptas(b.comptas, out)
 	out.records = trimRecords(b.records, out)
 	out.subrecords, out.filecomptas = trimSubrecords(b.subrecords, b.filecomptas, out)
 
 	return out
+}
+
+func trimEquipiers(equipiers rd.Equipiers, out baseV1) rd.Equipiers {
+	trimmed := make(rd.Equipiers)
+	for id, equipier := range equipiers {
+		if _, ok := out.camps[equipier.IdCamp]; ok {
+			trimmed[id] = equipier
+		}
+	}
+	return trimmed
 }
 
 // only keep recents year >= [donFirstYear], also drop anonymous gifts
@@ -344,14 +429,19 @@ func trimPersonnes(v1 rd.Personnes, trimmed baseV1) rd.Personnes {
 			used.Add(link.IdPersonne.Int64)
 		}
 	}
+	for _, eq := range trimmed.equipiers {
+		used.Add(eq.IdPersonne)
+	}
 	// TODO
 
 	out := make(rd.Personnes)
 	for id := range used {
 		p := v1[id]
-		if p.IsTemporaire {
-			panic("temporary profile with ID: " + strconv.Itoa(int(id)))
-		}
+		// TODO: for now, accept tmp people, but that should be
+		// checked before real migration
+		// if p.IsTemporaire {
+		// 	panic("temporary profile with ID: " + strconv.Itoa(int(id)) + " " + string(p.NomPrenom()))
+		// }
 		out[id] = p
 	}
 	return out
@@ -428,7 +518,7 @@ func trimSubrecords(in1 comptaV1.Subrecords, in2 comptaV1.Filecomptas, out baseV
 type (
 	organismesM  map[int64]dons.IdOrganisme
 	personnesM   map[int64]pr.IdPersonne
-	campsM       map[int64]cps.IdCamp
+	campsM       map[int64]cps.Camp
 	comptasM     map[comptaV1.IdCompta]compta.IdComptaCamp
 	recordsM     map[comptaV1.IdRecord]compta.IdComptaRecord
 	comptafilesM map[comptaV1.IdFilecompta]compta.IdComptaFile
@@ -570,14 +660,32 @@ func insert(dbV2 *sql.DB, origin, trimmed baseV1) error {
 			if err != nil {
 				return err
 			}
-			cM[camp.Id] = v2.Id
+			cM[camp.Id] = v2
+		}
+
+		// insert equipiers
+		fmt.Println("\tequipiers...")
+		for _, eq := range trimmed.equipiers {
+			camp := cM[eq.IdCamp]
+			v2 := cps.Equipier{
+				IdCamp:        camp.Id,
+				IdPersonne:    pM[eq.IdPersonne],
+				Roles:         roles(eq.Roles),
+				Presence:      presenceOffsets(eq.Presence, camp.Plage()),
+				FormStatus:    formStatusEquipier(eq.InvitationEquipier),
+				AccepteCharte: nullBool(eq.Charte),
+			}
+			v2, err = v2.Insert(tx)
+			if err != nil {
+				return err
+			}
 		}
 
 		// insert comptas
 		fmt.Println("\tcomptas...")
 		for _, c := range trimmed.comptas {
 			v2 := compta.ComptaCamp{
-				IdCamp:                cM[c.IdCamp],
+				IdCamp:                cM[c.IdCamp].Id,
 				FileStatus:            compta.FileStatus(c.FileStatus),
 				State:                 compta.State(c.State),
 				LastSentMailAdmin:     c.LastReviewNotif,

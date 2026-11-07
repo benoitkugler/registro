@@ -6,4 +6,4 @@ echo "Setup tables and add predeclared items..." &&
 psql -v ON_ERROR_STOP=1 test < ../create_all.sql &&
 echo "Launching migration script main.go..." &&
 source env.sh &&
-go run *.go $1
+go run main.go $1

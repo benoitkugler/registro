@@ -96,7 +96,7 @@ func JWTUser(c echo.Context) ca.IdComptaCamp {
 // DirecteurURL builds the crypted URL for the given camp.
 func DirecteurURL(key crypto.Encrypter, host string, idCamp cps.IdCamp) string {
 	dirKey := crypto.EncryptID(key, idCamp)
-	url := utils.BuildUrl(host, "compta", utils.QP("key", dirKey))
+	url := utils.BuildUrl(host, "compta", utils.QP("directeur-key", dirKey))
 	return url
 }
 
@@ -109,6 +109,7 @@ type LogginOut struct {
 
 // Loggin parse the user key, detecting if the user is an admin
 // or a directeur.
+// It also accept an already emitted token, checking its validity.
 func (ct *Controller) Loggin(c echo.Context) error {
 	isAdmin := utils.QueryParamBool(c, "isAdmin")
 	key := c.QueryParam("key")
@@ -122,6 +123,21 @@ func (ct *Controller) Loggin(c echo.Context) error {
 }
 
 func (ct *Controller) loggin(isAdmin bool, key string) (token LogginOut, err error) {
+	// check for cached tokens
+	meta, isValid := crypto.VerifyJWT[UserMeta](ct.key, key)
+	if isValid {
+		// ensure user match
+		if (meta.User == userAdmin) != isAdmin {
+			return LogginOut{}, errAccess
+		}
+		// renew the token
+		tk, err := ct.newToken(meta.User)
+		if err != nil {
+			return LogginOut{}, err
+		}
+		return LogginOut{IsValid: true, Token: tk, IdCompta: meta.User}, nil
+	}
+
 	if isAdmin {
 		if key == ct.adminPassword {
 			tk, err := ct.newToken(userAdmin)

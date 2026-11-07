@@ -187,7 +187,6 @@ func (ct *Controller) createRecord(args CreateRecordIn) (out RecordExt, err erro
 		}
 		sub, err := ca.ComptaSubrecord{
 			IdRecord: record.Id,
-			Montants: ca.Montants{{Kind: ca.NoVentilation}},
 			Currency: ds.Euros,
 		}.Insert(tx)
 		if err != nil {
@@ -231,7 +230,6 @@ func (ct *Controller) addSubrecord(record ca.IdComptaRecord, user ca.IdComptaCam
 	out, err := ca.ComptaSubrecord{
 		IdRecord: record,
 		Currency: ds.Euros,
-		Montants: ca.Montants{{Kind: ca.NoVentilation}},
 	}.Insert(ct.db)
 	if err != nil {
 		return ca.ComptaSubrecord{}, utils.SQLError(err)
@@ -260,26 +258,50 @@ func (ct *Controller) UpdateRecord(c echo.Context) error {
 	return c.JSON(200, updated)
 }
 
+func (ct *Controller) getTaux(id ca.IdComptaCamp) (ds.Taux, error) {
+	compta, err := ca.SelectComptaCamp(ct.db, id)
+	if err != nil {
+		return ds.Taux{}, utils.SQLError(err)
+	}
+	camp, err := cps.SelectCamp(ct.db, compta.IdCamp)
+	if err != nil {
+		return ds.Taux{}, utils.SQLError(err)
+	}
+	taux, err := ds.SelectTaux(ct.db, camp.IdTaux)
+	if err != nil {
+		return ds.Taux{}, utils.SQLError(err)
+	}
+	return taux, nil
+}
+
 func (ct *Controller) updateRecord(in RecordExt, user ca.IdComptaCamp) (out RecordExt, err error) {
+	currentGroup, err := ca.SelectComptaRecord(ct.db, in.Record.Id)
+	if err != nil {
+		return RecordExt{}, utils.SQLError(err)
+	}
+	currents, err := ca.SelectComptaSubrecordsByIdRecords(ct.db, currentGroup.Id)
+	if err != nil {
+		return RecordExt{}, utils.SQLError(err)
+	}
+
+	if user != userAdmin && user != currentGroup.IdCamp {
+		return RecordExt{}, errAccess
+	}
+
+	taux, err := ct.getTaux(currentGroup.IdCamp)
+	if err != nil {
+		return RecordExt{}, err
+	}
+
 	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
-		currentGroup, err := ca.SelectComptaRecord(tx, in.Record.Id)
-		if err != nil {
-			return utils.SQLError(err)
-		}
-		currents, err := ca.SelectComptaSubrecordsByIdRecords(tx, currentGroup.Id)
-		if err != nil {
-			return utils.SQLError(err)
-		}
-
-		if user != userAdmin && user != currentGroup.IdCamp {
-			return errAccess
-		}
-
 		// remove validation when a "sensitive" field is changed by a director
 		hasChanged := in.Record.IsReceipe != currentGroup.IsReceipe
 		for _, change := range in.Subrecords {
 			if err = checkVentilations(change.Montants, in.Record.IsReceipe); err != nil {
 				return err
+			}
+			if !taux.Has(change.Currency) {
+				return fmt.Errorf("currency %s not supported", change.Currency)
 			}
 
 			current := currents[change.Id]
@@ -295,7 +317,7 @@ func (ct *Controller) updateRecord(in RecordExt, user ca.IdComptaCamp) (out Reco
 
 			current, err = current.Update(tx)
 			if err != nil {
-				return utils.SQLError(err)
+				return err
 			}
 
 			currents[current.Id] = current
@@ -313,7 +335,7 @@ func (ct *Controller) updateRecord(in RecordExt, user ca.IdComptaCamp) (out Reco
 
 		currentGroup, err = currentGroup.Update(tx)
 		if err != nil {
-			return utils.SQLError(err)
+			return err
 		}
 
 		out = newRecordExt(currentGroup, currents.Sorted())
@@ -598,7 +620,6 @@ func (ct *Controller) uploadAndCreate(idCompta ca.IdComptaCamp, fileName string,
 		}
 		sub, err := ca.ComptaSubrecord{
 			IdRecord:    record.Id,
-			Montants:    ca.Montants{{Kind: ca.NoVentilation}},
 			Description: "A compléter",
 			Currency:    ds.Euros,
 			IdFile:      ca.NewOptIdComptaFile(meta.Id),

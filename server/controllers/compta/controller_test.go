@@ -1,9 +1,10 @@
 package compta
 
 import (
+	"testing"
+
 	"registro/crypto"
 	tu "registro/utils/testutils"
-	"testing"
 )
 
 func TestConnectionLink(t *testing.T) {
@@ -17,19 +18,30 @@ func TestConnectionLink(t *testing.T) {
 	enc := crypto.NewEncrypter("dummy")
 	ct := Controller{db: db.DB, key: enc, adminPassword: "HAHA"}
 
-	logged, err := ct.loggin(true, "HAHA")
+	lAdmin, err := ct.loggin(true, "HAHA")
 	tu.AssertNoErr(t, err)
-	tu.Assert(t, logged.IdCompta == -1)
+	tu.Assert(t, lAdmin.IdCompta == -1)
 
 	key := crypto.EncryptID(enc, c1.Id)
-	logged, err = ct.loggin(false, key)
+	lDir1, err := ct.loggin(false, key)
 	tu.AssertNoErr(t, err)
-	tu.Assert(t, logged.IdCompta > 0)
+	tu.Assert(t, lDir1.IdCompta > 0)
 
-	logged2, err := ct.loggin(false, key)
+	lDir2, err := ct.loggin(false, key)
 	tu.AssertNoErr(t, err)
-	tu.Assert(t, logged.IdCompta > 0)
-	tu.Assert(t, logged2.IdCompta == logged.IdCompta)
+	tu.Assert(t, lDir2.IsValid)
+	tu.Assert(t, lDir2.IdCompta == lDir1.IdCompta)
+
+	// check login again with token works
+	lA2, err := ct.loggin(true, lAdmin.Token)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, lA2.IsValid && lA2.IdCompta == userAdmin)
+
+	l3, err := ct.loggin(false, lDir1.Token)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, l3.IsValid && l3.IdCompta == lDir1.IdCompta)
+	_, err = ct.loggin(true, lDir1.Token) // no admin rights !
+	tu.AssertErr(t, err)
 
 	out, err := ct.loggin(true, "XXX")
 	tu.AssertNoErr(t, err)
