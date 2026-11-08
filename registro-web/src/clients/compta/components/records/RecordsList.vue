@@ -540,11 +540,11 @@ async function deleteSubrecord() {
 
 const inUpload = ref(new Set<IdComptaSubrecord>());
 
-async function uploadJustificatif(rec: ComptaSubrecord, file: File) {
+async function uploadJustificatif(rec: ComptaSubrecord, files: File[]) {
   inUpload.value.add(rec.Id);
   const res = await controller.UploadJustificatif(
     { idSubrecord: rec.Id },
-    file,
+    files,
   );
   inUpload.value.delete(rec.Id);
   if (res === undefined) return;
@@ -575,8 +575,6 @@ async function addSubrecord(record: ComptaRecord) {
 }
 
 async function deleteJustificatif(rec: ComptaSubrecord) {
-  //   records.value.find((r) => r.Id == rec.Id)!.JustificatifID = FileIsUploading;
-
   const res = await controller.RemoveJustificatif({ "id-subrecord": rec.Id });
   if (res === undefined) return;
   controller.showMessage("Justificatif supprimé avec succès.");
@@ -663,10 +661,10 @@ async function mergeRecordTo(target: IdComptaRecord) {
 }
 
 const showCreateFromFile = ref(false);
-async function uploadAndCreate(file: File) {
+async function uploadAndCreate(files: File[]) {
   const res = await controller.UploadAndCreate(
     { idCompta: controller.idCompta },
-    file,
+    files,
   );
   if (res === undefined) return;
   controller.showMessage("Enregistrement créé avec succès.");
@@ -685,7 +683,7 @@ async function directUploadCreate() {
   if (file == null) return;
   fileForDirectUpload.value = null;
 
-  uploadAndCreate(file);
+  uploadAndCreate([file]);
 }
 
 async function directUploadAddTo(subrecord: ComptaSubrecord) {
@@ -693,6 +691,6 @@ async function directUploadAddTo(subrecord: ComptaSubrecord) {
   if (file == null) return;
   fileForDirectUpload.value = null;
 
-  uploadJustificatif(subrecord, file);
+  uploadJustificatif(subrecord, [file]);
 }
 </script>

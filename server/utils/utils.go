@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"mime/multipart"
 	"net/url"
 	"slices"
 	"strconv"
@@ -81,6 +82,11 @@ func FormValueInt[T interface{ ~int64 | int }](c echo.Context, name string) (T, 
 func FormValueJSON(c echo.Context, name string, out any) error {
 	content := c.FormValue(name)
 	return json.Unmarshal([]byte(content), out)
+}
+
+// FormFiles returns the files at [name]. It is detected by gomacro.
+func FormFiles(form *multipart.Form, name string) []*multipart.FileHeader {
+	return form.File[name]
 }
 
 // SQLError wraps [*pq.Error] errors only

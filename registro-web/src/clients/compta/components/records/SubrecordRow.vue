@@ -23,7 +23,7 @@
         :record="props.subrecord"
         :in-upload="props.inFileUpload"
         :readonly="props.readonly"
-        @upload="(f: File) => emit('uploadFile', f)"
+        @upload="(files: File[]) => emit('uploadFile', files)"
         @delete="emit('deleteFile')"
         :small="mobile"
       ></FileBtn>
@@ -116,7 +116,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: "edit"): void;
   (e: "delete"): void;
-  (e: "uploadFile", file: File): void;
+  (e: "uploadFile", files: File[]): void;
   (e: "deleteFile"): void;
   (e: "addReview", text: string): void;
 }>();

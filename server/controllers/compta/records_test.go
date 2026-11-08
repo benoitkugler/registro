@@ -10,6 +10,8 @@ import (
 	"registro/sql/shared"
 	sh "registro/sql/shared"
 	tu "registro/utils/testutils"
+
+	"github.com/benoitkugler/pdf/reader"
 )
 
 func TestRecords(t *testing.T) {
@@ -48,7 +50,9 @@ func TestRecords(t *testing.T) {
 	tu.Assert(t, time.Time(updated.Subrecords[0].Date).Equal(newDate))
 	tu.Assert(t, updated.Record.IsValidated)
 
-	_, err = ct.uploadJustificatif(rec1.Subrecords[0].Id, "test.png", bytes.NewReader(tu.PngData), userAdmin)
+	_, err = ct.uploadJustificatif(rec1.Subrecords[0].Id, []justificatifUpload{
+		{filename: "test.png", content: tu.PngData},
+	}, userAdmin)
 	tu.AssertNoErr(t, err)
 
 	_, _, err = ct.getJustificatif(rec1.Subrecords[0].Id, userAdmin, true)
@@ -57,6 +61,18 @@ func TestRecords(t *testing.T) {
 	_, fn, err := ct.getJustificatif(rec1.Subrecords[0].Id, userAdmin, false)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, fn == "test.png")
+
+	_, err = ct.uploadJustificatif(rec1.Subrecords[0].Id, []justificatifUpload{
+		{filename: "first.png", content: pngTestImage(2, 3)},
+		{filename: "second.png", content: pngTestImage(5, 4)},
+	}, userAdmin)
+	tu.AssertNoErr(t, err)
+	merged, fn, err := ct.getJustificatif(rec1.Subrecords[0].Id, userAdmin, false)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, fn == "justificatifs.pdf")
+	doc, _, err := reader.ParsePDFReader(bytes.NewReader(merged), reader.Options{})
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(doc.Catalog.Pages.Flatten()) == 2)
 
 	_, _, err = ct.getRecordsArchive(co.Id)
 	tu.AssertNoErr(t, err)
@@ -149,7 +165,7 @@ func TestSQLDate(t *testing.T) {
 	tu.AssertNoErr(t, err)
 
 	group.Subrecords[0].Date = sh.Date(dateUTC)
-	group.Subrecords[0].Montants[0].Kind = ca.Alimentation
+	group.Subrecords[0].Montants = ca.Montants{{Kind: ca.Alimentation}}
 	u1, err := ct.updateRecord(group, userAdmin)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, time.Time(u1.Subrecords[0].Date).Day() == 7)
@@ -174,6 +190,8 @@ func TestUploadAndCreate(t *testing.T) {
 	co, err := ct.loadOrCreateCompta(c1.Id)
 	tu.AssertNoErr(t, err)
 
-	_, err = ct.uploadAndCreate(co.Id, "test.png", bytes.NewReader(tu.PngData), co.Id)
+	_, err = ct.uploadAndCreate(co.Id, []justificatifUpload{
+		{filename: "test.png", content: tu.PngData},
+	}, co.Id)
 	tu.AssertNoErr(t, err)
 }

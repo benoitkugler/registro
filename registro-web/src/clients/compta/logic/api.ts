@@ -632,12 +632,14 @@ export abstract class AbstractAPI {
   }
 
   /** UploadAndCreate performs the request and handles the error */
-  async UploadAndCreate(formParams: { idCompta: IdComptaCamp }, file: File) {
+  async UploadAndCreate(formParams: { idCompta: IdComptaCamp }, files: File[]) {
     const fullUrl = this.baseURL + "/api/v1/compta/records/upload";
     this.startRequest();
     try {
       const formData = new FormData();
-      formData.append("file", file, file.name);
+      for (const file of files) {
+        formData.append("justificatifs", file, file.name);
+      }
       formData.append("idCompta", String(formParams["idCompta"]));
       const rep: AxiosResponse<RecordExt> = await Axios.post(
         fullUrl,
@@ -653,13 +655,15 @@ export abstract class AbstractAPI {
   /** UploadJustificatif performs the request and handles the error */
   async UploadJustificatif(
     formParams: { idSubrecord: IdComptaSubrecord },
-    file: File,
+    files: File[],
   ) {
     const fullUrl = this.baseURL + "/api/v1/compta/records/justificatif";
     this.startRequest();
     try {
       const formData = new FormData();
-      formData.append("file", file, file.name);
+      for (const file of files) {
+        formData.append("justificatifs", file, file.name);
+      }
       formData.append("idSubrecord", String(formParams["idSubrecord"]));
       const rep: AxiosResponse<RecordAndSub> = await Axios.post(
         fullUrl,

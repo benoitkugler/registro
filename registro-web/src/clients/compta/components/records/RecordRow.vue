@@ -216,7 +216,7 @@ const emit = defineEmits<{
   (e: "addSubrecord"): void;
   (e: "mergeRecordTo"): void;
   (e: "delete", subrecord: ComptaSubrecord): void;
-  (e: "uploadFile", subrecord: ComptaSubrecord, file: File): void;
+  (e: "uploadFile", subrecord: ComptaSubrecord, files: File[]): void;
   (e: "deleteFile", subrecord: ComptaSubrecord): void;
   (e: "addReview", text: string): void;
 }>();

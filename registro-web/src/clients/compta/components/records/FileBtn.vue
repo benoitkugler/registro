@@ -57,7 +57,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: "upload", file: File): void;
+  (e: "upload", files: File[]): void;
   (e: "delete"): void;
 }>();
 

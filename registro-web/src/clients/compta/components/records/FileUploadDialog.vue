@@ -4,22 +4,27 @@
     @update:model-value="emit('update:modelValue', $event)"
     max-width="600px"
   >
-    <v-card title="Téléverser le justificatif">
+    <v-card
+      title="Téléverser le justificatif"
+      subtitle="Plusieurs images seront fusionnées en seul fichier."
+    >
       <v-card-text>
         <v-file-input
-          :multiple="false"
-          v-model="file"
+          multiple
+          v-model="files"
           label="Fichier"
           accept=".png,.jpeg,.jpg,.pdf"
           show-size
-          :rules="[validateSize]"
+          :rules="[validateSize, validateFormats]"
         ></v-file-input>
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn
           color="success"
-          :disabled="!file?.size || file.size >= MaxUploadSize"
+          :disabled="
+            !files.length || totalSize >= MaxUploadSize || !formatsValid
+          "
           @click="uploadFile"
           >Téléverser</v-btn
         >
@@ -29,7 +34,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from "vue";
+import { computed, ref } from "vue";
 
 const props = defineProps<{
   modelValue: boolean;
@@ -37,24 +42,48 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: "update:modelValue", value: boolean): void;
-  (e: "upload", file: File): void;
+  (e: "upload", files: File[]): void;
 }>();
 
 const MaxUploadSize = 10 * 1024 * 1024;
-const file = ref<File | null>(null);
+const files = ref<File[]>([]);
+const totalSize = computed(() =>
+  files.value.reduce((sum, file) => sum + file.size, 0),
+);
+const formatsValid = computed(
+  () => files.value.length <= 1 || areImageFiles(files.value),
+);
 
 function uploadFile() {
-  if (!file.value?.size || file.value.size >= MaxUploadSize) return;
-  emit("upload", file.value);
+  if (
+    !files.value.length ||
+    totalSize.value >= MaxUploadSize ||
+    !formatsValid.value
+  )
+    return;
+  emit("upload", files.value);
   emit("update:modelValue", false);
-  file.value = null;
+  files.value = [];
 }
 
-function validateSize(fs: File | null) {
-  if (!fs) return true;
+function validateSize(selectedFiles: File[] | null) {
+  if (!selectedFiles?.length) return true;
+  const size = selectedFiles.reduce((sum, file) => sum + file.size, 0);
   return (
-    fs.size < MaxUploadSize ||
-    `La taille d'un fichier est limitée à ${MaxUploadSize / (1024 * 1024)}M.`
+    size < MaxUploadSize ||
+    `La taille totale des fichiers est limitée à ${MaxUploadSize / (1024 * 1024)}M.`
+  );
+}
+
+function areImageFiles(selectedFiles: File[]) {
+  return selectedFiles.every((file) => /\.(png|jpe?g)$/i.test(file.name));
+}
+
+function validateFormats(selectedFiles: File[] | null) {
+  if (!selectedFiles || selectedFiles.length <= 1) return true;
+  return (
+    areImageFiles(selectedFiles) ||
+    "Plusieurs fichiers peuvent être téléversés uniquement au format PNG ou JPEG."
   );
 }
 </script>

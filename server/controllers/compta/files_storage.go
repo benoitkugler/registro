@@ -257,12 +257,7 @@ type filesAPI struct {
 	fileSystem  fileSystemAPI
 }
 
-func (ga filesAPI) createFile(db ca.DB, mode ca.FileStatus, fileName string, fileContent io.Reader) (_ ca.ComptaFile, _ error) {
-	content, err := io.ReadAll(fileContent)
-	if err != nil {
-		return ca.ComptaFile{}, fmt.Errorf("Erreur interne: %w", err)
-	}
-
+func (ga filesAPI) createFile(db ca.DB, mode ca.FileStatus, fileName string, content []byte) (_ ca.ComptaFile, _ error) {
 	meta, err := ca.ComptaFile{Name: fileName}.Insert(db)
 	if err != nil {
 		return ca.ComptaFile{}, utils.SQLError(err)

@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"mime"
+	"mime/multipart"
 	"path/filepath"
 	"sort"
 	"time"
@@ -578,18 +579,19 @@ func (ct *Controller) UploadAndCreate(c echo.Context) error {
 		return fmt.Errorf("invalid ID parameter: %s", err)
 	}
 
-	header, err := c.FormFile("file")
+	form, err := c.MultipartForm()
+	if err != nil {
+		return err
+	}
+	defer form.RemoveAll()
+
+	headers := utils.FormFiles(form, "justificatifs")
+	uploads, err := openFiles(headers)
 	if err != nil {
 		return err
 	}
 
-	file, err := header.Open()
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	rec, err := ct.uploadAndCreate(idCompta, header.Filename, file, user)
+	rec, err := ct.uploadAndCreate(idCompta, uploads, user)
 	if err != nil {
 		return err
 	}
@@ -597,9 +599,14 @@ func (ct *Controller) UploadAndCreate(c echo.Context) error {
 	return c.JSON(200, rec)
 }
 
-func (ct *Controller) uploadAndCreate(idCompta ca.IdComptaCamp, fileName string, fileContent io.Reader, user ca.IdComptaCamp) (out RecordExt, err error) {
+func (ct *Controller) uploadAndCreate(idCompta ca.IdComptaCamp, uploads []justificatifUpload, user ca.IdComptaCamp) (out RecordExt, err error) {
 	if user != userAdmin && user != idCompta {
 		return out, errAccess
+	}
+
+	filename, content, err := handleJustificatifsUploads(uploads)
+	if err != nil {
+		return out, err
 	}
 
 	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
@@ -609,7 +616,7 @@ func (ct *Controller) uploadAndCreate(idCompta ca.IdComptaCamp, fileName string,
 		}
 
 		// create the file item
-		meta, err := ct.files.createFile(tx, compta.FileStatus, fileName, fileContent)
+		meta, err := ct.files.createFile(tx, compta.FileStatus, filename, content)
 		if err != nil {
 			return err
 		}
@@ -636,6 +643,32 @@ func (ct *Controller) uploadAndCreate(idCompta ca.IdComptaCamp, fileName string,
 	return out, err
 }
 
+func openFiles(headers []*multipart.FileHeader) ([]justificatifUpload, error) {
+	if len(headers) == 0 {
+		return nil, fmt.Errorf("missing upload file")
+	}
+
+	uploads := make([]justificatifUpload, len(headers))
+	for i, header := range headers {
+		file, err := header.Open()
+		if err != nil {
+			return nil, err
+		}
+		content, err := io.ReadAll(io.LimitReader(file, header.Size))
+		_ = file.Close()
+		if err != nil {
+			return nil, err
+		}
+
+		if int64(len(content)) != header.Size {
+			return nil, fmt.Errorf("incomplete upload")
+		}
+		uploads[i] = justificatifUpload{filename: header.Filename, content: content}
+	}
+
+	return uploads, nil
+}
+
 func (ct *Controller) UploadJustificatif(c echo.Context) error {
 	user := JWTUser(c)
 
@@ -644,18 +677,19 @@ func (ct *Controller) UploadJustificatif(c echo.Context) error {
 		return fmt.Errorf("invalid ID parameter: %s", err)
 	}
 
-	header, err := c.FormFile("file")
+	form, err := c.MultipartForm()
+	if err != nil {
+		return err
+	}
+	defer form.RemoveAll()
+
+	headers := utils.FormFiles(form, "justificatifs")
+	uploads, err := openFiles(headers)
 	if err != nil {
 		return err
 	}
 
-	file, err := header.Open()
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	rec, err := ct.uploadJustificatif(idRecord, header.Filename, file, user)
+	rec, err := ct.uploadJustificatif(idRecord, uploads, user)
 	if err != nil {
 		return err
 	}
@@ -663,7 +697,32 @@ func (ct *Controller) UploadJustificatif(c echo.Context) error {
 	return c.JSON(200, rec)
 }
 
-func (ct *Controller) uploadJustificatif(id ca.IdComptaSubrecord, filename string, file io.Reader, user ca.IdComptaCamp) (RecordAndSub, error) {
+// not empty
+func handleJustificatifsUploads(uploads []justificatifUpload) (string, []byte, error) {
+	if len(uploads) == 0 {
+		return "", nil, fmt.Errorf("missing upload file")
+	}
+	var totalSize int64
+	for _, upload := range uploads {
+		totalSize += int64(len(upload.content))
+		if totalSize >= maxJustificatifSize {
+			return "", nil, fmt.Errorf("total upload size must be less than %d bytes", maxJustificatifSize)
+		}
+	}
+
+	if len(uploads) == 1 {
+		// one file upload is unchanged
+		return uploads[0].filename, uploads[0].content, nil
+	}
+
+	content, err := mergeImagesToPDF(uploads)
+	if err != nil {
+		return "", nil, err
+	}
+	return "justificatifs.pdf", content, nil
+}
+
+func (ct *Controller) uploadJustificatif(id ca.IdComptaSubrecord, uploads []justificatifUpload, user ca.IdComptaCamp) (RecordAndSub, error) {
 	group, rec, err := getRecord(ct.db, id)
 	if err != nil {
 		return RecordAndSub{}, fmt.Errorf("Erreur interne: %w", err)
@@ -677,12 +736,17 @@ func (ct *Controller) uploadJustificatif(id ca.IdComptaSubrecord, filename strin
 		return RecordAndSub{}, errAccess
 	}
 
+	filename, content, err := handleJustificatifsUploads(uploads)
+	if err != nil {
+		return RecordAndSub{}, err
+	}
+
 	if rec.IdFile.Valid {
 		// remove current files
 		go ct.files.remove(ct.db, compta.FileStatus, rec.IdFile.Id)
 	}
 
-	meta, err := ct.files.createFile(ct.db, compta.FileStatus, filename, file)
+	meta, err := ct.files.createFile(ct.db, compta.FileStatus, filename, content)
 	if err != nil {
 		return RecordAndSub{}, err
 	}
@@ -772,8 +836,6 @@ func (ct *Controller) DownloadJustificatif(c echo.Context) error {
 	c.Response().Header().Set(echo.HeaderContentDisposition, utils.AttachementHeader(filename))
 	return c.Blob(200, mime.TypeByExtension(filepath.Ext(filename)), fileBytes)
 }
-
-
 
 func (ct *Controller) GetMiniature(c echo.Context) error {
 	const pathMiniatureError = "static/images/default_miniature.png"
