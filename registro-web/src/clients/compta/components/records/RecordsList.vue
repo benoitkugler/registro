@@ -2,13 +2,18 @@
   <v-card title="Enregistrements" :subtitle="Camps.label(props.camp)">
     <template #append>
       <v-row no-gutters class="my-2">
-        <v-col v-if="itemsToHandle" align-self="center">
-          <v-chip prepend-icon="mdi-alert-circle" color="pink">
-            {{ itemsToHandle }} à vérifier
+        <v-col v-if="itemsToHandleCount" align-self="center">
+          <v-chip
+            prepend-icon="mdi-alert-circle"
+            color="pink"
+            @click="categoryToShow = categoryToShow ? null : 'toHandle'"
+            :variant="categoryToShow == 'toHandle' ? 'flat' : 'outlined'"
+          >
+            {{ itemsToHandleCount }} à vérifier
           </v-chip>
         </v-col>
         <v-divider
-          v-if="itemsToHandle"
+          v-if="itemsToHandleCount"
           vertical
           thickness="1"
           class="mx-2"
@@ -34,12 +39,12 @@
                 size="x-small"
               ></v-btn>
             </template>
-            <v-card width="400px" subtitle="Filtrer les dépenses">
+            <v-card width="400px" subtitle="Filtrer les enregistrements">
               <v-card-text>
                 <v-row>
                   <v-col>
                     <v-select
-                      density="compact"
+                      density="comfortable"
                       label="Compte"
                       hide-details
                       :items="[
@@ -56,6 +61,25 @@
                       v-model="showOtherAccount"
                     >
                     </v-select>
+                  </v-col>
+                </v-row>
+                <v-row>
+                  <v-col>
+                    <v-radio-group
+                      v-model="categoryToShow"
+                      label="Filtres rapides"
+                      density="comfortable"
+                    >
+                      <v-radio
+                        value="missingFile"
+                        label="Enregistrements avec pièces manquantes"
+                      ></v-radio>
+                      <v-radio
+                        value="toHandle"
+                        label="Enregistrements à vérifier"
+                      ></v-radio>
+                      <v-radio :value="null" label="Tous"></v-radio>
+                    </v-radio-group>
                   </v-col>
                 </v-row>
               </v-card-text>
@@ -294,20 +318,20 @@ const emit = defineEmits<{
 
 const { mobile } = useDisplay();
 
-const showOtherAccount = ref<AccountKind | null>(null);
-
 const records = ref(copy(props.records.Records || []));
 const toDelete = ref<{ hasMany: boolean; Subrecord: ComptaSubrecord } | null>(
   null,
 );
 const toEdit = ref<RecordExtModeOpt | null>(null);
 
-const itemsToHandle = computed(() => {
-  // admin : items complets mais non valides
-  // directeur : items incomplets
-  const status = controller.isAdmin
-    ? RecordStatus.Complete
-    : RecordStatus.Incomplete;
+// admin : items complets mais non valides
+// directeur : items incomplets
+const statusToHandle = computed(() =>
+  controller.isAdmin ? RecordStatus.Complete : RecordStatus.Incomplete,
+);
+
+const itemsToHandleCount = computed(() => {
+  const status = statusToHandle.value;
   return records.value.filter((r) => r.Status == status).length;
 });
 
@@ -321,7 +345,10 @@ const showMandatoryRecordsAlert = computed(() => {
   );
 });
 
+const showOtherAccount = ref<AccountKind | null>(null);
 const search = ref<string | null>("");
+const categoryToShow = ref<"toHandle" | "missingFile" | null>(null);
+
 type recordWithBold = {
   record: RecordExt;
   boldTitles: Map<IdComptaSubrecord, boolean>;
@@ -329,18 +356,31 @@ type recordWithBold = {
 };
 /** recordsToShow is filtered by the search and criteria*/
 const recordsToShow = computed<recordWithBold[]>(() => {
-  const l = records.value.filter((r) =>
-    showOtherAccount.value == null
-      ? true
-      : showOtherAccount.value == r.Record.Account,
-  );
+  const category = categoryToShow.value;
+  const account = showOtherAccount.value;
+  const l = records.value.filter((r) => {
+    switch (category) {
+      case "missingFile":
+        const missing = (r.Subrecords || []).some((sub) => !sub.IdFile.Valid);
+        if (!missing) return false;
+        break;
+      case "toHandle":
+        if (r.Status != statusToHandle.value) return false;
+    }
+    if (account != null) {
+      return account == r.Record.Account;
+    }
+    return true;
+  });
 
+  // fast path for general case of no search
   if (!search.value)
     return l.map((r) => ({
       record: r,
       boldTitles: new Map(),
       boldSerials: new Map(),
     }));
+
   const s = normalize(search.value);
   return l
     .map((rec) => {
