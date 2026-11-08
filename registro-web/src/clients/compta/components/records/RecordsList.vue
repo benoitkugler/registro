@@ -39,7 +39,7 @@
                 size="x-small"
               ></v-btn>
             </template>
-            <v-card width="400px" subtitle="Filtrer les enregistrements">
+            <v-card width="400px" title="Options d'affichage">
               <v-card-text>
                 <v-row>
                   <v-col>
@@ -80,6 +80,28 @@
                       ></v-radio>
                       <v-radio :value="null" label="Tous"></v-radio>
                     </v-radio-group>
+                  </v-col>
+                </v-row>
+                <v-row>
+                  <v-col>
+                    <v-select
+                      prepend-inner-icon="mdi-sort"
+                      density="comfortable"
+                      label="Tri"
+                      :items="[
+                        { title: 'Par défaut', value: '' },
+                        {
+                          title: 'Par date (récent en dernier)',
+                          value: 'date-asc',
+                        },
+                        {
+                          title: 'Par date (récent en premier)',
+                          value: 'date-desc',
+                        },
+                      ]"
+                      v-model="sortKind"
+                    >
+                    </v-select>
                   </v-col>
                 </v-row>
               </v-card-text>
@@ -302,6 +324,7 @@ import {
 } from "../../logic/api.ts";
 import { controller, type RecordExtModeOpt } from "../../logic/logic.ts";
 import { Camps, copy, normalize } from "../../../../utils";
+import { isDateZero } from "@/components/date";
 import RecordRow from "./RecordRow.vue";
 import RecordRowEdit from "./RecordRowEdit.vue";
 
@@ -345,9 +368,12 @@ const showMandatoryRecordsAlert = computed(() => {
   );
 });
 
+// filter criteria
 const showOtherAccount = ref<AccountKind | null>(null);
 const search = ref<string | null>("");
 const categoryToShow = ref<"toHandle" | "missingFile" | null>(null);
+// sort criteria
+const sortKind = ref<"date-asc" | "date-desc" | "">("");
 
 type recordWithBold = {
   record: RecordExt;
@@ -374,41 +400,65 @@ const recordsToShow = computed<recordWithBold[]>(() => {
   });
 
   // fast path for general case of no search
-  if (!search.value)
-    return l.map((r) => ({
+  let out: recordWithBold[];
+  if (!search.value) {
+    out = l.map((r) => ({
       record: r,
       boldTitles: new Map(),
       boldSerials: new Map(),
     }));
+  } else {
+    const s = normalize(search.value);
+    out = l
+      .map((rec) => {
+        // default search in Description and cheque number
+        // of each subrecord
+        return {
+          record: rec,
+          boldTitles: new Map<IdComptaSubrecord, boolean>(
+            rec.Subrecords?.map((subrecord) => [
+              subrecord.Id,
+              normalize(subrecord.Description).includes(s),
+            ]),
+          ),
+          boldSerials: new Map<IdComptaSubrecord, boolean>(
+            rec.Subrecords?.map((subrecord) => [
+              subrecord.Id,
+              normalize(subrecord.Serial).includes(s),
+            ]),
+          ),
+        };
+      })
+      .filter(
+        (r) =>
+          r.record.Record.Id.toString() == s ||
+          Array.from(r.boldTitles.values()).includes(true) ||
+          Array.from(r.boldSerials.values()).includes(true),
+      );
+  }
 
-  const s = normalize(search.value);
-  return l
-    .map((rec) => {
-      // default search in Description and cheque number
-      // of each subrecord
-      return {
-        record: rec,
-        boldTitles: new Map<IdComptaSubrecord, boolean>(
-          rec.Subrecords?.map((subrecord) => [
-            subrecord.Id,
-            normalize(subrecord.Description).includes(s),
-          ]),
-        ),
-        boldSerials: new Map<IdComptaSubrecord, boolean>(
-          rec.Subrecords?.map((subrecord) => [
-            subrecord.Id,
-            normalize(subrecord.Serial).includes(s),
-          ]),
-        ),
-      };
-    })
-    .filter(
-      (r) =>
-        r.record.Record.Id.toString() == s ||
-        Array.from(r.boldTitles.values()).includes(true) ||
-        Array.from(r.boldSerials.values()).includes(true),
-    );
+  if (sortKind.value) {
+    out.sort((a, b) => {
+      const diff =
+        averageDate(a.record).valueOf() - averageDate(b.record).valueOf();
+      return sortKind.value == "date-asc" ? diff : -diff;
+    });
+  }
+  return out;
 });
+
+// to enable date sort, we average the date in a record
+function averageDate(r: RecordExt): Date {
+  const dates = (r.Subrecords || [])
+    .map((subrecord) =>
+      isDateZero(subrecord.Date) ? NaN : new Date(subrecord.Date).valueOf(),
+    )
+    .filter(Number.isFinite);
+  if (!dates.length) return new Date(0);
+
+  const average = dates.reduce((sum, date) => sum + date, 0) / dates.length;
+  return new Date(average);
+}
 
 async function createRecord() {
   const res = await controller.CreateRecord({
