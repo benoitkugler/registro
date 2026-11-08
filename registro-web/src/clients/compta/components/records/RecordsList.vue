@@ -127,20 +127,42 @@
           </v-tooltip>
         </v-col>
         <v-divider vertical thickness="1" class="mr-2"></v-divider>
-        <v-col align-self="center">
-          <v-btn
-            density="comfortable"
-            color="success"
-            variant="elevated"
-            @click="createRecord"
-            :disabled="props.readonly"
-            :block="mobile"
-          >
-            <template v-slot:prepend>
-              <v-icon>mdi-plus</v-icon>
-            </template>
-            Ajouter
-          </v-btn>
+
+        <v-col align-self="center" cols="auto">
+          <v-btn-group density="comfortable">
+            <v-btn
+              color="success"
+              variant="elevated"
+              @click="showCreateFromFile = true"
+              :disabled="props.readonly"
+              :block="mobile"
+            >
+              <template v-slot:prepend>
+                <v-icon>mdi-plus</v-icon>
+              </template>
+              Ajouter
+            </v-btn>
+
+            <v-menu>
+              <template #activator="{ props: menuProps }">
+                <v-btn
+                  v-bind="menuProps"
+                  icon="mdi-chevron-down"
+                  size="small"
+                  :disabled="props.readonly"
+                  title="Autres options d'ajout"
+                ></v-btn>
+              </template>
+              <v-list>
+                <v-list-item
+                  title="Créer un enregistrement sans fichier"
+                  prepend-icon="mdi-plus"
+                  @click="createRecord"
+                >
+                </v-list-item>
+              </v-list>
+            </v-menu>
+          </v-btn-group>
         </v-col>
 
         <v-col align-self="center" cols="auto">
@@ -243,7 +265,7 @@
       </v-card>
     </v-dialog>
 
-    <!-- direct upload -->
+    <!-- direct upload from PWA -->
     <v-dialog
       v-if="fileForDirectUpload != null"
       :model-value="fileForDirectUpload != null"
@@ -256,6 +278,12 @@
         @create="directUploadCreate"
       ></DirectUpload>
     </v-dialog>
+
+    <!-- upload and create record -->
+    <FileUploadDialog
+      v-model="showCreateFromFile"
+      @upload="uploadAndCreate"
+    ></FileUploadDialog>
 
     <v-card-text>
       <v-alert v-if="showMandatoryRecordsAlert" type="warning" class="my-4">
@@ -327,6 +355,7 @@ import { Camps, copy, normalize } from "../../../../utils";
 import { isDateZero } from "@/components/date";
 import RecordRow from "./RecordRow.vue";
 import RecordRowEdit from "./RecordRowEdit.vue";
+import FileUploadDialog from "./FileUploadDialog.vue";
 
 const props = defineProps<{
   camp: CampHeader;
@@ -633,6 +662,20 @@ async function mergeRecordTo(target: IdComptaRecord) {
   controller.showMessage("Sous-enregistrements déplacés avec succès.");
 }
 
+const showCreateFromFile = ref(false);
+async function uploadAndCreate(file: File) {
+  const res = await controller.UploadAndCreate(
+    { idCompta: controller.idCompta },
+    file,
+  );
+  if (res === undefined) return;
+  controller.showMessage("Enregistrement créé avec succès.");
+
+  records.value = [res].concat(records.value);
+  // start editing
+  toEdit.value = res;
+}
+
 // Direct upload feature
 const fileForDirectUpload = defineModel<File | null>("directUploadFile", {
   required: true,
@@ -642,14 +685,7 @@ async function directUploadCreate() {
   if (file == null) return;
   fileForDirectUpload.value = null;
 
-  const res = await controller.UploadAndCreate(
-    { idCompta: controller.idCompta },
-    file,
-  );
-  if (res === undefined) return;
-  controller.showMessage("Enregistrement créé avec succès.");
-
-  records.value = [res].concat(records.value);
+  uploadAndCreate(file);
 }
 
 async function directUploadAddTo(subrecord: ComptaSubrecord) {

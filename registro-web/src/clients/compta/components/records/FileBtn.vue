@@ -1,29 +1,9 @@
 <template>
   <div>
-    <!-- Upload file dialog -->
-    <v-dialog v-model="showUpload" max-width="600px">
-      <v-card title="Téléverser le justificatif">
-        <v-card-text>
-          <v-file-input
-            :multiple="false"
-            v-model="file"
-            label="Fichier"
-            accept=".png,.jpeg,.jpg,.pdf"
-            show-size
-            :rules="[validateSize]"
-          ></v-file-input>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn
-            color="success"
-            :disabled="!file?.size || file.size >= MaxUploadSize"
-            @click="uploadJustificatif"
-            >Téléverser</v-btn
-          >
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <FileUploadDialog
+      v-model="showUpload"
+      @upload="emit('upload', $event)"
+    ></FileUploadDialog>
 
     <v-progress-circular
       indeterminate
@@ -67,6 +47,7 @@ import { computed, ref } from "vue";
 import type { ComptaSubrecord } from "../../logic/api.ts";
 import { controller } from "../../logic/logic.ts";
 import FilePreview from "./FilePreview.vue";
+import FileUploadDialog from "./FileUploadDialog.vue";
 
 const props = defineProps<{
   record: ComptaSubrecord;
@@ -89,22 +70,5 @@ const downloadURL = computed(() =>
   controller.DownloadJustificatif(props.record.Id, controller.authToken),
 );
 
-const MaxUploadSize = 10 * 1024 * 1024;
-const file = ref<File | null>(null);
-
 const showUpload = ref(false);
-function uploadJustificatif() {
-  if (!file.value?.size) return;
-  emit("upload", file.value);
-  showUpload.value = false;
-  file.value = null;
-}
-
-function validateSize(fs: File | null) {
-  if (!fs) return true;
-  return (
-    fs.size < MaxUploadSize ||
-    `La taille d'un fichier est limitée à ${MaxUploadSize / (1024 * 1024)}M.`
-  );
-}
 </script>
