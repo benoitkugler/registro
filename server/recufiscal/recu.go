@@ -56,7 +56,7 @@ func loadAndSelect(db dons.DB, year int) (map[pr.IdPersonne]recuFiscal, pr.Perso
 	}
 
 	// selectForRecu aggrège les dons, ignorant les dons collectifs.
-	// TODO: support for custom taux
+	// TODO: support for custom taux, not needed for now since Repere does not use this API
 	taux := ds.Taux{Euros: 1000}
 	selected := map[pr.IdPersonne]recuFiscal{}
 	for _, don := range dons {

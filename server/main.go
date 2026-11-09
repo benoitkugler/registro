@@ -172,12 +172,11 @@ func getAdress(devMode bool) string {
 	if devMode {
 		adress = "localhost:1323"
 	} else {
-		// TODO: adapt to infomaniak
 		// alwaysdata use IP and PORT env var
 		host := os.Getenv("IP")
 		port, err := strconv.Atoi(os.Getenv("PORT"))
 		if err != nil {
-			log.Fatal("No PORT found", err)
+			log.Fatal("no valid PORT found", err)
 		}
 		if strings.Count(host, ":") >= 2 { // ipV6 -> besoin de crochet
 			host = "[" + host + "]"
@@ -247,7 +246,6 @@ func setupClientApps(e *echo.Echo, asso string) {
 
 	e.GET("/compta", serveStaticAsso("/compta/index.html"), middleware.Gzip(), noCache)
 	e.GET("/compta/*", serveStaticAsso("/compta/index.html"), middleware.Gzip(), noCache)
-
 
 	// services also contains the index page and the CGUs
 	e.GET("/", serveStaticAsso("/services/index.html"), middleware.Gzip(), noCache)

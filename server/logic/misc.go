@@ -128,11 +128,11 @@ func CheckPersonneReferences(db pr.DB, id pr.IdPersonne) (out PersonneReferences
 	}
 	out.Files = links1.IdFiles()
 
-	// links2, err := rd.SelectDonDonateursByIdPersonnes(db, id)
-	// if err != nil {
-	// 	return out, utils.SQLError(err)
-	// }
-	// out.Dons = links2
+	dons, err := dons.SelectDonsByIdPersonnes(db, id)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+	out.Dons = dons.IDs()
 
 	return out, nil
 }
