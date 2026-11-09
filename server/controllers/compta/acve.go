@@ -2,8 +2,10 @@ package compta
 
 import (
 	"strings"
+	"time"
 
 	ca "registro/sql/compta"
+	ds "registro/sql/dossiers"
 )
 
 // custom logic for ACVE
@@ -54,110 +56,118 @@ var accountColors = [ca.Aurore + 1]string{
 	ca.Aurore:          "",
 }
 
+func (ld *comptaLoader) budgetFraisMDR(config ca.ComptaConfig, totalPeople int) (chauffage, entretien ds.Montant) {
+	// chauffage is activated from november to april
+	m := ld.camp.DateDebut.Time().Month()
+	if m >= time.November || m <= time.April {
+		chauffage = ds.Montant{Cent: config.ChauffageMDR * ld.camp.Duree, Currency: ds.Euros}
+	}
+	// number of days * number of people
+	daysPeople := ld.camp.Duree * totalPeople
+	entretien = ds.Montant{Cent: config.EntretienMDR * daysPeople, Currency: ds.Euros}
+
+	return
+}
+
+// only use [ca.Carburant] ventilations
+func carExpenses(rec *ca.ComptaSubrecord) Cent {
+	var total Cent
+	for _, vent := range rec.Montants {
+		if vent.Kind == ca.Carburant {
+			total += vent.Cent
+		}
+	}
+	return total
+}
+
 type ResolvedBus struct {
 	ca.Bus
 	Kms       int
-	Tarif     float32
-	TotalCost float32
+	Tarif     ds.Montant
+	TotalCost ds.Montant
 }
-
-// type ResolvedPhotocopies struct {
-// 	Start, End, Number int
-// 	Tarif              Cent
-// 	TotalCost          float32
-// }
 
 type ResolvedMateriel struct {
 	Days                                       int
 	NbPeople, NbInscrits                       int
 	DaysPeopleEntretien, DaysPeoplePedagogique int
-	TarifEntretien, TarifPedagogique           float32
-	CostEntretien, CostPedagogique             float32
-	Total                                      float32
 
-	totalEntretien, totalPedagogique Cent
+	TarifEntretien, TarifMateriel Cent
+	CostEntretien, CostMateriel   Cent // computed from days, people and tarif
+
+	Total Cent
 }
 
 // BusExpense is a summary of a [ComptaRecord],
 // keeping only the ventilation affected to cars
 type BusExpense struct {
-	Id    ca.IdComptaSubrecord
-	Title string
-	Total float32
+	Id          ca.IdComptaSubrecord
+	Description string
+	Total       ds.Montant
 }
 
+// all value are in €, since it is only used
+// for ACVE
 type ResolvedFraisMDR struct {
 	Bus            []ResolvedBus
 	ExpensesForBus []BusExpense
-	TotalBus       float32 // taking into account the potential expenses recorded
-	totalBus       Cent
+	TotalBus       Cent // taking into account the potential expenses recorded
 
-	// Photocopies ResolvedPhotocopies
 	HasMateriel bool // true for camp at MDR
 	Materiel    ResolvedMateriel
 
-	Total float32
+	Total Cent
 }
 
 func (ld *comptaLoader) resolveFraismdr() (out ResolvedFraisMDR) {
-	return resolve(ld.compta.Fraismdr, ld.config, ld.subrecords, ld.recordsForBus, ld.camp.Duree, ld.inscrits(), len(ld.equipiers), ld.atMDR())
+	return resolveFraismdr(ld.compta.Fraismdr, ld.config, ld.subrecords, ld.recordsForBus, ld.camp.Duree, ld.inscrits(), len(ld.equipiers), ld.atMDR())
 }
 
-func resolve(frais ca.FraismdrACVE, config ca.ComptaConfig, subrecords ca.ComptaSubrecords, links ca.ComptaRecordBuss, days, inscrits, equipiers int, atMDR bool) (out ResolvedFraisMDR) {
-	// 	out.Bus = make([]ResolvedBus, len(frais.Bus))
-	// 	for i, bus := range frais.Bus {
-	// 		tarif := config.CarsMDR[bus.Kind]
-	// 		kms := bus.KmEnd - bus.KmStart
-	// 		total := tarif * Cent(kms)
-	// 		out.Bus[i] = ResolvedBus{
-	// 			Bus:       bus,
-	// 			Kms:       kms,
-	// 			Tarif:     tarif.euros(),
-	// 			TotalCost: total.euros(),
-	// 		}
-	// 		out.totalBus += total
-	// 	}
+func resolveFraismdr(frais ca.FraismdrACVE, config ca.ComptaConfig, subrecords ca.ComptaSubrecords, links ca.ComptaRecordBuss, days, inscrits, equipiers int, atMDR bool) (out ResolvedFraisMDR) {
+	out.Bus = make([]ResolvedBus, len(frais.Bus))
+	for i, bus := range frais.Bus {
+		tarif := ds.Montant{Cent: Cent(config.AssoCars[bus.Kind]), Currency: ds.Euros}
+		kms := bus.KmEnd - bus.KmStart
+		total := tarif.Mult(kms)
+		out.Bus[i] = ResolvedBus{
+			Bus:       bus,
+			Kms:       kms,
+			Tarif:     tarif,
+			TotalCost: total,
+		}
+		out.TotalBus += total.Cent
+	}
 
-	// 	// select the expenses devoted to bus
-	// 	for _, link := range links {
-	// 		rec := subrecords[link.IdSubrecord]
-	// 		exp := rec.carExpenses()
-	// 		out.ExpensesForBus = append(out.ExpensesForBus, BusExpense{rec.Id, rec.Title, exp.euros()})
-	// 		out.totalBus -= exp
-	// 	}
+	// select the expenses devoted to bus
+	for _, link := range links {
+		rec := subrecords[link.IdSubrecord]
+		exp := carExpenses(&rec)
+		out.ExpensesForBus = append(out.ExpensesForBus, BusExpense{rec.Id, rec.Description, ds.Montant{Cent: exp, Currency: ds.Euros}})
+		out.TotalBus -= exp
+	}
 
-	// 	out.TotalBus = out.totalBus.euros()
+	out.HasMateriel = atMDR
+	all := inscrits + equipiers
+	costEntretien := days * all * config.EntretienMDR
+	costMateriel := days * inscrits * config.MaterielMDR
+	out.Materiel = ResolvedMateriel{
+		Days:                  days,
+		NbPeople:              all,
+		NbInscrits:            inscrits,
+		DaysPeopleEntretien:   days * all,
+		DaysPeoplePedagogique: days * inscrits,
+		TarifEntretien:        config.EntretienMDR,
+		TarifMateriel:         config.MaterielMDR,
+		CostEntretien:         costEntretien,
+		CostMateriel:          costMateriel,
+		Total:                 costEntretien + costMateriel,
+	}
 
-	// 	// photocopNb := in.PhotocopiesEnd - in.PhotocopiesStart
-	// 	// out.Photocopies = ResolvedPhotocopies{
-	// 	// 	Start: in.PhotocopiesStart, End: in.PhotocopiesEnd,
-	// 	// 	Number: photocopNb,
-	// 	// }
-
-	// 	all := inscrits + equipiers
-	// 	costEntretien := Cent(days*all) * config.EntretienMDR
-	// 	costMateriel := Cent(days*inscrits) * config.MaterielMDR
-	// 	out.Materiel = ResolvedMateriel{
-	// 		Days:                  days,
-	// 		NbInscrits:            inscrits,
-	// 		NbPeople:              all,
-	// 		DaysPeopleEntretien:   days * all,
-	// 		DaysPeoplePedagogique: days * inscrits,
-	// 		TarifEntretien:        config.EntretienMDR.euros(),
-	// 		TarifPedagogique:      config.MaterielMDR.euros(),
-	// 		CostEntretien:         costEntretien.euros(),
-	// 		CostPedagogique:       costMateriel.euros(),
-	// 		totalEntretien:        costEntretien,
-	// 		totalPedagogique:      costMateriel,
-	// 		Total:                 (costEntretien + costMateriel).euros(),
-	// 	}
-	// 	out.HasMateriel = atMDR
-
-	// 	total := out.totalBus
-	// 	if out.HasMateriel {
-	// 		total += costEntretien + costMateriel
-	// 	}
-	// 	out.Total = total.euros()
+	total := out.TotalBus
+	if out.HasMateriel {
+		total += costEntretien + costMateriel
+	}
+	out.Total = total
 
 	return out
 }

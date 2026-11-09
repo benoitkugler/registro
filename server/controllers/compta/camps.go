@@ -61,7 +61,7 @@ var months = [13]string{
 	time.December:  "Déc.",
 }
 
-func (c *CampDetails) dates() string {
+func (c *CampSummary) dates() string {
 	debut, fin := time.Time(c.DateDebut), sh.Plage{From: c.DateDebut, Duree: c.Duree}.To().Time()
 	dM, fM := debut.Month(), fin.Month()
 	if dM == fM { // condense

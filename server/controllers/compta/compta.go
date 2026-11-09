@@ -19,9 +19,9 @@ import (
 
 type Cent = int
 
-// CampDetails exposes several settings and statistics
+// CampSummary exposes several settings and statistics
 // about one sejour.
-type CampDetails struct {
+type CampSummary struct {
 	Compta ComptaExt
 
 	Nom       string
@@ -33,18 +33,18 @@ type CampDetails struct {
 	Duree     int        // number of days
 	Prix      ds.Montant // prix de base, sans options ou remises
 
-	Inscrits   int // validés
-	Animateurs int // TODO: rename au pair
-	Equipiers  int // including animateurs/au pair
+	Inscrits  int // validés
+	AuPairs   int // equipiers with au pair status
+	Equipiers int // including animateurs/au pair
 
 	// finances
 
 	// Simple estimation computed by [Prix] * [Inscrits]
 	Recettes ds.Montant
 	// Remises is the total remises applied to the pensions
-	// Note : the currency might be different from [BudgetSansRemises] due to convertions
+	// Note : the currency might be different from [Recettes] due to convertions
 	Remises ds.Montant
-	// in %, computed from [Remises] and [BudgetSansRemises]
+	// in %, computed from [Remises] and [Recettes]
 	PercentageRemises int
 
 	BudgetPrevisionnel BudgetPrevisionnelSummary
@@ -55,26 +55,26 @@ type CampDetails struct {
 	// fraisMDRVehicule float32
 	// fraisMDRMateriel float32 // only > 0 for camp at MDR
 
+	// prixJournee rd.Euros
+	// TODO
+	// deduced from [ventilations], with remboursements deduced
+	// also includes FraisMDR
+
 	// total expenses, grouped by kind
 	// it also includes the additional expenses
 	// from FraisMDR
 	ventilations ventilations
 
-	// TODO
-	// deduced from [ventilations], with remboursements deduced
-	// also includes FraisMDR
-
 	// converted
 	DepensesTotal         ds.Montant
 	Marge                 int        // in %
 	DepenseJourneeInscrit ds.Montant // for one day and one inscrit
-	// prixJournee rd.Euros
 
 	DepenseGraph DepenseGraph
 }
 
-func (ld *comptaLoader) compile() CampDetails {
-	var out CampDetails
+func (ld *comptaLoader) compile() CampSummary {
+	var out CampSummary
 
 	out.Nom = ld.camp.Nom
 	out.Serial = serial(ld.camp)
@@ -85,7 +85,7 @@ func (ld *comptaLoader) compile() CampDetails {
 	out.Duree = ld.camp.Duree
 	out.Prix = ld.camp.Prix
 	out.Inscrits = ld.inscrits()
-	out.Animateurs = len(ld.equipiers.AuPairs())
+	out.AuPairs = len(ld.equipiers.AuPairs())
 	out.Equipiers = len(ld.equipiers)
 
 	out.Compta = ComptaExt{
@@ -96,13 +96,13 @@ func (ld *comptaLoader) compile() CampDetails {
 
 	// finances
 
+	fraisMDR := ld.resolveFraismdr()
 	// TODO
-	// fraisMDR := ld.resolveFraismdr()
 	// out.fraisMDRVehicule = fraisMDR.TotalBus
 	// if fraisMDR.HasMateriel {
 	// 	out.fraisMDRMateriel = fraisMDR.Materiel.Total
 	// }
-	out.ventilations = ld.depenses(ResolvedFraisMDR{})
+	out.ventilations = ld.aggregateDepenses(fraisMDR)
 
 	out.Remises = ld.computeRemises()
 
@@ -339,26 +339,26 @@ func (ld comptaLoader) computeRemises() ds.Montant {
 }
 
 // agregate all records
-func (ld *comptaLoader) depenses(fraisMDR ResolvedFraisMDR) ventilations {
+func (ld *comptaLoader) aggregateDepenses(fraisMDR ResolvedFraisMDR) ventilations {
 	var vs ventilations
 	for _, r := range ld.subrecords {
 		group := ld.records[r.IdRecord]
 		vs.addRecord(group, r)
 	}
-	// TODO
-	// // add fraisMDR to other account
-	// vs.add(ventilations{Carburant: depenseTotale{otherAccount: fraisMDR.totalBus}})
-	// if fraisMDR.HasMateriel {
-	// 	vs.add(ventilations{
-	// 		FournitureEntretien:   depenseTotale{otherAccount: fraisMDR.Materiel.totalEntretien},
-	// 		FourniturePedagogique: depenseTotale{otherAccount: fraisMDR.Materiel.totalPedagogique},
-	// 	})
-	// }
+
+	// add fraisMDR to other account
+	vs.add(ventilations{ca.Carburant: depenseTotale{accAssoDepenses: ds.Montant{Cent: fraisMDR.TotalBus, Currency: ds.Euros}.Multi()}})
+	if fraisMDR.HasMateriel {
+		vs.add(ventilations{
+			ca.FournitureEntretien:   depenseTotale{accAssoDepenses: ds.Montant{Cent: fraisMDR.Materiel.CostEntretien, Currency: ds.Euros}.Multi()},
+			ca.FourniturePedagogique: depenseTotale{accAssoDepenses: ds.Montant{Cent: fraisMDR.Materiel.CostMateriel, Currency: ds.Euros}.Multi()},
+		})
+	}
 	return vs
 }
 
 // fill computed values
-func (out *CampDetails) fillFinances(taux ds.Taux) {
+func (out *CampSummary) fillFinances(taux ds.Taux) {
 	// TODO
 	// out.prixJournee = out.Prix / rd.Euros(out.Duree)
 
@@ -410,16 +410,6 @@ func checkVentilations(ms ca.Montants, isReceipe bool) error {
 		}
 	}
 	return nil
-}
-
-func carExpenses(rec *ca.ComptaSubrecord) Cent {
-	var total Cent
-	for _, vent := range rec.Montants {
-		if vent.Kind == ca.Carburant {
-			total += vent.Cent
-		}
-	}
-	return total
 }
 
 func computeState(compta ca.ComptaCamp, entries ca.ComptaRecords) ca.State {
@@ -543,15 +533,15 @@ func (ct *Controller) GetCampDetails(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) compileDetails(idCompta ca.IdComptaCamp) (CampDetails, error) {
+func (ct *Controller) compileDetails(idCompta ca.IdComptaCamp) (CampSummary, error) {
 	compta, err := ca.SelectComptaCamp(ct.db, idCompta)
 	if err != nil {
-		return CampDetails{}, utils.SQLError(err)
+		return CampSummary{}, utils.SQLError(err)
 	}
 
 	ld, err := newComptaLoader(ct.db, compta)
 	if err != nil {
-		return CampDetails{}, err
+		return CampSummary{}, err
 	}
 
 	return ld.compile(), nil

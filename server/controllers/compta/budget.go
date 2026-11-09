@@ -2,7 +2,6 @@ package compta
 
 import (
 	"fmt"
-	"time"
 
 	ca "registro/sql/compta"
 	ds "registro/sql/dossiers"
@@ -12,8 +11,6 @@ type BudgetPrevisionnelSummary struct {
 	Reel   ds.Montant
 	Simule ds.Montant
 }
-
-// ----------------------------------- Budget -----------------------------------
 
 // returns the more recent configuration among the ones available at the sejour time
 func selectBudgetConfig(campYear int, configs ca.ComptaConfigs) (ca.ComptaConfig, error) {
@@ -83,14 +80,7 @@ func (ld *comptaLoader) resolveBudget(origin ca.ComptaBugdet, config ca.ComptaCo
 
 	atMDR := ld.atMDR()
 	if atMDR {
-		// chauffage is activated from november to april
-		m := ld.camp.DateDebut.Time().Month()
-		if m >= time.November || m <= time.April {
-			out.ChauffageMDR = ds.Montant{Cent: config.ChauffageMDR * out.Duree, Currency: ds.Euros}
-		}
-		// number of days * number of people
-		daysPeople := out.Duree * (out.Inscrits + out.Equipiers)
-		out.EntretienMDR = ds.Montant{Cent: config.EntretienMDR * daysPeople, Currency: ds.Euros}
+		out.EntretienMDR, out.ChauffageMDR = ld.budgetFraisMDR(config, out.Inscrits+out.Equipiers)
 		// host cost is only MDR
 		out.HostTotal = ds.Montant{Cent: out.ChauffageMDR.Cent + out.EntretienMDR.Cent, Currency: ds.Euros}
 	} else {

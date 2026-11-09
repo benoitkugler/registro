@@ -1,11 +1,11 @@
 package compta
 
 import (
-	"archive/zip"
 	"fmt"
-	"io"
-	"net/http"
+	"iter"
+	"path/filepath"
 
+	"registro/controllers/files"
 	cps "registro/sql/camps"
 	ca "registro/sql/compta"
 	"registro/utils"
@@ -141,69 +141,56 @@ func (ct *Controller) DownloadRecordsAndFilesStream(c echo.Context) error {
 		return errAccess
 	}
 
-	err = ct.streamRecordsArchive(id, c.Response())
-	return err
-}
-
-func (ct *Controller) streamRecordsArchive(id ca.IdComptaCamp, resp http.ResponseWriter) error {
-	groups, recs, err := getRecords(ct.db, id)
+	name, iter, err := ct.streamRecordsArchive(id)
 	if err != nil {
 		return err
 	}
+	err = files.StreamZip(c.Response(), name, iter)
+	return err
+}
+
+func (ct *Controller) streamRecordsArchive(id ca.IdComptaCamp) (string, iter.Seq2[files.ZipItem, error], error) {
+	groups, recs, err := getRecords(ct.db, id)
+	if err != nil {
+		return "", nil, err
+	}
 	compta, err := ca.SelectComptaCamp(ct.db, id)
 	if err != nil {
-		return utils.SQLError(err)
+		return "", nil, utils.SQLError(err)
 	}
 	camp, err := cps.SelectCamp(ct.db, compta.IdCamp)
 	if err != nil {
-		return utils.SQLError(err)
+		return "", nil, utils.SQLError(err)
 	}
 
 	excel, err := generateExcelRecords(groups, recs)
 	if err != nil {
-		return err
+		return "", nil, err
 	}
 
 	filename := fmt.Sprintf("Compta %s.zip", camp.Label())
-	resp.Header().Set(echo.HeaderContentType, "application/x-zip")
-	resp.Header().Set(echo.HeaderContentDisposition, utils.AttachementHeader(filename))
-	if flusher, ok := resp.(http.Flusher); ok {
-		// this is needed so that browsers display a progress bar
-		flusher.Flush()
-	}
-
-	archive := zip.NewWriter(resp)
-
-	fw, err := archive.Create("compta.xlsx")
-	if err != nil {
-		return err
-	}
-	_, err = io.Copy(fw, excel)
-	if err != nil {
-		return err
-	}
-	err = archive.Flush()
-	if err != nil {
-		return err
-	}
-
-	var toDownload []idAndName
-	for _, rec := range recs {
-		if rec.IdFile.Valid {
-			toDownload = append(toDownload, idAndName{rec.IdFile.Id, fmt.Sprintf("justificatif_%d", rec.Id)})
+	return filename, func(yield func(files.ZipItem, error) bool) {
+		if !yield(files.ZipItem{Name: "compta.xlsx", Content: excel.Bytes()}, nil) {
+			return
 		}
-	}
-	err = ct.files.downloadToZip(ct.db, compta.FileStatus, toDownload, archive)
-	if err != nil {
-		return err
-	}
-
-	err = archive.Close()
-	if err != nil {
-		return err
-	}
-
-	return nil
+		for _, rec := range recs {
+			if !rec.IdFile.Valid {
+				continue
+			}
+			content, originalName, err := ct.files.download(ct.db, compta.FileStatus, rec.IdFile.Id, false)
+			if err != nil {
+				yield(files.ZipItem{}, err)
+				return
+			}
+			item := files.ZipItem{
+				Name:    fmt.Sprintf("justificatif_%d%s", rec.Id, filepath.Ext(originalName)),
+				Content: content,
+			}
+			if !yield(item, nil) {
+				return
+			}
+		}
+	}, nil
 }
 
 func (ct *Controller) getRecordsArchive(id ca.IdComptaCamp) (content []byte, filename string, err error) {

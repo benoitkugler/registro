@@ -3,12 +3,13 @@ package compta
 import (
 	"bytes"
 	"fmt"
-	"registro/generators/sheets"
-	ca "registro/sql/compta"
-	"registro/sql/dossiers"
 	"sort"
 	"strconv"
 	"time"
+
+	"registro/generators/sheets"
+	ca "registro/sql/compta"
+	"registro/sql/dossiers"
 )
 
 // excel support
@@ -23,7 +24,7 @@ func (ld *comptaLoader) ecritures() ecritures {
 	return ecritures{
 		camp:        string(ld.camp.Label()),
 		details:     fmt.Sprintf("%s %s - %s", ld.directeur.FPrenom(), ld.directeur.FNom(), accountLabels[ld.compta.Account]),
-		ventilation: ld.depenses(ld.resolveFraismdr()),
+		ventilation: ld.aggregateDepenses(ld.resolveFraismdr()),
 	}
 }
 
@@ -121,10 +122,10 @@ func generateExcelEcritures(ec ecritures) (*bytes.Buffer, error) {
 	return b.Finalize()
 }
 
-type bilanCamp []CampDetails
+type bilanCamp []CampSummary
 
 // compute the total (or average) for each field
-func (bc bilanCamp) total() (out CampDetails) {
+func (bc bilanCamp) total() (out CampSummary) {
 	// out.Label = "Total"
 	// out.Directeur = "(ou moyenne)"
 	// out.ventilations = make(ventilations)

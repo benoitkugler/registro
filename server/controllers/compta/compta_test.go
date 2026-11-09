@@ -76,7 +76,7 @@ func TestDetails(t *testing.T) {
 	tu.Assert(t, details.Prix.Cent == 0)
 	tu.Assert(t, details.Inscrits == 0)
 	tu.Assert(t, details.Equipiers == 1)
-	tu.Assert(t, details.Animateurs == 1)
+	tu.Assert(t, details.AuPairs == 1)
 	tu.Assert(t, details.Duree == 7)
 	tu.Assert(t, details.Directeur == " ")
 	tu.Assert(t, details.Recettes.Cent == 0)
