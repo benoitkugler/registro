@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"registro/sql/camps"
-	"registro/sql/dossiers"
+	ds "registro/sql/dossiers"
 	"registro/sql/shared"
 )
 
@@ -71,7 +71,7 @@ type ComptaSubrecord struct {
 	Serial      string             // mandatory for [ComptaRecord.Mode] Cheque, ignored otherwise
 
 	// [Currency] is constant for one given record
-	Currency dossiers.Currency
+	Currency ds.Currency
 	Montants Montants // avec les ventilations
 
 	IdFile OptIdComptaFile `gomacro-sql-foreign:"ComptaFile" gomacro-sql-on-delete:"SET NULL"`
@@ -106,29 +106,25 @@ type ComptaRecordBus struct {
 type ComptaBugdet struct {
 	IdCompta IdComptaCamp `gomacro-sql-on-delete:"CASCADE"`
 
-	// TODO
+	// the following fields may be set to forecast a budget
+	// before the real inscriptions are open
+	SimulatedInscrits  int
+	SimulatedEquipiers int
 
-	// 	BonusTeamPeople int // additional people present during the vacation
-	// 	MealsInscrits   MealsCount
-	// 	MealsEquipiers  MealsCount
+	StartMealInscrits, EndMealInscrits               Meal
+	StartMealEquipiers, EndMealEquipiers             Meal
+	OffsetStartMealEquipiers, OffsetEndMealEquipiers int
 
-	// 	ExternalHost RentCosts
+	ExternalHost Rents // ignored for camp at MDR
 
-	// 	Activities    Activities
-	// 	MaterielPeda  Cent
-	// 	ProduitPharma Cent
+	Activities Activities
 
-	// 	TeamTrips       Cent
-	// 	ExternalCarRent Cent
+	MaterielPeda  ds.Montant
+	ProduitPharma ds.Montant
 
-	// 	// the following fields may be set to forecast a budget
-	// 	// before the real inscriptions are open
-	// 	SimulatedInscrits  int
-	// 	SimulatedEquipiers int
-	// 	SimulatedReduc1    int // number of participants with one parent in the team
-	// 	SimulatedReduc2    int // number of participants with two parents in the team
-
-	// CarsMDRKms CarsKms
+	TeamTrips       ds.Montant
+	ExternalCarRent ds.Montant
+	AssoCarKms      CarsKms
 }
 
 // ComptaConfig holds parameters used to compute the budget,
@@ -140,15 +136,17 @@ type ComptaConfig struct {
 	Id   IdComptaConfig
 	Year int
 
-	// 	MealsCost          MealsCosts
-	// 	SmallMealThreshold int
-	// 	// additional percentage (typically 10) added to the meals
-	// 	// if the number of participants is strictly lower than the [SmallMealThreshold]
-	// 	SmallMealMajoration int
+	MealsCost          MealsCosts
+	SmallMealThreshold int
+	// additional percentage (typically 10) added to the meals
+	// if the number of participants is strictly lower than the [SmallMealThreshold]
+	SmallMealMajoration int
 
-	// 	ChauffageMDR Cent // cost for one day at MDR
-	// 	EntretienMDR Cent // cost for one day and one participant or equipier at MDR
-	// 	MaterielMDR  Cent // cost for one day and one participant at MDR
+	AssoCars CarsCosts
 
-	// CarsMDR CarsCosts
+	// ACVE only, in €
+
+	ChauffageMDR Cent // cost for one day at MDR
+	EntretienMDR Cent // cost for one day and one participant or equipier at MDR
+	MaterielMDR  Cent // cost for one day and one participant at MDR
 }

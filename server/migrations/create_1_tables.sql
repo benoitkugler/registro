@@ -440,7 +440,22 @@ CREATE TABLE organismes (
 );
 
 CREATE TABLE compta_bugdets (
-    IdCompta integer NOT NULL
+    IdCompta integer NOT NULL,
+    SimulatedInscrits integer NOT NULL,
+    SimulatedEquipiers integer NOT NULL,
+    StartMealInscrits smallint CHECK (StartMealInscrits IN (0, 1, 2, 3, 4)) NOT NULL,
+    EndMealInscrits smallint CHECK (EndMealInscrits IN (0, 1, 2, 3, 4)) NOT NULL,
+    StartMealEquipiers smallint CHECK (StartMealEquipiers IN (0, 1, 2, 3, 4)) NOT NULL,
+    EndMealEquipiers smallint CHECK (EndMealEquipiers IN (0, 1, 2, 3, 4)) NOT NULL,
+    OffsetStartMealEquipiers integer NOT NULL,
+    OffsetEndMealEquipiers integer NOT NULL,
+    ExternalHost jsonb NOT NULL,
+    Activities jsonb NOT NULL,
+    MaterielPeda Montant NOT NULL,
+    ProduitPharma Montant NOT NULL,
+    TeamTrips Montant NOT NULL,
+    ExternalCarRent Montant NOT NULL,
+    AssoCarKms integer[] CHECK (array_length(AssoCarKms, 1) = 3) NOT NULL
 );
 
 CREATE TABLE compta_camps (
@@ -456,7 +471,14 @@ CREATE TABLE compta_camps (
 
 CREATE TABLE compta_configs (
     Id serial PRIMARY KEY,
-    Year integer NOT NULL
+    Year integer NOT NULL,
+    MealsCost integer[] CHECK (array_length(MealsCost, 1) = 5) NOT NULL,
+    SmallMealThreshold integer NOT NULL,
+    SmallMealMajoration integer NOT NULL,
+    AssoCars integer[] CHECK (array_length(AssoCars, 1) = 3) NOT NULL,
+    ChauffageMDR integer NOT NULL,
+    EntretienMDR integer NOT NULL,
+    MaterielMDR integer NOT NULL
 );
 
 CREATE TABLE compta_files (

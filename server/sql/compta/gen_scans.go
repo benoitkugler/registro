@@ -7,6 +7,8 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"fmt"
+
 	"registro/sql/camps"
 
 	"github.com/lib/pq"
@@ -29,6 +31,21 @@ func scanOneComptaBugdet(row scanner) (ComptaBugdet, error) {
 	var item ComptaBugdet
 	err := row.Scan(
 		&item.IdCompta,
+		&item.SimulatedInscrits,
+		&item.SimulatedEquipiers,
+		&item.StartMealInscrits,
+		&item.EndMealInscrits,
+		&item.StartMealEquipiers,
+		&item.EndMealEquipiers,
+		&item.OffsetStartMealEquipiers,
+		&item.OffsetEndMealEquipiers,
+		&item.ExternalHost,
+		&item.Activities,
+		&item.MaterielPeda,
+		&item.ProduitPharma,
+		&item.TeamTrips,
+		&item.ExternalCarRent,
+		&item.AssoCarKms,
 	)
 	return item, err
 }
@@ -37,7 +54,7 @@ func ScanComptaBugdet(row *sql.Row) (ComptaBugdet, error) { return scanOneCompta
 
 // SelectAll returns all the items in the compta_bugdets table.
 func SelectAllComptaBugdets(db DB) (ComptaBugdets, error) {
-	rows, err := db.Query("SELECT idcompta FROM compta_bugdets")
+	rows, err := db.Query("SELECT idcompta, simulatedinscrits, simulatedequipiers, startmealinscrits, endmealinscrits, startmealequipiers, endmealequipiers, offsetstartmealequipiers, offsetendmealequipiers, externalhost, activities, materielpeda, produitpharma, teamtrips, externalcarrent, assocarkms FROM compta_bugdets")
 	if err != nil {
 		return nil, err
 	}
@@ -73,11 +90,11 @@ func ScanComptaBugdets(rs *sql.Rows) (ComptaBugdets, error) {
 
 func (item ComptaBugdet) Insert(db DB) error {
 	_, err := db.Exec(`INSERT INTO compta_bugdets (
-			idcompta
+			idcompta, simulatedinscrits, simulatedequipiers, startmealinscrits, endmealinscrits, startmealequipiers, endmealequipiers, offsetstartmealequipiers, offsetendmealequipiers, externalhost, activities, materielpeda, produitpharma, teamtrips, externalcarrent, assocarkms
 			) VALUES (
-			$1
+			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16
 			);
-			`, item.IdCompta)
+			`, item.IdCompta, item.SimulatedInscrits, item.SimulatedEquipiers, item.StartMealInscrits, item.EndMealInscrits, item.StartMealEquipiers, item.EndMealEquipiers, item.OffsetStartMealEquipiers, item.OffsetEndMealEquipiers, item.ExternalHost, item.Activities, item.MaterielPeda, item.ProduitPharma, item.TeamTrips, item.ExternalCarRent, item.AssoCarKms)
 	if err != nil {
 		return err
 	}
@@ -93,13 +110,28 @@ func InsertManyComptaBugdets(tx *sql.Tx, items ...ComptaBugdet) error {
 
 	stmt, err := tx.Prepare(pq.CopyIn("compta_bugdets",
 		"idcompta",
+		"simulatedinscrits",
+		"simulatedequipiers",
+		"startmealinscrits",
+		"endmealinscrits",
+		"startmealequipiers",
+		"endmealequipiers",
+		"offsetstartmealequipiers",
+		"offsetendmealequipiers",
+		"externalhost",
+		"activities",
+		"materielpeda",
+		"produitpharma",
+		"teamtrips",
+		"externalcarrent",
+		"assocarkms",
 	))
 	if err != nil {
 		return err
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdCompta)
+		_, err = stmt.Exec(item.IdCompta, item.SimulatedInscrits, item.SimulatedEquipiers, item.StartMealInscrits, item.EndMealInscrits, item.StartMealEquipiers, item.EndMealEquipiers, item.OffsetStartMealEquipiers, item.OffsetEndMealEquipiers, item.ExternalHost, item.Activities, item.MaterielPeda, item.ProduitPharma, item.TeamTrips, item.ExternalCarRent, item.AssoCarKms)
 		if err != nil {
 			return err
 		}
@@ -144,7 +176,7 @@ func (items ComptaBugdets) IdComptas() []IdComptaCamp {
 
 // SelectComptaBugdetByIdCompta return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectComptaBugdetByIdCompta(tx DB, idCompta IdComptaCamp) (item ComptaBugdet, found bool, err error) {
-	row := tx.QueryRow("SELECT idcompta FROM compta_bugdets WHERE idcompta = $1", idCompta)
+	row := tx.QueryRow("SELECT idcompta, simulatedinscrits, simulatedequipiers, startmealinscrits, endmealinscrits, startmealequipiers, endmealequipiers, offsetstartmealequipiers, offsetendmealequipiers, externalhost, activities, materielpeda, produitpharma, teamtrips, externalcarrent, assocarkms FROM compta_bugdets WHERE idcompta = $1", idCompta)
 	item, err = ScanComptaBugdet(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
@@ -153,7 +185,7 @@ func SelectComptaBugdetByIdCompta(tx DB, idCompta IdComptaCamp) (item ComptaBugd
 }
 
 func SelectComptaBugdetsByIdComptas(tx DB, idComptas_ ...IdComptaCamp) (ComptaBugdets, error) {
-	rows, err := tx.Query("SELECT idcompta FROM compta_bugdets WHERE idcompta = ANY($1)", IdComptaCampArrayToPQ(idComptas_))
+	rows, err := tx.Query("SELECT idcompta, simulatedinscrits, simulatedequipiers, startmealinscrits, endmealinscrits, startmealequipiers, endmealequipiers, offsetstartmealequipiers, offsetendmealequipiers, externalhost, activities, materielpeda, produitpharma, teamtrips, externalcarrent, assocarkms FROM compta_bugdets WHERE idcompta = ANY($1)", IdComptaCampArrayToPQ(idComptas_))
 	if err != nil {
 		return nil, err
 	}
@@ -161,7 +193,7 @@ func SelectComptaBugdetsByIdComptas(tx DB, idComptas_ ...IdComptaCamp) (ComptaBu
 }
 
 func DeleteComptaBugdetsByIdComptas(tx DB, idComptas_ ...IdComptaCamp) (ComptaBugdets, error) {
-	rows, err := tx.Query("DELETE FROM compta_bugdets WHERE idcompta = ANY($1) RETURNING idcompta", IdComptaCampArrayToPQ(idComptas_))
+	rows, err := tx.Query("DELETE FROM compta_bugdets WHERE idcompta = ANY($1) RETURNING idcompta, simulatedinscrits, simulatedequipiers, startmealinscrits, endmealinscrits, startmealequipiers, endmealequipiers, offsetstartmealequipiers, offsetendmealequipiers, externalhost, activities, materielpeda, produitpharma, teamtrips, externalcarrent, assocarkms", IdComptaCampArrayToPQ(idComptas_))
 	if err != nil {
 		return nil, err
 	}
@@ -332,6 +364,13 @@ func scanOneComptaConfig(row scanner) (ComptaConfig, error) {
 	err := row.Scan(
 		&item.Id,
 		&item.Year,
+		&item.MealsCost,
+		&item.SmallMealThreshold,
+		&item.SmallMealMajoration,
+		&item.AssoCars,
+		&item.ChauffageMDR,
+		&item.EntretienMDR,
+		&item.MaterielMDR,
 	)
 	return item, err
 }
@@ -340,7 +379,7 @@ func ScanComptaConfig(row *sql.Row) (ComptaConfig, error) { return scanOneCompta
 
 // SelectAll returns all the items in the compta_configs table.
 func SelectAllComptaConfigs(db DB) (ComptaConfigs, error) {
-	rows, err := db.Query("SELECT id, year FROM compta_configs")
+	rows, err := db.Query("SELECT id, year, mealscost, smallmealthreshold, smallmealmajoration, assocars, chauffagemdr, entretienmdr, materielmdr FROM compta_configs")
 	if err != nil {
 		return nil, err
 	}
@@ -349,13 +388,13 @@ func SelectAllComptaConfigs(db DB) (ComptaConfigs, error) {
 
 // SelectComptaConfig returns the entry matching 'id'.
 func SelectComptaConfig(tx DB, id IdComptaConfig) (ComptaConfig, error) {
-	row := tx.QueryRow("SELECT id, year FROM compta_configs WHERE id = $1", id)
+	row := tx.QueryRow("SELECT id, year, mealscost, smallmealthreshold, smallmealmajoration, assocars, chauffagemdr, entretienmdr, materielmdr FROM compta_configs WHERE id = $1", id)
 	return ScanComptaConfig(row)
 }
 
 // SelectComptaConfigs returns the entry matching the given 'ids'.
 func SelectComptaConfigs(tx DB, ids ...IdComptaConfig) (ComptaConfigs, error) {
-	rows, err := tx.Query("SELECT id, year FROM compta_configs WHERE id = ANY($1)", IdComptaConfigArrayToPQ(ids))
+	rows, err := tx.Query("SELECT id, year, mealscost, smallmealthreshold, smallmealmajoration, assocars, chauffagemdr, entretienmdr, materielmdr FROM compta_configs WHERE id = ANY($1)", IdComptaConfigArrayToPQ(ids))
 	if err != nil {
 		return nil, err
 	}
@@ -400,28 +439,28 @@ func ScanComptaConfigs(rs *sql.Rows) (ComptaConfigs, error) {
 // Insert one ComptaConfig in the database and returns the item with id filled.
 func (item ComptaConfig) Insert(tx DB) (out ComptaConfig, err error) {
 	row := tx.QueryRow(`INSERT INTO compta_configs (
-		year
+		year, mealscost, smallmealthreshold, smallmealmajoration, assocars, chauffagemdr, entretienmdr, materielmdr
 		) VALUES (
-		$1
-		) RETURNING id, year;
-		`, item.Year)
+		$1, $2, $3, $4, $5, $6, $7, $8
+		) RETURNING id, year, mealscost, smallmealthreshold, smallmealmajoration, assocars, chauffagemdr, entretienmdr, materielmdr;
+		`, item.Year, item.MealsCost, item.SmallMealThreshold, item.SmallMealMajoration, item.AssoCars, item.ChauffageMDR, item.EntretienMDR, item.MaterielMDR)
 	return ScanComptaConfig(row)
 }
 
 // Update ComptaConfig in the database and returns the new version.
 func (item ComptaConfig) Update(tx DB) (out ComptaConfig, err error) {
 	row := tx.QueryRow(`UPDATE compta_configs SET (
-		year
+		year, mealscost, smallmealthreshold, smallmealmajoration, assocars, chauffagemdr, entretienmdr, materielmdr
 		) = (
-		$1
-		) WHERE id = $2 RETURNING id, year;
-		`, item.Year, item.Id)
+		$1, $2, $3, $4, $5, $6, $7, $8
+		) WHERE id = $9 RETURNING id, year, mealscost, smallmealthreshold, smallmealmajoration, assocars, chauffagemdr, entretienmdr, materielmdr;
+		`, item.Year, item.MealsCost, item.SmallMealThreshold, item.SmallMealMajoration, item.AssoCars, item.ChauffageMDR, item.EntretienMDR, item.MaterielMDR, item.Id)
 	return ScanComptaConfig(row)
 }
 
 // Deletes the ComptaConfig and returns the item
 func DeleteComptaConfigById(tx DB, id IdComptaConfig) (ComptaConfig, error) {
-	row := tx.QueryRow("DELETE FROM compta_configs WHERE id = $1 RETURNING id, year;", id)
+	row := tx.QueryRow("DELETE FROM compta_configs WHERE id = $1 RETURNING id, year, mealscost, smallmealthreshold, smallmealmajoration, assocars, chauffagemdr, entretienmdr, materielmdr;", id)
 	return ScanComptaConfig(row)
 }
 
@@ -436,7 +475,7 @@ func DeleteComptaConfigsByIDs(tx DB, ids ...IdComptaConfig) ([]IdComptaConfig, e
 
 // SelectComptaConfigByYear return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectComptaConfigByYear(tx DB, year int) (item ComptaConfig, found bool, err error) {
-	row := tx.QueryRow("SELECT id, year FROM compta_configs WHERE Year = $1", year)
+	row := tx.QueryRow("SELECT id, year, mealscost, smallmealthreshold, smallmealmajoration, assocars, chauffagemdr, entretienmdr, materielmdr FROM compta_configs WHERE Year = $1", year)
 	item, err = ScanComptaConfig(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
@@ -1112,7 +1151,7 @@ func DeleteComptaSubrecordsByIdFiles(tx DB, idFiles_ ...IdComptaFile) (ComptaSub
 
 func loadJSON(out any, src any) error {
 	if src == nil {
-		return nil //zero value out
+		return nil // zero value out
 	}
 	bs, ok := src.([]byte)
 	if !ok {
@@ -1127,6 +1166,57 @@ func dumpJSON(s any) (driver.Value, error) {
 		return nil, err
 	}
 	return driver.Value(string(b)), nil
+}
+
+func (s *CarsCosts) Scan(src any) error {
+	var tmp pq.Int32Array
+	err := tmp.Scan(src)
+	if err != nil {
+		return err
+	}
+	if len(tmp) != 3 {
+		return fmt.Errorf("unexpected length %d", len(tmp))
+	}
+	copy(s[:], tmp)
+	return nil
+}
+
+func (s CarsCosts) Value() (driver.Value, error) {
+	return pq.Int32Array(s[:]).Value()
+}
+
+func (kms *CarsKms) Scan(src any) error {
+	var tmp pq.Int32Array
+	err := tmp.Scan(src)
+	if err != nil {
+		return err
+	}
+	if len(tmp) != 3 {
+		return fmt.Errorf("unexpected length %d", len(tmp))
+	}
+	copy(kms[:], tmp)
+	return nil
+}
+
+func (kms CarsKms) Value() (driver.Value, error) {
+	return pq.Int32Array(kms[:]).Value()
+}
+
+func (s *MealsCosts) Scan(src any) error {
+	var tmp pq.Int32Array
+	err := tmp.Scan(src)
+	if err != nil {
+		return err
+	}
+	if len(tmp) != 5 {
+		return fmt.Errorf("unexpected length %d", len(tmp))
+	}
+	copy(s[:], tmp)
+	return nil
+}
+
+func (s MealsCosts) Value() (driver.Value, error) {
+	return pq.Int32Array(s[:]).Value()
 }
 
 func IdComptaCampArrayToPQ(ids []IdComptaCamp) pq.Int64Array {
@@ -1264,11 +1354,17 @@ func ScanIdComptaSubrecordArray(rs *sql.Rows) ([]IdComptaSubrecord, error) {
 	return ints, nil
 }
 
+func (s *Activities) Scan(src any) error          { return loadJSON(s, src) }
+func (s Activities) Value() (driver.Value, error) { return dumpJSON(s) }
+
 func (s *FraismdrACVE) Scan(src any) error          { return loadJSON(s, src) }
 func (s FraismdrACVE) Value() (driver.Value, error) { return dumpJSON(s) }
 
 func (s *Montants) Scan(src any) error          { return loadJSON(s, src) }
 func (s Montants) Value() (driver.Value, error) { return dumpJSON(s) }
+
+func (s *Rents) Scan(src any) error          { return loadJSON(s, src) }
+func (s Rents) Value() (driver.Value, error) { return dumpJSON(s) }
 
 func (s *Reviews) Scan(src any) error          { return loadJSON(s, src) }
 func (s Reviews) Value() (driver.Value, error) { return dumpJSON(s) }

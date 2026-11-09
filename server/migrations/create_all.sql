@@ -440,7 +440,22 @@ CREATE TABLE organismes (
 );
 
 CREATE TABLE compta_bugdets (
-    IdCompta integer NOT NULL
+    IdCompta integer NOT NULL,
+    SimulatedInscrits integer NOT NULL,
+    SimulatedEquipiers integer NOT NULL,
+    StartMealInscrits smallint CHECK (StartMealInscrits IN (0, 1, 2, 3, 4)) NOT NULL,
+    EndMealInscrits smallint CHECK (EndMealInscrits IN (0, 1, 2, 3, 4)) NOT NULL,
+    StartMealEquipiers smallint CHECK (StartMealEquipiers IN (0, 1, 2, 3, 4)) NOT NULL,
+    EndMealEquipiers smallint CHECK (EndMealEquipiers IN (0, 1, 2, 3, 4)) NOT NULL,
+    OffsetStartMealEquipiers integer NOT NULL,
+    OffsetEndMealEquipiers integer NOT NULL,
+    ExternalHost jsonb NOT NULL,
+    Activities jsonb NOT NULL,
+    MaterielPeda Montant NOT NULL,
+    ProduitPharma Montant NOT NULL,
+    TeamTrips Montant NOT NULL,
+    ExternalCarRent Montant NOT NULL,
+    AssoCarKms integer[] CHECK (array_length(AssoCarKms, 1) = 3) NOT NULL
 );
 
 CREATE TABLE compta_camps (
@@ -456,7 +471,14 @@ CREATE TABLE compta_camps (
 
 CREATE TABLE compta_configs (
     Id serial PRIMARY KEY,
-    Year integer NOT NULL
+    Year integer NOT NULL,
+    MealsCost integer[] CHECK (array_length(MealsCost, 1) = 5) NOT NULL,
+    SmallMealThreshold integer NOT NULL,
+    SmallMealMajoration integer NOT NULL,
+    AssoCars integer[] CHECK (array_length(AssoCars, 1) = 3) NOT NULL,
+    ChauffageMDR integer NOT NULL,
+    EntretienMDR integer NOT NULL,
+    MaterielMDR integer NOT NULL
 );
 
 CREATE TABLE compta_files (
@@ -1128,6 +1150,29 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION gomacro_validate_json_array_comp_ActivityCost (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) = 'null' THEN
+        RETURN TRUE;
+    END IF;
+    IF jsonb_typeof(data) != 'array' THEN
+        RETURN FALSE;
+    END IF;
+    IF jsonb_array_length(data) = 0 THEN
+        RETURN TRUE;
+    END IF;
+    RETURN (
+        SELECT
+            bool_and(gomacro_validate_json_comp_ActivityCost (value))
+        FROM
+            jsonb_array_elements(data));
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
 CREATE OR REPLACE FUNCTION gomacro_validate_json_array_comp_Bus (data jsonb)
     RETURNS boolean
     AS $$
@@ -1174,6 +1219,29 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION gomacro_validate_json_array_comp_RentCost (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) = 'null' THEN
+        RETURN TRUE;
+    END IF;
+    IF jsonb_typeof(data) != 'array' THEN
+        RETURN FALSE;
+    END IF;
+    IF jsonb_array_length(data) = 0 THEN
+        RETURN TRUE;
+    END IF;
+    RETURN (
+        SELECT
+            bool_and(gomacro_validate_json_comp_RentCost (value))
+        FROM
+            jsonb_array_elements(data));
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
 CREATE OR REPLACE FUNCTION gomacro_validate_json_array_comp_Review (data jsonb)
     RETURNS boolean
     AS $$
@@ -1206,6 +1274,28 @@ BEGIN
     IF NOT is_valid THEN
         RAISE WARNING '% is not a boolean', data;
     END IF;
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_comp_ActivityCost (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(KEY IN ('Name', 'Cost'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_string (data -> 'Name')
+        AND gomacro_validate_json_doss_Montant (data -> 'Cost');
     RETURN is_valid;
 END;
 $$
@@ -1295,6 +1385,28 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION gomacro_validate_json_comp_RentCost (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(KEY IN ('Name', 'Cost'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_string (data -> 'Name')
+        AND gomacro_validate_json_doss_Montant (data -> 'Cost');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
 CREATE OR REPLACE FUNCTION gomacro_validate_json_comp_Review (data jsonb)
     RETURNS boolean
     AS $$
@@ -1328,6 +1440,44 @@ BEGIN
     IF NOT is_valid THEN
         RAISE WARNING '% is not a comp_Ventilation', data;
     END IF;
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_doss_Currency (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean := jsonb_typeof(data) = 'number'
+    AND data::int IN (0, 1);
+BEGIN
+    IF NOT is_valid THEN
+        RAISE WARNING '% is not a doss_Currency', data;
+    END IF;
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_doss_Montant (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(KEY IN ('Cent', 'Currency'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_number (data -> 'Cent')
+        AND gomacro_validate_json_doss_Currency (data -> 'Currency');
     RETURN is_valid;
 END;
 $$
@@ -1925,8 +2075,14 @@ ALTER TABLE compta_bugdets
 ALTER TABLE compta_configs
     ADD UNIQUE (Year);
 
+ALTER TABLE compta_bugdets
+    ADD CONSTRAINT Activities_gomacro CHECK (gomacro_validate_json_array_comp_ActivityCost (Activities));
+
 ALTER TABLE compta_subrecords
     ADD CONSTRAINT Montants_gomacro CHECK (gomacro_validate_json_array_comp_MontantPart (Montants));
+
+ALTER TABLE compta_bugdets
+    ADD CONSTRAINT ExternalHost_gomacro CHECK (gomacro_validate_json_array_comp_RentCost (ExternalHost));
 
 ALTER TABLE compta_records
     ADD CONSTRAINT Reviews_gomacro CHECK (gomacro_validate_json_array_comp_Review (Reviews));

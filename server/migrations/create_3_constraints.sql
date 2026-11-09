@@ -559,8 +559,14 @@ ALTER TABLE compta_bugdets
 ALTER TABLE compta_configs
     ADD UNIQUE (Year);
 
+ALTER TABLE compta_bugdets
+    ADD CONSTRAINT Activities_gomacro CHECK (gomacro_validate_json_array_comp_ActivityCost (Activities));
+
 ALTER TABLE compta_subrecords
     ADD CONSTRAINT Montants_gomacro CHECK (gomacro_validate_json_array_comp_MontantPart (Montants));
+
+ALTER TABLE compta_bugdets
+    ADD CONSTRAINT ExternalHost_gomacro CHECK (gomacro_validate_json_array_comp_RentCost (ExternalHost));
 
 ALTER TABLE compta_records
     ADD CONSTRAINT Reviews_gomacro CHECK (gomacro_validate_json_array_comp_Review (Reviews));

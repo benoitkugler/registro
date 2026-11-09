@@ -63,18 +63,22 @@ func TestSQLCompta(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(cs) == 1)
 
-	rec, err := ComptaRecord{IdCamp: cc.Id,
+	rec, err := ComptaRecord{
+		IdCamp: cc.Id,
 		Reviews: Reviews{
 			{true, time.Now(), "A first message"},
 			{false, time.Now(), "A second answer"},
-		}}.Insert(db)
+		},
+	}.Insert(db)
 	tu.AssertNoErr(t, err)
-	_, err = ComptaSubrecord{IdRecord: rec.Id,
+	_, err = ComptaSubrecord{
+		IdRecord: rec.Id,
 		Currency: dossiers.Euros,
 		Montants: Montants{
 			{1000, Alimentation},
 			{80, Bank},
-		}}.Insert(db)
+		},
+	}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	recs, err := SelectComptaRecordsByIdCamps(db, cc.Id)
@@ -89,22 +93,27 @@ func TestSQLCompta(t *testing.T) {
 	tu.Assert(t, len(cs) == 0)
 }
 
-// func TestBudget(t *testing.T) {
-// 	db := NewTestDB(t, "create_camps_test.sql", "gen_create.sql")
-// 	defer db.Remove()
+func TestBudget(t *testing.T) {
+	db := tu.NewTestDB(t, "../dossiers/gen_create.sql", "../camps/gen_create.sql", "gen_create.sql")
+	defer db.Remove()
 
-// 	camp, err := rd.Camp{}.Insert(db)
-// 	tu.AssertNoErr(t, err)
+	defautTaux, err := dossiers.Taux{Euros: 1000}.Insert(db)
+	tu.AssertNoErr(t, err)
 
-// 	cc, err := Compta{IdCamp: camp.Id, Account: Clairiere, State: Archive}.Insert(db)
-// 	tu.AssertNoErr(t, err)
+	for range 10 {
+		camp, err := camps.Camp{IdTaux: defautTaux.Id}.Insert(db)
+		tu.AssertNoErr(t, err)
 
-// 	budget := randComptaBugdet()
-// 	budget.IdCompta = cc.Id
-// 	err = budget.Insert(db)
-// 	tu.AssertNoErr(t, err)
+		cc, err := ComptaCamp{IdCamp: camp.Id}.Insert(db)
+		tu.AssertNoErr(t, err)
 
-// 	config := randBudgetconfig()
-// 	_, err = config.Insert(db)
-// 	tu.AssertNoErr(t, err)
-// }
+		budget := randComptaBugdet()
+		budget.IdCompta = cc.Id
+		err = budget.Insert(db)
+		tu.AssertNoErr(t, err)
+
+		config := randComptaConfig()
+		_, err = config.Insert(db)
+		tu.AssertNoErr(t, err)
+	}
+}

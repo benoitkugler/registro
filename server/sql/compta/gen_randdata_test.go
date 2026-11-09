@@ -22,6 +22,26 @@ func randAccountKind() AccountKind {
 	return choix[i]
 }
 
+func randActivities() Activities {
+	return Activities(randSliceNamedCost())
+}
+
+func randAr3_int32() [3]int32 {
+	var out [3]int32
+	for i := range out {
+		out[i] = randint32()
+	}
+	return out
+}
+
+func randAr5_int32() [5]int32 {
+	var out [5]int32
+	for i := range out {
+		out[i] = randint32()
+	}
+	return out
+}
+
 func randBus() Bus {
 	var s Bus
 	s.Name = randstring()
@@ -38,9 +58,32 @@ func randCarKind() CarKind {
 	return choix[i]
 }
 
+func randCarsCosts() CarsCosts {
+	return CarsCosts(randAr3_int32())
+}
+
+func randCarsKms() CarsKms {
+	return CarsKms(randAr3_int32())
+}
+
 func randComptaBugdet() ComptaBugdet {
 	var s ComptaBugdet
 	s.IdCompta = randIdComptaCamp()
+	s.SimulatedInscrits = randint()
+	s.SimulatedEquipiers = randint()
+	s.StartMealInscrits = randMeal()
+	s.EndMealInscrits = randMeal()
+	s.StartMealEquipiers = randMeal()
+	s.EndMealEquipiers = randMeal()
+	s.OffsetStartMealEquipiers = randint()
+	s.OffsetEndMealEquipiers = randint()
+	s.ExternalHost = randRents()
+	s.Activities = randActivities()
+	s.MaterielPeda = randdos_Montant()
+	s.ProduitPharma = randdos_Montant()
+	s.TeamTrips = randdos_Montant()
+	s.ExternalCarRent = randdos_Montant()
+	s.AssoCarKms = randCarsKms()
 
 	return s
 }
@@ -63,6 +106,13 @@ func randComptaConfig() ComptaConfig {
 	var s ComptaConfig
 	s.Id = randIdComptaConfig()
 	s.Year = randint()
+	s.MealsCost = randMealsCosts()
+	s.SmallMealThreshold = randint()
+	s.SmallMealMajoration = randint()
+	s.AssoCars = randCarsCosts()
+	s.ChauffageMDR = randint()
+	s.EntretienMDR = randint()
+	s.MaterielMDR = randint()
 
 	return s
 }
@@ -146,6 +196,16 @@ func randIdComptaSubrecord() IdComptaSubrecord {
 	return IdComptaSubrecord(randint64())
 }
 
+func randMeal() Meal {
+	choix := [...]Meal{PetitDejeuner, Midi, Gouter, Soir, Cinquieme}
+	i := rand.Intn(len(choix))
+	return choix[i]
+}
+
+func randMealsCosts() MealsCosts {
+	return MealsCosts(randAr5_int32())
+}
+
 func randModePaiementRecord() ModePaiementRecord {
 	choix := [...]ModePaiementRecord{CarteB, Virement, Liquide, Cheque, Helloasso}
 	i := rand.Intn(len(choix))
@@ -162,6 +222,18 @@ func randMontantPart() MontantPart {
 
 func randMontants() Montants {
 	return Montants(randSliceMontantPart())
+}
+
+func randNamedCost() NamedCost {
+	var s NamedCost
+	s.Name = randstring()
+	s.Cost = randdos_Montant()
+
+	return s
+}
+
+func randRents() Rents {
+	return Rents(randSliceNamedCost())
 }
 
 func randReview() Review {
@@ -191,6 +263,15 @@ func randSliceMontantPart() []MontantPart {
 	out := make([]MontantPart, l)
 	for i := range out {
 		out[i] = randMontantPart()
+	}
+	return out
+}
+
+func randSliceNamedCost() []NamedCost {
+	l := 3 + rand.Intn(5)
+	out := make([]NamedCost, l)
+	for i := range out {
+		out[i] = randNamedCost()
 	}
 	return out
 }
@@ -235,8 +316,20 @@ func randdos_Currency() dossiers.Currency {
 	return choix[i]
 }
 
+func randdos_Montant() dossiers.Montant {
+	var s dossiers.Montant
+	s.Cent = randint()
+	s.Currency = randdos_Currency()
+
+	return s
+}
+
 func randint() int {
 	return int(rand.Intn(1000000))
+}
+
+func randint32() int32 {
+	return int32(rand.Intn(1000000))
 }
 
 func randint64() int64 {

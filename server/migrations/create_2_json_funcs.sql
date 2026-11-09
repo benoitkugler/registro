@@ -633,6 +633,29 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION gomacro_validate_json_array_comp_ActivityCost (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) = 'null' THEN
+        RETURN TRUE;
+    END IF;
+    IF jsonb_typeof(data) != 'array' THEN
+        RETURN FALSE;
+    END IF;
+    IF jsonb_array_length(data) = 0 THEN
+        RETURN TRUE;
+    END IF;
+    RETURN (
+        SELECT
+            bool_and(gomacro_validate_json_comp_ActivityCost (value))
+        FROM
+            jsonb_array_elements(data));
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
 CREATE OR REPLACE FUNCTION gomacro_validate_json_array_comp_Bus (data jsonb)
     RETURNS boolean
     AS $$
@@ -679,6 +702,29 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION gomacro_validate_json_array_comp_RentCost (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) = 'null' THEN
+        RETURN TRUE;
+    END IF;
+    IF jsonb_typeof(data) != 'array' THEN
+        RETURN FALSE;
+    END IF;
+    IF jsonb_array_length(data) = 0 THEN
+        RETURN TRUE;
+    END IF;
+    RETURN (
+        SELECT
+            bool_and(gomacro_validate_json_comp_RentCost (value))
+        FROM
+            jsonb_array_elements(data));
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
 CREATE OR REPLACE FUNCTION gomacro_validate_json_array_comp_Review (data jsonb)
     RETURNS boolean
     AS $$
@@ -711,6 +757,28 @@ BEGIN
     IF NOT is_valid THEN
         RAISE WARNING '% is not a boolean', data;
     END IF;
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_comp_ActivityCost (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(KEY IN ('Name', 'Cost'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_string (data -> 'Name')
+        AND gomacro_validate_json_doss_Montant (data -> 'Cost');
     RETURN is_valid;
 END;
 $$
@@ -800,6 +868,28 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION gomacro_validate_json_comp_RentCost (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(KEY IN ('Name', 'Cost'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_string (data -> 'Name')
+        AND gomacro_validate_json_doss_Montant (data -> 'Cost');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
 CREATE OR REPLACE FUNCTION gomacro_validate_json_comp_Review (data jsonb)
     RETURNS boolean
     AS $$
@@ -833,6 +923,44 @@ BEGIN
     IF NOT is_valid THEN
         RAISE WARNING '% is not a comp_Ventilation', data;
     END IF;
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_doss_Currency (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean := jsonb_typeof(data) = 'number'
+    AND data::int IN (0, 1);
+BEGIN
+    IF NOT is_valid THEN
+        RAISE WARNING '% is not a doss_Currency', data;
+    END IF;
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_doss_Montant (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(KEY IN ('Cent', 'Currency'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_number (data -> 'Cent')
+        AND gomacro_validate_json_doss_Currency (data -> 'Currency');
     RETURN is_valid;
 END;
 $$

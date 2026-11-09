@@ -4,6 +4,8 @@ import (
 	"time"
 
 	"registro/sql/camps"
+	"registro/sql/dossiers"
+	ds "registro/sql/dossiers"
 	"registro/sql/shared"
 )
 
@@ -125,3 +127,48 @@ func NewOptIdComptaFile(id IdComptaFile) OptIdComptaFile {
 }
 
 type OptIdEquipier = shared.OptID[camps.IdEquipier]
+
+type Meal uint8
+
+const (
+	PetitDejeuner Meal = iota
+	Midi
+	Gouter
+	Soir
+	Cinquieme
+)
+
+type NamedCost struct {
+	Name string
+	Cost dossiers.Montant
+}
+
+type Rents []NamedCost
+
+type Activities []NamedCost
+
+// MealsCosts stores the cost, in € cent , of one meal
+type MealsCosts [Cinquieme + 1]int32
+
+type CarKind uint8
+
+const (
+	CarBus     CarKind = iota // Bus
+	CarMinibus                // Minibus
+	CarCar                    // Véhicule léger
+)
+
+const nbCarKind = CarCar + 1
+
+// CarsCosts stores the kilometric cost for each kind of cars,
+// as € cents
+type CarsCosts [nbCarKind]int32
+
+type CarsKms [nbCarKind]int32
+
+func (kms CarsKms) Resolve(costs CarsCosts) ds.Montant {
+	return ds.Montant{
+		Cent:     Cent(kms[CarBus]*costs[CarBus] + kms[CarMinibus]*costs[CarMinibus] + kms[CarCar]*costs[CarCar]),
+		Currency: ds.Euros,
+	}
+}

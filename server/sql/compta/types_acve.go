@@ -21,22 +21,6 @@ const (
 	Aurore         // Aurore
 )
 
-type CarKind uint8
-
-const (
-	CarBus     CarKind = iota // Bus
-	CarMinibus                // Minibus
-	CarCar                    // Véhicule léger
-)
-
-const nbCarKind = CarCar + 1
-
-// CarsCosts stores the kilometric cost for each kind of cars,
-// as Euros cents
-type CarsCosts [nbCarKind]int
-
-type CarsKms [nbCarKind]int32
-
 // FraismdrACVE records the indirect expenses made
 // by using the material from MdR
 type FraismdrACVE struct {
