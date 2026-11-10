@@ -1,10 +1,18 @@
 package compta
 
 import (
+	"cmp"
 	"fmt"
+	"slices"
+	"strings"
+	"time"
 
+	cps "registro/sql/camps"
 	ca "registro/sql/compta"
 	ds "registro/sql/dossiers"
+	"registro/utils"
+
+	"github.com/labstack/echo/v4"
 )
 
 type BudgetPrevisionnelSummary struct {
@@ -157,4 +165,348 @@ func resolveCostList(taux ds.Taux, costs []ca.NamedCost) ds.Montant {
 		out.Add(c.Cost)
 	}
 	return out.Montant
+}
+
+// API
+
+func (ct *Controller) GetComptaConfigs(c echo.Context) error {
+	user := JWTUser(c)
+
+	if user != userAdmin {
+		return errAccess
+	}
+
+	configs, err := ca.SelectAllComptaConfigs(ct.db)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	out := configs.Sorted()
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) CreateComptaConfig(c echo.Context) error {
+	user := JWTUser(c)
+
+	if user != userAdmin {
+		return errAccess
+	}
+
+	out, err := ca.ComptaConfig{Year: time.Now().Year()}.Insert(ct.db)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) UpdateComptaConfig(c echo.Context) error {
+	user := JWTUser(c)
+
+	if user != userAdmin {
+		return errAccess
+	}
+
+	var args ca.ComptaConfig
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+	_, err := args.Update(ct.db)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	return c.NoContent(200)
+}
+
+func (ct *Controller) DeleteComptaConfig(c echo.Context) error {
+	user := JWTUser(c)
+
+	if user != userAdmin {
+		return errAccess
+	}
+
+	id, err := utils.QueryParamInt[ca.IdComptaConfig](c, "id")
+	if err != nil {
+		return err
+	}
+	_, err = ca.DeleteComptaConfigById(ct.db, id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	return c.NoContent(200)
+}
+
+type CreateBudgetIn struct {
+	IdCompta   ca.IdComptaCamp
+	ImportFrom ca.IdComptaCamp // 0 to create a blank budget
+}
+
+func (ct *Controller) CreateBudget(c echo.Context) error {
+	user := JWTUser(c)
+
+	var args CreateBudgetIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	if user != userAdmin && user != args.IdCompta {
+		return errAccess
+	}
+
+	err := ct.createBudget(args)
+	if err != nil {
+		return err
+	}
+
+	out, err := ct.loadEstimatedBudget(args.IdCompta)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) createBudget(args CreateBudgetIn) (err error) {
+	var newBudget ca.ComptaBugdet
+	if args.ImportFrom != 0 {
+		newBudget, _, err = ca.SelectComptaBugdetByIdCompta(ct.db, args.ImportFrom)
+		if err != nil {
+			return utils.SQLError(err)
+		}
+	}
+	newBudget.IdCompta = args.IdCompta
+
+	err = newBudget.Insert(ct.db)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	return nil
+}
+
+func (ct *Controller) GetEstimatedBudget(c echo.Context) error {
+	user := JWTUser(c)
+
+	id, err := utils.QueryParamInt[ca.IdComptaCamp](c, "id-compta")
+	if err != nil {
+		return err
+	}
+
+	if user != userAdmin && user != id {
+		return errAccess
+	}
+
+	out, err := ct.loadEstimatedBudget(id)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+// EstimatedBudget may be empty if not filled yet
+type EstimatedBudget struct {
+	IsValid bool
+	Origin  ca.ComptaBugdet
+	Config  ca.ComptaConfig
+
+	Simulated ResolvedBudget
+	Real      ResolvedBudget
+}
+
+func (ct *Controller) loadEstimatedBudget(idCompta ca.IdComptaCamp) (EstimatedBudget, error) {
+	compta, err := ca.SelectComptaCamp(ct.db, idCompta)
+	if err != nil {
+		return EstimatedBudget{}, utils.SQLError(err)
+	}
+	ld, err := newComptaLoader(ct.db, compta)
+	if err != nil {
+		return EstimatedBudget{}, err
+	}
+
+	if ld.budget.IdCompta == 0 {
+		return EstimatedBudget{IsValid: false}, nil
+	}
+
+	return EstimatedBudget{
+		IsValid:   true,
+		Origin:    ld.budget,
+		Config:    ld.config,
+		Simulated: ld.resolveBudget(ld.budget, ld.config, true),
+		Real:      ld.resolveBudget(ld.budget, ld.config, false),
+	}, nil
+}
+
+func (ct *Controller) UpdateEstimatedBudget(c echo.Context) error {
+	user := JWTUser(c)
+
+	var args ca.ComptaBugdet
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	if user != userAdmin && user != args.IdCompta {
+		return errAccess
+	}
+
+	out, err := ct.updateBudget(args)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) updateBudget(origin ca.ComptaBugdet) (EstimatedBudget, error) {
+	err := origin.Delete(ct.db)
+	if err != nil {
+		return EstimatedBudget{}, utils.SQLError(err)
+	}
+
+	err = origin.Insert(ct.db)
+	if err != nil {
+		return EstimatedBudget{}, utils.SQLError(err)
+	}
+
+	return ct.loadEstimatedBudget(origin.IdCompta)
+}
+
+type CampBudgetHeader struct {
+	IdCompta ca.IdComptaCamp
+	Name     string
+	Year     int
+}
+
+func (ct *Controller) GetPreviousBudgets(c echo.Context) error {
+	out, err := ct.getPreviousBudgets()
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) loadCampsByBudget(budgets ca.ComptaBugdets) (map[ca.IdComptaCamp]CampBudgetHeader, error) {
+	comptas, err := ca.SelectComptaCamps(ct.db, budgets.IdComptas()...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	byCamp := comptas.ByIdCamp()
+
+	camps, err := cps.SelectCamps(ct.db, comptas.IdCamps()...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+
+	out := make(map[ca.IdComptaCamp]CampBudgetHeader)
+	for _, camp := range camps {
+		idCompta := byCamp[camp.Id].Id
+		out[idCompta] = CampBudgetHeader{
+			IdCompta: idCompta,
+			Name:     string(camp.Nom),
+			Year:     camp.DateDebut.Time().Year(),
+		}
+	}
+
+	return out, nil
+}
+
+func (ct *Controller) getPreviousBudgets() ([]CampBudgetHeader, error) {
+	budgets, err := ca.SelectAllComptaBugdets(ct.db)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+
+	headers, err := ct.loadCampsByBudget(budgets)
+	if err != nil {
+		return nil, err
+	}
+
+	var out []CampBudgetHeader
+	for _, camp := range headers {
+		out = append(out, camp)
+	}
+
+	slices.SortFunc(out, func(a, b CampBudgetHeader) int {
+		if yearOrder := cmp.Compare(a.Year, b.Year); yearOrder != 0 {
+			return yearOrder
+		}
+		return strings.Compare(a.Name, b.Name)
+	})
+
+	return out, nil
+}
+
+// GetBudgetActivities returns all the activities declared so far,
+// expected the one in the current budget.
+func (ct *Controller) GetBudgetActivities(c echo.Context) error {
+	id, err := utils.QueryParamInt[ca.IdComptaCamp](c, "id-compta")
+	if err != nil {
+		return err
+	}
+
+	out, err := ct.budgetActivities(id)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+type ActivityHint struct {
+	Activity ca.NamedCost
+	Origin   CampBudgetHeader
+}
+
+func (ct *Controller) budgetActivities(id ca.IdComptaCamp) ([]ActivityHint, error) {
+	budgets, err := ca.SelectAllComptaBugdets(ct.db)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	camps, err := ct.loadCampsByBudget(budgets)
+	if err != nil {
+		return nil, err
+	}
+
+	type key struct {
+		act  string
+		camp string
+	}
+	uniq := map[key]ActivityHint{}
+	seen := map[ca.NamedCost]bool{}
+	for _, budget := range budgets {
+		if budget.IdCompta == id {
+			continue
+		}
+
+		camp := camps[budget.IdCompta]
+		for _, activity := range budget.Activities {
+			// de-duplicate exact activities
+			if seen[activity] {
+				continue
+			}
+
+			k := key{activity.Name, camp.Name}
+			// only keep more recent version
+			if other, has := uniq[k]; has && other.Origin.Year > camp.Year {
+				continue
+			}
+			uniq[k] = ActivityHint{Activity: activity, Origin: camp}
+			seen[activity] = true
+		}
+	}
+
+	var out []ActivityHint
+	for _, v := range uniq {
+		out = append(out, v)
+	}
+
+	slices.SortFunc(out, func(a, b ActivityHint) int {
+		if nameOrder := strings.Compare(a.Activity.Name, b.Activity.Name); nameOrder != 0 {
+			return nameOrder
+		}
+		return cmp.Compare(b.Origin.Year, a.Origin.Year)
+	})
+
+	return out, nil
 }

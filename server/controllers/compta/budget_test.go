@@ -178,3 +178,53 @@ func TestResolveBudget(t *testing.T) {
 		})
 	}
 }
+
+func TestBudgetActivities(t *testing.T) {
+	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
+		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",
+		"../../migrations/init.sql")
+	defer db.Remove()
+
+	createBudget := func(name string, year int, activities ca.Activities) ca.IdComptaCamp {
+		camp, err := cps.Camp{
+			IdTaux:    1,
+			Nom:       name,
+			DateDebut: shared.NewDate(year, time.June, 1),
+			Duree:     1,
+		}.Insert(db)
+		tu.AssertNoErr(t, err)
+
+		compta, err := ca.ComptaCamp{IdCamp: camp.Id, FileStatus: ca.FileSystem}.Insert(db)
+		tu.AssertNoErr(t, err)
+		err = (ca.ComptaBugdet{IdCompta: compta.Id, Activities: activities}).Insert(db)
+		tu.AssertNoErr(t, err)
+		return compta.Id
+	}
+
+	currentID := createBudget("Current", 2025, ca.Activities{
+		{Name: "Current activity", Cost: ds.Montant{Cent: 400, Currency: ds.Euros}},
+	})
+	olderID := createBudget("Older", 2023, ca.Activities{
+		{Name: "Hiking", Cost: ds.Montant{Cent: 100, Currency: ds.Euros}},
+		{Name: "Archery", Cost: ds.Montant{Cent: 200, Currency: ds.Euros}},
+	})
+	newerID := createBudget("Newer", 2024, ca.Activities{
+		{Name: "Hiking", Cost: ds.Montant{Cent: 150, Currency: ds.Euros}},
+		{Name: "Cooking", Cost: ds.Montant{Cent: 300, Currency: ds.Euros}},
+	})
+
+	ct := Controller{db: db.DB}
+	got, err := ct.budgetActivities(currentID)
+	tu.AssertNoErr(t, err)
+
+	want := []ActivityHint{
+		{Activity: ca.NamedCost{Name: "Archery", Cost: ds.Montant{Cent: 200, Currency: ds.Euros}}, Origin: CampBudgetHeader{IdCompta: olderID, Name: "Older", Year: 2023}},
+		{Activity: ca.NamedCost{Name: "Cooking", Cost: ds.Montant{Cent: 300, Currency: ds.Euros}}, Origin: CampBudgetHeader{IdCompta: newerID, Name: "Newer", Year: 2024}},
+		{Activity: ca.NamedCost{Name: "Hiking", Cost: ds.Montant{Cent: 150, Currency: ds.Euros}}, Origin: CampBudgetHeader{IdCompta: newerID, Name: "Newer", Year: 2024}},
+		{Activity: ca.NamedCost{Name: "Hiking", Cost: ds.Montant{Cent: 100, Currency: ds.Euros}}, Origin: CampBudgetHeader{IdCompta: olderID, Name: "Older", Year: 2023}},
+	}
+	tu.Assert(t, len(got) == len(want))
+	for i := range want {
+		tu.Assert(t, got[i] == want[i])
+	}
+}
