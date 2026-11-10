@@ -118,7 +118,7 @@ func (ct *Controller) DownloadRecords(c echo.Context) error {
 		return errAccess
 	}
 
-	fileBytes, filename, err := ct.getRecordsArchive(id)
+	fileBytes, filename, err := ct.getRecordsExcel(id)
 	if err != nil {
 		return err
 	}
@@ -193,7 +193,7 @@ func (ct *Controller) streamRecordsArchive(id ca.IdComptaCamp) (string, iter.Seq
 	}, nil
 }
 
-func (ct *Controller) getRecordsArchive(id ca.IdComptaCamp) (content []byte, filename string, err error) {
+func (ct *Controller) getRecordsExcel(id ca.IdComptaCamp) (content []byte, filename string, err error) {
 	recs, subs, err := getRecords(ct.db, id)
 	if err != nil {
 		return nil, "", err

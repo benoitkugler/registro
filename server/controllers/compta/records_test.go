@@ -74,7 +74,7 @@ func TestRecords(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(doc.Catalog.Pages.Flatten()) == 2)
 
-	_, _, err = ct.getRecordsArchive(co.Id)
+	_, _, err = ct.getRecordsExcel(co.Id)
 	tu.AssertNoErr(t, err)
 
 	_, err = ct.removeJustificatif(rec1.Subrecords[0].Id, userAdmin)
