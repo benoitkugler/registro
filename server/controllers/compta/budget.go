@@ -80,7 +80,7 @@ func (ld *comptaLoader) resolveBudget(origin ca.ComptaBugdet, config ca.ComptaCo
 
 	atMDR := ld.atMDR()
 	if atMDR {
-		out.EntretienMDR, out.ChauffageMDR = ld.budgetFraisMDR(config, out.Inscrits+out.Equipiers)
+		out.ChauffageMDR, out.EntretienMDR = ld.budgetFraisMDR(config, out.Inscrits+out.Equipiers)
 		// host cost is only MDR
 		out.HostTotal = ds.Montant{Cent: out.ChauffageMDR.Cent + out.EntretienMDR.Cent, Currency: ds.Euros}
 	} else {
