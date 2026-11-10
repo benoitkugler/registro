@@ -59,7 +59,7 @@ func TestGenerateExcelCamps(t *testing.T) {
 	camps[4].ventilations[ca.Alimentation].camp = 600
 	camps[4].ventilations[ca.Carburant].asso = 900
 
-	buf, err := generateExcelCamps(camps)
+	buf, err := generateExcelCamps(camps, ventilationCodeACVE)
 	tu.AssertNoErr(t, err)
 	tu.Write(t, "bilan_camps.xlsx", buf.Bytes())
 }
@@ -75,7 +75,7 @@ func TestGenerateExcelCampsWithFraisMDR(t *testing.T) {
 	camps[1].ventilations[ca.Hotelier].camp = 2800
 	camps[1].ventilations[ca.Carburant].asso = 700
 
-	buf, err := generateExcelCamps(camps)
+	buf, err := generateExcelCamps(camps, ventilationCodeRepere)
 	tu.AssertNoErr(t, err)
 	tu.Write(t, "bilan_camps_frais_mdr.xlsx", buf.Bytes())
 }
@@ -91,7 +91,7 @@ func TestGenerateExcelCampsWithCampAccountVentilations(t *testing.T) {
 
 	tu.Assert(t, !camps.showAssoAccount())
 
-	buf, err := generateExcelCamps(camps)
+	buf, err := generateExcelCamps(camps, ventilationCodeACVE)
 	tu.AssertNoErr(t, err)
 	tu.Write(t, "bilan_camps_no_asso.xlsx", buf.Bytes())
 }
@@ -107,7 +107,7 @@ func TestExcelEcritures(t *testing.T) {
 			ca.Camping:      {ds.MultiCurrencies{1000}, ds.MultiCurrencies{2000}, ds.MultiCurrencies{500}, ds.MultiCurrencies{600}},
 		},
 	}
-	b, err := generateExcelEcritures(ec)
+	b, err := generateExcelEcritures(ec, ventilationCodeACVE)
 	tu.AssertNoErr(t, err)
 	tu.Write(t, "ecritures.xlsx", b.Bytes())
 }

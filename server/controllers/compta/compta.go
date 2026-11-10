@@ -356,9 +356,6 @@ func (ld *comptaLoader) aggregateDepenses(fraisMDR ResolvedFraisMDR) ventilation
 
 // fill computed values
 func (out *CampSummary) fillFinances(taux ds.Taux) {
-	// TODO
-	// out.prixJournee = out.Prix / rd.Euros(out.Duree)
-
 	out.Recettes = out.Prix.Mult(out.Inscrits)
 	out.DepensesTotal = out.ventilations.total(taux)
 	if out.Recettes.Cent != 0 {
@@ -374,27 +371,6 @@ func (out *CampSummary) fillFinances(taux ds.Taux) {
 
 	// display both accounts
 	out.DepenseGraph = out.ventilations.graph(taux)
-}
-
-var ventilationLabels = [ca.Autre + 1]struct{ codeACVE, label string }{
-	ca.NoVentilation: {"", ""},
-
-	ca.Activites:             {"6048", "Activités éducatives"},
-	ca.Alimentation:          {"6062", "Alimentation"},
-	ca.FournitureEntretien:   {"6063", "Fournitures d'entretien"},
-	ca.FournitureAdmin:       {"6064", "Fournitures administratives"},
-	ca.FourniturePedagogique: {"60685", "Fournitures éducatives"},
-	ca.Medical:               {"60681", "Pharmacie et médecins"},
-	ca.Hotelier:              {"6115", "Prestations hôtelières"},
-	ca.Camping:               {"613", "Location de camping (ou gîte)"},
-	ca.Carburant:             {"6066", "Carburant"},
-	ca.MaintenanceVehic:      {"6156", "Maintenance des véhicules"},
-	ca.Travels:               {"6251", "Déplacements"},
-	ca.Telephone:             {"6262", "Téléphone"},
-	ca.Poste:                 {"6263", "Frais postaux"},
-	ca.Bank:                  {"627", "Frais bancaires"},
-	ca.PensionBenevole:       {"7062", "Pension bénévole"},
-	ca.Autre:                 {"AUTRE", "Autre"},
 }
 
 func checkVentilations(ms ca.Montants, isReceipe bool) error {

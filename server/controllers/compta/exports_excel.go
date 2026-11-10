@@ -14,6 +14,44 @@ import (
 	sh "registro/sql/shared"
 )
 
+var ventilationLabels = [ca.VentilationCount]string{
+	ca.Activites:             "Activités éducatives",
+	ca.Alimentation:          "Alimentation",
+	ca.FournitureEntretien:   "Fournitures d'entretien",
+	ca.FournitureAdmin:       "Fournitures administratives",
+	ca.FourniturePedagogique: "Fournitures éducatives",
+	ca.Medical:               "Pharmacie et médecins",
+	ca.Hotelier:              "Prestations hôtelières",
+	ca.Camping:               "Location de camping (ou gîte)",
+	ca.Carburant:             "Carburant",
+	ca.MaintenanceVehic:      "Maintenance des véhicules",
+	ca.Travels:               "Déplacements",
+	ca.Telephone:             "Téléphone",
+	ca.Poste:                 "Frais postaux",
+	ca.Bank:                  "Frais bancaires",
+	ca.PensionBenevole:       "Pension bénévole",
+	ca.Autre:                 "Autre",
+}
+
+var ventilationCodeACVE = [ca.VentilationCount]string{
+	ca.Activites:             "6048",
+	ca.Alimentation:          "6062",
+	ca.FournitureEntretien:   "6063",
+	ca.FournitureAdmin:       "6064",
+	ca.FourniturePedagogique: "60685",
+	ca.Medical:               "60681",
+	ca.Hotelier:              "6115",
+	ca.Camping:               "613",
+	ca.Carburant:             "6066",
+	ca.MaintenanceVehic:      "6156",
+	ca.Travels:               "6251",
+	ca.Telephone:             "6262",
+	ca.Poste:                 "6263",
+	ca.Bank:                  "627",
+	ca.PensionBenevole:       "7062",
+	ca.Autre:                 "AUTRE",
+}
+
 // excel support
 
 type ecritures struct {
@@ -41,7 +79,7 @@ type ecritureComptable struct {
 
 // only use the dedicated camp account
 // toBalance is computed so that debit == credit
-func (ec ecritures) compile() ([]ecritureComptable, float32) {
+func (ec ecritures) compile(codes [ca.VentilationCount]string) ([]ecritureComptable, float32) {
 	sum := ec.ventilation.sum()
 	debitTotal, receipes := sum.accCampDepenses.AggTo(ec.taux, ds.Euros), sum.accAssoReceipes.AggTo(ec.taux, ds.Euros)
 	toBalance := debitTotal - receipes
@@ -52,8 +90,8 @@ func (ec ecritures) compile() ([]ecritureComptable, float32) {
 		if montant.Cent == 0 {
 			continue
 		}
-		item := ventilationLabels[k]
-		expList = append(expList, ecritureComptable{item.codeACVE, item.label, false, float32(montant.Cent) / 100})
+		code, label := codes[k], ventilationLabels[k]
+		expList = append(expList, ecritureComptable{code, label, false, float32(montant.Cent) / 100})
 	}
 	slices.SortFunc(expList, func(a, b ecritureComptable) int { return strings.Compare(a.Intitule, b.Intitule) })
 
@@ -64,8 +102,8 @@ func (ec ecritures) compile() ([]ecritureComptable, float32) {
 		if montant.Cent == 0 {
 			continue
 		}
-		item := ventilationLabels[k]
-		recList = append(recList, ecritureComptable{"REC-" + item.codeACVE, "Recette - " + item.label, true, float32(montant.Cent) / 100})
+		code, label := codes[k], ventilationLabels[k]
+		recList = append(recList, ecritureComptable{"REC-" + code, "Recette - " + label, true, float32(montant.Cent) / 100})
 	}
 	slices.SortFunc(recList, func(a, b ecritureComptable) int { return strings.Compare(a.Intitule, b.Intitule) })
 
@@ -76,7 +114,7 @@ func (ec ecritures) compile() ([]ecritureComptable, float32) {
 	return out, float32(debitTotal) / 100
 }
 
-func generateExcelEcritures(ec ecritures) (*bytes.Buffer, error) {
+func generateExcelEcritures(ec ecritures, ventilationCodes [ca.VentilationCount]string) (*bytes.Buffer, error) {
 	b := sheets.NewBuilder()
 
 	// header
@@ -87,7 +125,7 @@ func generateExcelEcritures(ec ecritures) (*bytes.Buffer, error) {
 	}
 
 	// rows
-	rows, tDebit := ec.compile()
+	rows, tDebit := ec.compile(ventilationCodes)
 	for j, item := range rows {
 		row := startRow + 2 + j
 		b.SetCell(row, 1, item.NumeroCompte)
@@ -273,7 +311,7 @@ func (bc bilanCamps) total() (out bilanCamp) {
 	return out
 }
 
-func generateExcelCamps(camps bilanCamps) (*bytes.Buffer, error) {
+func generateExcelCamps(camps bilanCamps, ventilationCodes [ca.VentilationCount]string) (*bytes.Buffer, error) {
 	b := sheets.NewBuilder()
 
 	showAssoAccount, showFraisMDR := camps.showAssoAccount(), camps.showFraisMDR()
@@ -311,8 +349,8 @@ func generateExcelCamps(camps bilanCamps) (*bytes.Buffer, error) {
 	}
 	bloc5 := make([]string, ca.Bank+1)
 	for v := range bloc5 {
-		item := ventilationLabels[v]
-		bloc5[v] = fmt.Sprintf("%s %s", item.codeACVE, item.label)
+		code, label := ventilationCodes[v], ventilationLabels[v]
+		bloc5[v] = fmt.Sprintf("%s %s", code, label)
 	}
 	bloc6 := bloc5
 	bloc7 := []string{

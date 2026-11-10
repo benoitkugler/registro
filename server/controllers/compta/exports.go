@@ -50,7 +50,7 @@ func (ct *Controller) getEcritures(idCompta ca.IdComptaCamp) ([]byte, string, er
 	}
 
 	ecr := ld.ecritures()
-	buf, err := generateExcelEcritures(ecr)
+	buf, err := generateExcelEcritures(ecr, ct.ventilationCodes())
 	if err != nil {
 		return nil, "", fmt.Errorf("Erreur pendant la création du fichier Excel: %w", err)
 	}
@@ -97,7 +97,7 @@ func (ct *Controller) getBilanCamps(args BilanCampsIn) ([]byte, string, error) {
 		bc[i] = newCampBilan(ld.compile(), ld.taux)
 	}
 
-	buf, err := generateExcelCamps(bc)
+	buf, err := generateExcelCamps(bc, ct.ventilationCodes())
 	if err != nil {
 		return nil, "", fmt.Errorf("Erreur pendant la création du fichier Excel: %w", err)
 	}
