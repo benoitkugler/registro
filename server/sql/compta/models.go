@@ -37,7 +37,7 @@ type ComptaCamp struct {
 	// Fields only relevant for ACVE
 
 	Account  AccountACVE
-	Fraismdr FraismdrACVE
+	Fraismdr FraisMDRACVE
 }
 
 // ComptaRecord is one financial operation, which may

@@ -21,9 +21,9 @@ const (
 	Aurore         // Aurore
 )
 
-// FraismdrACVE records the indirect expenses made
+// FraisMDRACVE records the indirect expenses made
 // by using the material from MdR
-type FraismdrACVE struct {
+type FraisMDRACVE struct {
 	Bus []Bus
 	// PhotocopiesStart, PhotocopiesEnd int
 }

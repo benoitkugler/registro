@@ -66,7 +66,7 @@ func (ld *comptaLoader) ecritures() ecritures {
 		taux:        ld.taux,
 		camp:        string(ld.camp.Label()),
 		details:     fmt.Sprintf("%s %s - %s", ld.directeur.FPrenom(), ld.directeur.FNom(), accountLabels[ld.compta.Account]),
-		ventilation: ld.aggregateDepenses(ld.resolveFraismdr()),
+		ventilation: ld.aggregateDepenses(ld.resolveFraisMDR()),
 	}
 }
 

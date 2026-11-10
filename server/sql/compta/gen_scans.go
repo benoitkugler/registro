@@ -1357,8 +1357,8 @@ func ScanIdComptaSubrecordArray(rs *sql.Rows) ([]IdComptaSubrecord, error) {
 func (s *Activities) Scan(src any) error          { return loadJSON(s, src) }
 func (s Activities) Value() (driver.Value, error) { return dumpJSON(s) }
 
-func (s *FraismdrACVE) Scan(src any) error          { return loadJSON(s, src) }
-func (s FraismdrACVE) Value() (driver.Value, error) { return dumpJSON(s) }
+func (s *FraisMDRACVE) Scan(src any) error          { return loadJSON(s, src) }
+func (s FraisMDRACVE) Value() (driver.Value, error) { return dumpJSON(s) }
 
 func (s *Montants) Scan(src any) error          { return loadJSON(s, src) }
 func (s Montants) Value() (driver.Value, error) { return dumpJSON(s) }

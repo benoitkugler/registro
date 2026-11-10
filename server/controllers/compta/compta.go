@@ -94,7 +94,7 @@ func (ld *comptaLoader) compile() CampSummary {
 
 	// finances
 
-	fraisMDR := ld.resolveFraismdr()
+	fraisMDR := ld.resolveFraisMDR()
 	out.fraisMDRVehicule = fraisMDR.TotalBus
 	if fraisMDR.HasMateriel {
 		out.fraisMDRMateriel = fraisMDR.Materiel.Total

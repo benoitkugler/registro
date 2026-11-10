@@ -1,11 +1,16 @@
 package compta
 
 import (
+	"database/sql"
 	"strings"
 	"time"
 
 	ca "registro/sql/compta"
 	ds "registro/sql/dossiers"
+	sh "registro/sql/shared"
+	"registro/utils"
+
+	"github.com/labstack/echo/v4"
 )
 
 // custom logic for ACVE
@@ -119,11 +124,11 @@ type ResolvedFraisMDR struct {
 	Total Cent
 }
 
-func (ld *comptaLoader) resolveFraismdr() (out ResolvedFraisMDR) {
+func (ld *comptaLoader) resolveFraisMDR() (out ResolvedFraisMDR) {
 	return resolveFraismdr(ld.compta.Fraismdr, ld.config, ld.subrecords, ld.recordsForBus, ld.camp.Duree, ld.inscrits(), len(ld.equipiers), ld.atMDR())
 }
 
-func resolveFraismdr(frais ca.FraismdrACVE, config ca.ComptaConfig, subrecords ca.ComptaSubrecords, links ca.ComptaRecordBuss, days, inscrits, equipiers int, atMDR bool) (out ResolvedFraisMDR) {
+func resolveFraismdr(frais ca.FraisMDRACVE, config ca.ComptaConfig, subrecords ca.ComptaSubrecords, links ca.ComptaRecordBuss, days, inscrits, equipiers int, atMDR bool) (out ResolvedFraisMDR) {
 	out.Bus = make([]ResolvedBus, len(frais.Bus))
 	for i, bus := range frais.Bus {
 		tarif := ds.Montant{Cent: Cent(config.AssoCars[bus.Kind]), Currency: ds.Euros}
@@ -170,4 +175,185 @@ func resolveFraismdr(frais ca.FraismdrACVE, config ca.ComptaConfig, subrecords c
 	out.Total = total
 
 	return out
+}
+
+func (ct *Controller) FraisMDRGetBusExpense(c echo.Context) error {
+	user := JWTUser(c)
+
+	id, err := utils.QueryParamInt[ca.IdComptaCamp](c, "id-compta")
+	if err != nil {
+		return err
+	}
+
+	if user != userAdmin && user != id {
+		return errAccess
+	}
+
+	out, err := ct.loadBusExpenses(id)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+type RecordBusHeader struct {
+	IdSubrecord ca.IdComptaSubrecord
+	Title       string
+	Date        sh.Date
+	ForBus      ds.Montant
+	Total       ds.Montant
+}
+
+type BusExpensesOut struct {
+	Records  []RecordBusHeader // only the one with car ventilation
+	Selected []ca.IdComptaSubrecord
+}
+
+func (ct *Controller) loadBusExpenses(id ca.IdComptaCamp) (BusExpensesOut, error) {
+	records, subs, err := getRecords(ct.db, id)
+	if err != nil {
+		return BusExpensesOut{}, utils.SQLError(err)
+	}
+
+	forBus, err := ca.SelectComptaRecordBussByIdCamps(ct.db, id)
+	if err != nil {
+		return BusExpensesOut{}, utils.SQLError(err)
+	}
+
+	var candidates []RecordBusHeader
+	for _, rec := range subs {
+		carExp := carExpenses(&rec)
+		if group := records[rec.IdRecord]; group.IsReceipe || carExp == 0 {
+			continue
+		}
+		candidates = append(candidates, RecordBusHeader{
+			IdSubrecord: rec.Id,
+			Title:       rec.Description,
+			Date:        rec.Date,
+			ForBus:      ds.Montant{Cent: carExp, Currency: ds.Euros},
+			Total:       ds.Montant{Cent: rec.Montants.Total(), Currency: ds.Euros},
+		})
+	}
+
+	return BusExpensesOut{Records: candidates, Selected: forBus.IdSubrecords()}, nil
+}
+
+type SetBusExpenseIn struct {
+	IdCompta ca.IdComptaCamp
+	Records  []ca.IdComptaSubrecord
+}
+
+func (ct *Controller) FraisMDRSetBusExpense(c echo.Context) error {
+	user := JWTUser(c)
+
+	var args SetBusExpenseIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	if user != userAdmin && user != args.IdCompta {
+		return errAccess
+	}
+
+	err := ct.setBusExpense(args)
+	if err != nil {
+		return err
+	}
+
+	out, err := ct.loadFraisMDR(args.IdCompta)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) setBusExpense(args SetBusExpenseIn) error {
+	err := utils.InTx(ct.db, func(tx *sql.Tx) error {
+		_, err := ca.DeleteComptaRecordBussByIdCamps(tx, args.IdCompta)
+		if err != nil {
+			return err
+		}
+
+		links := make(ca.ComptaRecordBuss, len(args.Records))
+		for i, id := range args.Records {
+			links[i] = ca.ComptaRecordBus{IdCamp: args.IdCompta, IdSubrecord: id}
+		}
+		err = ca.InsertManyComptaRecordBuss(tx, links...)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+
+	return err
+}
+
+func (ct *Controller) FraisMDRLoad(c echo.Context) error {
+	user := JWTUser(c)
+
+	id, err := utils.QueryParamInt[ca.IdComptaCamp](c, "id-compta")
+	if err != nil {
+		return err
+	}
+
+	if user != userAdmin && user != id {
+		return errAccess
+	}
+
+	out, err := ct.loadFraisMDR(id)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) loadFraisMDR(id ca.IdComptaCamp) (ResolvedFraisMDR, error) {
+	compta, err := ca.SelectComptaCamp(ct.db, id)
+	if err != nil {
+		return ResolvedFraisMDR{}, utils.SQLError(err)
+	}
+
+	ld, err := newComptaLoader(ct.db, compta)
+	if err != nil {
+		return ResolvedFraisMDR{}, err
+	}
+
+	return ld.resolveFraisMDR(), nil
+}
+
+type UpdateFraisMDRIn struct {
+	IdCompta ca.IdComptaCamp
+	Frais    ca.FraisMDRACVE
+}
+
+func (ct *Controller) FraisMDRUpdate(c echo.Context) error {
+	user := JWTUser(c)
+
+	var args UpdateFraisMDRIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	if user != userAdmin && user != args.IdCompta {
+		return errAccess
+	}
+
+	compta, err := ca.SelectComptaCamp(ct.db, args.IdCompta)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	compta.Fraismdr = args.Frais
+	_, err = compta.Update(ct.db)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	out, err := ct.loadFraisMDR(args.IdCompta)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
 }
