@@ -79,14 +79,6 @@ func TestFilesAPI(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(b) > 100)
 
-	var content bytes.Buffer
-	archive := zip.NewWriter(&content)
-	err = api.downloadToZip([]idAndName{{1, "premier"}, {2, "deuxième"}}, ca.ComptaFiles{1: {}, 2: {}}, archive)
-	tu.AssertNoErr(t, err)
-	err = archive.Close()
-	tu.AssertNoErr(t, err)
-	tu.Write(t, "archive_1.zip", content.Bytes())
-
 	err = api.remove(1)
 	tu.AssertNoErr(t, err)
 

@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+
 	ca "registro/sql/compta"
 	"registro/sql/files"
 	"registro/utils"
@@ -219,39 +220,6 @@ type idAndName struct {
 	newName string // without extension
 }
 
-func (ga fileSystemAPI) downloadToZip(files []idAndName, metas ca.ComptaFiles, out *zip.Writer) error {
-	for _, file := range files {
-		meta := metas[file.id]
-
-		ext := filepath.Ext(meta.Name)
-		outName := file.newName + ext
-
-		filePath, _ := ga.paths(file.id)
-		f, err := os.Open(filePath)
-
-		fileW, err := out.Create(outName)
-		if err != nil {
-			return err
-		}
-		_, err = io.Copy(fileW, f)
-		if err != nil {
-			return err
-		}
-
-		err = f.Close()
-		if err != nil {
-			return err
-		}
-
-		err = out.Flush()
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 type filesAPI struct {
 	googleDrive googleDriveAPI
 	fileSystem  fileSystemAPI
@@ -350,26 +318,4 @@ func (ga filesAPI) download(db ca.DB, mode ca.FileStatus, fileId ca.IdComptaFile
 	}
 
 	return b, meta.Name, err
-}
-
-func (ga filesAPI) downloadToZip(db ca.DB, mode ca.FileStatus, files []idAndName, out *zip.Writer) error {
-	var ids []ca.IdComptaFile
-	for _, file := range files {
-		ids = append(ids, file.id)
-	}
-	metas, err := ca.SelectComptaFiles(db, ids...)
-	if err != nil {
-		return utils.SQLError(err)
-	}
-
-	switch mode {
-	case ca.FileSystem:
-		return ga.fileSystem.downloadToZip(files, metas, out)
-	case ca.GoogleDrive:
-		return ga.googleDrive.downloadToZip(files, metas, out)
-	case ca.Archived:
-		return fmt.Errorf("Téléchargement impossible: dossier archivé.")
-	default:
-		panic("exhaustive switch")
-	}
 }

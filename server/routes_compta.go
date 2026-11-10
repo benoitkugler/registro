@@ -23,6 +23,22 @@ func setupRoutesCompta(e *echo.Echo, ct *compta.Controller) {
 	gr.POST("/api/v1/compta/camp/state", ct.SetComptaState)
 	gr.GET("/api/v1/compta/camp/details", ct.GetCampDetails)
 
+	gr.GET("/api/v1/compta/configs", ct.GetComptaConfigs)
+	gr.PUT("/api/v1/compta/configs", ct.CreateComptaConfig)
+	gr.POST("/api/v1/compta/configs", ct.UpdateComptaConfig)
+	gr.DELETE("/api/v1/compta/configs", ct.DeleteComptaConfig)
+
+	gr.PUT("/api/v1/compta/budget", ct.CreateBudget)
+	gr.GET("/api/v1/compta/budget", ct.GetEstimatedBudget)
+	gr.POST("/api/v1/compta/budget", ct.UpdateEstimatedBudget)
+	gr.GET("/api/v1/compta/budget/previous-budgets", ct.GetPreviousBudgets)
+	gr.GET("/api/v1/compta/budget/activities", ct.GetBudgetActivities)
+
+	gr.GET("/api/v1/compta/frais-mdr", ct.FraisMDRLoad)
+	gr.POST("/api/v1/compta/frais-mdr", ct.FraisMDRUpdate)
+	gr.GET("/api/v1/compta/frais-mdr/bus-expense", ct.FraisMDRGetBusExpense)
+	gr.POST("/api/v1/compta/frais-mdr/bus-expense", ct.FraisMDRSetBusExpense)
+
 	gr.GET("/api/v1/compta/records", ct.GetRecords)
 	gr.PUT("/api/v1/compta/records", ct.CreateRecord)
 	gr.POST("/api/v1/compta/records", ct.UpdateRecord)
