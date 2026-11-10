@@ -96,6 +96,22 @@ func TestGenerateExcelCampsWithCampAccountVentilations(t *testing.T) {
 	tu.Write(t, "bilan_camps_no_asso.xlsx", buf.Bytes())
 }
 
+func TestExcelEcritures(t *testing.T) {
+	ec := ecritures{
+		taux:    ds.Taux{Euros: 1000},
+		camp:    "MENDIT'EN PISTE- 2023",
+		details: "Benjamin Gaufres- Le Rocher",
+		ventilation: ventilations{
+			ca.Activites:    {ds.MultiCurrencies{20000}, ds.MultiCurrencies{45650 - 20000}, ds.MultiCurrencies{10000}, ds.MultiCurrencies{}},
+			ca.Alimentation: {ds.MultiCurrencies{31000}, ds.MultiCurrencies{78978 - 31000}, ds.MultiCurrencies{}, ds.MultiCurrencies{20000}},
+			ca.Camping:      {ds.MultiCurrencies{1000}, ds.MultiCurrencies{2000}, ds.MultiCurrencies{500}, ds.MultiCurrencies{600}},
+		},
+	}
+	b, err := generateExcelEcritures(ec)
+	tu.AssertNoErr(t, err)
+	tu.Write(t, "ecritures.xlsx", b.Bytes())
+}
+
 func TestStreamRecordsArchive(t *testing.T) {
 	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
 		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",

@@ -3,6 +3,7 @@ package compta
 import (
 	"testing"
 
+	ca "registro/sql/compta"
 	tu "registro/utils/testutils"
 )
 
@@ -57,6 +58,46 @@ func TestAtMDR(t *testing.T) {
 	}
 }
 
+func TestFraismdr_resolve(t *testing.T) {
+	got := resolveFraismdr(ca.FraismdrACVE{
+		Bus: []ca.Bus{
+			{Name: "Car", Kind: ca.CarBus, KmStart: 0, KmEnd: 1000},
+			{Name: "A", Kind: ca.CarMinibus, KmStart: 0, KmEnd: 1000},
+			{Name: "A", Kind: ca.CarMinibus, KmStart: 0, KmEnd: 1000},
+			{Name: "B", Kind: ca.CarCar, KmStart: 0, KmEnd: 1000},
+		},
+	}, ca.ComptaConfig{
+		AssoCars:     ca.CarsCosts{20, 10, 5},
+		EntretienMDR: 10,
+		MaterielMDR:  5,
+	}, nil, nil, 5, 20, 10, true)
+
+	tu.Assert(t, len(got.Bus) == 4)
+	tu.Assert(t, got.TotalBus == 1000*20+2*1000*10+1000*5)
+	tu.Assert(t, got.Materiel.CostEntretien == 5*30*10)
+	tu.Assert(t, got.Materiel.CostMateriel == 5*20*5)
+
+	got = resolveFraismdr(ca.FraismdrACVE{
+		Bus: []ca.Bus{
+			{Name: "Car", Kind: ca.CarBus, KmStart: 0, KmEnd: 1000},
+			{Name: "A", Kind: ca.CarMinibus, KmStart: 0, KmEnd: 1000},
+			{Name: "A", Kind: ca.CarMinibus, KmStart: 0, KmEnd: 1000},
+			{Name: "B", Kind: ca.CarCar, KmStart: 0, KmEnd: 1000},
+		},
+	}, ca.ComptaConfig{
+		AssoCars:     ca.CarsCosts{20, 10, 5},
+		EntretienMDR: 10,
+		MaterielMDR:  5,
+	}, ca.ComptaSubrecords{
+		1: {Montants: ca.Montants{{Kind: ca.Travels, Cent: 100}, {Kind: ca.Alimentation, Cent: 200}}},
+		2: {Montants: ca.Montants{{Kind: ca.Carburant, Cent: 300}, {Kind: ca.Alimentation, Cent: 200}}},
+		3: {Montants: ca.Montants{{Kind: ca.Carburant, Cent: 300}, {Kind: ca.Alimentation, Cent: 200}}},
+	}, ca.ComptaRecordBuss{{IdSubrecord: 1}, {IdSubrecord: 2}}, 5, 20, 10, true)
+
+	tu.Assert(t, got.TotalBus == 1000*20+2*1000*10+1000*5-300)
+}
+
+// TODO:
 // func TestFraismdr(t *testing.T) {
 // 	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
 // 		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",
@@ -70,15 +111,15 @@ func TestAtMDR(t *testing.T) {
 // 	co, err := ct.loadOrCreateCompta(c1.Id)
 // 	tu.AssertNoErr(t, err)
 
-// 	rec1, err := ct.createRecord(CreateRecordIn{co.Id, true})
+// 	rec1, err := ct.createRecord(CreateRecordIn{co.Id, ca.AccountAsso})
 // 	tu.AssertNoErr(t, err)
-// 	rec2, err := ct.createRecord(CreateRecordIn{co.Id, false})
+// 	rec2, err := ct.createRecord(CreateRecordIn{co.Id, ca.AccountCamp})
 // 	tu.AssertNoErr(t, err)
 
-// 	rec1.Records[0].Montants = Montants{{Kind: Carburant, Montant: 100}}
+// 	rec1.Subrecords[0].Montants = ca.Montants{{Kind: ca.Carburant, Cent: 100}}
 // 	_, err = ct.updateRecord(rec1, co.Id)
 // 	tu.AssertNoErr(t, err)
-// 	rec2.Records[0].Montants = Montants{{Kind: Carburant, Montant: 200}}
+// 	rec2.Subrecords[0].Montants = ca.Montants{{Kind: ca.Carburant, Cent: 200}}
 // 	_, err = ct.updateRecord(rec2, co.Id)
 // 	tu.AssertNoErr(t, err)
 
