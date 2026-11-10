@@ -53,11 +53,10 @@
 
 <script lang="ts" setup>
 import {
-  Currency,
   CurrencyLabels,
   Ventilation,
   VentilationLabels,
-  type CampDetails,
+  type CampSummary,
 } from "../../logic/api";
 
 import { Bar, Pie } from "vue-chartjs";
@@ -88,7 +87,7 @@ ChartJS.register(
 );
 
 const props = defineProps<{
-  camp: CampDetails;
+  camp: CampSummary;
 }>();
 
 // filter zeros

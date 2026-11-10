@@ -99,7 +99,9 @@
                 >
                 <v-row no-gutters>
                   <v-col>Nombre total d'équipiers : {{ camp.Equipiers }}</v-col>
-                  <v-col>Nombre d'animateurs : {{ camp.Animateurs }}</v-col>
+                  <v-col
+                    >Nombre d'animateurs (au pair) : {{ camp.AuPairs }}</v-col
+                  >
                 </v-row>
               </v-col>
               <v-col cols="12" md="6">
@@ -242,14 +244,14 @@ import {
   AccountACVELabels,
   State,
   StateLabels,
-  type CampDetails,
+  type CampSummary,
 } from "../logic/api";
 import { Camps, Formatters, selectItems } from "@/utils";
 import NoSelectedCamp from "../components/NoSelectedCamp.vue";
 import NavBar from "../components/NavBar.vue";
 import SummaryGraphs from "../components/home/SummaryGraphs.vue";
 
-const camp = ref<CampDetails | null>(null);
+const camp = ref<CampSummary | null>(null);
 const showStateHelp = ref(false);
 
 onMounted(fetch);
