@@ -92,9 +92,9 @@ func (ct *Controller) getBilanCamps(args BilanCampsIn) ([]byte, string, error) {
 		return nil, "", err
 	}
 
-	bc := make(bilanCamp, len(loaders))
+	bc := make(bilanCamps, len(loaders))
 	for i, ld := range loaders {
-		bc[i] = ld.compile()
+		bc[i] = newCampBilan(ld.compile(), ld.taux)
 	}
 
 	buf, err := generateExcelCamps(bc)

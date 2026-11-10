@@ -150,6 +150,14 @@ func (mc MultiCurrencies) Agg(taux Taux) Montant {
 	return out.Montant
 }
 
+func (mc MultiCurrencies) AggTo(taux Taux, c Currency) int {
+	out := taux.Zero()
+	for cur, cent := range mc {
+		out.Add(Montant{cent, Currency(cur)})
+	}
+	return out.Convert(c).Cent
+}
+
 func (mc MultiCurrencies) String() string {
 	chunks := make([]string, 0, len(mc))
 	for currency, cents := range mc {

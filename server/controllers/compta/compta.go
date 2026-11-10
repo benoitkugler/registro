@@ -49,11 +49,9 @@ type CampSummary struct {
 
 	BudgetPrevisionnel BudgetPrevisionnelSummary
 
-	// TODO:
-	// Fraismdr is the total of the expenses
-	// related to MDR (may be 0)
-	// fraisMDRVehicule float32
-	// fraisMDRMateriel float32 // only > 0 for camp at MDR
+	// MDR expenses, in euro cents.
+	fraisMDRVehicule Cent
+	fraisMDRMateriel Cent // only > 0 for camp at MDR
 
 	// prixJournee rd.Euros
 	// TODO
@@ -97,11 +95,10 @@ func (ld *comptaLoader) compile() CampSummary {
 	// finances
 
 	fraisMDR := ld.resolveFraismdr()
-	// TODO
-	// out.fraisMDRVehicule = fraisMDR.TotalBus
-	// if fraisMDR.HasMateriel {
-	// 	out.fraisMDRMateriel = fraisMDR.Materiel.Total
-	// }
+	out.fraisMDRVehicule = fraisMDR.TotalBus
+	if fraisMDR.HasMateriel {
+		out.fraisMDRMateriel = fraisMDR.Materiel.Total
+	}
 	out.ventilations = ld.aggregateDepenses(fraisMDR)
 
 	out.Remises = ld.computeRemises()

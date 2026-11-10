@@ -3,18 +3,21 @@ package compta
 import (
 	"bytes"
 	"fmt"
-	"sort"
+	"slices"
 	"strconv"
+	"strings"
 	"time"
 
 	"registro/generators/sheets"
 	ca "registro/sql/compta"
-	"registro/sql/dossiers"
+	ds "registro/sql/dossiers"
+	sh "registro/sql/shared"
 )
 
 // excel support
 
 type ecritures struct {
+	taux        ds.Taux
 	camp        string
 	details     string
 	ventilation ventilations
@@ -22,6 +25,7 @@ type ecritures struct {
 
 func (ld *comptaLoader) ecritures() ecritures {
 	return ecritures{
+		taux:        ld.taux,
 		camp:        string(ld.camp.Label()),
 		details:     fmt.Sprintf("%s %s - %s", ld.directeur.FPrenom(), ld.directeur.FNom(), accountLabels[ld.compta.Account]),
 		ventilation: ld.aggregateDepenses(ld.resolveFraismdr()),
@@ -32,44 +36,44 @@ type ecritureComptable struct {
 	NumeroCompte string
 	Intitule     string
 	IsCredit     bool
-	Montant      float32
+	Montant      float32 // in euros
 }
 
-// only use the dedicated account
+// only use the dedicated camp account
 // toBalance is computed so that debit == credit
 func (ec ecritures) compile() ([]ecritureComptable, float32) {
-	// sum := ec.ventilation.sum()
-	// debitTotal, receipes := sum.ownAccount, sum.ownAccountRec
-	// toBalance := debitTotal - receipes
+	sum := ec.ventilation.sum()
+	debitTotal, receipes := sum.accCampDepenses.AggTo(ec.taux, ds.Euros), sum.accAssoReceipes.AggTo(ec.taux, ds.Euros)
+	toBalance := debitTotal - receipes
 
-	// expList := make([]ecritureComptable, 0, len(ec.ventilation))
-	// for k, dep := range ec.ventilation {
-	// 	if dep.ownAccount == 0 {
-	// 		continue
-	// 	}
-	// 	item := ventilationLabels[k]
-	// 	expList = append(expList, ecritureComptable{item.codeACVE, item.label, false, dep.ownAccount.euros()})
-	// }
-	// sort.Slice(expList, func(i, j int) bool { return expList[i].Intitule < expList[j].Intitule })
+	expList := make([]ecritureComptable, 0, len(ec.ventilation))
+	for k, dep := range ec.ventilation {
+		montant := dep.accCampDepenses.Agg(ec.taux)
+		if montant.Cent == 0 {
+			continue
+		}
+		item := ventilationLabels[k]
+		expList = append(expList, ecritureComptable{item.codeACVE, item.label, false, float32(montant.Cent) / 100})
+	}
+	slices.SortFunc(expList, func(a, b ecritureComptable) int { return strings.Compare(a.Intitule, b.Intitule) })
 
-	// // add the receipes
-	// recList := make([]ecritureComptable, 0, len(ec.ventilation))
-	// for k, dep := range ec.ventilation {
-	// 	if dep.ownAccountRec == 0 {
-	// 		continue
-	// 	}
-	// 	item := ventilationLabels[k]
-	// 	recList = append(recList, ecritureComptable{"REC-" + item.codeACVE, "Recette - " + item.label, true, dep.ownAccountRec.euros()})
-	// }
-	// sort.Slice(recList, func(i, j int) bool { return recList[i].Intitule < recList[j].Intitule })
+	// add the receipes
+	recList := make([]ecritureComptable, 0, len(ec.ventilation))
+	for k, dep := range ec.ventilation {
+		montant := dep.accCampReceipes.Agg(ec.taux)
+		if montant.Cent == 0 {
+			continue
+		}
+		item := ventilationLabels[k]
+		recList = append(recList, ecritureComptable{"REC-" + item.codeACVE, "Recette - " + item.label, true, float32(montant.Cent) / 100})
+	}
+	slices.SortFunc(recList, func(a, b ecritureComptable) int { return strings.Compare(a.Intitule, b.Intitule) })
 
-	// out := append(expList, recList...)
-	// out = append([]ecritureComptable{
-	// 	{"5125", ec.camp, true, toBalance.euros()},
-	// }, out...)
+	out := slices.Concat(expList, recList, []ecritureComptable{
+		{"5125", ec.camp, true, float32(toBalance) / 100},
+	})
 
-	// return out, debitTotal.euros()
-	return nil, 0
+	return out, float32(debitTotal) / 100
 }
 
 func generateExcelEcritures(ec ecritures) (*bytes.Buffer, error) {
@@ -122,265 +126,387 @@ func generateExcelEcritures(ec ecritures) (*bytes.Buffer, error) {
 	return b.Finalize()
 }
 
-type bilanCamp []CampSummary
+// --------------------------------- bilan ---------------------------------
 
-// compute the total (or average) for each field
-func (bc bilanCamp) total() (out CampSummary) {
-	// out.Label = "Total"
-	// out.Directeur = "(ou moyenne)"
-	// out.ventilations = make(ventilations)
-	// for _, camp := range bc {
-	// 	out.Duree += camp.Duree
-	// 	out.Inscrits += camp.Inscrits
-	// 	out.Animateurs += camp.Animateurs
-	// 	out.Equipiers += camp.Equipiers
-	// 	// out.Prix += camp.Prix
+type campBilanVentilation struct {
+	camp, asso Cent
+}
 
-	// 	out.Budget += camp.Budget
-	// 	out.BudgetSansRemises += camp.BudgetSansRemises
-	// 	out.BudgetPrevisionnelReel += camp.BudgetPrevisionnelReel
-	// 	out.BudgetPrevisionnelSimule += camp.BudgetPrevisionnelSimule
-	// 	out.DepenseOwnAccount += camp.DepenseOwnAccount
-	// 	out.DepenseTotal += camp.DepenseTotal
-	// 	out.Dons += camp.Dons
+// bilanCamp stores the export data with monetary amounts converted to euro cents.
+type bilanCamp struct {
+	Nom, Serial, Directeur, Lieu string
+	Account                      ca.AccountACVE
+	DateDebut                    sh.Date
 
-	// 	out.fraisMDRVehicule += camp.fraisMDRVehicule
-	// 	out.fraisMDRMateriel += camp.fraisMDRMateriel
+	Duree, JoursInscrits, Inscrits, AuPairs, Equipiers int
 
-	// 	out.prixJournee += camp.prixJournee
-	// 	out.PercentageRemises += camp.PercentageRemises
-	// 	out.Marge += camp.Marge
-	// 	out.DepenseJourneeInscrit += camp.DepenseJourneeInscrit
+	Prix, PrixJournee                  Cent
+	Recettes, Remises                  Cent
+	PercentageRemises, Marge           int
+	DepensesTotal                      Cent
+	DepenseJourneeInscrit              Cent
+	fraisMDRVehicule, fraisMDRMateriel Cent
+	ventilations                       [ca.VentilationCount]campBilanVentilation
+}
 
-	// 	// total expenses, grouped by kind
-	// 	out.ventilations.add(camp.ventilations)
-	// }
-	// // average ratio fields
-	// out.prixJournee /= rd.Euros(len(bc))
-	// out.PercentageRemises /= float32(len(bc))
-	// out.Marge /= float32(len(bc))
-	// out.DepenseJourneeInscrit /= float32(len(bc))
+type bilanCamps []bilanCamp
+
+// return false if every camp has 0 in asso ventilations
+func (camps bilanCamps) showAssoAccount() bool {
+	for _, camp := range camps {
+		if totalVentilations(camp.ventilations, false) != 0 {
+			return true
+		}
+	}
+	return false
+}
+
+// return false if every camp has 0 FraisMDR
+func (camps bilanCamps) showFraisMDR() bool {
+	for _, camp := range camps {
+		if camp.fraisMDRVehicule != 0 || camp.fraisMDRMateriel != 0 {
+			return true
+		}
+	}
+	return false
+}
+
+func euroCent(taux ds.Taux, montant ds.Montant) Cent {
+	return Cent(taux.Convertible(montant).Convert(ds.Euros).Cent)
+}
+
+func newCampBilan(stats CampSummary, taux ds.Taux) (out bilanCamp) {
+	out.Nom = stats.Nom
+	out.Serial = stats.Serial
+	out.Directeur = stats.Directeur
+	out.Lieu = stats.Lieu
+	out.Account = stats.Compta.Account
+	out.DateDebut = stats.DateDebut
+	out.Duree = stats.Duree
+	out.JoursInscrits = stats.Duree * stats.Inscrits
+	out.Inscrits = stats.Inscrits
+	out.AuPairs = stats.AuPairs
+	out.Equipiers = stats.Equipiers
+	out.Prix = euroCent(taux, stats.Prix)
+	if out.Duree != 0 {
+		out.PrixJournee = out.Prix / out.Duree
+	}
+	out.Recettes = euroCent(taux, stats.Recettes)
+	out.Remises = euroCent(taux, stats.Remises)
+	out.PercentageRemises = stats.PercentageRemises
+	out.DepensesTotal = euroCent(taux, stats.DepensesTotal)
+	out.Marge = stats.Marge
+	out.DepenseJourneeInscrit = euroCent(taux, stats.DepenseJourneeInscrit)
+	out.fraisMDRVehicule = stats.fraisMDRVehicule
+	out.fraisMDRMateriel = stats.fraisMDRMateriel
+
+	for v, depense := range stats.ventilations {
+		camp, asso := depense.net()
+		out.ventilations[v] = campBilanVentilation{
+			camp: Cent(camp.AggTo(taux, ds.Euros)),
+			asso: Cent(asso.AggTo(taux, ds.Euros)),
+		}
+	}
 	return out
 }
 
-// TODO
-func generateExcelCamps(camps bilanCamp) (*bytes.Buffer, error) {
+func (camp bilanCamp) dates() string {
+	if camp.DateDebut.Time().IsZero() {
+		return ""
+	}
+	debut := time.Time(camp.DateDebut)
+	fin := sh.Plage{From: camp.DateDebut, Duree: camp.Duree}.To().Time()
+	dM, fM := debut.Month(), fin.Month()
+	if dM == fM {
+		return fmt.Sprintf("du %d au %d %s", debut.Day(), fin.Day(), months[dM])
+	}
+	return fmt.Sprintf("du %d %s au %d %s", debut.Day(), months[dM], fin.Day(), months[fM])
+}
+
+func totalVentilations(ventilations [ca.VentilationCount]campBilanVentilation, campAccount bool) (total Cent) {
+	for _, ventilation := range ventilations {
+		if campAccount {
+			total += ventilation.camp
+		} else {
+			total += ventilation.asso
+		}
+	}
+	return total
+}
+
+// total sums additive values and recomputes ratios from the combined amounts.
+func (bc bilanCamps) total() (out bilanCamp) {
+	out.Nom = "Total"
+	out.Serial = "ou moyenne"
+	for _, camp := range bc {
+		out.Duree += camp.Duree
+		out.JoursInscrits += camp.JoursInscrits
+
+		out.Inscrits += camp.Inscrits
+		out.AuPairs += camp.AuPairs
+		out.Equipiers += camp.Equipiers
+
+		out.Recettes += camp.Recettes
+		out.Remises += camp.Remises
+		out.DepensesTotal += camp.DepensesTotal
+		out.fraisMDRVehicule += camp.fraisMDRVehicule
+		out.fraisMDRMateriel += camp.fraisMDRMateriel
+
+		for v, amounts := range camp.ventilations {
+			out.ventilations[v].camp += amounts.camp
+			out.ventilations[v].asso += amounts.asso
+		}
+
+		out.PercentageRemises += camp.PercentageRemises
+		out.Marge += camp.Marge
+		out.Prix += camp.Prix
+		out.PrixJournee += camp.PrixJournee
+		out.DepenseJourneeInscrit += camp.DepenseJourneeInscrit
+	}
+
+	out.PercentageRemises /= len(bc)
+	out.Marge /= len(bc)
+	out.Prix /= len(bc)
+	out.PrixJournee /= len(bc)
+	out.DepenseJourneeInscrit /= len(bc)
+
+	return out
+}
+
+func generateExcelCamps(camps bilanCamps) (*bytes.Buffer, error) {
 	b := sheets.NewBuilder()
 
-	// const (
-	// 	color1, color2, color3, color4, color5 = "#f2f2f2", "#ffffcc", "#dae3f3", "", "#ccffcc"
-	// 	color6, color7, color8                 = color5, color5, color5
-	// )
-	// // header column
-	// bloc1 := [...]string{
-	// 	"Durée (en jour)",
-	// 	"Nombre de jours × Nombre d'inscrits",
-	// 	"Taille de l'équipe : animation",
-	// 	"Taille de l'équipe : service",
-	// 	"Nombre d'inscrits",
-	// 	"Prix (pension)",
-	// 	"Prix à la journée",
-	// }
-	// bloc2 := [...]string{
-	// 	"Budget total (factures et aides)",
-	// 	"Total des pensions sans remise",
-	// 	"Influence des remises (en %)",
-	// }
-	// bloc3 := [...]string{
-	// 	"Dépenses : Compte dédiée",
-	// 	"Dépenses : Autres comptes",
-	// 	"Dépenses : Matériel Maison du Rocher",
-	// 	"Dépenses (Total)",
-	// }
-	// bloc4 := [...]string{
-	// 	"Dépenses maximum souhaitées",
-	// 	"Dons spécifiques",
-	// 	"Bénéfice (hors dons)",
-	// 	"Bénéfice par enfant(hors dons)",
-	// 	"Coût par jour et par inscrit",
-	// }
-	// bloc5 := make([]string, ca.Bank+1)
-	// for v := range bloc5 {
-	// 	item := ventilationLabels[v]
-	// 	bloc5[v] = fmt.Sprintf("%-5s %s", item.codeACVE, item.label)
-	// }
-	// bloc6 := bloc5
-	// bloc7 := [...]string{
-	// 	"Véhicules",
-	// 	"Matériel",
-	// }
+	showAssoAccount, showFraisMDR := camps.showAssoAccount(), camps.showFraisMDR()
+	total := camps.total()
 
-	// colStart := 2
-	// bloc1Start := 5 + 2
-	// for i, title := range bloc1 {
-	// 	b.SetCell(bloc1Start+i, colStart, title)
-	// 	b.SetStyle(bloc1Start+i, colStart, sheets.Style{Color: color1, Border: sheets.Right | sheets.BorderDouble})
-	// }
-	// bloc2Start := bloc1Start + len(bloc1) + 1
-	// for i, title := range bloc2 {
-	// 	b.SetCell(bloc2Start+i, colStart, title)
-	// 	b.SetStyle(bloc2Start+i, colStart, sheets.Style{Color: color2, Border: sheets.Right | sheets.BorderDouble, Bold: i == 0})
-	// }
-	// bloc3Start := bloc2Start + len(bloc2) + 1
-	// for i, title := range bloc3 {
-	// 	b.SetCell(bloc3Start+i, colStart, title)
-	// 	b.SetStyle(bloc3Start+i, colStart, sheets.Style{Color: color3, Border: sheets.Right | sheets.BorderDouble, Bold: i == len(bloc3)-1})
-	// }
-	// bloc4Start := bloc3Start + len(bloc3) + 1
-	// for i, title := range bloc4 {
-	// 	b.SetCell(bloc4Start+i, colStart, title)
-	// 	b.SetStyle(bloc4Start+i, colStart, sheets.Style{Border: sheets.Right | sheets.BorderDouble, Bold: i == 2 || i == 4})
-	// }
-	// bloc5Start := bloc4Start + len(bloc4) + 1
-	// for i, title := range bloc5 {
-	// 	b.SetCell(bloc5Start+i, colStart, title)
-	// 	b.SetStyle(bloc5Start+i, colStart, sheets.Style{Color: color5, Border: sheets.Right | sheets.BorderDouble})
-	// }
-	// bloc6Start := bloc5Start + len(bloc5) + 1
-	// for i, title := range bloc6 {
-	// 	b.SetCell(bloc6Start+i, colStart, title)
-	// 	b.SetStyle(bloc6Start+i, colStart, sheets.Style{Color: color6, Border: sheets.Right | sheets.BorderDouble})
-	// }
-	// bloc7Start := bloc6Start + len(bloc6) + 1
-	// for i, title := range bloc7 {
-	// 	b.SetCell(bloc7Start+i, colStart, title)
-	// 	b.SetStyle(bloc7Start+i, colStart, sheets.Style{Color: color7, Border: sheets.Right | sheets.BorderDouble})
-	// }
-	// bloc8Start := bloc7Start + len(bloc7) + 1
-	// b.SetCell(bloc8Start, colStart, "Total")
-	// b.SetStyle(bloc8Start, colStart, sheets.Style{Color: color8, Border: sheets.Right | sheets.BorderDouble, Bold: true})
+	const (
+		color1, color2, color3, color4, color5 = "#f2f2f2", "#ffffcc", "#dae3f3", "", "#ccffcc"
+		color6, color7, color8                 = color5, color5, color5
+	)
+	// header column
+	bloc1 := [...]string{
+		"Durée (en jour)",
+		"Nombre de jours × Nombre d'inscrits",
+		"Taille de l'équipe : au pair",
+		"Taille de l'équipe : hors au pair",
+		"Nombre d'inscrits",
+		"Prix (pension)",
+		"Prix à la journée",
+	}
+	bloc2 := [...]string{
+		"Recettes estimées",
+		"Remises",
+		"Influence des remises (en %)",
+	}
+	bloc3 := [...]string{
+		"Dépenses : Compte dédiée",
+		"Dépenses : Autres comptes",
+		"Dépenses : Matériel Maison du Rocher",
+		"Dépenses (Total)",
+	}
+	bloc4 := [...]string{
+		"Bénéfice",
+		"Bénéfice par inscrit",
+		"Coût par jour et par inscrit",
+	}
+	bloc5 := make([]string, ca.Bank+1)
+	for v := range bloc5 {
+		item := ventilationLabels[v]
+		bloc5[v] = fmt.Sprintf("%s %s", item.codeACVE, item.label)
+	}
+	bloc6 := bloc5
+	bloc7 := []string{
+		"Véhicules",
+		"Matériel",
+	}
+	if !showAssoAccount {
+		bloc6 = nil
+	}
+	if !showFraisMDR {
+		bloc7 = nil
+	}
 
-	// // camps
-	// campColStart := colStart + 1
-	// for j, camp := range append(camps, camps.total()) {
-	// 	col := campColStart + j
-	// 	// header
-	// 	account := ""
-	// 	if camp.Compta.Account != 0 {
-	// 		account = accountLabels[camp.Compta.Account]
-	// 	}
-	// 	dates := ""
-	// 	if !time.Time(camp.DateDebut).IsZero() {
-	// 		dates = camp.dates()
-	// 	}
-	// 	for i, cell := range [...]string{
-	// 		camp.Label, camp.Directeur, camp.Lieu,
-	// 		account, dates,
-	// 	} {
-	// 		b.SetCell(i+1, col, cell)
-	// 		color := ""
-	// 		if i == 3 || i == 4 {
-	// 			color = accountColors[camp.Compta.Account]
-	// 		}
-	// 		var border sheets.Border
-	// 		if i == 4 {
-	// 			border = sheets.Bottom
-	// 		}
-	// 		b.SetStyle(i+1, col, sheets.Style{
-	// 			Bold: i == 0, TextAlignement: sheets.ACenter, Color: color,
-	// 			Border: border,
-	// 		})
-	// 	}
+	colStart := 2
+	bloc1Start := 5 + 2
+	for i, title := range bloc1 {
+		b.SetCell(bloc1Start+i, colStart, title)
+		b.SetStyle(bloc1Start+i, colStart, sheets.Style{Color: color1, Border: sheets.Right | sheets.BorderDouble})
+	}
+	bloc2Start := bloc1Start + len(bloc1) + 1
+	for i, title := range bloc2 {
+		b.SetCell(bloc2Start+i, colStart, title)
+		b.SetStyle(bloc2Start+i, colStart, sheets.Style{Color: color2, Border: sheets.Right | sheets.BorderDouble, Bold: i == 0})
+	}
+	bloc3Start := bloc2Start + len(bloc2) + 1
+	for i, title := range bloc3 {
+		b.SetCell(bloc3Start+i, colStart, title)
+		b.SetStyle(bloc3Start+i, colStart, sheets.Style{Color: color3, Border: sheets.Right | sheets.BorderDouble, Bold: i == len(bloc3)-1})
+	}
+	bloc4Start := bloc3Start + len(bloc3) + 1
+	for i, title := range bloc4 {
+		b.SetCell(bloc4Start+i, colStart, title)
+		b.SetStyle(bloc4Start+i, colStart, sheets.Style{Border: sheets.Right | sheets.BorderDouble, Bold: i == 2 || i == 4})
+	}
+	bloc5Start := bloc4Start + len(bloc4) + 1
+	for i, title := range bloc5 {
+		b.SetCell(bloc5Start+i, colStart, title)
+		b.SetStyle(bloc5Start+i, colStart, sheets.Style{Color: color5, Border: sheets.Right | sheets.BorderDouble})
+	}
+	bloc6Start := bloc5Start + len(bloc5) + 1
+	for i, title := range bloc6 {
+		b.SetCell(bloc6Start+i, colStart, title)
+		b.SetStyle(bloc6Start+i, colStart, sheets.Style{Color: color6, Border: sheets.Right | sheets.BorderDouble})
+	}
+	bloc7Start := bloc6Start + len(bloc6) + 1
+	for i, title := range bloc7 {
+		b.SetCell(bloc7Start+i, colStart, title)
+		b.SetStyle(bloc7Start+i, colStart, sheets.Style{Color: color7, Border: sheets.Right | sheets.BorderDouble})
+	}
+	bloc8Start := bloc7Start + len(bloc7) + 1
+	b.SetCell(bloc8Start, colStart, "Total")
+	b.SetStyle(bloc8Start, colStart, sheets.Style{Color: color8, Border: sheets.Right | sheets.BorderDouble, Bold: true})
 
-	// 	type value struct {
-	// 		v    float32
-	// 		kind sheets.NumFormat
-	// 	}
+	// camps
+	campColStart := colStart + 1
+	allCamps := append(camps, total)
+	for j, camp := range allCamps {
+		col := campColStart + j
+		// header
+		account := accountLabels[camp.Account]
+		dates := camp.dates()
+		label := fmt.Sprintf("%s (%s)", camp.Nom, camp.Serial)
+		for i, cell := range [...]string{
+			label, camp.Directeur, camp.Lieu,
+			account, dates,
+		} {
+			b.SetCell(i+1, col, cell)
+			color := ""
+			if i == 3 || i == 4 {
+				color = accountColors[camp.Account]
+			}
+			var border sheets.Border
+			if i == 4 {
+				border = sheets.Bottom
+			}
+			b.SetStyle(i+1, col, sheets.Style{
+				Bold: i == 0, TextAlignement: sheets.ACenter, Color: color,
+				Border: border,
+			})
+		}
 
-	// 	ventilationsOwn, ventilationsOther := camp.ventilations.byAccount()
-	// 	ventilationsOwnCells, ventilationsOtherCells := make([]value, len(bloc5)), make([]value, len(bloc6))
-	// 	for v := range ventilationsOwnCells {
-	// 		ventilationsOwnCells[v] = value{ventilationsOwn[Ventilation(v)], sheets.Euros}
-	// 	}
-	// 	for v := range ventilationsOtherCells {
-	// 		ventilationsOtherCells[v] = value{ventilationsOther[Ventilation(v)], sheets.Euros}
-	// 	}
-	// 	fraisMDR := camp.fraisMDR()
-	// 	totalDepenses := camp.DepenseTotal + fraisMDR
+		type value struct {
+			v    float32
+			kind sheets.NumFormat
+		}
 
-	// 	blocs := [...]struct {
-	// 		color    string
-	// 		startRow int
-	// 		cells    []value
-	// 	}{
-	// 		{
-	// 			color1, bloc1Start, []value{
-	// 				{float32(camp.Duree), sheets.Int},
-	// 				{float32(camp.Duree * camp.Inscrits), sheets.Int},
-	// 				{float32(camp.Animateurs), sheets.Int},
-	// 				{float32(camp.Equipiers - camp.Animateurs), sheets.Int},
-	// 				{float32(camp.Inscrits), sheets.Int},
-	// 				{float32(camp.Prix), sheets.Euros},
-	// 				{float32(camp.prixJournee), sheets.Euros},
-	// 			},
-	// 		},
-	// 		{
-	// 			color2, bloc2Start, []value{
-	// 				{camp.Budget, sheets.Euros},
-	// 				{camp.BudgetSansRemises, sheets.Euros},
-	// 				{camp.PercentageRemises / 100, sheets.Percentage}, // excel % format expects a number in [0,1]
-	// 			},
-	// 		},
-	// 		{
-	// 			color3, bloc3Start, []value{
-	// 				{camp.DepenseOwnAccount, sheets.Euros},
-	// 				{camp.DepenseTotal - camp.DepenseOwnAccount, sheets.Euros}, // other account
-	// 				{fraisMDR, sheets.Euros},
-	// 				{totalDepenses, sheets.Euros},
-	// 			},
-	// 		},
-	// 		{
-	// 			color4, bloc4Start, []value{
-	// 				{camp.hintDepensesMax(), sheets.Euros},
-	// 				{camp.Dons, sheets.Euros},
-	// 				{camp.Budget - totalDepenses, sheets.Euros},
-	// 				{(camp.Budget - totalDepenses) / float32(camp.Inscrits), sheets.Euros},
-	// 				{camp.DepenseJourneeInscrit, sheets.Euros},
-	// 			},
-	// 		},
-	// 		{
-	// 			color5, bloc5Start, ventilationsOwnCells,
-	// 		},
-	// 		{
-	// 			color6, bloc6Start, ventilationsOtherCells,
-	// 		},
-	// 		{
-	// 			color7, bloc7Start, []value{
-	// 				{camp.fraisMDRVehicule, sheets.Euros},
-	// 				{camp.fraisMDRMateriel, sheets.Euros},
-	// 			},
-	// 		},
-	// 	}
-	// 	for _, bloc := range blocs {
-	// 		for i, cell := range bloc.cells {
-	// 			if cell.v != 0 {
-	// 				b.SetCellF(bloc.startRow+i, col, cell.v)
-	// 			}
-	// 			b.SetStyle(bloc.startRow+i, col, sheets.Style{
-	// 				TextAlignement: sheets.ACenter, Color: bloc.color, Border: sheets.Right,
-	// 				NumFormat: cell.kind,
-	// 			})
-	// 		}
-	// 	}
-	// 	b.SetCellF(bloc8Start, col, camp.DepenseTotal)
-	// 	b.SetStyle(bloc8Start, col, sheets.Style{TextAlignement: sheets.ACenter, Color: color8, Border: sheets.Right, Bold: true})
+		ventilationsCampCells, ventilationsAssoCells := make([]value, len(bloc5)), make([]value, len(bloc6))
+		for v := range ventilationsCampCells {
+			ventilationsCampCells[v] = value{float32(camp.ventilations[v].camp) / 100, sheets.Euros}
+		}
+		for v := range ventilationsAssoCells {
+			ventilationsAssoCells[v] = value{float32(camp.ventilations[v].asso) / 100, sheets.Euros}
+		}
+		fraisMDRCells := []value{
+			{float32(camp.fraisMDRVehicule) / 100, sheets.Euros},
+			{float32(camp.fraisMDRMateriel) / 100, sheets.Euros},
+		}
+		totalDepenses := camp.DepensesTotal
+		benefice := camp.Recettes - totalDepenses
+		beneficeParInscrit := Cent(0)
+		if camp.Inscrits != 0 {
+			beneficeParInscrit = benefice / Cent(camp.Inscrits)
+		}
 
-	// }
+		if !showAssoAccount {
+			ventilationsAssoCells = nil
+		}
+		if !showFraisMDR {
+			fraisMDRCells = nil
+		}
 
-	// b.FitColsWidth()
+		blocs := [...]struct {
+			color    string
+			startRow int
+			cells    []value
+		}{
+			{
+				color1, bloc1Start, []value{
+					{float32(camp.Duree), sheets.Int},
+					{float32(camp.JoursInscrits), sheets.Int},
+					{float32(camp.AuPairs), sheets.Int},
+					{float32(camp.Equipiers - camp.AuPairs), sheets.Int},
+					{float32(camp.Inscrits), sheets.Int},
+					{float32(camp.Prix) / 100, sheets.Euros},
+					{float32(camp.PrixJournee) / 100, sheets.Euros},
+				},
+			},
+			{
+				color2, bloc2Start, []value{
+					{float32(camp.Recettes) / 100, sheets.Euros},
+					{float32(camp.Remises) / 100, sheets.Euros},
+					{float32(camp.PercentageRemises) / 100, sheets.Percentage},
+				},
+			},
+			{
+				color3, bloc3Start, []value{
+					{float32(totalVentilations(camp.ventilations, true)) / 100, sheets.Euros},
+					{float32(totalVentilations(camp.ventilations, false)) / 100, sheets.Euros},
+					{float32(camp.fraisMDRVehicule+camp.fraisMDRMateriel) / 100, sheets.Euros},
+					{float32(totalDepenses) / 100, sheets.Euros},
+				},
+			},
+			{
+				color4, bloc4Start, []value{
+					{float32(benefice) / 100, sheets.Euros},
+					{float32(beneficeParInscrit) / 100, sheets.Euros},
+					{float32(camp.DepenseJourneeInscrit) / 100, sheets.Euros},
+				},
+			},
+			{
+				color5, bloc5Start, ventilationsCampCells,
+			},
+			{
+				color6, bloc6Start, ventilationsAssoCells,
+			},
+			{
+				color7, bloc7Start, fraisMDRCells,
+			},
+		}
+		for _, bloc := range blocs {
+			for i, cell := range bloc.cells {
+				if cell.v != 0 {
+					b.SetCellF(bloc.startRow+i, col, cell.v)
+				}
+				b.SetStyle(bloc.startRow+i, col, sheets.Style{
+					TextAlignement: sheets.ACenter, Color: bloc.color, Border: sheets.Right,
+					NumFormat: cell.kind,
+				})
+			}
+		}
+		b.SetCellF(bloc8Start, col, float32(camp.DepensesTotal)/100)
+		b.SetStyle(bloc8Start, col, sheets.Style{TextAlignement: sheets.ACenter, Color: color8, Border: sheets.Right, Bold: true, NumFormat: sheets.Euros})
 
-	// // add vertical legend
-	// b.SetCell(bloc5Start, 1, "Compte dédié")
-	// b.SetStyle(bloc5Start, 1, sheets.Style{TextAlignement: sheets.AVertical})
-	// b.MergeCells(bloc5Start, 1, bloc5Start+len(bloc5)-1, 1)
-	// b.SetCell(bloc6Start, 1, "Autres comptes")
-	// b.MergeCells(bloc6Start, 1, bloc6Start+len(bloc6)-1, 1)
-	// b.SetStyle(bloc6Start, 1, sheets.Style{TextAlignement: sheets.AVertical})
-	// b.SetCell(bloc7Start, 1, "Frais MDR")
-	// b.MergeCells(bloc7Start, 1, bloc7Start+len(bloc7)-1, 1)
-	// b.SetStyle(bloc7Start, 1, sheets.Style{TextAlignement: sheets.AVertical})
+	}
 
-	// b.SetColumnWidth(1, 8)
+	b.FitColsWidth()
+
+	// add vertical legend
+	b.SetCell(bloc5Start, 1, "Compte dédié")
+	b.SetStyle(bloc5Start, 1, sheets.Style{TextAlignement: sheets.AVertical})
+	b.MergeCells(bloc5Start, 1, bloc5Start+len(bloc5)-1, 1)
+
+	if showAssoAccount {
+		b.SetCell(bloc6Start, 1, "Autres comptes")
+		b.MergeCells(bloc6Start, 1, bloc6Start+len(bloc6)-1, 1)
+		b.SetStyle(bloc6Start, 1, sheets.Style{TextAlignement: sheets.AVertical})
+	}
+	if showFraisMDR {
+		b.SetCell(bloc7Start, 1, "Frais MDR")
+		b.MergeCells(bloc7Start, 1, bloc7Start+len(bloc7)-1, 1)
+		b.SetStyle(bloc7Start, 1, sheets.Style{TextAlignement: sheets.AVertical})
+	}
+
+	b.SetColumnWidth(1, 8)
 
 	return b.Finalize()
 }
@@ -405,17 +531,17 @@ var ventilationToColumns = [...]int{
 	ca.NoVentilation:         15,
 }
 
-// split according to IsOtherAccount and sort by Date
-func sortRecords(records ca.ComptaRecords, subs ca.ComptaSubrecords) (mainAccount, otherAccount []ca.ComptaSubrecord) {
+// split according to Account and sort by Date
+func sortRecords(records ca.ComptaRecords, subs ca.ComptaSubrecords) (campAccount, assoAccount []ca.ComptaSubrecord) {
 	for _, rec := range subs {
 		if group := records[rec.IdRecord]; group.Account == ca.AccountAsso {
-			otherAccount = append(otherAccount, rec)
+			assoAccount = append(assoAccount, rec)
 		} else {
-			mainAccount = append(mainAccount, rec)
+			campAccount = append(campAccount, rec)
 		}
 	}
-	sort.Slice(mainAccount, func(i, j int) bool { return time.Time(mainAccount[i].Date).Before(time.Time(mainAccount[j].Date)) })
-	sort.Slice(otherAccount, func(i, j int) bool { return time.Time(otherAccount[i].Date).Before(time.Time(otherAccount[j].Date)) })
+	slices.SortFunc(campAccount, func(i, j ca.ComptaSubrecord) int { return time.Time(i.Date).Compare(time.Time(j.Date)) })
+	slices.SortFunc(assoAccount, func(i, j ca.ComptaSubrecord) int { return time.Time(i.Date).Compare(time.Time(j.Date)) })
 	return
 }
 
@@ -457,7 +583,7 @@ func generateExcelRecords(records ca.ComptaRecords, subrecords ca.ComptaSubrecor
 			// ventilations
 			for _, ventilation := range record.Montants.Uniquify() {
 				offset := ventilationToColumns[ventilation.Kind]
-				b.SetCell(row, 14+offset, dossiers.Montant{Currency: record.Currency, Cent: ventilation.Cent}.String())
+				b.SetCell(row, 14+offset, ds.Montant{Currency: record.Currency, Cent: ventilation.Cent}.String())
 			}
 
 			group := records[record.IdRecord]
