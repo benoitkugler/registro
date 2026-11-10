@@ -22,6 +22,8 @@ export type Ar17_Int = [
   Int,
   Int,
 ];
+export type Ar3_Int = [Int, Int, Int];
+export type Ar5_Int = [Int, Int, Int, Int, Int];
 
 // AAAA-MM-YY date format
 export type Date_ = string & { __opaque__: "Date" };
@@ -31,6 +33,11 @@ export type Int = number & { __opaque__: "Int" };
 // ISO date-time string
 export type Time = string & { __opaque__: "Time" };
 
+// registro/controllers/compta.ActivityHint
+export interface ActivityHint {
+  Activity: NamedCost;
+  Origin: CampBudgetHeader;
+}
 // registro/controllers/compta.AddRecordReviewIn
 export interface AddRecordReviewIn {
   IdRecord: IdComptaRecord;
@@ -45,28 +52,22 @@ export interface BudgetPrevisionnelSummary {
   Reel: Montant;
   Simule: Montant;
 }
-// registro/controllers/compta.CampDetails
-export interface CampDetails {
-  Compta: ComptaExt;
-  Nom: string;
-  Serial: string;
-  Directeur: string;
-  Lieu: string;
-  AtMDR: boolean;
-  DateDebut: Date;
-  Duree: Int;
-  Prix: Montant;
-  Inscrits: Int;
-  Animateurs: Int;
-  Equipiers: Int;
-  Recettes: Montant;
-  Remises: Montant;
-  PercentageRemises: Int;
-  BudgetPrevisionnel: BudgetPrevisionnelSummary;
-  DepensesTotal: Montant;
-  Marge: Int;
-  DepenseJourneeInscrit: Montant;
-  DepenseGraph: DepenseGraph;
+// registro/controllers/compta.BusExpense
+export interface BusExpense {
+  Id: IdComptaSubrecord;
+  Description: string;
+  Total: Montant;
+}
+// registro/controllers/compta.BusExpensesOut
+export interface BusExpensesOut {
+  Records: RecordBusHeader[] | null;
+  Selected: IdComptaSubrecord[] | null;
+}
+// registro/controllers/compta.CampBudgetHeader
+export interface CampBudgetHeader {
+  IdCompta: IdComptaCamp;
+  Name: string;
+  Year: Int;
 }
 // registro/controllers/compta.CampHeader
 export interface CampHeader {
@@ -80,11 +81,39 @@ export interface CampHeader {
   Compta: ComptaExt;
   DirecteurURL: string;
 }
+// registro/controllers/compta.CampSummary
+export interface CampSummary {
+  Compta: ComptaExt;
+  Nom: string;
+  Serial: string;
+  Directeur: string;
+  Lieu: string;
+  AtMDR: boolean;
+  DateDebut: Date;
+  Duree: Int;
+  Prix: Montant;
+  Inscrits: Int;
+  AuPairs: Int;
+  Equipiers: Int;
+  Recettes: Montant;
+  Remises: Montant;
+  PercentageRemises: Int;
+  BudgetPrevisionnel: BudgetPrevisionnelSummary;
+  DepensesTotal: Montant;
+  Marge: Int;
+  DepenseJourneeInscrit: Montant;
+  DepenseGraph: DepenseGraph;
+}
 // registro/controllers/compta.ComptaExt
 export interface ComptaExt {
   Id: IdComptaCamp;
   State: State;
   Account: AccountACVE;
+}
+// registro/controllers/compta.CreateBudgetIn
+export interface CreateBudgetIn {
+  IdCompta: IdComptaCamp;
+  ImportFrom: IdComptaCamp;
 }
 // registro/controllers/compta.CreateRecordIn
 export interface CreateRecordIn {
@@ -95,6 +124,14 @@ export interface CreateRecordIn {
 export interface DepenseGraph {
   Currency: Currency;
   Cents: Ar17_Int;
+}
+// registro/controllers/compta.EstimatedBudget
+export interface EstimatedBudget {
+  IsValid: boolean;
+  Origin: ComptaBugdet;
+  Config: ComptaConfig;
+  Simulated: ResolvedBudget;
+  Real: ResolvedBudget;
 }
 // registro/controllers/compta.GetRecordsOut
 export interface GetRecordsOut {
@@ -117,6 +154,14 @@ export interface RecordAndSub {
   Record: ComptaRecord;
   Subrecord: ComptaSubrecord;
 }
+// registro/controllers/compta.RecordBusHeader
+export interface RecordBusHeader {
+  IdSubrecord: IdComptaSubrecord;
+  Title: string;
+  Date: Date;
+  ForBus: Montant;
+  Total: Montant;
+}
 // registro/controllers/compta.RecordExt
 export interface RecordExt {
   Record: ComptaRecord;
@@ -138,11 +183,74 @@ export const RecordStatusLabels: Record<RecordStatus, string> = {
   [RecordStatus.Validated]: "",
 };
 
+// registro/controllers/compta.ResolvedBudget
+export interface ResolvedBudget {
+  Duree: Int;
+  Inscrits: Int;
+  Equipiers: Int;
+  Prix: Montant;
+  FoodInscrits: Montant;
+  FoodEquipiers: Montant;
+  HasSmallTeamFactor: boolean;
+  FoodTotal: Montant;
+  ChauffageMDR: Montant;
+  EntretienMDR: Montant;
+  HostTotal: Montant;
+  MaterielMDR: Montant;
+  ActivitiesTotal: Montant;
+  TransportTotal: Montant;
+  Pensions: Montant;
+  Depenses: Montant;
+  Bilan: Montant;
+  BilanPercentage: Int;
+}
+// registro/controllers/compta.ResolvedBus
+export interface ResolvedBus {
+  Name: string;
+  Kind: CarKind;
+  KmStart: Int;
+  KmEnd: Int;
+  Kms: Int;
+  Tarif: Montant;
+  TotalCost: Montant;
+}
+// registro/controllers/compta.ResolvedFraisMDR
+export interface ResolvedFraisMDR {
+  Bus: ResolvedBus[] | null;
+  ExpensesForBus: BusExpense[] | null;
+  TotalBus: Int;
+  HasMateriel: boolean;
+  Materiel: ResolvedMateriel;
+  Total: Int;
+}
+// registro/controllers/compta.ResolvedMateriel
+export interface ResolvedMateriel {
+  Days: Int;
+  NbPeople: Int;
+  NbInscrits: Int;
+  DaysPeopleEntretien: Int;
+  DaysPeoplePedagogique: Int;
+  TarifEntretien: Int;
+  TarifMateriel: Int;
+  CostEntretien: Int;
+  CostMateriel: Int;
+  Total: Int;
+}
+// registro/controllers/compta.SetBusExpenseIn
+export interface SetBusExpenseIn {
+  IdCompta: IdComptaCamp;
+  Records: IdComptaSubrecord[] | null;
+}
 // registro/controllers/compta.SetComptaStateIn
 export interface SetComptaStateIn {
   IdCompta: IdComptaCamp;
   State: State;
   SendMail: boolean;
+}
+// registro/controllers/compta.UpdateFraisMDRIn
+export interface UpdateFraisMDRIn {
+  IdCompta: IdComptaCamp;
+  Frais: FraisMDRACVE;
 }
 export type IdCamp = Int & { __opaque_int__: "IdCamp" };
 export type IdEquipier = Int & { __opaque_int__: "IdEquipier" };
@@ -192,6 +300,8 @@ export const AccountKindLabels: Record<AccountKind, string> = {
   [AccountKind.AccountAsso]: "Compte de l'asso.",
 };
 
+// registro/sql/compta.Activities
+export type Activities = NamedCost[] | null;
 // registro/sql/compta.Bus
 export interface Bus {
   Name: string;
@@ -215,6 +325,29 @@ export const CarKindLabels: Record<CarKind, string> = {
   [CarKind.nbCarKind]: "",
 };
 
+// registro/sql/compta.CarsCosts
+export type CarsCosts = Ar3_Int;
+// registro/sql/compta.CarsKms
+export type CarsKms = Ar3_Int;
+// registro/sql/compta.ComptaBugdet
+export interface ComptaBugdet {
+  IdCompta: IdComptaCamp;
+  SimulatedInscrits: Int;
+  SimulatedEquipiers: Int;
+  StartMealInscrits: Meal;
+  EndMealInscrits: Meal;
+  StartMealEquipiers: Meal;
+  EndMealEquipiers: Meal;
+  OffsetStartMealEquipiers: Int;
+  OffsetEndMealEquipiers: Int;
+  ExternalHost: Rents;
+  Activities: Activities;
+  MaterielPeda: Montant;
+  ProduitPharma: Montant;
+  TeamTrips: Montant;
+  ExternalCarRent: Montant;
+  AssoCarKms: CarsKms;
+}
 // registro/sql/compta.ComptaCamp
 export interface ComptaCamp {
   Id: IdComptaCamp;
@@ -224,7 +357,19 @@ export interface ComptaCamp {
   LastSentMailAdmin: Time;
   LastSentMailDirecteur: Time;
   Account: AccountACVE;
-  Fraismdr: FraismdrACVE;
+  Fraismdr: FraisMDRACVE;
+}
+// registro/sql/compta.ComptaConfig
+export interface ComptaConfig {
+  Id: IdComptaConfig;
+  Year: Int;
+  MealsCost: MealsCosts;
+  SmallMealThreshold: Int;
+  SmallMealMajoration: Int;
+  AssoCars: CarsCosts;
+  ChauffageMDR: Int;
+  EntretienMDR: Int;
+  MaterielMDR: Int;
 }
 // registro/sql/compta.ComptaRecord
 export interface ComptaRecord {
@@ -262,14 +407,35 @@ export const FileStatusLabels: Record<FileStatus, string> = {
   [FileStatus.Archived]: "",
 };
 
-// registro/sql/compta.FraismdrACVE
-export interface FraismdrACVE {
+// registro/sql/compta.FraisMDRACVE
+export interface FraisMDRACVE {
   Bus: Bus[] | null;
 }
 export type IdComptaCamp = Int & { __opaque_int__: "IdComptaCamp" };
+export type IdComptaConfig = Int & { __opaque_int__: "IdComptaConfig" };
 export type IdComptaFile = Int & { __opaque_int__: "IdComptaFile" };
 export type IdComptaRecord = Int & { __opaque_int__: "IdComptaRecord" };
 export type IdComptaSubrecord = Int & { __opaque_int__: "IdComptaSubrecord" };
+// registro/sql/compta.Meal
+export const Meal = {
+  PetitDejeuner: 0,
+  Midi: 1,
+  Gouter: 2,
+  Soir: 3,
+  Cinquieme: 4,
+} as const;
+export type Meal = (typeof Meal)[keyof typeof Meal];
+
+export const MealLabels: Record<Meal, string> = {
+  [Meal.PetitDejeuner]: "",
+  [Meal.Midi]: "",
+  [Meal.Gouter]: "",
+  [Meal.Soir]: "",
+  [Meal.Cinquieme]: "",
+};
+
+// registro/sql/compta.MealsCosts
+export type MealsCosts = Ar5_Int;
 // registro/sql/compta.ModePaiementRecord
 export const ModePaiementRecord = {
   CarteB: 0,
@@ -296,6 +462,13 @@ export interface MontantPart {
 }
 // registro/sql/compta.Montants
 export type Montants = MontantPart[] | null;
+// registro/sql/compta.NamedCost
+export interface NamedCost {
+  Name: string;
+  Cost: Montant;
+}
+// registro/sql/compta.Rents
+export type Rents = NamedCost[] | null;
 // registro/sql/compta.Review
 export interface Review {
   IsAdmin: boolean;
@@ -514,10 +687,208 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseURL + "/api/v1/compta/camp/details";
     this.startRequest();
     try {
-      const rep: AxiosResponse<CampDetails> = await Axios.get(fullUrl, {
+      const rep: AxiosResponse<CampSummary> = await Axios.get(fullUrl, {
         headers: this.getHeaders(),
         params: { IdCompta: String(params["IdCompta"]) },
       });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** GetComptaConfigs performs the request and handles the error */
+  async GetComptaConfigs() {
+    const fullUrl = this.baseURL + "/api/v1/compta/configs";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<ComptaConfig[] | null> = await Axios.get(
+        fullUrl,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** CreateComptaConfig performs the request and handles the error */
+  async CreateComptaConfig() {
+    const fullUrl = this.baseURL + "/api/v1/compta/configs";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<ComptaConfig> = await Axios.put(fullUrl, null, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** UpdateComptaConfig performs the request and handles the error */
+  async UpdateComptaConfig(params: ComptaConfig) {
+    const fullUrl = this.baseURL + "/api/v1/compta/configs";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** DeleteComptaConfig performs the request and handles the error */
+  async DeleteComptaConfig(params: { id: IdComptaConfig }) {
+    const fullUrl = this.baseURL + "/api/v1/compta/configs";
+    this.startRequest();
+    try {
+      await Axios.delete(fullUrl, {
+        headers: this.getHeaders(),
+        params: { id: String(params["id"]) },
+      });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** CreateBudget performs the request and handles the error */
+  async CreateBudget(params: CreateBudgetIn) {
+    const fullUrl = this.baseURL + "/api/v1/compta/budget";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<EstimatedBudget> = await Axios.put(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** GetEstimatedBudget performs the request and handles the error */
+  async GetEstimatedBudget(params: { "id-compta": IdComptaCamp }) {
+    const fullUrl = this.baseURL + "/api/v1/compta/budget";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<EstimatedBudget> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { "id-compta": String(params["id-compta"]) },
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** UpdateEstimatedBudget performs the request and handles the error */
+  async UpdateEstimatedBudget(params: ComptaBugdet) {
+    const fullUrl = this.baseURL + "/api/v1/compta/budget";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<EstimatedBudget> = await Axios.post(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** GetPreviousBudgets performs the request and handles the error */
+  async GetPreviousBudgets() {
+    const fullUrl = this.baseURL + "/api/v1/compta/budget/previous-budgets";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<CampBudgetHeader[] | null> = await Axios.get(
+        fullUrl,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** GetBudgetActivities performs the request and handles the error */
+  async GetBudgetActivities(params: { "id-compta": IdComptaCamp }) {
+    const fullUrl = this.baseURL + "/api/v1/compta/budget/activities";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<ActivityHint[] | null> = await Axios.get(
+        fullUrl,
+        {
+          headers: this.getHeaders(),
+          params: { "id-compta": String(params["id-compta"]) },
+        },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** FraisMDRLoad performs the request and handles the error */
+  async FraisMDRLoad(params: { "id-compta": IdComptaCamp }) {
+    const fullUrl = this.baseURL + "/api/v1/compta/frais-mdr";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<ResolvedFraisMDR> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { "id-compta": String(params["id-compta"]) },
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** FraisMDRUpdate performs the request and handles the error */
+  async FraisMDRUpdate(params: UpdateFraisMDRIn) {
+    const fullUrl = this.baseURL + "/api/v1/compta/frais-mdr";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<ResolvedFraisMDR> = await Axios.post(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** FraisMDRGetBusExpense performs the request and handles the error */
+  async FraisMDRGetBusExpense(params: { "id-compta": IdComptaCamp }) {
+    const fullUrl = this.baseURL + "/api/v1/compta/frais-mdr/bus-expense";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<BusExpensesOut> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { "id-compta": String(params["id-compta"]) },
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** FraisMDRSetBusExpense performs the request and handles the error */
+  async FraisMDRSetBusExpense(params: SetBusExpenseIn) {
+    const fullUrl = this.baseURL + "/api/v1/compta/frais-mdr/bus-expense";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<ResolvedFraisMDR> = await Axios.post(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
       return rep.data;
     } catch (error) {
       this.handleError(error);
