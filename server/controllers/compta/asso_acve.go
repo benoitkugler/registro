@@ -171,13 +171,3 @@ func resolveFraismdr(frais ca.FraismdrACVE, config ca.ComptaConfig, subrecords c
 
 	return out
 }
-
-// func (c *CampDetails) fraisMDR() float32 { return c.fraisMDRMateriel + c.fraisMDRVehicule }
-
-// // hors MDR: 80% du budget, MDR: 50%
-// func (c *CampDetails) hintDepensesMax() float32 {
-// 	if c.AtMDR {
-// 		return c.Remises * 0.5
-// 	}
-// 	return c.Remises * 0.8
-// }
