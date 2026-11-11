@@ -69,6 +69,7 @@
 import { computed, ref } from "vue";
 import type { BilanCampsIn, CampHeader, IdComptaCamp } from "../../logic/api";
 import { Camps, normalize } from "@/utils";
+import { searchOtherYears } from "../../logic/logic";
 
 const props = defineProps<{
   camps: CampHeader[];
@@ -107,14 +108,6 @@ function addCurrentYear() {
 function addOtherYears(camp: CampHeader) {
   searchOtherYears(camp, props.camps).forEach((c) =>
     toExport.value.add(c.Compta.Id),
-  );
-}
-
-function searchOtherYears(camp: CampHeader, among: CampHeader[]) {
-  const query = normalize(camp.Nom);
-  const year = Camps.year(camp);
-  return among.filter(
-    (c) => Camps.year(c) != year && query == normalize(c.Nom),
   );
 }
 </script>

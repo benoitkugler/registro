@@ -75,7 +75,7 @@
                 <v-tooltip
                   v-if="camp.AtMDR"
                   location="top"
-                  text="Le bugdet prévisionnel et les dépenses sont ajustés pour un séjour à la Maison du Rocher."
+                  text="Le budget prévisionnel et les dépenses sont ajustés pour un séjour à la Maison du Rocher."
                 >
                   <template v-slot:activator="{ props }">
                     <v-chip v-bind="props" color="primary"
@@ -162,8 +162,12 @@
           >
             <v-row justify="center">
               <v-col cols="auto" align-self="center">
-                <v-chip link class="mx-0" elevation="1">
-                  <!-- TODO: :to="{ path: '/budget' }" -->
+                <v-chip
+                  link
+                  class="mx-0"
+                  elevation="1"
+                  :to="{ path: '/budget' }"
+                >
                   Budget prévisionnel :
                   {{ Formatters.montant(camp.BudgetPrevisionnel.Reel) }} (réel)
                   / {{ Formatters.montant(camp.BudgetPrevisionnel.Simule) }}
@@ -248,8 +252,9 @@ import {
 } from "../logic/api";
 import { Camps, Formatters, selectItems } from "@/utils";
 import NoSelectedCamp from "../components/NoSelectedCamp.vue";
+
+import SummaryGraphs from "../components/summary/SummaryGraphs.vue";
 import NavBar from "../components/NavBar.vue";
-import SummaryGraphs from "../components/home/SummaryGraphs.vue";
 
 const camp = ref<CampSummary | null>(null);
 const showStateHelp = ref(false);
@@ -258,7 +263,7 @@ onMounted(fetch);
 
 async function fetch() {
   if (controller.idCompta == -1) return;
-  const res = await controller.GetCampDetails({
+  const res = await controller.GetCampSummary({
     IdCompta: controller.idCompta,
   });
   if (res === undefined) return;

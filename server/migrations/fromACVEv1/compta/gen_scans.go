@@ -308,8 +308,8 @@ func DeleteComptasByIdCamps(tx DB, idCamps_ ...int64) ([]IdCompta, error) {
 	return ScanIdComptaArray(rows)
 }
 
-func scanOneComptaBugdet(row scanner) (ComptaBugdet, error) {
-	var item ComptaBugdet
+func scanOneComptaBudget(row scanner) (ComptaBudget, error) {
+	var item ComptaBudget
 	err := row.Scan(
 		&item.IdCompta,
 		&item.BonusTeamPeople,
@@ -330,22 +330,22 @@ func scanOneComptaBugdet(row scanner) (ComptaBugdet, error) {
 	return item, err
 }
 
-func ScanComptaBugdet(row *sql.Row) (ComptaBugdet, error) { return scanOneComptaBugdet(row) }
+func ScanComptaBudget(row *sql.Row) (ComptaBudget, error) { return scanOneComptaBudget(row) }
 
 // SelectAll returns all the items in the compta_bugdets table.
-func SelectAllComptaBugdets(db DB) (ComptaBugdets, error) {
+func SelectAllComptaBudgets(db DB) (ComptaBudgets, error) {
 	rows, err := db.Query("SELECT idcompta, bonusteampeople, mealsinscrits, mealsequipiers, externalhost, activities, materielpeda, produitpharma, teamtrips, externalcarrent, simulatedinscrits, simulatedequipiers, simulatedreduc1, simulatedreduc2, carsmdrkms FROM compta_bugdets")
 	if err != nil {
 		return nil, err
 	}
-	return ScanComptaBugdets(rows)
+	return ScanComptaBudgets(rows)
 }
 
-type ComptaBugdets []ComptaBugdet
+type ComptaBudgets []ComptaBudget
 
-func ScanComptaBugdets(rs *sql.Rows) (ComptaBugdets, error) {
+func ScanComptaBudgets(rs *sql.Rows) (ComptaBudgets, error) {
 	var (
-		item ComptaBugdet
+		item ComptaBudget
 		err  error
 	)
 	defer func() {
@@ -354,9 +354,9 @@ func ScanComptaBugdets(rs *sql.Rows) (ComptaBugdets, error) {
 			err = errClose
 		}
 	}()
-	structs := make(ComptaBugdets, 0, 16)
+	structs := make(ComptaBudgets, 0, 16)
 	for rs.Next() {
-		item, err = scanOneComptaBugdet(rs)
+		item, err = scanOneComptaBudget(rs)
 		if err != nil {
 			return nil, err
 		}
@@ -368,7 +368,7 @@ func ScanComptaBugdets(rs *sql.Rows) (ComptaBugdets, error) {
 	return structs, nil
 }
 
-func (item ComptaBugdet) Insert(db DB) error {
+func (item ComptaBudget) Insert(db DB) error {
 	_, err := db.Exec(`INSERT INTO compta_bugdets (
 			idcompta, bonusteampeople, mealsinscrits, mealsequipiers, externalhost, activities, materielpeda, produitpharma, teamtrips, externalcarrent, simulatedinscrits, simulatedequipiers, simulatedreduc1, simulatedreduc2, carsmdrkms
 			) VALUES (
@@ -381,9 +381,9 @@ func (item ComptaBugdet) Insert(db DB) error {
 	return nil
 }
 
-// Insert the links ComptaBugdet in the database.
+// Insert the links ComptaBudget in the database.
 // It is a no-op if 'items' is empty.
-func InsertManyComptaBugdets(tx *sql.Tx, items ...ComptaBugdet) error {
+func InsertManyComptaBudgets(tx *sql.Tx, items ...ComptaBudget) error {
 	if len(items) == 0 {
 		return nil
 	}
@@ -426,16 +426,16 @@ func InsertManyComptaBugdets(tx *sql.Tx, items ...ComptaBugdet) error {
 	return nil
 }
 
-// Delete the link ComptaBugdet from the database.
+// Delete the link ComptaBudget from the database.
 // Only the foreign keys IdCompta fields are used in 'item'.
-func (item ComptaBugdet) Delete(tx DB) error {
+func (item ComptaBudget) Delete(tx DB) error {
 	_, err := tx.Exec(`DELETE FROM compta_bugdets WHERE IdCompta = $1;`, item.IdCompta)
 	return err
 }
 
 // ByIdCompta returns a map with 'IdCompta' as keys.
-func (items ComptaBugdets) ByIdCompta() map[IdCompta]ComptaBugdet {
-	out := make(map[IdCompta]ComptaBugdet, len(items))
+func (items ComptaBudgets) ByIdCompta() map[IdCompta]ComptaBudget {
+	out := make(map[IdCompta]ComptaBudget, len(items))
 	for _, target := range items {
 		out[target.IdCompta] = target
 	}
@@ -445,7 +445,7 @@ func (items ComptaBugdets) ByIdCompta() map[IdCompta]ComptaBugdet {
 // IdComptas returns the list of ids of IdCompta
 // contained in this link table.
 // They are not garanteed to be distinct.
-func (items ComptaBugdets) IdComptas() []IdCompta {
+func (items ComptaBudgets) IdComptas() []IdCompta {
 	out := make([]IdCompta, len(items))
 	for index, target := range items {
 		out[index] = target.IdCompta
@@ -453,30 +453,30 @@ func (items ComptaBugdets) IdComptas() []IdCompta {
 	return out
 }
 
-// SelectComptaBugdetByIdCompta return zero or one item, thanks to a UNIQUE SQL constraint.
-func SelectComptaBugdetByIdCompta(tx DB, idCompta IdCompta) (item ComptaBugdet, found bool, err error) {
+// SelectComptaBudgetByIdCompta return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectComptaBudgetByIdCompta(tx DB, idCompta IdCompta) (item ComptaBudget, found bool, err error) {
 	row := tx.QueryRow("SELECT idcompta, bonusteampeople, mealsinscrits, mealsequipiers, externalhost, activities, materielpeda, produitpharma, teamtrips, externalcarrent, simulatedinscrits, simulatedequipiers, simulatedreduc1, simulatedreduc2, carsmdrkms FROM compta_bugdets WHERE idcompta = $1", idCompta)
-	item, err = ScanComptaBugdet(row)
+	item, err = ScanComptaBudget(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
 	}
 	return item, true, err
 }
 
-func SelectComptaBugdetsByIdComptas(tx DB, idComptas_ ...IdCompta) (ComptaBugdets, error) {
+func SelectComptaBudgetsByIdComptas(tx DB, idComptas_ ...IdCompta) (ComptaBudgets, error) {
 	rows, err := tx.Query("SELECT idcompta, bonusteampeople, mealsinscrits, mealsequipiers, externalhost, activities, materielpeda, produitpharma, teamtrips, externalcarrent, simulatedinscrits, simulatedequipiers, simulatedreduc1, simulatedreduc2, carsmdrkms FROM compta_bugdets WHERE idcompta = ANY($1)", IdComptaArrayToPQ(idComptas_))
 	if err != nil {
 		return nil, err
 	}
-	return ScanComptaBugdets(rows)
+	return ScanComptaBudgets(rows)
 }
 
-func DeleteComptaBugdetsByIdComptas(tx DB, idComptas_ ...IdCompta) (ComptaBugdets, error) {
+func DeleteComptaBudgetsByIdComptas(tx DB, idComptas_ ...IdCompta) (ComptaBudgets, error) {
 	rows, err := tx.Query("DELETE FROM compta_bugdets WHERE idcompta = ANY($1) RETURNING idcompta, bonusteampeople, mealsinscrits, mealsequipiers, externalhost, activities, materielpeda, produitpharma, teamtrips, externalcarrent, simulatedinscrits, simulatedequipiers, simulatedreduc1, simulatedreduc2, carsmdrkms", IdComptaArrayToPQ(idComptas_))
 	if err != nil {
 		return nil, err
 	}
-	return ScanComptaBugdets(rows)
+	return ScanComptaBudgets(rows)
 }
 
 func scanOneDonc(row scanner) (Donc, error) {

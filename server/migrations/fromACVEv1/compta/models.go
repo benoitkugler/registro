@@ -108,11 +108,11 @@ type Donc struct {
 	Montant Cent
 }
 
-// ComptaBugdet is an 'extension' table for a camp,
+// ComptaBudget is an 'extension' table for a camp,
 // storing the estimated budget.
 //
 // gomacro:SQL ADD UNIQUE(IdCompta)
-type ComptaBugdet struct {
+type ComptaBudget struct {
 	IdCompta IdCompta `gomacro-sql-on-delete:"CASCADE"`
 
 	BonusTeamPeople int // additional people present during the vacation

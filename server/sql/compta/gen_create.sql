@@ -1,5 +1,5 @@
 -- Code genererated by gomacro/generator/sql. DO NOT EDIT.
-CREATE TABLE compta_bugdets (
+CREATE TABLE compta_budgets (
     IdCompta integer NOT NULL,
     SimulatedInscrits integer NOT NULL,
     SimulatedEquipiers integer NOT NULL,
@@ -106,10 +106,10 @@ ALTER TABLE compta_record_buss
 ALTER TABLE compta_record_buss
     ADD FOREIGN KEY (IdSubrecord) REFERENCES compta_subrecords ON DELETE CASCADE;
 
-ALTER TABLE compta_bugdets
+ALTER TABLE compta_budgets
     ADD UNIQUE (IdCompta);
 
-ALTER TABLE compta_bugdets
+ALTER TABLE compta_budgets
     ADD FOREIGN KEY (IdCompta) REFERENCES compta_camps ON DELETE CASCADE;
 
 ALTER TABLE compta_configs
@@ -262,7 +262,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION gomacro_validate_json_comp_FraismdrACVE (data jsonb)
+CREATE OR REPLACE FUNCTION gomacro_validate_json_comp_FraisMDRACVE (data jsonb)
     RETURNS boolean
     AS $$
 DECLARE
@@ -437,15 +437,15 @@ IMMUTABLE;
 ALTER TABLE compta_subrecords
     ADD CONSTRAINT Montants_gomacro CHECK (gomacro_validate_json_array_comp_MontantPart (Montants));
 
-ALTER TABLE compta_bugdets
+ALTER TABLE compta_budgets
     ADD CONSTRAINT Activities_gomacro CHECK (gomacro_validate_json_array_comp_NamedCost (Activities));
 
-ALTER TABLE compta_bugdets
+ALTER TABLE compta_budgets
     ADD CONSTRAINT ExternalHost_gomacro CHECK (gomacro_validate_json_array_comp_NamedCost (ExternalHost));
 
 ALTER TABLE compta_records
     ADD CONSTRAINT Reviews_gomacro CHECK (gomacro_validate_json_array_comp_Review (Reviews));
 
 ALTER TABLE compta_camps
-    ADD CONSTRAINT Fraismdr_gomacro CHECK (gomacro_validate_json_comp_FraismdrACVE (Fraismdr));
+    ADD CONSTRAINT Fraismdr_gomacro CHECK (gomacro_validate_json_comp_FraisMDRACVE (Fraismdr));
 

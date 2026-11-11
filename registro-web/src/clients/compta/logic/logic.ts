@@ -1,4 +1,4 @@
-import { baseURL, parseError } from "@/utils";
+import { baseURL, Camps, normalize, parseError } from "@/utils";
 import {
   AbstractAPI,
   AccountKind,
@@ -6,6 +6,7 @@ import {
   State,
   Ventilation,
   VentilationLabels,
+  type CampHeader,
   type ComptaRecord,
   type ComptaSubrecord,
   type IdComptaCamp,
@@ -14,6 +15,7 @@ import {
 } from "./api";
 import { isDateZero } from "@/components/date";
 import type { RouteLocationNormalizedLoaded } from "vue-router";
+import type { CampItem } from "@/clients/directeurs/logic/api";
 
 class Controller extends AbstractAPI {
   public isAdmin: boolean = false;
@@ -169,3 +171,14 @@ export const VentilationsIcons = {
   [Ventilation.PensionBenevole]: "mdi-hand-heart",
   [Ventilation.Autre]: "mdi-dots-horizontal-circle-outline",
 };
+
+export function searchOtherYears<T extends CampItem, S extends CampItem>(
+  camp: T,
+  among: S[],
+) {
+  const query = normalize(camp.Nom);
+  const year = Camps.year(camp);
+  return among.filter(
+    (c) => Camps.year(c) != year && query == normalize(c.Nom),
+  );
+}

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"registro/logic"
 	cps "registro/sql/camps"
 	ca "registro/sql/compta"
 	ds "registro/sql/dossiers"
@@ -62,7 +63,7 @@ type ResolvedBudget struct {
 
 // if [simulated] is true, the number of inscrits and equipiers are taken from the budget field
 // otherwise they are computed from the database
-func (ld *comptaLoader) resolveBudget(origin ca.ComptaBugdet, config ca.ComptaConfig, simulated bool) ResolvedBudget {
+func (ld *comptaLoader) resolveBudget(origin ca.ComptaBudget, config ca.ComptaConfig, simulated bool) ResolvedBudget {
 	out := ResolvedBudget{}
 
 	out.Duree = ld.camp.Duree
@@ -192,12 +193,32 @@ func (ct *Controller) CreateComptaConfig(c echo.Context) error {
 		return errAccess
 	}
 
-	out, err := ca.ComptaConfig{Year: time.Now().Year()}.Insert(ct.db)
+	out, err := ct.createConfig()
 	if err != nil {
 		return utils.SQLError(err)
 	}
 
 	return c.JSON(200, out)
+}
+
+func (ct *Controller) createConfig() (ca.ComptaConfig, error) {
+	// copy the latest one, if any
+	configs, err := ca.SelectAllComptaConfigs(ct.db)
+	if err != nil {
+		return ca.ComptaConfig{}, utils.SQLError(err)
+	}
+	var config ca.ComptaConfig
+	if l := configs.Sorted(); len(l) != 0 {
+		config = l[0]
+	}
+
+	config.Year = time.Now().Year()
+
+	out, err := config.Insert(ct.db)
+	if err != nil {
+		return ca.ComptaConfig{}, utils.SQLError(err)
+	}
+	return out, nil
 }
 
 func (ct *Controller) UpdateComptaConfig(c echo.Context) error {
@@ -269,9 +290,9 @@ func (ct *Controller) CreateBudget(c echo.Context) error {
 }
 
 func (ct *Controller) createBudget(args CreateBudgetIn) (err error) {
-	var newBudget ca.ComptaBugdet
+	var newBudget ca.ComptaBudget
 	if args.ImportFrom != 0 {
-		newBudget, _, err = ca.SelectComptaBugdetByIdCompta(ct.db, args.ImportFrom)
+		newBudget, _, err = ca.SelectComptaBudgetByIdCompta(ct.db, args.ImportFrom)
 		if err != nil {
 			return utils.SQLError(err)
 		}
@@ -308,7 +329,7 @@ func (ct *Controller) GetEstimatedBudget(c echo.Context) error {
 // EstimatedBudget may be empty if not filled yet
 type EstimatedBudget struct {
 	IsValid bool
-	Origin  ca.ComptaBugdet
+	Origin  ca.ComptaBudget
 	Config  ca.ComptaConfig
 
 	Simulated ResolvedBudget
@@ -341,7 +362,7 @@ func (ct *Controller) loadEstimatedBudget(idCompta ca.IdComptaCamp) (EstimatedBu
 func (ct *Controller) UpdateEstimatedBudget(c echo.Context) error {
 	user := JWTUser(c)
 
-	var args ca.ComptaBugdet
+	var args ca.ComptaBudget
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
@@ -358,7 +379,7 @@ func (ct *Controller) UpdateEstimatedBudget(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) updateBudget(origin ca.ComptaBugdet) (EstimatedBudget, error) {
+func (ct *Controller) updateBudget(origin ca.ComptaBudget) (EstimatedBudget, error) {
 	err := origin.Delete(ct.db)
 	if err != nil {
 		return EstimatedBudget{}, utils.SQLError(err)
@@ -374,8 +395,7 @@ func (ct *Controller) updateBudget(origin ca.ComptaBugdet) (EstimatedBudget, err
 
 type CampBudgetHeader struct {
 	IdCompta ca.IdComptaCamp
-	Name     string
-	Year     int
+	logic.CampItem
 }
 
 func (ct *Controller) GetPreviousBudgets(c echo.Context) error {
@@ -386,7 +406,7 @@ func (ct *Controller) GetPreviousBudgets(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) loadCampsByBudget(budgets ca.ComptaBugdets) (map[ca.IdComptaCamp]CampBudgetHeader, error) {
+func (ct *Controller) loadCampsByBudget(budgets ca.ComptaBudgets) (map[ca.IdComptaCamp]CampBudgetHeader, error) {
 	comptas, err := ca.SelectComptaCamps(ct.db, budgets.IdComptas()...)
 	if err != nil {
 		return nil, utils.SQLError(err)
@@ -403,8 +423,7 @@ func (ct *Controller) loadCampsByBudget(budgets ca.ComptaBugdets) (map[ca.IdComp
 		idCompta := byCamp[camp.Id].Id
 		out[idCompta] = CampBudgetHeader{
 			IdCompta: idCompta,
-			Name:     string(camp.Nom),
-			Year:     camp.DateDebut.Time().Year(),
+			CampItem: logic.NewCampItem(camp),
 		}
 	}
 
@@ -412,7 +431,7 @@ func (ct *Controller) loadCampsByBudget(budgets ca.ComptaBugdets) (map[ca.IdComp
 }
 
 func (ct *Controller) getPreviousBudgets() ([]CampBudgetHeader, error) {
-	budgets, err := ca.SelectAllComptaBugdets(ct.db)
+	budgets, err := ca.SelectAllComptaBudgets(ct.db)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
@@ -428,10 +447,10 @@ func (ct *Controller) getPreviousBudgets() ([]CampBudgetHeader, error) {
 	}
 
 	slices.SortFunc(out, func(a, b CampBudgetHeader) int {
-		if yearOrder := cmp.Compare(a.Year, b.Year); yearOrder != 0 {
+		if yearOrder := cmp.Compare(a.DateDebut.Time().Year(), b.DateDebut.Time().Year()); yearOrder != 0 {
 			return yearOrder
 		}
-		return strings.Compare(a.Name, b.Name)
+		return strings.Compare(a.Nom, b.Nom)
 	})
 
 	return out, nil
@@ -459,7 +478,7 @@ type ActivityHint struct {
 }
 
 func (ct *Controller) budgetActivities(id ca.IdComptaCamp) ([]ActivityHint, error) {
-	budgets, err := ca.SelectAllComptaBugdets(ct.db)
+	budgets, err := ca.SelectAllComptaBudgets(ct.db)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
@@ -486,9 +505,9 @@ func (ct *Controller) budgetActivities(id ca.IdComptaCamp) ([]ActivityHint, erro
 				continue
 			}
 
-			k := key{activity.Name, camp.Name}
+			k := key{activity.Name, camp.Nom}
 			// only keep more recent version
-			if other, has := uniq[k]; has && other.Origin.Year > camp.Year {
+			if other, has := uniq[k]; has && other.Origin.DateDebut.Time().Year() > camp.DateDebut.Time().Year() {
 				continue
 			}
 			uniq[k] = ActivityHint{Activity: activity, Origin: camp}
@@ -505,7 +524,7 @@ func (ct *Controller) budgetActivities(id ca.IdComptaCamp) ([]ActivityHint, erro
 		if nameOrder := strings.Compare(a.Activity.Name, b.Activity.Name); nameOrder != 0 {
 			return nameOrder
 		}
-		return cmp.Compare(b.Origin.Year, a.Origin.Year)
+		return cmp.Compare(b.Origin.DateDebut.Time().Year(), a.Origin.DateDebut.Time().Year())
 	})
 
 	return out, nil

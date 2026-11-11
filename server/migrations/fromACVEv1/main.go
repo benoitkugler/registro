@@ -293,7 +293,7 @@ type baseV1 struct {
 	subrecords  comptaV1.Subrecords
 	filecomptas comptaV1.Filecomptas
 	// TODO:
-	budgets       comptaV1.ComptaBugdets
+	budgets       comptaV1.ComptaBudgets
 	budgetConfigs comptaV1.Budgetconfigs
 }
 

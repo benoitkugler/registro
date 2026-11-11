@@ -213,7 +213,7 @@ type comptaLoader struct {
 	taux ds.Taux
 
 	compta ca.ComptaCamp
-	budget ca.ComptaBugdet // may be empty
+	budget ca.ComptaBudget // may be empty
 	config ca.ComptaConfig
 
 	finances logic.DossiersFinances
@@ -257,7 +257,7 @@ func newComptaLoader(db ca.DB, compta ca.ComptaCamp) (comptaLoader, error) {
 	if err != nil {
 		return comptaLoader{}, utils.SQLError(err)
 	}
-	bugdet, _, err := ca.SelectComptaBugdetByIdCompta(db, compta.Id)
+	budget, _, err := ca.SelectComptaBudgetByIdCompta(db, compta.Id)
 	if err != nil {
 		return comptaLoader{}, utils.SQLError(err)
 	}
@@ -302,7 +302,7 @@ func newComptaLoader(db ca.DB, compta ca.ComptaCamp) (comptaLoader, error) {
 		}
 	}
 
-	return comptaLoader{camp, taux, compta, bugdet, config, finances, participants, equipiers, directeur, records, subrecords, forBus}, nil
+	return comptaLoader{camp, taux, compta, budget, config, finances, participants, equipiers, directeur, records, subrecords, forBus}, nil
 }
 
 // do not include waiting list
@@ -486,7 +486,7 @@ func (ct *Controller) setComptaState(args SetComptaStateIn, user ca.IdComptaCamp
 	return out, nil
 }
 
-func (ct *Controller) GetCampDetails(c echo.Context) error {
+func (ct *Controller) GetCampSummary(c echo.Context) error {
 	user := JWTUser(c)
 
 	idCompta, err := utils.QueryParamInt[ca.IdComptaCamp](c, "IdCompta")

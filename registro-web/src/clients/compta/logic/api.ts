@@ -66,8 +66,11 @@ export interface BusExpensesOut {
 // registro/controllers/compta.CampBudgetHeader
 export interface CampBudgetHeader {
   IdCompta: IdComptaCamp;
-  Name: string;
-  Year: Int;
+  Id: IdCamp;
+  Nom: string;
+  DateDebut: Date;
+  Duree: Int;
+  IsOld: boolean;
 }
 // registro/controllers/compta.CampHeader
 export interface CampHeader {
@@ -128,7 +131,7 @@ export interface DepenseGraph {
 // registro/controllers/compta.EstimatedBudget
 export interface EstimatedBudget {
   IsValid: boolean;
-  Origin: ComptaBugdet;
+  Origin: ComptaBudget;
   Config: ComptaConfig;
   Simulated: ResolvedBudget;
   Real: ResolvedBudget;
@@ -329,8 +332,8 @@ export const CarKindLabels: Record<CarKind, string> = {
 export type CarsCosts = Ar3_Int;
 // registro/sql/compta.CarsKms
 export type CarsKms = Ar3_Int;
-// registro/sql/compta.ComptaBugdet
-export interface ComptaBugdet {
+// registro/sql/compta.ComptaBudget
+export interface ComptaBudget {
   IdCompta: IdComptaCamp;
   SimulatedInscrits: Int;
   SimulatedEquipiers: Int;
@@ -427,11 +430,11 @@ export const Meal = {
 export type Meal = (typeof Meal)[keyof typeof Meal];
 
 export const MealLabels: Record<Meal, string> = {
-  [Meal.PetitDejeuner]: "",
-  [Meal.Midi]: "",
-  [Meal.Gouter]: "",
-  [Meal.Soir]: "",
-  [Meal.Cinquieme]: "",
+  [Meal.PetitDejeuner]: "Petit déjeuner",
+  [Meal.Midi]: "Midi",
+  [Meal.Gouter]: "Goûter",
+  [Meal.Soir]: "Soir",
+  [Meal.Cinquieme]: "Cinquième",
 };
 
 // registro/sql/compta.MealsCosts
@@ -682,9 +685,9 @@ export abstract class AbstractAPI {
     }
   }
 
-  /** GetCampDetails performs the request and handles the error */
-  async GetCampDetails(params: { IdCompta: IdComptaCamp }) {
-    const fullUrl = this.baseURL + "/api/v1/compta/camp/details";
+  /** GetCampSummary performs the request and handles the error */
+  async GetCampSummary(params: { IdCompta: IdComptaCamp }) {
+    const fullUrl = this.baseURL + "/api/v1/compta/camp/summary";
     this.startRequest();
     try {
       const rep: AxiosResponse<CampSummary> = await Axios.get(fullUrl, {
@@ -785,7 +788,7 @@ export abstract class AbstractAPI {
   }
 
   /** UpdateEstimatedBudget performs the request and handles the error */
-  async UpdateEstimatedBudget(params: ComptaBugdet) {
+  async UpdateEstimatedBudget(params: ComptaBudget) {
     const fullUrl = this.baseURL + "/api/v1/compta/budget";
     this.startRequest();
     try {

@@ -439,7 +439,7 @@ CREATE TABLE organismes (
     Pays text NOT NULL
 );
 
-CREATE TABLE compta_bugdets (
+CREATE TABLE compta_budgets (
     IdCompta integer NOT NULL,
     SimulatedInscrits integer NOT NULL,
     SimulatedEquipiers integer NOT NULL,

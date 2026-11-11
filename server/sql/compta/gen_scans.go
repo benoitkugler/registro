@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-
 	"registro/sql/camps"
 
 	"github.com/lib/pq"
@@ -27,8 +26,8 @@ type DB interface {
 	Prepare(query string) (*sql.Stmt, error)
 }
 
-func scanOneComptaBugdet(row scanner) (ComptaBugdet, error) {
-	var item ComptaBugdet
+func scanOneComptaBudget(row scanner) (ComptaBudget, error) {
+	var item ComptaBudget
 	err := row.Scan(
 		&item.IdCompta,
 		&item.SimulatedInscrits,
@@ -50,22 +49,22 @@ func scanOneComptaBugdet(row scanner) (ComptaBugdet, error) {
 	return item, err
 }
 
-func ScanComptaBugdet(row *sql.Row) (ComptaBugdet, error) { return scanOneComptaBugdet(row) }
+func ScanComptaBudget(row *sql.Row) (ComptaBudget, error) { return scanOneComptaBudget(row) }
 
-// SelectAll returns all the items in the compta_bugdets table.
-func SelectAllComptaBugdets(db DB) (ComptaBugdets, error) {
-	rows, err := db.Query("SELECT idcompta, simulatedinscrits, simulatedequipiers, startmealinscrits, endmealinscrits, startmealequipiers, endmealequipiers, offsetstartmealequipiers, offsetendmealequipiers, externalhost, activities, materielpeda, produitpharma, teamtrips, externalcarrent, assocarkms FROM compta_bugdets")
+// SelectAll returns all the items in the compta_budgets table.
+func SelectAllComptaBudgets(db DB) (ComptaBudgets, error) {
+	rows, err := db.Query("SELECT idcompta, simulatedinscrits, simulatedequipiers, startmealinscrits, endmealinscrits, startmealequipiers, endmealequipiers, offsetstartmealequipiers, offsetendmealequipiers, externalhost, activities, materielpeda, produitpharma, teamtrips, externalcarrent, assocarkms FROM compta_budgets")
 	if err != nil {
 		return nil, err
 	}
-	return ScanComptaBugdets(rows)
+	return ScanComptaBudgets(rows)
 }
 
-type ComptaBugdets []ComptaBugdet
+type ComptaBudgets []ComptaBudget
 
-func ScanComptaBugdets(rs *sql.Rows) (ComptaBugdets, error) {
+func ScanComptaBudgets(rs *sql.Rows) (ComptaBudgets, error) {
 	var (
-		item ComptaBugdet
+		item ComptaBudget
 		err  error
 	)
 	defer func() {
@@ -74,9 +73,9 @@ func ScanComptaBugdets(rs *sql.Rows) (ComptaBugdets, error) {
 			err = errClose
 		}
 	}()
-	structs := make(ComptaBugdets, 0, 16)
+	structs := make(ComptaBudgets, 0, 16)
 	for rs.Next() {
-		item, err = scanOneComptaBugdet(rs)
+		item, err = scanOneComptaBudget(rs)
 		if err != nil {
 			return nil, err
 		}
@@ -88,8 +87,8 @@ func ScanComptaBugdets(rs *sql.Rows) (ComptaBugdets, error) {
 	return structs, nil
 }
 
-func (item ComptaBugdet) Insert(db DB) error {
-	_, err := db.Exec(`INSERT INTO compta_bugdets (
+func (item ComptaBudget) Insert(db DB) error {
+	_, err := db.Exec(`INSERT INTO compta_budgets (
 			idcompta, simulatedinscrits, simulatedequipiers, startmealinscrits, endmealinscrits, startmealequipiers, endmealequipiers, offsetstartmealequipiers, offsetendmealequipiers, externalhost, activities, materielpeda, produitpharma, teamtrips, externalcarrent, assocarkms
 			) VALUES (
 			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16
@@ -101,14 +100,14 @@ func (item ComptaBugdet) Insert(db DB) error {
 	return nil
 }
 
-// Insert the links ComptaBugdet in the database.
+// Insert the links ComptaBudget in the database.
 // It is a no-op if 'items' is empty.
-func InsertManyComptaBugdets(tx *sql.Tx, items ...ComptaBugdet) error {
+func InsertManyComptaBudgets(tx *sql.Tx, items ...ComptaBudget) error {
 	if len(items) == 0 {
 		return nil
 	}
 
-	stmt, err := tx.Prepare(pq.CopyIn("compta_bugdets",
+	stmt, err := tx.Prepare(pq.CopyIn("compta_budgets",
 		"idcompta",
 		"simulatedinscrits",
 		"simulatedequipiers",
@@ -147,16 +146,16 @@ func InsertManyComptaBugdets(tx *sql.Tx, items ...ComptaBugdet) error {
 	return nil
 }
 
-// Delete the link ComptaBugdet from the database.
+// Delete the link ComptaBudget from the database.
 // Only the foreign keys IdCompta fields are used in 'item'.
-func (item ComptaBugdet) Delete(tx DB) error {
-	_, err := tx.Exec(`DELETE FROM compta_bugdets WHERE IdCompta = $1;`, item.IdCompta)
+func (item ComptaBudget) Delete(tx DB) error {
+	_, err := tx.Exec(`DELETE FROM compta_budgets WHERE IdCompta = $1;`, item.IdCompta)
 	return err
 }
 
 // ByIdCompta returns a map with 'IdCompta' as keys.
-func (items ComptaBugdets) ByIdCompta() map[IdComptaCamp]ComptaBugdet {
-	out := make(map[IdComptaCamp]ComptaBugdet, len(items))
+func (items ComptaBudgets) ByIdCompta() map[IdComptaCamp]ComptaBudget {
+	out := make(map[IdComptaCamp]ComptaBudget, len(items))
 	for _, target := range items {
 		out[target.IdCompta] = target
 	}
@@ -166,7 +165,7 @@ func (items ComptaBugdets) ByIdCompta() map[IdComptaCamp]ComptaBugdet {
 // IdComptas returns the list of ids of IdCompta
 // contained in this table.
 // They are not garanteed to be distinct.
-func (items ComptaBugdets) IdComptas() []IdComptaCamp {
+func (items ComptaBudgets) IdComptas() []IdComptaCamp {
 	out := make([]IdComptaCamp, len(items))
 	for index, target := range items {
 		out[index] = target.IdCompta
@@ -174,30 +173,30 @@ func (items ComptaBugdets) IdComptas() []IdComptaCamp {
 	return out
 }
 
-// SelectComptaBugdetByIdCompta return zero or one item, thanks to a UNIQUE SQL constraint.
-func SelectComptaBugdetByIdCompta(tx DB, idCompta IdComptaCamp) (item ComptaBugdet, found bool, err error) {
-	row := tx.QueryRow("SELECT idcompta, simulatedinscrits, simulatedequipiers, startmealinscrits, endmealinscrits, startmealequipiers, endmealequipiers, offsetstartmealequipiers, offsetendmealequipiers, externalhost, activities, materielpeda, produitpharma, teamtrips, externalcarrent, assocarkms FROM compta_bugdets WHERE idcompta = $1", idCompta)
-	item, err = ScanComptaBugdet(row)
+// SelectComptaBudgetByIdCompta return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectComptaBudgetByIdCompta(tx DB, idCompta IdComptaCamp) (item ComptaBudget, found bool, err error) {
+	row := tx.QueryRow("SELECT idcompta, simulatedinscrits, simulatedequipiers, startmealinscrits, endmealinscrits, startmealequipiers, endmealequipiers, offsetstartmealequipiers, offsetendmealequipiers, externalhost, activities, materielpeda, produitpharma, teamtrips, externalcarrent, assocarkms FROM compta_budgets WHERE idcompta = $1", idCompta)
+	item, err = ScanComptaBudget(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
 	}
 	return item, true, err
 }
 
-func SelectComptaBugdetsByIdComptas(tx DB, idComptas_ ...IdComptaCamp) (ComptaBugdets, error) {
-	rows, err := tx.Query("SELECT idcompta, simulatedinscrits, simulatedequipiers, startmealinscrits, endmealinscrits, startmealequipiers, endmealequipiers, offsetstartmealequipiers, offsetendmealequipiers, externalhost, activities, materielpeda, produitpharma, teamtrips, externalcarrent, assocarkms FROM compta_bugdets WHERE idcompta = ANY($1)", IdComptaCampArrayToPQ(idComptas_))
+func SelectComptaBudgetsByIdComptas(tx DB, idComptas_ ...IdComptaCamp) (ComptaBudgets, error) {
+	rows, err := tx.Query("SELECT idcompta, simulatedinscrits, simulatedequipiers, startmealinscrits, endmealinscrits, startmealequipiers, endmealequipiers, offsetstartmealequipiers, offsetendmealequipiers, externalhost, activities, materielpeda, produitpharma, teamtrips, externalcarrent, assocarkms FROM compta_budgets WHERE idcompta = ANY($1)", IdComptaCampArrayToPQ(idComptas_))
 	if err != nil {
 		return nil, err
 	}
-	return ScanComptaBugdets(rows)
+	return ScanComptaBudgets(rows)
 }
 
-func DeleteComptaBugdetsByIdComptas(tx DB, idComptas_ ...IdComptaCamp) (ComptaBugdets, error) {
-	rows, err := tx.Query("DELETE FROM compta_bugdets WHERE idcompta = ANY($1) RETURNING idcompta, simulatedinscrits, simulatedequipiers, startmealinscrits, endmealinscrits, startmealequipiers, endmealequipiers, offsetstartmealequipiers, offsetendmealequipiers, externalhost, activities, materielpeda, produitpharma, teamtrips, externalcarrent, assocarkms", IdComptaCampArrayToPQ(idComptas_))
+func DeleteComptaBudgetsByIdComptas(tx DB, idComptas_ ...IdComptaCamp) (ComptaBudgets, error) {
+	rows, err := tx.Query("DELETE FROM compta_budgets WHERE idcompta = ANY($1) RETURNING idcompta, simulatedinscrits, simulatedequipiers, startmealinscrits, endmealinscrits, startmealequipiers, endmealequipiers, offsetstartmealequipiers, offsetendmealequipiers, externalhost, activities, materielpeda, produitpharma, teamtrips, externalcarrent, assocarkms", IdComptaCampArrayToPQ(idComptas_))
 	if err != nil {
 		return nil, err
 	}
-	return ScanComptaBugdets(rows)
+	return ScanComptaBudgets(rows)
 }
 
 func scanOneComptaCamp(row scanner) (ComptaCamp, error) {
@@ -1151,7 +1150,7 @@ func DeleteComptaSubrecordsByIdFiles(tx DB, idFiles_ ...IdComptaFile) (ComptaSub
 
 func loadJSON(out any, src any) error {
 	if src == nil {
-		return nil // zero value out
+		return nil //zero value out
 	}
 	bs, ok := src.([]byte)
 	if !ok {
@@ -1179,13 +1178,13 @@ func (s *CarsCosts) Scan(src any) error {
 	}
 	copy(s[:], tmp)
 	return nil
-}
 
+}
 func (s CarsCosts) Value() (driver.Value, error) {
 	return pq.Int32Array(s[:]).Value()
 }
 
-func (kms *CarsKms) Scan(src any) error {
+func (s *CarsKms) Scan(src any) error {
 	var tmp pq.Int32Array
 	err := tmp.Scan(src)
 	if err != nil {
@@ -1194,12 +1193,12 @@ func (kms *CarsKms) Scan(src any) error {
 	if len(tmp) != 3 {
 		return fmt.Errorf("unexpected length %d", len(tmp))
 	}
-	copy(kms[:], tmp)
+	copy(s[:], tmp)
 	return nil
-}
 
-func (kms CarsKms) Value() (driver.Value, error) {
-	return pq.Int32Array(kms[:]).Value()
+}
+func (s CarsKms) Value() (driver.Value, error) {
+	return pq.Int32Array(s[:]).Value()
 }
 
 func (s *MealsCosts) Scan(src any) error {
@@ -1213,8 +1212,8 @@ func (s *MealsCosts) Scan(src any) error {
 	}
 	copy(s[:], tmp)
 	return nil
-}
 
+}
 func (s MealsCosts) Value() (driver.Value, error) {
 	return pq.Int32Array(s[:]).Value()
 }

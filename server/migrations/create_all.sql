@@ -439,7 +439,7 @@ CREATE TABLE organismes (
     Pays text NOT NULL
 );
 
-CREATE TABLE compta_bugdets (
+CREATE TABLE compta_budgets (
     IdCompta integer NOT NULL,
     SimulatedInscrits integer NOT NULL,
     SimulatedEquipiers integer NOT NULL,
@@ -1150,29 +1150,6 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION gomacro_validate_json_array_comp_ActivityCost (data jsonb)
-    RETURNS boolean
-    AS $$
-BEGIN
-    IF jsonb_typeof(data) = 'null' THEN
-        RETURN TRUE;
-    END IF;
-    IF jsonb_typeof(data) != 'array' THEN
-        RETURN FALSE;
-    END IF;
-    IF jsonb_array_length(data) = 0 THEN
-        RETURN TRUE;
-    END IF;
-    RETURN (
-        SELECT
-            bool_and(gomacro_validate_json_comp_ActivityCost (value))
-        FROM
-            jsonb_array_elements(data));
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
 CREATE OR REPLACE FUNCTION gomacro_validate_json_array_comp_Bus (data jsonb)
     RETURNS boolean
     AS $$
@@ -1219,7 +1196,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION gomacro_validate_json_array_comp_RentCost (data jsonb)
+CREATE OR REPLACE FUNCTION gomacro_validate_json_array_comp_NamedCost (data jsonb)
     RETURNS boolean
     AS $$
 BEGIN
@@ -1234,7 +1211,7 @@ BEGIN
     END IF;
     RETURN (
         SELECT
-            bool_and(gomacro_validate_json_comp_RentCost (value))
+            bool_and(gomacro_validate_json_comp_NamedCost (value))
         FROM
             jsonb_array_elements(data));
 END;
@@ -1274,28 +1251,6 @@ BEGIN
     IF NOT is_valid THEN
         RAISE WARNING '% is not a boolean', data;
     END IF;
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION gomacro_validate_json_comp_ActivityCost (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean;
-BEGIN
-    IF jsonb_typeof(data) != 'object' THEN
-        RETURN FALSE;
-    END IF;
-    is_valid := (
-        SELECT
-            bool_and(KEY IN ('Name', 'Cost'))
-        FROM
-            jsonb_each(data))
-        AND gomacro_validate_json_string (data -> 'Name')
-        AND gomacro_validate_json_doss_Montant (data -> 'Cost');
     RETURN is_valid;
 END;
 $$
@@ -1342,7 +1297,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION gomacro_validate_json_comp_FraismdrACVE (data jsonb)
+CREATE OR REPLACE FUNCTION gomacro_validate_json_comp_FraisMDRACVE (data jsonb)
     RETURNS boolean
     AS $$
 DECLARE
@@ -1385,7 +1340,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION gomacro_validate_json_comp_RentCost (data jsonb)
+CREATE OR REPLACE FUNCTION gomacro_validate_json_comp_NamedCost (data jsonb)
     RETURNS boolean
     AS $$
 DECLARE
@@ -2066,29 +2021,29 @@ ALTER TABLE compta_record_buss
 ALTER TABLE compta_record_buss
     ADD FOREIGN KEY (IdSubrecord) REFERENCES compta_subrecords ON DELETE CASCADE;
 
-ALTER TABLE compta_bugdets
+ALTER TABLE compta_budgets
     ADD UNIQUE (IdCompta);
 
-ALTER TABLE compta_bugdets
+ALTER TABLE compta_budgets
     ADD FOREIGN KEY (IdCompta) REFERENCES compta_camps ON DELETE CASCADE;
 
 ALTER TABLE compta_configs
     ADD UNIQUE (Year);
 
-ALTER TABLE compta_bugdets
-    ADD CONSTRAINT Activities_gomacro CHECK (gomacro_validate_json_array_comp_ActivityCost (Activities));
-
 ALTER TABLE compta_subrecords
     ADD CONSTRAINT Montants_gomacro CHECK (gomacro_validate_json_array_comp_MontantPart (Montants));
 
-ALTER TABLE compta_bugdets
-    ADD CONSTRAINT ExternalHost_gomacro CHECK (gomacro_validate_json_array_comp_RentCost (ExternalHost));
+ALTER TABLE compta_budgets
+    ADD CONSTRAINT Activities_gomacro CHECK (gomacro_validate_json_array_comp_NamedCost (Activities));
+
+ALTER TABLE compta_budgets
+    ADD CONSTRAINT ExternalHost_gomacro CHECK (gomacro_validate_json_array_comp_NamedCost (ExternalHost));
 
 ALTER TABLE compta_records
     ADD CONSTRAINT Reviews_gomacro CHECK (gomacro_validate_json_array_comp_Review (Reviews));
 
 ALTER TABLE compta_camps
-    ADD CONSTRAINT Fraismdr_gomacro CHECK (gomacro_validate_json_comp_FraismdrACVE (Fraismdr));
+    ADD CONSTRAINT Fraismdr_gomacro CHECK (gomacro_validate_json_comp_FraisMDRACVE (Fraismdr));
 
 --
 -- Script to be run after the DB creation (mandatory, assumed by the server code)
@@ -2136,4 +2091,17 @@ SELECT
             SELECT
                 max(id)
             FROM demandes));
+
+-- default compta config
+
+INSERT INTO compta_configs (Year, -- integer
+    MealsCost, -- integer[]
+    SmallMealThreshold, -- integer
+    SmallMealMajoration, -- integer
+    AssoCars, -- integer[]
+    ChauffageMDR, -- integer
+    EntretienMDR, -- integer
+    MaterielMDR -- integer
+ )
+    VALUES (2018, '{50, 200, 50, 200, 70}', 25, 10, '{150, 80, 50}', 15000, 20, 100);
 

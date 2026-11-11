@@ -21,7 +21,7 @@ func setupRoutesCompta(e *echo.Echo, ct *compta.Controller) {
 	gr.DELETE("/api/v1/compta/camp", ct.DeleteCompta)
 
 	gr.POST("/api/v1/compta/camp/state", ct.SetComptaState)
-	gr.GET("/api/v1/compta/camp/details", ct.GetCampDetails)
+	gr.GET("/api/v1/compta/camp/summary", ct.GetCampSummary)
 
 	gr.GET("/api/v1/compta/configs", ct.GetComptaConfigs)
 	gr.PUT("/api/v1/compta/configs", ct.CreateComptaConfig)

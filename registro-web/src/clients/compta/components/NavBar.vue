@@ -26,14 +26,14 @@
     >
       Tableau de bord
     </v-list-item>
-    <!-- <v-list-item
-            prepend-icon="mdi-currency-eur"
-            link
-            :to="{ path: '/budget' }"
-            color="primary"
-          >
-            Budget prévisionnel
-          </v-list-item> -->
+    <v-list-item
+      prepend-icon="mdi-currency-eur"
+      link
+      :to="{ path: '/budget' }"
+      color="primary"
+    >
+      Budget prévisionnel
+    </v-list-item>
     <v-list-item
       prepend-icon="mdi-view-list"
       link

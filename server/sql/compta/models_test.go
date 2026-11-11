@@ -107,7 +107,7 @@ func TestBudget(t *testing.T) {
 		cc, err := ComptaCamp{IdCamp: camp.Id}.Insert(db)
 		tu.AssertNoErr(t, err)
 
-		budget := randComptaBugdet()
+		budget := randComptaBudget()
 		budget.IdCompta = cc.Id
 		err = budget.Insert(db)
 		tu.AssertNoErr(t, err)

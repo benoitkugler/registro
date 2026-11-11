@@ -131,11 +131,11 @@ type OptIdEquipier = shared.OptID[camps.IdEquipier]
 type Meal uint8
 
 const (
-	PetitDejeuner Meal = iota
-	Midi
-	Gouter
-	Soir
-	Cinquieme
+	PetitDejeuner Meal = iota // Petit déjeuner
+	Midi                      // Midi
+	Gouter                    // Goûter
+	Soir                      // Soir
+	Cinquieme                 // Cinquième
 )
 
 type NamedCost struct {
