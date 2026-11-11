@@ -64,6 +64,8 @@ func main() {
 	fmt.Println("\trecords:", len(originV1.records), "->", len(trimmedV1.records))
 	fmt.Println("\tsubrecords:", len(originV1.subrecords), "->", len(trimmedV1.subrecords))
 	fmt.Println("\tfilecomptas:", len(originV1.filecomptas), "->", len(trimmedV1.filecomptas))
+	fmt.Println("\tbudgets:", len(originV1.budgets), "->", len(trimmedV1.budgets))
+	fmt.Println("\tbudgetConfigs:", len(originV1.budgetConfigs), "->", len(trimmedV1.budgetConfigs))
 
 	if *commit {
 		fmt.Println("Connecting to v2...")
@@ -275,6 +277,52 @@ func montants(rv comptaV1.Montants) compta.Montants {
 	return out
 }
 
+func amountFromV1(v comptaV1.Cent) ds.Montant {
+	return ds.Montant{Cent: int(v), Currency: ds.Euros}
+}
+
+// Legacy-only fields without a compatible destination representation are omitted :
+// we loose a bit of precision in Repas
+func budgetFromV1(v1 comptaV1.ComptaBudget, newID compta.IdComptaCamp) compta.ComptaBudget {
+	out := compta.ComptaBudget{
+		IdCompta:           newID,
+		SimulatedInscrits:  v1.SimulatedInscrits,
+		SimulatedEquipiers: v1.SimulatedEquipiers,
+		MaterielPeda:       amountFromV1(v1.MaterielPeda),
+		ProduitPharma:      amountFromV1(v1.ProduitPharma),
+		TeamTrips:          amountFromV1(v1.TeamTrips),
+		ExternalCarRent:    amountFromV1(v1.ExternalCarRent),
+		AssoCarKms:         compta.CarsKms(v1.CarsMDRKms),
+		ExternalHost:       make(compta.Rents, len(v1.ExternalHost)),
+		Activities:         make(compta.Activities, len(v1.Activities)),
+	}
+	for i, rent := range v1.ExternalHost {
+		out.ExternalHost[i] = compta.NamedCost{Name: rent.Name, Cost: amountFromV1(rent.Cost)}
+	}
+	for i, activity := range v1.Activities {
+		out.Activities[i] = compta.NamedCost{Name: activity.Name, Cost: amountFromV1(activity.Cost)}
+	}
+	return out
+}
+
+func budgetConfigFromV1(v1 comptaV1.Budgetconfig) compta.ComptaConfig {
+	out := compta.ComptaConfig{
+		Year:                v1.Year,
+		SmallMealThreshold:  v1.SmallMealThreshold,
+		SmallMealMajoration: v1.SmallMealMajoration,
+		ChauffageMDR:        int(v1.ChauffageMDR),
+		EntretienMDR:        int(v1.EntretienMDR),
+		MaterielMDR:         int(v1.MaterielMDR),
+	}
+	for i, cost := range v1.MealsCost {
+		out.MealsCost[i] = int32(cost)
+	}
+	for i, cost := range v1.CarsMDR {
+		out.AssoCars[i] = int32(cost)
+	}
+	return out
+}
+
 type baseV1 struct {
 	personnes  rd.Personnes
 	dons       rd.Dons
@@ -288,11 +336,10 @@ type baseV1 struct {
 	documents rd.Documents
 	// documentsPersonnes
 
-	comptas     comptaV1.Comptas
-	records     comptaV1.Records
-	subrecords  comptaV1.Subrecords
-	filecomptas comptaV1.Filecomptas
-	// TODO:
+	comptas       comptaV1.Comptas
+	records       comptaV1.Records
+	subrecords    comptaV1.Subrecords
+	filecomptas   comptaV1.Filecomptas
 	budgets       comptaV1.ComptaBudgets
 	budgetConfigs comptaV1.Budgetconfigs
 }
@@ -340,7 +387,15 @@ func loadV1(db *sql.DB) (out baseV1, err error) {
 	}
 	out.filecomptas, err = comptaV1.SelectAllFilecomptas(db)
 	if err != nil {
-		return baseV1{}, fmt.Errorf("table subrecords: %s", err)
+		return baseV1{}, fmt.Errorf("table filecomptas: %s", err)
+	}
+	out.budgets, err = comptaV1.SelectAllComptaBudgets(db)
+	if err != nil {
+		return baseV1{}, fmt.Errorf("table compta_budgets: %s", err)
+	}
+	out.budgetConfigs, err = comptaV1.SelectAllBudgetconfigs(db)
+	if err != nil {
+		return baseV1{}, fmt.Errorf("table budgetconfigs: %s", err)
 	}
 	return
 }
@@ -361,6 +416,8 @@ func (b baseV1) trim() (out baseV1) {
 	out.comptas = trimComptas(b.comptas, out)
 	out.records = trimRecords(b.records, out)
 	out.subrecords, out.filecomptas = trimSubrecords(b.subrecords, b.filecomptas, out)
+	out.budgets = trimBudgets(b.budgets, out)
+	out.budgetConfigs = b.budgetConfigs
 
 	return out
 }
@@ -486,6 +543,16 @@ func trimComptas(in comptaV1.Comptas, out baseV1) comptaV1.Comptas {
 		comptas[i] = c
 	}
 	return comptas
+}
+
+func trimBudgets(in comptaV1.ComptaBudgets, out baseV1) comptaV1.ComptaBudgets {
+	budgets := make(comptaV1.ComptaBudgets, 0, len(in))
+	for _, budget := range in {
+		if _, has := out.comptas[budget.IdCompta]; has {
+			budgets = append(budgets, budget)
+		}
+	}
+	return budgets
 }
 
 func trimRecords(in comptaV1.Records, out baseV1) comptaV1.Records {
@@ -752,6 +819,28 @@ func insert(dbV2 *sql.DB, origin, trimmed baseV1) error {
 				IdFile:      idFile,
 			}
 			v2, err = v2.Insert(tx)
+			if err != nil {
+				return err
+			}
+		}
+
+		// insert budget configs
+		fmt.Println("\tbudget configs...")
+		for _, c := range trimmed.budgetConfigs {
+			if c.Year == 2018 { // we already have one default config inserted
+				continue
+			}
+			_, err = budgetConfigFromV1(c).Insert(tx)
+			if err != nil {
+				return err
+			}
+		}
+
+		// insert budgets
+		fmt.Println("\tbudgets...")
+		for _, b := range trimmed.budgets {
+			v2 := budgetFromV1(b, coM[b.IdCompta])
+			err = v2.Insert(tx)
 			if err != nil {
 				return err
 			}

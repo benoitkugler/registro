@@ -262,10 +262,9 @@
                     Ajouter une activité
                   </v-btn>
                   <v-menu>
-                    <template v-slot:activator="{ isActive, props }">
+                    <template v-slot:activator="{ props: menuProps }">
                       <v-btn
-                        v-on="{ isActive }"
-                        v-bind="props"
+                        v-bind="menuProps"
                         :disabled="!activityHints.length"
                       >
                         <v-icon>mdi-assistant</v-icon>
