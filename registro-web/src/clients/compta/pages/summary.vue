@@ -92,7 +92,7 @@
               >
             </v-row>
             <v-row>
-              <v-col cols="12" md="6">
+              <v-col cols="12" md="8">
                 <v-row no-gutters>
                   <v-col>Prix : {{ Formatters.montant(camp.Prix) }}</v-col>
                   <v-col>Nombre d'inscrits : {{ camp.Inscrits }}</v-col></v-row
@@ -104,12 +104,12 @@
                   >
                 </v-row>
               </v-col>
-              <v-col cols="12" md="6">
+              <v-col cols="12" md="4">
                 <v-select
                   variant="underlined"
                   density="comfortable"
                   hide-details
-                  label="Compte banquaire associé"
+                  label="Compte bancaire associé"
                   :items="accountItems"
                   :model-value="camp.Compta.Account"
                   @update:model-value="updateAccount"
