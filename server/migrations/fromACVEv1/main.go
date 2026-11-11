@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	_ "github.com/lib/pq"
 
@@ -33,6 +34,12 @@ const (
 	donsStartYear  = 2025
 	campsStartYear = 2024
 )
+
+// many inscrits without dossier
+var blackListCamps = map[int64]bool{
+	245: true, 263: true, 265: true, 283: true, 312: true, 315: true,
+	318: true, // TODO: remove this camp one the Calista special case has been handled
+}
 
 func check(err error) {
 	if err != nil {
@@ -59,6 +66,8 @@ func main() {
 	fmt.Println("\tpersonnes:", len(originV1.personnes), "->", len(trimmedV1.personnes))
 	fmt.Println("\tdocuments:", len(originV1.documents), "->", len(trimmedV1.documents))
 	fmt.Println("\tcamps:", len(originV1.camps), "->", len(trimmedV1.camps))
+	fmt.Println("\tfactures:", len(originV1.factures), "->", len(trimmedV1.factures))
+	fmt.Println("\tparticipants:", len(originV1.participants), "->", len(trimmedV1.participants))
 	fmt.Println("\tequipiers:", len(originV1.equipiers), "->", len(trimmedV1.equipiers))
 	fmt.Println("\tcomptas:", len(originV1.comptas), "->", len(trimmedV1.comptas))
 	fmt.Println("\trecords:", len(originV1.records), "->", len(trimmedV1.records))
@@ -333,6 +342,11 @@ type baseV1 struct {
 
 	equipiers rd.Equipiers
 
+	factures     rd.Factures
+	participants rd.Participants
+
+	// TODO: events
+
 	documents rd.Documents
 	// documentsPersonnes
 
@@ -368,6 +382,14 @@ func loadV1(db *sql.DB) (out baseV1, err error) {
 	out.equipiers, err = rd.SelectAllEquipiers(db)
 	if err != nil {
 		return baseV1{}, fmt.Errorf("table equipiers: %s", err)
+	}
+	out.factures, err = rd.SelectAllFactures(db)
+	if err != nil {
+		return baseV1{}, fmt.Errorf("table factures: %s", err)
+	}
+	out.participants, err = rd.SelectAllParticipants(db)
+	if err != nil {
+		return baseV1{}, fmt.Errorf("table participants: %s", err)
 	}
 	out.documents, err = rd.SelectAllDocuments(db)
 	if err != nil {
@@ -410,6 +432,7 @@ func (b baseV1) trim() (out baseV1) {
 	out.camps = trimCamps(b.camps)
 
 	out.equipiers = trimEquipiers(b.equipiers, out)
+	out.participants, out.factures = trimParticipants(b.participants, b.factures, out)
 
 	out.personnes = trimPersonnes(b.personnes, out)
 
@@ -422,6 +445,22 @@ func (b baseV1) trim() (out baseV1) {
 	return out
 }
 
+func trimCamps(v1 rd.Camps) rd.Camps {
+	out := make(rd.Camps)
+
+	for id, c := range v1 {
+		if c.InscriptionSimple || c.DateDebut.Time().Year() < campsStartYear {
+			continue
+		}
+		if blackListCamps[id] {
+			continue
+		}
+		out[id] = c
+	}
+
+	return out
+}
+
 func trimEquipiers(equipiers rd.Equipiers, out baseV1) rd.Equipiers {
 	trimmed := make(rd.Equipiers)
 	for id, equipier := range equipiers {
@@ -430,6 +469,25 @@ func trimEquipiers(equipiers rd.Equipiers, out baseV1) rd.Equipiers {
 		}
 	}
 	return trimmed
+}
+
+// Keep registrations belonging to camps retained by trimCamps, and only the
+// factures needed to create dossiers for those participants.
+func trimParticipants(participants rd.Participants, factures rd.Factures, out baseV1) (rd.Participants, rd.Factures) {
+	trimmedParticipants := make(rd.Participants)
+	trimmedFactures := make(rd.Factures)
+	for id, participant := range participants {
+		if _, ok := out.camps[participant.IdCamp]; !ok {
+			continue
+		}
+		trimmedParticipants[id] = participant
+		if participant.IdFacture.Valid {
+			if facture, ok := factures[participant.IdFacture.Int64]; ok {
+				trimmedFactures[participant.IdFacture.Int64] = facture
+			}
+		}
+	}
+	return trimmedParticipants, trimmedFactures
 }
 
 // only keep recents year >= [donFirstYear], also drop anonymous gifts
@@ -489,7 +547,12 @@ func trimPersonnes(v1 rd.Personnes, trimmed baseV1) rd.Personnes {
 	for _, eq := range trimmed.equipiers {
 		used.Add(eq.IdPersonne)
 	}
-	// TODO
+	for _, facture := range trimmed.factures {
+		used.Add(facture.IdPersonne)
+	}
+	for _, participant := range trimmed.participants {
+		used.Add(participant.IdPersonne)
+	}
 
 	out := make(rd.Personnes)
 	for id := range used {
@@ -517,19 +580,6 @@ func (b baseV1) inferDiplomeAppro() map[int64]rd.Equipier {
 		}
 	}
 	return lastEquipier
-}
-
-func trimCamps(v1 rd.Camps) rd.Camps {
-	out := make(rd.Camps)
-
-	for id, c := range v1 {
-		if c.InscriptionSimple || c.DateDebut.Time().Year() < campsStartYear {
-			continue
-		}
-		out[id] = c
-	}
-
-	return out
 }
 
 // remove unused camps
@@ -586,6 +636,7 @@ type (
 	organismesM  map[int64]dons.IdOrganisme
 	personnesM   map[int64]pr.IdPersonne
 	campsM       map[int64]cps.Camp
+	dossiersM    map[int64]ds.IdDossier
 	comptasM     map[comptaV1.IdCompta]compta.IdComptaCamp
 	recordsM     map[comptaV1.IdRecord]compta.IdComptaRecord
 	comptafilesM map[comptaV1.IdFilecompta]compta.IdComptaFile
@@ -599,6 +650,7 @@ func insert(dbV2 *sql.DB, origin, trimmed baseV1) error {
 	pM := make(personnesM)
 	oM := make(organismesM)
 	cM := make(campsM)
+	dM := make(dossiersM)
 	coM := make(comptasM)
 	recordsM := make(recordsM)
 	comptafilesM := make(comptafilesM)
@@ -748,6 +800,55 @@ func insert(dbV2 *sql.DB, origin, trimmed baseV1) error {
 			}
 		}
 
+		// insert dossiers, one per retained legacy facture
+		fmt.Println("\tdossiers...")
+		momentsInscription := factureMomentsInscription(origin.participants)
+		for id, facture := range trimmed.factures {
+			if _, ok := origin.personnes[facture.IdPersonne]; !ok {
+				return fmt.Errorf("facture %d: missing v1 responsible person %d", id, facture.IdPersonne)
+			}
+			idResponsable, ok := pM[facture.IdPersonne]
+			if !ok {
+				return fmt.Errorf("facture %d: missing migrated responsible person %d", id, facture.IdPersonne)
+			}
+			v2 := dossierFromV1(facture, 1, idResponsable, momentsInscription[id])
+			v2, err = v2.Insert(tx)
+			if err != nil {
+				return err
+			}
+			dM[id] = v2.Id
+		}
+
+		// insert participants
+		fmt.Println("\tparticipants...")
+		for id, participant := range trimmed.participants {
+			if !participant.IdFacture.Valid {
+				return fmt.Errorf("participant %d: missing facture", id)
+			}
+			idDossier, ok := dM[participant.IdFacture.Int64]
+			if !ok {
+				return fmt.Errorf("participant %d: missing migrated facture %d", id, participant.IdFacture.Int64)
+			}
+			camp, ok := cM[participant.IdCamp]
+			if !ok {
+				return fmt.Errorf("participant %d: missing migrated camp %d", id, participant.IdCamp)
+			}
+			if _, ok := origin.personnes[participant.IdPersonne]; !ok {
+				return fmt.Errorf("participant %d: missing v1 person %d", id, participant.IdPersonne)
+			}
+			idPersonne, ok := pM[participant.IdPersonne]
+			if !ok {
+				return fmt.Errorf("participant %d: missing migrated person %d", id, participant.IdPersonne)
+			}
+			v2, err := participantFromV1(participant, camp.Id, idPersonne, idDossier, camp.IdTaux)
+			if err != nil {
+				return fmt.Errorf("participant %d: %w", id, err)
+			}
+			if _, err = v2.Insert(tx); err != nil {
+				return err
+			}
+		}
+
 		// insert comptas
 		fmt.Println("\tcomptas...")
 		for _, c := range trimmed.comptas {
@@ -848,6 +949,82 @@ func insert(dbV2 *sql.DB, origin, trimmed baseV1) error {
 
 		return nil
 	})
+}
+
+func factureMomentsInscription(participants rd.Participants) map[int64]time.Time {
+	out := make(map[int64]time.Time)
+	for _, participant := range participants {
+		if !participant.IdFacture.Valid {
+			continue
+		}
+		date := participant.DateHeure.Time()
+		if date.IsZero() {
+			continue
+		}
+		if current, ok := out[participant.IdFacture.Int64]; !ok || date.Before(current) {
+			out[participant.IdFacture.Int64] = date
+		}
+	}
+	return out
+}
+
+func dossierFromV1(v1 rd.Facture, idTaux ds.IdTaux, responsable pr.IdPersonne, moment time.Time) ds.Dossier {
+	return ds.Dossier{
+		IdTaux:            idTaux,
+		IdResponsable:     responsable,
+		CopiesMails:       pr.Mails(v1.CopiesMails),
+		PartageAdressesOK: v1.PartageAdressesOK,
+		MomentInscription: moment,
+		KeyV1:             string(v1.Key),
+	}
+}
+
+func participantFromV1(v1 rd.Participant, camp cps.IdCamp, personne pr.IdPersonne, dossier ds.IdDossier, taux ds.IdTaux) (cps.Participant, error) {
+	statut, err := statutParticipant(v1.ListeAttente)
+	if err != nil {
+		return cps.Participant{}, err
+	}
+	return cps.Participant{
+		IdCamp:           camp,
+		IdPersonne:       personne,
+		IdDossier:        dossier,
+		IdTaux:           taux,
+		Statut:           statut,
+		Remises:          remises(v1.Remises),
+		QuotientFamilial: int(v1.QuotientFamilial),
+		OptionPrix:       optionPrixParticipant(v1.OptionPrix),
+	}, nil
+}
+
+func statutParticipant(v1 rd.ListeAttente) (cps.StatutParticipant, error) {
+	switch v1.Statut {
+	case rd.Inscrit:
+		return cps.Inscrit, nil
+	case rd.Attente:
+		return cps.AttenteCampComplet, nil
+	case rd.AttenteReponse:
+		return cps.EnAttenteReponse, nil
+	case rd.Refuse:
+		return cps.Refuse, nil
+	default:
+		return 0, fmt.Errorf("unsupported waitlist status %d", v1.Statut)
+	}
+}
+
+func remises(v1 rd.Remises) cps.Remises {
+	return cps.Remises{
+		Equipiers: int(v1.ReducEquipiers),
+		Famille:   int(v1.ReducEnfants),
+		Speciale:  ds.Montant{Cent: int(v1.ReducSpeciale.Centimes()), Currency: ds.Euros},
+	}
+}
+
+func optionPrixParticipant(v1 rd.OptionPrixParticipant) cps.OptionPrixParticipant {
+	days := make(cps.JoursPresence, len(v1.Jour))
+	for i, day := range v1.Jour {
+		days[i] = int32(day)
+	}
+	return cps.OptionPrixParticipant{Jour: days}
 }
 
 func connectV1() (*sql.DB, error) {

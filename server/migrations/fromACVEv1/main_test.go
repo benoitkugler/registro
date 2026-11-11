@@ -1,16 +1,143 @@
 package main
 
 import (
+	"reflect"
 	"testing"
 	"time"
+
+	"github.com/lib/pq"
 
 	comptaV1 "registro/migrations/fromACVEv1/compta"
 	rd "registro/migrations/fromACVEv1/rawdata"
 	cps "registro/sql/camps"
 	"registro/sql/compta"
 	ds "registro/sql/dossiers"
+	pr "registro/sql/personnes"
 	"registro/sql/shared"
 )
+
+func TestTrimParticipants(t *testing.T) {
+	participants := rd.Participants{
+		1: {Id: 1, IdCamp: 10, IdFacture: rd.OptionnalId{Int64: 100, Valid: true}},
+		2: {Id: 2, IdCamp: 20, IdFacture: rd.OptionnalId{Int64: 200, Valid: true}},
+		3: {Id: 3, IdCamp: 10},
+	}
+	factures := rd.Factures{
+		100: {Id: 100},
+		200: {Id: 200},
+	}
+
+	gotParticipants, gotFactures := trimParticipants(participants, factures, baseV1{camps: rd.Camps{10: {Id: 10}}})
+	if len(gotParticipants) != 2 || gotParticipants[1].Id != 1 || gotParticipants[3].Id != 3 {
+		t.Fatalf("trimmed participants = %+v, want participants 1 and 3", gotParticipants)
+	}
+	if len(gotFactures) != 1 || gotFactures[100].Id != 100 {
+		t.Fatalf("trimmed factures = %+v, want facture 100 only", gotFactures)
+	}
+}
+
+func TestTrimPersonnesKeepsRegistrationPeople(t *testing.T) {
+	trimmed := baseV1{
+		factures: rd.Factures{100: {Id: 100, IdPersonne: 1}},
+		participants: rd.Participants{
+			2: {Id: 2, IdPersonne: 2},
+		},
+	}
+	got := trimPersonnes(rd.Personnes{
+		1: {Id: 1},
+		2: {Id: 2},
+		3: {Id: 3},
+	}, trimmed)
+	if len(got) != 2 || got[1].Id != 1 || got[2].Id != 2 {
+		t.Errorf("trimPersonnes() = %+v, want dossier owner and participant only", got)
+	}
+}
+
+func TestDossierFromV1(t *testing.T) {
+	moment := time.Date(2025, time.June, 1, 12, 0, 0, 0, time.UTC)
+	got := dossierFromV1(rd.Facture{
+		Key:               "legacy-key",
+		CopiesMails:       pq.StringArray{"copy@example.org"},
+		PartageAdressesOK: true,
+	}, 1, 42, moment)
+
+	want := ds.Dossier{
+		IdTaux:            1,
+		IdResponsable:     42,
+		CopiesMails:       pr.Mails{"copy@example.org"},
+		PartageAdressesOK: true,
+		MomentInscription: moment,
+		KeyV1:             "legacy-key",
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("dossierFromV1() = %+v, want %+v", got, want)
+	}
+}
+
+func TestFactureMomentsInscription(t *testing.T) {
+	first := time.Date(2025, time.June, 1, 12, 0, 0, 0, time.UTC)
+	last := first.Add(24 * time.Hour)
+	got := factureMomentsInscription(rd.Participants{
+		1: {IdFacture: rd.NewOptionnalId(100), DateHeure: rd.Time(last)},
+		2: {IdFacture: rd.NewOptionnalId(100), DateHeure: rd.Time{}},
+		3: {IdFacture: rd.NewOptionnalId(100), DateHeure: rd.Time(first)},
+	})
+	if got[100] != first {
+		t.Errorf("factureMomentsInscription() = %v, want earliest time %v", got[100], first)
+	}
+}
+
+func TestParticipantConversions(t *testing.T) {
+	status, err := statutParticipant(rd.ListeAttente{Statut: rd.AttenteReponse})
+	if err != nil || status != cps.EnAttenteReponse {
+		t.Fatalf("statutParticipant() = %v, %v; want %v", status, err, cps.EnAttenteReponse)
+	}
+
+	gotRemises := remises(rd.Remises{
+		ReducEquipiers: 10,
+		ReducEnfants:   20,
+		ReducSpeciale:  12.34,
+	})
+	wantRemises := cps.Remises{
+		Equipiers: 10,
+		Famille:   20,
+		Speciale:  ds.Montant{Cent: 1234, Currency: ds.Euros},
+	}
+	if gotRemises != wantRemises {
+		t.Errorf("remises() = %+v, want %+v", gotRemises, wantRemises)
+	}
+
+	gotOption := optionPrixParticipant(rd.OptionPrixParticipant{Jour: rd.Jours{1, 3}})
+	wantOption := cps.OptionPrixParticipant{Jour: cps.JoursPresence{1, 3}}
+	if !reflect.DeepEqual(gotOption, wantOption) {
+		t.Errorf("optionPrixParticipant() = %+v, want %+v", gotOption, wantOption)
+	}
+}
+
+func TestParticipantFromV1(t *testing.T) {
+	got, err := participantFromV1(rd.Participant{
+		ListeAttente:     rd.ListeAttente{Statut: rd.Inscrit},
+		Remises:          rd.Remises{ReducEquipiers: 5, ReducEnfants: 10, ReducSpeciale: 7.5},
+		QuotientFamilial: 420,
+		OptionPrix:       rd.OptionPrixParticipant{Jour: rd.Jours{0, 2}},
+	}, 11, 22, 33, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := cps.Participant{
+		IdCamp:           11,
+		IdPersonne:       22,
+		IdDossier:        33,
+		IdTaux:           1,
+		Statut:           cps.Inscrit,
+		Remises:          cps.Remises{Equipiers: 5, Famille: 10, Speciale: ds.Montant{Cent: 750, Currency: ds.Euros}},
+		QuotientFamilial: 420,
+		OptionPrix:       cps.OptionPrixParticipant{Jour: cps.JoursPresence{0, 2}},
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("participantFromV1() = %+v, want %+v", got, want)
+	}
+}
 
 func TestPresenceOffsets(t *testing.T) {
 	camp := shared.Plage{From: shared.NewDate(2025, time.July, 10), Duree: 5}
