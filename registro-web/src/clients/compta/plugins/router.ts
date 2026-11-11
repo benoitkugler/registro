@@ -5,6 +5,7 @@ import Home from "../pages/home.vue";
 import Summary from "../pages/summary.vue";
 import Records from "../pages/records.vue";
 import Budget from "../pages/budget.vue";
+import FraisAssoAcve from "../pages/fraisAssoAcve.vue";
 
 const routes = [
   { path: "/", component: Index },
@@ -12,6 +13,7 @@ const routes = [
   { path: "/summary", component: Summary },
   { path: "/records", component: Records },
   { path: "/budget", component: Budget },
+  { path: "/frais-asso-acve", component: FraisAssoAcve },
 ];
 
 const baseURL = import.meta.env.DEV ? "/src/clients/compta" : "/compta";

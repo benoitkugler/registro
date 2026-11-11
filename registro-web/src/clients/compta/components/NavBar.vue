@@ -42,6 +42,15 @@
     >
       Enregistrements
     </v-list-item>
+    <v-list-item
+      v-if="showFraisACVE"
+      prepend-icon="mdi-car-multiple"
+      link
+      :to="{ path: '/frais-asso-acve' }"
+      color="primary"
+    >
+      Frais de l'association
+    </v-list-item>
   </v-navigation-drawer>
 
   <v-app-bar rounded elevation="4" color="primary">
@@ -74,6 +83,8 @@ const logo = `${import.meta.env.BASE_URL}${import.meta.env.VITE_ASSO}/logo.png`;
 const version = `v${VITE_APP_VERSION}`;
 
 const { smAndUp } = useDisplay();
+
+const showFraisACVE = import.meta.env.VITE_ASSO == "acve";
 
 const rail = ref(true);
 </script>
