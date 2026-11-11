@@ -3,27 +3,30 @@
     title="Bilan"
     subtitle="Sélectionner les séjours à exporter au format Excel."
   >
-    <template v-slot:append>
-      <v-btn variant="flat" @click="addCurrentYear">
-        <template v-slot:prepend><v-icon>mdi-plus</v-icon></template>
-        Année {{ props.curentYear }}</v-btn
-      >
-    </template>
     <v-card-text>
-      <v-select
-        prepend-icon="mdi-plus"
-        placeholder="Rechercher un séjour..."
-        :items="selectItems"
-        variant="outlined"
-        density="comfortable"
-        v-model:model-value="currentSearch"
-        @update:model-value="
-          (v) => {
-            toExport.add(v);
-            currentSearch = null;
-          }
-        "
-      ></v-select>
+      <v-row>
+        <v-col>
+          <v-select
+            prepend-inner-icon="mdi-plus"
+            placeholder="Rechercher un séjour..."
+            :items="selectItems"
+            variant="outlined"
+            density="comfortable"
+            hide-details
+            v-model:model-value="currentSearch"
+            @update:model-value="
+              (v) => {
+                toExport.add(v);
+                currentSearch = null;
+              }
+            "
+          ></v-select>
+        </v-col>
+        <v-col cols="3" align-self="center">
+          <v-btn @click="addCurrentYear"> Année {{ props.curentYear }}</v-btn>
+        </v-col>
+      </v-row>
+
       <v-list>
         <div v-if="!selected.length" class="font-italic text-center">
           Aucun séjour n'est encore sélectionné.
@@ -59,7 +62,7 @@
         :disabled="!toExport.size"
         @click="emit('download', { Ids: Array.from(toExport) })"
       >
-        Télécharger
+        Télécharger ({{ toExport.size }} séjour(s))
       </v-btn>
     </v-card-actions>
   </v-card>
@@ -68,7 +71,7 @@
 <script lang="ts" setup>
 import { computed, ref } from "vue";
 import type { BilanCampsIn, CampHeader, IdComptaCamp } from "../../logic/api";
-import { Camps, normalize } from "@/utils";
+import { Camps } from "@/utils";
 import { searchOtherYears } from "../../logic/logic";
 
 const props = defineProps<{
