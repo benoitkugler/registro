@@ -247,6 +247,11 @@ func setupClientApps(e *echo.Echo, asso string) {
 	e.GET("/compta", serveStaticAsso("/compta/index.html"), middleware.Gzip(), noCache)
 	e.GET("/compta/*", serveStaticAsso("/compta/index.html"), middleware.Gzip(), noCache)
 
+	e.GET("/static/sw.js", func(c echo.Context) error {
+		c.Response().Header().Set("Service-Worker-Allowed", "/compta/")
+		return serveStaticAsso("/sw.js")(c)
+	}, middleware.Gzip(), noCache)
+
 	// services also contains the index page and the CGUs
 	e.GET("/", serveStaticAsso("/services/index.html"), middleware.Gzip(), noCache)
 	e.GET("/cgu", serveStaticAsso("/services/index.html"), middleware.Gzip(), noCache)

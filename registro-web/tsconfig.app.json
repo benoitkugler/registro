@@ -9,7 +9,7 @@
   ],
   "exclude": ["src/**/__tests__/*"],
   "compilerOptions": {
-    "lib": ["es2021", "DOM"],
+    "lib": ["es2021", "DOM", "WebWorker"],
     "composite": true,
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "paths": {
