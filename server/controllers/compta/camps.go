@@ -24,7 +24,8 @@ type CampHeader struct {
 
 	Compta ComptaExt // optional, with Id = 0 when empty
 
-	DirecteurURL string
+	DirecteurURL             string
+	DirectUploadDirecteurURL string
 }
 
 func newCampHeader(camp cps.Camp, compta ca.ComptaCamp, entries ca.ComptaRecords, host string, enc crypto.Encrypter) CampHeader {
@@ -37,7 +38,8 @@ func newCampHeader(camp cps.Camp, compta ca.ComptaCamp, entries ca.ComptaRecords
 			computeState(compta, entries),
 			compta.Account,
 		},
-		DirecteurURL: DirecteurURL(enc, host, camp.Id),
+		DirecteurURL:             DirecteurURL(enc, host, camp.Id),
+		DirectUploadDirecteurURL: directUploadDirecteurURL(enc, host, camp.Id, compta.Id),
 	}
 }
 

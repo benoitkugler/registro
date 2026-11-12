@@ -177,15 +177,6 @@ func (vs *ventilations) addRecord(record ca.ComptaRecord, subrecord ca.ComptaSub
 	}
 }
 
-// func (vs ventilations) byAccount() (ownAccount, otherAccount map[ca.Ventilation]float32) {
-// 	ownAccount, otherAccount = make(map[ca.Ventilation]float32), make(map[ca.Ventilation]float32)
-// 	for v, dep := range vs {
-// 		ownAccount[v] = dep.ownAccount.euros()
-// 		otherAccount[v] = dep.otherAccount.euros()
-// 	}
-// 	return
-// }
-
 // adds both accounts
 func (vs ventilations) graph(taux ds.Taux) (out DepenseGraph) {
 	out.Currency = taux.Zero().Currency

@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"registro/assets"
+	"registro/crypto"
 	"registro/mails"
 	cps "registro/sql/camps"
 	"registro/sql/compta"
@@ -579,6 +580,36 @@ func (ct *Controller) UploadAndCreate(c echo.Context) error {
 		return fmt.Errorf("invalid ID parameter: %s", err)
 	}
 
+	return ct.uploadAndCreateFromForm(c, idCompta, user)
+}
+
+// UploadAndCreateQuery creates a new Record with the given file,
+// taking the key and the compta id from the query parameters.
+func (ct *Controller) UploadAndCreateQuery(c echo.Context) error {
+	key := c.QueryParam("directeur-key")
+	user, err := crypto.DecryptID[cps.IdCamp](ct.key, key)
+	if err != nil {
+		return fmt.Errorf("invalide director key: %s", err)
+	}
+
+	idCompta, err := utils.QueryParamInt[ca.IdComptaCamp](c, "idCompta")
+	if err != nil {
+		return fmt.Errorf("invalid ID parameter: %s", err)
+	}
+
+	// secure the upload by checking permission
+	compta, err := ca.SelectComptaCamp(ct.db, idCompta)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	if compta.IdCamp != user {
+		return errAccess
+	}
+
+	return ct.uploadAndCreateFromForm(c, idCompta, idCompta)
+}
+
+func (ct *Controller) uploadAndCreateFromForm(c echo.Context, idCompta ca.IdComptaCamp, user ca.IdComptaCamp) error {
 	form, err := c.MultipartForm()
 	if err != nil {
 		return err

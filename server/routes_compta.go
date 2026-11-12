@@ -47,6 +47,8 @@ func setupRoutesCompta(e *echo.Echo, ct *compta.Controller) {
 	gr.POST("/api/v1/compta/records/merge", ct.MergeRecordTo)
 	gr.POST("/api/v1/compta/records/review", ct.AddRecordReview)
 	gr.POST("/api/v1/compta/records/upload", ct.UploadAndCreate)
+	// This route takes a camp token and the compta id in the query.
+	e.POST("/api/v1/compta/records/upload-query", ct.UploadAndCreateQuery)
 
 	gr.POST("/api/v1/compta/records/justificatif", ct.UploadJustificatif)
 	gr.DELETE("/api/v1/compta/records/justificatif", ct.RemoveJustificatif)
