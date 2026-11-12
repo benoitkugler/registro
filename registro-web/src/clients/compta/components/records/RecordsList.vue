@@ -13,7 +13,7 @@
           </v-chip>
         </v-col>
         <v-divider
-          v-if="itemsToHandleCount"
+          v-if="itemsToHandleCount && !mobile"
           vertical
           thickness="1"
           class="mx-2"
@@ -30,7 +30,7 @@
             v-model="search"
           ></v-text-field>
         </v-col>
-        <v-col cols="auto" align-self="center" class="mx-1">
+        <v-col cols="auto" align-self="center" class="mx-1" v-if="!mobile">
           <v-menu :close-on-content-click="false">
             <template #activator="{ props: menuProps }">
               <v-btn
@@ -108,7 +108,12 @@
             </v-card>
           </v-menu>
         </v-col>
-        <v-divider vertical thickness="1" class="ml-2"></v-divider>
+        <v-divider
+          vertical
+          thickness="1"
+          class="ml-2"
+          v-if="!mobile"
+        ></v-divider>
         <v-spacer v-if="!mobile"></v-spacer>
         <v-col align-self="center" class="px-2">
           <v-tooltip v-if="stateAction != null" location="top">
@@ -131,15 +136,22 @@
         <v-col align-self="center" cols="auto">
           <v-btn-group density="comfortable">
             <v-btn
+              v-if="mobile"
               color="success"
               variant="elevated"
               @click="showCreateFromFile = true"
               :disabled="props.readonly"
-              :block="mobile"
+              icon="mdi-plus"
             >
-              <template v-slot:prepend>
-                <v-icon>mdi-plus</v-icon>
-              </template>
+            </v-btn>
+            <v-btn
+              v-else
+              color="success"
+              variant="elevated"
+              @click="showCreateFromFile = true"
+              :disabled="props.readonly"
+              prepend-icon=" mdi-plus"
+            >
               Ajouter
             </v-btn>
 

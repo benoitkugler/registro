@@ -1,10 +1,11 @@
 <template>
   <v-row class="mx-0 my-0">
-    <v-col align-self="center" cols="8" md="3">
+    <v-col align-self="center" cols="7" md="3">
       <v-text-field
         variant="underlined"
         density="compact"
         label="Description"
+        :hide-details="mobile"
         v-model="subrecord.Description"
         @update:model-value="notif"
         autofocus
@@ -24,7 +25,7 @@
     </v-col>
     <v-col
       align-self="center"
-      cols="7"
+      cols="6"
       md="2"
       v-if="props.account == AccountKind.AccountCamp"
     >
@@ -40,7 +41,7 @@
     </v-col>
     <v-col
       align-self="center"
-      cols="12"
+      cols="6"
       md="2"
       v-if="props.account == AccountKind.AccountCamp"
     >
@@ -51,6 +52,7 @@
         v-model="subrecord.Serial"
         @update:model-value="notif"
         :disabled="subrecord.Mode != ModePaiementRecord.Cheque"
+        :hide-details="mobile"
         :rules="[
           (v: string) =>
             subrecord.Mode == ModePaiementRecord.Cheque
@@ -62,7 +64,7 @@
     </v-col>
 
     <!-- Ventilations -->
-    <v-col cols="3">
+    <v-col cols="12" md="3">
       <VentilationsField
         v-model:currency="subrecord.Currency"
         v-model:montants="subrecord.Montants"
@@ -82,8 +84,8 @@ import {
   AccountKind,
   type Int,
 } from "../../logic/api.ts";
-import { montantTotal, type SubrecordModeOpt } from "../../logic/logic.ts";
-import { copy, Formatters, selectItems } from "@/utils.ts";
+import { type SubrecordModeOpt } from "../../logic/logic.ts";
+import { copy, selectItems } from "@/utils.ts";
 import VentilationsField from "./VentilationsField.vue";
 
 const props = defineProps<{

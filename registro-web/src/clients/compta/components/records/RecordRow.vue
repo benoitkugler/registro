@@ -1,5 +1,5 @@
 <template>
-  <div class="py-1 rounded" :style="`border: 1px solid ${statusFormat.color}`">
+  <div class="pa-1 rounded" :style="`border: 1px solid ${statusFormat.color}`">
     <!-- Review edit dialog -->
     <v-dialog v-model="showEditReview" max-width="800px">
       <v-card title="Ajouter un commentaire">
@@ -41,7 +41,7 @@
         <RecordID :record="props.record.Record" />
       </v-col>
 
-      <v-col :cols="mobile ? 10 : 4" md="8">
+      <v-col md="8">
         <SubrecordRow
           v-for="(subrecord, index) in props.record.Subrecords"
           :key="index"
@@ -75,7 +75,13 @@
         </v-row>
       </v-col>
 
-      <v-col cols="6" md="1" align-self="center" class="px-0 text-center mx-0">
+      <v-col
+        cols="4"
+        md="1"
+        align-self="center"
+        class="px-0 text-center mx-0"
+        v-if="!mobile"
+      >
         <v-chip
           size="small"
           v-if="props.record.Record.SpentBy.Valid"
@@ -89,7 +95,7 @@
         </v-chip>
       </v-col>
 
-      <v-col :cols="mobile ? 2 : 4" md="auto" align-self="center">
+      <v-col cols="2" md="auto" align-self="center">
         <v-row no-gutters>
           <v-col align-self="center" :cols="mobile ? 12 : 4">
             <v-tooltip :text="statusFormat.text" location="top">

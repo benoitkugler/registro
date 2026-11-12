@@ -27,7 +27,7 @@
       Tableau de bord
     </v-list-item>
     <v-list-item
-      prepend-icon="mdi-currency-eur"
+      prepend-icon="mdi-calculator-variant"
       link
       :to="{ path: '/budget' }"
       color="primary"
@@ -35,7 +35,7 @@
       Budget prévisionnel
     </v-list-item>
     <v-list-item
-      prepend-icon="mdi-view-list"
+      prepend-icon="mdi-receipt-text-outline"
       link
       :to="{ path: '/records' }"
       color="primary"
@@ -51,6 +51,18 @@
     >
       Frais de l'association
     </v-list-item>
+
+    <template #append>
+      <v-list-item
+        prepend-icon="mdi-logout"
+        link
+        :to="{ path: '/' }"
+        color="primary"
+        @click="CachedTokens.clear()"
+      >
+        Se déconnecter
+      </v-list-item>
+    </template>
   </v-navigation-drawer>
 
   <v-app-bar rounded elevation="4" color="primary">
@@ -73,6 +85,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useDisplay } from "vuetify";
+import { CachedTokens } from "../logic/logic";
 
 const props = defineProps<{
   hideMenu?: boolean;
@@ -82,7 +95,7 @@ const logo = `${import.meta.env.BASE_URL}${import.meta.env.VITE_ASSO}/logo.png`;
 
 const version = `v${VITE_APP_VERSION}`;
 
-const { smAndUp } = useDisplay();
+const { smAndUp, mobile } = useDisplay();
 
 const showFraisACVE = import.meta.env.VITE_ASSO == "acve";
 

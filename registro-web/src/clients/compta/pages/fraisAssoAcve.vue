@@ -28,13 +28,13 @@
               color="green"
               density="comfortable"
               @click="addBus"
-              :disabled="props.readonly"
+              :disabled="readonly"
             >
               <template v-slot:prepend>
                 <v-icon>mdi-plus</v-icon>
               </template>
-              Ajouter un véhicule</v-btn
-            >
+              {{ mobile ? "Ajouter" : "Ajouter un véhicule" }}
+            </v-btn>
           </template>
           <v-card-text>
             <v-row>
@@ -42,7 +42,7 @@
               <v-col class="text-center">Début (km)</v-col>
               <v-col class="text-center">Fin (km)</v-col>
               <v-col class="text-center">Total (km)</v-col>
-              <v-col class="text-center">Tarif (par km)</v-col>
+              <v-col class="text-center" v-if="!mobile">Tarif (par km)</v-col>
               <v-col class="text-right">Total</v-col>
               <v-col cols="1"></v-col>
             </v-row>
@@ -55,7 +55,7 @@
               v-for="(bus, i) in frais.Bus"
               :key="i"
               :bus="bus"
-              :readonly="props.readonly"
+              :readonly="readonly"
               @delete="deleteBus(i)"
               @edit="(bus) => updateBus(i, bus)"
               ref="busRows"
@@ -68,7 +68,7 @@
                 <v-chip
                   @click="showBusExpenses = true"
                   elevation="4"
-                  :disabled="props.readonly"
+                  :disabled="readonly"
                 >
                   Sélectionner les dépenses concernant les véhicules</v-chip
                 >
@@ -176,7 +176,9 @@ import NavBar from "../components/NavBar.vue";
 import {
   CarKind,
   Currency,
+  State,
   type Bus,
+  type CampHeader,
   type IdComptaSubrecord,
   type Int,
   type ResolvedFraisMDR,
@@ -186,32 +188,38 @@ import BusRow from "../components/fraisAssoAcve/BusRow.vue";
 import { Formatters } from "@/utils.ts";
 import NoSelectedCamp from "../components/NoSelectedCamp.vue";
 import BusExpenses from "../components/fraisAssoAcve/BusExpenses.vue";
+import { useDisplay } from "vuetify";
 
-const props = defineProps<{
-  atMdr: boolean;
-  readonly: boolean;
-}>();
+// const props = defineProps<{
 
-const emit = defineEmits<{
-  (e: "updateMandatoryExpenses", alert: boolean): void;
-}>();
+// }>();
+
+const emit = defineEmits<{}>();
 
 onMounted(fetch);
 
+const { mobile } = useDisplay();
+
 const showMandatoryAlert = computed(
-  () => props.atMdr && !frais.value?.Bus?.length,
+  () => (compta.value?.AtMDR || false) && !frais.value?.Bus?.length,
 );
 
+const readonly = computed(
+  () => !controller.isAdmin && compta.value?.Compta.State == State.Archive,
+);
+
+const compta = ref<CampHeader | null>(null);
 const frais = ref<ResolvedFraisMDR | null>(null);
 async function fetch() {
   if (controller.idCompta == -1) return;
+  const res1 = await controller.GetCompta({ IdCompta: controller.idCompta });
+  if (res1 === undefined) return;
   const res = await controller.FraisMDRLoad({
     "id-compta": controller.idCompta,
   });
   if (res === undefined) return;
+  compta.value = res1;
   frais.value = res;
-
-  emit("updateMandatoryExpenses", showMandatoryAlert.value);
 }
 
 async function saveBus(bus: Bus[]) {
@@ -224,8 +232,6 @@ async function saveBus(bus: Bus[]) {
 
   controller.showMessage("Utilisation des véhicules modifiée avec succès.");
   frais.value = res;
-
-  emit("updateMandatoryExpenses", showMandatoryAlert.value);
 }
 
 async function updateBusExpenses(selected: IdComptaSubrecord[]) {

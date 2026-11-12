@@ -1,7 +1,7 @@
 <template>
   <div class="bg-grey-lighten-5 rounded" style="border: 1px dashed blue">
     <v-row class="mx-0 my-0">
-      <v-col cols="2">
+      <v-col cols="6" md="2">
         <v-select
           variant="underlined"
           density="comfortable"
@@ -14,7 +14,7 @@
           ]"
         ></v-select>
       </v-col>
-      <v-col cols="3">
+      <v-col cols="6" md="3">
         <v-select
           variant="underlined"
           density="comfortable"
@@ -25,7 +25,7 @@
         ></v-select>
       </v-col>
 
-      <v-col cols="2">
+      <v-col cols="5" md="2">
         <v-select
           variant="underlined"
           density="comfortable"

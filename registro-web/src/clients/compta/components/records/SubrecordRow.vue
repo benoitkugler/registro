@@ -11,14 +11,14 @@
   >
     <v-col
       align-self="center"
-      cols="6"
+      cols="9"
       md="3"
       :class="props.boldTitle ? 'font-weight-bold' : undefined"
     >
       {{ props.subrecord.Description }}
     </v-col>
 
-    <v-col align-self="center" cols="auto">
+    <v-col align-self="center" cols="3" md="auto">
       <FileBtn
         :record="props.subrecord"
         :in-upload="props.inFileUpload"

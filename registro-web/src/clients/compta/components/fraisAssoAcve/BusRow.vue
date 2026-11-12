@@ -47,7 +47,7 @@
       <v-col align-self="center" class="text-center">
         {{ props.bus.Kms }}
       </v-col>
-      <v-col align-self="center" class="text-center">
+      <v-col align-self="center" class="text-center" v-if="!mobile">
         {{ Formatters.montant(props.bus.Tarif) }}
       </v-col>
       <v-col align-self="center" class="text-right font-weight-bold">
@@ -83,6 +83,7 @@
 import { watch, ref } from "vue";
 import { CarKind, Currency, type Bus, type ResolvedBus } from "../../logic/api";
 import { copy, Formatters } from "@/utils";
+import { useDisplay } from "vuetify";
 
 const props = defineProps<{
   readonly: boolean;
@@ -93,6 +94,8 @@ const emit = defineEmits<{
   (e: "edit", bus: Bus): void;
   (e: "delete"): void;
 }>();
+
+const { mobile } = useDisplay();
 
 defineExpose({ startEdit });
 
