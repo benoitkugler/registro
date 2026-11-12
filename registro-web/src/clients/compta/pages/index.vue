@@ -4,6 +4,13 @@
     <v-card class="mx-auto" width="400px">
       <v-card-text>
         <form>
+          <input
+            type="text"
+            name="username"
+            autocomplete="username"
+            value="compta"
+            hidden
+          />
           <v-text-field
             label="Clé de connection"
             v-model="password"
