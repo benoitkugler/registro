@@ -44,7 +44,10 @@
     </v-card-text>
     <v-card-actions>
       <v-spacer></v-spacer>
-      <v-btn color="success" @click="emit('save', Array.from(selected.keys()))"
+      <v-btn
+        color="success"
+        :disabled="!records.length"
+        @click="emit('save', Array.from(selected.keys()))"
         >Enregistrer</v-btn
       >
     </v-card-actions>

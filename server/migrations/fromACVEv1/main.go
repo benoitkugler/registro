@@ -72,6 +72,7 @@ func main() {
 	fmt.Println("\tcomptas:", len(originV1.comptas), "->", len(trimmedV1.comptas))
 	fmt.Println("\trecords:", len(originV1.records), "->", len(trimmedV1.records))
 	fmt.Println("\tsubrecords:", len(originV1.subrecords), "->", len(trimmedV1.subrecords))
+	fmt.Println("\tbusRecords:", len(originV1.busRecords), "->", len(trimmedV1.busRecords))
 	fmt.Println("\tfilecomptas:", len(originV1.filecomptas), "->", len(trimmedV1.filecomptas))
 	fmt.Println("\tbudgets:", len(originV1.budgets), "->", len(trimmedV1.budgets))
 	fmt.Println("\tbudgetConfigs:", len(originV1.budgetConfigs), "->", len(trimmedV1.budgetConfigs))
@@ -356,6 +357,7 @@ type baseV1 struct {
 	filecomptas   comptaV1.Filecomptas
 	budgets       comptaV1.ComptaBudgets
 	budgetConfigs comptaV1.Budgetconfigs
+	busRecords    comptaV1.RecordBuss
 }
 
 func loadV1(db *sql.DB) (out baseV1, err error) {
@@ -419,6 +421,10 @@ func loadV1(db *sql.DB) (out baseV1, err error) {
 	if err != nil {
 		return baseV1{}, fmt.Errorf("table budgetconfigs: %s", err)
 	}
+	out.busRecords, err = comptaV1.SelectAllRecordBuss(db)
+	if err != nil {
+		return baseV1{}, fmt.Errorf("table record_buss: %s", err)
+	}
 	return
 }
 
@@ -441,6 +447,7 @@ func (b baseV1) trim() (out baseV1) {
 	out.subrecords, out.filecomptas = trimSubrecords(b.subrecords, b.filecomptas, out)
 	out.budgets = trimBudgets(b.budgets, out)
 	out.budgetConfigs = b.budgetConfigs
+	out.busRecords = trimBusRecords(b.busRecords, out)
 
 	return out
 }
@@ -632,28 +639,30 @@ func trimSubrecords(in1 comptaV1.Subrecords, in2 comptaV1.Filecomptas, out baseV
 	return subrecords, files
 }
 
-type (
-	organismesM  map[int64]dons.IdOrganisme
-	personnesM   map[int64]pr.IdPersonne
-	campsM       map[int64]cps.Camp
-	dossiersM    map[int64]ds.IdDossier
-	comptasM     map[comptaV1.IdCompta]compta.IdComptaCamp
-	recordsM     map[comptaV1.IdRecord]compta.IdComptaRecord
-	comptafilesM map[comptaV1.IdFilecompta]compta.IdComptaFile
-)
+func trimBusRecords(recordBuss comptaV1.RecordBuss, out baseV1) comptaV1.RecordBuss {
+	var bus comptaV1.RecordBuss
+	for _, link := range recordBuss {
+		if _, has := out.subrecords[link.IdSubrecord]; has {
+			bus = append(bus, link)
+		}
+	}
+	return bus
+}
 
 // TODO: fiche sanitaire + fiche equipier
 
 func insert(dbV2 *sql.DB, origin, trimmed baseV1) error {
 	// diplomeAppros := origin.inferDiplomeAppro()
 
-	pM := make(personnesM)
-	oM := make(organismesM)
-	cM := make(campsM)
-	dM := make(dossiersM)
-	coM := make(comptasM)
-	recordsM := make(recordsM)
-	comptafilesM := make(comptafilesM)
+	oM := make(map[int64]dons.IdOrganisme)
+	pM := make(map[int64]pr.IdPersonne)
+	cM := make(map[int64]cps.Camp)
+	dM := make(map[int64]ds.IdDossier)
+	coM := make(map[comptaV1.IdCompta]compta.IdComptaCamp)
+	recordsM := make(map[comptaV1.IdRecord]compta.IdComptaRecord)
+	subRecordsM := make(map[comptaV1.IdSubrecord]compta.IdComptaSubrecord)
+	comptafilesM := make(map[comptaV1.IdFilecompta]compta.IdComptaFile)
+
 	return utils.InTx(dbV2, func(tx *sql.Tx) error {
 		var err error
 
@@ -859,7 +868,7 @@ func insert(dbV2 *sql.DB, origin, trimmed baseV1) error {
 				LastSentMailAdmin:     c.LastReviewNotif,
 				LastSentMailDirecteur: c.LastReviewNotif,
 				Account:               compta.AccountACVE(c.Account),
-				// Fraismdr:              c.Fraismdr, // TODO:
+				FraisMDR:              fraisACVE(c.Fraismdr),
 			}
 			v2, err = v2.Insert(tx)
 			if err != nil {
@@ -920,6 +929,20 @@ func insert(dbV2 *sql.DB, origin, trimmed baseV1) error {
 				IdFile:      idFile,
 			}
 			v2, err = v2.Insert(tx)
+			if err != nil {
+				return err
+			}
+			subRecordsM[r.Id] = v2.Id
+		}
+
+		// insert record_bus
+		fmt.Println("\trecord_buss...")
+		for _, link := range trimmed.busRecords {
+			v2 := compta.ComptaRecordBus{
+				IdCamp:      coM[link.IdCompta],
+				IdSubrecord: subRecordsM[link.IdSubrecord],
+			}
+			err = v2.Insert(tx)
 			if err != nil {
 				return err
 			}
@@ -1025,6 +1048,18 @@ func optionPrixParticipant(v1 rd.OptionPrixParticipant) cps.OptionPrixParticipan
 		days[i] = int32(day)
 	}
 	return cps.OptionPrixParticipant{Jour: days}
+}
+
+func fraisACVE(v1 comptaV1.Fraismdr) compta.FraisMDRACVE {
+	out := compta.FraisMDRACVE{Bus: make([]compta.Bus, len(v1.Bus))}
+	for i, b := range v1.Bus {
+		out.Bus[i] = compta.Bus{
+			Name:    b.Name,
+			Kind:    compta.CarKind(b.Kind),
+			KmStart: b.KmStart, KmEnd: b.KmEnd,
+		}
+	}
+	return out
 }
 
 func connectV1() (*sql.DB, error) {

@@ -1,22 +1,28 @@
 <template>
   <NavBar></NavBar>
 
-  <v-responsive class="fill-height mx-2">
-    <v-card>
-      <v-dialog
-        :model-value="showBusExpenses"
-        @update:model-value="showBusExpenses = false"
-        max-width="800"
-      >
-        <BusExpenses
-          v-if="showBusExpenses"
-          @save="updateBusExpenses"
-        ></BusExpenses>
-      </v-dialog>
+  <v-dialog
+    :model-value="showBusExpenses"
+    @update:model-value="showBusExpenses = false"
+    max-width="800"
+  >
+    <BusExpenses v-if="showBusExpenses" @save="updateBusExpenses"></BusExpenses>
+  </v-dialog>
 
-      <v-skeleton-loader v-if="frais == null" type="card"> </v-skeleton-loader>
-      <v-card-text v-else class="text-left">
-        <v-card title="Utilisation des véhicules" class="my-2">
+  <v-responsive class="fill-height mx-2">
+    <NoSelectedCamp
+      v-if="controller.idCompta == -1"
+      class="mt-2"
+    ></NoSelectedCamp>
+    <v-skeleton-loader v-else-if="frais == null" type="card">
+    </v-skeleton-loader>
+    <v-card v-else>
+      <v-card-text class="text-left">
+        <v-card
+          title="Utilisation des véhicules"
+          subtitle="Déclarer ici les kilomètres des bus de l'association"
+          class="my-2"
+        >
           <template v-slot:append>
             <v-btn
               color="green"
@@ -40,6 +46,7 @@
               <v-col class="text-right">Total</v-col>
               <v-col cols="1"></v-col>
             </v-row>
+            <v-divider horizontal thickness="1" class="my-2"></v-divider>
             <v-alert v-if="showMandatoryAlert" type="warning" class="my-4">
               Pour un séjour à la Maison du Rocher, ces dépenses doivent être
               fournies !
@@ -53,10 +60,10 @@
               @edit="(bus) => updateBus(i, bus)"
               ref="busRows"
             ></BusRow>
-            <v-row class="mt-3 bg-green-lighten-4 rounded">
+            <v-row class="mt-3 mx-0 bg-green-lighten-4 rounded">
               <v-col cols="7" class="text-center" align-self="center">
                 <div class="mb-2">
-                  Les dépenses ci-contre sont déduites de l'indemnité ci-dessus.
+                  Les dépenses ci-contre sont déduites des indemnités ci-dessus.
                 </div>
                 <v-chip
                   @click="showBusExpenses = true"
@@ -80,15 +87,21 @@
             </v-row>
             <v-row>
               <v-spacer></v-spacer>
-              <v-col cols="3" class="text-right font-weight-bold">
-                {{ frais.TotalBus.toFixed(2) }}€
+              <v-col cols="auto">Total</v-col>
+              <v-col cols="2" class="text-right font-weight-bold">
+                {{
+                  Formatters.montant({
+                    Cent: frais.TotalBus,
+                    Currency: Currency.Euros,
+                  })
+                }}
               </v-col>
               <v-col cols="1"></v-col>
             </v-row>
           </v-card-text>
         </v-card>
 
-        <v-card title="Utilisation du matériel" class="my-2">
+        <v-card title="Utilisation du matériel MdR" class="my-2">
           <v-card-text v-if="frais.HasMateriel">
             <v-row>
               <v-col></v-col>
@@ -96,7 +109,7 @@
               <v-col class="text-center">Durée (jours)</v-col>
               <v-col class="text-center">Nombre total de jours</v-col>
               <v-col class="text-center">Tarif unitaire</v-col>
-              <v-col class="text-center">Total</v-col>
+              <v-col class="text-right">Total</v-col>
             </v-row>
             <v-row>
               <v-col>Produits d'entretien</v-col>
@@ -171,6 +184,8 @@ import {
 import { controller } from "../logic/logic.ts";
 import BusRow from "../components/fraisAssoAcve/BusRow.vue";
 import { Formatters } from "@/utils.ts";
+import NoSelectedCamp from "../components/NoSelectedCamp.vue";
+import BusExpenses from "../components/fraisAssoAcve/BusExpenses.vue";
 
 const props = defineProps<{
   atMdr: boolean;
@@ -189,6 +204,7 @@ const showMandatoryAlert = computed(
 
 const frais = ref<ResolvedFraisMDR | null>(null);
 async function fetch() {
+  if (controller.idCompta == -1) return;
   const res = await controller.FraisMDRLoad({
     "id-compta": controller.idCompta,
   });

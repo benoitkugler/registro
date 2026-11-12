@@ -125,7 +125,7 @@ type ResolvedFraisMDR struct {
 }
 
 func (ld *comptaLoader) resolveFraisMDR() (out ResolvedFraisMDR) {
-	return resolveFraismdr(ld.compta.Fraismdr, ld.config, ld.subrecords, ld.recordsForBus, ld.camp.Duree, ld.inscrits(), len(ld.equipiers), ld.atMDR())
+	return resolveFraismdr(ld.compta.FraisMDR, ld.config, ld.subrecords, ld.recordsForBus, ld.camp.Duree, ld.inscrits(), len(ld.equipiers), ld.atMDR())
 }
 
 func resolveFraismdr(frais ca.FraisMDRACVE, config ca.ComptaConfig, subrecords ca.ComptaSubrecords, links ca.ComptaRecordBuss, days, inscrits, equipiers int, atMDR bool) (out ResolvedFraisMDR) {
@@ -345,7 +345,7 @@ func (ct *Controller) FraisMDRUpdate(c echo.Context) error {
 	if err != nil {
 		return utils.SQLError(err)
 	}
-	compta.Fraismdr = args.Frais
+	compta.FraisMDR = args.Frais
 	_, err = compta.Update(ct.db)
 	if err != nil {
 		return utils.SQLError(err)

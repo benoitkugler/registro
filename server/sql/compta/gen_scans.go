@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
 	"registro/sql/camps"
 
 	"github.com/lib/pq"
@@ -209,7 +210,7 @@ func scanOneComptaCamp(row scanner) (ComptaCamp, error) {
 		&item.LastSentMailAdmin,
 		&item.LastSentMailDirecteur,
 		&item.Account,
-		&item.Fraismdr,
+		&item.FraisMDR,
 	)
 	return item, err
 }
@@ -282,7 +283,7 @@ func (item ComptaCamp) Insert(tx DB) (out ComptaCamp, err error) {
 		) VALUES (
 		$1, $2, $3, $4, $5, $6, $7
 		) RETURNING id, idcamp, filestatus, state, lastsentmailadmin, lastsentmaildirecteur, account, fraismdr;
-		`, item.IdCamp, item.FileStatus, item.State, item.LastSentMailAdmin, item.LastSentMailDirecteur, item.Account, item.Fraismdr)
+		`, item.IdCamp, item.FileStatus, item.State, item.LastSentMailAdmin, item.LastSentMailDirecteur, item.Account, item.FraisMDR)
 	return ScanComptaCamp(row)
 }
 
@@ -293,7 +294,7 @@ func (item ComptaCamp) Update(tx DB) (out ComptaCamp, err error) {
 		) = (
 		$1, $2, $3, $4, $5, $6, $7
 		) WHERE id = $8 RETURNING id, idcamp, filestatus, state, lastsentmailadmin, lastsentmaildirecteur, account, fraismdr;
-		`, item.IdCamp, item.FileStatus, item.State, item.LastSentMailAdmin, item.LastSentMailDirecteur, item.Account, item.Fraismdr, item.Id)
+		`, item.IdCamp, item.FileStatus, item.State, item.LastSentMailAdmin, item.LastSentMailDirecteur, item.Account, item.FraisMDR, item.Id)
 	return ScanComptaCamp(row)
 }
 
@@ -1150,7 +1151,7 @@ func DeleteComptaSubrecordsByIdFiles(tx DB, idFiles_ ...IdComptaFile) (ComptaSub
 
 func loadJSON(out any, src any) error {
 	if src == nil {
-		return nil //zero value out
+		return nil // zero value out
 	}
 	bs, ok := src.([]byte)
 	if !ok {
@@ -1178,8 +1179,8 @@ func (s *CarsCosts) Scan(src any) error {
 	}
 	copy(s[:], tmp)
 	return nil
-
 }
+
 func (s CarsCosts) Value() (driver.Value, error) {
 	return pq.Int32Array(s[:]).Value()
 }
@@ -1195,8 +1196,8 @@ func (s *CarsKms) Scan(src any) error {
 	}
 	copy(s[:], tmp)
 	return nil
-
 }
+
 func (s CarsKms) Value() (driver.Value, error) {
 	return pq.Int32Array(s[:]).Value()
 }
@@ -1212,8 +1213,8 @@ func (s *MealsCosts) Scan(src any) error {
 	}
 	copy(s[:], tmp)
 	return nil
-
 }
+
 func (s MealsCosts) Value() (driver.Value, error) {
 	return pq.Int32Array(s[:]).Value()
 }
