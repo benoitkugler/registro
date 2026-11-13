@@ -83,6 +83,7 @@ export interface CampHeader {
   AtMDR: boolean;
   Compta: ComptaExt;
   DirecteurURL: string;
+  DirectUploadDirecteurURL: string;
 }
 // registro/controllers/compta.CampSummary
 export interface CampSummary {
@@ -360,7 +361,7 @@ export interface ComptaCamp {
   LastSentMailAdmin: Time;
   LastSentMailDirecteur: Time;
   Account: AccountACVE;
-  Fraismdr: FraisMDRACVE;
+  FraisMDR: FraisMDRACVE;
 }
 // registro/sql/compta.ComptaConfig
 export interface ComptaConfig {
@@ -1021,6 +1022,31 @@ export abstract class AbstractAPI {
         { headers: this.getHeaders() },
       );
       return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** UploadAndCreateQuery performs the request and handles the error */
+  async UploadAndCreateQuery(
+    files: File[],
+    params: { "directeur-key": string; idCompta: IdComptaCamp },
+  ) {
+    const fullUrl = this.baseURL + "/api/v1/compta/records/upload-query";
+    this.startRequest();
+    try {
+      const formData = new FormData();
+      for (const file of files) {
+        formData.append("justificatifs", file, file.name);
+      }
+      await Axios.post(fullUrl, formData, {
+        headers: this.getHeaders(),
+        params: {
+          "directeur-key": params["directeur-key"],
+          idCompta: String(params["idCompta"]),
+        },
+      });
+      return true;
     } catch (error) {
       this.handleError(error);
     }

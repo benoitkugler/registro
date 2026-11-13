@@ -343,7 +343,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref, onMounted } from "vue";
+import { computed, ref, watch } from "vue";
 import DirectUpload from "./DirectUpload.vue";
 import { useDisplay } from "vuetify";
 import {
@@ -373,6 +373,7 @@ const props = defineProps<{
   camp: CampHeader;
   records: GetRecordsOut;
   readonly: boolean;
+  newRecordId?: IdComptaRecord | null;
 }>();
 
 const emit = defineEmits<{
@@ -415,6 +416,24 @@ const search = ref<string | null>("");
 const categoryToShow = ref<"toHandle" | "missingFile" | null>(null);
 // sort criteria
 const sortKind = ref<"date-asc" | "date-desc" | "">("");
+
+// start editing the record given by the "new-record" query param
+watch(
+  () => props.newRecordId,
+  (id) => {
+    if (id == null || props.readonly) return;
+
+    const record = records.value.find((r) => r.Record.Id == id);
+    if (record == undefined) return;
+
+    // make sure the record is visible regardless of active filters
+    search.value = "";
+    categoryToShow.value = null;
+    showOtherAccount.value = null;
+    toEdit.value = copy(record);
+  },
+  { immediate: true },
+);
 
 type recordWithBold = {
   record: RecordExt;

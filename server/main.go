@@ -170,7 +170,8 @@ func loadEnvs(devMode bool) (config.Asso, config.Keys, config.DB, config.SMTP, c
 func getAdress(devMode bool) string {
 	var adress string
 	if devMode {
-		adress = "localhost:1323"
+		// also enable connection over WIFI
+		adress = "0.0.0.0:1323"
 	} else {
 		// alwaysdata use IP and PORT env var
 		host := os.Getenv("IP")

@@ -55,22 +55,12 @@
         :readonly="readonly"
         :camp="camp"
         :records="records"
+        :new-record-id="newRecordId"
         v-model:direct-upload-file="fileForDirectUpload"
         @update-state="(c) => (camp != null ? (camp.Compta = c) : null)"
         @show-help="showHelp = true"
       ></RecordsList>
     </div>
-
-    <v-dialog>
-      <!-- TODO -->
-      <!-- <FraismdrPannel
-                :at-mdr="camp.AtMDR"
-                :readonly="readonly"
-                @update-mandatory-expenses="
-                  (v) => (showMandatoryFraisMDRAlert = v)
-                "
-              ></FraismdrPannel> -->
-    </v-dialog>
   </v-responsive>
 </template>
 
@@ -81,7 +71,12 @@ import {
   setRecordHelpSeen,
   wasRecordHelpSeen,
 } from "../logic/logic";
-import { State, type CampHeader, type GetRecordsOut } from "../logic/api";
+import {
+  State,
+  type CampHeader,
+  type GetRecordsOut,
+  type IdComptaRecord,
+} from "../logic/api";
 import RecordsList from "../components/records/RecordsList.vue";
 import NavBar from "../components/NavBar.vue";
 import NoSelectedCamp from "../components/NoSelectedCamp.vue";
@@ -94,6 +89,7 @@ const camp = ref<CampHeader | null>(null);
 
 onMounted(() => {
   showHelp.value = !controller.isAdmin && !wasRecordHelpSeen();
+  handleNewRecordParam();
   fetchData();
   handleDirectUpload();
 });
@@ -112,6 +108,19 @@ async function fetchData() {
 
   camp.value = res;
   records.value = res2;
+}
+
+// "new-record" query param :
+// start editing the record with the given id once the records are loaded
+const newRecordId = ref<IdComptaRecord | null>(null);
+function handleNewRecordParam() {
+  const raw = new URLSearchParams(location.search).get("new-record");
+  if (raw == null || raw === "") return;
+
+  const id = Number(raw);
+  if (!Number.isInteger(id)) return;
+
+  newRecordId.value = id as IdComptaRecord;
 }
 
 const showHelp = ref(false);

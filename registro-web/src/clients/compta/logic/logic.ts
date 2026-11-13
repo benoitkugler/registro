@@ -6,7 +6,6 @@ import {
   State,
   Ventilation,
   VentilationLabels,
-  type CampHeader,
   type ComptaRecord,
   type ComptaSubrecord,
   type IdComptaCamp,

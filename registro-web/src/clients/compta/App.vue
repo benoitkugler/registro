@@ -63,7 +63,19 @@ router.beforeEach(async (to, from) => {
   // only trigger this path at application startup (including reload)
   if (controller.authToken) return;
 
-  if (isDirectorLoggin(to)) return;
+  // a valid director key logs the user in and sets the current compta
+  const directorKey = isDirectorLoggin(to);
+  if (directorKey) {
+    const res = await controller.Loggin({ key: directorKey, isAdmin: false });
+    if (res?.IsValid) {
+      controller.onSuccessfullLoggin(res.IdCompta, res.Token);
+      // the index page would log in again : go straight to home
+      if (to.path == "/") return { path: "/home" };
+      return; // stay on the target route
+    }
+    // invalid director key : fallback to a cached token (if any)
+    // or to the loggin page below
+  }
 
   const { idCompta, token } = CachedTokens.get();
   if (token) {

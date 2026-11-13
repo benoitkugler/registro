@@ -44,8 +44,8 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref } from "vue";
-import { controller, isDirectorLoggin } from "../logic/logic";
+import { ref } from "vue";
+import { controller } from "../logic/logic";
 import { useRouter } from "vue-router";
 import NavBar from "../components/NavBar.vue";
 
@@ -53,19 +53,6 @@ const router = useRouter();
 
 // const emit = defineEmits<{
 //  }>();
-
-onMounted(init);
-
-async function init() {
-  const directorKey = isDirectorLoggin(router.currentRoute.value);
-  if (directorKey) {
-    const res = await controller.Loggin({ key: directorKey, isAdmin: false });
-    if (res === undefined) return;
-
-    controller.onSuccessfullLoggin(res.IdCompta, res.Token);
-    router.push({ path: "/home" });
-  }
-}
 
 const showPassword = ref(false);
 const password = ref("");
