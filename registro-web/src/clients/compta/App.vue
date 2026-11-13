@@ -55,13 +55,13 @@ controller.showMessage = (s, color) => {
 // redirect to the index page
 const router = useRouter();
 router.beforeEach(async (to, from) => {
-  // only trigger this path at application startup (including reload)
-  if (controller.authToken) return;
-
   // resolve loggin strategy :
   //  - give priority to director link (query param 'key')
   //  - otherwise, try to use a cached token
   //  - fallback to admin loggin screen
+
+  // only trigger this path at application startup (including reload)
+  if (controller.authToken) return;
 
   if (isDirectorLoggin(to)) return;
 

@@ -45,10 +45,9 @@
 
 <script lang="ts" setup>
 import { onMounted, ref } from "vue";
-import { CachedTokens, controller, isDirectorLoggin } from "../logic/logic";
+import { controller, isDirectorLoggin } from "../logic/logic";
 import { useRouter } from "vue-router";
 import NavBar from "../components/NavBar.vue";
-import type { IdComptaCamp } from "../logic/api.ts";
 
 const router = useRouter();
 
