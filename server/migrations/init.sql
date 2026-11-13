@@ -56,5 +56,5 @@ INSERT INTO compta_configs (Year, -- integer
     EntretienMDR, -- integer
     MaterielMDR -- integer
  )
-    VALUES (2018, '{50, 200, 50, 200, 70}', 25, 10, '{150, 80, 50}', 15000, 20, 100);
+    VALUES (2020, '{50, 200, 50, 200, 70}', 25, 10, '{150, 80, 50}', 15000, 20, 100);
 
