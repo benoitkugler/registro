@@ -85,7 +85,7 @@ func (ct *Controller) getCamps(host string) ([]CampHeader, error) {
 		return nil, err
 	}
 
-	filesLoader, err := fsAPI.LoadParticipantsFiles(ct.db, ct.key, ids)
+	filesLoader, err := fsAPI.LoadParticipantsFiles(ct.db, ct.key, ids, ct.asso.AskCarteIdInscrits)
 	if err != nil {
 		return nil, err
 	}

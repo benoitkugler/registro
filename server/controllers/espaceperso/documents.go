@@ -145,7 +145,7 @@ func (ct *Controller) markAndloadDocuments(id ds.IdDossier) (Documents, error) {
 		return Documents{}, utils.SQLError(err)
 	}
 
-	out, err := loadDocuments(ct.db, ct.key, dossier, ct.asso.AskFicheSanitaireMajeurs)
+	out, err := loadDocuments(ct.db, ct.key, dossier, ct.asso.AskFicheSanitaireMajeurs, ct.asso.AskCarteIdInscrits)
 	if err != nil {
 		return Documents{}, err
 	}
@@ -153,7 +153,7 @@ func (ct *Controller) markAndloadDocuments(id ds.IdDossier) (Documents, error) {
 	return out, nil
 }
 
-func loadDocuments(db ds.DB, key crypto.Encrypter, dossier logic.Dossier, askFichesanitaireMajeurs bool) (Documents, error) {
+func loadDocuments(db ds.DB, key crypto.Encrypter, dossier logic.Dossier, askFichesanitaireMajeurs, askCarteIdInscrits bool) (Documents, error) {
 	camps := dossier.CampsInscrits()
 	links, err := fs.SelectFileCampsByIdCamps(db, camps.IDs()...)
 	if err != nil {
@@ -208,12 +208,15 @@ func loadDocuments(db ds.DB, key crypto.Encrypter, dossier logic.Dossier, askFic
 	}
 	demandesByCamp := links2.ByIdCamp()
 	// always asks vaccins
-	demandeVaccin, err := filesAPI.DemandeVaccin(db)
+	demandeVaccin, demandeCarteId, err := filesAPI.DemandesVaccinEtCarteId(db)
 	if err != nil {
 		return Documents{}, err
 	}
 
 	idsDemandes := append(links2.IdDemandes(), demandeVaccin.Id)
+	if askCarteIdInscrits {
+		idsDemandes = append(idsDemandes, demandeCarteId.Id)
+	}
 	personnesFiles, demandes, err := filesAPI.LoadFilesPersonnes(db, key, idsDemandes, dossier.Participants.IdPersonnes()...)
 	if err != nil {
 		return Documents{}, err
@@ -249,6 +252,12 @@ func loadDocuments(db ds.DB, key crypto.Encrypter, dossier logic.Dossier, askFic
 				item.Demandes = append(item.Demandes, DemandePersonne{
 					Demande:  demandeVaccin,
 					Uploaded: personnesFiles[personne.Id][demandeVaccin.Id],
+				})
+			}
+			if askCarteIdInscrits {
+				item.Demandes = append(item.Demandes, DemandePersonne{
+					Demande:  demandeCarteId,
+					Uploaded: personnesFiles[personne.Id][demandeCarteId.Id],
 				})
 			}
 		}

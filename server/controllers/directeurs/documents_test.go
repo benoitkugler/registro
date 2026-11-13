@@ -56,6 +56,29 @@ func TestDocuments(t *testing.T) {
 	ct, err := NewController(db.DB, "", "", files.NewFileSystem(os.TempDir()), smtp, asso, config.Immich{})
 	tu.AssertNoErr(t, err)
 
+	t.Run("CarteId request setting", func(t *testing.T) {
+		originalCarteId := ct.asso.AskCarteIdInscrits
+		originalFiche := ct.asso.AskFicheSanitaireMajeurs
+		defer func() {
+			ct.asso.AskCarteIdInscrits = originalCarteId
+			ct.asso.AskFicheSanitaireMajeurs = originalFiche
+		}()
+
+		ct.asso.AskCarteIdInscrits = true
+		ct.asso.AskFicheSanitaireMajeurs = true
+		docs, err := ct.getDocuments(camp.Id)
+		tu.AssertNoErr(t, err)
+		tu.Assert(t, docs.AskCarteIdInscrits)
+		tu.Assert(t, docs.AskFicheSanitaireMajeurs)
+
+		ct.asso.AskCarteIdInscrits = false
+		ct.asso.AskFicheSanitaireMajeurs = false
+		docs, err = ct.getDocuments(camp.Id)
+		tu.AssertNoErr(t, err)
+		tu.Assert(t, !docs.AskCarteIdInscrits)
+		tu.Assert(t, !docs.AskFicheSanitaireMajeurs)
+	})
+
 	t.Run("files to download", func(t *testing.T) {
 		file1, err := ct.uploadToDownload(camp.Id, tu.PngData, "test.png")
 		tu.AssertNoErr(t, err)
@@ -136,10 +159,24 @@ func TestDocuments(t *testing.T) {
 		err = createFileFor(ct.db, pe3.Id, demande2.Demande.Id)
 		tu.AssertNoErr(t, err)
 
+		original := ct.asso.AskCarteIdInscrits
+		defer func() { ct.asso.AskCarteIdInscrits = original }()
+
+		ct.asso.AskCarteIdInscrits = false
 		docs, err := ct.loadParticipantsFiles(camp.Id)
 		tu.AssertNoErr(t, err)
 		tu.Assert(t, len(docs.Demandes) == 3)
 		tu.Assert(t, len(docs.Participants) == 2)
+
+		ct.asso.AskCarteIdInscrits = true
+		docs, err = ct.loadParticipantsFiles(camp.Id)
+		tu.AssertNoErr(t, err)
+		tu.Assert(t, len(docs.Demandes) == 4)
+		hasCarteId := false
+		for _, demande := range docs.Demandes {
+			hasCarteId = hasCarteId || demande.Categorie == files.CarteId
+		}
+		tu.Assert(t, hasCarteId)
 
 		files, _, err := ct.selectFilesForDemande(camp.Id, demande1.Demande.Id)
 		tu.AssertNoErr(t, err)

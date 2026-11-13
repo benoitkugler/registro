@@ -175,17 +175,26 @@ func ReadUpload(fileHeader *multipart.FileHeader) (content []byte, filename stri
 	return content, fileHeader.Filename, nil
 }
 
-func DemandeVaccin(db fs.DB) (fs.Demande, error) {
+func DemandesVaccinEtCarteId(db fs.DB) (vaccin, carteId fs.Demande, err error) {
 	demandes, err := fs.SelectAllDemandes(db)
 	if err != nil {
-		return fs.Demande{}, utils.SQLError(err)
+		return fs.Demande{}, fs.Demande{}, utils.SQLError(err)
 	}
 	for _, demande := range demandes {
-		if demande.Categorie == fs.Vaccins {
-			return demande, nil
+		switch demande.Categorie {
+		case fs.Vaccins:
+			vaccin = demande
+		case fs.CarteId:
+			carteId = demande
 		}
 	}
-	return fs.Demande{}, errors.New("missing Demande for categorie <Vaccins>")
+	if vaccin.Id == 0 {
+		return fs.Demande{}, fs.Demande{}, fmt.Errorf("missing Demande for categorie <%s>", fs.Vaccins)
+	}
+	if carteId.Id == 0 {
+		return fs.Demande{}, fs.Demande{}, fmt.Errorf("missing Demande for categorie <%s>", fs.CarteId)
+	}
+	return vaccin, carteId, nil
 }
 
 func LoadFilesPersonnes(db fs.DB, key crypto.Encrypter, demandes []fs.IdDemande, personnes ...pr.IdPersonne) (map[pr.IdPersonne]map[fs.IdDemande][]logic.PublicFile, fs.Demandes,
@@ -250,13 +259,14 @@ type ParticipantsFilesLoader struct {
 
 	demandes       fs.Demandes
 	idVaccin       fs.IdDemande
+	idCarteId      fs.IdDemande
 	demandesByCamp map[cps.IdCamp]fs.DemandeCamps
 
 	fiches map[pr.IdPersonne]pr.Fichesanitaire
 	files  map[pr.IdPersonne]map[fs.IdDemande][]logic.PublicFile
 }
 
-func LoadParticipantsFiles(db fs.DB, key crypto.Encrypter, ids []cps.IdCamp) (ParticipantsFilesLoader, error) {
+func LoadParticipantsFiles(db fs.DB, key crypto.Encrypter, ids []cps.IdCamp, askCarteId bool) (ParticipantsFilesLoader, error) {
 	camps, err := cps.LoadCamps(db, ids)
 	if err != nil {
 		return ParticipantsFilesLoader{}, err
@@ -269,7 +279,7 @@ func LoadParticipantsFiles(db fs.DB, key crypto.Encrypter, ids []cps.IdCamp) (Pa
 
 	// demandes
 	// always include vaccin
-	vaccinDemande, err := DemandeVaccin(db)
+	vaccinDemande, carteIdDemande, err := DemandesVaccinEtCarteId(db)
 	if err != nil {
 		return ParticipantsFilesLoader{}, err
 	}
@@ -278,6 +288,11 @@ func LoadParticipantsFiles(db fs.DB, key crypto.Encrypter, ids []cps.IdCamp) (Pa
 		return ParticipantsFilesLoader{}, utils.SQLError(err)
 	}
 	idDemandes := append(tmp.IdDemandes(), vaccinDemande.Id)
+	var idCarteId fs.IdDemande
+	if askCarteId {
+		idCarteId = carteIdDemande.Id
+		idDemandes = append(idDemandes, idCarteId)
+	}
 
 	// personnes et fichiers
 	personnes := camps.Personnes(true)
@@ -292,7 +307,16 @@ func LoadParticipantsFiles(db fs.DB, key crypto.Encrypter, ids []cps.IdCamp) (Pa
 		return ParticipantsFilesLoader{}, err
 	}
 
-	return ParticipantsFilesLoader{camps, dossiers, demandes, vaccinDemande.Id, tmp.ByIdCamp(), fiches, files}, nil
+	return ParticipantsFilesLoader{
+		camps:          camps,
+		dossiers:       dossiers,
+		demandes:       demandes,
+		idVaccin:       vaccinDemande.Id,
+		idCarteId:      idCarteId,
+		demandesByCamp: tmp.ByIdCamp(),
+		fiches:         fiches,
+		files:          files,
+	}, nil
 }
 
 type ParticipantFiles struct {
@@ -307,13 +331,16 @@ type ParticipantFiles struct {
 type ParticipantsFiles struct {
 	DocumentsReady bool // copied from Camp
 
-	// contains Vaccins, and a column for Fiche sanitaire should be added
+	// contains Vaccins and, when enabled for the association, CarteId.
 	Demandes     fs.Demandes
 	Participants []ParticipantFiles
 }
 
 func (ld ParticipantsFilesLoader) For(id cps.IdCamp) ParticipantsFiles {
 	idDemandes := append(ld.demandesByCamp[id].IdDemandes(), ld.idVaccin)
+	if ld.idCarteId != 0 {
+		idDemandes = append(idDemandes, ld.idCarteId)
+	}
 	demandes := make(fs.Demandes)
 	for _, id := range idDemandes {
 		demandes[id] = ld.demandes[id]

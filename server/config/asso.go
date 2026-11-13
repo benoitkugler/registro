@@ -34,6 +34,9 @@ type Asso struct {
 	// for every participant, regardless of age.
 	AskFicheSanitaireMajeurs bool
 
+	// AskCarteIdInscrits requests a Carte d'identité/Passeport for enrolled participants.
+	AskCarteIdInscrits bool
+
 	ConfigInscription
 }
 
@@ -90,6 +93,7 @@ var acve = Asso{
 	},
 
 	AskFicheSanitaireMajeurs: false,
+	AskCarteIdInscrits:       false,
 
 	ConfigInscription: ConfigInscription{
 		SupportBonsCAF: true, SupportANCV: true,
@@ -137,6 +141,7 @@ var repere = Asso{
 	},
 
 	AskFicheSanitaireMajeurs: true,
+	AskCarteIdInscrits:       true,
 
 	ConfigInscription: ConfigInscription{
 		SupportBonsCAF: false, SupportANCV: false,

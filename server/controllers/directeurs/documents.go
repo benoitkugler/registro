@@ -24,8 +24,10 @@ import (
 var errNoDir = errors.New("Aucun directeur n'est déclaré pour ce camp !")
 
 type DocumentsOut struct {
-	Ready  bool
-	ToShow cps.DocumentsToShow
+	Ready                    bool
+	ToShow                   cps.DocumentsToShow
+	AskCarteIdInscrits       bool
+	AskFicheSanitaireMajeurs bool
 	// à télécharger (n'inclut pas la lettre)
 	FilesToDownload []logic.PublicFile
 	CampDemandes    []DemandeDirecteur
@@ -91,8 +93,10 @@ func (ct *Controller) getDocuments(id cps.IdCamp) (DocumentsOut, error) {
 	}
 
 	out := DocumentsOut{
-		Ready:  camp.DocumentsReady,
-		ToShow: camp.DocumentsToShow,
+		Ready:                    camp.DocumentsReady,
+		ToShow:                   camp.DocumentsToShow,
+		AskCarteIdInscrits:       ct.asso.AskCarteIdInscrits,
+		AskFicheSanitaireMajeurs: ct.asso.AskFicheSanitaireMajeurs,
 	}
 	for _, link := range toDownload {
 		if link.IsLettre {
@@ -458,7 +462,7 @@ func (ct *Controller) ParticipantsLoadFiles(c echo.Context) error {
 }
 
 func (ct *Controller) loadParticipantsFiles(id cps.IdCamp) (fsAPI.ParticipantsFiles, error) {
-	loader, err := fsAPI.LoadParticipantsFiles(ct.db, ct.key, []cps.IdCamp{id})
+	loader, err := fsAPI.LoadParticipantsFiles(ct.db, ct.key, []cps.IdCamp{id}, ct.asso.AskCarteIdInscrits)
 	if err != nil {
 		return fsAPI.ParticipantsFiles{}, err
 	}

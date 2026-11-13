@@ -21,7 +21,7 @@ func TestDocuments(t *testing.T) {
 		"../../migrations/init.sql")
 	defer db.Remove()
 
-	pe1, err := pr.Personne{Identite: pr.Identite{DateNaissance: shared.NewDateFrom(tu.DateFor(13))}}.Insert(db)
+	pe1, err := pr.Personne{Identite: pr.Identite{DateNaissance: shared.NewDateFrom(tu.DateFor(25))}}.Insert(db)
 	tu.AssertNoErr(t, err)
 	pe2, err := pr.Personne{Identite: pr.Identite{DateNaissance: shared.NewDateFrom(tu.DateFor(8))}}.Insert(db)
 	tu.AssertNoErr(t, err)
@@ -59,7 +59,7 @@ func TestDocuments(t *testing.T) {
 	err = cps.ParticipantForm{IdForm: form.Id, IdCamp: camp.Id, IdParticipant: p1.Id, Reponses: cps.FormReponses{cps.ChampReponseTexte("")}}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	ct := NewController(db.DB, crypto.Encrypter{}, config.SMTP{}, config.Asso{}, fs.NewFileSystem(os.TempDir()), config.Immich{})
+	ct := NewController(db.DB, crypto.Encrypter{}, config.SMTP{}, config.Asso{AskCarteIdInscrits: true}, fs.NewFileSystem(os.TempDir()), config.Immich{})
 
 	docs, err := ct.markAndloadDocuments(dossier.Id)
 	tu.AssertNoErr(t, err)
@@ -68,9 +68,31 @@ func TestDocuments(t *testing.T) {
 	tu.Assert(t, len(docs.FilesToUpload) == 2)
 	tu.Assert(t, len(docs.FilesToUpload[0].Demandes[0].Uploaded) == 0)
 	tu.Assert(t, len(docs.Chartes) == 1)
-	tu.Assert(t, len(docs.Fiches) == 2)
+	tu.Assert(t, len(docs.Fiches) == 1)
 	tu.Assert(t, len(docs.Forms) == 2)
-	tu.Assert(t, docs.NewCount == 0+4+2+1+1)
+	tu.Assert(t, docs.NewCount == 0+5+1+1+1)
+
+	for _, personne := range docs.FilesToUpload {
+		hasCarteId, hasVaccins := false, false
+		for _, demande := range personne.Demandes {
+			hasCarteId = hasCarteId || demande.Demande.Categorie == fs.CarteId
+			hasVaccins = hasVaccins || demande.Demande.Categorie == fs.Vaccins
+		}
+		tu.Assert(t, hasCarteId)
+		if personne.IdPersonne == pe1.Id {
+			tu.Assert(t, !hasVaccins)
+		}
+	}
+
+	ct.asso.AskCarteIdInscrits = false
+	docsWithoutCarteId, err := ct.markAndloadDocuments(dossier.Id)
+	tu.AssertNoErr(t, err)
+	for _, personne := range docsWithoutCarteId.FilesToUpload {
+		for _, demande := range personne.Demandes {
+			tu.Assert(t, demande.Demande.Categorie != fs.CarteId)
+		}
+	}
+	ct.asso.AskCarteIdInscrits = true
 
 	_, err = ct.uploadDocument(dossier.Id, d1.Id, pe4.Id, tu.PngData, "test.png")
 	tu.AssertErr(t, err)

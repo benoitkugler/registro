@@ -67,6 +67,8 @@ export interface DemandesOut {
 export interface DocumentsOut {
   Ready: boolean;
   ToShow: DocumentsToShow;
+  AskCarteIdInscrits: boolean;
+  AskFicheSanitaireMajeurs: boolean;
   FilesToDownload: PublicFile[] | null;
   CampDemandes: DemandeDirecteur[] | null;
   HasLettre: boolean;
