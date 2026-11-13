@@ -580,7 +580,24 @@ func (ct *Controller) UploadAndCreate(c echo.Context) error {
 		return fmt.Errorf("invalid ID parameter: %s", err)
 	}
 
-	return ct.uploadAndCreateFromForm(c, idCompta, user)
+	form, err := c.MultipartForm()
+	if err != nil {
+		return err
+	}
+	defer form.RemoveAll()
+
+	headers := utils.FormFiles(form, "justificatifs")
+	uploads, err := openFiles(headers)
+	if err != nil {
+		return err
+	}
+
+	rec, err := ct.uploadAndCreate(idCompta, uploads, user)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, rec)
 }
 
 // UploadAndCreateQuery creates a new Record with the given file,
@@ -606,10 +623,6 @@ func (ct *Controller) UploadAndCreateQuery(c echo.Context) error {
 		return errAccess
 	}
 
-	return ct.uploadAndCreateFromForm(c, idCompta, idCompta)
-}
-
-func (ct *Controller) uploadAndCreateFromForm(c echo.Context, idCompta ca.IdComptaCamp, user ca.IdComptaCamp) error {
 	form, err := c.MultipartForm()
 	if err != nil {
 		return err
@@ -622,12 +635,16 @@ func (ct *Controller) uploadAndCreateFromForm(c echo.Context, idCompta ca.IdComp
 		return err
 	}
 
-	rec, err := ct.uploadAndCreate(idCompta, uploads, user)
+	rec, err := ct.uploadAndCreate(idCompta, uploads, idCompta)
 	if err != nil {
 		return err
 	}
 
-	return c.JSON(200, rec)
+	type out struct {
+		RedirectURL string
+	}
+	url := redirectDirectUploadURL(ct.key, c.Request().Host, user, rec.Record.Id)
+	return c.JSON(200, out{url})
 }
 
 func (ct *Controller) uploadAndCreate(idCompta ca.IdComptaCamp, uploads []justificatifUpload, user ca.IdComptaCamp) (out RecordExt, err error) {

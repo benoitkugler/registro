@@ -100,6 +100,12 @@ func DirecteurURL(key crypto.Encrypter, host string, idCamp cps.IdCamp) string {
 	return url
 }
 
+func redirectDirectUploadURL(key crypto.Encrypter, host string, idCamp cps.IdCamp, idRecord ca.IdComptaRecord) string {
+	dirKey := crypto.EncryptID(key, idCamp)
+	url := utils.BuildUrl(host, "compta/records", utils.QP("directeur-key", dirKey), utils.QPInt("new-record", idRecord))
+	return url
+}
+
 func directUploadDirecteurURL(key crypto.Encrypter, host string, idCamp cps.IdCamp, idCompta ca.IdComptaCamp) string {
 	dirKey := crypto.EncryptID(key, idCamp)
 	url := utils.BuildUrl(host, "/api/v1/compta/records/upload-query", utils.QP("directeur-key", dirKey), utils.QPInt("idCompta", idCompta))

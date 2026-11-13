@@ -616,7 +616,7 @@ func (ct *Controller) ConfirmeInscription(c echo.Context) error {
 	}()
 
 	url := logic.EspacePersoURL(ct.key, c.Request().Host, dossier.Id, utils.QP("from-inscription", "true"))
-	return c.Redirect(307, url)
+	return c.Redirect(303, url)
 }
 
 // ConfirmeInscription transforme l'inscription en dossier,
