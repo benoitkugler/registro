@@ -46,9 +46,10 @@ func parseTemplate(templateFile string) *template.Template {
 }
 
 type FicheSanitaire struct {
-	Personne       pr.Identite
-	FicheSanitaire pr.Fichesanitaire
-	Responsable    pr.Identite
+	Personne         pr.Identite
+	FicheSanitaire   pr.Fichesanitaire
+	Responsable      pr.Identite
+	IsOwnResponsable bool
 }
 
 // CreateFicheSanitaires returns a PDF document, one "fiche sanitaire" per page.

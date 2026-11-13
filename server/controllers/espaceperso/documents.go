@@ -145,7 +145,7 @@ func (ct *Controller) markAndloadDocuments(id ds.IdDossier) (Documents, error) {
 		return Documents{}, utils.SQLError(err)
 	}
 
-	out, err := loadDocuments(ct.db, ct.key, dossier)
+	out, err := loadDocuments(ct.db, ct.key, dossier, ct.asso.AskFicheSanitaireMajeurs)
 	if err != nil {
 		return Documents{}, err
 	}
@@ -153,7 +153,7 @@ func (ct *Controller) markAndloadDocuments(id ds.IdDossier) (Documents, error) {
 	return out, nil
 }
 
-func loadDocuments(db ds.DB, key crypto.Encrypter, dossier logic.Dossier) (Documents, error) {
+func loadDocuments(db ds.DB, key crypto.Encrypter, dossier logic.Dossier, askFichesanitaireMajeurs bool) (Documents, error) {
 	camps := dossier.CampsInscrits()
 	links, err := fs.SelectFileCampsByIdCamps(db, camps.IDs()...)
 	if err != nil {
@@ -245,7 +245,7 @@ func loadDocuments(db ds.DB, key crypto.Encrypter, dossier logic.Dossier) (Docum
 				item.Demandes = append(item.Demandes, dp)
 			}
 
-			if asksFichesanitaire(dossier, personne) {
+			if asksFichesanitaire(dossier, personne, askFichesanitaireMajeurs) {
 				item.Demandes = append(item.Demandes, DemandePersonne{
 					Demande:  demandeVaccin,
 					Uploaded: personnesFiles[personne.Id][demandeVaccin.Id],
@@ -258,7 +258,7 @@ func loadDocuments(db ds.DB, key crypto.Encrypter, dossier logic.Dossier) (Docum
 		}
 	}
 
-	out.Fiches, err = loadFichesanitaires(db, dossier)
+	out.Fiches, err = loadFichesanitaires(db, dossier, askFichesanitaireMajeurs)
 	if err != nil {
 		return Documents{}, err
 	}

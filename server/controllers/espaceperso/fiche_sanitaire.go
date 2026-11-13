@@ -20,26 +20,28 @@ import (
 
 // fiches sanitaires
 
-// only asks for fiche sanitaires and vaccins for majeur
-func asksFichesanitaire(dossier logic.Dossier, personne pr.Personne) bool {
+// asksFichesanitaire reports whether a fiche sanitaire (and vaccins) is
+// requested for this participant. Majors are included when [askMajeurs] is true.
+func asksFichesanitaire(dossier logic.Dossier, personne pr.Personne, askMajeurs bool) bool {
 	camp, ok := dossier.FirstCampFor(personne.Id)
 	if !ok {
 		return false
 	}
-	return camp.AgeDebutCamp(personne.DateNaissance) < 18
+	return askMajeurs || camp.AgeDebutCamp(personne.DateNaissance) < 18
 }
 
 type FichesanitaireExt struct {
-	Personne       string
-	IsLocked       bool
-	State          pr.FichesanitaireState
-	Fichesanitaire pr.Fichesanitaire
+	Personne         string
+	IsLocked         bool
+	IsOwnResponsable bool
+	State            pr.FichesanitaireState
+	Fichesanitaire   pr.Fichesanitaire
 
 	ResponsableNom  string
 	ResponsableTels pr.Tels
 }
 
-func loadFichesanitaires(db ds.DB, dossier logic.Dossier) (out []FichesanitaireExt, _ error) {
+func loadFichesanitaires(db ds.DB, dossier logic.Dossier, askMajeurs bool) (out []FichesanitaireExt, _ error) {
 	responsable := dossier.Responsable()
 	idPersonnes := dossier.Participants.IdPersonnes()
 
@@ -48,24 +50,26 @@ func loadFichesanitaires(db ds.DB, dossier logic.Dossier) (out []FichesanitaireE
 		return out, utils.SQLError(err)
 	}
 	fichesByPersonne := fiches.ByIdPersonne()
-	// make sure the struct is initialized for every [Personne], restricting to < 18 years old
+	// make sure the struct is initialized for every [Personne], restricting to minors
+	// unless the association asks for fiche sanitaires for majors.
 	for _, pers := range dossier.Personnes()[1:] {
 		if pers.IsTemp { // wait for the validation
 			continue
 		}
-		if !asksFichesanitaire(dossier, pers) {
+		if !asksFichesanitaire(dossier, pers, askMajeurs) {
 			continue
 		}
 
 		fiche := fichesByPersonne[pers.Id]
 		fiche.IdPersonne = pers.Id // init ID for empty fiche
 		fsExt := FichesanitaireExt{
-			pers.PrenomN(),
-			isFichesanitaireLocked(responsable.Mail, fiche.Owners),
-			fiche.State(dossier.Dossier.MomentInscription),
-			fiche,
-			responsable.PrenomNOM(),
-			responsable.Tels,
+			Personne:         pers.PrenomN(),
+			IsLocked:         isFichesanitaireLocked(responsable.Mail, fiche.Owners),
+			IsOwnResponsable: pers.Id == dossier.Dossier.IdResponsable,
+			State:            fiche.State(dossier.Dossier.MomentInscription),
+			Fichesanitaire:   fiche,
+			ResponsableNom:   responsable.PrenomNOM(),
+			ResponsableTels:  responsable.Tels,
 		}
 		if fsExt.IsLocked { // hide sensitive information
 			fsExt.Fichesanitaire = pr.Fichesanitaire{

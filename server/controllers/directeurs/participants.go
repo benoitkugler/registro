@@ -152,7 +152,12 @@ func (ct *Controller) downloadFicheSanitaire(user cps.IdCamp, id cps.IdParticipa
 	}
 
 	content, err := pdfcreator.CreateFicheSanitaires(ct.asso, []pdfcreator.FicheSanitaire{
-		{Personne: personne.Identite, FicheSanitaire: fiche, Responsable: responsable.Identite},
+		{
+			Personne:         personne.Identite,
+			FicheSanitaire:   fiche,
+			Responsable:      responsable.Identite,
+			IsOwnResponsable: personne.Id == dossier.IdResponsable,
+		},
 	})
 	if err != nil {
 		return nil, "", err

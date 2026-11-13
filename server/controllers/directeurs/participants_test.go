@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"registro/config"
 	"registro/generators/pdfcreator"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
@@ -48,7 +49,7 @@ func TestFichesSanitaires(t *testing.T) {
 	_, err = cps.Participant{IdCamp: camp.Id, IdTaux: 1, IdDossier: dossier.Id, IdPersonne: pe3.Id, Statut: cps.Refuse}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	ct := Controller{db: db.DB}
+	ct := Controller{db: db.DB, asso: config.Asso{AskFicheSanitaireMajeurs: true}}
 
 	fiches, err := ct.loadFichesSanitaires(camp.Id)
 	tu.AssertNoErr(t, err)

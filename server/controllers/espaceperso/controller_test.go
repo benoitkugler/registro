@@ -143,11 +143,27 @@ func Test_loadFichesanitaires(t *testing.T) {
 	ct := Controller{db: db.DB}
 	ext, err := logic.LoadDossier(ct.db, dossier.Id)
 	tu.AssertNoErr(t, err)
-	fiches, err := loadFichesanitaires(ct.db, ext)
+
+	// by default, only minors are asked for a fiche sanitaire
+	fiches, err := loadFichesanitaires(ct.db, ext, false)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(fiches) == 1)
 	tu.Assert(t, fiches[0].Fichesanitaire.IdPersonne == mineur.Id)
+	tu.Assert(t, fiches[0].IsOwnResponsable)
 	tu.Assert(t, !fiches[0].IsLocked && fiches[0].State == pr.NoFiche)
+
+	// when configured, majors are also asked for a fiche sanitaire
+	fiches, err = loadFichesanitaires(ct.db, ext, true)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(fiches) == 2)
+	var hasMajeur bool
+	for _, fiche := range fiches {
+		if fiche.Fichesanitaire.IdPersonne == majeur.Id {
+			hasMajeur = true
+			tu.Assert(t, !fiche.IsOwnResponsable)
+		}
+	}
+	tu.Assert(t, hasMajeur)
 }
 
 func Test_sondages(t *testing.T) {

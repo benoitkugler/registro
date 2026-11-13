@@ -543,7 +543,7 @@ func (ct *Controller) DocumentsDownloadFichesSanitaires(c echo.Context) error {
 	return c.Blob(200, mimeType, content)
 }
 
-// ignore les participants majeurs et les fiches vides
+// ignore les fiches vides et, sauf si configuré, les participants majeurs
 func (ct *Controller) renderFichesSanitaires(user cps.IdCamp) ([]byte, string, error) {
 	camp, err := cps.LoadCamp(ct.db, user)
 	if err != nil {
@@ -569,11 +569,17 @@ func (ct *Controller) renderFichesSanitaires(user cps.IdCamp) ([]byte, string, e
 	var list []pdfcreator.FicheSanitaire
 	for _, part := range participants {
 		fiche, hasFiche := fiches[part.Participant.IdPersonne]
-		if !hasFiche || part.Personne.Age() >= 18 {
+		if !hasFiche || (!ct.asso.AskFicheSanitaireMajeurs && part.Personne.Age() >= 18) {
 			continue
 		}
-		responsable := responsables[dossiers[part.Participant.IdDossier].IdResponsable]
-		list = append(list, pdfcreator.FicheSanitaire{Personne: part.Personne.Identite, FicheSanitaire: fiche, Responsable: responsable.Identite})
+		dossier := dossiers[part.Participant.IdDossier]
+		responsable := responsables[dossier.IdResponsable]
+		list = append(list, pdfcreator.FicheSanitaire{
+			Personne:         part.Personne.Identite,
+			FicheSanitaire:   fiche,
+			Responsable:      responsable.Identite,
+			IsOwnResponsable: part.Personne.Id == dossier.IdResponsable,
+		})
 	}
 	content, err := pdfcreator.CreateFicheSanitaires(ct.asso, list)
 	if err != nil {

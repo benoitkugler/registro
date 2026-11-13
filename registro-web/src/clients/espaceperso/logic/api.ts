@@ -68,6 +68,7 @@ export interface Documents {
 export interface FichesanitaireExt {
   Personne: string;
   IsLocked: boolean;
+  IsOwnResponsable: boolean;
   State: FichesanitaireState;
   Fichesanitaire: Fichesanitaire;
   ResponsableNom: string;

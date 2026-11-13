@@ -78,7 +78,12 @@ func randFicheSanitaire() FicheSanitaire {
 		Pays:       pr.Pays(utils.RandString(2, false)),
 		Tels:       pr.Tels{"7987987979", "897779897998789"},
 	}
-	return FicheSanitaire{pers, fs, resp}
+	return FicheSanitaire{
+		Personne:         pers,
+		FicheSanitaire:   fs,
+		Responsable:      resp,
+		IsOwnResponsable: randBool(),
+	}
 }
 
 func randFicheSanitaires() []FicheSanitaire {

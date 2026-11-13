@@ -88,7 +88,7 @@ func (ct *Controller) load(id ds.IdDossier) (Data, error) {
 	if err != nil {
 		return Data{}, err
 	}
-	documents, err := loadDocuments(ct.db, ct.key, dossier.Dossier)
+	documents, err := loadDocuments(ct.db, ct.key, dossier.Dossier, ct.asso.AskFicheSanitaireMajeurs)
 	if err != nil {
 		return Data{}, err
 	}

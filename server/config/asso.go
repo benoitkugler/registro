@@ -30,6 +30,10 @@ type Asso struct {
 
 	RemisesHints RemisesHints
 
+	// AskFicheSanitaireMajeurs requests a fiche sanitaire (and vaccins)
+	// for every participant, regardless of age.
+	AskFicheSanitaireMajeurs bool
+
 	ConfigInscription
 }
 
@@ -85,6 +89,8 @@ var acve = Asso{
 		AutresInscrits: 15,
 	},
 
+	AskFicheSanitaireMajeurs: false,
+
 	ConfigInscription: ConfigInscription{
 		SupportBonsCAF: true, SupportANCV: true,
 		SupportPaiementEnLigne:    true,
@@ -129,6 +135,8 @@ var repere = Asso{
 		ParentEquipier: 50,
 		AutresInscrits: 10,
 	},
+
+	AskFicheSanitaireMajeurs: true,
 
 	ConfigInscription: ConfigInscription{
 		SupportBonsCAF: false, SupportANCV: false,

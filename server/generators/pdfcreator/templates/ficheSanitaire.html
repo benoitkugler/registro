@@ -71,11 +71,13 @@
     <h4>Contacts</h4>
 
     <div style="display: flex">
+      {{ if not .IsOwnResponsable }}
       <div style="width: 50%">
         <b>Nom : </b>{{ .Responsable.NOMPrenom}} <br />
         <b>Tél. : </b> {{ .Responsable.Tels.String }}
       </div>
-      <div style="width: 50%">
+      {{ end }}
+      <div style="{{ if .IsOwnResponsable }}width: 100%{{ else }}width: 50%{{ end }}">
         <b>Nom : </b>{{ .FicheSanitaire.AutreContact.Nom}} <br />
         <b>Tél. : </b> {{ .FicheSanitaire.AutreContact.Tel }}
       </div>

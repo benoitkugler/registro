@@ -108,31 +108,33 @@
         <!-- Contacts -->
         <v-card title="Contacts" class="my-2">
           <v-card-text>
-            <v-row>
-              <v-col cols="12" sm="6">
-                <v-text-field
-                  variant="outlined"
-                  density="compact"
-                  :model-value="props.fiche.ResponsableNom"
-                  label="Responsable légal"
-                  disabled
-                  hint="Contactez-nous pour modifier ce champ."
-                  persistent-hint
-                ></v-text-field>
-              </v-col>
-              <v-col cols="12" sm="6">
-                <v-text-field
-                  variant="outlined"
-                  density="compact"
-                  :model-value="Formatters.tels(props.fiche.ResponsableTels)"
-                  label="Téléphone"
-                  disabled
-                  hint="Contactez-nous pour modifier ce champ."
-                  persistent-hint
-                ></v-text-field>
-              </v-col>
-            </v-row>
-            <v-divider thickness="2" class="my-4"></v-divider>
+            <template v-if="!props.fiche.IsOwnResponsable">
+              <v-row>
+                <v-col cols="12" sm="6">
+                  <v-text-field
+                    variant="outlined"
+                    density="compact"
+                    :model-value="props.fiche.ResponsableNom"
+                    label="Responsable légal"
+                    disabled
+                    hint="Contactez-nous pour modifier ce champ."
+                    persistent-hint
+                  ></v-text-field>
+                </v-col>
+                <v-col cols="12" sm="6">
+                  <v-text-field
+                    variant="outlined"
+                    density="compact"
+                    :model-value="Formatters.tels(props.fiche.ResponsableTels)"
+                    label="Téléphone"
+                    disabled
+                    hint="Contactez-nous pour modifier ce champ."
+                    persistent-hint
+                  ></v-text-field>
+                </v-col>
+              </v-row>
+              <v-divider thickness="2" class="my-4"></v-divider>
+            </template>
             <v-row>
               <v-col cols="12" sm="6">
                 <v-text-field
