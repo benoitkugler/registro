@@ -182,23 +182,7 @@ export interface Demande {
   Categorie: Categorie;
   Description: string;
   MaxDocs: Int;
-  JoursValide: Int;
 }
-// registro/sql/files.FileReviewStatus
-export const FileReviewStatus = {
-  FileReviewPending: 0,
-  FileReviewValidated: 1,
-  FileReviewRejected: 2,
-} as const;
-export type FileReviewStatus =
-  (typeof FileReviewStatus)[keyof typeof FileReviewStatus];
-
-export const FileReviewStatusLabels: Record<FileReviewStatus, string> = {
-  [FileReviewStatus.FileReviewPending]: "En attente",
-  [FileReviewStatus.FileReviewValidated]: "Validé",
-  [FileReviewStatus.FileReviewRejected]: "Refusé",
-};
-
 export type IdDemande = Int & { __opaque_int__: "IdDemande" };
 export type IdFile = Int & { __opaque_int__: "IdFile" };
 // registro/sql/personnes.Diplome
@@ -294,6 +278,21 @@ export interface Ficheequipier {
   DemandeMembreAssoPermanent: boolean;
   FormationRepere: FormationRepere;
 }
+// registro/sql/personnes.FileReviewStatus
+export const FileReviewStatus = {
+  FileReviewPending: 0,
+  FileReviewValidated: 1,
+  FileReviewRejected: 2,
+} as const;
+export type FileReviewStatus =
+  (typeof FileReviewStatus)[keyof typeof FileReviewStatus];
+
+export const FileReviewStatusLabels: Record<FileReviewStatus, string> = {
+  [FileReviewStatus.FileReviewPending]: "En attente",
+  [FileReviewStatus.FileReviewValidated]: "Validé",
+  [FileReviewStatus.FileReviewRejected]: "Refusé",
+};
+
 // registro/sql/personnes.FormationRepere
 export const FormationRepere = {
   FRAucun: 0,

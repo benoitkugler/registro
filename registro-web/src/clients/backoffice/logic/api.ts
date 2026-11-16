@@ -1018,21 +1018,6 @@ export interface EventMessage {
   OnlyToCamp: OptID_IdCamp;
 }
 export type IdEvent = Int & { __opaque_int__: "IdEvent" };
-// registro/sql/files.FileReviewStatus
-export const FileReviewStatus = {
-  FileReviewPending: 0,
-  FileReviewValidated: 1,
-  FileReviewRejected: 2,
-} as const;
-export type FileReviewStatus =
-  (typeof FileReviewStatus)[keyof typeof FileReviewStatus];
-
-export const FileReviewStatusLabels: Record<FileReviewStatus, string> = {
-  [FileReviewStatus.FileReviewPending]: "En attente",
-  [FileReviewStatus.FileReviewValidated]: "Validé",
-  [FileReviewStatus.FileReviewRejected]: "Refusé",
-};
-
 export type IdFile = Int & { __opaque_int__: "IdFile" };
 export type IdInscription = Int & { __opaque_int__: "IdInscription" };
 export type IdInscriptionParticipant = Int & {
@@ -1094,7 +1079,23 @@ export interface Fichesanitaire {
   AutreContact: NomTel;
   Modified: Time;
   Owners: Mails;
+  ReviewStatus: FileReviewStatus;
 }
+// registro/sql/personnes.FileReviewStatus
+export const FileReviewStatus = {
+  FileReviewPending: 0,
+  FileReviewValidated: 1,
+  FileReviewRejected: 2,
+} as const;
+export type FileReviewStatus =
+  (typeof FileReviewStatus)[keyof typeof FileReviewStatus];
+
+export const FileReviewStatusLabels: Record<FileReviewStatus, string> = {
+  [FileReviewStatus.FileReviewPending]: "En attente",
+  [FileReviewStatus.FileReviewValidated]: "Validé",
+  [FileReviewStatus.FileReviewRejected]: "Refusé",
+};
+
 export type IdPersonne = Int & { __opaque_int__: "IdPersonne" };
 // registro/sql/personnes.Mails
 export type Mails = string[] | null;

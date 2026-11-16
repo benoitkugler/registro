@@ -283,8 +283,7 @@ CREATE TABLE demandes (
     IdDirecteur integer,
     Categorie smallint CHECK (Categorie IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)) NOT NULL,
     Description text NOT NULL,
-    MaxDocs integer NOT NULL,
-    JoursValide integer NOT NULL
+    MaxDocs integer NOT NULL
 );
 
 CREATE TABLE demande_camps (
@@ -468,7 +467,7 @@ CREATE TABLE compta_camps (
     LastSentMailAdmin timestamp(0) with time zone NOT NULL,
     LastSentMailDirecteur timestamp(0) with time zone NOT NULL,
     Account smallint CHECK (Account IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)) NOT NULL,
-    Fraismdr jsonb NOT NULL
+    FraisMDR jsonb NOT NULL
 );
 
 CREATE TABLE compta_configs (

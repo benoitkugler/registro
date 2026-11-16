@@ -26,7 +26,7 @@ CREATE TABLE compta_camps (
     LastSentMailAdmin timestamp(0) with time zone NOT NULL,
     LastSentMailDirecteur timestamp(0) with time zone NOT NULL,
     Account smallint CHECK (Account IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)) NOT NULL,
-    Fraismdr jsonb NOT NULL
+    FraisMDR jsonb NOT NULL
 );
 
 CREATE TABLE compta_configs (
@@ -447,5 +447,5 @@ ALTER TABLE compta_records
     ADD CONSTRAINT Reviews_gomacro CHECK (gomacro_validate_json_array_comp_Review (Reviews));
 
 ALTER TABLE compta_camps
-    ADD CONSTRAINT Fraismdr_gomacro CHECK (gomacro_validate_json_comp_FraisMDRACVE (Fraismdr));
+    ADD CONSTRAINT FraisMDR_gomacro CHECK (gomacro_validate_json_comp_FraisMDRACVE (FraisMDR));
 

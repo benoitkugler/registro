@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-
 	"registro/sql/camps"
 
 	"github.com/lib/pq"
@@ -1151,7 +1150,7 @@ func DeleteComptaSubrecordsByIdFiles(tx DB, idFiles_ ...IdComptaFile) (ComptaSub
 
 func loadJSON(out any, src any) error {
 	if src == nil {
-		return nil // zero value out
+		return nil //zero value out
 	}
 	bs, ok := src.([]byte)
 	if !ok {
@@ -1179,8 +1178,8 @@ func (s *CarsCosts) Scan(src any) error {
 	}
 	copy(s[:], tmp)
 	return nil
-}
 
+}
 func (s CarsCosts) Value() (driver.Value, error) {
 	return pq.Int32Array(s[:]).Value()
 }
@@ -1196,8 +1195,8 @@ func (s *CarsKms) Scan(src any) error {
 	}
 	copy(s[:], tmp)
 	return nil
-}
 
+}
 func (s CarsKms) Value() (driver.Value, error) {
 	return pq.Int32Array(s[:]).Value()
 }
@@ -1213,8 +1212,8 @@ func (s *MealsCosts) Scan(src any) error {
 	}
 	copy(s[:], tmp)
 	return nil
-}
 
+}
 func (s MealsCosts) Value() (driver.Value, error) {
 	return pq.Int32Array(s[:]).Value()
 }

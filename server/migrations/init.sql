@@ -14,30 +14,30 @@ SELECT
             FROM tauxs));
 
 -- Builtin Demandes
-INSERT INTO demandes (Categorie, Description, MaxDocs, JoursValide)
+INSERT INTO demandes (Categorie, Description, MaxDocs)
     VALUES
         --
-        (1, '', 2, 0),
+        (1, '', 2),
         --
-        (2, '', 2, 0),
+        (2, '', 2),
         --
-        (3, '', 1, 0),
+        (3, '', 1),
         --
-        (4, '', 1, 0),
+        (4, '', 1),
         --
-        (5, '', 1, 0),
+        (5, '', 1),
         --
-        (6, '', 1, 0),
+        (6, '', 1),
         --
-        (7, '', 2, 0),
+        (7, '', 2),
         --
-        (8, 'Vaccins', 5, 0),
+        (8, 'Vaccins', 5),
         --
-        (9, '', 1, 0),
+        (9, '', 1),
         --
-        (10, '', 1, 0),
+        (10, '', 1),
         --
-        (11, '', 1, 0);
+        (11, '', 1);
 
 SELECT
     setval('demandes_id_seq', (

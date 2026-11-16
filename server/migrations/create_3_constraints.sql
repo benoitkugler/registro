@@ -572,5 +572,5 @@ ALTER TABLE compta_records
     ADD CONSTRAINT Reviews_gomacro CHECK (gomacro_validate_json_array_comp_Review (Reviews));
 
 ALTER TABLE compta_camps
-    ADD CONSTRAINT Fraismdr_gomacro CHECK (gomacro_validate_json_comp_FraisMDRACVE (Fraismdr));
+    ADD CONSTRAINT FraisMDR_gomacro CHECK (gomacro_validate_json_comp_FraisMDRACVE (FraisMDR));
 

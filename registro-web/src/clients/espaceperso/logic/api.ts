@@ -667,7 +667,6 @@ export interface Demande {
   Categorie: Categorie;
   Description: string;
   MaxDocs: Int;
-  JoursValide: Int;
 }
 export type IdDemande = Int & { __opaque_int__: "IdDemande" };
 export type IdFile = Int & { __opaque_int__: "IdFile" };

@@ -874,7 +874,6 @@ export interface Demande {
   Categorie: Categorie;
   Description: string;
   MaxDocs: Int;
-  JoursValide: Int;
 }
 // registro/sql/files.Demandes
 export type Demandes = Record<IdDemande, Demande> | null;

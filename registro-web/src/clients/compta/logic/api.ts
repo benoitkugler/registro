@@ -256,6 +256,10 @@ export interface UpdateFraisMDRIn {
   IdCompta: IdComptaCamp;
   Frais: FraisMDRACVE;
 }
+// registro/controllers/compta.out
+export interface out {
+  RedirectURL: string;
+}
 export type IdCamp = Int & { __opaque_int__: "IdCamp" };
 export type IdEquipier = Int & { __opaque_int__: "IdEquipier" };
 // registro/sql/compta.AccountACVE
@@ -1039,14 +1043,14 @@ export abstract class AbstractAPI {
       for (const file of files) {
         formData.append("justificatifs", file, file.name);
       }
-      await Axios.post(fullUrl, formData, {
+      const rep: AxiosResponse<out> = await Axios.post(fullUrl, formData, {
         headers: this.getHeaders(),
         params: {
           "directeur-key": params["directeur-key"],
           idCompta: String(params["idCompta"]),
         },
       });
-      return true;
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
