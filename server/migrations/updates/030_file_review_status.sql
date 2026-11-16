@@ -1,3 +1,4 @@
+-- v0.13.0
 -- Store the director's review state for each uploaded file.
 
 BEGIN;
