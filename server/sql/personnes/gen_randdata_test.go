@@ -62,8 +62,15 @@ func randFichesanitaire() Fichesanitaire {
 	s.AutreContact = randNomTel()
 	s.Modified = randtTime()
 	s.Owners = randMails()
+	s.ReviewStatus = randFileReviewStatus()
 
 	return s
+}
+
+func randFileReviewStatus() FileReviewStatus {
+	choix := [...]FileReviewStatus{FileReviewPending, FileReviewValidated, FileReviewRejected}
+	i := rand.Intn(len(choix))
+	return choix[i]
 }
 
 func randFormationRepere() FormationRepere {

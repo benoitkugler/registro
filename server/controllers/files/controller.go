@@ -234,6 +234,7 @@ func LoadFilesPersonnes(db fs.DB, key crypto.Encrypter, demandes []fs.IdDemande,
 func SaveFileFor(files fs.FileSystem, db *sql.DB, idPersonne pr.IdPersonne, idDemande fs.IdDemande, content []byte, filename string) (file fs.File, err error) {
 	err = utils.InTx(db, func(tx *sql.Tx) error {
 		// create a new file, and the associated metadata
+		// in particular the review status always starts at Pending
 		file, err = fs.File{}.Insert(tx)
 		if err != nil {
 			return err
@@ -257,16 +258,17 @@ type ParticipantsFilesLoader struct {
 	camps    cps.CampsData
 	dossiers ds.Dossiers
 
-	demandes       fs.Demandes
-	idVaccin       fs.IdDemande
-	idCarteId      fs.IdDemande
-	demandesByCamp map[cps.IdCamp]fs.DemandeCamps
+	demandes                 fs.Demandes
+	idVaccin                 fs.IdDemande
+	idCarteId                fs.IdDemande
+	demandesByCamp           map[cps.IdCamp]fs.DemandeCamps
+	askFicheSanitaireMajeurs bool
 
 	fiches map[pr.IdPersonne]pr.Fichesanitaire
 	files  map[pr.IdPersonne]map[fs.IdDemande][]logic.PublicFile
 }
 
-func LoadParticipantsFiles(db fs.DB, key crypto.Encrypter, ids []cps.IdCamp, askCarteId bool) (ParticipantsFilesLoader, error) {
+func LoadParticipantsFiles(db fs.DB, key crypto.Encrypter, ids []cps.IdCamp, askCarteId, askFicheSanitaireMajeurs bool) (ParticipantsFilesLoader, error) {
 	camps, err := cps.LoadCamps(db, ids)
 	if err != nil {
 		return ParticipantsFilesLoader{}, err
@@ -278,7 +280,7 @@ func LoadParticipantsFiles(db fs.DB, key crypto.Encrypter, ids []cps.IdCamp, ask
 	}
 
 	// demandes
-	// always include vaccin
+	// always include vaccin, and add carteId if needed
 	vaccinDemande, carteIdDemande, err := DemandesVaccinEtCarteId(db)
 	if err != nil {
 		return ParticipantsFilesLoader{}, err
@@ -308,22 +310,65 @@ func LoadParticipantsFiles(db fs.DB, key crypto.Encrypter, ids []cps.IdCamp, ask
 	}
 
 	return ParticipantsFilesLoader{
-		camps:          camps,
-		dossiers:       dossiers,
-		demandes:       demandes,
-		idVaccin:       vaccinDemande.Id,
-		idCarteId:      idCarteId,
-		demandesByCamp: tmp.ByIdCamp(),
-		fiches:         fiches,
-		files:          files,
+		camps:                    camps,
+		dossiers:                 dossiers,
+		demandes:                 demandes,
+		idVaccin:                 vaccinDemande.Id,
+		idCarteId:                idCarteId,
+		demandesByCamp:           tmp.ByIdCamp(),
+		askFicheSanitaireMajeurs: askFicheSanitaireMajeurs,
+		fiches:                   fiches,
+		files:                    files,
 	}, nil
 }
 
 type ParticipantFiles struct {
-	Id             cps.IdParticipant
-	Personne       string
-	Fichesanitaire pr.FichesanitaireState
-	Files          map[fs.IdDemande][]logic.PublicFile
+	Id       cps.IdParticipant
+	Personne string
+
+	FicheSanitaireRequired bool // may depend on age
+
+	FichesanitaireValid bool
+	Fichesanitaire      pr.Fichesanitaire
+
+	Files map[fs.IdDemande][]logic.PublicFile
+
+	// IsComplete is true if all document asked in are present and all validated.
+	IsComplete bool
+}
+
+func areDocumentsComplete(pfiles ParticipantFiles, demandes fs.Demandes) bool {
+	if pfiles.FicheSanitaireRequired && pfiles.Fichesanitaire.ReviewStatus != pr.FileReviewValidated {
+		return false
+	}
+	for idDemande, demande := range demandes {
+		if demande.Categorie == fs.Vaccins && !pfiles.FicheSanitaireRequired {
+			continue
+		}
+		// at least one document; and every document validated
+		filesForDemande := pfiles.Files[idDemande]
+		allValidated := true
+		for _, file := range filesForDemande {
+			if file.ReviewStatus != pr.FileReviewValidated {
+				allValidated = false
+			}
+		}
+		if len(filesForDemande) == 0 || !allValidated {
+			return false
+		}
+	}
+	return true
+}
+
+func (pfiles ParticipantFiles) GetFile(id fs.IdFile) (logic.PublicFile, fs.IdDemande) {
+	for idDemande, l := range pfiles.Files {
+		for _, file := range l {
+			if file.Id == id {
+				return file, idDemande
+			}
+		}
+	}
+	return logic.PublicFile{}, 0
 }
 
 // ParticipantsFiles is a 2D array participants as rows
@@ -334,6 +379,16 @@ type ParticipantsFiles struct {
 	// contains Vaccins and, when enabled for the association, CarteId.
 	Demandes     fs.Demandes
 	Participants []ParticipantFiles
+}
+
+// GetParticipant assumes [id] is present
+func (files ParticipantsFiles) GetParticipant(id cps.IdParticipant) ParticipantFiles {
+	for _, participant := range files.Participants {
+		if participant.Id == id {
+			return participant
+		}
+	}
+	return ParticipantFiles{}
 }
 
 func (ld ParticipantsFilesLoader) For(id cps.IdCamp) ParticipantsFiles {
@@ -354,12 +409,19 @@ func (ld ParticipantsFilesLoader) For(id cps.IdCamp) ParticipantsFiles {
 		for _, demande := range idDemandes {
 			filesM[demande] = ld.files[personne.Id][demande]
 		}
-		out.Participants = append(out.Participants, ParticipantFiles{
-			Id:             participant.Participant.Id,
-			Personne:       personne.NOMPrenom(),
-			Fichesanitaire: ld.fiches[personne.Id].State(dossier.MomentInscription),
-			Files:          filesM,
-		})
+		fiche := ld.fiches[personne.Id]
+
+		pFiles := ParticipantFiles{
+			Id:                     participant.Participant.Id,
+			Personne:               personne.NOMPrenom(),
+			FicheSanitaireRequired: camp.Camp.AgeDebutCamp(personne.DateNaissance) < 18 || ld.askFicheSanitaireMajeurs,
+			FichesanitaireValid:    fiche.State(dossier.MomentInscription) == pr.UpToDate,
+			Fichesanitaire:         fiche,
+			Files:                  filesM,
+		}
+		pFiles.IsComplete = areDocumentsComplete(pFiles, demandes)
+
+		out.Participants = append(out.Participants, pFiles)
 	}
 
 	slices.SortFunc(out.Participants, func(a, b ParticipantFiles) int { return strings.Compare(a.Personne, b.Personne) })
@@ -375,13 +437,14 @@ type DemandeStat struct {
 
 // Stats returns a summary of the files uploaded
 // for each [Demande] and Fiche Sanitaire
+// TODO: maybe include the verification status
 func (files ParticipantsFiles) Stats() (out []DemandeStat) {
 	inscritsCount := len(files.Participants)
 
 	// fiche sanitaire
 	uploadedCount := 0
 	for _, participant := range files.Participants {
-		if hasFiche := participant.Fichesanitaire == pr.UpToDate; hasFiche {
+		if participant.FichesanitaireValid {
 			uploadedCount += 1
 		}
 	}

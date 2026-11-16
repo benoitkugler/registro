@@ -482,6 +482,7 @@ export interface PublicFile {
   Taille: Int;
   NomClient: string;
   Uploaded: Time;
+  ReviewStatus: FileReviewStatus;
 }
 // registro/logic.PublicParticipantCamp
 export interface PublicParticipantCamp {
@@ -1017,6 +1018,21 @@ export interface EventMessage {
   OnlyToCamp: OptID_IdCamp;
 }
 export type IdEvent = Int & { __opaque_int__: "IdEvent" };
+// registro/sql/files.FileReviewStatus
+export const FileReviewStatus = {
+  FileReviewPending: 0,
+  FileReviewValidated: 1,
+  FileReviewRejected: 2,
+} as const;
+export type FileReviewStatus =
+  (typeof FileReviewStatus)[keyof typeof FileReviewStatus];
+
+export const FileReviewStatusLabels: Record<FileReviewStatus, string> = {
+  [FileReviewStatus.FileReviewPending]: "En attente",
+  [FileReviewStatus.FileReviewValidated]: "Validé",
+  [FileReviewStatus.FileReviewRejected]: "Refusé",
+};
+
 export type IdFile = Int & { __opaque_int__: "IdFile" };
 export type IdInscription = Int & { __opaque_int__: "IdInscription" };
 export type IdInscriptionParticipant = Int & {

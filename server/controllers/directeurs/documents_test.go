@@ -13,16 +13,16 @@ import (
 	tu "registro/utils/testutils"
 )
 
-func createFileFor(db ds.DB, idPersonne pr.IdPersonne, idDemande files.IdDemande) error {
+func createFileFor(db ds.DB, idPersonne pr.IdPersonne, idDemande files.IdDemande) (files.File, error) {
 	file, err := files.File{}.Insert(db)
 	if err != nil {
-		return err
+		return files.File{}, err
 	}
 	err = files.FilePersonne{IdFile: file.Id, IdPersonne: idPersonne, IdDemande: idDemande}.Insert(db)
 	if err != nil {
-		return err
+		return files.File{}, err
 	}
-	return nil
+	return file, nil
 }
 
 func TestDocuments(t *testing.T) {
@@ -36,7 +36,7 @@ func TestDocuments(t *testing.T) {
 	camp, err := cps.Camp{IdTaux: 1}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	pe1, err := pr.Personne{Identite: pr.Identite{Mail: "dummy@free.fr"}}.Insert(db)
+	pe1, err := pr.Personne{Identite: pr.Identite{Mail: "dummy@free.fr", Prenom: "Benoit", Nom: "Dupont"}}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	pe2, err := pr.Personne{}.Insert(db)
@@ -147,16 +147,16 @@ func TestDocuments(t *testing.T) {
 		_, err = ct.applyDemande(camp.Id, demande2.Demande.Id)
 		tu.AssertNoErr(t, err)
 
-		err = createFileFor(ct.db, pe1.Id, demande1.Demande.Id)
+		_, err = createFileFor(ct.db, pe1.Id, demande1.Demande.Id)
 		tu.AssertNoErr(t, err)
-		err = createFileFor(ct.db, pe2.Id, demande1.Demande.Id)
+		_, err = createFileFor(ct.db, pe2.Id, demande1.Demande.Id)
 		tu.AssertNoErr(t, err)
-		err = createFileFor(ct.db, pe3.Id, demande1.Demande.Id)
+		_, err = createFileFor(ct.db, pe3.Id, demande1.Demande.Id)
 		tu.AssertNoErr(t, err)
 
-		err = createFileFor(ct.db, pe1.Id, demande2.Demande.Id)
+		_, err = createFileFor(ct.db, pe1.Id, demande2.Demande.Id)
 		tu.AssertNoErr(t, err)
-		err = createFileFor(ct.db, pe3.Id, demande2.Demande.Id)
+		_, err = createFileFor(ct.db, pe3.Id, demande2.Demande.Id)
 		tu.AssertNoErr(t, err)
 
 		original := ct.asso.AskCarteIdInscrits
@@ -187,4 +187,85 @@ func TestDocuments(t *testing.T) {
 		err = ct.relanceDocuments("", []cps.IdParticipant{pa1.Id, pa2.Id})
 		tu.AssertNoErr(t, err)
 	})
+}
+
+func TestReview(t *testing.T) {
+	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
+		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",
+		"../../migrations/init.sql")
+	defer db.Remove()
+
+	asso, smtp := loadEnv(t)
+
+	camp, err := cps.Camp{IdTaux: 1}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	pe1, err := pr.Personne{Identite: pr.Identite{Mail: "dummy@free.fr", Prenom: "Benoit", Nom: "Dupont"}}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	dossier, err := ds.Dossier{IdTaux: 1, IdResponsable: pe1.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	pa1, err := cps.Participant{IdPersonne: pe1.Id, IdCamp: camp.Id, IdDossier: dossier.Id, IdTaux: 1, Statut: cps.Inscrit}.Insert(db)
+	tu.AssertNoErr(t, err)
+	ct, err := NewController(db.DB, "", "", files.NewFileSystem(os.TempDir()), smtp, asso, config.Immich{})
+	tu.AssertNoErr(t, err)
+
+	ct.asso.AskFicheSanitaireMajeurs = true
+	ct.asso.AskCarteIdInscrits = false
+
+	_, err = ct.createEquipier("", EquipiersCreateIn{
+		CreatePersonne: true,
+		Roles:          cps.Roles{cps.Direction},
+	}, camp.Id)
+	tu.AssertNoErr(t, err)
+
+	demande1, err := ct.createDemande(camp.Id)
+	tu.AssertNoErr(t, err)
+	_, err = ct.applyDemande(camp.Id, demande1.Demande.Id)
+	tu.AssertNoErr(t, err)
+
+	added, err := createFileFor(ct.db, pe1.Id, demande1.Demande.Id)
+	tu.AssertNoErr(t, err)
+
+	_, err = ct.reviewParticipantFile("", camp.Id+1, ParticipantFileReviewIn{
+		IdParticipant: pa1.Id,
+	})
+	tu.AssertErr(t, err)
+
+	out, err := ct.reviewParticipantFile("test.fr", camp.Id, ParticipantFileReviewIn{
+		IdParticipant: pa1.Id, IdFile: added.Id.Opt(), Accepted: false, Reason: "xxx",
+	})
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, out.Notif == RejectionMailSent)
+
+	out, err = ct.reviewParticipantFile("test.fr", camp.Id, ParticipantFileReviewIn{
+		IdParticipant: pa1.Id, IdFile: added.Id.Opt(), Accepted: true,
+	})
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, out.Notif == NoOp)
+
+	// fiche sanitaire
+	err = pr.Fichesanitaire{IdPersonne: pa1.IdPersonne}.Insert(db)
+	tu.AssertNoErr(t, err)
+	out, err = ct.reviewParticipantFile("test.fr", camp.Id, ParticipantFileReviewIn{
+		IdParticipant: pa1.Id, Accepted: false, Reason: "xxx",
+	})
+	tu.Assert(t, out.Notif == RejectionMailSent)
+	tu.AssertNoErr(t, err)
+	out, err = ct.reviewParticipantFile("test.fr", camp.Id, ParticipantFileReviewIn{
+		IdParticipant: pa1.Id, Accepted: true,
+	})
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, out.Notif == NoOp)
+
+	vaccin, _, err := filesAPI.DemandesVaccinEtCarteId(ct.db)
+	tu.AssertNoErr(t, err)
+	addedVaccin, err := createFileFor(ct.db, pe1.Id, vaccin.Id)
+	tu.AssertNoErr(t, err)
+	out, err = ct.reviewParticipantFile("test.fr", camp.Id, ParticipantFileReviewIn{
+		IdParticipant: pa1.Id, IdFile: addedVaccin.Id.Opt(), Accepted: true,
+	})
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, out.Notif == CompletionMailSent)
 }

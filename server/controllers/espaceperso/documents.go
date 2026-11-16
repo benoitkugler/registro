@@ -47,7 +47,7 @@ func (docs *Documents) setCounts(lastLoaded time.Time, events logic.Events) {
 	toFill := 0
 	for _, personne := range docs.FilesToUpload {
 		for _, demande := range personne.Demandes {
-			if len(demande.Uploaded) == 0 {
+			if demande.toFill() {
 				toFill++
 			}
 		}
@@ -82,7 +82,7 @@ func (docs *Documents) setCounts(lastLoaded time.Time, events logic.Events) {
 	// fiches sanitaires
 	fichesCount := 0
 	for _, fiche := range docs.Fiches {
-		if fiche.IsLocked || fiche.State != pr.UpToDate {
+		if fiche.IsLocked || fiche.State != pr.UpToDate || fiche.Fichesanitaire.ReviewStatus == pr.FileReviewRejected {
 			fichesCount++
 		}
 	}
@@ -115,6 +115,18 @@ type DemandePersonne struct {
 	Demande     fs.Demande
 	DemandeFile logic.PublicFile
 	Uploaded    []logic.PublicFile
+}
+
+func (dp DemandePersonne) toFill() bool {
+	if len(dp.Uploaded) == 0 {
+		return true
+	}
+	for _, f := range dp.Uploaded {
+		if f.ReviewStatus == pr.FileReviewRejected {
+			return true
+		}
+	}
+	return false
 }
 
 func (ct *Controller) LoadDocuments(c echo.Context) error {

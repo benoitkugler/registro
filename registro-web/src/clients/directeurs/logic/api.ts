@@ -171,6 +171,13 @@ export interface Messages {
   Dossiers: Record<IdDossier, DossierPersonnes> | null;
   NewMessagesCount: Int;
 }
+// registro/controllers/directeurs.ParticipantFileReviewIn
+export interface ParticipantFileReviewIn {
+  IdParticipant: IdParticipant;
+  IdFile: OptID_IdFile;
+  Accepted: boolean;
+  Reason: string;
+}
 // registro/controllers/directeurs.ParticipantsOut
 export interface ParticipantsOut {
   Participants: ParticipantExt[] | null;
@@ -188,6 +195,25 @@ export interface PhotosInviteIn {
   ToResponsables: boolean;
   ToEquipiers: boolean;
 }
+// registro/controllers/directeurs.ReviewFileOut
+export interface ReviewFileOut {
+  Notif: ReviewNotif;
+  Files: ParticipantFiles;
+}
+// registro/controllers/directeurs.ReviewNotif
+export const ReviewNotif = {
+  NoOp: 0,
+  RejectionMailSent: 1,
+  CompletionMailSent: 2,
+} as const;
+export type ReviewNotif = (typeof ReviewNotif)[keyof typeof ReviewNotif];
+
+export const ReviewNotifLabels: Record<ReviewNotif, string> = {
+  [ReviewNotif.NoOp]: "",
+  [ReviewNotif.RejectionMailSent]: "",
+  [ReviewNotif.CompletionMailSent]: "",
+};
+
 // registro/controllers/directeurs.UpdateFinsIn
 export interface UpdateFinsIn {
   Fins: Record<IdGroupe, Date> | null;
@@ -197,8 +223,11 @@ export interface UpdateFinsIn {
 export interface ParticipantFiles {
   Id: IdParticipant;
   Personne: string;
-  Fichesanitaire: FichesanitaireState;
+  FicheSanitaireRequired: boolean;
+  FichesanitaireValid: boolean;
+  Fichesanitaire: Fichesanitaire;
   Files: Record<IdDemande, PublicFile[] | null> | null;
+  IsComplete: boolean;
 }
 // registro/controllers/files.ParticipantsFiles
 export interface ParticipantsFiles {
@@ -281,6 +310,7 @@ export interface PublicFile {
   Taille: Int;
   NomClient: string;
   Uploaded: Time;
+  ReviewStatus: FileReviewStatus;
 }
 // registro/logic.SondageExt
 export interface SondageExt {
@@ -860,6 +890,7 @@ export interface Fichesanitaire {
   AutreContact: NomTel;
   Modified: Time;
   Owners: Mails;
+  ReviewStatus: FileReviewStatus;
 }
 // registro/sql/personnes.FichesanitaireState
 export const FichesanitaireState = {
@@ -874,6 +905,21 @@ export const FichesanitaireStateLabels: Record<FichesanitaireState, string> = {
   [FichesanitaireState.NoFiche]: "Vide",
   [FichesanitaireState.Outdated]: "Pas à jour",
   [FichesanitaireState.UpToDate]: "Remplie",
+};
+
+// registro/sql/personnes.FileReviewStatus
+export const FileReviewStatus = {
+  FileReviewPending: 0,
+  FileReviewValidated: 1,
+  FileReviewRejected: 2,
+} as const;
+export type FileReviewStatus =
+  (typeof FileReviewStatus)[keyof typeof FileReviewStatus];
+
+export const FileReviewStatusLabels: Record<FileReviewStatus, string> = {
+  [FileReviewStatus.FileReviewPending]: "En attente",
+  [FileReviewStatus.FileReviewValidated]: "Validé",
+  [FileReviewStatus.FileReviewRejected]: "Refusé",
 };
 
 export type IdPersonne = Int & { __opaque_int__: "IdPersonne" };
@@ -1192,6 +1238,23 @@ export abstract class AbstractAPI {
       const rep: AxiosResponse<ParticipantsFiles> = await Axios.get(fullUrl, {
         headers: this.getHeaders(),
       });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** ParticipantsReviewFile performs the request and handles the error */
+  async ParticipantsReviewFile(params: ParticipantFileReviewIn) {
+    const fullUrl =
+      this.baseURL + "/api/v1/directeurs/participants/review-file";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<ReviewFileOut> = await Axios.post(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
       return rep.data;
     } catch (error) {
       this.handleError(error);

@@ -462,11 +462,152 @@ func (ct *Controller) ParticipantsLoadFiles(c echo.Context) error {
 }
 
 func (ct *Controller) loadParticipantsFiles(id cps.IdCamp) (fsAPI.ParticipantsFiles, error) {
-	loader, err := fsAPI.LoadParticipantsFiles(ct.db, ct.key, []cps.IdCamp{id}, ct.asso.AskCarteIdInscrits)
+	loader, err := fsAPI.LoadParticipantsFiles(ct.db, ct.key, []cps.IdCamp{id}, ct.asso.AskCarteIdInscrits, ct.asso.AskFicheSanitaireMajeurs)
 	if err != nil {
 		return fsAPI.ParticipantsFiles{}, err
 	}
 	return loader.For(id), nil
+}
+
+type ParticipantFileReviewIn struct {
+	IdParticipant cps.IdParticipant
+
+	IdFile fs.OptIdFile // If null, this means Fichesanitaire
+
+	Accepted bool
+	Reason   string
+}
+
+func (ct *Controller) ParticipantsReviewFile(c echo.Context) error {
+	user := JWTUser(c)
+	var args ParticipantFileReviewIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+	out, err := ct.reviewParticipantFile(c.Request().Host, user, args)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
+type ReviewFileOut struct {
+	Notif ReviewNotif
+	Files fsAPI.ParticipantFiles
+}
+
+type ReviewNotif uint8
+
+const (
+	NoOp ReviewNotif = iota
+	RejectionMailSent
+	CompletionMailSent
+)
+
+func (ct *Controller) reviewParticipantFile(host string, idCamp cps.IdCamp, args ParticipantFileReviewIn) (ReviewFileOut, error) {
+	participant, err := cps.SelectParticipant(ct.db, args.IdParticipant)
+	if err != nil {
+		return ReviewFileOut{}, utils.SQLError(err)
+	}
+	if participant.IdCamp != idCamp {
+		return ReviewFileOut{}, errors.New("inconsistent idParticipant")
+	}
+
+	before, err := ct.loadParticipantsFiles(idCamp)
+	if err != nil {
+		return ReviewFileOut{}, err
+	}
+	filesBefore := before.GetParticipant(args.IdParticipant)
+	wasComplete := filesBefore.IsComplete
+
+	status := pr.FileReviewRejected
+	if args.Accepted {
+		status = pr.FileReviewValidated
+	}
+	// handle file or fiche sanitaire
+	var docContext mails.DocumentContext
+	if args.IdFile.Valid { // "regular" file
+		idFile := args.IdFile.Id
+		file, idTarget := filesBefore.GetFile(idFile)
+
+		file.ReviewStatus = status
+		_, err = file.Update(ct.db)
+		if err != nil {
+			return ReviewFileOut{}, utils.SQLError(err)
+		}
+		demande := before.Demandes[idTarget]
+		docContext = mails.DocumentContext{DemandeTitle: demande.Title(), FileName: file.NomClient}
+	} else { // fiche sanitaire
+		filesBefore.Fichesanitaire.ReviewStatus = status
+		err = utils.InTx(ct.db, func(tx *sql.Tx) error {
+			_, err = pr.DeleteFichesanitairesByIdPersonnes(tx, participant.IdPersonne)
+			if err != nil {
+				return err
+			}
+			err = filesBefore.Fichesanitaire.Insert(tx)
+			return err
+		})
+		if err != nil {
+			return ReviewFileOut{}, err
+		}
+		docContext = mails.DocumentContext{IsFicheSanitaire: true}
+	}
+
+	after, err := ct.loadParticipantsFiles(idCamp)
+	if err != nil {
+		return ReviewFileOut{}, err
+	}
+	filesAfter := after.GetParticipant(args.IdParticipant)
+	isComplete := filesAfter.IsComplete
+
+	// notify either on rejection or when a non complete participant is now complet
+	var action ReviewNotif
+	if !args.Accepted {
+		action = RejectionMailSent
+	} else if !wasComplete && isComplete {
+		action = CompletionMailSent
+	}
+	if action != NoOp {
+		err = ct.sendParticipantFileReviewEmails(host, idCamp, participant, docContext, args.Reason, action)
+	}
+	return ReviewFileOut{action, filesAfter}, err
+}
+
+func (ct *Controller) sendParticipantFileReviewEmails(host string, idCamp cps.IdCamp, participant cps.Participant, context mails.DocumentContext, reason string, action ReviewNotif) error {
+	dossier, err := logic.LoadDossier(ct.db, participant.IdDossier)
+	if err != nil {
+		return err
+	}
+	responsable := dossier.Responsable()
+	participantP := dossier.PersonneFor(participant)
+	camp := dossier.Camps()[idCamp]
+	mailer := mails.NewMailer(ct.smtp, ct.asso.MailsSettings)
+
+	var ccs []string
+	if participantP.Mail != "" && participantP.Mail != responsable.Mail {
+		ccs = append(ccs, participantP.Mail)
+	}
+	if action == RejectionMailSent {
+		url := logic.EspacePersoURL(ct.key, host, dossier.Dossier.Id, utils.QP("origine", "document-refuse"))
+		html, err := mails.NotifieDocumentRefuse(ct.asso, mails.NewContact(&responsable), camp.Label(), participantP.PrenomN(),
+			context, reason, url)
+		if err != nil {
+			return err
+		}
+		if err := mailer.SendMail(responsable.Mail, fmt.Sprintf("Document à remplacer - %s", camp.Label()), html, ccs, nil); err != nil {
+			return err
+		}
+	} else if action == CompletionMailSent {
+		url := logic.EspacePersoURL(ct.key, host, dossier.Dossier.Id, utils.QP("origine", "documents-valides"))
+		html, err := mails.NotifieDocumentsValides(ct.asso, mails.NewContact(&responsable), camp.Label(), participantP.PrenomN(), url)
+		if err != nil {
+			return err
+		}
+		if err := mailer.SendMail(responsable.Mail, fmt.Sprintf("Documents validés - %s", camp.Label()), html, ccs, nil); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // DocumentsStreamFiles télécharge tous les fichiers pour une [Demande],

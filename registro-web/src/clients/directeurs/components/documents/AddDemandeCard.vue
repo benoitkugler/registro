@@ -288,6 +288,7 @@ async function deleteFile() {
       NomClient: "",
       Taille: 0 as Int,
       Uploaded: "" as Time,
+      ReviewStatus: 0,
     } satisfies PublicFile,
   });
 }

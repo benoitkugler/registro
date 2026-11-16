@@ -27,6 +27,8 @@ type File struct {
 	// different from the file path
 	NomClient string
 	Uploaded  time.Time
+
+	ReviewStatus pr.FileReviewStatus
 }
 
 func (id IdFile) Opt() OptIdFile { return OptIdFile{Id: id, Valid: true} }

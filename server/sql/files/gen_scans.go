@@ -583,6 +583,7 @@ func scanOneFile(row scanner) (File, error) {
 		&item.Taille,
 		&item.NomClient,
 		&item.Uploaded,
+		&item.ReviewStatus,
 	)
 	return item, err
 }
@@ -591,7 +592,7 @@ func ScanFile(row *sql.Row) (File, error) { return scanOneFile(row) }
 
 // SelectAll returns all the items in the files table.
 func SelectAllFiles(db DB) (Files, error) {
-	rows, err := db.Query("SELECT id, taille, nomclient, uploaded FROM files")
+	rows, err := db.Query("SELECT id, taille, nomclient, uploaded, reviewstatus FROM files")
 	if err != nil {
 		return nil, err
 	}
@@ -600,13 +601,13 @@ func SelectAllFiles(db DB) (Files, error) {
 
 // SelectFile returns the entry matching 'id'.
 func SelectFile(tx DB, id IdFile) (File, error) {
-	row := tx.QueryRow("SELECT id, taille, nomclient, uploaded FROM files WHERE id = $1", id)
+	row := tx.QueryRow("SELECT id, taille, nomclient, uploaded, reviewstatus FROM files WHERE id = $1", id)
 	return ScanFile(row)
 }
 
 // SelectFiles returns the entry matching the given 'ids'.
 func SelectFiles(tx DB, ids ...IdFile) (Files, error) {
-	rows, err := tx.Query("SELECT id, taille, nomclient, uploaded FROM files WHERE id = ANY($1)", IdFileArrayToPQ(ids))
+	rows, err := tx.Query("SELECT id, taille, nomclient, uploaded, reviewstatus FROM files WHERE id = ANY($1)", IdFileArrayToPQ(ids))
 	if err != nil {
 		return nil, err
 	}
@@ -651,28 +652,28 @@ func ScanFiles(rs *sql.Rows) (Files, error) {
 // Insert one File in the database and returns the item with id filled.
 func (item File) Insert(tx DB) (out File, err error) {
 	row := tx.QueryRow(`INSERT INTO files (
-		taille, nomclient, uploaded
+		taille, nomclient, uploaded, reviewstatus
 		) VALUES (
-		$1, $2, $3
-		) RETURNING id, taille, nomclient, uploaded;
-		`, item.Taille, item.NomClient, item.Uploaded)
+		$1, $2, $3, $4
+		) RETURNING id, taille, nomclient, uploaded, reviewstatus;
+		`, item.Taille, item.NomClient, item.Uploaded, item.ReviewStatus)
 	return ScanFile(row)
 }
 
 // Update File in the database and returns the new version.
 func (item File) Update(tx DB) (out File, err error) {
 	row := tx.QueryRow(`UPDATE files SET (
-		taille, nomclient, uploaded
+		taille, nomclient, uploaded, reviewstatus
 		) = (
-		$1, $2, $3
-		) WHERE id = $4 RETURNING id, taille, nomclient, uploaded;
-		`, item.Taille, item.NomClient, item.Uploaded, item.Id)
+		$1, $2, $3, $4
+		) WHERE id = $5 RETURNING id, taille, nomclient, uploaded, reviewstatus;
+		`, item.Taille, item.NomClient, item.Uploaded, item.ReviewStatus, item.Id)
 	return ScanFile(row)
 }
 
 // Deletes the File and returns the item
 func DeleteFileById(tx DB, id IdFile) (File, error) {
-	row := tx.QueryRow("DELETE FROM files WHERE id = $1 RETURNING id, taille, nomclient, uploaded;", id)
+	row := tx.QueryRow("DELETE FROM files WHERE id = $1 RETURNING id, taille, nomclient, uploaded, reviewstatus;", id)
 	return ScanFile(row)
 }
 

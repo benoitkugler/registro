@@ -2,6 +2,7 @@ import {
   Acteur,
   CurrencyLabels,
   EventContentKind,
+  FileReviewStatus,
   ModePaiement,
   Sexe,
   StatutPaiement,
@@ -441,6 +442,17 @@ export namespace Formatters {
         return "orange";
       case FichesanitaireState.UpToDate:
         return "green";
+    }
+  }
+
+  export function reviewStatus(status: FileReviewStatus) {
+    switch (status) {
+      case FileReviewStatus.FileReviewValidated:
+        return { color: "green", icon: "mdi-check" };
+      case FileReviewStatus.FileReviewRejected:
+        return { color: "red", icon: "mdi-close-circle" };
+      default:
+        return { color: "orange", icon: "mdi-clock-outline" };
     }
   }
 

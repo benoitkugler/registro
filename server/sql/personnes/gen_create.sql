@@ -54,7 +54,8 @@ CREATE TABLE fichesanitaires (
     AutreContact jsonb NOT NULL,
     Modified timestamp(0) with time zone NOT NULL,
     Owners text[],
-    guard boolean NOT NULL
+    guard boolean NOT NULL,
+    ReviewStatus smallint CHECK (ReviewStatus IN (0, 1, 2)) NOT NULL
 );
 
 CREATE TABLE personnes (

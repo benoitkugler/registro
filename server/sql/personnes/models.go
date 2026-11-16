@@ -69,6 +69,8 @@ type Fichesanitaire struct {
 	Owners   Mails // used for security
 
 	guard bool `gomacro-sql-guard:"false"`
+
+	ReviewStatus FileReviewStatus
 }
 
 // Ficheequipier is an extension table loaded

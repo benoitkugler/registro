@@ -166,6 +166,60 @@ func Test_loadFichesanitaires(t *testing.T) {
 	tu.Assert(t, hasMajeur)
 }
 
+func Test_updateFichesanitaire(t *testing.T) {
+	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
+		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",
+		"../../migrations/init.sql")
+	defer db.Remove()
+
+	now := time.Now()
+	responsable, err := pr.Personne{Identite: pr.Identite{Mail: "parent@example.test"}}.Insert(db)
+	tu.AssertNoErr(t, err)
+	enfant, err := pr.Personne{Identite: pr.Identite{
+		DateNaissance: shared.NewDateFrom(now.AddDate(-12, 0, 0)),
+	}}.Insert(db)
+	tu.AssertNoErr(t, err)
+	outsider, err := pr.Personne{}.Insert(db)
+	tu.AssertNoErr(t, err)
+	dossier, err := ds.Dossier{IdTaux: 1, IdResponsable: responsable.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+	camp, err := cps.Camp{
+		IdTaux: 1, DateDebut: shared.NewDateFrom(now), Duree: 1,
+	}.Insert(db)
+	tu.AssertNoErr(t, err)
+	_, err = cps.Participant{
+		IdCamp: camp.Id, IdPersonne: enfant.Id, IdDossier: dossier.Id,
+		IdTaux: 1, Statut: cps.Inscrit,
+	}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	ct := Controller{
+		db:  db.DB,
+		key: crypto.NewEncrypter("test"),
+	}
+	token := crypto.EncryptID(ct.key, dossier.Id)
+	err = ct.updateFichesanitaire(UpdateFichesanitaireIn{
+		Token: token,
+		Fichesanitaire: pr.Fichesanitaire{
+			IdPersonne: enfant.Id,
+		},
+	})
+	tu.AssertNoErr(t, err)
+
+	fiche, found, err := pr.SelectFichesanitaireByIdPersonne(db, enfant.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, found && !fiche.Modified.IsZero())
+	tu.Assert(t, len(fiche.Owners) == 1 && fiche.Owners[0] == responsable.Mail)
+
+	err = ct.updateFichesanitaire(UpdateFichesanitaireIn{
+		Token: token,
+		Fichesanitaire: pr.Fichesanitaire{
+			IdPersonne: outsider.Id,
+		},
+	})
+	tu.AssertErr(t, err)
+}
+
 func Test_sondages(t *testing.T) {
 	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
 		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",

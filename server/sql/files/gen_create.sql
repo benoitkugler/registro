@@ -24,7 +24,8 @@ CREATE TABLE files (
     Id serial PRIMARY KEY,
     Taille integer NOT NULL,
     NomClient text NOT NULL,
-    Uploaded timestamp(0) with time zone NOT NULL
+    Uploaded timestamp(0) with time zone NOT NULL,
+    ReviewStatus smallint CHECK (ReviewStatus IN (0, 1, 2)) NOT NULL
 );
 
 CREATE TABLE file_aides (

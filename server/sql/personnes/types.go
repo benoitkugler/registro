@@ -241,3 +241,11 @@ type NomTel struct {
 	Nom string
 	Tel Tel
 }
+
+type FileReviewStatus uint8
+
+const (
+	FileReviewPending   FileReviewStatus = iota // En attente
+	FileReviewValidated                         // Validé
+	FileReviewRejected                          // Refusé
+)

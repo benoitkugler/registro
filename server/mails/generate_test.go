@@ -200,6 +200,31 @@ func TestNotifieFusionDossier(t *testing.T) {
 	tu.Write(t, "NotifieFusionDossier.html", []byte(html))
 }
 
+func TestNotifieDocumentsValides(t *testing.T) {
+	cfg, _ := loadEnv(t)
+
+	html, err := NotifieDocumentsValides(cfg, Contact{Prenom: "Benoit", Sexe: pr.Woman},
+		"C2 - 2025", "Bneoit K", "http://localhost/test")
+	tu.AssertNoErr(t, err)
+	tu.Write(t, "NotifieDocumentsValides.html", []byte(html))
+}
+
+func TestNotifieDocumentRefuse(t *testing.T) {
+	cfg, _ := loadEnv(t)
+
+	html, err := NotifieDocumentRefuse(cfg, Contact{Prenom: "Benoit", Sexe: pr.Woman},
+		"C2 - 2025", "Bneoit K", DocumentContext{IsFicheSanitaire: true}, "Champ manquants",
+		"http://localhost/test")
+	tu.AssertNoErr(t, err)
+	tu.Write(t, "NotifieDocumentRefuse1.html", []byte(html))
+
+	html, err = NotifieDocumentRefuse(cfg, Contact{Prenom: "Benoit", Sexe: pr.Woman},
+		"C2 - 2025", "Bneoit K", DocumentContext{DemandeTitle: "Vaccins", FileName: "test.pdf"}, "Champ manquants",
+		"http://localhost/test")
+	tu.AssertNoErr(t, err)
+	tu.Write(t, "NotifieDocumentRefuse2.html", []byte(html))
+}
+
 func TestTransfertFicheSanitaire(t *testing.T) {
 	cfg, _ := loadEnv(t)
 

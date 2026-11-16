@@ -264,6 +264,7 @@ export interface PublicFile {
   Taille: Int;
   NomClient: string;
   Uploaded: Time;
+  ReviewStatus: FileReviewStatus;
 }
 // registro/logic.PublicParticipantCamp
 export interface PublicParticipantCamp {
@@ -680,6 +681,7 @@ export interface Fichesanitaire {
   AutreContact: NomTel;
   Modified: Time;
   Owners: Mails;
+  ReviewStatus: FileReviewStatus;
 }
 // registro/sql/personnes.FichesanitaireState
 export const FichesanitaireState = {
@@ -694,6 +696,21 @@ export const FichesanitaireStateLabels: Record<FichesanitaireState, string> = {
   [FichesanitaireState.NoFiche]: "Vide",
   [FichesanitaireState.Outdated]: "Pas à jour",
   [FichesanitaireState.UpToDate]: "Remplie",
+};
+
+// registro/sql/personnes.FileReviewStatus
+export const FileReviewStatus = {
+  FileReviewPending: 0,
+  FileReviewValidated: 1,
+  FileReviewRejected: 2,
+} as const;
+export type FileReviewStatus =
+  (typeof FileReviewStatus)[keyof typeof FileReviewStatus];
+
+export const FileReviewStatusLabels: Record<FileReviewStatus, string> = {
+  [FileReviewStatus.FileReviewPending]: "En attente",
+  [FileReviewStatus.FileReviewValidated]: "Validé",
+  [FileReviewStatus.FileReviewRejected]: "Refusé",
 };
 
 export type IdPersonne = Int & { __opaque_int__: "IdPersonne" };

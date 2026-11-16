@@ -52,6 +52,7 @@ func randFile() File {
 	s.Taille = randint()
 	s.NomClient = randstring()
 	s.Uploaded = randtTime()
+	s.ReviewStatus = randper_FileReviewStatus()
 
 	return s
 }
@@ -113,6 +114,12 @@ func randint() int {
 
 func randint64() int64 {
 	return int64(rand.Intn(1000000))
+}
+
+func randper_FileReviewStatus() personnes.FileReviewStatus {
+	choix := [...]personnes.FileReviewStatus{personnes.FileReviewPending, personnes.FileReviewValidated, personnes.FileReviewRejected}
+	i := rand.Intn(len(choix))
+	return choix[i]
 }
 
 func randper_IdPersonne() personnes.IdPersonne {

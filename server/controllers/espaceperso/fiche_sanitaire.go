@@ -143,7 +143,7 @@ func (ct *Controller) updateFichesanitaire(args UpdateFichesanitaireIn) error {
 	}
 	args.Fichesanitaire.Owners = fs.Owners
 	args.Fichesanitaire.Modified = time.Now()
-
+	args.Fichesanitaire.ReviewStatus = pr.FileReviewPending // reset the validation status
 	return utils.InTx(ct.db, func(tx *sql.Tx) error {
 		_, err = pr.DeleteFichesanitairesByIdPersonnes(tx, idPersonne)
 		if err != nil {

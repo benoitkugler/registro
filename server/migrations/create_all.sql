@@ -78,7 +78,8 @@ CREATE TABLE fichesanitaires (
     AutreContact jsonb NOT NULL,
     Modified timestamp(0) with time zone NOT NULL,
     Owners text[],
-    guard boolean NOT NULL
+    guard boolean NOT NULL,
+    ReviewStatus smallint CHECK (ReviewStatus IN (0, 1, 2)) NOT NULL
 );
 
 CREATE TABLE personnes (
@@ -301,7 +302,8 @@ CREATE TABLE files (
     Id serial PRIMARY KEY,
     Taille integer NOT NULL,
     NomClient text NOT NULL,
-    Uploaded timestamp(0) with time zone NOT NULL
+    Uploaded timestamp(0) with time zone NOT NULL,
+    ReviewStatus smallint CHECK (ReviewStatus IN (0, 1, 2)) NOT NULL
 );
 
 CREATE TABLE file_aides (
@@ -2103,5 +2105,5 @@ INSERT INTO compta_configs (Year, -- integer
     EntretienMDR, -- integer
     MaterielMDR -- integer
  )
-    VALUES (2018, '{50, 200, 50, 200, 70}', 25, 10, '{150, 80, 50}', 15000, 20, 100);
+    VALUES (2020, '{50, 200, 50, 200, 70}', 25, 10, '{150, 80, 50}', 15000, 20, 100);
 

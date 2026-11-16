@@ -156,7 +156,7 @@
     </v-dialog>
 
     <!-- documents demandés -->
-    <v-dialog v-model="showDocuments" max-width="800px">
+    <v-dialog v-model="showDocuments" max-width="1200px">
       <DocumentsPannel></DocumentsPannel>
     </v-dialog>
 
