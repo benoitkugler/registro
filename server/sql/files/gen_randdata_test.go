@@ -24,7 +24,6 @@ func randDemande() Demande {
 	s.Categorie = randCategorie()
 	s.Description = randstring()
 	s.MaxDocs = randint()
-	s.JoursValide = randint()
 
 	return s
 }

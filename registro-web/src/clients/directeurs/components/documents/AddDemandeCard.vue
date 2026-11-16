@@ -122,17 +122,6 @@
               <IntField
                 density="compact"
                 variant="outlined"
-                label="Document temporaire"
-                :min="(0 as Int)"
-                suffix="jours"
-                v-model="toEdit.Demande.JoursValide"
-                hint="Nombre de jours de validité (0 pour un document permanent)"
-              ></IntField>
-            </v-col>
-            <v-col>
-              <IntField
-                density="compact"
-                variant="outlined"
                 label="Nombre maximum de fichiers"
                 v-model="toEdit.Demande.MaxDocs"
                 hint="Limite le nombre de fichiers pouvant être déposés."

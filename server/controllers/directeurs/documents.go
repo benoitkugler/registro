@@ -289,7 +289,6 @@ func (ct *Controller) createDemande(id cps.IdCamp) (DemandeDirecteur, error) {
 		IdDirecteur: directeur.Id.Opt(),
 		Categorie:   fs.NoBuiltin,
 		MaxDocs:     1,
-		JoursValide: 0,
 	}.Insert(ct.db)
 	if err != nil {
 		return DemandeDirecteur{}, utils.SQLError(err)
@@ -336,7 +335,6 @@ func (ct *Controller) updateDemande(id cps.IdCamp, args fs.Demande) error {
 	}
 	demande.Description = args.Description
 	demande.MaxDocs = args.MaxDocs
-	demande.JoursValide = args.JoursValide
 	_, err = demande.Update(ct.db)
 	if err != nil {
 		return utils.SQLError(err)

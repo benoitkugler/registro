@@ -116,7 +116,7 @@ func TestDocuments(t *testing.T) {
 		demande, err = ct.createDemande(camp.Id)
 		tu.AssertNoErr(t, err)
 
-		demande.Demande.JoursValide = 30
+		demande.Demande.Description = "Un doc hyper important !"
 		err = ct.updateDemande(camp.Id, demande.Demande)
 		tu.AssertNoErr(t, err)
 

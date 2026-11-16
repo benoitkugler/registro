@@ -67,10 +67,6 @@ type Demande struct {
 	// Nombre max de documents qui peuvent satisfaire la contrainte
 	// (1 par défaut)
 	MaxDocs int
-
-	// JoursValide, si > 0, indique un document temporaire :
-	// une alerte est donnée pour les documents périmés
-	JoursValide int
 }
 
 // Title returns either the Categorie or the Description

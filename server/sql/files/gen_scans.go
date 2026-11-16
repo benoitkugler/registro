@@ -32,7 +32,6 @@ func scanOneDemande(row scanner) (Demande, error) {
 		&item.Categorie,
 		&item.Description,
 		&item.MaxDocs,
-		&item.JoursValide,
 	)
 	return item, err
 }
@@ -41,7 +40,7 @@ func ScanDemande(row *sql.Row) (Demande, error) { return scanOneDemande(row) }
 
 // SelectAll returns all the items in the demandes table.
 func SelectAllDemandes(db DB) (Demandes, error) {
-	rows, err := db.Query("SELECT id, idfile, iddirecteur, categorie, description, maxdocs, joursvalide FROM demandes")
+	rows, err := db.Query("SELECT id, idfile, iddirecteur, categorie, description, maxdocs FROM demandes")
 	if err != nil {
 		return nil, err
 	}
@@ -50,13 +49,13 @@ func SelectAllDemandes(db DB) (Demandes, error) {
 
 // SelectDemande returns the entry matching 'id'.
 func SelectDemande(tx DB, id IdDemande) (Demande, error) {
-	row := tx.QueryRow("SELECT id, idfile, iddirecteur, categorie, description, maxdocs, joursvalide FROM demandes WHERE id = $1", id)
+	row := tx.QueryRow("SELECT id, idfile, iddirecteur, categorie, description, maxdocs FROM demandes WHERE id = $1", id)
 	return ScanDemande(row)
 }
 
 // SelectDemandes returns the entry matching the given 'ids'.
 func SelectDemandes(tx DB, ids ...IdDemande) (Demandes, error) {
-	rows, err := tx.Query("SELECT id, idfile, iddirecteur, categorie, description, maxdocs, joursvalide FROM demandes WHERE id = ANY($1)", IdDemandeArrayToPQ(ids))
+	rows, err := tx.Query("SELECT id, idfile, iddirecteur, categorie, description, maxdocs FROM demandes WHERE id = ANY($1)", IdDemandeArrayToPQ(ids))
 	if err != nil {
 		return nil, err
 	}
@@ -101,28 +100,28 @@ func ScanDemandes(rs *sql.Rows) (Demandes, error) {
 // Insert one Demande in the database and returns the item with id filled.
 func (item Demande) Insert(tx DB) (out Demande, err error) {
 	row := tx.QueryRow(`INSERT INTO demandes (
-		idfile, iddirecteur, categorie, description, maxdocs, joursvalide
+		idfile, iddirecteur, categorie, description, maxdocs
 		) VALUES (
-		$1, $2, $3, $4, $5, $6
-		) RETURNING id, idfile, iddirecteur, categorie, description, maxdocs, joursvalide;
-		`, item.IdFile, item.IdDirecteur, item.Categorie, item.Description, item.MaxDocs, item.JoursValide)
+		$1, $2, $3, $4, $5
+		) RETURNING id, idfile, iddirecteur, categorie, description, maxdocs;
+		`, item.IdFile, item.IdDirecteur, item.Categorie, item.Description, item.MaxDocs)
 	return ScanDemande(row)
 }
 
 // Update Demande in the database and returns the new version.
 func (item Demande) Update(tx DB) (out Demande, err error) {
 	row := tx.QueryRow(`UPDATE demandes SET (
-		idfile, iddirecteur, categorie, description, maxdocs, joursvalide
+		idfile, iddirecteur, categorie, description, maxdocs
 		) = (
-		$1, $2, $3, $4, $5, $6
-		) WHERE id = $7 RETURNING id, idfile, iddirecteur, categorie, description, maxdocs, joursvalide;
-		`, item.IdFile, item.IdDirecteur, item.Categorie, item.Description, item.MaxDocs, item.JoursValide, item.Id)
+		$1, $2, $3, $4, $5
+		) WHERE id = $6 RETURNING id, idfile, iddirecteur, categorie, description, maxdocs;
+		`, item.IdFile, item.IdDirecteur, item.Categorie, item.Description, item.MaxDocs, item.Id)
 	return ScanDemande(row)
 }
 
 // Deletes the Demande and returns the item
 func DeleteDemandeById(tx DB, id IdDemande) (Demande, error) {
-	row := tx.QueryRow("DELETE FROM demandes WHERE id = $1 RETURNING id, idfile, iddirecteur, categorie, description, maxdocs, joursvalide;", id)
+	row := tx.QueryRow("DELETE FROM demandes WHERE id = $1 RETURNING id, idfile, iddirecteur, categorie, description, maxdocs;", id)
 	return ScanDemande(row)
 }
 
@@ -532,7 +531,7 @@ func (items Demandes) IdFiles() []IdFile {
 }
 
 func SelectDemandesByIdFiles(tx DB, idFiles_ ...IdFile) (Demandes, error) {
-	rows, err := tx.Query("SELECT id, idfile, iddirecteur, categorie, description, maxdocs, joursvalide FROM demandes WHERE idfile = ANY($1)", IdFileArrayToPQ(idFiles_))
+	rows, err := tx.Query("SELECT id, idfile, iddirecteur, categorie, description, maxdocs FROM demandes WHERE idfile = ANY($1)", IdFileArrayToPQ(idFiles_))
 	if err != nil {
 		return nil, err
 	}
@@ -540,7 +539,7 @@ func SelectDemandesByIdFiles(tx DB, idFiles_ ...IdFile) (Demandes, error) {
 }
 
 func DeleteDemandesByIdFiles(tx DB, idFiles_ ...IdFile) (Demandes, error) {
-	rows, err := tx.Query("DELETE FROM demandes WHERE idfile = ANY($1) RETURNING id, idfile, iddirecteur, categorie, description, maxdocs, joursvalide", IdFileArrayToPQ(idFiles_))
+	rows, err := tx.Query("DELETE FROM demandes WHERE idfile = ANY($1) RETURNING id, idfile, iddirecteur, categorie, description, maxdocs", IdFileArrayToPQ(idFiles_))
 	if err != nil {
 		return nil, err
 	}
@@ -561,7 +560,7 @@ func (items Demandes) IdDirecteurs() []personnes.IdPersonne {
 }
 
 func SelectDemandesByIdDirecteurs(tx DB, idDirecteurs_ ...personnes.IdPersonne) (Demandes, error) {
-	rows, err := tx.Query("SELECT id, idfile, iddirecteur, categorie, description, maxdocs, joursvalide FROM demandes WHERE iddirecteur = ANY($1)", personnes.IdPersonneArrayToPQ(idDirecteurs_))
+	rows, err := tx.Query("SELECT id, idfile, iddirecteur, categorie, description, maxdocs FROM demandes WHERE iddirecteur = ANY($1)", personnes.IdPersonneArrayToPQ(idDirecteurs_))
 	if err != nil {
 		return nil, err
 	}
@@ -569,7 +568,7 @@ func SelectDemandesByIdDirecteurs(tx DB, idDirecteurs_ ...personnes.IdPersonne) 
 }
 
 func DeleteDemandesByIdDirecteurs(tx DB, idDirecteurs_ ...personnes.IdPersonne) (Demandes, error) {
-	rows, err := tx.Query("DELETE FROM demandes WHERE iddirecteur = ANY($1) RETURNING id, idfile, iddirecteur, categorie, description, maxdocs, joursvalide", personnes.IdPersonneArrayToPQ(idDirecteurs_))
+	rows, err := tx.Query("DELETE FROM demandes WHERE iddirecteur = ANY($1) RETURNING id, idfile, iddirecteur, categorie, description, maxdocs", personnes.IdPersonneArrayToPQ(idDirecteurs_))
 	if err != nil {
 		return nil, err
 	}
