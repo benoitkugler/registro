@@ -64,6 +64,7 @@
             v-model:charte="isCharteOK"
             v-model:autorisation-vehicules="autorisationVehicules"
             v-model:autorisation-soin="autorisationSoin"
+            v-model:has-responsabilite-civile="hasResponsabiliteCivile"
             :settings="props.data.Settings"
           ></Step4>
         </v-stepper-window-item>
@@ -192,6 +193,7 @@ const isStep2Valid = computed(() => {
 const isCharteOK = ref(false);
 const autorisationVehicules = ref(true);
 const autorisationSoin = ref(true);
+const hasResponsabiliteCivile = ref(false);
 const isStep4Valid = computed(() => step4Error.value === null);
 
 // perform validations and return a precise error string
@@ -206,7 +208,11 @@ const step4Error = computed(() => {
   )
     return "Autorisation manquante";
   if (!autorisationSoin.value) return "Autorisation manquante";
-
+  if (
+    !hasResponsabiliteCivile.value &&
+    props.data.Settings.RequireResponsabiliteCivile
+  )
+    return "Responsabilité civile manquante";
   return null; // everything OK
 });
 

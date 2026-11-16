@@ -45,16 +45,17 @@ type BankAccount struct {
 }
 
 type ConfigInscription struct {
-	SupportBonsCAF            bool // if true, displayed in inscription form and activates Aides on espaceperso
-	SupportANCV               bool // if true, displayed in inscription form
-	SupportPaiementEnLigne    bool // if true, displayed in inscription and activated on espaceperso
-	EmailRetraitMedia         string
-	ShowFondSoutien           bool // if true, displayed in inscription form
-	ShowCharteConduite        bool // if true, displayed in inscription form
-	AskNationnalite           bool // if true, displayed for participants in inscription form
-	ShowInscriptionRapide     bool // if true, displays a bar in inscription form
-	ShowAutorisationVehicules bool // if true, displays an autorisation checkbox in inscription form
-	ShowAnnulationConditions  bool // if true, displays a warning in inscription form (step 3)
+	SupportBonsCAF              bool // if true, displayed in inscription form and activates Aides on espaceperso
+	SupportANCV                 bool // if true, displayed in inscription form
+	SupportPaiementEnLigne      bool // if true, displayed in inscription and activated on espaceperso
+	EmailRetraitMedia           string
+	ShowFondSoutien             bool // if true, displayed in inscription form
+	ShowCharteConduite          bool // if true, displayed in inscription form
+	AskNationnalite             bool // if true, displayed for participants in inscription form
+	ShowInscriptionRapide       bool // if true, displays a bar in inscription form
+	ShowAutorisationVehicules   bool // if true, displays an autorisation checkbox in inscription form
+	ShowAnnulationConditions    bool // if true, displays a warning in inscription form (step 3)
+	RequireResponsabiliteCivile bool // if true, a checkbox must be checked
 }
 
 var acve = Asso{
@@ -97,14 +98,15 @@ var acve = Asso{
 
 	ConfigInscription: ConfigInscription{
 		SupportBonsCAF: true, SupportANCV: true,
-		SupportPaiementEnLigne:    true,
-		EmailRetraitMedia:         "contact@acve.asso.fr",
-		ShowFondSoutien:           false,
-		ShowCharteConduite:        false,
-		AskNationnalite:           false,
-		ShowInscriptionRapide:     true,
-		ShowAutorisationVehicules: true,
-		ShowAnnulationConditions:  false,
+		SupportPaiementEnLigne:      true,
+		EmailRetraitMedia:           "contact@acve.asso.fr",
+		ShowFondSoutien:             false,
+		ShowCharteConduite:          false,
+		AskNationnalite:             false,
+		ShowInscriptionRapide:       true,
+		ShowAutorisationVehicules:   true,
+		ShowAnnulationConditions:    false,
+		RequireResponsabiliteCivile: false,
 	},
 }
 
@@ -145,14 +147,15 @@ var repere = Asso{
 
 	ConfigInscription: ConfigInscription{
 		SupportBonsCAF: false, SupportANCV: false,
-		SupportPaiementEnLigne:    false,
-		EmailRetraitMedia:         "webmaster@lerepere.ch",
-		ShowFondSoutien:           true,
-		ShowCharteConduite:        true,
-		AskNationnalite:           true,
-		ShowInscriptionRapide:     true, // false pour la première année, actif maintenant
-		ShowAutorisationVehicules: false,
-		ShowAnnulationConditions:  true,
+		SupportPaiementEnLigne:      false,
+		EmailRetraitMedia:           "webmaster@lerepere.ch",
+		ShowFondSoutien:             true,
+		ShowCharteConduite:          true,
+		AskNationnalite:             true,
+		ShowInscriptionRapide:       true, // false pour la première année, actif maintenant
+		ShowAutorisationVehicules:   false,
+		ShowAnnulationConditions:    true,
+		RequireResponsabiliteCivile: true,
 	},
 }
 

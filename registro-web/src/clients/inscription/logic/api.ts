@@ -21,6 +21,7 @@ export interface ConfigInscription {
   ShowInscriptionRapide: boolean;
   ShowAutorisationVehicules: boolean;
   ShowAnnulationConditions: boolean;
+  RequireResponsabiliteCivile: boolean;
 }
 // registro/config.RemisesHints
 export interface RemisesHints {
