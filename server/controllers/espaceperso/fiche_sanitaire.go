@@ -31,11 +31,15 @@ func asksFichesanitaire(dossier logic.Dossier, personne pr.Personne, askMajeurs 
 }
 
 type FichesanitaireExt struct {
-	Personne         string
+	Personne     string
+	Nationnalite pr.Nationnalite
+
 	IsLocked         bool
 	IsOwnResponsable bool
 	State            pr.FichesanitaireState
-	Fichesanitaire   pr.Fichesanitaire
+
+	Fichesanitaire  pr.Fichesanitaire
+	SecuriteSociale string
 
 	ResponsableNom  string
 	ResponsableTels pr.Tels
@@ -64,10 +68,12 @@ func loadFichesanitaires(db ds.DB, dossier logic.Dossier, askMajeurs bool) (out 
 		fiche.IdPersonne = pers.Id // init ID for empty fiche
 		fsExt := FichesanitaireExt{
 			Personne:         pers.PrenomN(),
+			Nationnalite:     pers.Nationnalite,
 			IsLocked:         isFichesanitaireLocked(responsable.Mail, fiche.Owners),
 			IsOwnResponsable: pers.Id == dossier.Dossier.IdResponsable,
 			State:            fiche.State(dossier.Dossier.MomentInscription),
 			Fichesanitaire:   fiche,
+			SecuriteSociale:  pers.SecuriteSociale,
 			ResponsableNom:   responsable.PrenomNOM(),
 			ResponsableTels:  responsable.Tels,
 		}
@@ -84,8 +90,9 @@ func loadFichesanitaires(db ds.DB, dossier logic.Dossier, askMajeurs bool) (out 
 }
 
 type UpdateFichesanitaireIn struct {
-	Token          string
-	Fichesanitaire pr.Fichesanitaire
+	Token           string
+	Fichesanitaire  pr.Fichesanitaire
+	SecuriteSociale string
 }
 
 func (ct *Controller) UpdateFichesanitaire(c echo.Context) error {
@@ -127,6 +134,11 @@ func (ct *Controller) updateFichesanitaire(args UpdateFichesanitaireIn) error {
 	if !slices.Contains(dossier.Participants.IdPersonnes(), idPersonne) {
 		return errors.New("access forbidden")
 	}
+	personne, err := pr.SelectPersonne(ct.db, idPersonne)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
 	// for security concern, load the existing fs
 	fs, _, err := pr.SelectFichesanitaireByIdPersonne(ct.db, idPersonne)
 	if err != nil {
@@ -145,6 +157,11 @@ func (ct *Controller) updateFichesanitaire(args UpdateFichesanitaireIn) error {
 	args.Fichesanitaire.Modified = time.Now()
 	args.Fichesanitaire.ReviewStatus = pr.FileReviewPending // reset the validation status
 	return utils.InTx(ct.db, func(tx *sql.Tx) error {
+		personne.SecuriteSociale = args.SecuriteSociale
+		_, err = personne.Update(tx)
+		if err != nil {
+			return err
+		}
 		_, err = pr.DeleteFichesanitairesByIdPersonnes(tx, idPersonne)
 		if err != nil {
 			return err

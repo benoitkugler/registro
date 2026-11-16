@@ -1127,6 +1127,7 @@ export interface Personne {
   Publicite: Publicite;
   CharteAccepted: Time;
   IsTemp: boolean;
+  SecuriteSociale: string;
 }
 // registro/sql/personnes.Publicite
 export interface Publicite {

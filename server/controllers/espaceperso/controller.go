@@ -28,6 +28,7 @@ import (
 
 // Une modification après J-7 (début du séjour)
 // entraine une notification par email
+// TODO: check that
 const updateLimitation = 7 * 24 * time.Hour
 
 type Controller struct {

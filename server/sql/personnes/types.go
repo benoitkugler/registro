@@ -60,6 +60,13 @@ type Identite struct {
 	Pays       Pays
 }
 
+// PersonneBase is the editable subset of [Personne] exposed
+// to the equipier client.
+type PersonneBase struct {
+	Identite
+	SecuriteSociale string
+}
+
 func (p *Identite) FPrenom() string { return formatPrenom(p.Prenom) }
 
 func (p *Identite) FNom() string { return strings.ToUpper(p.Nom) }

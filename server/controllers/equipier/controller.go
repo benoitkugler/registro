@@ -60,7 +60,7 @@ type EquipierExt struct {
 	Equipier cps.Equipier
 	IsAuPair bool
 
-	PersonneBase    pr.Identite
+	PersonneBase    pr.PersonneBase
 	PersonneDetails pr.Ficheequipier
 
 	Camp Camp
@@ -111,7 +111,7 @@ func (ct *Controller) load(id cps.IdEquipier) (EquipierExt, error) {
 	out := EquipierExt{
 		equipier,
 		equipier.Roles.IsAuPair(),
-		personneBase.Identite,
+		pr.PersonneBase{Identite: personneBase.Identite, SecuriteSociale: personneBase.SecuriteSociale},
 		personneDetails,
 		Camp{camp.Nom, camp.DateDebut, camp.Duree},
 		demandes,
@@ -165,7 +165,7 @@ func (ct *Controller) loadPhotos(id cps.IdEquipier) (Photos, error) {
 type UpdateIn struct {
 	Token string
 
-	PersonneBase    pr.Identite
+	PersonneBase    pr.PersonneBase
 	PersonneDetails pr.Ficheequipier
 	Presence        cps.PresenceOffsets
 }
@@ -216,7 +216,8 @@ func (ct *Controller) update(id cps.IdEquipier, args UpdateIn) error {
 	equipier.FormStatus = cps.Answered
 	equipier.Presence = args.Presence
 
-	personneBase.Identite = args.PersonneBase
+	personneBase.Identite = args.PersonneBase.Identite
+	personneBase.SecuriteSociale = args.PersonneBase.SecuriteSociale
 	personneDetails = args.PersonneDetails
 	personneDetails.IdPersonne = equipier.IdPersonne // for new profils
 

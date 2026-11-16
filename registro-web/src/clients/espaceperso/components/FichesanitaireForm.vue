@@ -81,6 +81,22 @@
           </v-card-text>
         </v-card>
 
+        <!-- Numéro de sécurité sociale / AVS -->
+        <v-card title="Numéro AVS" v-if="props.fiche.Nationnalite.IsSuisse">
+          <v-card-text>
+            <v-row>
+              <v-col>
+                <v-text-field
+                  label="Numéro AVS"
+                  variant="outlined"
+                  density="compact"
+                  v-model="innerSecuriteSociale"
+                  hide-details
+                ></v-text-field>
+              </v-col>
+            </v-row>
+          </v-card-text>
+        </v-card>
         <!-- Médecin -->
         <v-card title="Médecin traitant" class="my-2">
           <v-card-text>
@@ -177,7 +193,7 @@
             <v-btn
               block
               color="success"
-              @click="emit('save', inner)"
+              @click="emit('save', inner, innerSecuriteSociale)"
               prepend-icon="mdi-content-save"
             >
               {{
@@ -209,13 +225,14 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: "close"): void;
-  (e: "save", fs: Fichesanitaire): void;
+  (e: "save", fs: Fichesanitaire, securiteSociale: string): void;
   (e: "transfert", fs: Fichesanitaire): void;
 }>();
 
 const { smAndDown } = useDisplay();
 
 const inner = reactive(copy(props.fiche.Fichesanitaire));
+const innerSecuriteSociale = ref(props.fiche.SecuriteSociale);
 
 const ownerMails = computed(() => props.fiche.Fichesanitaire.Owners || []);
 
@@ -226,9 +243,5 @@ const subtitle = computed(() =>
         props.fiche.Fichesanitaire.Modified,
       )} / Propriétaire(s) :
          ${ownerMails.value.join(" ; ")}`,
-);
-
-const difficultesSanteEnabled = ref(
-  props.fiche.Fichesanitaire.DifficultesSante != "",
 );
 </script>

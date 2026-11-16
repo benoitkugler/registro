@@ -342,7 +342,7 @@ func LoadByMail(db ds.DB, mail string) (Dossiers, pr.Personnes, error) {
 	if len(mail) == 0 { // return early to avoid matching against empty profiles
 		return Dossiers{}, nil, nil
 	}
-	responsables, err := pr.SelectByMail(db, mail)
+	responsables, err := pr.SelectPersonnesByMail(db, mail)
 	if err != nil {
 		return Dossiers{}, nil, utils.SQLError(err)
 	}

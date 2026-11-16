@@ -31,7 +31,6 @@ func randEtatCivil() EtatCivil {
 func randFicheequipier() Ficheequipier {
 	var s Ficheequipier
 	s.IdPersonne = randIdPersonne()
-	s.SecuriteSociale = randstring()
 	s.Diplome = randDiplome()
 	s.Formation = randstring()
 	s.Fonctionnaire = randbool()
@@ -123,6 +122,7 @@ func randPersonne() Personne {
 	s.Publicite = randPublicite()
 	s.CharteAccepted = randtTime()
 	s.IsTemp = randbool()
+	s.SecuriteSociale = randstring()
 
 	return s
 }

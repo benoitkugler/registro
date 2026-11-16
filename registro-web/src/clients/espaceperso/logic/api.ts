@@ -67,10 +67,12 @@ export interface Documents {
 // registro/controllers/espaceperso.FichesanitaireExt
 export interface FichesanitaireExt {
   Personne: string;
+  Nationnalite: Nationnalite;
   IsLocked: boolean;
   IsOwnResponsable: boolean;
   State: FichesanitaireState;
   Fichesanitaire: Fichesanitaire;
+  SecuriteSociale: string;
   ResponsableNom: string;
   ResponsableTels: Tels;
 }
@@ -118,6 +120,7 @@ export interface SondageExt {
 export interface UpdateFichesanitaireIn {
   Token: string;
   Fichesanitaire: Fichesanitaire;
+  SecuriteSociale: string;
 }
 // registro/controllers/espaceperso.UpdateFormIn
 export interface UpdateFormIn {
@@ -715,6 +718,10 @@ export const FileReviewStatusLabels: Record<FileReviewStatus, string> = {
 export type IdPersonne = Int & { __opaque_int__: "IdPersonne" };
 // registro/sql/personnes.Mails
 export type Mails = string[] | null;
+// registro/sql/personnes.Nationnalite
+export interface Nationnalite {
+  IsSuisse: boolean;
+}
 // registro/sql/personnes.NomTel
 export interface NomTel {
   Nom: string;

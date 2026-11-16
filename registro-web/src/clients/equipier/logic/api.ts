@@ -34,7 +34,7 @@ export interface DemandeEquipier {
 export interface EquipierExt {
   Equipier: Equipier;
   IsAuPair: boolean;
-  PersonneBase: Identite;
+  PersonneBase: PersonneBase;
   PersonneDetails: Ficheequipier;
   Camp: Camp;
   Demandes: DemandeEquipier[] | null;
@@ -61,7 +61,7 @@ export interface SecuriteSocialeIn {
 // registro/controllers/equipier.UpdateIn
 export interface UpdateIn {
   Token: string;
-  PersonneBase: Identite;
+  PersonneBase: PersonneBase;
   PersonneDetails: Ficheequipier;
   Presence: PresenceOffsets;
 }
@@ -260,7 +260,6 @@ export const EtatCivilLabels: Record<EtatCivil, string> = {
 // registro/sql/personnes.Ficheequipier
 export interface Ficheequipier {
   IdPersonne: IdPersonne;
-  SecuriteSociale: string;
   Diplome: Diplome;
   Formation: string;
   Fonctionnaire: boolean;
@@ -314,8 +313,14 @@ export const FormationRepereLabels: Record<FormationRepere, string> = {
 };
 
 export type IdPersonne = Int & { __opaque_int__: "IdPersonne" };
-// registro/sql/personnes.Identite
-export interface Identite {
+// registro/sql/personnes.Nationnalite
+export interface Nationnalite {
+  IsSuisse: boolean;
+}
+// registro/sql/personnes.Pays
+export type Pays = string;
+// registro/sql/personnes.PersonneBase
+export interface PersonneBase {
   Nom: string;
   Prenom: string;
   Sexe: Sexe;
@@ -327,13 +332,8 @@ export interface Identite {
   CodePostal: string;
   Ville: string;
   Pays: Pays;
+  SecuriteSociale: string;
 }
-// registro/sql/personnes.Nationnalite
-export interface Nationnalite {
-  IsSuisse: boolean;
-}
-// registro/sql/personnes.Pays
-export type Pays = string;
 // registro/sql/personnes.Qualifications
 export interface Qualifications {
   SB: boolean;

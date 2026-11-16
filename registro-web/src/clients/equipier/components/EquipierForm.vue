@@ -149,7 +149,7 @@
               :token="props.token"
               :sexe="innerBase.Sexe"
               :date-naissance="innerBase.DateNaissance"
-              v-model="innerDetails.SecuriteSociale"
+              v-model="innerBase.SecuriteSociale"
             ></SecuriteSocialeField>
           </v-col>
           <v-col md="4" cols="12">
@@ -377,7 +377,7 @@
               label="Numéro AVS (optionnel)"
               variant="outlined"
               density="compact"
-              v-model="innerDetails.SecuriteSociale"
+              v-model="innerBase.SecuriteSociale"
               hint="Si tu vis en Suisse ou as la nationalité Suisse."
             ></v-text-field>
           </v-col>
@@ -671,9 +671,8 @@ function isFormRepereValid() {
 }
 
 function isFormAcveValid() {
-  const d = innerDetails.value;
   if (props.equipier.IsAuPair) {
-    return d.SecuriteSociale != "";
+    return innerBase.value.SecuriteSociale != "";
   }
   return true;
 }

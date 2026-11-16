@@ -123,11 +123,11 @@ func (ct *Controller) exportListeEquipiers(idCamp cps.IdCamp) ([]byte, string, e
 		}
 		row := rowCommun[:]
 		if ct.asso.ID == "acve" {
-			infered := eqAPI.ParseSecuriteSociale(pe.Sexe, pe.DateNaissance.Time(), detail.SecuriteSociale)
+			infered := eqAPI.ParseSecuriteSociale(pe.Sexe, pe.DateNaissance.Time(), pe.SecuriteSociale)
 			auPair := equipier.Roles.IsAuPair()
 			var rowACVE [len(headerACVE)]sheets.Cell = [...]sheets.Cell{
 				{Value: formatBool(auPair)},
-				{Value: detail.SecuriteSociale},
+				{Value: pe.SecuriteSociale},
 				{Value: infered.CommuneNaissance},
 				{Value: infered.DepartementNaissance},
 				{Value: infered.DepartementNaissanceCode},

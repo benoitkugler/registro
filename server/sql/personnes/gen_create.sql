@@ -25,7 +25,6 @@ CREATE TYPE Qualifications AS (
 
 CREATE TABLE ficheequipiers (
     IdPersonne integer NOT NULL,
-    SecuriteSociale text NOT NULL,
     Diplome smallint CHECK (Diplome IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24)) NOT NULL,
     Formation text NOT NULL,
     Fonctionnaire boolean NOT NULL,
@@ -73,7 +72,8 @@ CREATE TABLE personnes (
     Pays text NOT NULL,
     Publicite Publicite NOT NULL,
     CharteAccepted timestamp(0) with time zone NOT NULL,
-    IsTemp boolean NOT NULL
+    IsTemp boolean NOT NULL,
+    SecuriteSociale text NOT NULL
 );
 
 -- constraints

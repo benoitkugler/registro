@@ -307,11 +307,15 @@ async function deleteDocument(file: PublicFile) {
 
 const ficheToEdit = ref<FichesanitaireExt | null>(null);
 
-async function saveFichesanitaire(fiche: Fichesanitaire) {
+async function saveFichesanitaire(
+  fiche: Fichesanitaire,
+  securiteSociale: string,
+) {
   ficheToEdit.value = null;
   const res = await controller.UpdateFichesanitaire({
     Token: props.token,
     Fichesanitaire: fiche,
+    SecuriteSociale: securiteSociale,
   });
   if (res === undefined) return;
   controller.showMessage("La fiche sanitaire a bien été enregistrée. Merci !");

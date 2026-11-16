@@ -62,6 +62,7 @@ func (ct *Controller) updatePersonne(args pr.Personne) (search.PersonneHeader, e
 
 	current.Identite = args.Identite
 	current.Publicite = args.Publicite
+	current.SecuriteSociale = args.SecuriteSociale
 	_, err = current.Update(ct.db)
 	if err != nil {
 		return search.PersonneHeader{}, utils.SQLError(err)
