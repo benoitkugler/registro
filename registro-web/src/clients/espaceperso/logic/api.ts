@@ -679,7 +679,6 @@ export interface Fichesanitaire {
   DifficultesSante: string;
   AllergiesAlimentaires: string;
   TraitementMedical: string;
-  Medecin: NomTel;
   AutreContact: NomTel;
   Modified: Time;
   Owners: Mails;

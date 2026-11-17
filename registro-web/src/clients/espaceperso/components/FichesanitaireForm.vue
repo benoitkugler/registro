@@ -97,30 +97,7 @@
             </v-row>
           </v-card-text>
         </v-card>
-        <!-- Médecin -->
-        <v-card title="Médecin traitant" class="my-2">
-          <v-card-text>
-            <v-row>
-              <v-col cols="12" sm="6">
-                <v-text-field
-                  variant="outlined"
-                  density="compact"
-                  label="Nom"
-                  v-model="inner.Medecin.Nom"
-                  hide-details
-                ></v-text-field>
-              </v-col>
-              <v-col cols="12" sm="6">
-                <TelField
-                  label="Téléphone"
-                  v-model="inner.Medecin.Tel"
-                  hide-details
-                ></TelField>
-              </v-col>
-            </v-row>
-          </v-card-text>
-        </v-card>
-
+       
         <!-- Contacts -->
         <v-card title="Contacts" class="my-2">
           <v-card-text>

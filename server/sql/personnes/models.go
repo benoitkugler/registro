@@ -57,7 +57,6 @@ type Fichesanitaire struct {
 	AllergiesAlimentaires string
 	TraitementMedical     string
 
-	Medecin      NomTel
 	AutreContact NomTel // added to the responsable
 
 	// TODO: maybe add assurances

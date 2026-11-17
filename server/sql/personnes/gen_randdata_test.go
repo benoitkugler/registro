@@ -57,7 +57,6 @@ func randFichesanitaire() Fichesanitaire {
 	s.DifficultesSante = randstring()
 	s.AllergiesAlimentaires = randstring()
 	s.TraitementMedical = randstring()
-	s.Medecin = randNomTel()
 	s.AutreContact = randNomTel()
 	s.Modified = randtTime()
 	s.Owners = randMails()
