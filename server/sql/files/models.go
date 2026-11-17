@@ -67,6 +67,8 @@ type Demande struct {
 	// Nombre max de documents qui peuvent satisfaire la contrainte
 	// (1 par défaut)
 	MaxDocs int
+
+	Nationnalite NationnaliteCible
 }
 
 // Title returns either the Categorie or the Description

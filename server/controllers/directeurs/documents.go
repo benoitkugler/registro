@@ -335,6 +335,7 @@ func (ct *Controller) updateDemande(id cps.IdCamp, args fs.Demande) error {
 	}
 	demande.Description = args.Description
 	demande.MaxDocs = args.MaxDocs
+	demande.Nationnalite = args.Nationnalite
 	_, err = demande.Update(ct.db)
 	if err != nil {
 		return utils.SQLError(err)

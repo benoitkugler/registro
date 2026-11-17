@@ -323,15 +323,19 @@ func LoadParticipantsFiles(db fs.DB, key crypto.Encrypter, ids []cps.IdCamp, ask
 }
 
 type ParticipantFiles struct {
-	Id       cps.IdParticipant
-	Personne string
+	Id           cps.IdParticipant
+	Personne     string
+	nationnalite pr.Nationnalite
 
 	FicheSanitaireRequired bool // may depend on age
 
 	FichesanitaireValid bool
 	Fichesanitaire      pr.Fichesanitaire
 
-	Files map[fs.IdDemande][]logic.PublicFile
+	// depending on age and nationnality some demand may
+	// not be required
+	DemandesRequired map[fs.IdDemande]bool
+	Files            map[fs.IdDemande][]logic.PublicFile
 
 	// IsComplete is true if all document asked in are present and all validated.
 	IsComplete bool
@@ -341,8 +345,8 @@ func areDocumentsComplete(pfiles ParticipantFiles, demandes fs.Demandes) bool {
 	if pfiles.FicheSanitaireRequired && pfiles.Fichesanitaire.ReviewStatus != pr.FileReviewValidated {
 		return false
 	}
-	for idDemande, demande := range demandes {
-		if demande.Categorie == fs.Vaccins && !pfiles.FicheSanitaireRequired {
+	for idDemande := range demandes {
+		if !pfiles.DemandesRequired[idDemande] {
 			continue
 		}
 		// at least one document; and every document validated
@@ -405,18 +409,25 @@ func (ld ParticipantsFilesLoader) For(id cps.IdCamp) ParticipantsFiles {
 	out := ParticipantsFiles{DocumentsReady: camp.Camp.DocumentsReady, Demandes: demandes}
 	for _, participant := range camp.Participants(true) {
 		personne, dossier := participant.Personne, ld.dossiers[participant.Participant.IdDossier]
-		filesM := make(map[fs.IdDemande][]logic.PublicFile)
-		for _, demande := range idDemandes {
-			filesM[demande] = ld.files[personne.Id][demande]
+		fsRequired := camp.Camp.AgeDebutCamp(personne.DateNaissance) < 18 || ld.askFicheSanitaireMajeurs
+
+		filesM, required := make(map[fs.IdDemande][]logic.PublicFile), make(map[fs.IdDemande]bool)
+		for _, idDemande := range idDemandes {
+			filesM[idDemande] = ld.files[personne.Id][idDemande]
+			demande := demandes[idDemande]
+			match := demande.Nationnalite.Match(personne.Nationnalite)
+			required[idDemande] = match && (demande.Categorie != fs.Vaccins || fsRequired)
 		}
 		fiche := ld.fiches[personne.Id]
 
 		pFiles := ParticipantFiles{
 			Id:                     participant.Participant.Id,
 			Personne:               personne.NOMPrenom(),
-			FicheSanitaireRequired: camp.Camp.AgeDebutCamp(personne.DateNaissance) < 18 || ld.askFicheSanitaireMajeurs,
+			nationnalite:           personne.Nationnalite,
+			FicheSanitaireRequired: fsRequired,
 			FichesanitaireValid:    fiche.State(dossier.MomentInscription) == pr.UpToDate,
 			Fichesanitaire:         fiche,
+			DemandesRequired:       required,
 			Files:                  filesM,
 		}
 		pFiles.IsComplete = areDocumentsComplete(pFiles, demandes)

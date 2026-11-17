@@ -128,6 +128,18 @@
               ></IntField>
             </v-col>
           </v-row>
+          <v-row>
+            <v-col>
+              <v-select
+                density="compact"
+                variant="outlined"
+                label="Nationnalité du participant"
+                v-model="toEdit.Demande.Nationnalite"
+                :items="selectItems(NationnaliteCibleLabels)"
+                hint="Demande le document en fonction de la nationnalité."
+              ></v-select>
+            </v-col>
+          </v-row>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -183,16 +195,17 @@
 <script lang="ts" setup>
 import { computed, nextTick, ref, useTemplateRef } from "vue";
 import { controller } from "../../logic/logic";
-import type {
-  Demande,
-  DemandeDirecteur,
-  IdDemande,
-  IdFile,
-  Int,
-  PublicFile,
-  Time,
+import {
+  NationnaliteCibleLabels,
+  type Demande,
+  type DemandeDirecteur,
+  type IdDemande,
+  type IdFile,
+  type Int,
+  type PublicFile,
+  type Time,
 } from "../../logic/api";
-import { copy } from "@/utils";
+import { copy, selectItems } from "@/utils";
 
 const props = defineProps<{
   availableDemandes: DemandeDirecteur[];

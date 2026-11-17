@@ -36,9 +36,6 @@ ALTER TABLE ficheequipiers
 ALTER TABLE fichesanitaires
     ADD CONSTRAINT AutreContact_gomacro CHECK (gomacro_validate_json_pers_NomTel (AutreContact));
 
-ALTER TABLE fichesanitaires
-    ADD CONSTRAINT Medecin_gomacro CHECK (gomacro_validate_json_pers_NomTel (Medecin));
-
 ALTER TABLE ficheequipiers
     ADD CONSTRAINT Recommandation_gomacro CHECK (gomacro_validate_json_pers_Recommandation (Recommandation));
 

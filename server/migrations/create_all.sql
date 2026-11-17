@@ -73,7 +73,6 @@ CREATE TABLE fichesanitaires (
     DifficultesSante text NOT NULL,
     AllergiesAlimentaires text NOT NULL,
     TraitementMedical text NOT NULL,
-    Medecin jsonb NOT NULL,
     AutreContact jsonb NOT NULL,
     Modified timestamp(0) with time zone NOT NULL,
     Owners text[],
@@ -283,7 +282,8 @@ CREATE TABLE demandes (
     IdDirecteur integer,
     Categorie smallint CHECK (Categorie IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)) NOT NULL,
     Description text NOT NULL,
-    MaxDocs integer NOT NULL
+    MaxDocs integer NOT NULL,
+    Nationnalite smallint CHECK (Nationnalite IN (0, 1, 2)) NOT NULL
 );
 
 CREATE TABLE demande_camps (
@@ -1507,9 +1507,6 @@ ALTER TABLE ficheequipiers
 
 ALTER TABLE fichesanitaires
     ADD CONSTRAINT AutreContact_gomacro CHECK (gomacro_validate_json_pers_NomTel (AutreContact));
-
-ALTER TABLE fichesanitaires
-    ADD CONSTRAINT Medecin_gomacro CHECK (gomacro_validate_json_pers_NomTel (Medecin));
 
 ALTER TABLE ficheequipiers
     ADD CONSTRAINT Recommandation_gomacro CHECK (gomacro_validate_json_pers_Recommandation (Recommandation));

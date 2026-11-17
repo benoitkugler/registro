@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	cp "registro/sql/camps"
+	pr "registro/sql/personnes"
 	"registro/sql/shared"
 	"registro/utils"
 )
@@ -178,4 +179,19 @@ func defaultRepere(_ cp.Roles) []optionalCategorie {
 		{Bafd, true},
 		{ExtraitCasierJudiciaire, false},
 	}
+}
+
+type NationnaliteCible uint8
+
+const (
+	Both   NationnaliteCible = iota // Toutes
+	OnlyCh                          // Suisse seulement
+	OnlyFr                          // Française seulement
+)
+
+func (nc NationnaliteCible) Match(nat pr.Nationnalite) bool {
+	if nc == Both {
+		return true
+	}
+	return (nc == OnlyCh) == nat.IsSuisse
 }

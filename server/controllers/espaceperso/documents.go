@@ -248,8 +248,20 @@ func loadDocuments(db ds.DB, key crypto.Encrypter, dossier logic.Dossier, askFic
 			}
 
 			// add demandes from the camp
-			for _, link := range demandesByCamp[part.IdCamp] {
+			demandesList := demandesByCamp[part.IdCamp]
+			if asksFichesanitaire(dossier, personne, askFichesanitaireMajeurs) {
+				demandesList = append(demandesList, fs.DemandeCamp{IdDemande: demandeVaccin.Id})
+			}
+			if askCarteIdInscrits {
+				demandesList = append(demandesList, fs.DemandeCamp{IdDemande: demandeCarteId.Id})
+			}
+
+			for _, link := range demandesList {
 				demande := demandes[link.IdDemande]
+				// apply the nationnalite check
+				if !demande.Nationnalite.Match(personne.Nationnalite) {
+					continue
+				}
 				dp := DemandePersonne{
 					Demande:  demande,
 					Uploaded: personnesFiles[personne.Id][demande.Id],
@@ -258,19 +270,6 @@ func loadDocuments(db ds.DB, key crypto.Encrypter, dossier logic.Dossier, askFic
 					dp.DemandeFile = logic.NewPublicFile(key, demandesFiles[fi.Id])
 				}
 				item.Demandes = append(item.Demandes, dp)
-			}
-
-			if asksFichesanitaire(dossier, personne, askFichesanitaireMajeurs) {
-				item.Demandes = append(item.Demandes, DemandePersonne{
-					Demande:  demandeVaccin,
-					Uploaded: personnesFiles[personne.Id][demandeVaccin.Id],
-				})
-			}
-			if askCarteIdInscrits {
-				item.Demandes = append(item.Demandes, DemandePersonne{
-					Demande:  demandeCarteId,
-					Uploaded: personnesFiles[personne.Id][demandeCarteId.Id],
-				})
 			}
 		}
 		// do not include empty lists

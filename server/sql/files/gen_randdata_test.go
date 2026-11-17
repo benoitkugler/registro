@@ -24,6 +24,7 @@ func randDemande() Demande {
 	s.Categorie = randCategorie()
 	s.Description = randstring()
 	s.MaxDocs = randint()
+	s.Nationnalite = randNationnaliteCible()
 
 	return s
 }
@@ -88,6 +89,12 @@ func randIdDemande() IdDemande {
 
 func randIdFile() IdFile {
 	return IdFile(randint64())
+}
+
+func randNationnaliteCible() NationnaliteCible {
+	choix := [...]NationnaliteCible{Both, OnlyCh, OnlyFr}
+	i := rand.Intn(len(choix))
+	return choix[i]
 }
 
 func randbool() bool {

@@ -88,8 +88,9 @@
           <td class="text-left py-1">{{ participant.Personne }}</td>
           <!-- fiche sanitaire -->
           <td class="text-center">
+            <span v-if="!participant.FicheSanitaireRequired">-</span>
             <v-btn
-              v-if="participant.FichesanitaireValid"
+              v-else-if="participant.FichesanitaireValid"
               icon
               size="small"
               flat
@@ -141,16 +142,11 @@
                 </v-card>
               </v-menu>
             </v-btn>
-            <span v-else-if="!participant.FicheSanitaireRequired">-</span>
             <v-icon v-else color="orange">mdi-alert </v-icon>
           </td>
 
           <td class="text-center" v-for="demande in demandes">
-            <span
-              v-if="
-                demande.Categorie === Categorie.Vaccins &&
-                !participant.FicheSanitaireRequired
-              "
+            <span v-if="!(participant.DemandesRequired || {})[demande.Id]"
               >-</span
             >
             <v-btn
