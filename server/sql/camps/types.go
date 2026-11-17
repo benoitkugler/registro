@@ -2,6 +2,7 @@ package camps
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -494,4 +495,23 @@ func (fr FormReponses) ToString(champs Champs) []string {
 		out[i] = c.formatReponse(fr[i])
 	}
 	return out
+}
+
+type Horaire struct {
+	Valid  bool
+	Heure  uint8 // [0-23]
+	Minute uint8 // [0-59]
+}
+
+func (h Horaire) check() error {
+	if !h.Valid {
+		return nil
+	}
+	if h.Heure > 23 {
+		return errors.New("invalid Horaire.Heure")
+	}
+	if h.Minute > 59 {
+		return errors.New("invalid Horaire.Minute")
+	}
+	return nil
 }

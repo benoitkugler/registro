@@ -45,6 +45,7 @@ declare module 'vue' {
     FilesDemande: typeof import('./src/components/files/FilesDemande.vue')['default']
     FilesRow: typeof import('./src/components/files/FilesRow.vue')['default']
     FormationRepereField: typeof import('./src/components/FormationRepereField.vue')['default']
+    HoraireField: typeof import('./src/components/HoraireField.vue')['default']
     InscriptionEtatcivilCols: typeof import('./src/components/inscriptions/InscriptionEtatcivilCols.vue')['default']
     InscriptionRow: typeof import('./src/components/inscriptions/InscriptionRow.vue')['default']
     IntField: typeof import('./src/components/IntField.vue')['default']

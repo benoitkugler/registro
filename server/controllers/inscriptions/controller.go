@@ -110,16 +110,16 @@ type CampExt struct {
 	Id   cps.IdCamp
 	Slug string
 
-	Nom         string
-	DateDebut   sh.Date
-	Duree       int // nombre de jours date et fin inclus
-	Lieu        string
-	ImageURL    string // affichée sur le formulaire d'inscription
-	Description string // affichée sur le formulaire d'inscription
-	Navette     cps.OptionNavette
-	Places      int // nombre de places prévues pour le séjour
-	AgeMin      int // inclusif
-	AgeMax      int // inclusif
+	Nom                      string
+	DateDebut                sh.Date
+	Duree                    int // nombre de jours date et fin inclus
+	Lieu                     string
+	ImageURL                 string // affichée sur le formulaire d'inscription
+	Description              string // affichée sur le formulaire d'inscription
+	Navette                  cps.OptionNavette
+	Places                   int // nombre de places prévues pour le séjour
+	AgeMin, AgeMax           int // inclusif
+	HoraireDebut, HoraireFin cps.Horaire
 
 	Meta cps.Meta
 
@@ -158,17 +158,20 @@ func newCampExt(camp cps.Camp, taux ds.Taux, direction []pr.Personne, participan
 		Id:   camp.Id,
 		Slug: camp.Slug(),
 
-		Nom:         camp.Nom,
-		DateDebut:   camp.DateDebut,
-		Duree:       camp.Duree,
-		Lieu:        camp.Lieu,
-		ImageURL:    camp.ImageURL,
-		Description: camp.Description,
-		Navette:     camp.Navette,
-		Places:      camp.Places,
-		AgeMin:      camp.AgeMin,
-		AgeMax:      camp.AgeMax,
-		Meta:        camp.Meta,
+		Nom:          camp.Nom,
+		DateDebut:    camp.DateDebut,
+		Duree:        camp.Duree,
+		Lieu:         camp.Lieu,
+		ImageURL:     camp.ImageURL,
+		Description:  camp.Description,
+		Navette:      camp.Navette,
+		Places:       camp.Places,
+		AgeMin:       camp.AgeMin,
+		AgeMax:       camp.AgeMax,
+		HoraireDebut: camp.HoraireDebut,
+		HoraireFin:   camp.HoraireFin,
+
+		Meta: camp.Meta,
 
 		Prix:       taux.Convertible(camp.Prix).String(),
 		OptionPrix: newOptionPrixExt(camp.OptionPrix, camp.Prix, taux),

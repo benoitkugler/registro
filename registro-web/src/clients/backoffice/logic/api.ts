@@ -601,6 +601,8 @@ export interface Camp {
   Meta: Meta;
   IsAlbumVisible: boolean;
   PlacesReservees: Int;
+  HoraireDebut: Horaire;
+  HoraireFin: Horaire;
 }
 // registro/sql/camps.CampExt
 export interface CampExt {
@@ -649,6 +651,12 @@ export const FormStatusEquipierLabels: Record<FormStatusEquipier, string> = {
   [FormStatusEquipier.Answered]: "Répondu",
 };
 
+// registro/sql/camps.Horaire
+export interface Horaire {
+  Valid: boolean;
+  Heure: Int;
+  Minute: Int;
+}
 export type IdAide = Int & { __opaque_int__: "IdAide" };
 export type IdCamp = Int & { __opaque_int__: "IdCamp" };
 export type IdEquipier = Int & { __opaque_int__: "IdEquipier" };
@@ -1075,7 +1083,6 @@ export interface Fichesanitaire {
   DifficultesSante: string;
   AllergiesAlimentaires: string;
   TraitementMedical: string;
-  Medecin: NomTel;
   AutreContact: NomTel;
   Modified: Time;
   Owners: Mails;

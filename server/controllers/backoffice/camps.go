@@ -255,6 +255,8 @@ func (ct *Controller) updateCamp(args cps.Camp) (cps.CampExt, error) {
 	camp.OptionQuotientFamilial = args.OptionQuotientFamilial
 	camp.Password = args.Password
 	camp.PlacesReservees = args.PlacesReservees
+	camp.HoraireDebut = args.HoraireDebut
+	camp.HoraireFin = args.HoraireFin
 	camp, err = camp.Update(ct.db)
 	if err != nil {
 		return cps.CampExt{}, utils.SQLError(err)

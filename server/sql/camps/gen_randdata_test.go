@@ -61,6 +61,8 @@ func randCamp() Camp {
 	s.Meta = randMeta()
 	s.IsAlbumVisible = randbool()
 	s.PlacesReservees = randint()
+	s.HoraireDebut = randHoraire()
+	s.HoraireFin = randHoraire()
 
 	return s
 }
@@ -180,6 +182,15 @@ func randGroupeParticipant() GroupeParticipant {
 	s.IdGroupe = randIdGroupe()
 	s.IdCamp = randIdCamp()
 	s.Manuel = randbool()
+
+	return s
+}
+
+func randHoraire() Horaire {
+	var s Horaire
+	s.Valid = randbool()
+	s.Heure = randuint8()
+	s.Minute = randuint8()
 
 	return s
 }

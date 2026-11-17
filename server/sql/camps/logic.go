@@ -417,6 +417,12 @@ func (c *Camp) Check() error {
 	if c.PlacesReservees < 0 || c.PlacesReservees > c.Places {
 		return errors.New("invalid PlacesReservees")
 	}
+	if err := c.HoraireDebut.check(); err != nil {
+		return err
+	}
+	if err := c.HoraireFin.check(); err != nil {
+		return err
+	}
 	return nil
 }
 
