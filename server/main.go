@@ -91,6 +91,7 @@ func main() {
 
 	comptaCt, err := compta.NewController(db, encrypter, comptaCfg, smtp, asso)
 	check(err)
+	fmt.Printf("Google Drive acces for compta: OK.\n\tkey file: %s\n\troot folder: %s\n", comptaCfg.GoogleDriveKeyFile, comptaCfg.GoogleDriveFolderId)
 
 	servicesCt := services.NewController(db, encrypter, smtp, asso)
 
