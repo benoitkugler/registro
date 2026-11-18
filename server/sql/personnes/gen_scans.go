@@ -94,7 +94,25 @@ func (item Ficheequipier) Insert(db DB) error {
 			) VALUES (
 			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17
 			);
-			`, item.IdPersonne, item.Diplome, item.Formation, item.Fonctionnaire, item.Qualifications, item.EtatCivil, item.NombreEnfants, item.Profession, item.ExperienceTravailJeunes, item.ParcoursSpirituel, item.Eglise, item.Recommandation, item.Sante, item.AssuranceMaladie, item.AssuranceAccident, item.DemandeMembreAssoPermanent, item.FormationRepere)
+			`,
+		item.IdPersonne,
+		item.Diplome,
+		item.Formation,
+		item.Fonctionnaire,
+		item.Qualifications,
+		item.EtatCivil,
+		item.NombreEnfants,
+		item.Profession,
+		item.ExperienceTravailJeunes,
+		item.ParcoursSpirituel,
+		item.Eglise,
+		item.Recommandation,
+		item.Sante,
+		item.AssuranceMaladie,
+		item.AssuranceAccident,
+		item.DemandeMembreAssoPermanent,
+		item.FormationRepere,
+	)
 	if err != nil {
 		return err
 	}
@@ -132,7 +150,25 @@ func InsertManyFicheequipiers(tx *sql.Tx, items ...Ficheequipier) error {
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdPersonne, item.Diplome, item.Formation, item.Fonctionnaire, item.Qualifications, item.EtatCivil, item.NombreEnfants, item.Profession, item.ExperienceTravailJeunes, item.ParcoursSpirituel, item.Eglise, item.Recommandation, item.Sante, item.AssuranceMaladie, item.AssuranceAccident, item.DemandeMembreAssoPermanent, item.FormationRepere)
+		_, err = stmt.Exec(
+			item.IdPersonne,
+			item.Diplome,
+			item.Formation,
+			item.Fonctionnaire,
+			item.Qualifications,
+			item.EtatCivil,
+			item.NombreEnfants,
+			item.Profession,
+			item.ExperienceTravailJeunes,
+			item.ParcoursSpirituel,
+			item.Eglise,
+			item.Recommandation,
+			item.Sante,
+			item.AssuranceMaladie,
+			item.AssuranceAccident,
+			item.DemandeMembreAssoPermanent,
+			item.FormationRepere,
+		)
 		if err != nil {
 			return err
 		}
@@ -260,7 +296,16 @@ func (item Fichesanitaire) Insert(db DB) error {
 			) VALUES (
 			$1, $2, $3, $4, $5, $6, $7, $8
 			);
-			`, item.IdPersonne, item.DifficultesSante, item.AllergiesAlimentaires, item.TraitementMedical, item.AutreContact, item.Modified, item.Owners, item.ReviewStatus)
+			`,
+		item.IdPersonne,
+		item.DifficultesSante,
+		item.AllergiesAlimentaires,
+		item.TraitementMedical,
+		item.AutreContact,
+		item.Modified,
+		item.Owners,
+		item.ReviewStatus,
+	)
 	if err != nil {
 		return err
 	}
@@ -289,7 +334,16 @@ func InsertManyFichesanitaires(tx *sql.Tx, items ...Fichesanitaire) error {
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdPersonne, item.DifficultesSante, item.AllergiesAlimentaires, item.TraitementMedical, item.AutreContact, item.Modified, item.Owners, item.ReviewStatus)
+		_, err = stmt.Exec(
+			item.IdPersonne,
+			item.DifficultesSante,
+			item.AllergiesAlimentaires,
+			item.TraitementMedical,
+			item.AutreContact,
+			item.Modified,
+			item.Owners,
+			item.ReviewStatus,
+		)
 		if err != nil {
 			return err
 		}
@@ -449,7 +503,23 @@ func (item Personne) Insert(tx DB) (out Personne, err error) {
 		) VALUES (
 		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15
 		) RETURNING id, nom, prenom, sexe, datenaissance, nationnalite, tels, mail, adresse, codepostal, ville, pays, publicite, charteaccepted, istemp, securitesociale;
-		`, item.Nom, item.Prenom, item.Sexe, item.DateNaissance, item.Nationnalite, item.Tels, item.Mail, item.Adresse, item.CodePostal, item.Ville, item.Pays, item.Publicite, item.CharteAccepted, item.IsTemp, item.SecuriteSociale)
+		`,
+		item.Nom,
+		item.Prenom,
+		item.Sexe,
+		item.DateNaissance,
+		item.Nationnalite,
+		item.Tels,
+		item.Mail,
+		item.Adresse,
+		item.CodePostal,
+		item.Ville,
+		item.Pays,
+		item.Publicite,
+		item.CharteAccepted,
+		item.IsTemp,
+		item.SecuriteSociale,
+	)
 	return ScanPersonne(row)
 }
 
@@ -460,7 +530,24 @@ func (item Personne) Update(tx DB) (out Personne, err error) {
 		) = (
 		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15
 		) WHERE id = $16 RETURNING id, nom, prenom, sexe, datenaissance, nationnalite, tels, mail, adresse, codepostal, ville, pays, publicite, charteaccepted, istemp, securitesociale;
-		`, item.Nom, item.Prenom, item.Sexe, item.DateNaissance, item.Nationnalite, item.Tels, item.Mail, item.Adresse, item.CodePostal, item.Ville, item.Pays, item.Publicite, item.CharteAccepted, item.IsTemp, item.SecuriteSociale, item.Id)
+		`,
+		item.Nom,
+		item.Prenom,
+		item.Sexe,
+		item.DateNaissance,
+		item.Nationnalite,
+		item.Tels,
+		item.Mail,
+		item.Adresse,
+		item.CodePostal,
+		item.Ville,
+		item.Pays,
+		item.Publicite,
+		item.CharteAccepted,
+		item.IsTemp,
+		item.SecuriteSociale,
+		item.Id,
+	)
 	return ScanPersonne(row)
 }
 

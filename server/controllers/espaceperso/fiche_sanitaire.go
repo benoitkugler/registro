@@ -7,10 +7,12 @@ import (
 	"strings"
 	"time"
 
+	filesAPI "registro/controllers/files"
 	"registro/controllers/services"
 	"registro/crypto"
 	"registro/logic"
 	"registro/mails"
+	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
 	pr "registro/sql/personnes"
 	"registro/utils"
@@ -19,16 +21,6 @@ import (
 )
 
 // fiches sanitaires
-
-// asksFichesanitaire reports whether a fiche sanitaire (and vaccins) is
-// requested for this participant. Majors are included when [askMajeurs] is true.
-func asksFichesanitaire(dossier logic.Dossier, personne pr.Personne, askMajeurs bool) bool {
-	camp, ok := dossier.FirstCampFor(personne.Id)
-	if !ok {
-		return false
-	}
-	return askMajeurs || camp.AgeDebutCamp(personne.DateNaissance) < 18
-}
 
 type FichesanitaireExt struct {
 	Personne     string
@@ -45,7 +37,7 @@ type FichesanitaireExt struct {
 	ResponsableTels pr.Tels
 }
 
-func loadFichesanitaires(db ds.DB, dossier logic.Dossier, askMajeurs bool) (out []FichesanitaireExt, _ error) {
+func loadFichesanitaires(db ds.DB, dossier logic.Dossier, loader filesAPI.DemandesLoader) (out []FichesanitaireExt, _ error) {
 	responsable := dossier.Responsable()
 	idPersonnes := dossier.Participants.IdPersonnes()
 
@@ -57,10 +49,17 @@ func loadFichesanitaires(db ds.DB, dossier logic.Dossier, askMajeurs bool) (out 
 	// make sure the struct is initialized for every [Personne], restricting to minors
 	// unless the association asks for fiche sanitaires for majors.
 	for _, pers := range dossier.Personnes()[1:] {
-		if pers.IsTemp { // wait for the validation
+		ageCamp, hasCamp := dossier.FirstCampFor(pers.Id)
+		if !hasCamp {
 			continue
 		}
-		if !asksFichesanitaire(dossier, pers, askMajeurs) {
+		required := loader.ForParticipant(filesAPI.ParticipantDemandesArgs{
+			IdCamp:   ageCamp.Id,
+			AgeCamp:  ageCamp,
+			Personne: pers,
+			Statut:   cps.Inscrit,
+		}).FicheSanitaire
+		if !required {
 			continue
 		}
 

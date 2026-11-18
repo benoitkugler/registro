@@ -57,26 +57,24 @@ func TestDocuments(t *testing.T) {
 	tu.AssertNoErr(t, err)
 
 	t.Run("CarteId request setting", func(t *testing.T) {
-		originalCarteId := ct.asso.AskCarteIdInscrits
-		originalFiche := ct.asso.AskFicheSanitaireMajeurs
+		originalReq := ct.asso.AskedDocs
 		defer func() {
-			ct.asso.AskCarteIdInscrits = originalCarteId
-			ct.asso.AskFicheSanitaireMajeurs = originalFiche
+			ct.asso.AskedDocs = originalReq
 		}()
 
-		ct.asso.AskCarteIdInscrits = true
-		ct.asso.AskFicheSanitaireMajeurs = true
+		ct.asso.AskedDocs.CarteId = true
+		ct.asso.AskedDocs.FicheSanitaireMajeurs = true
 		docs, err := ct.getDocuments(camp.Id)
 		tu.AssertNoErr(t, err)
-		tu.Assert(t, docs.AskCarteIdInscrits)
-		tu.Assert(t, docs.AskFicheSanitaireMajeurs)
+		tu.Assert(t, docs.AskedDocs.CarteId)
+		tu.Assert(t, docs.AskedDocs.FicheSanitaireMajeurs)
 
-		ct.asso.AskCarteIdInscrits = false
-		ct.asso.AskFicheSanitaireMajeurs = false
+		ct.asso.AskedDocs.CarteId = false
+		ct.asso.AskedDocs.FicheSanitaireMajeurs = false
 		docs, err = ct.getDocuments(camp.Id)
 		tu.AssertNoErr(t, err)
-		tu.Assert(t, !docs.AskCarteIdInscrits)
-		tu.Assert(t, !docs.AskFicheSanitaireMajeurs)
+		tu.Assert(t, !docs.AskedDocs.CarteId)
+		tu.Assert(t, !docs.AskedDocs.FicheSanitaireMajeurs)
 	})
 
 	t.Run("files to download", func(t *testing.T) {
@@ -159,16 +157,16 @@ func TestDocuments(t *testing.T) {
 		_, err = createFileFor(ct.db, pe3.Id, demande2.Demande.Id)
 		tu.AssertNoErr(t, err)
 
-		original := ct.asso.AskCarteIdInscrits
-		defer func() { ct.asso.AskCarteIdInscrits = original }()
+		original := ct.asso.AskedDocs.CarteId
+		defer func() { ct.asso.AskedDocs.CarteId = original }()
 
-		ct.asso.AskCarteIdInscrits = false
+		ct.asso.AskedDocs.CarteId = false
 		docs, err := ct.loadParticipantsFiles(camp.Id)
 		tu.AssertNoErr(t, err)
 		tu.Assert(t, len(docs.Demandes) == 3)
 		tu.Assert(t, len(docs.Participants) == 2)
 
-		ct.asso.AskCarteIdInscrits = true
+		ct.asso.AskedDocs.CarteId = true
 		docs, err = ct.loadParticipantsFiles(camp.Id)
 		tu.AssertNoErr(t, err)
 		tu.Assert(t, len(docs.Demandes) == 4)
@@ -211,8 +209,8 @@ func TestReview(t *testing.T) {
 	ct, err := NewController(db.DB, "", "", files.NewFileSystem(os.TempDir()), smtp, asso, config.Immich{})
 	tu.AssertNoErr(t, err)
 
-	ct.asso.AskFicheSanitaireMajeurs = true
-	ct.asso.AskCarteIdInscrits = false
+	ct.asso.AskedDocs.FicheSanitaireMajeurs = true
+	ct.asso.AskedDocs.CarteId = false
 
 	_, err = ct.createEquipier("", EquipiersCreateIn{
 		CreatePersonne: true,

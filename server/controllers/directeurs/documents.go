@@ -7,6 +7,7 @@ import (
 	"iter"
 	"slices"
 
+	"registro/config"
 	"registro/controllers/backoffice"
 	fsAPI "registro/controllers/files"
 	"registro/generators/pdfcreator"
@@ -24,10 +25,9 @@ import (
 var errNoDir = errors.New("Aucun directeur n'est déclaré pour ce camp !")
 
 type DocumentsOut struct {
-	Ready                    bool
-	ToShow                   cps.DocumentsToShow
-	AskCarteIdInscrits       bool
-	AskFicheSanitaireMajeurs bool
+	Ready     bool
+	ToShow    cps.DocumentsToShow
+	AskedDocs config.AskedDocs
 	// à télécharger (n'inclut pas la lettre)
 	FilesToDownload []logic.PublicFile
 	CampDemandes    []DemandeDirecteur
@@ -93,10 +93,9 @@ func (ct *Controller) getDocuments(id cps.IdCamp) (DocumentsOut, error) {
 	}
 
 	out := DocumentsOut{
-		Ready:                    camp.DocumentsReady,
-		ToShow:                   camp.DocumentsToShow,
-		AskCarteIdInscrits:       ct.asso.AskCarteIdInscrits,
-		AskFicheSanitaireMajeurs: ct.asso.AskFicheSanitaireMajeurs,
+		Ready:     camp.DocumentsReady,
+		ToShow:    camp.DocumentsToShow,
+		AskedDocs: ct.asso.AskedDocs,
 	}
 	for _, link := range toDownload {
 		if link.IsLettre {
@@ -461,7 +460,7 @@ func (ct *Controller) ParticipantsLoadFiles(c echo.Context) error {
 }
 
 func (ct *Controller) loadParticipantsFiles(id cps.IdCamp) (fsAPI.ParticipantsFiles, error) {
-	loader, err := fsAPI.LoadParticipantsFiles(ct.db, ct.key, []cps.IdCamp{id}, ct.asso.AskCarteIdInscrits, ct.asso.AskFicheSanitaireMajeurs)
+	loader, err := fsAPI.LoadParticipantsFiles(ct.db, ct.key, []cps.IdCamp{id}, ct.asso.AskedDocs)
 	if err != nil {
 		return fsAPI.ParticipantsFiles{}, err
 	}
@@ -688,8 +687,8 @@ func (ct *Controller) DocumentsDownloadFichesSanitaires(c echo.Context) error {
 }
 
 // ignore les fiches vides et, sauf si configuré, les participants majeurs
-func (ct *Controller) renderFichesSanitaires(user cps.IdCamp) ([]byte, string, error) {
-	camp, err := cps.LoadCamp(ct.db, user)
+func (ct *Controller) renderFichesSanitaires(idCamp cps.IdCamp) ([]byte, string, error) {
+	camp, err := cps.LoadCamp(ct.db, idCamp)
 	if err != nil {
 		return nil, "", err
 	}
@@ -705,6 +704,11 @@ func (ct *Controller) renderFichesSanitaires(user cps.IdCamp) ([]byte, string, e
 	}
 	fiches := tmp.ByIdPersonne()
 
+	loader, err := fsAPI.LoadDemandes(ct.db, ct.asso.AskedDocs, idCamp)
+	if err != nil {
+		return nil, "", err
+	}
+
 	responsables, err := pr.SelectPersonnes(ct.db, dossiers.IdResponsables()...)
 	if err != nil {
 		return nil, "", utils.SQLError(err)
@@ -713,7 +717,13 @@ func (ct *Controller) renderFichesSanitaires(user cps.IdCamp) ([]byte, string, e
 	var list []pdfcreator.FicheSanitaire
 	for _, part := range participants {
 		fiche, hasFiche := fiches[part.Participant.IdPersonne]
-		if !hasFiche || (!ct.asso.AskFicheSanitaireMajeurs && part.Personne.Age() >= 18) {
+		required := loader.ForParticipant(fsAPI.ParticipantDemandesArgs{
+			IdCamp:   idCamp,
+			AgeCamp:  camp.Camp,
+			Personne: part.Personne,
+			Statut:   part.Participant.Statut,
+		}).FicheSanitaire
+		if !hasFiche || !required {
 			continue
 		}
 		dossier := dossiers[part.Participant.IdDossier]

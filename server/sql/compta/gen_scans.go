@@ -93,7 +93,24 @@ func (item ComptaBudget) Insert(db DB) error {
 			) VALUES (
 			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16
 			);
-			`, item.IdCompta, item.SimulatedInscrits, item.SimulatedEquipiers, item.StartMealInscrits, item.EndMealInscrits, item.StartMealEquipiers, item.EndMealEquipiers, item.OffsetStartMealEquipiers, item.OffsetEndMealEquipiers, item.ExternalHost, item.Activities, item.MaterielPeda, item.ProduitPharma, item.TeamTrips, item.ExternalCarRent, item.AssoCarKms)
+			`,
+		item.IdCompta,
+		item.SimulatedInscrits,
+		item.SimulatedEquipiers,
+		item.StartMealInscrits,
+		item.EndMealInscrits,
+		item.StartMealEquipiers,
+		item.EndMealEquipiers,
+		item.OffsetStartMealEquipiers,
+		item.OffsetEndMealEquipiers,
+		item.ExternalHost,
+		item.Activities,
+		item.MaterielPeda,
+		item.ProduitPharma,
+		item.TeamTrips,
+		item.ExternalCarRent,
+		item.AssoCarKms,
+	)
 	if err != nil {
 		return err
 	}
@@ -130,7 +147,24 @@ func InsertManyComptaBudgets(tx *sql.Tx, items ...ComptaBudget) error {
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdCompta, item.SimulatedInscrits, item.SimulatedEquipiers, item.StartMealInscrits, item.EndMealInscrits, item.StartMealEquipiers, item.EndMealEquipiers, item.OffsetStartMealEquipiers, item.OffsetEndMealEquipiers, item.ExternalHost, item.Activities, item.MaterielPeda, item.ProduitPharma, item.TeamTrips, item.ExternalCarRent, item.AssoCarKms)
+		_, err = stmt.Exec(
+			item.IdCompta,
+			item.SimulatedInscrits,
+			item.SimulatedEquipiers,
+			item.StartMealInscrits,
+			item.EndMealInscrits,
+			item.StartMealEquipiers,
+			item.EndMealEquipiers,
+			item.OffsetStartMealEquipiers,
+			item.OffsetEndMealEquipiers,
+			item.ExternalHost,
+			item.Activities,
+			item.MaterielPeda,
+			item.ProduitPharma,
+			item.TeamTrips,
+			item.ExternalCarRent,
+			item.AssoCarKms,
+		)
 		if err != nil {
 			return err
 		}
@@ -282,7 +316,15 @@ func (item ComptaCamp) Insert(tx DB) (out ComptaCamp, err error) {
 		) VALUES (
 		$1, $2, $3, $4, $5, $6, $7
 		) RETURNING id, idcamp, filestatus, state, lastsentmailadmin, lastsentmaildirecteur, account, fraismdr;
-		`, item.IdCamp, item.FileStatus, item.State, item.LastSentMailAdmin, item.LastSentMailDirecteur, item.Account, item.FraisMDR)
+		`,
+		item.IdCamp,
+		item.FileStatus,
+		item.State,
+		item.LastSentMailAdmin,
+		item.LastSentMailDirecteur,
+		item.Account,
+		item.FraisMDR,
+	)
 	return ScanComptaCamp(row)
 }
 
@@ -293,7 +335,16 @@ func (item ComptaCamp) Update(tx DB) (out ComptaCamp, err error) {
 		) = (
 		$1, $2, $3, $4, $5, $6, $7
 		) WHERE id = $8 RETURNING id, idcamp, filestatus, state, lastsentmailadmin, lastsentmaildirecteur, account, fraismdr;
-		`, item.IdCamp, item.FileStatus, item.State, item.LastSentMailAdmin, item.LastSentMailDirecteur, item.Account, item.FraisMDR, item.Id)
+		`,
+		item.IdCamp,
+		item.FileStatus,
+		item.State,
+		item.LastSentMailAdmin,
+		item.LastSentMailDirecteur,
+		item.Account,
+		item.FraisMDR,
+		item.Id,
+	)
 	return ScanComptaCamp(row)
 }
 
@@ -442,7 +493,16 @@ func (item ComptaConfig) Insert(tx DB) (out ComptaConfig, err error) {
 		) VALUES (
 		$1, $2, $3, $4, $5, $6, $7, $8
 		) RETURNING id, year, mealscost, smallmealthreshold, smallmealmajoration, assocars, chauffagemdr, entretienmdr, materielmdr;
-		`, item.Year, item.MealsCost, item.SmallMealThreshold, item.SmallMealMajoration, item.AssoCars, item.ChauffageMDR, item.EntretienMDR, item.MaterielMDR)
+		`,
+		item.Year,
+		item.MealsCost,
+		item.SmallMealThreshold,
+		item.SmallMealMajoration,
+		item.AssoCars,
+		item.ChauffageMDR,
+		item.EntretienMDR,
+		item.MaterielMDR,
+	)
 	return ScanComptaConfig(row)
 }
 
@@ -453,7 +513,17 @@ func (item ComptaConfig) Update(tx DB) (out ComptaConfig, err error) {
 		) = (
 		$1, $2, $3, $4, $5, $6, $7, $8
 		) WHERE id = $9 RETURNING id, year, mealscost, smallmealthreshold, smallmealmajoration, assocars, chauffagemdr, entretienmdr, materielmdr;
-		`, item.Year, item.MealsCost, item.SmallMealThreshold, item.SmallMealMajoration, item.AssoCars, item.ChauffageMDR, item.EntretienMDR, item.MaterielMDR, item.Id)
+		`,
+		item.Year,
+		item.MealsCost,
+		item.SmallMealThreshold,
+		item.SmallMealMajoration,
+		item.AssoCars,
+		item.ChauffageMDR,
+		item.EntretienMDR,
+		item.MaterielMDR,
+		item.Id,
+	)
 	return ScanComptaConfig(row)
 }
 
@@ -561,7 +631,11 @@ func (item ComptaFile) Insert(tx DB) (out ComptaFile, err error) {
 		) VALUES (
 		$1, $2, $3
 		) RETURNING id, name, driveid, driveidminiature;
-		`, item.Name, item.DriveID, item.DriveIDMiniature)
+		`,
+		item.Name,
+		item.DriveID,
+		item.DriveIDMiniature,
+	)
 	return ScanComptaFile(row)
 }
 
@@ -572,7 +646,12 @@ func (item ComptaFile) Update(tx DB) (out ComptaFile, err error) {
 		) = (
 		$1, $2, $3
 		) WHERE id = $4 RETURNING id, name, driveid, driveidminiature;
-		`, item.Name, item.DriveID, item.DriveIDMiniature, item.Id)
+		`,
+		item.Name,
+		item.DriveID,
+		item.DriveIDMiniature,
+		item.Id,
+	)
 	return ScanComptaFile(row)
 }
 
@@ -673,7 +752,14 @@ func (item ComptaRecord) Insert(tx DB) (out ComptaRecord, err error) {
 		) VALUES (
 		$1, $2, $3, $4, $5, $6
 		) RETURNING id, idcamp, isreceipe, spentby, reviews, isvalidated, account;
-		`, item.IdCamp, item.IsReceipe, item.SpentBy, item.Reviews, item.IsValidated, item.Account)
+		`,
+		item.IdCamp,
+		item.IsReceipe,
+		item.SpentBy,
+		item.Reviews,
+		item.IsValidated,
+		item.Account,
+	)
 	return ScanComptaRecord(row)
 }
 
@@ -684,7 +770,15 @@ func (item ComptaRecord) Update(tx DB) (out ComptaRecord, err error) {
 		) = (
 		$1, $2, $3, $4, $5, $6
 		) WHERE id = $7 RETURNING id, idcamp, isreceipe, spentby, reviews, isvalidated, account;
-		`, item.IdCamp, item.IsReceipe, item.SpentBy, item.Reviews, item.IsValidated, item.Account, item.Id)
+		`,
+		item.IdCamp,
+		item.IsReceipe,
+		item.SpentBy,
+		item.Reviews,
+		item.IsValidated,
+		item.Account,
+		item.Id,
+	)
 	return ScanComptaRecord(row)
 }
 
@@ -756,7 +850,10 @@ func (item ComptaRecordBus) Insert(db DB) error {
 			) VALUES (
 			$1, $2
 			);
-			`, item.IdCamp, item.IdSubrecord)
+			`,
+		item.IdCamp,
+		item.IdSubrecord,
+	)
 	if err != nil {
 		return err
 	}
@@ -779,7 +876,10 @@ func InsertManyComptaRecordBuss(tx *sql.Tx, items ...ComptaRecordBus) error {
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdCamp, item.IdSubrecord)
+		_, err = stmt.Exec(
+			item.IdCamp,
+			item.IdSubrecord,
+		)
 		if err != nil {
 			return err
 		}
@@ -1048,7 +1148,16 @@ func (item ComptaSubrecord) Insert(tx DB) (out ComptaSubrecord, err error) {
 		) VALUES (
 		$1, $2, $3, $4, $5, $6, $7, $8
 		) RETURNING id, idrecord, date, description, mode, serial, currency, montants, idfile;
-		`, item.IdRecord, item.Date, item.Description, item.Mode, item.Serial, item.Currency, item.Montants, item.IdFile)
+		`,
+		item.IdRecord,
+		item.Date,
+		item.Description,
+		item.Mode,
+		item.Serial,
+		item.Currency,
+		item.Montants,
+		item.IdFile,
+	)
 	return ScanComptaSubrecord(row)
 }
 
@@ -1059,7 +1168,17 @@ func (item ComptaSubrecord) Update(tx DB) (out ComptaSubrecord, err error) {
 		) = (
 		$1, $2, $3, $4, $5, $6, $7, $8
 		) WHERE id = $9 RETURNING id, idrecord, date, description, mode, serial, currency, montants, idfile;
-		`, item.IdRecord, item.Date, item.Description, item.Mode, item.Serial, item.Currency, item.Montants, item.IdFile, item.Id)
+		`,
+		item.IdRecord,
+		item.Date,
+		item.Description,
+		item.Mode,
+		item.Serial,
+		item.Currency,
+		item.Montants,
+		item.IdFile,
+		item.Id,
+	)
 	return ScanComptaSubrecord(row)
 }
 

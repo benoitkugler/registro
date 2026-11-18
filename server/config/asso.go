@@ -30,14 +30,18 @@ type Asso struct {
 
 	RemisesHints RemisesHints
 
-	// AskFicheSanitaireMajeurs requests a fiche sanitaire (and vaccins)
-	// for every participant, regardless of age.
-	AskFicheSanitaireMajeurs bool
-
-	// AskCarteIdInscrits requests a Carte d'identité/Passeport for enrolled participants.
-	AskCarteIdInscrits bool
+	AskedDocs AskedDocs
 
 	ConfigInscription
+}
+
+type AskedDocs struct {
+	// FicheSanitaireMajeurs requests a fiche sanitaire (and vaccins)
+	// for every participant, regardless of age.
+	FicheSanitaireMajeurs bool
+
+	// CarteId requests a Carte d'identité/Passeport for enrolled participants.
+	CarteId bool
 }
 
 type BankAccount struct {
@@ -93,8 +97,10 @@ var acve = Asso{
 		AutresInscrits: 15,
 	},
 
-	AskFicheSanitaireMajeurs: false,
-	AskCarteIdInscrits:       false,
+	AskedDocs: AskedDocs{
+		FicheSanitaireMajeurs: false,
+		CarteId:               false,
+	},
 
 	ConfigInscription: ConfigInscription{
 		SupportBonsCAF: true, SupportANCV: true,
@@ -142,8 +148,10 @@ var repere = Asso{
 		AutresInscrits: 10,
 	},
 
-	AskFicheSanitaireMajeurs: true,
-	AskCarteIdInscrits:       true,
+	AskedDocs: AskedDocs{
+		FicheSanitaireMajeurs: true,
+		CarteId:               true,
+	},
 
 	ConfigInscription: ConfigInscription{
 		SupportBonsCAF: false, SupportANCV: false,

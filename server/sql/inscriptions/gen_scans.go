@@ -110,7 +110,16 @@ func (item Inscription) Insert(tx DB) (out Inscription, err error) {
 		) VALUES (
 		$1, $2, $3, $4, $5, $6, $7, $8
 		) RETURNING id, idtaux, responsable, message, copiesmails, partageadressesok, demandefondsoutien, dateheure, confirmedasdossier;
-		`, item.IdTaux, item.Responsable, item.Message, item.CopiesMails, item.PartageAdressesOK, item.DemandeFondSoutien, item.DateHeure, item.ConfirmedAsDossier)
+		`,
+		item.IdTaux,
+		item.Responsable,
+		item.Message,
+		item.CopiesMails,
+		item.PartageAdressesOK,
+		item.DemandeFondSoutien,
+		item.DateHeure,
+		item.ConfirmedAsDossier,
+	)
 	return ScanInscription(row)
 }
 
@@ -121,7 +130,17 @@ func (item Inscription) Update(tx DB) (out Inscription, err error) {
 		) = (
 		$1, $2, $3, $4, $5, $6, $7, $8
 		) WHERE id = $9 RETURNING id, idtaux, responsable, message, copiesmails, partageadressesok, demandefondsoutien, dateheure, confirmedasdossier;
-		`, item.IdTaux, item.Responsable, item.Message, item.CopiesMails, item.PartageAdressesOK, item.DemandeFondSoutien, item.DateHeure, item.ConfirmedAsDossier, item.Id)
+		`,
+		item.IdTaux,
+		item.Responsable,
+		item.Message,
+		item.CopiesMails,
+		item.PartageAdressesOK,
+		item.DemandeFondSoutien,
+		item.DateHeure,
+		item.ConfirmedAsDossier,
+		item.Id,
+	)
 	return ScanInscription(row)
 }
 
@@ -228,7 +247,18 @@ func (item InscriptionParticipant) Insert(tx DB) (out InscriptionParticipant, er
 		) VALUES (
 		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10
 		) RETURNING id, idinscription, idcamp, idtaux, nom, prenom, datenaissance, sexe, nationnalite, mail, isdoublon;
-		`, item.IdInscription, item.IdCamp, item.IdTaux, item.Nom, item.Prenom, item.DateNaissance, item.Sexe, item.Nationnalite, item.Mail, item.IsDoublon)
+		`,
+		item.IdInscription,
+		item.IdCamp,
+		item.IdTaux,
+		item.Nom,
+		item.Prenom,
+		item.DateNaissance,
+		item.Sexe,
+		item.Nationnalite,
+		item.Mail,
+		item.IsDoublon,
+	)
 	return ScanInscriptionParticipant(row)
 }
 
@@ -239,7 +269,19 @@ func (item InscriptionParticipant) Update(tx DB) (out InscriptionParticipant, er
 		) = (
 		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10
 		) WHERE id = $11 RETURNING id, idinscription, idcamp, idtaux, nom, prenom, datenaissance, sexe, nationnalite, mail, isdoublon;
-		`, item.IdInscription, item.IdCamp, item.IdTaux, item.Nom, item.Prenom, item.DateNaissance, item.Sexe, item.Nationnalite, item.Mail, item.IsDoublon, item.Id)
+		`,
+		item.IdInscription,
+		item.IdCamp,
+		item.IdTaux,
+		item.Nom,
+		item.Prenom,
+		item.DateNaissance,
+		item.Sexe,
+		item.Nationnalite,
+		item.Mail,
+		item.IsDoublon,
+		item.Id,
+	)
 	return ScanInscriptionParticipant(row)
 }
 

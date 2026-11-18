@@ -30,7 +30,7 @@ const (
 
 )
 
-const nbCategorieEquipier = int(Autre) + 1
+const nbBuiltins = int(Autre) + 1
 
 func (c Categorie) String() string {
 	switch c {
@@ -62,7 +62,7 @@ func (c Categorie) String() string {
 }
 
 // Builtins indique les demandes connues à l'avance
-type Builtins [nbCategorieEquipier]Demande
+type Builtins [nbBuiltins]Demande
 
 // LoadBuiltins charge les demandes 'builtin', qui doivent
 // être prédéclarées dans la base de données.
@@ -78,7 +78,7 @@ func (bs Builtins) List() []Demande {
 	return bs[1:] // remove the NoBuiltin
 }
 
-func (ds Demandes) builtins() (out [nbCategorieEquipier]Demande, err error) {
+func (ds Demandes) builtins() (out [nbBuiltins]Demande, err error) {
 	for _, demande := range ds {
 		if demande.Categorie == NoBuiltin {
 			continue
@@ -143,7 +143,7 @@ var defaultDemandesACVE = [cp.RolesCount][]Categorie{
 
 func defaultACVE(roles cp.Roles) []optionalCategorie {
 	// on aggrège les demandes de chaque rôle
-	var categories [nbCategorieEquipier]bool
+	var categories [nbBuiltins]bool
 	for _, role := range roles {
 		for _, cat := range defaultDemandesACVE[role] {
 			categories[cat] = true

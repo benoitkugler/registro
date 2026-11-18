@@ -102,7 +102,11 @@ func (item Event) Insert(tx DB) (out Event, err error) {
 		) VALUES (
 		$1, $2, $3
 		) RETURNING id, iddossier, kind, created;
-		`, item.IdDossier, item.Kind, item.Created)
+		`,
+		item.IdDossier,
+		item.Kind,
+		item.Created,
+	)
 	return ScanEvent(row)
 }
 
@@ -113,7 +117,12 @@ func (item Event) Update(tx DB) (out Event, err error) {
 		) = (
 		$1, $2, $3
 		) WHERE id = $4 RETURNING id, iddossier, kind, created;
-		`, item.IdDossier, item.Kind, item.Created, item.Id)
+		`,
+		item.IdDossier,
+		item.Kind,
+		item.Created,
+		item.Id,
+	)
 	return ScanEvent(row)
 }
 
@@ -188,7 +197,11 @@ func (item EventAttestation) Insert(db DB) error {
 			) VALUES (
 			$1, $2, $3
 			);
-			`, item.IdEvent, item.Distribution, item.IsPresence)
+			`,
+		item.IdEvent,
+		item.Distribution,
+		item.IsPresence,
+	)
 	if err != nil {
 		return err
 	}
@@ -212,7 +225,11 @@ func InsertManyEventAttestations(tx *sql.Tx, items ...EventAttestation) error {
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdEvent, item.Distribution, item.IsPresence)
+		_, err = stmt.Exec(
+			item.IdEvent,
+			item.Distribution,
+			item.IsPresence,
+		)
 		if err != nil {
 			return err
 		}
@@ -334,7 +351,10 @@ func (item EventCampDocs) Insert(db DB) error {
 			) VALUES (
 			$1, $2
 			);
-			`, item.IdEvent, item.IdCamp)
+			`,
+		item.IdEvent,
+		item.IdCamp,
+	)
 	if err != nil {
 		return err
 	}
@@ -357,7 +377,10 @@ func InsertManyEventCampDocss(tx *sql.Tx, items ...EventCampDocs) error {
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdEvent, item.IdCamp)
+		_, err = stmt.Exec(
+			item.IdEvent,
+			item.IdCamp,
+		)
 		if err != nil {
 			return err
 		}
@@ -519,7 +542,12 @@ func (item EventChangementCamp) Insert(db DB) error {
 			) VALUES (
 			$1, $2, $3, $4
 			);
-			`, item.IdEvent, item.IdParticipant, item.Old, item.New)
+			`,
+		item.IdEvent,
+		item.IdParticipant,
+		item.Old,
+		item.New,
+	)
 	if err != nil {
 		return err
 	}
@@ -544,7 +572,12 @@ func InsertManyEventChangementCamps(tx *sql.Tx, items ...EventChangementCamp) er
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdEvent, item.IdParticipant, item.Old, item.New)
+		_, err = stmt.Exec(
+			item.IdEvent,
+			item.IdParticipant,
+			item.Old,
+			item.New,
+		)
 		if err != nil {
 			return err
 		}
@@ -781,7 +814,17 @@ func (item EventMessage) Insert(db DB) error {
 			) VALUES (
 			$1, $2, $3, $4, $5, $6, $7, $8, $9
 			);
-			`, item.IdEvent, item.Contenu, item.Origine, item.OrigineCamp, item.VuBackoffice, item.VuEspaceperso, item.VuFondSoutien, item.OnlyToFondSoutien, item.OnlyToCamp)
+			`,
+		item.IdEvent,
+		item.Contenu,
+		item.Origine,
+		item.OrigineCamp,
+		item.VuBackoffice,
+		item.VuEspaceperso,
+		item.VuFondSoutien,
+		item.OnlyToFondSoutien,
+		item.OnlyToCamp,
+	)
 	if err != nil {
 		return err
 	}
@@ -811,7 +854,17 @@ func InsertManyEventMessages(tx *sql.Tx, items ...EventMessage) error {
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdEvent, item.Contenu, item.Origine, item.OrigineCamp, item.VuBackoffice, item.VuEspaceperso, item.VuFondSoutien, item.OnlyToFondSoutien, item.OnlyToCamp)
+		_, err = stmt.Exec(
+			item.IdEvent,
+			item.Contenu,
+			item.Origine,
+			item.OrigineCamp,
+			item.VuBackoffice,
+			item.VuEspaceperso,
+			item.VuFondSoutien,
+			item.OnlyToFondSoutien,
+			item.OnlyToCamp,
+		)
 		if err != nil {
 			return err
 		}
@@ -887,7 +940,10 @@ func (item EventMessageVu) Insert(db DB) error {
 			) VALUES (
 			$1, $2
 			);
-			`, item.IdEvent, item.IdCamp)
+			`,
+		item.IdEvent,
+		item.IdCamp,
+	)
 	if err != nil {
 		return err
 	}
@@ -910,7 +966,10 @@ func InsertManyEventMessageVus(tx *sql.Tx, items ...EventMessageVu) error {
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdEvent, item.IdCamp)
+		_, err = stmt.Exec(
+			item.IdEvent,
+			item.IdCamp,
+		)
 		if err != nil {
 			return err
 		}
@@ -1175,7 +1234,11 @@ func (item EventPlaceLiberee) Insert(db DB) error {
 			) VALUES (
 			$1, $2, $3
 			);
-			`, item.IdEvent, item.IdParticipant, item.Accepted)
+			`,
+		item.IdEvent,
+		item.IdParticipant,
+		item.Accepted,
+	)
 	if err != nil {
 		return err
 	}
@@ -1199,7 +1262,11 @@ func InsertManyEventPlaceLiberees(tx *sql.Tx, items ...EventPlaceLiberee) error 
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdEvent, item.IdParticipant, item.Accepted)
+		_, err = stmt.Exec(
+			item.IdEvent,
+			item.IdParticipant,
+			item.Accepted,
+		)
 		if err != nil {
 			return err
 		}
@@ -1357,7 +1424,10 @@ func (item EventSondage) Insert(db DB) error {
 			) VALUES (
 			$1, $2
 			);
-			`, item.IdEvent, item.IdCamp)
+			`,
+		item.IdEvent,
+		item.IdCamp,
+	)
 	if err != nil {
 		return err
 	}
@@ -1380,7 +1450,10 @@ func InsertManyEventSondages(tx *sql.Tx, items ...EventSondage) error {
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdEvent, item.IdCamp)
+		_, err = stmt.Exec(
+			item.IdEvent,
+			item.IdCamp,
+		)
 		if err != nil {
 			return err
 		}
@@ -1541,7 +1614,13 @@ func (item EventStatuation) Insert(db DB) error {
 			) VALUES (
 			$1, $2, $3, $4, $5
 			);
-			`, item.IdEvent, item.IdCamp, item.IsBackoffice, item.IdParticipant, item.Statut)
+			`,
+		item.IdEvent,
+		item.IdCamp,
+		item.IsBackoffice,
+		item.IdParticipant,
+		item.Statut,
+	)
 	if err != nil {
 		return err
 	}
@@ -1567,7 +1646,13 @@ func InsertManyEventStatuations(tx *sql.Tx, items ...EventStatuation) error {
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdEvent, item.IdCamp, item.IsBackoffice, item.IdParticipant, item.Statut)
+		_, err = stmt.Exec(
+			item.IdEvent,
+			item.IdCamp,
+			item.IsBackoffice,
+			item.IdParticipant,
+			item.Statut,
+		)
 		if err != nil {
 			return err
 		}

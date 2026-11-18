@@ -6,6 +6,7 @@ import (
 	"slices"
 	"time"
 
+	"registro/config"
 	filesAPI "registro/controllers/files"
 	"registro/crypto"
 	"registro/logic"
@@ -157,7 +158,7 @@ func (ct *Controller) markAndloadDocuments(id ds.IdDossier) (Documents, error) {
 		return Documents{}, utils.SQLError(err)
 	}
 
-	out, err := loadDocuments(ct.db, ct.key, dossier, ct.asso.AskFicheSanitaireMajeurs, ct.asso.AskCarteIdInscrits)
+	out, err := loadDocuments(ct.db, ct.key, dossier, ct.asso.AskedDocs)
 	if err != nil {
 		return Documents{}, err
 	}
@@ -165,7 +166,7 @@ func (ct *Controller) markAndloadDocuments(id ds.IdDossier) (Documents, error) {
 	return out, nil
 }
 
-func loadDocuments(db ds.DB, key crypto.Encrypter, dossier logic.Dossier, askFichesanitaireMajeurs, askCarteIdInscrits bool) (Documents, error) {
+func loadDocuments(db ds.DB, key crypto.Encrypter, dossier logic.Dossier, settings config.AskedDocs) (Documents, error) {
 	camps := dossier.CampsInscrits()
 	links, err := fs.SelectFileCampsByIdCamps(db, camps.IDs()...)
 	if err != nil {
@@ -214,26 +215,15 @@ func loadDocuments(db ds.DB, key crypto.Encrypter, dossier logic.Dossier, askFic
 		}
 	}
 
-	links2, err := fs.SelectDemandeCampsByIdCamps(db, camps.IDs()...)
-	if err != nil {
-		return Documents{}, utils.SQLError(err)
-	}
-	demandesByCamp := links2.ByIdCamp()
-	// always asks vaccins
-	demandeVaccin, demandeCarteId, err := filesAPI.DemandesVaccinEtCarteId(db)
+	loader, err := filesAPI.LoadDemandes(db, settings, camps.IDs()...)
 	if err != nil {
 		return Documents{}, err
 	}
-
-	idsDemandes := append(links2.IdDemandes(), demandeVaccin.Id)
-	if askCarteIdInscrits {
-		idsDemandes = append(idsDemandes, demandeCarteId.Id)
-	}
-	personnesFiles, demandes, err := filesAPI.LoadFilesPersonnes(db, key, idsDemandes, dossier.Participants.IdPersonnes()...)
+	personnesFiles, _, err := filesAPI.LoadFilesPersonnes(db, key, loader.AllDemandes().IDs(), dossier.Participants.IdPersonnes()...)
 	if err != nil {
 		return Documents{}, err
 	}
-	demandesFiles, err := fs.SelectFiles(db, demandes.IdFiles()...)
+	demandesFiles, err := fs.SelectFiles(db, loader.AllDemandes().IdFiles()...)
 	if err != nil {
 		return Documents{}, utils.SQLError(err)
 	}
@@ -241,27 +231,19 @@ func loadDocuments(db ds.DB, key crypto.Encrypter, dossier logic.Dossier, askFic
 	byPersonne := dossier.Participants.ByIdPersonne()
 	for _, personne := range dossier.Personnes()[1:] {
 		item := DemandesPersonne{IdPersonne: personne.Id, Personne: personne.PrenomN()}
+		// the fiche sanitaire is asked once, using the first camp
+		ageCamp, hasCamp := dossier.FirstCampFor(personne.Id)
+		if !hasCamp {
+			continue
+		}
 		for _, part := range byPersonne[personne.Id] {
-			// wait for the validation
-			if personne.IsTemp || part.Statut != cps.Inscrit {
-				continue
-			}
-
-			// add demandes from the camp
-			demandesList := demandesByCamp[part.IdCamp]
-			if asksFichesanitaire(dossier, personne, askFichesanitaireMajeurs) {
-				demandesList = append(demandesList, fs.DemandeCamp{IdDemande: demandeVaccin.Id})
-			}
-			if askCarteIdInscrits {
-				demandesList = append(demandesList, fs.DemandeCamp{IdDemande: demandeCarteId.Id})
-			}
-
-			for _, link := range demandesList {
-				demande := demandes[link.IdDemande]
-				// apply the nationnalite check
-				if !demande.Nationnalite.Match(personne.Nationnalite) {
-					continue
-				}
+			filtered := loader.ForParticipant(filesAPI.ParticipantDemandesArgs{
+				IdCamp:   part.IdCamp,
+				AgeCamp:  ageCamp,
+				Personne: personne,
+				Statut:   part.Statut,
+			})
+			for _, demande := range filtered.Demandes {
 				dp := DemandePersonne{
 					Demande:  demande,
 					Uploaded: personnesFiles[personne.Id][demande.Id],
@@ -278,7 +260,7 @@ func loadDocuments(db ds.DB, key crypto.Encrypter, dossier logic.Dossier, askFic
 		}
 	}
 
-	out.Fiches, err = loadFichesanitaires(db, dossier, askFichesanitaireMajeurs)
+	out.Fiches, err = loadFichesanitaires(db, dossier, loader)
 	if err != nil {
 		return Documents{}, err
 	}

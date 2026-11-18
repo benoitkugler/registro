@@ -105,7 +105,14 @@ func (item Demande) Insert(tx DB) (out Demande, err error) {
 		) VALUES (
 		$1, $2, $3, $4, $5, $6
 		) RETURNING id, idfile, iddirecteur, categorie, description, maxdocs, nationnalite;
-		`, item.IdFile, item.IdDirecteur, item.Categorie, item.Description, item.MaxDocs, item.Nationnalite)
+		`,
+		item.IdFile,
+		item.IdDirecteur,
+		item.Categorie,
+		item.Description,
+		item.MaxDocs,
+		item.Nationnalite,
+	)
 	return ScanDemande(row)
 }
 
@@ -116,7 +123,15 @@ func (item Demande) Update(tx DB) (out Demande, err error) {
 		) = (
 		$1, $2, $3, $4, $5, $6
 		) WHERE id = $7 RETURNING id, idfile, iddirecteur, categorie, description, maxdocs, nationnalite;
-		`, item.IdFile, item.IdDirecteur, item.Categorie, item.Description, item.MaxDocs, item.Nationnalite, item.Id)
+		`,
+		item.IdFile,
+		item.IdDirecteur,
+		item.Categorie,
+		item.Description,
+		item.MaxDocs,
+		item.Nationnalite,
+		item.Id,
+	)
 	return ScanDemande(row)
 }
 
@@ -188,7 +203,10 @@ func (item DemandeCamp) Insert(db DB) error {
 			) VALUES (
 			$1, $2
 			);
-			`, item.IdCamp, item.IdDemande)
+			`,
+		item.IdCamp,
+		item.IdDemande,
+	)
 	if err != nil {
 		return err
 	}
@@ -211,7 +229,10 @@ func InsertManyDemandeCamps(tx *sql.Tx, items ...DemandeCamp) error {
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdCamp, item.IdDemande)
+		_, err = stmt.Exec(
+			item.IdCamp,
+			item.IdDemande,
+		)
 		if err != nil {
 			return err
 		}
@@ -370,7 +391,11 @@ func (item DemandeEquipier) Insert(db DB) error {
 			) VALUES (
 			$1, $2, $3
 			);
-			`, item.IdEquipier, item.IdDemande, item.Optionnelle)
+			`,
+		item.IdEquipier,
+		item.IdDemande,
+		item.Optionnelle,
+	)
 	if err != nil {
 		return err
 	}
@@ -394,7 +419,11 @@ func InsertManyDemandeEquipiers(tx *sql.Tx, items ...DemandeEquipier) error {
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdEquipier, item.IdDemande, item.Optionnelle)
+		_, err = stmt.Exec(
+			item.IdEquipier,
+			item.IdDemande,
+			item.Optionnelle,
+		)
 		if err != nil {
 			return err
 		}
@@ -656,7 +685,12 @@ func (item File) Insert(tx DB) (out File, err error) {
 		) VALUES (
 		$1, $2, $3, $4
 		) RETURNING id, taille, nomclient, uploaded, reviewstatus;
-		`, item.Taille, item.NomClient, item.Uploaded, item.ReviewStatus)
+		`,
+		item.Taille,
+		item.NomClient,
+		item.Uploaded,
+		item.ReviewStatus,
+	)
 	return ScanFile(row)
 }
 
@@ -667,7 +701,13 @@ func (item File) Update(tx DB) (out File, err error) {
 		) = (
 		$1, $2, $3, $4
 		) WHERE id = $5 RETURNING id, taille, nomclient, uploaded, reviewstatus;
-		`, item.Taille, item.NomClient, item.Uploaded, item.ReviewStatus, item.Id)
+		`,
+		item.Taille,
+		item.NomClient,
+		item.Uploaded,
+		item.ReviewStatus,
+		item.Id,
+	)
 	return ScanFile(row)
 }
 
@@ -739,7 +779,10 @@ func (item FileAide) Insert(db DB) error {
 			) VALUES (
 			$1, $2
 			);
-			`, item.IdFile, item.IdAide)
+			`,
+		item.IdFile,
+		item.IdAide,
+	)
 	if err != nil {
 		return err
 	}
@@ -762,7 +805,10 @@ func InsertManyFileAides(tx *sql.Tx, items ...FileAide) error {
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdFile, item.IdAide)
+		_, err = stmt.Exec(
+			item.IdFile,
+			item.IdAide,
+		)
 		if err != nil {
 			return err
 		}
@@ -931,7 +977,11 @@ func (item FileCamp) Insert(db DB) error {
 			) VALUES (
 			$1, $2, $3
 			);
-			`, item.IdFile, item.IdCamp, item.IsLettre)
+			`,
+		item.IdFile,
+		item.IdCamp,
+		item.IsLettre,
+	)
 	if err != nil {
 		return err
 	}
@@ -955,7 +1005,11 @@ func InsertManyFileCamps(tx *sql.Tx, items ...FileCamp) error {
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdFile, item.IdCamp, item.IsLettre)
+		_, err = stmt.Exec(
+			item.IdFile,
+			item.IdCamp,
+			item.IsLettre,
+		)
 		if err != nil {
 			return err
 		}
@@ -1114,7 +1168,11 @@ func (item FilePersonne) Insert(db DB) error {
 			) VALUES (
 			$1, $2, $3
 			);
-			`, item.IdFile, item.IdPersonne, item.IdDemande)
+			`,
+		item.IdFile,
+		item.IdPersonne,
+		item.IdDemande,
+	)
 	if err != nil {
 		return err
 	}
@@ -1138,7 +1196,11 @@ func InsertManyFilePersonnes(tx *sql.Tx, items ...FilePersonne) error {
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdFile, item.IdPersonne, item.IdDemande)
+		_, err = stmt.Exec(
+			item.IdFile,
+			item.IdPersonne,
+			item.IdDemande,
+		)
 		if err != nil {
 			return err
 		}

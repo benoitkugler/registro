@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"registro/config"
+	filesAPI "registro/controllers/files"
 	"registro/crypto"
 	"registro/generators/pdfcreator"
 	"registro/immich"
@@ -144,17 +145,25 @@ func Test_loadFichesanitaires(t *testing.T) {
 	ext, err := logic.LoadDossier(ct.db, dossier.Id)
 	tu.AssertNoErr(t, err)
 
+	loadFiches := func(askMajeurs bool) []FichesanitaireExt {
+		loader, err := filesAPI.LoadDemandes(ct.db,
+			config.AskedDocs{FicheSanitaireMajeurs: askMajeurs},
+			ext.CampsInscrits().IDs()...)
+		tu.AssertNoErr(t, err)
+		fiches, err := loadFichesanitaires(ct.db, ext, loader)
+		tu.AssertNoErr(t, err)
+		return fiches
+	}
+
 	// by default, only minors are asked for a fiche sanitaire
-	fiches, err := loadFichesanitaires(ct.db, ext, false)
-	tu.AssertNoErr(t, err)
+	fiches := loadFiches(false)
 	tu.Assert(t, len(fiches) == 1)
 	tu.Assert(t, fiches[0].Fichesanitaire.IdPersonne == mineur.Id)
 	tu.Assert(t, fiches[0].IsOwnResponsable)
 	tu.Assert(t, !fiches[0].IsLocked && fiches[0].State == pr.NoFiche)
 
 	// when configured, majors are also asked for a fiche sanitaire
-	fiches, err = loadFichesanitaires(ct.db, ext, true)
-	tu.AssertNoErr(t, err)
+	fiches = loadFiches(true)
 	tu.Assert(t, len(fiches) == 2)
 	var hasMajeur bool
 	for _, fiche := range fiches {

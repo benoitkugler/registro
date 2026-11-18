@@ -182,9 +182,25 @@ export interface Demande {
   Categorie: Categorie;
   Description: string;
   MaxDocs: Int;
+  Nationnalite: NationnaliteCible;
 }
 export type IdDemande = Int & { __opaque_int__: "IdDemande" };
 export type IdFile = Int & { __opaque_int__: "IdFile" };
+// registro/sql/files.NationnaliteCible
+export const NationnaliteCible = {
+  Both: 0,
+  OnlyCh: 1,
+  OnlyFr: 2,
+} as const;
+export type NationnaliteCible =
+  (typeof NationnaliteCible)[keyof typeof NationnaliteCible];
+
+export const NationnaliteCibleLabels: Record<NationnaliteCible, string> = {
+  [NationnaliteCible.Both]: "Toutes",
+  [NationnaliteCible.OnlyCh]: "Suisse seulement",
+  [NationnaliteCible.OnlyFr]: "Française seulement",
+};
+
 // registro/sql/personnes.Diplome
 export const Diplome = {
   DAucun: 0,

@@ -20,6 +20,11 @@ export interface NullBool {
   Bool: boolean;
   Valid: boolean;
 }
+// registro/config.AskedDocs
+export interface AskedDocs {
+  FicheSanitaireMajeurs: boolean;
+  CarteId: boolean;
+}
 // registro/controllers/backoffice.SendProgress
 export interface SendProgress {
   Current: Int;
@@ -67,8 +72,7 @@ export interface DemandesOut {
 export interface DocumentsOut {
   Ready: boolean;
   ToShow: DocumentsToShow;
-  AskCarteIdInscrits: boolean;
-  AskFicheSanitaireMajeurs: boolean;
+  AskedDocs: AskedDocs;
   FilesToDownload: PublicFile[] | null;
   CampDemandes: DemandeDirecteur[] | null;
   HasLettre: boolean;
@@ -396,6 +400,8 @@ export interface Camp {
   Meta: Meta;
   IsAlbumVisible: boolean;
   PlacesReservees: Int;
+  HoraireDebut: Horaire;
+  HoraireFin: Horaire;
 }
 // registro/sql/camps.CauseAge
 export interface CauseAge {
@@ -490,6 +496,12 @@ export interface GroupeParticipant {
 }
 // registro/sql/camps.Groupes
 export type Groupes = Record<IdGroupe, Groupe> | null;
+// registro/sql/camps.Horaire
+export interface Horaire {
+  Valid: boolean;
+  Heure: Int;
+  Minute: Int;
+}
 export type IdCamp = Int & { __opaque_int__: "IdCamp" };
 export type IdEquipier = Int & { __opaque_int__: "IdEquipier" };
 export type IdForm = Int & { __opaque_int__: "IdForm" };

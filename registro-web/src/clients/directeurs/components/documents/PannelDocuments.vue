@@ -23,11 +23,11 @@
       <v-alert type="info" closable>
         La <b>fiche sanitaire</b> et les <b>vaccins</b> sont automatiquement
         demandés
-        <span v-if="data.AskFicheSanitaireMajeurs">
+        <span v-if="data.AskedDocs.FicheSanitaireMajeurs">
           pour tous les participants, quel que soit leur âge.
         </span>
         <span v-else>pour les participants mineurs.</span>
-        <div v-if="data.AskCarteIdInscrits" class="mt-2">
+        <div v-if="data.AskedDocs.CarteId" class="mt-2">
           Une <b>pièce d'identité</b> est également demandée automatiquement
           pour tous les inscrits.
         </div>
