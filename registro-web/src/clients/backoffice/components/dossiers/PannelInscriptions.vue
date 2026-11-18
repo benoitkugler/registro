@@ -21,10 +21,12 @@
       <v-text-field
         density="comfortable"
         width="300"
-        append-inner-icon="mdi-magnify"
+        prepend-inner-icon="mdi-magnify"
         label="Rechercher"
         hide-details
         v-model="search"
+        clearable
+        @click:clear="search = ''"
       ></v-text-field>
 
       <v-divider vertical thickness="1" class="mx-2"></v-divider>
@@ -122,7 +124,9 @@ import { normalize, Personnes, Camps, Participants } from "@/utils";
 import MergeCard from "./MergeCard.vue";
 import DoublonsParticipantsCard from "./DoublonsParticipantsCard.vue";
 
-const props = defineProps<{}>();
+const props = defineProps<{
+  initialDossier: IdDossier | undefined;
+}>();
 
 const emit = defineEmits<{
   (e: "goTo", id: IdDossier): void;
@@ -135,6 +139,14 @@ onMounted(async () => {
   await fetchInscriptions();
   if (!data.value.length) {
     emit("empty");
+  }
+  if (props.initialDossier !== undefined) {
+    // ensure item is visible by tweaking search
+    const dossier = data.value.find(
+      (d) => d.Dossier.Id == props.initialDossier,
+    );
+    if (dossier === undefined) return;
+    search.value = Personnes.NOMPrenom(dossier.Responsable);
   }
 });
 
@@ -188,6 +200,8 @@ watch(
   () => {
     if (currentPageIndex.value >= pagesCount.value) {
       currentPageIndex.value = pagesCount.value;
+    } else if (currentPageIndex.value == 0 && pagesCount.value) {
+      currentPageIndex.value = 1;
     }
   },
 );
