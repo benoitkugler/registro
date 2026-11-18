@@ -286,9 +286,6 @@ func (bp BilanParticipant) net(taux ds.Taux) cps.Montant {
 	v1 := bp.prixSansRemises(taux).Remise(bp.Remises.Famille + bp.Remises.Equipiers)
 	val := taux.Convertible(v1)
 	val.Sub(bp.Remises.Speciale)
-	if val.Montant.Cent < 0 {
-		val.Montant.Cent = 0
-	}
 	return val.Montant
 }
 

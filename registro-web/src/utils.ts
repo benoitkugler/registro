@@ -294,7 +294,7 @@ export namespace Personnes {
   }
 
   export function prenomN(pr: PersonneLike) {
-    return `${pr.Prenom} ${pr.Nom.substring(0, 1).toUpperCase()}`;
+    return `${pr.Prenom} ${pr.Nom.substring(0, 1).toUpperCase()}.`;
   }
 
   export function match(pr: PersonneLike, normalizedPattern: string) {

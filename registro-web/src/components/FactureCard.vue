@@ -8,7 +8,7 @@
           )}) ne sont pas pris en compte.`
         : ''
     "
-    :min-width="hideOptionsAndAides ? '400px' : '900px'"
+    :min-width="hideOptionsAndAides ? '500px' : '900px'"
   >
     <v-card-text>
       <v-row>
@@ -102,7 +102,7 @@
       </template>
 
       <!-- Total avant paiements -->
-      <v-row>
+      <v-row class="mt-0">
         <v-col cols="10" class="text-right">Total demandé</v-col>
         <v-col cols="2" class="text-right">{{
           props.dossier.Bilan.Demande

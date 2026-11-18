@@ -76,6 +76,7 @@ func setupRoutesBackoffice(e *echo.Echo, ct *backoffice.Controller) {
 
 	gr.PUT("/api/v1/backoffice/dossiers/remises-hints", ct.DossiersRemisesHint)
 	gr.POST("/api/v1/backoffice/dossiers/remises-hints", ct.DossiersApplyRemisesHints)
+	gr.POST("/api/v1/backoffice/dossiers/solde", ct.DossierSolde)
 
 	gr.POST("/api/v1/backoffice/dossiers/merge", ct.DossiersMerge)
 

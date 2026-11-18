@@ -79,6 +79,7 @@
         @create-paiement="createPaiement"
         @update-paiement="updatePaiement"
         @delete-paiement="deletePaiement"
+        @solde-facture="soldeFacture"
         @send-message="sendMessage"
         @delete-message="deleteMessage"
         @send-facture="sendFacture"
@@ -195,7 +196,7 @@ watch(
     if (props.initialDossier !== undefined) {
       showDossier(props.initialDossier);
     }
-  }
+  },
 );
 
 const detailsPannel = useTemplateRef("detailsPannel");
@@ -331,7 +332,7 @@ async function expandParticipant(participant: Participant) {
   if (dossierDetails.value == null) return;
   const others =
     dossierDetails.value.Dossier.Participants?.map((p) => p.Participant).filter(
-      (p) => p.Id != participant.Id
+      (p) => p.Id != participant.Id,
     ) || [];
   if (!others.length) return;
 
@@ -344,7 +345,7 @@ async function expandParticipant(participant: Participant) {
     }
   });
   const res = await Promise.all(
-    others.map((p) => controller.ParticipantsUpdate(p))
+    others.map((p) => controller.ParticipantsUpdate(p)),
   );
   if (res.includes(undefined)) return;
   controller.showMessage("Réglages des participants modifiés avec succès.");
@@ -426,6 +427,16 @@ async function deletePaiement(paiement: Paiement) {
   ensureDossier();
 }
 
+async function soldeFacture() {
+  if (dossierDetails.value == null) return;
+  const res = await controller.DossierSolde({
+    id: dossierDetails.value.Dossier.Dossier.Id,
+  });
+  if (res === undefined) return;
+  controller.showMessage("Dossier soldé avec succès.");
+  ensureDossier();
+}
+
 async function sendMessage(contenu: string) {
   if (dossierDetails.value == null) return;
   const res = await controller.EventsSendMessage({
@@ -475,7 +486,7 @@ async function sendDocumentsCamp(idCamp: IdCamp, idDossiers: IdDossier[]) {
   await readJSONStream(
     res,
     (v) => (documentsCampProgress.value = v),
-    (err) => controller.onError("Envoi des documents", err)
+    (err) => controller.onError("Envoi des documents", err),
   );
   documentsCampProgress.value = null;
   ensureDossier();
@@ -500,7 +511,7 @@ async function sendRelancePaiement(idCamp: IdCamp, idDossiers: IdDossier[]) {
   await readJSONStream(
     res,
     (v) => (relancePaiementProgress.value = v),
-    (err) => controller.onError("Envoi de la relance", err)
+    (err) => controller.onError("Envoi de la relance", err),
   );
   relancePaiementProgress.value = null;
   ensureDossier();

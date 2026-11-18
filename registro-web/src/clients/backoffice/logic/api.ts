@@ -1836,6 +1836,21 @@ export abstract class AbstractAPI {
     }
   }
 
+  /** DossierSolde performs the request and handles the error */
+  async DossierSolde(params: { id: IdDossier }) {
+    const fullUrl = this.baseURL + "/api/v1/backoffice/dossiers/solde";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, null, {
+        headers: this.getHeaders(),
+        params: { id: String(params["id"]) },
+      });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
   /** DossiersMerge performs the request and handles the error */
   async DossiersMerge(params: DossiersMergeIn) {
     const fullUrl = this.baseURL + "/api/v1/backoffice/dossiers/merge";

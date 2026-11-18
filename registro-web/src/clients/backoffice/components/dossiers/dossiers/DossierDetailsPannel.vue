@@ -63,6 +63,13 @@
             title="Ajouter un paiement"
           >
           </v-list-item>
+          <v-list-item
+            prepend-icon="mdi-cash-check"
+            @click="emit('soldeFacture')"
+            title="Solder le dossier"
+            subtitle="Ajoute une remise spéciale"
+          >
+          </v-list-item>
           <v-divider></v-divider>
           <v-list-item
             prepend-icon="mdi-link"
@@ -114,15 +121,8 @@
             <template #activator="{ props: menuProps }">
               <v-row no-gutters v-bind="menuProps">
                 <v-col cols="12">
-                  <v-chip
-                    class="mb-2"
-                    :color="
-                      Formatters.colorStatutPaiement(
-                        props.dossier.Dossier.Bilan.Statut,
-                      )
-                    "
-                  >
-                    Prix : {{ props.dossier.Dossier.Bilan.Demande }}
+                  <v-chip class="mb-2" prepend-icon="mdi-cash-multiple">
+                    Demandé : {{ props.dossier.Dossier.Bilan.Demande }}
                   </v-chip>
                 </v-col>
                 <v-col cols="12">
@@ -132,6 +132,7 @@
                         props.dossier.Dossier.Bilan.Statut,
                       )
                     "
+                    prepend-icon="mdi-cash-check"
                   >
                     Payé : {{ props.dossier.Dossier.Bilan.Recu }}
                   </v-chip>
@@ -372,6 +373,7 @@ const emit = defineEmits<{
   (e: "createPaiement"): void;
   (e: "updatePaiement", paiement: Paiement): void;
   (e: "deletePaiement", paiement: Paiement): void;
+  (e: "soldeFacture"): void;
   // events
   (e: "sendMessage", contenu: string): void;
   (e: "deleteMessage", event: Event): void;
@@ -399,7 +401,6 @@ function showEditPaiement(paiement: Paiement) {
   paiementToUpdate.value = paiement;
 }
 
-const asso = import.meta.env.VITE_ASSO_TITLE;
 const showLinks = ref(false);
 async function copyEspacepersoURL() {
   await copyToClipboard(props.dossier.EspacepersoURL);
