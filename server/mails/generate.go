@@ -38,6 +38,7 @@ var (
 	sendPhotosLinkEquipiersT    *template.Template
 	notifieMessageDirecteursT   *template.Template
 	notifieMessageFondsSoutienT *template.Template
+	notifieComptableT           *template.Template
 )
 
 func init() {
@@ -62,6 +63,7 @@ func init() {
 	sendPhotosLinkEquipiersT = parseTemplate("templates/sendPhotosLinkEquipiers.html")
 	notifieMessageDirecteursT = parseTemplate("templates/notifieMessageDirecteurs.html")
 	notifieMessageFondsSoutienT = parseTemplate("templates/notifieMessageFondsSoutien.html")
+	notifieComptableT = parseTemplate("templates/notifieComptable.html")
 }
 
 func parseTemplate(templateFile string) *template.Template {
@@ -598,6 +600,28 @@ func NotifieMessageFondsSoutien(cfg config.Asso, responsable, contenu, backoffic
 		EspacePersoButtonLabel: "Backoffice",
 	}
 	return render(notifieMessageFondsSoutienT, args)
+}
+
+func NotifieComptable(cfg config.Asso, responsable, campLabel, dossierURL string) (string, error) {
+	args := struct {
+		champsCommuns
+		Responsable            string
+		CampLabel              string
+		EspacePersoURL         string
+		EspacePersoButtonLabel string
+	}{
+		champsCommuns: champsCommuns{
+			Title:       "Dossier à examiner",
+			Salutations: Contact{}.Salutations(),
+			Asso:        cfg,
+			Signature:   "<i>Ce mail est envoyé automatiquement, merci de ne pas y répondre.</i>",
+		},
+		Responsable:            responsable,
+		CampLabel:              campLabel,
+		EspacePersoURL:         dossierURL,
+		EspacePersoButtonLabel: "OUVRIR LE DOSSIER",
+	}
+	return render(notifieComptableT, args)
 }
 
 // func NewRenvoieLienJoomeo(lien, login, password string) (string, error) {

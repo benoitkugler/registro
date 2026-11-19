@@ -1,0 +1,20 @@
+{{ define "content" }}
+
+<table cellpadding="0">
+  <tr>
+    <td>
+      Le directeur du séjour {{ .CampLabel }} souhaite que vous examiniez le
+      dossier de {{ .Responsable }}.
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <br />
+      Vous pouvez ouvrir ce dossier directement en cliquant sur le bouton :
+    </td>
+  </tr>
+  <tr>
+    <td>{{ template "espacePersoButton" . }}</td>
+  </tr>
+</table>
+{{ end }}

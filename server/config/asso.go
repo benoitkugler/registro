@@ -23,6 +23,10 @@ type Asso struct {
 	// Also used in "Lettre aux parents" if UseCoordCentre is true, and as contact in espaceperso
 	ContactNom, ContactTel, ContactMail string
 
+	// Dénomination du contact notifié depuis l'espace directeur,
+	// utilisée pour le libellé du bouton (ex: "le comptable", "le centre").
+	ComptaContactLabel string
+
 	MailsSettings MailsSettings
 
 	BankAccounts   []BankAccount  // displayed in espace perso
@@ -71,6 +75,8 @@ var acve = Asso{
 	ContactNom:  "ACVE - Centre d'inscriptions",
 	ContactTel:  "04 75 22 03 95",
 	ContactMail: "inscriptions@acve.asso.fr",
+
+	ComptaContactLabel: "le centre",
 
 	Icon:            "logo_acve.png",
 	BackgroundColor: "#b8dbf1", // rgb(184, 219, 241)
@@ -125,6 +131,8 @@ var repere = Asso{
 	ContactNom:  "Repère - Centre d'inscriptions",
 	ContactTel:  "+41 79 334 15 04",
 	ContactMail: "webmaster@lerepere.ch",
+
+	ComptaContactLabel: "le comptable",
 
 	Icon: "logo_repere.png",
 	// couleurs extraites de https://asso-repere.ch
@@ -189,6 +197,9 @@ type MailsSettings struct {
 
 	// notification adress; should be specified by env. var ASSO_MAIL_FONDS_SOUTIEN
 	FondsSoutien string
+
+	// notification adress; should be specified by env. var ASSO_MAIL_NOTIFICATION_FROM_DIRECTEUR
+	NotificationFromDirecteur string
 }
 
 // NewAsso read the ASSO env variable and returns the associated configuration.
@@ -196,7 +207,8 @@ type MailsSettings struct {
 //   - acve
 //   - repere
 //
-// The ASSO_BANK_IBAN and ASSO_MAIL_SAUVEGARDE envs are also read
+// The ASSO_BANK_IBAN, ASSO_MAIL_SAUVEGARDE, ASSO_MAIL_FONDS_SOUTIEN
+// and ASSO_MAIL_NOTIFICATION_FROM_DIRECTEUR envs are also read
 func NewAsso() (Asso, error) {
 	var out Asso
 
@@ -231,6 +243,11 @@ func NewAsso() (Asso, error) {
 	out.MailsSettings.FondsSoutien = os.Getenv("ASSO_MAIL_FONDS_SOUTIEN")
 	if out.MailsSettings.FondsSoutien == "" {
 		return Asso{}, errors.New("missing ASSO_MAIL_FONDS_SOUTIEN env. variable")
+	}
+
+	out.MailsSettings.NotificationFromDirecteur = os.Getenv("ASSO_MAIL_NOTIFICATION_FROM_DIRECTEUR")
+	if out.MailsSettings.NotificationFromDirecteur == "" {
+		return Asso{}, errors.New("missing ASSO_MAIL_NOTIFICATION_FROM_DIRECTEUR env. variable")
 	}
 
 	return out, nil

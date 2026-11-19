@@ -88,6 +88,15 @@
           >
             Répondre</v-btn
           >
+          <v-btn
+            class="ml-2"
+            size="small"
+            color="info"
+            prepend-icon="mdi-account-tie-outline"
+            @click="notifieComptableTo = dossier.IdDossier"
+          >
+            Notifier {{ contactLabel }}</v-btn
+          >
         </template>
         <v-card-text>
           <MessageRow
@@ -98,6 +107,25 @@
         </v-card-text>
       </v-card>
     </v-card-text>
+
+    <!-- notify the comptable -->
+    <v-dialog
+      :model-value="notifieComptableTo != null"
+      @update:model-value="notifieComptableTo = null"
+      max-width="600px"
+    >
+      <v-card :title="`Notifier ${contactLabel}`">
+        <v-card-text>
+          Un mail avec un accès direct au dossier sera envoyé à
+          {{ data.ComptaContactMail }}
+        </v-card-text>
+        <v-card-actions>
+          <v-btn @click="notifieComptableTo = null">Annuler</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn color="info" @click="notifierComptable">Notifier</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 
     <!-- new message -->
     <v-dialog v-model="showCreateMessage" max-width="600px">
@@ -207,6 +235,21 @@ async function setMessageSeen(idEvent: IdEvent, seen: boolean) {
   controller.showMessage(
     seen ? "Message marqué comme lu." : "Message marqué comme non lu.",
   );
+}
+
+const contactLabel = computed(
+  () => data.value?.ComptaContactLabel || "le comptable",
+);
+
+const notifieComptableTo = ref<IdDossier | null>(null);
+async function notifierComptable() {
+  if (notifieComptableTo.value == null) return;
+  const res = await controller.ParticipantsNotifieComptable({
+    IdDossier: notifieComptableTo.value,
+  });
+  notifieComptableTo.value = null;
+  if (res === undefined) return;
+  controller.showMessage("Notification envoyée.");
 }
 
 const showCreateMessage = ref(false);

@@ -96,6 +96,7 @@ func TestMessages(t *testing.T) {
 
 	messages1, err := ct.loadMessages(camp.Id)
 	tu.AssertNoErr(t, err)
+	tu.Assert(t, messages1.ComptaContactLabel == asso.ComptaContactLabel)
 
 	out, err := ct.setMessageSeen(camp.Id, ev.Id, true)
 	tu.AssertNoErr(t, err)
@@ -117,6 +118,41 @@ func TestMessages(t *testing.T) {
 	messages2, err := ct.loadMessages(camp.Id)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(messages2.Messages) == len(messages1.Messages)+1+2)
+}
+
+func TestNotifieComptable(t *testing.T) {
+	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
+		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",
+		"../../migrations/init.sql")
+	defer db.Remove()
+
+	asso, smtp := loadEnv(t)
+
+	camp, err := cps.Camp{IdTaux: 1}.Insert(db)
+	tu.AssertNoErr(t, err)
+	otherCamp, err := cps.Camp{IdTaux: 1}.Insert(db)
+	tu.AssertNoErr(t, err)
+	pe1, err := pr.Personne{}.Insert(db)
+	tu.AssertNoErr(t, err)
+	pe2, err := pr.Personne{}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	dossier, err := ds.Dossier{IdTaux: 1, IdResponsable: pe1.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+	otherDossier, err := ds.Dossier{IdTaux: 1, IdResponsable: pe2.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	_, err = cps.Participant{IdCamp: camp.Id, IdTaux: 1, IdDossier: dossier.Id, IdPersonne: pe1.Id, Statut: cps.Inscrit}.Insert(db)
+	tu.AssertNoErr(t, err)
+	_, err = cps.Participant{IdCamp: otherCamp.Id, IdTaux: 1, IdDossier: otherDossier.Id, IdPersonne: pe2.Id, Statut: cps.Inscrit}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	ct := Controller{db: db.DB, asso: asso, smtp: smtp}
+	tu.AssertNoErr(t, ct.notifieComptable("localhost:1323", camp.Id, dossier.Id))
+
+	// a dossier from another camp must not be notified
+	err = ct.notifieComptable("localhost:1323", camp.Id, otherDossier.Id)
+	tu.Assert(t, err != nil)
 }
 
 func TestGroupes(t *testing.T) {

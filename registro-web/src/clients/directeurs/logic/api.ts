@@ -174,6 +174,12 @@ export interface Messages {
   Messages: EventExt_MessageEvt[] | null;
   Dossiers: Record<IdDossier, DossierPersonnes> | null;
   NewMessagesCount: Int;
+  ComptaContactLabel: string;
+  ComptaContactMail: string;
+}
+// registro/controllers/directeurs.NotifieComptableIn
+export interface NotifieComptableIn {
+  IdDossier: IdDossier;
 }
 // registro/controllers/directeurs.ParticipantFileReviewIn
 export interface ParticipantFileReviewIn {
@@ -1463,6 +1469,20 @@ export abstract class AbstractAPI {
         },
       );
       return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** ParticipantsNotifieComptable performs the request and handles the error */
+  async ParticipantsNotifieComptable(params: NotifieComptableIn) {
+    const fullUrl =
+      this.baseURL +
+      "/api/v1/directeurs/participants/messages/notifie-comptable";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
     } catch (error) {
       this.handleError(error);
     }

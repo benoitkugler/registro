@@ -12,6 +12,15 @@ import (
 	tu "registro/utils/testutils"
 )
 
+func TestNotifieComptable(t *testing.T) {
+	asso, _ := loadEnv(t)
+
+	html, err := NotifieComptable(asso, "Dupont Jean", "Séjour été 2026",
+		"http://test.fr")
+	tu.AssertNoErr(t, err)
+	tu.Write(t, "NotifieComptable.html", []byte(html))
+}
+
 func TestNotifieMessage(t *testing.T) {
 	asso, _ := loadEnv(t)
 
