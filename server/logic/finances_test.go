@@ -147,6 +147,19 @@ func TestDossierFinance_Bilan(t *testing.T) {
 	}))
 }
 
+func TestDossierFinance_MontantsPayesParDevise(t *testing.T) {
+	df := DossierFinance{paiements: ds.Paiements{
+		1: {Montant: eur(100)},
+		2: {Montant: chf(80), Payeur: ds.PayeurFondSoutien},
+		3: {Montant: eur(25), IsRemboursement: true},
+		4: {Montant: chf(10), IsRemboursement: true},
+	}}
+
+	got := df.MontantsPayesParDevise()
+	tu.Assert(t, got[ds.Euros] == 7500)
+	tu.Assert(t, got[ds.FrancsSuisse] == 7000)
+}
+
 func Test_pc_prixBase(t *testing.T) {
 	inscription := time.Now()
 	type fields struct {

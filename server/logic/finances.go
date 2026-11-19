@@ -98,6 +98,19 @@ type DossierFinance struct {
 	paiements ds.Paiements // liste exacte
 }
 
+// MontantsPayesParDevise returns the net payments in their original currencies.
+func (de DossierFinance) MontantsPayesParDevise() ds.MultiCurrencies {
+	var out ds.MultiCurrencies
+	for _, paiement := range de.paiements {
+		montant := paiement.Montant
+		if paiement.IsRemboursement {
+			montant.Cent = -montant.Cent
+		}
+		out.Add(montant)
+	}
+	return out
+}
+
 // IsPaiementOpen returns [true] if the Espace perso
 // should allow paiements
 func (de *DossierFinance) IsPaiementOpen() bool {

@@ -37,6 +37,9 @@ func (m Montant) String() string {
 	}
 }
 
+// MultiCurrency returns true if currencies other than Euros are supported.
+func (ts Taux) MultiCurrency() bool { return ts.Has(FrancsSuisse) }
+
 // Has returns 'true' is the taux is able to handle the
 // given [currency]
 func (ts Taux) Has(currency Currency) bool {

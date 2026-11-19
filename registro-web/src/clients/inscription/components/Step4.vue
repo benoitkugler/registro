@@ -153,8 +153,7 @@
         </li>
         <li>
           en vivant un temps « bonne santé » : renoncer à la consommation
-          d’alcool, de cigarettes, de drogues, d’internet, de réseaux
-          sociaux....
+          d’alcool, de cigarettes, de drogues, d’internet, de réseaux sociaux....
         </li>
       </ul>
 

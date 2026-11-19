@@ -1,6 +1,7 @@
 package sheets
 
 import (
+	"bytes"
 	"testing"
 	"time"
 
@@ -11,6 +12,8 @@ import (
 	"registro/sql/shared"
 	"registro/utils"
 	tu "registro/utils/testutils"
+
+	"github.com/xuri/excelize/v2"
 )
 
 func TestStyle(t *testing.T) {
@@ -118,45 +121,144 @@ func TestListeParticipants(t *testing.T) {
 }
 
 func TestListeParticipantsCamps(t *testing.T) {
-	camp := cps.Camp{Id: 123, Nom: "Mini's", DateDebut: shared.NewDateFrom(time.Now())}
-	p1 := pr.Personne{Identite: pr.Identite{
+	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
+		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",
+		"../../migrations/init.sql")
+	defer db.Remove()
+
+	// init.sql registers the default taux (id 1), supporting Euros only.
+	const idTauxEuros dossiers.IdTaux = 1
+	tauxMulti, err := dossiers.Taux{Label: "Euros et CHF", Euros: 1000, FrancsSuisse: 1100}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	responsable, err := pr.Personne{Identite: pr.Identite{Nom: "Responsable", Prenom: "Test"}}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	campMulti, err := cps.Camp{
+		IdTaux: tauxMulti.Id, Nom: "Multi's", DateDebut: shared.NewDateFrom(time.Now()),
+		Duree: 7, Prix: dossiers.NewEuros(100),
+	}.Insert(db)
+	tu.AssertNoErr(t, err)
+	campEuros, err := cps.Camp{
+		IdTaux: idTauxEuros, Nom: "Euros", DateDebut: shared.NewDateFrom(time.Now()),
+		Duree: 7, Prix: dossiers.NewEuros(100),
+	}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	dossierMulti, err := dossiers.Dossier{
+		IdTaux: tauxMulti.Id, IdResponsable: responsable.Id,
+		MomentInscription: time.Now(), PartageAdressesOK: true,
+	}.Insert(db)
+	tu.AssertNoErr(t, err)
+	dossierEuros, err := dossiers.Dossier{
+		IdTaux: idTauxEuros, IdResponsable: responsable.Id,
+		MomentInscription: time.Now().Add(time.Hour), PartageAdressesOK: false,
+	}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	p1, err := pr.Personne{Identite: pr.Identite{
 		Nom: utils.RandString(12, false), Prenom: utils.RandString(12, false),
 		Sexe:          pr.Man,
 		DateNaissance: shared.NewDate(2000, time.August, 5),
 		Nationnalite:  pr.Nationnalite{IsSuisse: true},
-	}}
-	p2 := p1
-	p2.Nationnalite.IsSuisse = false
-	pa1 := cps.Participant{Id: 1, IdDossier: 1}
-	pa2 := cps.Participant{Id: 2, IdDossier: 2, Remises: cps.Remises{Famille: 30}}
-	inscrit1 := cps.ParticipantCamp{
-		Camp: camp,
-		ParticipantPersonne: cps.ParticipantPersonne{
-			Participant: pa1,
-			Personne:    p1,
-		},
-	}
-	inscrit2 := cps.ParticipantCamp{
-		Camp: camp,
-		ParticipantPersonne: cps.ParticipantPersonne{
-			Participant: pa2,
-			Personne:    p2,
-		},
-	}
-	liste := []cps.ParticipantCamp{inscrit1, inscrit2, inscrit1}
-	dossiers := logic.DossiersFinances{Dossiers: logic.Dossiers{Dossiers: dossiers.Dossiers{
-		1: dossiers.Dossier{Id: 1, MomentInscription: time.Now(), IdResponsable: 2, PartageAdressesOK: true},
-		2: dossiers.Dossier{Id: 2, MomentInscription: time.Now().Add(time.Hour), IdResponsable: 1, PartageAdressesOK: false},
-	}}}
+	}}.Insert(db)
+	tu.AssertNoErr(t, err)
+	p2, err := pr.Personne{Identite: pr.Identite{
+		Nom: utils.RandString(12, false), Prenom: utils.RandString(12, false),
+		Sexe:          pr.Woman,
+		DateNaissance: shared.NewDate(2001, time.June, 12),
+		Nationnalite:  pr.Nationnalite{IsSuisse: false},
+	}}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	part1, err := cps.Participant{
+		IdCamp: campMulti.Id, IdPersonne: p1.Id, IdDossier: dossierMulti.Id,
+		IdTaux: tauxMulti.Id, Statut: cps.Inscrit,
+	}.Insert(db)
+	tu.AssertNoErr(t, err)
+	_, err = cps.Participant{
+		IdCamp: campEuros.Id, IdPersonne: p2.Id, IdDossier: dossierEuros.Id,
+		IdTaux: idTauxEuros, Statut: cps.Inscrit,
+	}.Insert(db)
+	tu.AssertNoErr(t, err)
+
 	remisesHints := map[cps.IdParticipant]cps.Remises{
-		pa1.Id: {Equipiers: 10, Famille: 5},
+		part1.Id: {Equipiers: 10, Famille: 5},
 	}
 
-	content, err := ListeParticipantsCamps(liste, dossiers, remisesHints, false)
+	finances, err := logic.LoadDossiersFinances(db, dossierMulti.Id, dossierEuros.Id)
 	tu.AssertNoErr(t, err)
-	tu.Write(t, "ListeParticipantsCamps_1.xlsx", content)
+	dataMulti, dataEuros := finances.For(dossierMulti.Id), finances.For(dossierEuros.Id)
+	liste := append(dataMulti.ParticipantsExt(), dataEuros.ParticipantsExt()...)
 
-	content, err = ListeParticipantsCamps(liste, dossiers, remisesHints, true)
+	t.Run("multi currency", func(t *testing.T) {
+		content, err := ListeParticipantsCamps(liste, finances, remisesHints, false)
+		tu.AssertNoErr(t, err)
+		assertListeParticipantsCamps(t, content, 2,
+			[]string{
+				"Montant payé (devise du camp)",
+				"Montant payé (EUR)",
+				"Montant payé (CHF)",
+				"Fonds de soutien (devise du camp)",
+				"Remises (devise du camp)",
+			}, nil)
+		tu.Write(t, "ListeParticipantsCamps_1.xlsx", content)
+	})
+
+	t.Run("euros only", func(t *testing.T) {
+		financesEuros, err := logic.LoadDossiersFinances(db, dossierEuros.Id)
+		tu.AssertNoErr(t, err)
+		data := financesEuros.For(dossierEuros.Id)
+		listeEuros := data.ParticipantsExt()
+
+		content, err := ListeParticipantsCamps(listeEuros, financesEuros, remisesHints, true)
+		tu.AssertNoErr(t, err)
+		assertListeParticipantsCamps(t, content, 1,
+			[]string{
+				"Montant payé (devise du camp)",
+				"Fonds de soutien (devise du camp)",
+				"Remises (devise du camp)",
+			}, []string{
+				"Montant payé (EUR)",
+				"Montant payé (CHF)",
+			})
+		tu.Write(t, "ListeParticipantsCamps_2.xlsx", content)
+	})
+}
+
+// assertListeParticipantsCamps checks the headers of the generated workbook
+// and that the monetary columns of every data row are numeric cells.
+func assertListeParticipantsCamps(t *testing.T, content []byte, nbRows int, present, absent []string) {
+	t.Helper()
+
+	book, err := excelize.OpenReader(bytes.NewReader(content))
 	tu.AssertNoErr(t, err)
-	tu.Write(t, "ListeParticipantsCamps_2.xlsx", content)
+	defer book.Close()
+
+	rows, err := book.GetRows("Sheet1")
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(rows) >= nbRows+1)
+	tu.Assert(t, rows[0][2] == "Devise du camp")
+	tu.Assert(t, rows[1][2] == "€")
+
+	headers := make(map[string]int, len(rows[0]))
+	for col, header := range rows[0] {
+		headers[header] = col + 1
+	}
+	for _, header := range present {
+		col, exists := headers[header]
+		tu.Assert(t, exists)
+		for row := 2; row <= nbRows+1; row++ {
+			cell, err := excelize.CoordinatesToCellName(col, row)
+			tu.AssertNoErr(t, err)
+			cellType, err := book.GetCellType("Sheet1", cell)
+			tu.AssertNoErr(t, err)
+			// excelize leaves the type unset for numeric cells written by SetCellValue.
+			tu.Assert(t, cellType == excelize.CellTypeNumber || cellType == excelize.CellTypeUnset)
+		}
+	}
+	for _, header := range absent {
+		_, exists := headers[header]
+		tu.Assert(t, !exists)
+	}
 }
