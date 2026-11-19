@@ -106,7 +106,7 @@ func (de DossierFinance) MontantsPayesParDevise() ds.MultiCurrencies {
 		if paiement.IsRemboursement {
 			montant.Cent = -montant.Cent
 		}
-		out.Add(montant)
+		out.AddM(montant)
 	}
 	return out
 }
