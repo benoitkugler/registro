@@ -253,7 +253,7 @@ func (bp BilanParticipant) publish(taux ds.Taux) BilanParticipantPub {
 	out := BilanParticipantPub{BilanParticipant: bp}
 
 	out.AvecAides = taux.Convertible(bp.prixSansRemises(taux)).String()
-	out.Net = taux.Convertible(bp.net(taux)).String()
+	out.Net = taux.Convertible(bp.Net(taux)).String()
 	return out
 }
 

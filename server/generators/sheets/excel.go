@@ -608,6 +608,8 @@ func ListeParticipantsCamps(participants []cps.ParticipantCamp, dossiers logic.D
 		"Code postal",
 		"Ville",
 		"Pays",
+		"Montant demandé (devise du camp)",
+		"Montant reçu (devise du camp)",
 	}
 	if showNationnaliteSuisse {
 		headersParticipant[6] = "Nationalité suisse"
@@ -657,7 +659,14 @@ func ListeParticipantsCamps(participants []cps.ParticipantCamp, dossiers logic.D
 		hints := remisesHints[inscrit.Participant.Id]
 		remiseFamilleProbable := hints.Famille != 0
 		remiseEquipiersProbable := hints.Equipiers != 0
+
 		montantsPayes := dossier.MontantsPayesParDevise()
+
+		paiementByParticipant := bilan.DispatchPaiements(taux)[inscrit.Participant.Id]
+		ownPaiement := convertAmount(taux, paiementByParticipant, inscrit.Camp.Prix.Currency)
+
+		ownAsked := convertAmount(taux, bilan.Inscrits[inscrit.Participant.Id].Net(taux), inscrit.Camp.Prix.Currency)
+
 		row := []Cell{
 			// camp
 			intCell(inscrit.Camp.Id),                     // ID Camp
@@ -677,6 +686,8 @@ func ListeParticipantsCamps(participants []cps.ParticipantCamp, dossiers logic.D
 			{Value: inscrit.Personne.CodePostal},             // Code postal
 			{Value: inscrit.Personne.Ville},                  // Ville
 			{Value: string(inscrit.Personne.Pays)},           // Pays
+			amountCell(ownAsked),                             // Montant demandé (devise du camp)
+			amountCell(ownPaiement),                          // Montant reçu (devise du camp)
 			// responsable
 			{Value: responsable.NOMPrenom()},   // Responsable
 			{Value: responsable.Mail},          // Mail

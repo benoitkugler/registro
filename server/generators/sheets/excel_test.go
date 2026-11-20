@@ -8,6 +8,7 @@ import (
 	"registro/logic"
 	cps "registro/sql/camps"
 	"registro/sql/dossiers"
+	ds "registro/sql/dossiers"
 	pr "registro/sql/personnes"
 	"registro/sql/shared"
 	"registro/utils"
@@ -156,6 +157,11 @@ func TestListeParticipantsCamps(t *testing.T) {
 	}.Insert(db)
 	tu.AssertNoErr(t, err)
 
+	_, err = ds.Paiement{IdDossier: dossierMulti.Id, Montant: ds.Montant{Cent: 5000, Currency: ds.Euros}}.Insert(db.DB)
+	tu.AssertNoErr(t, err)
+	_, err = ds.Paiement{IdDossier: dossierMulti.Id, Montant: ds.Montant{Cent: 1000, Currency: ds.FrancsSuisse}}.Insert(db.DB)
+	tu.AssertNoErr(t, err)
+
 	p1, err := pr.Personne{Identite: pr.Identite{
 		Nom: utils.RandString(12, false), Prenom: utils.RandString(12, false),
 		Sexe:          pr.Man,
@@ -173,6 +179,11 @@ func TestListeParticipantsCamps(t *testing.T) {
 
 	part1, err := cps.Participant{
 		IdCamp: campMulti.Id, IdPersonne: p1.Id, IdDossier: dossierMulti.Id,
+		IdTaux: tauxMulti.Id, Statut: cps.Inscrit,
+	}.Insert(db)
+	tu.AssertNoErr(t, err)
+	_, err = cps.Participant{
+		IdCamp: campMulti.Id, IdPersonne: p2.Id, IdDossier: dossierMulti.Id,
 		IdTaux: tauxMulti.Id, Statut: cps.Inscrit,
 	}.Insert(db)
 	tu.AssertNoErr(t, err)
@@ -202,7 +213,7 @@ func TestListeParticipantsCamps(t *testing.T) {
 				"Fonds de soutien (devise du camp)",
 				"Remises (devise du camp)",
 			}, nil)
-		tu.Write(t, "ListeParticipantsCamps_1.xlsx", content)
+		tu.Write(t, "ListeParticipantsCamps_multi.xlsx", content)
 	})
 
 	t.Run("euros only", func(t *testing.T) {
@@ -222,7 +233,7 @@ func TestListeParticipantsCamps(t *testing.T) {
 				"Montant payé (EUR)",
 				"Montant payé (CHF)",
 			})
-		tu.Write(t, "ListeParticipantsCamps_2.xlsx", content)
+		tu.Write(t, "ListeParticipantsCamps_euros.xlsx", content)
 	})
 }
 
