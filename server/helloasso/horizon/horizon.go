@@ -1,7 +1,5 @@
 // Implémente un relais Horizon <-> Helloasso
 // exposant la fonction Checkout sans partager l'accès complet aux données HelloAsso
-//
-// TODO: vérifier urls retours
 package horizon
 
 import (

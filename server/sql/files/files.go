@@ -69,7 +69,7 @@ func (fs FileSystem) Save(doc IdFile, fileContent []byte, miniature bool) error 
 // The file size is not checked.
 func UploadFile(fs FileSystem, db DB, id IdFile, fileContent []byte, filename string) (File, error) {
 	ext := filepath.Ext(filename)
-	minContent, err := computeMiniature(ext, bytes.NewReader(fileContent))
+	minContent, err := ComputeMiniature(ext, bytes.NewReader(fileContent))
 	if err != nil {
 		return File{}, err
 	}

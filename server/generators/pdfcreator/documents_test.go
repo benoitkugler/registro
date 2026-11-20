@@ -57,10 +57,6 @@ func randFicheSanitaire() FicheSanitaire {
 			Nom: utils.RandString(30, true),
 			Tel: pr.Tel(utils.RandString(30, true)),
 		},
-		Medecin: pr.NomTel{
-			Nom: utils.RandString(30, true),
-			Tel: pr.Tel(utils.RandString(30, true)),
-		},
 	}
 
 	pers := pr.Identite{
@@ -78,7 +74,12 @@ func randFicheSanitaire() FicheSanitaire {
 		Pays:       pr.Pays(utils.RandString(2, false)),
 		Tels:       pr.Tels{"7987987979", "897779897998789"},
 	}
-	return FicheSanitaire{pers, fs, resp}
+	return FicheSanitaire{
+		Personne:         pers,
+		FicheSanitaire:   fs,
+		Responsable:      resp,
+		IsOwnResponsable: randBool(),
+	}
 }
 
 func randFicheSanitaires() []FicheSanitaire {
@@ -112,7 +113,7 @@ func TestFicheSanitaire(t *testing.T) {
 
 func BenchmarkFS(b *testing.B) {
 	pages := randFicheSanitaires()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, _ = CreateFicheSanitaires(asso, pages)
 	}
 }

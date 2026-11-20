@@ -8,6 +8,14 @@ CREATE TYPE DocumentsToShow AS (
     CharteParticipant boolean
 );
 
+DROP TYPE IF EXISTS Horaire;
+
+CREATE TYPE Horaire AS (
+    Valid boolean,
+    Heure smallint,
+    Minute smallint
+);
+
 DROP TYPE IF EXISTS PresenceOffsets;
 
 CREATE TYPE PresenceOffsets AS (
@@ -52,7 +60,9 @@ CREATE TABLE camps (
     AlbumID text NOT NULL,
     Meta jsonb NOT NULL,
     IsAlbumVisible boolean NOT NULL,
-    PlacesReservees integer NOT NULL
+    PlacesReservees integer NOT NULL,
+    HoraireDebut Horaire NOT NULL,
+    HoraireFin Horaire NOT NULL
 );
 
 CREATE TABLE equipiers (

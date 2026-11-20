@@ -12,6 +12,7 @@ import (
 
 	"registro/config"
 	"registro/controllers/backoffice"
+	"registro/controllers/compta"
 	"registro/controllers/directeurs"
 	"registro/controllers/dons"
 	equipiers "registro/controllers/equipier"
@@ -35,7 +36,7 @@ func main() {
 	flag.Parse()
 	isDev := *devPtr
 
-	asso, keys, dbCreds, smtp, directories, immich := loadEnvs(isDev)
+	asso, keys, dbCreds, smtp, directories, immich, comptaCfg := loadEnvs(isDev)
 
 	fmt.Println("Loading env. -> OK.")
 	fmt.Println("\tASSO:", asso.ID)
@@ -57,7 +58,7 @@ func main() {
 	// TODO: setup Helloasso, OnlinePaiement APIS
 	helloasso := config.Helloasso{}
 
-	fmt.Println("Connecting to DB", dbCreds.Name, "at", dbCreds.Host, "...")
+	fmt.Printf("Connecting to DB <%s> at <%s>...\n", dbCreds.Name, dbCreds.Host)
 	db, err := dbCreds.ConnectPostgres()
 	check(err)
 	check(db.Ping())
@@ -87,6 +88,10 @@ func main() {
 	espacepersoCt := espaceperso.NewController(db, encrypter, smtp, asso, fs, immich)
 
 	inscriptionsCt := inscriptions.NewController(db, encrypter, smtp, asso)
+
+	comptaCt, err := compta.NewController(db, encrypter, comptaCfg, smtp, asso)
+	check(err)
+	fmt.Printf("Google Drive acces for compta: OK.\n\tkey file: %s\n\troot folder: %s\n", comptaCfg.GoogleDriveKeyFile, comptaCfg.GoogleDriveFolderId)
 
 	servicesCt := services.NewController(db, encrypter, smtp, asso)
 
@@ -123,6 +128,7 @@ func main() {
 	setupRoutesEquipier(e, equipiersCt)
 	setupRoutesEspaceperso(e, espacepersoCt)
 	setupRoutesInscription(e, inscriptionsCt)
+	setupRoutesCompta(e, comptaCt)
 	setupRoutesMisc(e, filesCt)
 	setupRoutesServices(e, servicesCt, espacepersoCt)
 	setupClientApps(e, asso.ID)
@@ -137,7 +143,7 @@ func main() {
 	e.Logger.Fatal(e.Start(adress))
 }
 
-func loadEnvs(devMode bool) (config.Asso, config.Keys, config.DB, config.SMTP, config.Directories, config.Immich) {
+func loadEnvs(devMode bool) (config.Asso, config.Keys, config.DB, config.SMTP, config.Directories, config.Immich, config.Compta) {
 	asso, err := config.NewAsso()
 	check(err)
 
@@ -156,20 +162,23 @@ func loadEnvs(devMode bool) (config.Asso, config.Keys, config.DB, config.SMTP, c
 	immich, err := config.NewImmich()
 	check(err)
 
-	return asso, keys, db, smtp, dirs, immich
+	compta, err := config.NewCompta()
+	check(err)
+
+	return asso, keys, db, smtp, dirs, immich, compta
 }
 
 func getAdress(devMode bool) string {
 	var adress string
 	if devMode {
-		adress = "localhost:1323"
+		// also enable connection over WIFI
+		adress = "0.0.0.0:1323"
 	} else {
-		// TODO: adapt to infomaniak
 		// alwaysdata use IP and PORT env var
 		host := os.Getenv("IP")
 		port, err := strconv.Atoi(os.Getenv("PORT"))
 		if err != nil {
-			log.Fatal("No PORT found", err)
+			log.Fatal("no valid PORT found", err)
 		}
 		if strings.Count(host, ":") >= 2 { // ipV6 -> besoin de crochet
 			host = "[" + host + "]"
@@ -236,6 +245,14 @@ func setupClientApps(e *echo.Echo, asso string) {
 
 	e.GET(inscriptions.EndpointInscription, serveStaticAsso("/inscription/index.html"), middleware.Gzip(), noCache)
 	e.GET(inscriptions.EndpointInscription+"/*", serveStaticAsso("/inscription/index.html"), middleware.Gzip(), noCache)
+
+	e.GET("/compta", serveStaticAsso("/compta/index.html"), middleware.Gzip(), noCache)
+	e.GET("/compta/*", serveStaticAsso("/compta/index.html"), middleware.Gzip(), noCache)
+
+	e.GET("/static/sw.js", func(c echo.Context) error {
+		c.Response().Header().Set("Service-Worker-Allowed", "/compta/")
+		return serveStaticAsso("/sw.js")(c)
+	}, middleware.Gzip(), noCache)
 
 	// services also contains the index page and the CGUs
 	e.GET("/", serveStaticAsso("/services/index.html"), middleware.Gzip(), noCache)

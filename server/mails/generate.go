@@ -25,6 +25,8 @@ var (
 	notifieMessageT             *template.Template
 	notifieFactureT             *template.Template
 	notifieDocumentsCampT       *template.Template
+	notifieDocumentsValidesT    *template.Template
+	notifieDocumentRefuseT      *template.Template
 	notifieSondageT             *template.Template
 	notifiePlaceLibereeT        *template.Template
 	confirmationInscriptionT    *template.Template
@@ -36,6 +38,7 @@ var (
 	sendPhotosLinkEquipiersT    *template.Template
 	notifieMessageDirecteursT   *template.Template
 	notifieMessageFondsSoutienT *template.Template
+	notifieComptableT           *template.Template
 )
 
 func init() {
@@ -47,6 +50,8 @@ func init() {
 	notifieMessageT = parseTemplate("templates/notifieMessage.html")
 	notifieFactureT = parseTemplate("templates/notifieFacture.html")
 	notifieDocumentsCampT = parseTemplate("templates/notifieDocumentsCamp.html")
+	notifieDocumentsValidesT = parseTemplate("templates/notifieDocumentsValides.html")
+	notifieDocumentRefuseT = parseTemplate("templates/notifieDocumentRefuse.html")
 	notifieSondageT = parseTemplate("templates/notifieSondage.html")
 	notifiePlaceLibereeT = parseTemplate("templates/notifiePlaceLiberee.html")
 	confirmationInscriptionT = parseTemplate("templates/confirmationInscription.html")
@@ -58,6 +63,7 @@ func init() {
 	sendPhotosLinkEquipiersT = parseTemplate("templates/sendPhotosLinkEquipiers.html")
 	notifieMessageDirecteursT = parseTemplate("templates/notifieMessageDirecteurs.html")
 	notifieMessageFondsSoutienT = parseTemplate("templates/notifieMessageFondsSoutien.html")
+	notifieComptableT = parseTemplate("templates/notifieComptable.html")
 }
 
 func parseTemplate(templateFile string) *template.Template {
@@ -176,6 +182,61 @@ func NotifieDocumentsCamp(asso config.Asso, contact Contact, campLabel string, e
 		EspacePersoButtonLabel: "COMPLÉTER LES DOCUMENTS",
 	}
 	return render(notifieDocumentsCampT, args)
+}
+
+func NotifieDocumentsValides(asso config.Asso, contact Contact, campLabel, participant, espacePersoURL string) (string, error) {
+	args := struct {
+		champsCommuns
+		CampLabel              string
+		Participant            string
+		EspacePersoURL         string
+		EspacePersoButtonLabel string
+	}{
+		champsCommuns: champsCommuns{
+			Title:       "Documents validés",
+			Salutations: contact.Salutations(),
+			Asso:        asso,
+			Signature:   mailAuto,
+		},
+		CampLabel:              campLabel,
+		Participant:            participant,
+		EspacePersoURL:         espacePersoURL,
+		EspacePersoButtonLabel: "MON ESPACE",
+	}
+	return render(notifieDocumentsValidesT, args)
+}
+
+type DocumentContext struct {
+	IsFicheSanitaire bool
+	DemandeTitle     string
+	FileName         string
+}
+
+// demandeTitle is empty for fiche sanitaire
+func NotifieDocumentRefuse(asso config.Asso, contact Contact, campLabel, participant string, document DocumentContext, reason, espacePersoURL string) (string, error) {
+	args := struct {
+		champsCommuns
+		CampLabel              string
+		Participant            string
+		Document               DocumentContext
+		Reason                 string
+		EspacePersoURL         string
+		EspacePersoButtonLabel string
+	}{
+		champsCommuns: champsCommuns{
+			Title:       "Document à remplacer",
+			Salutations: contact.Salutations(),
+			Asso:        asso,
+			Signature:   mailAuto,
+		},
+		CampLabel:              campLabel,
+		Participant:            participant,
+		Document:               document,
+		Reason:                 reason,
+		EspacePersoURL:         espacePersoURL,
+		EspacePersoButtonLabel: "REMPLACER LE DOCUMENT",
+	}
+	return render(notifieDocumentRefuseT, args)
 }
 
 func RelanceDocuments(cfg config.Asso, contact Contact, campLabel, prenom, espacePersoURL string) (string, error) {
@@ -539,6 +600,28 @@ func NotifieMessageFondsSoutien(cfg config.Asso, responsable, contenu, backoffic
 		EspacePersoButtonLabel: "Backoffice",
 	}
 	return render(notifieMessageFondsSoutienT, args)
+}
+
+func NotifieComptable(cfg config.Asso, responsable, campLabel, dossierURL string) (string, error) {
+	args := struct {
+		champsCommuns
+		Responsable            string
+		CampLabel              string
+		EspacePersoURL         string
+		EspacePersoButtonLabel string
+	}{
+		champsCommuns: champsCommuns{
+			Title:       "Dossier à examiner",
+			Salutations: Contact{}.Salutations(),
+			Asso:        cfg,
+			Signature:   "<i>Ce mail est envoyé automatiquement, merci de ne pas y répondre.</i>",
+		},
+		Responsable:            responsable,
+		CampLabel:              campLabel,
+		EspacePersoURL:         dossierURL,
+		EspacePersoButtonLabel: "OUVRIR LE DOSSIER",
+	}
+	return render(notifieComptableT, args)
 }
 
 // func NewRenvoieLienJoomeo(lien, login, password string) (string, error) {

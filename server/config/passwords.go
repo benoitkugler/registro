@@ -8,11 +8,14 @@ import (
 // Keys expose the passwords/keys used to
 // authenticate/crypt
 type Keys struct {
-	EncryptKey  string // used for encryption key
+	EncryptKey string // used for encryption key
+
 	Backoffice  string // password
 	FondSoutien string // password
-	Directeurs  string // global password for all camps
-	Dons        string // password
+
+	Directeurs string // global password for all camps
+
+	Dons string // password
 }
 
 // NewKeys uses env. variables to load the credentials :

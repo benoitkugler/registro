@@ -58,7 +58,7 @@
             <v-row>
               <v-col v-if="equipier.HasBirthday" cols="2" align-self="center">
                 <v-tooltip
-                  :text="`${equipier.Personne} a son anniveraire pendant le séjour !`"
+                  :text="`${equipier.Personne} a son anniversaire pendant le séjour !`"
                 >
                   <template #activator="{ props }">
                     <v-icon v-bind="props" color="pink"

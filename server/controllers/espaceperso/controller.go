@@ -28,6 +28,7 @@ import (
 
 // Une modification après J-7 (début du séjour)
 // entraine une notification par email
+// TODO: check that
 const updateLimitation = 7 * 24 * time.Hour
 
 type Controller struct {
@@ -88,7 +89,7 @@ func (ct *Controller) load(id ds.IdDossier) (Data, error) {
 	if err != nil {
 		return Data{}, err
 	}
-	documents, err := loadDocuments(ct.db, ct.key, dossier.Dossier)
+	documents, err := loadDocuments(ct.db, ct.key, dossier.Dossier, ct.asso.AskedDocs)
 	if err != nil {
 		return Data{}, err
 	}

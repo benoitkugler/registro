@@ -2,6 +2,7 @@ package camps
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -51,7 +52,7 @@ const (
 )
 
 var (
-	_ json.Marshaler   = (StatutParticipant)(0)
+	_ json.Marshaler   = StatutParticipant(0)
 	_ json.Unmarshaler = (*StatutParticipant)(nil)
 )
 
@@ -269,7 +270,7 @@ const (
 	AutreRole                 // Autre
 )
 
-const NbRoles = AutreRole + 1 // gomacro:no-enum
+const RolesCount = AutreRole + 1 // gomacro:no-enum
 
 func (r Role) String() string {
 	switch r {
@@ -347,7 +348,7 @@ func (rs Roles) Is(r Role) bool {
 }
 
 var (
-	_ json.Marshaler   = (Role)(0)
+	_ json.Marshaler   = Role(0)
 	_ json.Unmarshaler = (*Role)(nil)
 )
 
@@ -494,4 +495,23 @@ func (fr FormReponses) ToString(champs Champs) []string {
 		out[i] = c.formatReponse(fr[i])
 	}
 	return out
+}
+
+type Horaire struct {
+	Valid  bool
+	Heure  uint8 // [0-23]
+	Minute uint8 // [0-59]
+}
+
+func (h Horaire) check() error {
+	if !h.Valid {
+		return nil
+	}
+	if h.Heure > 23 {
+		return errors.New("invalid Horaire.Heure")
+	}
+	if h.Minute > 59 {
+		return errors.New("invalid Horaire.Minute")
+	}
+	return nil
 }

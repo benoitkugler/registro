@@ -38,7 +38,8 @@ func TestDossierFinance_Bilan(t *testing.T) {
 		3: cps.Participant{Id: 3, IdCamp: 2, Statut: cps.Inscrit},
 		4: cps.Participant{Id: 4, IdCamp: 2, Statut: cps.AStatuer},
 	}
-	tu.Assert(t, reflect.DeepEqual(df.Bilan(), BilanFinances{
+	bilan := df.Bilan()
+	tu.Assert(t, reflect.DeepEqual(bilan, BilanFinances{
 		map[cps.IdParticipant]BilanParticipant{
 			1: {eur(200), eur(200), "", cps.Remises{}, nil},
 			2: {chf(150), chf(150), "", cps.Remises{}, nil},
@@ -46,6 +47,7 @@ func TestDossierFinance_Bilan(t *testing.T) {
 		},
 		40000, 15000, 35000, 0, 0, ds.FrancsSuisse,
 	}))
+	tu.Assert(t, bilan.Inscrits[1].ResolvedRemises(taux) == chf(0))
 
 	// avec aides
 	df.Participants = cps.Participants{
@@ -61,7 +63,8 @@ func TestDossierFinance_Bilan(t *testing.T) {
 			3: cps.Aide{Valide: false, Valeur: chf(5)},
 		},
 	}
-	tu.Assert(t, reflect.DeepEqual(df.Bilan(), BilanFinances{
+	bilan = df.Bilan()
+	tu.Assert(t, reflect.DeepEqual(bilan, BilanFinances{
 		map[cps.IdParticipant]BilanParticipant{
 			1: {eur(200), eur(200), "", cps.Remises{}, []AideResolved{{"", eur(20)}, {"", chf(20)}}},
 			2: {chf(150), chf(150), "", cps.Remises{}, nil},
@@ -69,6 +72,7 @@ func TestDossierFinance_Bilan(t *testing.T) {
 		},
 		40000 - 1000 - 200*10, 15000, 35000, 0, 1000 + 200*10, ds.FrancsSuisse,
 	}))
+	tu.Assert(t, bilan.Inscrits[1].ResolvedRemises(taux) == chf(0))
 
 	// avec remises
 	df.Participants = cps.Participants{
@@ -82,7 +86,8 @@ func TestDossierFinance_Bilan(t *testing.T) {
 		4: cps.Participant{Id: 4, IdCamp: 2, Statut: cps.AStatuer},
 	}
 	df.aides = nil
-	tu.Assert(t, reflect.DeepEqual(df.Bilan(), BilanFinances{
+	bilan = df.Bilan()
+	tu.Assert(t, reflect.DeepEqual(bilan, BilanFinances{
 		map[cps.IdParticipant]BilanParticipant{
 			1: {eur(200), eur(200), "", cps.Remises{
 				Speciale:  eur(10),
@@ -94,6 +99,7 @@ func TestDossierFinance_Bilan(t *testing.T) {
 		},
 		40000 - 500 - 1500, 15000, 35000, 0, 0, ds.FrancsSuisse,
 	}))
+	tu.Assert(t, bilan.Inscrits[1].ResolvedRemises(taux) == chf(20))
 
 	// avec remises et aides
 	df.Participants = cps.Participants{
@@ -108,6 +114,7 @@ func TestDossierFinance_Bilan(t *testing.T) {
 			1: cps.Aide{Valide: true, Valeur: eur(20)},
 		},
 	}
+	bilan = df.Bilan()
 	tu.Assert(t, reflect.DeepEqual(df.Bilan(), BilanFinances{
 		map[cps.IdParticipant]BilanParticipant{
 			1: {eur(200), eur(200), "", cps.Remises{
@@ -118,6 +125,7 @@ func TestDossierFinance_Bilan(t *testing.T) {
 		},
 		10000 - 1000 - 500 - 900, 0, 35000, 0, 1000, ds.FrancsSuisse,
 	}))
+	tu.Assert(t, bilan.Inscrits[1].ResolvedRemises(taux) == chf(14))
 
 	// avec fond soutien
 	df = DossierFinance{
@@ -137,6 +145,156 @@ func TestDossierFinance_Bilan(t *testing.T) {
 		},
 		10000, 0, 35000, 5000, 0, ds.FrancsSuisse,
 	}))
+}
+
+func TestDossierFinance_MontantsPayesParDevise(t *testing.T) {
+	df := DossierFinance{paiements: ds.Paiements{
+		1: {Montant: eur(100)},
+		2: {Montant: chf(80), Payeur: ds.PayeurFondSoutien},
+		3: {Montant: eur(25), IsRemboursement: true},
+		4: {Montant: chf(10), IsRemboursement: true},
+	}}
+
+	got := df.MontantsPayesParDevise()
+	tu.Assert(t, got[ds.Euros] == 7500)
+	tu.Assert(t, got[ds.FrancsSuisse] == 7000)
+}
+
+func TestDossierFinance_DispatchPaiements(t *testing.T) {
+	tests := []struct {
+		name string
+		df   DossierFinance
+		want map[cps.IdParticipant]ds.Montant
+	}{
+		{
+			name: "taux EUR/CHF, paiements EUR et CHF",
+			df: DossierFinance{
+				Dossier: Dossier{
+					camps: cps.Camps{
+						1: cps.Camp{Prix: eur(200), Duree: 10},
+						2: cps.Camp{Prix: chf(150)},
+					},
+					Participants: cps.Participants{
+						1: cps.Participant{Id: 1, IdCamp: 1, Statut: cps.Inscrit},
+						2: cps.Participant{Id: 2, IdCamp: 2, Statut: cps.Inscrit},
+						3: cps.Participant{Id: 3, IdCamp: 2, Statut: cps.Inscrit},
+						4: cps.Participant{Id: 4, IdCamp: 2, Statut: cps.AStatuer},
+					},
+				},
+				Taux: ds.Taux{Euros: 1000, FrancsSuisse: 2000},
+				paiements: ds.Paiements{
+					1: {Montant: eur(100), IsRemboursement: true},
+					2: {Montant: eur(200)},
+					3: {Montant: chf(300)},
+				},
+			},
+			want: map[cps.IdParticipant]ds.Montant{1: chf(87.50), 2: chf(131.25), 3: chf(131.25)},
+		},
+		{
+			name: "taux EUR seulement, paiements EUR",
+			df: DossierFinance{
+				Dossier: Dossier{
+					camps: cps.Camps{
+						1: cps.Camp{Prix: eur(200)},
+						2: cps.Camp{Prix: eur(100)},
+					},
+					Participants: cps.Participants{
+						1: cps.Participant{Id: 1, IdCamp: 1, Statut: cps.Inscrit},
+						2: cps.Participant{Id: 2, IdCamp: 2, Statut: cps.Inscrit},
+					},
+				},
+				Taux: ds.Taux{Euros: 1000},
+				paiements: ds.Paiements{
+					1: {Montant: eur(200)},
+					2: {Montant: eur(50), IsRemboursement: true},
+				},
+			},
+			want: map[cps.IdParticipant]ds.Montant{1: eur(100.00), 2: eur(50.00)},
+		},
+		{
+			name: "taux EUR/CHF, paiements CHF",
+			df: DossierFinance{
+				Dossier: Dossier{
+					camps: cps.Camps{
+						1: cps.Camp{Prix: eur(100)},
+						2: cps.Camp{Prix: eur(300)},
+					},
+					Participants: cps.Participants{
+						1: cps.Participant{Id: 1, IdCamp: 1, Statut: cps.Inscrit},
+						2: cps.Participant{Id: 2, IdCamp: 2, Statut: cps.Inscrit},
+					},
+				},
+				Taux: ds.Taux{Euros: 1000, FrancsSuisse: 2000},
+				paiements: ds.Paiements{
+					1: {Montant: chf(200)},
+					2: {Montant: chf(50)},
+				},
+			},
+			want: map[cps.IdParticipant]ds.Montant{1: chf(62.50), 2: chf(187.50)},
+		},
+		{
+			name: "taux EUR/CHF, paiements EUR",
+			df: DossierFinance{
+				Dossier: Dossier{
+					camps: cps.Camps{
+						1: cps.Camp{Prix: chf(100)},
+						2: cps.Camp{Prix: chf(300)},
+					},
+					Participants: cps.Participants{
+						1: cps.Participant{Id: 1, IdCamp: 1, Statut: cps.Inscrit},
+						2: cps.Participant{Id: 2, IdCamp: 2, Statut: cps.Inscrit},
+					},
+				},
+				Taux: ds.Taux{Euros: 1000, FrancsSuisse: 2000},
+				paiements: ds.Paiements{
+					1: {Montant: eur(150)},
+					2: {Montant: eur(50)},
+				},
+			},
+			want: map[cps.IdParticipant]ds.Montant{1: chf(25.00), 2: chf(75.00)},
+		},
+		{
+			name: "aucun inscrit",
+			df: DossierFinance{
+				Dossier: Dossier{
+					camps: cps.Camps{1: cps.Camp{Prix: chf(100)}},
+					Participants: cps.Participants{
+						1: cps.Participant{Id: 1, IdCamp: 1, Statut: cps.AStatuer},
+					},
+				},
+				Taux: ds.Taux{Euros: 1000, FrancsSuisse: 2000},
+				paiements: ds.Paiements{
+					1: {Montant: chf(50)},
+				},
+			},
+			want: nil,
+		},
+		{
+			name: "avec reste",
+			df: DossierFinance{
+				Dossier: Dossier{
+					camps: cps.Camps{1: cps.Camp{Prix: chf(100)}},
+					Participants: cps.Participants{
+						1: cps.Participant{Id: 1, IdCamp: 1, Statut: cps.Inscrit},
+						2: cps.Participant{Id: 2, IdCamp: 1, Statut: cps.Inscrit},
+						3: cps.Participant{Id: 3, IdCamp: 1, Statut: cps.Inscrit},
+					},
+				},
+				Taux: ds.Taux{Euros: 1000, FrancsSuisse: 2000},
+				paiements: ds.Paiements{
+					1: {Montant: eur(200)},
+					2: {Montant: chf(400)},
+				},
+			},
+			want: map[cps.IdParticipant]ds.Montant{1: chf(166.66), 2: chf(166.66), 3: chf(166.68)},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := tt.df.Bilan().DispatchPaiements(tt.df.Taux)
+			tu.Assert(t, reflect.DeepEqual(got, tt.want))
+		})
+	}
 }
 
 func Test_pc_prixBase(t *testing.T) {

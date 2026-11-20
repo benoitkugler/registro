@@ -36,9 +36,6 @@ ALTER TABLE ficheequipiers
 ALTER TABLE fichesanitaires
     ADD CONSTRAINT AutreContact_gomacro CHECK (gomacro_validate_json_pers_NomTel (AutreContact));
 
-ALTER TABLE fichesanitaires
-    ADD CONSTRAINT Medecin_gomacro CHECK (gomacro_validate_json_pers_NomTel (Medecin));
-
 ALTER TABLE ficheequipiers
     ADD CONSTRAINT Recommandation_gomacro CHECK (gomacro_validate_json_pers_Recommandation (Recommandation));
 
@@ -519,4 +516,58 @@ ALTER TABLE dons
 
 ALTER TABLE dons
     ADD FOREIGN KEY (IdOrganisme) REFERENCES organismes;
+
+ALTER TABLE compta_camps
+    ADD UNIQUE (IdCamp);
+
+ALTER TABLE compta_camps
+    ADD FOREIGN KEY (IdCamp) REFERENCES camps ON DELETE CASCADE;
+
+ALTER TABLE compta_records
+    ADD UNIQUE (Id, IdCamp);
+
+ALTER TABLE compta_records
+    ADD FOREIGN KEY (IdCamp) REFERENCES compta_camps ON DELETE CASCADE;
+
+ALTER TABLE compta_records
+    ADD FOREIGN KEY (SpentBy) REFERENCES equipiers;
+
+ALTER TABLE compta_subrecords
+    ADD FOREIGN KEY (IdRecord) REFERENCES compta_records ON DELETE CASCADE;
+
+ALTER TABLE compta_subrecords
+    ADD FOREIGN KEY (IdFile) REFERENCES compta_files ON DELETE SET NULL;
+
+ALTER TABLE compta_record_buss
+    ADD UNIQUE (IdSubrecord);
+
+ALTER TABLE compta_record_buss
+    ADD FOREIGN KEY (IdCamp) REFERENCES compta_camps ON DELETE CASCADE;
+
+ALTER TABLE compta_record_buss
+    ADD FOREIGN KEY (IdSubrecord) REFERENCES compta_subrecords ON DELETE CASCADE;
+
+ALTER TABLE compta_budgets
+    ADD UNIQUE (IdCompta);
+
+ALTER TABLE compta_budgets
+    ADD FOREIGN KEY (IdCompta) REFERENCES compta_camps ON DELETE CASCADE;
+
+ALTER TABLE compta_configs
+    ADD UNIQUE (Year);
+
+ALTER TABLE compta_subrecords
+    ADD CONSTRAINT Montants_gomacro CHECK (gomacro_validate_json_array_comp_MontantPart (Montants));
+
+ALTER TABLE compta_budgets
+    ADD CONSTRAINT Activities_gomacro CHECK (gomacro_validate_json_array_comp_NamedCost (Activities));
+
+ALTER TABLE compta_budgets
+    ADD CONSTRAINT ExternalHost_gomacro CHECK (gomacro_validate_json_array_comp_NamedCost (ExternalHost));
+
+ALTER TABLE compta_records
+    ADD CONSTRAINT Reviews_gomacro CHECK (gomacro_validate_json_array_comp_Review (Reviews));
+
+ALTER TABLE compta_camps
+    ADD CONSTRAINT FraisMDR_gomacro CHECK (gomacro_validate_json_comp_FraisMDRACVE (FraisMDR));
 

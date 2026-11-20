@@ -67,9 +67,12 @@ export interface Documents {
 // registro/controllers/espaceperso.FichesanitaireExt
 export interface FichesanitaireExt {
   Personne: string;
+  Nationnalite: Nationnalite;
   IsLocked: boolean;
+  IsOwnResponsable: boolean;
   State: FichesanitaireState;
   Fichesanitaire: Fichesanitaire;
+  SecuriteSociale: string;
   ResponsableNom: string;
   ResponsableTels: Tels;
 }
@@ -117,6 +120,7 @@ export interface SondageExt {
 export interface UpdateFichesanitaireIn {
   Token: string;
   Fichesanitaire: Fichesanitaire;
+  SecuriteSociale: string;
 }
 // registro/controllers/espaceperso.UpdateFormIn
 export interface UpdateFormIn {
@@ -263,6 +267,7 @@ export interface PublicFile {
   Taille: Int;
   NomClient: string;
   Uploaded: Time;
+  ReviewStatus: FileReviewStatus;
 }
 // registro/logic.PublicParticipantCamp
 export interface PublicParticipantCamp {
@@ -665,20 +670,35 @@ export interface Demande {
   Categorie: Categorie;
   Description: string;
   MaxDocs: Int;
-  JoursValide: Int;
+  Nationnalite: NationnaliteCible;
 }
 export type IdDemande = Int & { __opaque_int__: "IdDemande" };
 export type IdFile = Int & { __opaque_int__: "IdFile" };
+// registro/sql/files.NationnaliteCible
+export const NationnaliteCible = {
+  Both: 0,
+  OnlyCh: 1,
+  OnlyFr: 2,
+} as const;
+export type NationnaliteCible =
+  (typeof NationnaliteCible)[keyof typeof NationnaliteCible];
+
+export const NationnaliteCibleLabels: Record<NationnaliteCible, string> = {
+  [NationnaliteCible.Both]: "Toutes",
+  [NationnaliteCible.OnlyCh]: "Suisse seulement",
+  [NationnaliteCible.OnlyFr]: "Française seulement",
+};
+
 // registro/sql/personnes.Fichesanitaire
 export interface Fichesanitaire {
   IdPersonne: IdPersonne;
   DifficultesSante: string;
   AllergiesAlimentaires: string;
   TraitementMedical: string;
-  Medecin: NomTel;
   AutreContact: NomTel;
   Modified: Time;
   Owners: Mails;
+  ReviewStatus: FileReviewStatus;
 }
 // registro/sql/personnes.FichesanitaireState
 export const FichesanitaireState = {
@@ -695,9 +715,28 @@ export const FichesanitaireStateLabels: Record<FichesanitaireState, string> = {
   [FichesanitaireState.UpToDate]: "Remplie",
 };
 
+// registro/sql/personnes.FileReviewStatus
+export const FileReviewStatus = {
+  FileReviewPending: 0,
+  FileReviewValidated: 1,
+  FileReviewRejected: 2,
+} as const;
+export type FileReviewStatus =
+  (typeof FileReviewStatus)[keyof typeof FileReviewStatus];
+
+export const FileReviewStatusLabels: Record<FileReviewStatus, string> = {
+  [FileReviewStatus.FileReviewPending]: "En attente",
+  [FileReviewStatus.FileReviewValidated]: "Validé",
+  [FileReviewStatus.FileReviewRejected]: "Refusé",
+};
+
 export type IdPersonne = Int & { __opaque_int__: "IdPersonne" };
 // registro/sql/personnes.Mails
 export type Mails = string[] | null;
+// registro/sql/personnes.Nationnalite
+export interface Nationnalite {
+  IsSuisse: boolean;
+}
 // registro/sql/personnes.NomTel
 export interface NomTel {
   Nom: string;

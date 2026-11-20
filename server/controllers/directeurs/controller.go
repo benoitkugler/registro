@@ -12,6 +12,7 @@ import (
 
 	"registro/config"
 	"registro/controllers/backoffice"
+	"registro/controllers/compta"
 	"registro/crypto"
 	"registro/logic"
 	"registro/utils"
@@ -187,28 +188,11 @@ func (ct *Controller) loggin(host string, id cps.IdCamp, password string) (Loggi
 		if err != nil {
 			return LogginOut{}, err
 		}
-		comptaURL, err := comptaURL(ct.key, host, id)
-		if err != nil {
-			return LogginOut{}, err
-		}
+		comptaURL := compta.DirecteurURL(ct.key, host, id)
 		item := logic.NewCampItem(camp)
 		return LogginOut{true, item, comptaURL, token}, nil
 	}
 	return LogginOut{IsValid: false}, nil
-}
-
-// comptaURL builds the crypted URL for the given camp.
-func comptaURL(key crypto.Encrypter, host string, idCamp cps.IdCamp) (string, error) {
-	type UserKey struct {
-		IsAdmin bool
-		IdCamp  cps.IdCamp
-	}
-	dirKey, err := key.EncryptJSON(UserKey{IsAdmin: false, IdCamp: idCamp})
-	if err != nil {
-		return "", err
-	}
-	url := utils.BuildUrl(host, "compta", utils.QP("key", dirKey))
-	return url, nil
 }
 
 // helpers

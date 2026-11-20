@@ -112,7 +112,16 @@ func (item Dossier) Insert(tx DB) (out Dossier, err error) {
 		) VALUES (
 		$1, $2, $3, $4, $5, $6, $7, $8
 		) RETURNING id, idtaux, idresponsable, copiesmails, partageadressesok, demandefondsoutien, momentinscription, lastloaddocuments, keyv1;
-		`, item.IdTaux, item.IdResponsable, item.CopiesMails, item.PartageAdressesOK, item.DemandeFondSoutien, item.MomentInscription, item.LastLoadDocuments, item.KeyV1)
+		`,
+		item.IdTaux,
+		item.IdResponsable,
+		item.CopiesMails,
+		item.PartageAdressesOK,
+		item.DemandeFondSoutien,
+		item.MomentInscription,
+		item.LastLoadDocuments,
+		item.KeyV1,
+	)
 	return ScanDossier(row)
 }
 
@@ -123,7 +132,17 @@ func (item Dossier) Update(tx DB) (out Dossier, err error) {
 		) = (
 		$1, $2, $3, $4, $5, $6, $7, $8
 		) WHERE id = $9 RETURNING id, idtaux, idresponsable, copiesmails, partageadressesok, demandefondsoutien, momentinscription, lastloaddocuments, keyv1;
-		`, item.IdTaux, item.IdResponsable, item.CopiesMails, item.PartageAdressesOK, item.DemandeFondSoutien, item.MomentInscription, item.LastLoadDocuments, item.KeyV1, item.Id)
+		`,
+		item.IdTaux,
+		item.IdResponsable,
+		item.CopiesMails,
+		item.PartageAdressesOK,
+		item.DemandeFondSoutien,
+		item.MomentInscription,
+		item.LastLoadDocuments,
+		item.KeyV1,
+		item.Id,
+	)
 	return ScanDossier(row)
 }
 
@@ -318,7 +337,16 @@ func (item Paiement) Insert(tx DB) (out Paiement, err error) {
 		) VALUES (
 		$1, $2, $3, $4, $5, $6, $7, $8
 		) RETURNING id, iddossier, isremboursement, montant, payeur, mode, time, label, details;
-		`, item.IdDossier, item.IsRemboursement, item.Montant, item.Payeur, item.Mode, item.Time, item.Label, item.Details)
+		`,
+		item.IdDossier,
+		item.IsRemboursement,
+		item.Montant,
+		item.Payeur,
+		item.Mode,
+		item.Time,
+		item.Label,
+		item.Details,
+	)
 	return ScanPaiement(row)
 }
 
@@ -329,7 +357,17 @@ func (item Paiement) Update(tx DB) (out Paiement, err error) {
 		) = (
 		$1, $2, $3, $4, $5, $6, $7, $8
 		) WHERE id = $9 RETURNING id, iddossier, isremboursement, montant, payeur, mode, time, label, details;
-		`, item.IdDossier, item.IsRemboursement, item.Montant, item.Payeur, item.Mode, item.Time, item.Label, item.Details, item.Id)
+		`,
+		item.IdDossier,
+		item.IsRemboursement,
+		item.Montant,
+		item.Payeur,
+		item.Mode,
+		item.Time,
+		item.Label,
+		item.Details,
+		item.Id,
+	)
 	return ScanPaiement(row)
 }
 
@@ -468,7 +506,11 @@ func (item Taux) Insert(tx DB) (out Taux, err error) {
 		) VALUES (
 		$1, $2, $3
 		) RETURNING id, label, euros, francssuisse;
-		`, item.Label, item.Euros, item.FrancsSuisse)
+		`,
+		item.Label,
+		item.Euros,
+		item.FrancsSuisse,
+	)
 	return ScanTaux(row)
 }
 
@@ -479,7 +521,12 @@ func (item Taux) Update(tx DB) (out Taux, err error) {
 		) = (
 		$1, $2, $3
 		) WHERE id = $4 RETURNING id, label, euros, francssuisse;
-		`, item.Label, item.Euros, item.FrancsSuisse, item.Id)
+		`,
+		item.Label,
+		item.Euros,
+		item.FrancsSuisse,
+		item.Id,
+	)
 	return ScanTaux(row)
 }
 

@@ -2,6 +2,7 @@ import {
   Acteur,
   CurrencyLabels,
   EventContentKind,
+  FileReviewStatus,
   ModePaiement,
   Sexe,
   StatutPaiement,
@@ -293,7 +294,7 @@ export namespace Personnes {
   }
 
   export function prenomN(pr: PersonneLike) {
-    return `${pr.Prenom} ${pr.Nom.substring(0, 1).toUpperCase()}`;
+    return `${pr.Prenom} ${pr.Nom.substring(0, 1).toUpperCase()}.`;
   }
 
   export function match(pr: PersonneLike, normalizedPattern: string) {
@@ -326,7 +327,7 @@ export namespace Formatters {
 
   export function date(
     date: Date_ | Time,
-    showYear = false,
+    showYear: boolean | "short" = false,
     showWeekday = true,
   ) {
     if (isDateZero(date)) {
@@ -334,9 +335,9 @@ export namespace Formatters {
     }
     const da = new Date(date);
     const s = da.toLocaleString(undefined, {
-      year: showYear ? "numeric" : undefined,
+      year: showYear == "short" ? "2-digit" : showYear ? "numeric" : undefined,
       day: "numeric",
-      month: "short",
+      month: showYear == "short" ? "2-digit" : "short",
       // hour: "2-digit",
       // minute: showMinute ? "2-digit" : undefined,
     });
@@ -441,6 +442,17 @@ export namespace Formatters {
         return "orange";
       case FichesanitaireState.UpToDate:
         return "green";
+    }
+  }
+
+  export function reviewStatus(status: FileReviewStatus) {
+    switch (status) {
+      case FileReviewStatus.FileReviewValidated:
+        return { color: "green", icon: "mdi-check" };
+      case FileReviewStatus.FileReviewRejected:
+        return { color: "red", icon: "mdi-close-circle" };
+      default:
+        return { color: "orange", icon: "mdi-clock-outline" };
     }
   }
 

@@ -122,21 +122,22 @@
               <IntField
                 density="compact"
                 variant="outlined"
-                label="Document temporaire"
-                :min="(0 as Int)"
-                suffix="jours"
-                v-model="toEdit.Demande.JoursValide"
-                hint="Nombre de jours de validité (0 pour un document permanent)"
-              ></IntField>
-            </v-col>
-            <v-col>
-              <IntField
-                density="compact"
-                variant="outlined"
                 label="Nombre maximum de fichiers"
                 v-model="toEdit.Demande.MaxDocs"
                 hint="Limite le nombre de fichiers pouvant être déposés."
               ></IntField>
+            </v-col>
+          </v-row>
+          <v-row>
+            <v-col>
+              <v-select
+                density="compact"
+                variant="outlined"
+                label="Nationnalité du participant"
+                v-model="toEdit.Demande.Nationnalite"
+                :items="selectItems(NationnaliteCibleLabels)"
+                hint="Demande le document en fonction de la nationnalité."
+              ></v-select>
             </v-col>
           </v-row>
         </v-card-text>
@@ -194,16 +195,17 @@
 <script lang="ts" setup>
 import { computed, nextTick, ref, useTemplateRef } from "vue";
 import { controller } from "../../logic/logic";
-import type {
-  Demande,
-  DemandeDirecteur,
-  IdDemande,
-  IdFile,
-  Int,
-  PublicFile,
-  Time,
+import {
+  NationnaliteCibleLabels,
+  type Demande,
+  type DemandeDirecteur,
+  type IdDemande,
+  type IdFile,
+  type Int,
+  type PublicFile,
+  type Time,
 } from "../../logic/api";
-import { copy } from "@/utils";
+import { copy, selectItems } from "@/utils";
 
 const props = defineProps<{
   availableDemandes: DemandeDirecteur[];
@@ -288,6 +290,7 @@ async function deleteFile() {
       NomClient: "",
       Taille: 0 as Int,
       Uploaded: "" as Time,
+      ReviewStatus: 0,
     } satisfies PublicFile,
   });
 }

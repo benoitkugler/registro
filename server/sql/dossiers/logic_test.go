@@ -12,8 +12,11 @@ func TestTaux_String(t *testing.T) {
 	tu.Assert(t, Taux{Euros: 1000}.String() == "")
 	fmt.Println(Taux{Euros: 1000, FrancsSuisse: 800}.String())
 	fmt.Println(Taux{Euros: 1000, FrancsSuisse: 1106}.String())
-	// tu.Assert(t, Taux{Euros: 1000, FrancsSuisse: 800}.Zero().Currency == Euros)
-	// tu.Assert(t, Taux{Euros: 1000, FrancsSuisse: 1106}.Zero().Currency == FrancsSuisse)
+}
+
+func TestTaux_Zero(t *testing.T) {
+	tu.Assert(t, Taux{Euros: 1000, FrancsSuisse: 800}.Zero().Currency == Euros)
+	tu.Assert(t, Taux{Euros: 1000, FrancsSuisse: 1106}.Zero().Currency == FrancsSuisse)
 }
 
 func TestMontantTaux_Add(t *testing.T) {
@@ -183,4 +186,15 @@ func TestMultiCurrencies_String(t *testing.T) {
 	} {
 		tu.Assert(t, test.m.String() == test.expected)
 	}
+}
+
+func TestMultiCurrencies_Agg(t *testing.T) {
+	taux1 := Taux{Euros: 1000}
+	tu.Assert(t, MultiCurrencies{}.Agg(taux1) == NewEuros(0))
+	tu.Assert(t, MultiCurrencies{500}.Agg(taux1) == NewEuros(5))
+
+	taux2 := Taux{Euros: 1000, FrancsSuisse: 2000}
+	tu.Assert(t, MultiCurrencies{}.Agg(taux2) == NewFrancsuisses(0))
+	tu.Assert(t, MultiCurrencies{600}.Agg(taux2) == NewFrancsuisses(3))
+	tu.Assert(t, MultiCurrencies{600, 1000}.Agg(taux2) == NewFrancsuisses(13))
 }

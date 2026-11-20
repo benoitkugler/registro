@@ -28,7 +28,7 @@
         <v-col align-self="end" cols="auto">
           <v-tooltip
             v-if="props.participant.HasBirthday"
-            :text="`${props.participant.Personne.Prenom} a son anniveraire pendant le séjour !`"
+            :text="`${props.participant.Personne.Prenom} a son anniversaire pendant le séjour !`"
           >
             <template #activator="{ props }">
               <v-icon v-bind="props" color="pink">mdi-cake-variant</v-icon>

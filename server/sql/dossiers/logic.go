@@ -37,6 +37,9 @@ func (m Montant) String() string {
 	}
 }
 
+// MultiCurrency returns true if currencies other than Euros are supported.
+func (ts Taux) MultiCurrency() bool { return ts.Has(FrancsSuisse) }
+
 // Has returns 'true' is the taux is able to handle the
 // given [currency]
 func (ts Taux) Has(currency Currency) bool {
@@ -130,7 +133,33 @@ func (m MontantTaux) String() string {
 // typiquement utile pour des totaux.
 type MultiCurrencies [nbCurrencies]int
 
-func (mc *MultiCurrencies) Add(v Montant) { mc[v.Currency] += v.Cent }
+func (mc *MultiCurrencies) AddM(v Montant) { mc[v.Currency] += v.Cent }
+
+// Add renvoie [mc] + [other]
+func (mc MultiCurrencies) Add(other MultiCurrencies) MultiCurrencies {
+	return [...]int{mc[0] + other[0], mc[1] + other[1]}
+}
+
+// Sub renvoie [mc] - [other]
+func (mc MultiCurrencies) Sub(other MultiCurrencies) MultiCurrencies {
+	return [...]int{mc[0] - other[0], mc[1] - other[1]}
+}
+
+func (mc MultiCurrencies) Agg(taux Taux) Montant {
+	out := taux.Zero()
+	for cur, cent := range mc {
+		out.Add(Montant{cent, Currency(cur)})
+	}
+	return out.Montant
+}
+
+func (mc MultiCurrencies) AggTo(taux Taux, c Currency) int {
+	out := taux.Zero()
+	for cur, cent := range mc {
+		out.Add(Montant{cent, Currency(cur)})
+	}
+	return out.Convert(c).Cent
+}
 
 func (mc MultiCurrencies) String() string {
 	chunks := make([]string, 0, len(mc))

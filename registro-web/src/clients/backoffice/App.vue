@@ -82,6 +82,14 @@ router.beforeEach(async (to, from) => {
       controller.showMessage("Bienvenue !");
       if (to.path == "/") {
         // we are on the loggin page, dont stay here !
+        const redirect = to.query.redirect;
+        if (
+          typeof redirect === "string" &&
+          redirect.startsWith("/") &&
+          !redirect.startsWith("//")
+        ) {
+          return redirect;
+        }
         return { path: "/inscriptions" };
       } else {
         return; // do not redirect to login page
@@ -90,8 +98,8 @@ router.beforeEach(async (to, from) => {
   }
 
   if (to.path !== "/") {
-    // redirect the user to the login page
-    return { path: "/" };
+    // redirect the user to the login page, keeping the requested destination
+    return { path: "/", query: { redirect: to.fullPath } };
   }
 });
 </script>

@@ -20,6 +20,11 @@ export interface NullBool {
   Bool: boolean;
   Valid: boolean;
 }
+// registro/config.AskedDocs
+export interface AskedDocs {
+  FicheSanitaireMajeurs: boolean;
+  CarteId: boolean;
+}
 // registro/controllers/backoffice.SendProgress
 export interface SendProgress {
   Current: Int;
@@ -67,6 +72,7 @@ export interface DemandesOut {
 export interface DocumentsOut {
   Ready: boolean;
   ToShow: DocumentsToShow;
+  AskedDocs: AskedDocs;
   FilesToDownload: PublicFile[] | null;
   CampDemandes: DemandeDirecteur[] | null;
   HasLettre: boolean;
@@ -168,6 +174,19 @@ export interface Messages {
   Messages: EventExt_MessageEvt[] | null;
   Dossiers: Record<IdDossier, DossierPersonnes> | null;
   NewMessagesCount: Int;
+  ComptaContactLabel: string;
+  ComptaContactMail: string;
+}
+// registro/controllers/directeurs.NotifieComptableIn
+export interface NotifieComptableIn {
+  IdDossier: IdDossier;
+}
+// registro/controllers/directeurs.ParticipantFileReviewIn
+export interface ParticipantFileReviewIn {
+  IdParticipant: IdParticipant;
+  IdFile: OptID_IdFile;
+  Accepted: boolean;
+  Reason: string;
 }
 // registro/controllers/directeurs.ParticipantsOut
 export interface ParticipantsOut {
@@ -186,6 +205,25 @@ export interface PhotosInviteIn {
   ToResponsables: boolean;
   ToEquipiers: boolean;
 }
+// registro/controllers/directeurs.ReviewFileOut
+export interface ReviewFileOut {
+  Notif: ReviewNotif;
+  Files: ParticipantFiles;
+}
+// registro/controllers/directeurs.ReviewNotif
+export const ReviewNotif = {
+  NoOp: 0,
+  RejectionMailSent: 1,
+  CompletionMailSent: 2,
+} as const;
+export type ReviewNotif = (typeof ReviewNotif)[keyof typeof ReviewNotif];
+
+export const ReviewNotifLabels: Record<ReviewNotif, string> = {
+  [ReviewNotif.NoOp]: "",
+  [ReviewNotif.RejectionMailSent]: "",
+  [ReviewNotif.CompletionMailSent]: "",
+};
+
 // registro/controllers/directeurs.UpdateFinsIn
 export interface UpdateFinsIn {
   Fins: Record<IdGroupe, Date> | null;
@@ -195,8 +233,12 @@ export interface UpdateFinsIn {
 export interface ParticipantFiles {
   Id: IdParticipant;
   Personne: string;
-  Fichesanitaire: FichesanitaireState;
+  FicheSanitaireRequired: boolean;
+  FichesanitaireValid: boolean;
+  Fichesanitaire: Fichesanitaire;
+  DemandesRequired: Record<IdDemande, boolean> | null;
   Files: Record<IdDemande, PublicFile[] | null> | null;
+  IsComplete: boolean;
 }
 // registro/controllers/files.ParticipantsFiles
 export interface ParticipantsFiles {
@@ -279,6 +321,7 @@ export interface PublicFile {
   Taille: Int;
   NomClient: string;
   Uploaded: Time;
+  ReviewStatus: FileReviewStatus;
 }
 // registro/logic.SondageExt
 export interface SondageExt {
@@ -363,6 +406,8 @@ export interface Camp {
   Meta: Meta;
   IsAlbumVisible: boolean;
   PlacesReservees: Int;
+  HoraireDebut: Horaire;
+  HoraireFin: Horaire;
 }
 // registro/sql/camps.CauseAge
 export interface CauseAge {
@@ -457,6 +502,12 @@ export interface GroupeParticipant {
 }
 // registro/sql/camps.Groupes
 export type Groupes = Record<IdGroupe, Groupe> | null;
+// registro/sql/camps.Horaire
+export interface Horaire {
+  Valid: boolean;
+  Heure: Int;
+  Minute: Int;
+}
 export type IdCamp = Int & { __opaque_int__: "IdCamp" };
 export type IdEquipier = Int & { __opaque_int__: "IdEquipier" };
 export type IdForm = Int & { __opaque_int__: "IdForm" };
@@ -842,22 +893,37 @@ export interface Demande {
   Categorie: Categorie;
   Description: string;
   MaxDocs: Int;
-  JoursValide: Int;
+  Nationnalite: NationnaliteCible;
 }
 // registro/sql/files.Demandes
 export type Demandes = Record<IdDemande, Demande> | null;
 export type IdDemande = Int & { __opaque_int__: "IdDemande" };
 export type IdFile = Int & { __opaque_int__: "IdFile" };
+// registro/sql/files.NationnaliteCible
+export const NationnaliteCible = {
+  Both: 0,
+  OnlyCh: 1,
+  OnlyFr: 2,
+} as const;
+export type NationnaliteCible =
+  (typeof NationnaliteCible)[keyof typeof NationnaliteCible];
+
+export const NationnaliteCibleLabels: Record<NationnaliteCible, string> = {
+  [NationnaliteCible.Both]: "Toutes",
+  [NationnaliteCible.OnlyCh]: "Suisse seulement",
+  [NationnaliteCible.OnlyFr]: "Française seulement",
+};
+
 // registro/sql/personnes.Fichesanitaire
 export interface Fichesanitaire {
   IdPersonne: IdPersonne;
   DifficultesSante: string;
   AllergiesAlimentaires: string;
   TraitementMedical: string;
-  Medecin: NomTel;
   AutreContact: NomTel;
   Modified: Time;
   Owners: Mails;
+  ReviewStatus: FileReviewStatus;
 }
 // registro/sql/personnes.FichesanitaireState
 export const FichesanitaireState = {
@@ -872,6 +938,21 @@ export const FichesanitaireStateLabels: Record<FichesanitaireState, string> = {
   [FichesanitaireState.NoFiche]: "Vide",
   [FichesanitaireState.Outdated]: "Pas à jour",
   [FichesanitaireState.UpToDate]: "Remplie",
+};
+
+// registro/sql/personnes.FileReviewStatus
+export const FileReviewStatus = {
+  FileReviewPending: 0,
+  FileReviewValidated: 1,
+  FileReviewRejected: 2,
+} as const;
+export type FileReviewStatus =
+  (typeof FileReviewStatus)[keyof typeof FileReviewStatus];
+
+export const FileReviewStatusLabels: Record<FileReviewStatus, string> = {
+  [FileReviewStatus.FileReviewPending]: "En attente",
+  [FileReviewStatus.FileReviewValidated]: "Validé",
+  [FileReviewStatus.FileReviewRejected]: "Refusé",
 };
 
 export type IdPersonne = Int & { __opaque_int__: "IdPersonne" };
@@ -905,6 +986,7 @@ export interface Personne {
   Publicite: Publicite;
   CharteAccepted: Time;
   IsTemp: boolean;
+  SecuriteSociale: string;
 }
 // registro/sql/personnes.Publicite
 export interface Publicite {
@@ -1196,6 +1278,23 @@ export abstract class AbstractAPI {
     }
   }
 
+  /** ParticipantsReviewFile performs the request and handles the error */
+  async ParticipantsReviewFile(params: ParticipantFileReviewIn) {
+    const fullUrl =
+      this.baseURL + "/api/v1/directeurs/participants/review-file";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<ReviewFileOut> = await Axios.post(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
   /** ParticipantsRelanceDocuments performs the request and handles the error */
   async ParticipantsRelanceDocuments(params: IdParticipant[] | null) {
     const fullUrl =
@@ -1370,6 +1469,20 @@ export abstract class AbstractAPI {
         },
       );
       return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** ParticipantsNotifieComptable performs the request and handles the error */
+  async ParticipantsNotifieComptable(params: NotifieComptableIn) {
+    const fullUrl =
+      this.baseURL +
+      "/api/v1/directeurs/participants/messages/notifie-comptable";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
     } catch (error) {
       this.handleError(error);
     }

@@ -1,0 +1,27 @@
+{{ define "content" }}
+<table cellpadding="0">
+  <tr>
+    <td>
+        {{ if .Document.IsFicheSanitaire }}
+        La fiche sanitaire, transmise 
+        {{ else }}
+        Le document « {{ .Document.FileName }} » pour la catégorie « {{ .Document.DemandeTitle }} », transmis
+        {{ end }}
+        pour {{ .Participant }} pour le séjour {{ .CampLabel }}, doit être
+        {{ if .Document.IsFicheSanitaire }}
+        corrigée.
+        {{ else }}
+        remplacé. 
+        {{ end }}
+        {{ if .Reason }}
+        <br />
+        Motif : {{ .Reason }} {{ end }}
+        <br />
+        Vous pouvez déposer un nouveau document depuis votre espace personnel.
+    </td>
+  </tr>
+  <tr>
+    <td>{{ template "espacePersoButton" . }}</td>
+  </tr>
+</table>
+{{ end }}

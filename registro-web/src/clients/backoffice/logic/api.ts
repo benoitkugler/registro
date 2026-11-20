@@ -482,6 +482,7 @@ export interface PublicFile {
   Taille: Int;
   NomClient: string;
   Uploaded: Time;
+  ReviewStatus: FileReviewStatus;
 }
 // registro/logic.PublicParticipantCamp
 export interface PublicParticipantCamp {
@@ -600,6 +601,8 @@ export interface Camp {
   Meta: Meta;
   IsAlbumVisible: boolean;
   PlacesReservees: Int;
+  HoraireDebut: Horaire;
+  HoraireFin: Horaire;
 }
 // registro/sql/camps.CampExt
 export interface CampExt {
@@ -648,6 +651,12 @@ export const FormStatusEquipierLabels: Record<FormStatusEquipier, string> = {
   [FormStatusEquipier.Answered]: "Répondu",
 };
 
+// registro/sql/camps.Horaire
+export interface Horaire {
+  Valid: boolean;
+  Heure: Int;
+  Minute: Int;
+}
 export type IdAide = Int & { __opaque_int__: "IdAide" };
 export type IdCamp = Int & { __opaque_int__: "IdCamp" };
 export type IdEquipier = Int & { __opaque_int__: "IdEquipier" };
@@ -1074,11 +1083,26 @@ export interface Fichesanitaire {
   DifficultesSante: string;
   AllergiesAlimentaires: string;
   TraitementMedical: string;
-  Medecin: NomTel;
   AutreContact: NomTel;
   Modified: Time;
   Owners: Mails;
+  ReviewStatus: FileReviewStatus;
 }
+// registro/sql/personnes.FileReviewStatus
+export const FileReviewStatus = {
+  FileReviewPending: 0,
+  FileReviewValidated: 1,
+  FileReviewRejected: 2,
+} as const;
+export type FileReviewStatus =
+  (typeof FileReviewStatus)[keyof typeof FileReviewStatus];
+
+export const FileReviewStatusLabels: Record<FileReviewStatus, string> = {
+  [FileReviewStatus.FileReviewPending]: "En attente",
+  [FileReviewStatus.FileReviewValidated]: "Validé",
+  [FileReviewStatus.FileReviewRejected]: "Refusé",
+};
+
 export type IdPersonne = Int & { __opaque_int__: "IdPersonne" };
 // registro/sql/personnes.Mails
 export type Mails = string[] | null;
@@ -1110,6 +1134,7 @@ export interface Personne {
   Publicite: Publicite;
   CharteAccepted: Time;
   IsTemp: boolean;
+  SecuriteSociale: string;
 }
 // registro/sql/personnes.Publicite
 export interface Publicite {
@@ -1805,6 +1830,21 @@ export abstract class AbstractAPI {
     this.startRequest();
     try {
       await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** DossierSolde performs the request and handles the error */
+  async DossierSolde(params: { id: IdDossier }) {
+    const fullUrl = this.baseURL + "/api/v1/backoffice/dossiers/solde";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, null, {
+        headers: this.getHeaders(),
+        params: { id: String(params["id"]) },
+      });
       return true;
     } catch (error) {
       this.handleError(error);

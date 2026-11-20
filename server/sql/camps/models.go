@@ -82,6 +82,8 @@ type Camp struct {
 	// PlacesReservees influence le calcul du nombre de
 	// places restantes.
 	PlacesReservees int
+
+	HoraireDebut, HoraireFin Horaire
 }
 
 // ProjetSpi est une extension de la table [Camp],

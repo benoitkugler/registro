@@ -81,6 +81,12 @@
                 @click="goToPersonne(p.Personne.Id)"
               ></v-list-item>
               <v-list-item
+                title="Aller à l'inscription"
+                :subtitle="`(ID : ${p.Participant.IdDossier})`"
+                @click="goToInscription(p.Participant.IdDossier)"
+                :disabled="p.Participant.Statut != StatutParticipant.AStatuer"
+              ></v-list-item>
+              <v-list-item
                 title="Aller au dossier"
                 :subtitle="`(ID : ${p.Participant.IdDossier})`"
                 @click="goToDossier(p.Participant.IdDossier)"
@@ -251,6 +257,7 @@ import {
 import { Camps, copy, Participants, Personnes } from "@/utils";
 import {
   goToDossier,
+  goToInscription,
   goToParticipant,
   goToPersonne,
 } from "../../plugins/router";

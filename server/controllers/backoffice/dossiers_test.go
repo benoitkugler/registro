@@ -343,3 +343,38 @@ func TestEstimeRemises(t *testing.T) {
 	err = ct.applyRemises(out[1:2])
 	tu.AssertNoErr(t, err)
 }
+
+func TestController_soldeDossier(t *testing.T) {
+	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
+		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",
+		"../../migrations/init.sql")
+	defer db.Remove()
+
+	pe1, err := pr.Personne{IsTemp: false, Identite: pr.Identite{DateNaissance: shared.Date(time.Now())}}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	dossier1, err := ds.Dossier{IdResponsable: pe1.Id, IdTaux: 1, MomentInscription: time.Now()}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	ct := Controller{db: db.DB, files: fs.NewFileSystem(t.TempDir())}
+	camp1, err := ct.createCamp("localhost")
+	tu.AssertNoErr(t, err)
+	part, err := ct.createParticipant(ParticipantsCreateIn{IdDossier: dossier1.Id, IdCamp: camp1.Camp.Camp.Id, IdPersonne: pe1.Id})
+	tu.AssertNoErr(t, err)
+
+	// start with non empty remise
+	part.Participant.Statut = cps.Inscrit
+	part.Participant.Remises.Speciale = cps.Montant{Currency: ds.FrancsSuisse, Cent: 200}
+	_, err = part.Participant.Update(ct.db)
+	tu.AssertNoErr(t, err)
+
+	bilan, err := logic.LoadDossiersFinance(ct.db, dossier1.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, !bilan.Bilan().IsAcquitte()) // default camp prix is 100€
+
+	err = ct.soldeDossier(dossier1.Id)
+	tu.AssertNoErr(t, err)
+	bilan, err = logic.LoadDossiersFinance(ct.db, dossier1.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, bilan.Bilan().IsAcquitte() && bilan.Bilan().ApresPaiement().Cent == 0)
+}

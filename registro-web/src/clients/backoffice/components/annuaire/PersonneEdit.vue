@@ -95,13 +95,17 @@
           </v-col>
           <v-col>
             <TelsField label="Téléphone" v-model="inner.Tels"></TelsField>
-            <!-- <StringList
-              label="Téléphone"
-              v-model="inner.Tels"
-              :formatter="
-                inner.Pays == 'CH' ? Formatters.telCh : Formatters.telFr
-              "
-            ></StringList> -->
+          </v-col>
+        </v-row>
+        <v-row>
+          <v-col>
+            <v-text-field
+              hide-details
+              label="Sécurité sociale/AVS"
+              density="compact"
+              variant="outlined"
+              v-model="inner.SecuriteSociale"
+            ></v-text-field>
           </v-col>
         </v-row>
       </v-form>

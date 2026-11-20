@@ -40,6 +40,14 @@ CREATE TYPE DocumentsToShow AS (
     CharteParticipant boolean
 );
 
+DROP TYPE IF EXISTS Horaire;
+
+CREATE TYPE Horaire AS (
+    Valid boolean,
+    Heure smallint,
+    Minute smallint
+);
+
 DROP TYPE IF EXISTS PresenceOffsets;
 
 CREATE TYPE PresenceOffsets AS (
@@ -49,7 +57,6 @@ CREATE TYPE PresenceOffsets AS (
 
 CREATE TABLE ficheequipiers (
     IdPersonne integer NOT NULL,
-    SecuriteSociale text NOT NULL,
     Diplome smallint CHECK (Diplome IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24)) NOT NULL,
     Formation text NOT NULL,
     Fonctionnaire boolean NOT NULL,
@@ -74,11 +81,11 @@ CREATE TABLE fichesanitaires (
     DifficultesSante text NOT NULL,
     AllergiesAlimentaires text NOT NULL,
     TraitementMedical text NOT NULL,
-    Medecin jsonb NOT NULL,
     AutreContact jsonb NOT NULL,
     Modified timestamp(0) with time zone NOT NULL,
     Owners text[],
-    guard boolean NOT NULL
+    guard boolean NOT NULL,
+    ReviewStatus smallint CHECK (ReviewStatus IN (0, 1, 2)) NOT NULL
 );
 
 CREATE TABLE personnes (
@@ -96,7 +103,8 @@ CREATE TABLE personnes (
     Pays text NOT NULL,
     Publicite Publicite NOT NULL,
     CharteAccepted timestamp(0) with time zone NOT NULL,
-    IsTemp boolean NOT NULL
+    IsTemp boolean NOT NULL,
+    SecuriteSociale text NOT NULL
 );
 
 CREATE TABLE dossiers (
@@ -167,7 +175,9 @@ CREATE TABLE camps (
     AlbumID text NOT NULL,
     Meta jsonb NOT NULL,
     IsAlbumVisible boolean NOT NULL,
-    PlacesReservees integer NOT NULL
+    PlacesReservees integer NOT NULL,
+    HoraireDebut Horaire NOT NULL,
+    HoraireFin Horaire NOT NULL
 );
 
 CREATE TABLE equipiers (
@@ -283,7 +293,7 @@ CREATE TABLE demandes (
     Categorie smallint CHECK (Categorie IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)) NOT NULL,
     Description text NOT NULL,
     MaxDocs integer NOT NULL,
-    JoursValide integer NOT NULL
+    Nationnalite smallint CHECK (Nationnalite IN (0, 1, 2)) NOT NULL
 );
 
 CREATE TABLE demande_camps (
@@ -301,7 +311,8 @@ CREATE TABLE files (
     Id serial PRIMARY KEY,
     Taille integer NOT NULL,
     NomClient text NOT NULL,
-    Uploaded timestamp(0) with time zone NOT NULL
+    Uploaded timestamp(0) with time zone NOT NULL,
+    ReviewStatus smallint CHECK (ReviewStatus IN (0, 1, 2)) NOT NULL
 );
 
 CREATE TABLE file_aides (
@@ -437,5 +448,81 @@ CREATE TABLE organismes (
     CodePostal text NOT NULL,
     Ville text NOT NULL,
     Pays text NOT NULL
+);
+
+CREATE TABLE compta_budgets (
+    IdCompta integer NOT NULL,
+    SimulatedInscrits integer NOT NULL,
+    SimulatedEquipiers integer NOT NULL,
+    StartMealInscrits smallint CHECK (StartMealInscrits IN (0, 1, 2, 3, 4)) NOT NULL,
+    EndMealInscrits smallint CHECK (EndMealInscrits IN (0, 1, 2, 3, 4)) NOT NULL,
+    StartMealEquipiers smallint CHECK (StartMealEquipiers IN (0, 1, 2, 3, 4)) NOT NULL,
+    EndMealEquipiers smallint CHECK (EndMealEquipiers IN (0, 1, 2, 3, 4)) NOT NULL,
+    OffsetStartMealEquipiers integer NOT NULL,
+    OffsetEndMealEquipiers integer NOT NULL,
+    ExternalHost jsonb NOT NULL,
+    Activities jsonb NOT NULL,
+    MaterielPeda Montant NOT NULL,
+    ProduitPharma Montant NOT NULL,
+    TeamTrips Montant NOT NULL,
+    ExternalCarRent Montant NOT NULL,
+    AssoCarKms integer[] CHECK (array_length(AssoCarKms, 1) = 3) NOT NULL
+);
+
+CREATE TABLE compta_camps (
+    Id serial PRIMARY KEY,
+    IdCamp integer NOT NULL,
+    FileStatus smallint CHECK (FileStatus IN (0, 1, 2)) NOT NULL,
+    State smallint CHECK (State IN (0, 1, 2, 3)) NOT NULL,
+    LastSentMailAdmin timestamp(0) with time zone NOT NULL,
+    LastSentMailDirecteur timestamp(0) with time zone NOT NULL,
+    Account smallint CHECK (Account IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)) NOT NULL,
+    FraisMDR jsonb NOT NULL
+);
+
+CREATE TABLE compta_configs (
+    Id serial PRIMARY KEY,
+    Year integer NOT NULL,
+    MealsCost integer[] CHECK (array_length(MealsCost, 1) = 5) NOT NULL,
+    SmallMealThreshold integer NOT NULL,
+    SmallMealMajoration integer NOT NULL,
+    AssoCars integer[] CHECK (array_length(AssoCars, 1) = 3) NOT NULL,
+    ChauffageMDR integer NOT NULL,
+    EntretienMDR integer NOT NULL,
+    MaterielMDR integer NOT NULL
+);
+
+CREATE TABLE compta_files (
+    Id serial PRIMARY KEY,
+    Name text NOT NULL,
+    DriveID text NOT NULL,
+    DriveIDMiniature text NOT NULL
+);
+
+CREATE TABLE compta_records (
+    Id serial PRIMARY KEY,
+    IdCamp integer NOT NULL,
+    IsReceipe boolean NOT NULL,
+    SpentBy integer,
+    Reviews jsonb NOT NULL,
+    IsValidated boolean NOT NULL,
+    Account smallint CHECK (Account IN (0, 1)) NOT NULL
+);
+
+CREATE TABLE compta_record_buss (
+    IdCamp integer NOT NULL,
+    IdSubrecord integer NOT NULL
+);
+
+CREATE TABLE compta_subrecords (
+    Id serial PRIMARY KEY,
+    IdRecord integer NOT NULL,
+    Date date NOT NULL,
+    Description text NOT NULL,
+    Mode smallint CHECK (Mode IN (0, 1, 2, 3, 4)) NOT NULL,
+    Serial text NOT NULL,
+    Currency smallint CHECK (Currency IN (0, 1)) NOT NULL,
+    Montants jsonb NOT NULL,
+    IdFile integer
 );
 

@@ -898,6 +898,52 @@ func (ct *Controller) previewRelancePaiement(idCamp cps.IdCamp) ([]PreviewRelanc
 	return out, nil
 }
 
+func (ct *Controller) DossierSolde(c echo.Context) error {
+	id, err := utils.QueryParamInt[ds.IdDossier](c, "id")
+	if err != nil {
+		return err
+	}
+	err = ct.soldeDossier(id)
+	if err != nil {
+		return err
+	}
+	return c.NoContent(200)
+}
+
+func oneInscrit(d logic.Dossier) (cps.Participant, bool) {
+	for _, part := range d.Participants {
+		if part.Statut == cps.Inscrit {
+			return part, true
+		}
+	}
+	return cps.Participant{}, false
+}
+
+// adjust special remise to sold the invoice out
+func (ct *Controller) soldeDossier(id ds.IdDossier) error {
+	dossier, err := logic.LoadDossiersFinance(ct.db, id)
+	if err != nil {
+		return err
+	}
+	// attribute all the remise to one inscrit
+	// be careful with Currency : it may not match
+	part, ok := oneInscrit(dossier.Dossier)
+	if !ok {
+		return errors.New("le dossier ne contient aucun inscrit")
+	}
+	// reset the remise speciale, if any
+	part.Remises.Speciale = ds.Montant{}
+	dossier.Participants[part.Id] = part
+
+	toPay := dossier.Bilan().ApresPaiement()
+	part.Remises.Speciale = toPay
+	_, err = part.Update(ct.db)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	return nil
+}
+
 type RemisesHintIn struct {
 	IdCamps []cps.IdCamp
 }

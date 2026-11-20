@@ -7,6 +7,7 @@ import (
 	"iter"
 	"slices"
 
+	"registro/config"
 	"registro/controllers/backoffice"
 	fsAPI "registro/controllers/files"
 	"registro/generators/pdfcreator"
@@ -24,8 +25,9 @@ import (
 var errNoDir = errors.New("Aucun directeur n'est déclaré pour ce camp !")
 
 type DocumentsOut struct {
-	Ready  bool
-	ToShow cps.DocumentsToShow
+	Ready     bool
+	ToShow    cps.DocumentsToShow
+	AskedDocs config.AskedDocs
 	// à télécharger (n'inclut pas la lettre)
 	FilesToDownload []logic.PublicFile
 	CampDemandes    []DemandeDirecteur
@@ -91,8 +93,9 @@ func (ct *Controller) getDocuments(id cps.IdCamp) (DocumentsOut, error) {
 	}
 
 	out := DocumentsOut{
-		Ready:  camp.DocumentsReady,
-		ToShow: camp.DocumentsToShow,
+		Ready:     camp.DocumentsReady,
+		ToShow:    camp.DocumentsToShow,
+		AskedDocs: ct.asso.AskedDocs,
 	}
 	for _, link := range toDownload {
 		if link.IsLettre {
@@ -285,7 +288,6 @@ func (ct *Controller) createDemande(id cps.IdCamp) (DemandeDirecteur, error) {
 		IdDirecteur: directeur.Id.Opt(),
 		Categorie:   fs.NoBuiltin,
 		MaxDocs:     1,
-		JoursValide: 0,
 	}.Insert(ct.db)
 	if err != nil {
 		return DemandeDirecteur{}, utils.SQLError(err)
@@ -332,7 +334,7 @@ func (ct *Controller) updateDemande(id cps.IdCamp, args fs.Demande) error {
 	}
 	demande.Description = args.Description
 	demande.MaxDocs = args.MaxDocs
-	demande.JoursValide = args.JoursValide
+	demande.Nationnalite = args.Nationnalite
 	_, err = demande.Update(ct.db)
 	if err != nil {
 		return utils.SQLError(err)
@@ -458,11 +460,152 @@ func (ct *Controller) ParticipantsLoadFiles(c echo.Context) error {
 }
 
 func (ct *Controller) loadParticipantsFiles(id cps.IdCamp) (fsAPI.ParticipantsFiles, error) {
-	loader, err := fsAPI.LoadParticipantsFiles(ct.db, ct.key, []cps.IdCamp{id})
+	loader, err := fsAPI.LoadParticipantsFiles(ct.db, ct.key, []cps.IdCamp{id}, ct.asso.AskedDocs)
 	if err != nil {
 		return fsAPI.ParticipantsFiles{}, err
 	}
 	return loader.For(id), nil
+}
+
+type ParticipantFileReviewIn struct {
+	IdParticipant cps.IdParticipant
+
+	IdFile fs.OptIdFile // If null, this means Fichesanitaire
+
+	Accepted bool
+	Reason   string
+}
+
+func (ct *Controller) ParticipantsReviewFile(c echo.Context) error {
+	user := JWTUser(c)
+	var args ParticipantFileReviewIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+	out, err := ct.reviewParticipantFile(c.Request().Host, user, args)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
+type ReviewFileOut struct {
+	Notif ReviewNotif
+	Files fsAPI.ParticipantFiles
+}
+
+type ReviewNotif uint8
+
+const (
+	NoOp ReviewNotif = iota
+	RejectionMailSent
+	CompletionMailSent
+)
+
+func (ct *Controller) reviewParticipantFile(host string, idCamp cps.IdCamp, args ParticipantFileReviewIn) (ReviewFileOut, error) {
+	participant, err := cps.SelectParticipant(ct.db, args.IdParticipant)
+	if err != nil {
+		return ReviewFileOut{}, utils.SQLError(err)
+	}
+	if participant.IdCamp != idCamp {
+		return ReviewFileOut{}, errors.New("inconsistent idParticipant")
+	}
+
+	before, err := ct.loadParticipantsFiles(idCamp)
+	if err != nil {
+		return ReviewFileOut{}, err
+	}
+	filesBefore := before.GetParticipant(args.IdParticipant)
+	wasComplete := filesBefore.IsComplete
+
+	status := pr.FileReviewRejected
+	if args.Accepted {
+		status = pr.FileReviewValidated
+	}
+	// handle file or fiche sanitaire
+	var docContext mails.DocumentContext
+	if args.IdFile.Valid { // "regular" file
+		idFile := args.IdFile.Id
+		file, idTarget := filesBefore.GetFile(idFile)
+
+		file.ReviewStatus = status
+		_, err = file.Update(ct.db)
+		if err != nil {
+			return ReviewFileOut{}, utils.SQLError(err)
+		}
+		demande := before.Demandes[idTarget]
+		docContext = mails.DocumentContext{DemandeTitle: demande.Title(), FileName: file.NomClient}
+	} else { // fiche sanitaire
+		filesBefore.Fichesanitaire.ReviewStatus = status
+		err = utils.InTx(ct.db, func(tx *sql.Tx) error {
+			_, err = pr.DeleteFichesanitairesByIdPersonnes(tx, participant.IdPersonne)
+			if err != nil {
+				return err
+			}
+			err = filesBefore.Fichesanitaire.Insert(tx)
+			return err
+		})
+		if err != nil {
+			return ReviewFileOut{}, err
+		}
+		docContext = mails.DocumentContext{IsFicheSanitaire: true}
+	}
+
+	after, err := ct.loadParticipantsFiles(idCamp)
+	if err != nil {
+		return ReviewFileOut{}, err
+	}
+	filesAfter := after.GetParticipant(args.IdParticipant)
+	isComplete := filesAfter.IsComplete
+
+	// notify either on rejection or when a non complete participant is now complet
+	var action ReviewNotif
+	if !args.Accepted {
+		action = RejectionMailSent
+	} else if !wasComplete && isComplete {
+		action = CompletionMailSent
+	}
+	if action != NoOp {
+		err = ct.sendParticipantFileReviewEmails(host, idCamp, participant, docContext, args.Reason, action)
+	}
+	return ReviewFileOut{action, filesAfter}, err
+}
+
+func (ct *Controller) sendParticipantFileReviewEmails(host string, idCamp cps.IdCamp, participant cps.Participant, context mails.DocumentContext, reason string, action ReviewNotif) error {
+	dossier, err := logic.LoadDossier(ct.db, participant.IdDossier)
+	if err != nil {
+		return err
+	}
+	responsable := dossier.Responsable()
+	participantP := dossier.PersonneFor(participant)
+	camp := dossier.Camps()[idCamp]
+	mailer := mails.NewMailer(ct.smtp, ct.asso.MailsSettings)
+
+	var ccs []string
+	if participantP.Mail != "" && participantP.Mail != responsable.Mail {
+		ccs = append(ccs, participantP.Mail)
+	}
+	if action == RejectionMailSent {
+		url := logic.EspacePersoURL(ct.key, host, dossier.Dossier.Id, utils.QP("origine", "document-refuse"))
+		html, err := mails.NotifieDocumentRefuse(ct.asso, mails.NewContact(&responsable), camp.Label(), participantP.PrenomN(),
+			context, reason, url)
+		if err != nil {
+			return err
+		}
+		if err := mailer.SendMail(responsable.Mail, fmt.Sprintf("Document à remplacer - %s", camp.Label()), html, ccs, nil); err != nil {
+			return err
+		}
+	} else if action == CompletionMailSent {
+		url := logic.EspacePersoURL(ct.key, host, dossier.Dossier.Id, utils.QP("origine", "documents-valides"))
+		html, err := mails.NotifieDocumentsValides(ct.asso, mails.NewContact(&responsable), camp.Label(), participantP.PrenomN(), url)
+		if err != nil {
+			return err
+		}
+		if err := mailer.SendMail(responsable.Mail, fmt.Sprintf("Documents validés - %s", camp.Label()), html, ccs, nil); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // DocumentsStreamFiles télécharge tous les fichiers pour une [Demande],
@@ -543,9 +686,9 @@ func (ct *Controller) DocumentsDownloadFichesSanitaires(c echo.Context) error {
 	return c.Blob(200, mimeType, content)
 }
 
-// ignore les participants majeurs et les fiches vides
-func (ct *Controller) renderFichesSanitaires(user cps.IdCamp) ([]byte, string, error) {
-	camp, err := cps.LoadCamp(ct.db, user)
+// ignore les fiches vides et, sauf si configuré, les participants majeurs
+func (ct *Controller) renderFichesSanitaires(idCamp cps.IdCamp) ([]byte, string, error) {
+	camp, err := cps.LoadCamp(ct.db, idCamp)
 	if err != nil {
 		return nil, "", err
 	}
@@ -561,6 +704,11 @@ func (ct *Controller) renderFichesSanitaires(user cps.IdCamp) ([]byte, string, e
 	}
 	fiches := tmp.ByIdPersonne()
 
+	loader, err := fsAPI.LoadDemandes(ct.db, ct.asso.AskedDocs, idCamp)
+	if err != nil {
+		return nil, "", err
+	}
+
 	responsables, err := pr.SelectPersonnes(ct.db, dossiers.IdResponsables()...)
 	if err != nil {
 		return nil, "", utils.SQLError(err)
@@ -569,11 +717,23 @@ func (ct *Controller) renderFichesSanitaires(user cps.IdCamp) ([]byte, string, e
 	var list []pdfcreator.FicheSanitaire
 	for _, part := range participants {
 		fiche, hasFiche := fiches[part.Participant.IdPersonne]
-		if !hasFiche || part.Personne.Age() >= 18 {
+		required := loader.ForParticipant(fsAPI.ParticipantDemandesArgs{
+			IdCamp:   idCamp,
+			AgeCamp:  camp.Camp,
+			Personne: part.Personne,
+			Statut:   part.Participant.Statut,
+		}).FicheSanitaire
+		if !hasFiche || !required {
 			continue
 		}
-		responsable := responsables[dossiers[part.Participant.IdDossier].IdResponsable]
-		list = append(list, pdfcreator.FicheSanitaire{Personne: part.Personne.Identite, FicheSanitaire: fiche, Responsable: responsable.Identite})
+		dossier := dossiers[part.Participant.IdDossier]
+		responsable := responsables[dossier.IdResponsable]
+		list = append(list, pdfcreator.FicheSanitaire{
+			Personne:         part.Personne.Identite,
+			FicheSanitaire:   fiche,
+			Responsable:      responsable.Identite,
+			IsOwnResponsable: part.Personne.Id == dossier.IdResponsable,
+		})
 	}
 	content, err := pdfcreator.CreateFicheSanitaires(ct.asso, list)
 	if err != nil {

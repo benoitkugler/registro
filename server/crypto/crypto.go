@@ -30,7 +30,7 @@ type Encrypter [32]byte
 func NewEncrypter(key string) Encrypter { return sha256.Sum256([]byte(key)) }
 
 type IDs interface {
-	cps.IdLettreImage | fs.IdFile | cps.IdEquipier | pr.IdPersonne | in.IdInscription | ds.IdDossier | int64
+	cps.IdLettreImage | fs.IdFile | cps.IdEquipier | pr.IdPersonne | in.IdInscription | ds.IdDossier | cps.IdCamp | int64
 }
 
 const (
@@ -41,6 +41,7 @@ const (
 	tPersonne
 	tInscription
 	tDossier
+	tCamp
 )
 
 type wrappedID[T IDs] struct {
@@ -71,6 +72,8 @@ func encryptID[T IDs](key Encrypter, ID T) (string, error) {
 		data.Type = tFile
 	case cps.IdLettreImage:
 		data.Type = tLettreImage
+	case cps.IdCamp:
+		data.Type = tCamp
 	default:
 		data.Type = tOther
 	}
@@ -99,6 +102,8 @@ func DecryptID[T IDs](key Encrypter, enc string) (T, error) {
 		typeMatch = wr.Type == tFile
 	case cps.IdLettreImage:
 		typeMatch = wr.Type == tLettreImage
+	case cps.IdCamp:
+		typeMatch = wr.Type == tCamp
 	default:
 		typeMatch = wr.Type == tOther
 	}

@@ -34,7 +34,7 @@ export interface DemandeEquipier {
 export interface EquipierExt {
   Equipier: Equipier;
   IsAuPair: boolean;
-  PersonneBase: Identite;
+  PersonneBase: PersonneBase;
   PersonneDetails: Ficheequipier;
   Camp: Camp;
   Demandes: DemandeEquipier[] | null;
@@ -61,7 +61,7 @@ export interface SecuriteSocialeIn {
 // registro/controllers/equipier.UpdateIn
 export interface UpdateIn {
   Token: string;
-  PersonneBase: Identite;
+  PersonneBase: PersonneBase;
   PersonneDetails: Ficheequipier;
   Presence: PresenceOffsets;
 }
@@ -72,6 +72,7 @@ export interface PublicFile {
   Taille: Int;
   NomClient: string;
   Uploaded: Time;
+  ReviewStatus: FileReviewStatus;
 }
 // registro/sql/camps.Equipier
 export interface Equipier {
@@ -181,10 +182,25 @@ export interface Demande {
   Categorie: Categorie;
   Description: string;
   MaxDocs: Int;
-  JoursValide: Int;
+  Nationnalite: NationnaliteCible;
 }
 export type IdDemande = Int & { __opaque_int__: "IdDemande" };
 export type IdFile = Int & { __opaque_int__: "IdFile" };
+// registro/sql/files.NationnaliteCible
+export const NationnaliteCible = {
+  Both: 0,
+  OnlyCh: 1,
+  OnlyFr: 2,
+} as const;
+export type NationnaliteCible =
+  (typeof NationnaliteCible)[keyof typeof NationnaliteCible];
+
+export const NationnaliteCibleLabels: Record<NationnaliteCible, string> = {
+  [NationnaliteCible.Both]: "Toutes",
+  [NationnaliteCible.OnlyCh]: "Suisse seulement",
+  [NationnaliteCible.OnlyFr]: "Française seulement",
+};
+
 // registro/sql/personnes.Diplome
 export const Diplome = {
   DAucun: 0,
@@ -260,7 +276,6 @@ export const EtatCivilLabels: Record<EtatCivil, string> = {
 // registro/sql/personnes.Ficheequipier
 export interface Ficheequipier {
   IdPersonne: IdPersonne;
-  SecuriteSociale: string;
   Diplome: Diplome;
   Formation: string;
   Fonctionnaire: boolean;
@@ -278,6 +293,21 @@ export interface Ficheequipier {
   DemandeMembreAssoPermanent: boolean;
   FormationRepere: FormationRepere;
 }
+// registro/sql/personnes.FileReviewStatus
+export const FileReviewStatus = {
+  FileReviewPending: 0,
+  FileReviewValidated: 1,
+  FileReviewRejected: 2,
+} as const;
+export type FileReviewStatus =
+  (typeof FileReviewStatus)[keyof typeof FileReviewStatus];
+
+export const FileReviewStatusLabels: Record<FileReviewStatus, string> = {
+  [FileReviewStatus.FileReviewPending]: "En attente",
+  [FileReviewStatus.FileReviewValidated]: "Validé",
+  [FileReviewStatus.FileReviewRejected]: "Refusé",
+};
+
 // registro/sql/personnes.FormationRepere
 export const FormationRepere = {
   FRAucun: 0,
@@ -299,8 +329,14 @@ export const FormationRepereLabels: Record<FormationRepere, string> = {
 };
 
 export type IdPersonne = Int & { __opaque_int__: "IdPersonne" };
-// registro/sql/personnes.Identite
-export interface Identite {
+// registro/sql/personnes.Nationnalite
+export interface Nationnalite {
+  IsSuisse: boolean;
+}
+// registro/sql/personnes.Pays
+export type Pays = string;
+// registro/sql/personnes.PersonneBase
+export interface PersonneBase {
   Nom: string;
   Prenom: string;
   Sexe: Sexe;
@@ -312,13 +348,8 @@ export interface Identite {
   CodePostal: string;
   Ville: string;
   Pays: Pays;
+  SecuriteSociale: string;
 }
-// registro/sql/personnes.Nationnalite
-export interface Nationnalite {
-  IsSuisse: boolean;
-}
-// registro/sql/personnes.Pays
-export type Pays = string;
 // registro/sql/personnes.Qualifications
 export interface Qualifications {
   SB: boolean;

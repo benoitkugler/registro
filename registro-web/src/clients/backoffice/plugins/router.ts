@@ -18,7 +18,6 @@ const routes = [
   { path: "/annuaire", component: Annuaire },
 ];
 
-// TODO: check that
 const baseURL = import.meta.env.DEV ? "/src/clients/backoffice" : "/backoffice";
 
 const router = createRouter({
@@ -83,7 +82,7 @@ export type QueryURLInscriptions = {
 };
 
 export function parseQueryURLInscriptions(
-  query: LocationQuery
+  query: LocationQuery,
 ): QueryURLInscriptions {
   const q = query as QueryURLInscriptions;
   return { tab: q.tab, idDossier: enforceNumber(q.idDossier) };
@@ -96,12 +95,19 @@ export function goToDossier(idDossier?: IdDossier) {
   });
 }
 
+export function goToInscription(idDossier: IdDossier) {
+  router.push({
+    path: "/inscriptions",
+    query: { tab: "insc", idDossier } satisfies QueryURLInscriptions,
+  });
+}
+
 export type QueryURLPersonnes = {
   idPersonne?: IdPersonne;
 };
 
 export function parseQueryURLPersonnes(
-  query: LocationQuery
+  query: LocationQuery,
 ): QueryURLPersonnes {
   const q = query as QueryURLPersonnes;
   return {

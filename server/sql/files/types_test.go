@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	cp "registro/sql/camps"
+	pr "registro/sql/personnes"
 	tu "registro/utils/testutils"
 )
 
@@ -69,5 +70,24 @@ func TestBuiltins_Defaut(t *testing.T) {
 	for _, tt := range tests {
 		got := b.Defaut(tt.equipier.Id, tt.equipier.Roles, "repere")
 		tu.Assert(t, reflect.DeepEqual(got, tt.want))
+	}
+}
+
+func TestNationnaliteCible_Match(t *testing.T) {
+	tests := []struct {
+		nc   NationnaliteCible
+		nat  pr.Nationnalite
+		want bool
+	}{
+		{Both, pr.Nationnalite{}, true},
+		{Both, pr.Nationnalite{IsSuisse: true}, true},
+		{OnlyCh, pr.Nationnalite{IsSuisse: true}, true},
+		{OnlyFr, pr.Nationnalite{IsSuisse: true}, false},
+		{OnlyCh, pr.Nationnalite{IsSuisse: false}, false},
+		{OnlyFr, pr.Nationnalite{IsSuisse: false}, true},
+	}
+	for _, tt := range tests {
+		got := tt.nc.Match(tt.nat)
+		tu.Assert(t, got == tt.want)
 	}
 }

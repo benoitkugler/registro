@@ -45,8 +45,43 @@
     </v-card-text>
   </v-card>
 
+  <v-card
+    class="my-2 border-primary border-lg"
+    title="Responsabilité civile"
+    v-if="props.settings.RequireResponsabiliteCivile"
+  >
+    <v-card-text>
+      <v-checkbox
+        density="comfortable"
+        class="mb-2"
+        v-model="hasResponsabiliteCivile"
+        color="primary"
+        :rules="[FormRules.required('Merci de contracter une assurance.')]"
+      >
+        <template #label>
+          Une assurance responsabilité civile est obligatoire. J'atteste que les
+          participants sont bien couverts par une responsabilité civile.
+        </template>
+      </v-checkbox>
+    </v-card-text>
+  </v-card>
+
   <v-card class="my-2 border-primary border-lg" title="Autorisations">
     <v-card-text>
+      <v-checkbox
+        density="comfortable"
+        class="mb-2"
+        v-model="autorisationVehicules"
+        color="primary"
+        v-if="props.settings.ShowAutorisationVehicules"
+        :rules="[FormRules.required('Merci de donner votre autorisation')]"
+      >
+        <template #label>
+          Pour chaque participant dont j'ai la responsabilité, j'autorise le
+          transport dans les véhicules de l'association.
+        </template>
+      </v-checkbox>
+
       <v-checkbox
         density="comfortable"
         class="mb-2"
@@ -172,4 +207,10 @@ const autorisationVehicules = defineModel<boolean>("autorisationVehicules", {
 const autorisationSoin = defineModel<boolean>("autorisationSoin", {
   required: true,
 });
+const hasResponsabiliteCivile = defineModel<boolean>(
+  "hasResponsabiliteCivile",
+  {
+    required: true,
+  },
+);
 </script>

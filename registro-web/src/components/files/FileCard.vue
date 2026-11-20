@@ -1,7 +1,11 @@
 <template>
   <v-menu>
     <template #activator="{ props: menuProps }">
-      <v-card class="my-2" v-bind="menuProps">
+      <v-card
+        class="my-2 border"
+        :color="Formatters.reviewStatus(props.file.ReviewStatus).color"
+        v-bind="menuProps"
+      >
         <v-img
           cover
           :src="endpoints.LoadMiniature(props.file.Key)"
@@ -15,18 +19,25 @@
         <v-list-item
           min-width="400"
           :title="props.file.NomClient"
-          :subtitle="Formatters.size(props.file.Taille)"
+          :subtitle="`${Formatters.size(
+            props.file.Taille,
+          )} - Ajouté ${Formatters.date(props.file.Uploaded)}`"
         >
           <template #append>
-            <div class="text-right ml-2">
-              téléversé le <br />
-              {{ Formatters.time(props.file.Uploaded) }}
-            </div>
+            <v-chip
+              class="ml-2"
+              :color="Formatters.reviewStatus(file.ReviewStatus).color"
+              :prepend-icon="Formatters.reviewStatus(file.ReviewStatus).icon"
+            >
+              {{ FileReviewStatusLabels[file.ReviewStatus] }}
+            </v-chip>
           </template>
         </v-list-item>
       </v-card-text>
       <v-card-actions>
-        <v-btn @click="emit('delete')" color="red"> Supprimer </v-btn>
+        <v-btn @click="emit('delete')" color="red" prepend-icon="mdi-delete">
+          Supprimer
+        </v-btn>
         <v-spacer></v-spacer>
         <v-btn :href="endpoints.LoadDocument(props.file.Key)">
           Télécharger
@@ -39,6 +50,7 @@
 <script setup lang="ts">
 import { endpoints, Formatters } from "@/utils";
 import type { PublicFile } from "@/clients/equipier/logic/api";
+import { FileReviewStatusLabels } from "@/clients/backoffice/logic/api";
 
 const props = defineProps<{
   file: PublicFile;

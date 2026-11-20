@@ -31,7 +31,6 @@ func randEtatCivil() EtatCivil {
 func randFicheequipier() Ficheequipier {
 	var s Ficheequipier
 	s.IdPersonne = randIdPersonne()
-	s.SecuriteSociale = randstring()
 	s.Diplome = randDiplome()
 	s.Formation = randstring()
 	s.Fonctionnaire = randbool()
@@ -58,12 +57,18 @@ func randFichesanitaire() Fichesanitaire {
 	s.DifficultesSante = randstring()
 	s.AllergiesAlimentaires = randstring()
 	s.TraitementMedical = randstring()
-	s.Medecin = randNomTel()
 	s.AutreContact = randNomTel()
 	s.Modified = randtTime()
 	s.Owners = randMails()
+	s.ReviewStatus = randFileReviewStatus()
 
 	return s
+}
+
+func randFileReviewStatus() FileReviewStatus {
+	choix := [...]FileReviewStatus{FileReviewPending, FileReviewValidated, FileReviewRejected}
+	i := rand.Intn(len(choix))
+	return choix[i]
 }
 
 func randFormationRepere() FormationRepere {
@@ -116,6 +121,7 @@ func randPersonne() Personne {
 	s.Publicite = randPublicite()
 	s.CharteAccepted = randtTime()
 	s.IsTemp = randbool()
+	s.SecuriteSociale = randstring()
 
 	return s
 }

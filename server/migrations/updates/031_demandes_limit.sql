@@ -1,0 +1,5 @@
+-- v0.13.0
+
+BEGIN;
+ALTER TABLE demandes DROP COLUMN JoursValide;
+COMMIT;

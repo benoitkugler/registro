@@ -27,6 +27,8 @@ type File struct {
 	// different from the file path
 	NomClient string
 	Uploaded  time.Time
+
+	ReviewStatus pr.FileReviewStatus
 }
 
 func (id IdFile) Opt() OptIdFile { return OptIdFile{Id: id, Valid: true} }
@@ -66,9 +68,7 @@ type Demande struct {
 	// (1 par défaut)
 	MaxDocs int
 
-	// JoursValide, si > 0, indique un document temporaire :
-	// une alerte est donnée pour les documents périmés
-	JoursValide int
+	Nationnalite NationnaliteCible
 }
 
 // Title returns either the Categorie or the Description

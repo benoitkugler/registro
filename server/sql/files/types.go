@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	cp "registro/sql/camps"
+	pr "registro/sql/personnes"
 	"registro/sql/shared"
 	"registro/utils"
 )
@@ -29,7 +30,7 @@ const (
 
 )
 
-const nbCategorieEquipier = int(Autre) + 1
+const nbBuiltins = int(Autre) + 1
 
 func (c Categorie) String() string {
 	switch c {
@@ -61,7 +62,7 @@ func (c Categorie) String() string {
 }
 
 // Builtins indique les demandes connues à l'avance
-type Builtins [nbCategorieEquipier]Demande
+type Builtins [nbBuiltins]Demande
 
 // LoadBuiltins charge les demandes 'builtin', qui doivent
 // être prédéclarées dans la base de données.
@@ -77,7 +78,7 @@ func (bs Builtins) List() []Demande {
 	return bs[1:] // remove the NoBuiltin
 }
 
-func (ds Demandes) builtins() (out [nbCategorieEquipier]Demande, err error) {
+func (ds Demandes) builtins() (out [nbBuiltins]Demande, err error) {
 	for _, demande := range ds {
 		if demande.Categorie == NoBuiltin {
 			continue
@@ -124,7 +125,7 @@ type optionalCategorie struct {
 	Optionnelle bool
 }
 
-var defaultDemandesACVE = [cp.NbRoles][]Categorie{
+var defaultDemandesACVE = [cp.RolesCount][]Categorie{
 	cp.Direction:     {CarteId, Permis, SB, Bafa, Bafd, CarteVitale, Vaccins},
 	cp.Adjoint:       {CarteId, Permis, SB, CarteVitale, Vaccins},
 	cp.Animation:     {CarteId, Permis, SB, Bafa, CarteVitale, Vaccins},
@@ -142,7 +143,7 @@ var defaultDemandesACVE = [cp.NbRoles][]Categorie{
 
 func defaultACVE(roles cp.Roles) []optionalCategorie {
 	// on aggrège les demandes de chaque rôle
-	var categories [nbCategorieEquipier]bool
+	var categories [nbBuiltins]bool
 	for _, role := range roles {
 		for _, cat := range defaultDemandesACVE[role] {
 			categories[cat] = true
@@ -178,4 +179,19 @@ func defaultRepere(_ cp.Roles) []optionalCategorie {
 		{Bafd, true},
 		{ExtraitCasierJudiciaire, false},
 	}
+}
+
+type NationnaliteCible uint8
+
+const (
+	Both   NationnaliteCible = iota // Toutes
+	OnlyCh                          // Suisse seulement
+	OnlyFr                          // Française seulement
+)
+
+func (nc NationnaliteCible) Match(nat pr.Nationnalite) bool {
+	if nc == Both {
+		return true
+	}
+	return (nc == OnlyCh) == nat.IsSuisse
 }

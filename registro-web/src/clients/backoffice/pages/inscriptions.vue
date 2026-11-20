@@ -2,7 +2,7 @@
   <NavBar title="Suivi des inscriptions">
     <v-tabs
       :model-value="currentTab"
-      @update:model-value="v => setTab(v as InscriptionsTab)"
+      @update:model-value="(v) => setTab(v as InscriptionsTab)"
     >
       <v-tab value="pending">Inscriptions non terminées</v-tab>
       <v-tab value="insc">Inscriptions en attente</v-tab>
@@ -16,6 +16,7 @@
     </v-tabs-window-item>
     <v-tabs-window-item value="insc">
       <PannelInscriptions
+        :initial-dossier="dossierToShow"
         @go-to="goToDossier"
         @empty="goToDossier()"
       ></PannelInscriptions>
@@ -43,7 +44,7 @@ import PannelPendingInscriptions from "../components/dossiers/PannelPendingInscr
 const router = useRouter();
 
 const query = computed(() =>
-  parseQueryURLInscriptions(router.currentRoute.value.query)
+  parseQueryURLInscriptions(router.currentRoute.value.query),
 );
 
 const currentTab = computed(() => query.value.tab || "insc");

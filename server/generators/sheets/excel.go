@@ -9,6 +9,7 @@ import (
 
 	"registro/logic"
 	cps "registro/sql/camps"
+	ds "registro/sql/dossiers"
 	pr "registro/sql/personnes"
 	"registro/utils"
 
@@ -128,6 +129,25 @@ func (b *Builder) Finalize() (*bytes.Buffer, error) {
 	return b.file.WriteToBuffer()
 }
 
+// FitColsWidth adjust colums width to fit existing
+// content.
+func (b *Builder) FitColsWidth() {
+	cols, err := b.file.GetCols("Sheet1")
+	if err != nil {
+		b.err = err
+		return
+	}
+	for j, col := range cols {
+		width := 0.
+		for i, cell := range col {
+			if w := stringWidth(cell, i == 0); w > width {
+				width = w
+			}
+		}
+		b.SetColumnWidth(j+1, width)
+	}
+}
+
 func (b *Builder) MergeCells(startRow, startCol, endRow, endCol int) {
 	start, err := excelize.CoordinatesToCellName(startCol, startRow)
 	if err != nil {
@@ -218,6 +238,8 @@ func (b Builder) register(s Style) (int, error) {
 	}
 
 	switch s.NumFormat {
+	case Float:
+		excelS.NumFmt = 2
 	case Int:
 		excelS.NumFmt = 1
 	case Euros:
@@ -276,6 +298,17 @@ type Cell struct {
 
 func intCell[T ~int | ~int64](v T) Cell {
 	return Cell{ValueF: float32(v), NumFormat: Int}
+}
+
+func amountCell(m ds.Montant) Cell {
+	return Cell{ValueF: float32(m.Cent) / 100, NumFormat: Float}
+}
+
+func convertAmount(taux ds.Taux, montant ds.Montant, currency ds.Currency) ds.Montant {
+	if montant.Cent == 0 {
+		return ds.Montant{Currency: currency}
+	}
+	return taux.Convertible(montant).Convert(currency)
 }
 
 func (b *Builder) drawItems(rows [][]Cell, startingRow int, showLineNumbers bool, separators []int) error {
@@ -535,6 +568,17 @@ func ListeParticipantsCamp(camp cps.Camp, inscrits []cps.ParticipantPersonne, do
 	return f.Bytes(), nil
 }
 
+func multiCurrency(dossiers logic.DossiersFinances) bool {
+	for id := range dossiers.Dossiers.Dossiers {
+		dossier := dossiers.For(id)
+		taux := dossier.Taux
+		if taux.MultiCurrency() {
+			return true
+		}
+	}
+	return false
+}
+
 // ListeParticipantsCamps renvoie un document Excel des participants (éventuellement en liste d'attente)
 // de plusieurs séjours, à destination des comptables.
 //
@@ -543,9 +587,12 @@ func ListeParticipantsCamps(participants []cps.ParticipantCamp, dossiers logic.D
 	remisesHints map[cps.IdParticipant]cps.Remises,
 	showNationnaliteSuisse bool,
 ) ([]byte, error) {
+	hasMultiCurrency := multiCurrency(dossiers)
+
 	headersCamp := [...]string{
 		"ID Camp",
 		"Camp",
+		"Devise du camp",
 	}
 	headersParticipant := [...]string{
 		"ID Inscrit",
@@ -561,6 +608,8 @@ func ListeParticipantsCamps(participants []cps.ParticipantCamp, dossiers logic.D
 		"Code postal",
 		"Ville",
 		"Pays",
+		"Montant demandé (devise du camp)",
+		"Montant reçu (devise du camp)",
 	}
 	if showNationnaliteSuisse {
 		headersParticipant[6] = "Nationalité suisse"
@@ -574,18 +623,26 @@ func ListeParticipantsCamps(participants []cps.ParticipantCamp, dossiers logic.D
 		"Ville",
 		"Pays",
 	}
-	headersDossier := [...]string{
+	headersDossier := []string{
 		"ID Dossier",
 		"Moment d'inscription",
 		"Partage Adresse",
 		"Etat du règlement",
-		"Montant payé",
-		"Fonds de soutien",
+		"Montant payé (devise du camp)",
+	}
+	if hasMultiCurrency {
+		headersDossier = append(headersDossier,
+			"Montant payé (EUR)",
+			"Montant payé (CHF)",
+		)
+	}
+	headersDossier = append(headersDossier,
+		"Fonds de soutien (devise du camp)",
 		"Remises (%)",
-		"Remises",
+		"Remises (devise du camp)",
 		"Remise famille probable",
 		"Remise équpiers probable",
-	}
+	)
 
 	rows := make([][]Cell, len(participants))
 	for i, inscrit := range participants {
@@ -602,10 +659,19 @@ func ListeParticipantsCamps(participants []cps.ParticipantCamp, dossiers logic.D
 		hints := remisesHints[inscrit.Participant.Id]
 		remiseFamilleProbable := hints.Famille != 0
 		remiseEquipiersProbable := hints.Equipiers != 0
-		var row [len(headersCamp) + len(headersParticipant) + len(headersResponsable) + len(headersDossier)]Cell = [...]Cell{
+
+		montantsPayes := dossier.MontantsPayesParDevise()
+
+		paiementByParticipant := bilan.DispatchPaiements(taux)[inscrit.Participant.Id]
+		ownPaiement := convertAmount(taux, paiementByParticipant, inscrit.Camp.Prix.Currency)
+
+		ownAsked := convertAmount(taux, bilan.Inscrits[inscrit.Participant.Id].Net(taux), inscrit.Camp.Prix.Currency)
+
+		row := []Cell{
 			// camp
-			intCell(inscrit.Camp.Id),      // ID Camp
-			{Value: inscrit.Camp.Label()}, // Camp
+			intCell(inscrit.Camp.Id),                     // ID Camp
+			{Value: inscrit.Camp.Label()},                // Camp
+			{Value: inscrit.Camp.Prix.Currency.String()}, // Devise du camp
 			// inscrit
 			intCell(inscrit.Participant.Id),                  // ID Inscrit
 			{Value: inscrit.Participant.Statut.String()},     // Statut
@@ -620,6 +686,8 @@ func ListeParticipantsCamps(participants []cps.ParticipantCamp, dossiers logic.D
 			{Value: inscrit.Personne.CodePostal},             // Code postal
 			{Value: inscrit.Personne.Ville},                  // Ville
 			{Value: string(inscrit.Personne.Pays)},           // Pays
+			amountCell(ownAsked),                             // Montant demandé (devise du camp)
+			amountCell(ownPaiement),                          // Montant reçu (devise du camp)
 			// responsable
 			{Value: responsable.NOMPrenom()},   // Responsable
 			{Value: responsable.Mail},          // Mail
@@ -629,21 +697,30 @@ func ListeParticipantsCamps(participants []cps.ParticipantCamp, dossiers logic.D
 			{Value: responsable.Ville},         // Ville
 			{Value: string(responsable.Pays)},  // Pays
 			// dossier
-			intCell(dossier.Dossier.Dossier.Id),                            // ID Dossier
-			{Value: formatTime(dossier.Dossier.Dossier.MomentInscription)}, // Inscription
-			{Value: formatBool(dossier.Dossier.Dossier.PartageAdressesOK)}, // Partage Adresse
-			{Value: bilan.StatutPaiement().String()},                       // Etat du règlement
-			{Value: taux.Convertible(bilan.Recu()).String()},               // Montant payé
-			{Value: taux.Convertible(bilan.FondsSoutien()).String()},       // Fonds de soutien
-			{ValueF: float32(rem.Famille + rem.Equipiers), NumFormat: Int}, // Remises (%)
-			{Value: taux.Convertible(rem.Speciale).String()},               // Remises
-			{Value: formatBool(remiseFamilleProbable)},                     // Remise famille probable
-			{Value: formatBool(remiseEquipiersProbable)},                   // Remise équipiers probable
+			intCell(dossier.Dossier.Dossier.Id),                                       // ID Dossier
+			{Value: formatTime(dossier.Dossier.Dossier.MomentInscription)},            // Inscription
+			{Value: formatBool(dossier.Dossier.Dossier.PartageAdressesOK)},            // Partage Adresse
+			{Value: bilan.StatutPaiement().String()},                                  // Etat du règlement
+			amountCell(convertAmount(taux, bilan.Recu(), inscrit.Camp.Prix.Currency)), // Montant payé
 		}
-		rows[i] = row[:]
+		if hasMultiCurrency {
+			row = append(row,
+				Cell{ValueF: float32(montantsPayes[ds.Euros]) / 100, NumFormat: Float},        // Montant payé (EUR)
+				Cell{ValueF: float32(montantsPayes[ds.FrancsSuisse]) / 100, NumFormat: Float}, // Montant payé (CHF)
+			)
+		}
+		row = append(row,
+			amountCell(convertAmount(taux, bilan.FondsSoutien(), inscrit.Camp.Prix.Currency)), // Fonds de soutien
+			Cell{ValueF: float32(rem.Famille + rem.Equipiers), NumFormat: Int},                // Remises (%)
+			amountCell(convertAmount(taux, rem.Speciale, inscrit.Camp.Prix.Currency)),         // Remises
+			Cell{Value: formatBool(remiseFamilleProbable)},                                    // Remise famille probable
+			Cell{Value: formatBool(remiseEquipiersProbable)},                                  // Remise équipiers probable
+		)
+
+		rows[i] = row
 	}
 
-	headers := slices.Concat(headersCamp[:], headersParticipant[:], headersResponsable[:], headersDossier[:])
+	headers := slices.Concat(headersCamp[:], headersParticipant[:], headersResponsable[:], headersDossier)
 	sep1 := len(headersCamp) + 1
 	sep2 := sep1 + len(headersParticipant)
 	sep3 := sep2 + len(headersResponsable)

@@ -41,9 +41,10 @@
 import { ref } from "vue";
 import NavBar from "../components/NavBar.vue";
 import { CachedTokens, controller } from "../logic/logic";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 
 const router = useRouter();
+const route = useRoute();
 
 const showPassword = ref(false);
 const password = ref("");
@@ -59,7 +60,14 @@ async function loggin() {
     CachedTokens.set(res.Token);
 
     controller.showMessage("Bienvenue !");
-    router.push({ path: "/inscriptions" });
+    const redirect = route.query.redirect;
+    router.push(
+      typeof redirect === "string" &&
+        redirect.startsWith("/") &&
+        !redirect.startsWith("//")
+        ? redirect
+        : "/inscriptions",
+    );
   } else {
     errors.value = ["Clé de connection incorrecte."];
   }

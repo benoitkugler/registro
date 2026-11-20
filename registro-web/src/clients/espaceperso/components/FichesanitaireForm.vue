@@ -81,58 +81,53 @@
           </v-card-text>
         </v-card>
 
-        <!-- Médecin -->
-        <v-card title="Médecin traitant" class="my-2">
+        <!-- Numéro de sécurité sociale / AVS -->
+        <v-card title="Numéro AVS" v-if="props.fiche.Nationnalite.IsSuisse">
           <v-card-text>
             <v-row>
-              <v-col cols="12" sm="6">
+              <v-col>
                 <v-text-field
+                  label="Numéro AVS"
                   variant="outlined"
                   density="compact"
-                  label="Nom"
-                  v-model="inner.Medecin.Nom"
+                  v-model="innerSecuriteSociale"
                   hide-details
                 ></v-text-field>
-              </v-col>
-              <v-col cols="12" sm="6">
-                <TelField
-                  label="Téléphone"
-                  v-model="inner.Medecin.Tel"
-                  hide-details
-                ></TelField>
               </v-col>
             </v-row>
           </v-card-text>
         </v-card>
-
+       
         <!-- Contacts -->
         <v-card title="Contacts" class="my-2">
           <v-card-text>
-            <v-row>
-              <v-col cols="12" sm="6">
-                <v-text-field
-                  variant="outlined"
-                  density="compact"
-                  :model-value="props.fiche.ResponsableNom"
-                  label="Responsable légal"
-                  disabled
-                  hint="Contactez-nous pour modifier ce champ."
-                  persistent-hint
-                ></v-text-field>
-              </v-col>
-              <v-col cols="12" sm="6">
-                <v-text-field
-                  variant="outlined"
-                  density="compact"
-                  :model-value="Formatters.tels(props.fiche.ResponsableTels)"
-                  label="Téléphone"
-                  disabled
-                  hint="Contactez-nous pour modifier ce champ."
-                  persistent-hint
-                ></v-text-field>
-              </v-col>
-            </v-row>
-            <v-divider thickness="2" class="my-4"></v-divider>
+            <template v-if="!props.fiche.IsOwnResponsable">
+              <v-row>
+                <v-col cols="12" sm="6">
+                  <v-text-field
+                    variant="outlined"
+                    density="compact"
+                    :model-value="props.fiche.ResponsableNom"
+                    label="Responsable légal"
+                    disabled
+                    hint="Contactez-nous pour modifier ce champ."
+                    persistent-hint
+                  ></v-text-field>
+                </v-col>
+                <v-col cols="12" sm="6">
+                  <v-text-field
+                    variant="outlined"
+                    density="compact"
+                    :model-value="Formatters.tels(props.fiche.ResponsableTels)"
+                    label="Téléphone"
+                    disabled
+                    hint="Contactez-nous pour modifier ce champ."
+                    persistent-hint
+                  ></v-text-field>
+                </v-col>
+              </v-row>
+              <v-divider thickness="2" class="my-4"></v-divider>
+            </template>
             <v-row>
               <v-col cols="12" sm="6">
                 <v-text-field
@@ -175,7 +170,7 @@
             <v-btn
               block
               color="success"
-              @click="emit('save', inner)"
+              @click="emit('save', inner, innerSecuriteSociale)"
               prepend-icon="mdi-content-save"
             >
               {{
@@ -207,13 +202,14 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: "close"): void;
-  (e: "save", fs: Fichesanitaire): void;
+  (e: "save", fs: Fichesanitaire, securiteSociale: string): void;
   (e: "transfert", fs: Fichesanitaire): void;
 }>();
 
 const { smAndDown } = useDisplay();
 
 const inner = reactive(copy(props.fiche.Fichesanitaire));
+const innerSecuriteSociale = ref(props.fiche.SecuriteSociale);
 
 const ownerMails = computed(() => props.fiche.Fichesanitaire.Owners || []);
 
@@ -224,9 +220,5 @@ const subtitle = computed(() =>
         props.fiche.Fichesanitaire.Modified,
       )} / Propriétaire(s) :
          ${ownerMails.value.join(" ; ")}`,
-);
-
-const difficultesSanteEnabled = ref(
-  props.fiche.Fichesanitaire.DifficultesSante != "",
 );
 </script>

@@ -8,28 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"time"
-
-	"github.com/lib/pq"
 )
-
-type Currency uint8
-
-const (
-	_ Currency = iota
-	euros
-	francsSuisse
-)
-
-func (c Currency) String() string {
-	switch c {
-	case euros:
-		return "€"
-	case francsSuisse:
-		return "CHF"
-	default:
-		return "<invalid currency>"
-	}
-}
 
 // Date is a date (without notion of time)
 type Date time.Time
@@ -157,7 +136,7 @@ func (d *Date) UnmarshalText(text []byte) error {
 }
 
 func (s *Date) Scan(src interface{}) error {
-	var tmp pq.NullTime
+	var tmp sql.NullTime
 	err := tmp.Scan(src)
 	if err != nil {
 		return err
@@ -167,7 +146,7 @@ func (s *Date) Scan(src interface{}) error {
 }
 
 func (s Date) Value() (driver.Value, error) {
-	return pq.NullTime{Time: s.Time(), Valid: true}.Value()
+	return sql.NullTime{Time: s.Time(), Valid: true}.Value()
 }
 
 type Plage struct {

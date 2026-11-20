@@ -32,7 +32,7 @@ func scanOneDemande(row scanner) (Demande, error) {
 		&item.Categorie,
 		&item.Description,
 		&item.MaxDocs,
-		&item.JoursValide,
+		&item.Nationnalite,
 	)
 	return item, err
 }
@@ -41,7 +41,7 @@ func ScanDemande(row *sql.Row) (Demande, error) { return scanOneDemande(row) }
 
 // SelectAll returns all the items in the demandes table.
 func SelectAllDemandes(db DB) (Demandes, error) {
-	rows, err := db.Query("SELECT id, idfile, iddirecteur, categorie, description, maxdocs, joursvalide FROM demandes")
+	rows, err := db.Query("SELECT id, idfile, iddirecteur, categorie, description, maxdocs, nationnalite FROM demandes")
 	if err != nil {
 		return nil, err
 	}
@@ -50,13 +50,13 @@ func SelectAllDemandes(db DB) (Demandes, error) {
 
 // SelectDemande returns the entry matching 'id'.
 func SelectDemande(tx DB, id IdDemande) (Demande, error) {
-	row := tx.QueryRow("SELECT id, idfile, iddirecteur, categorie, description, maxdocs, joursvalide FROM demandes WHERE id = $1", id)
+	row := tx.QueryRow("SELECT id, idfile, iddirecteur, categorie, description, maxdocs, nationnalite FROM demandes WHERE id = $1", id)
 	return ScanDemande(row)
 }
 
 // SelectDemandes returns the entry matching the given 'ids'.
 func SelectDemandes(tx DB, ids ...IdDemande) (Demandes, error) {
-	rows, err := tx.Query("SELECT id, idfile, iddirecteur, categorie, description, maxdocs, joursvalide FROM demandes WHERE id = ANY($1)", IdDemandeArrayToPQ(ids))
+	rows, err := tx.Query("SELECT id, idfile, iddirecteur, categorie, description, maxdocs, nationnalite FROM demandes WHERE id = ANY($1)", IdDemandeArrayToPQ(ids))
 	if err != nil {
 		return nil, err
 	}
@@ -101,28 +101,43 @@ func ScanDemandes(rs *sql.Rows) (Demandes, error) {
 // Insert one Demande in the database and returns the item with id filled.
 func (item Demande) Insert(tx DB) (out Demande, err error) {
 	row := tx.QueryRow(`INSERT INTO demandes (
-		idfile, iddirecteur, categorie, description, maxdocs, joursvalide
+		idfile, iddirecteur, categorie, description, maxdocs, nationnalite
 		) VALUES (
 		$1, $2, $3, $4, $5, $6
-		) RETURNING id, idfile, iddirecteur, categorie, description, maxdocs, joursvalide;
-		`, item.IdFile, item.IdDirecteur, item.Categorie, item.Description, item.MaxDocs, item.JoursValide)
+		) RETURNING id, idfile, iddirecteur, categorie, description, maxdocs, nationnalite;
+		`,
+		item.IdFile,
+		item.IdDirecteur,
+		item.Categorie,
+		item.Description,
+		item.MaxDocs,
+		item.Nationnalite,
+	)
 	return ScanDemande(row)
 }
 
 // Update Demande in the database and returns the new version.
 func (item Demande) Update(tx DB) (out Demande, err error) {
 	row := tx.QueryRow(`UPDATE demandes SET (
-		idfile, iddirecteur, categorie, description, maxdocs, joursvalide
+		idfile, iddirecteur, categorie, description, maxdocs, nationnalite
 		) = (
 		$1, $2, $3, $4, $5, $6
-		) WHERE id = $7 RETURNING id, idfile, iddirecteur, categorie, description, maxdocs, joursvalide;
-		`, item.IdFile, item.IdDirecteur, item.Categorie, item.Description, item.MaxDocs, item.JoursValide, item.Id)
+		) WHERE id = $7 RETURNING id, idfile, iddirecteur, categorie, description, maxdocs, nationnalite;
+		`,
+		item.IdFile,
+		item.IdDirecteur,
+		item.Categorie,
+		item.Description,
+		item.MaxDocs,
+		item.Nationnalite,
+		item.Id,
+	)
 	return ScanDemande(row)
 }
 
 // Deletes the Demande and returns the item
 func DeleteDemandeById(tx DB, id IdDemande) (Demande, error) {
-	row := tx.QueryRow("DELETE FROM demandes WHERE id = $1 RETURNING id, idfile, iddirecteur, categorie, description, maxdocs, joursvalide;", id)
+	row := tx.QueryRow("DELETE FROM demandes WHERE id = $1 RETURNING id, idfile, iddirecteur, categorie, description, maxdocs, nationnalite;", id)
 	return ScanDemande(row)
 }
 
@@ -188,7 +203,10 @@ func (item DemandeCamp) Insert(db DB) error {
 			) VALUES (
 			$1, $2
 			);
-			`, item.IdCamp, item.IdDemande)
+			`,
+		item.IdCamp,
+		item.IdDemande,
+	)
 	if err != nil {
 		return err
 	}
@@ -211,7 +229,10 @@ func InsertManyDemandeCamps(tx *sql.Tx, items ...DemandeCamp) error {
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdCamp, item.IdDemande)
+		_, err = stmt.Exec(
+			item.IdCamp,
+			item.IdDemande,
+		)
 		if err != nil {
 			return err
 		}
@@ -370,7 +391,11 @@ func (item DemandeEquipier) Insert(db DB) error {
 			) VALUES (
 			$1, $2, $3
 			);
-			`, item.IdEquipier, item.IdDemande, item.Optionnelle)
+			`,
+		item.IdEquipier,
+		item.IdDemande,
+		item.Optionnelle,
+	)
 	if err != nil {
 		return err
 	}
@@ -394,7 +419,11 @@ func InsertManyDemandeEquipiers(tx *sql.Tx, items ...DemandeEquipier) error {
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdEquipier, item.IdDemande, item.Optionnelle)
+		_, err = stmt.Exec(
+			item.IdEquipier,
+			item.IdDemande,
+			item.Optionnelle,
+		)
 		if err != nil {
 			return err
 		}
@@ -532,7 +561,7 @@ func (items Demandes) IdFiles() []IdFile {
 }
 
 func SelectDemandesByIdFiles(tx DB, idFiles_ ...IdFile) (Demandes, error) {
-	rows, err := tx.Query("SELECT id, idfile, iddirecteur, categorie, description, maxdocs, joursvalide FROM demandes WHERE idfile = ANY($1)", IdFileArrayToPQ(idFiles_))
+	rows, err := tx.Query("SELECT id, idfile, iddirecteur, categorie, description, maxdocs, nationnalite FROM demandes WHERE idfile = ANY($1)", IdFileArrayToPQ(idFiles_))
 	if err != nil {
 		return nil, err
 	}
@@ -540,7 +569,7 @@ func SelectDemandesByIdFiles(tx DB, idFiles_ ...IdFile) (Demandes, error) {
 }
 
 func DeleteDemandesByIdFiles(tx DB, idFiles_ ...IdFile) (Demandes, error) {
-	rows, err := tx.Query("DELETE FROM demandes WHERE idfile = ANY($1) RETURNING id, idfile, iddirecteur, categorie, description, maxdocs, joursvalide", IdFileArrayToPQ(idFiles_))
+	rows, err := tx.Query("DELETE FROM demandes WHERE idfile = ANY($1) RETURNING id, idfile, iddirecteur, categorie, description, maxdocs, nationnalite", IdFileArrayToPQ(idFiles_))
 	if err != nil {
 		return nil, err
 	}
@@ -561,7 +590,7 @@ func (items Demandes) IdDirecteurs() []personnes.IdPersonne {
 }
 
 func SelectDemandesByIdDirecteurs(tx DB, idDirecteurs_ ...personnes.IdPersonne) (Demandes, error) {
-	rows, err := tx.Query("SELECT id, idfile, iddirecteur, categorie, description, maxdocs, joursvalide FROM demandes WHERE iddirecteur = ANY($1)", personnes.IdPersonneArrayToPQ(idDirecteurs_))
+	rows, err := tx.Query("SELECT id, idfile, iddirecteur, categorie, description, maxdocs, nationnalite FROM demandes WHERE iddirecteur = ANY($1)", personnes.IdPersonneArrayToPQ(idDirecteurs_))
 	if err != nil {
 		return nil, err
 	}
@@ -569,7 +598,7 @@ func SelectDemandesByIdDirecteurs(tx DB, idDirecteurs_ ...personnes.IdPersonne) 
 }
 
 func DeleteDemandesByIdDirecteurs(tx DB, idDirecteurs_ ...personnes.IdPersonne) (Demandes, error) {
-	rows, err := tx.Query("DELETE FROM demandes WHERE iddirecteur = ANY($1) RETURNING id, idfile, iddirecteur, categorie, description, maxdocs, joursvalide", personnes.IdPersonneArrayToPQ(idDirecteurs_))
+	rows, err := tx.Query("DELETE FROM demandes WHERE iddirecteur = ANY($1) RETURNING id, idfile, iddirecteur, categorie, description, maxdocs, nationnalite", personnes.IdPersonneArrayToPQ(idDirecteurs_))
 	if err != nil {
 		return nil, err
 	}
@@ -583,6 +612,7 @@ func scanOneFile(row scanner) (File, error) {
 		&item.Taille,
 		&item.NomClient,
 		&item.Uploaded,
+		&item.ReviewStatus,
 	)
 	return item, err
 }
@@ -591,7 +621,7 @@ func ScanFile(row *sql.Row) (File, error) { return scanOneFile(row) }
 
 // SelectAll returns all the items in the files table.
 func SelectAllFiles(db DB) (Files, error) {
-	rows, err := db.Query("SELECT id, taille, nomclient, uploaded FROM files")
+	rows, err := db.Query("SELECT id, taille, nomclient, uploaded, reviewstatus FROM files")
 	if err != nil {
 		return nil, err
 	}
@@ -600,13 +630,13 @@ func SelectAllFiles(db DB) (Files, error) {
 
 // SelectFile returns the entry matching 'id'.
 func SelectFile(tx DB, id IdFile) (File, error) {
-	row := tx.QueryRow("SELECT id, taille, nomclient, uploaded FROM files WHERE id = $1", id)
+	row := tx.QueryRow("SELECT id, taille, nomclient, uploaded, reviewstatus FROM files WHERE id = $1", id)
 	return ScanFile(row)
 }
 
 // SelectFiles returns the entry matching the given 'ids'.
 func SelectFiles(tx DB, ids ...IdFile) (Files, error) {
-	rows, err := tx.Query("SELECT id, taille, nomclient, uploaded FROM files WHERE id = ANY($1)", IdFileArrayToPQ(ids))
+	rows, err := tx.Query("SELECT id, taille, nomclient, uploaded, reviewstatus FROM files WHERE id = ANY($1)", IdFileArrayToPQ(ids))
 	if err != nil {
 		return nil, err
 	}
@@ -651,28 +681,39 @@ func ScanFiles(rs *sql.Rows) (Files, error) {
 // Insert one File in the database and returns the item with id filled.
 func (item File) Insert(tx DB) (out File, err error) {
 	row := tx.QueryRow(`INSERT INTO files (
-		taille, nomclient, uploaded
+		taille, nomclient, uploaded, reviewstatus
 		) VALUES (
-		$1, $2, $3
-		) RETURNING id, taille, nomclient, uploaded;
-		`, item.Taille, item.NomClient, item.Uploaded)
+		$1, $2, $3, $4
+		) RETURNING id, taille, nomclient, uploaded, reviewstatus;
+		`,
+		item.Taille,
+		item.NomClient,
+		item.Uploaded,
+		item.ReviewStatus,
+	)
 	return ScanFile(row)
 }
 
 // Update File in the database and returns the new version.
 func (item File) Update(tx DB) (out File, err error) {
 	row := tx.QueryRow(`UPDATE files SET (
-		taille, nomclient, uploaded
+		taille, nomclient, uploaded, reviewstatus
 		) = (
-		$1, $2, $3
-		) WHERE id = $4 RETURNING id, taille, nomclient, uploaded;
-		`, item.Taille, item.NomClient, item.Uploaded, item.Id)
+		$1, $2, $3, $4
+		) WHERE id = $5 RETURNING id, taille, nomclient, uploaded, reviewstatus;
+		`,
+		item.Taille,
+		item.NomClient,
+		item.Uploaded,
+		item.ReviewStatus,
+		item.Id,
+	)
 	return ScanFile(row)
 }
 
 // Deletes the File and returns the item
 func DeleteFileById(tx DB, id IdFile) (File, error) {
-	row := tx.QueryRow("DELETE FROM files WHERE id = $1 RETURNING id, taille, nomclient, uploaded;", id)
+	row := tx.QueryRow("DELETE FROM files WHERE id = $1 RETURNING id, taille, nomclient, uploaded, reviewstatus;", id)
 	return ScanFile(row)
 }
 
@@ -738,7 +779,10 @@ func (item FileAide) Insert(db DB) error {
 			) VALUES (
 			$1, $2
 			);
-			`, item.IdFile, item.IdAide)
+			`,
+		item.IdFile,
+		item.IdAide,
+	)
 	if err != nil {
 		return err
 	}
@@ -761,7 +805,10 @@ func InsertManyFileAides(tx *sql.Tx, items ...FileAide) error {
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdFile, item.IdAide)
+		_, err = stmt.Exec(
+			item.IdFile,
+			item.IdAide,
+		)
 		if err != nil {
 			return err
 		}
@@ -930,7 +977,11 @@ func (item FileCamp) Insert(db DB) error {
 			) VALUES (
 			$1, $2, $3
 			);
-			`, item.IdFile, item.IdCamp, item.IsLettre)
+			`,
+		item.IdFile,
+		item.IdCamp,
+		item.IsLettre,
+	)
 	if err != nil {
 		return err
 	}
@@ -954,7 +1005,11 @@ func InsertManyFileCamps(tx *sql.Tx, items ...FileCamp) error {
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdFile, item.IdCamp, item.IsLettre)
+		_, err = stmt.Exec(
+			item.IdFile,
+			item.IdCamp,
+			item.IsLettre,
+		)
 		if err != nil {
 			return err
 		}
@@ -1113,7 +1168,11 @@ func (item FilePersonne) Insert(db DB) error {
 			) VALUES (
 			$1, $2, $3
 			);
-			`, item.IdFile, item.IdPersonne, item.IdDemande)
+			`,
+		item.IdFile,
+		item.IdPersonne,
+		item.IdDemande,
+	)
 	if err != nil {
 		return err
 	}
@@ -1137,7 +1196,11 @@ func InsertManyFilePersonnes(tx *sql.Tx, items ...FilePersonne) error {
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdFile, item.IdPersonne, item.IdDemande)
+		_, err = stmt.Exec(
+			item.IdFile,
+			item.IdPersonne,
+			item.IdDemande,
+		)
 		if err != nil {
 			return err
 		}

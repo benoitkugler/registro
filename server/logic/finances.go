@@ -98,6 +98,19 @@ type DossierFinance struct {
 	paiements ds.Paiements // liste exacte
 }
 
+// MontantsPayesParDevise returns the net payments in their original currencies.
+func (de DossierFinance) MontantsPayesParDevise() ds.MultiCurrencies {
+	var out ds.MultiCurrencies
+	for _, paiement := range de.paiements {
+		montant := paiement.Montant
+		if paiement.IsRemboursement {
+			montant.Cent = -montant.Cent
+		}
+		out.AddM(montant)
+	}
+	return out
+}
+
 // IsPaiementOpen returns [true] if the Espace perso
 // should allow paiements
 func (de *DossierFinance) IsPaiementOpen() bool {
@@ -133,14 +146,14 @@ func (df DossierFinance) Bilan() BilanFinances {
 	for _, participant := range df.Participants {
 		camp := df.camps[participant.IdCamp]
 		if participant.Statut != cps.Inscrit {
-			// simmplify by just using the camp Prix
+			// simplify by just using the camp Prix
 			demandeEnAttente.Add(camp.Prix)
 			continue
 		}
 		data := partExt{participant, camp, df.Dossier.Dossier.MomentInscription, df.aides[participant.Id], df.structures}
 		bilan := data.bilan()
 		inscrits[participant.Id] = bilan
-		demande.Add(bilan.net(df.Taux))
+		demande.Add(bilan.Net(df.Taux))
 		aides.Add(bilan.totalAides(df.Taux))
 	}
 
@@ -152,8 +165,7 @@ func (df DossierFinance) Bilan() BilanFinances {
 
 		recu.Add(montant)
 
-		isFondsSoutien := paiement.Payeur == ds.PayeurFondSoutien
-		if isFondsSoutien {
+		if isFondsSoutien := paiement.Payeur == ds.PayeurFondSoutien; isFondsSoutien {
 			fondsSoutien.Add(montant)
 		}
 	}
@@ -164,7 +176,7 @@ func (df DossierFinance) Bilan() BilanFinances {
 
 // BilanFinances résume l'état financier d'un dossier
 type BilanFinances struct {
-	inscrits map[cps.IdParticipant]BilanParticipant
+	Inscrits map[cps.IdParticipant]BilanParticipant
 
 	// totaux, en centimes
 
@@ -227,6 +239,33 @@ func (b BilanFinances) StatutPaiement() StatutPaiement {
 	}
 }
 
+// DispatchPaiements split the received amount between all inscrits,
+// proportionnal to the sejour price.
+func (b BilanFinances) DispatchPaiements(taux ds.Taux) map[cps.IdParticipant]ds.Montant {
+	totalAsked, totalReceived := b.demande, b.recu
+	if len(b.Inscrits) == 0 || totalAsked == 0 {
+		return nil
+	}
+	out := make(map[cps.IdParticipant]ds.Montant, len(b.Inscrits))
+	currency := b.currency
+	sum, maxId := 0, cps.IdParticipant(0)
+	for id, inscrit := range b.Inscrits {
+		asked := taux.Convertible(inscrit.Net(taux)).Convert(currency).Cent
+		// use the proportion to dispatch the total
+		received := asked * totalReceived / totalAsked
+		out[id] = ds.Montant{Cent: received, Currency: currency}
+		// be carefull for rounding
+		sum += received
+		if id > maxId {
+			maxId = id
+		}
+	}
+	// attribute any leftover arbitrarily, in a deterministic fashion
+	out[maxId] = ds.Montant{Cent: out[maxId].Cent + totalReceived - sum, Currency: currency}
+
+	return out
+}
+
 type partExt struct {
 	cps.Participant
 	cps.Camp
@@ -282,14 +321,21 @@ func (bp BilanParticipant) prixSansRemises(taux ds.Taux) cps.Montant {
 }
 
 // Net renvoie le prix à payer après avoir déduit les aides extérieures et les remises
-func (bp BilanParticipant) net(taux ds.Taux) cps.Montant {
+func (bp BilanParticipant) Net(taux ds.Taux) cps.Montant {
 	v1 := bp.prixSansRemises(taux).Remise(bp.Remises.Famille + bp.Remises.Equipiers)
 	val := taux.Convertible(v1)
 	val.Sub(bp.Remises.Speciale)
-	if val.Montant.Cent < 0 {
-		val.Montant.Cent = 0
-	}
 	return val.Montant
+}
+
+// ResolvedRemises renvoie le total des remises appliquées à ce participant,
+// comptés positivement.
+func (bp BilanParticipant) ResolvedRemises(taux ds.Taux) cps.Montant {
+	before := bp.prixSansRemises(taux)
+	after := bp.Net(taux)
+	// both montant have been converted to the same unit
+	before.Cent -= after.Cent
+	return before
 }
 
 // AideResolved shows resolved [AideResolved]

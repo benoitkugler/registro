@@ -1,0 +1,16 @@
+{{ define "content" }}
+<table cellpadding="0">
+  <tr>
+    <td>
+      Les documents de {{ .Participant }} requis pour le séjour {{ .CampLabel }} ont été reçus et
+      validés par l'équipe.
+      <br />
+      Vous pouvez retrouver les informations et les documents sur votre espace
+      personnel.
+    </td>
+  </tr>
+  <tr>
+    <td>{{ template "espacePersoButton" . }}</td>
+  </tr>
+</table>
+{{ end }}

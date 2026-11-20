@@ -24,7 +24,7 @@ func randDemande() Demande {
 	s.Categorie = randCategorie()
 	s.Description = randstring()
 	s.MaxDocs = randint()
-	s.JoursValide = randint()
+	s.Nationnalite = randNationnaliteCible()
 
 	return s
 }
@@ -52,6 +52,7 @@ func randFile() File {
 	s.Taille = randint()
 	s.NomClient = randstring()
 	s.Uploaded = randtTime()
+	s.ReviewStatus = randper_FileReviewStatus()
 
 	return s
 }
@@ -90,6 +91,12 @@ func randIdFile() IdFile {
 	return IdFile(randint64())
 }
 
+func randNationnaliteCible() NationnaliteCible {
+	choix := [...]NationnaliteCible{Both, OnlyCh, OnlyFr}
+	i := rand.Intn(len(choix))
+	return choix[i]
+}
+
 func randbool() bool {
 	i := rand.Int31n(2)
 	return i == 1
@@ -113,6 +120,12 @@ func randint() int {
 
 func randint64() int64 {
 	return int64(rand.Intn(1000000))
+}
+
+func randper_FileReviewStatus() personnes.FileReviewStatus {
+	choix := [...]personnes.FileReviewStatus{personnes.FileReviewPending, personnes.FileReviewValidated, personnes.FileReviewRejected}
+	i := rand.Intn(len(choix))
+	return choix[i]
 }
 
 func randper_IdPersonne() personnes.IdPersonne {

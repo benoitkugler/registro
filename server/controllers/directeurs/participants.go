@@ -152,7 +152,12 @@ func (ct *Controller) downloadFicheSanitaire(user cps.IdCamp, id cps.IdParticipa
 	}
 
 	content, err := pdfcreator.CreateFicheSanitaires(ct.asso, []pdfcreator.FicheSanitaire{
-		{Personne: personne.Identite, FicheSanitaire: fiche, Responsable: responsable.Identite},
+		{
+			Personne:         personne.Identite,
+			FicheSanitaire:   fiche,
+			Responsable:      responsable.Identite,
+			IsOwnResponsable: personne.Id == dossier.IdResponsable,
+		},
 	})
 	if err != nil {
 		return nil, "", err
@@ -176,6 +181,9 @@ type Messages struct {
 	Messages         []MessageExt // sorted by time, most recent first
 	Dossiers         map[ds.IdDossier]DossierPersonnes
 	NewMessagesCount int
+
+	ComptaContactLabel string
+	ComptaContactMail  string
 }
 
 func (m *Messages) setNewMessagesCount(idCamp cps.IdCamp) {
@@ -206,7 +214,11 @@ func (ct *Controller) loadMessages(idCamp cps.IdCamp) (Messages, error) {
 	if err != nil {
 		return Messages{}, err
 	}
-	out := Messages{Dossiers: make(map[ds.IdDossier]DossierPersonnes)}
+	out := Messages{
+		Dossiers:           make(map[ds.IdDossier]DossierPersonnes),
+		ComptaContactLabel: ct.asso.ComptaContactLabel,
+		ComptaContactMail:  ct.asso.MailsSettings.NotificationFromDirecteur,
+	}
 	for idDossier := range dossiers.Dossiers {
 		dossier := dossiers.For(idDossier)
 
@@ -215,7 +227,7 @@ func (ct *Controller) loadMessages(idCamp cps.IdCamp) (Messages, error) {
 			m := message.Content.Message
 			fromFondSoutien := m.Origine == evs.FondSoutien
 			toFondSoutien := m.OnlyToFondSoutien
-			fromOtherCamp := m.Origine == evs.Directeur && !(m.OrigineCamp.Is(idCamp))
+			fromOtherCamp := m.Origine == evs.Directeur && !m.OrigineCamp.Is(idCamp)
 			toOtherCamp := m.OnlyToCamp.Valid && m.OnlyToCamp.Id != idCamp
 			if fromFondSoutien || toFondSoutien || fromOtherCamp || toOtherCamp {
 				continue
@@ -289,6 +301,44 @@ func loadMessage(db evs.DB, id evs.IdEvent) (MessageExt, error) {
 		return MessageExt{}, errors.New("internal error : expected Message")
 	}
 	return MessageExt{Event: event.Raw(), Content: m}, nil
+}
+
+type NotifieComptableIn struct {
+	IdDossier ds.IdDossier
+}
+
+// ParticipantsNotifieComptable sends a short notification mail to the comptable,
+// with a direct link to the given dossier in the backoffice.
+func (ct *Controller) ParticipantsNotifieComptable(c echo.Context) error {
+	user := JWTUser(c)
+	var args NotifieComptableIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+	if err := ct.notifieComptable(c.Request().Host, user, args.IdDossier); err != nil {
+		return err
+	}
+	return c.NoContent(200)
+}
+
+func (ct *Controller) notifieComptable(host string, idCamp cps.IdCamp, idDossier ds.IdDossier) error {
+	dossier, err := logic.LoadDossier(ct.db, idDossier)
+	if err != nil {
+		return err
+	}
+	if !slices.Contains(dossier.Participants.IdCamps(), idCamp) {
+		return errors.New("ce dossier n'appartient pas au séjour courant")
+	}
+	camp, err := cps.SelectCamp(ct.db, idCamp)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	url := utils.BuildUrl(host, "/backoffice/inscriptions", utils.QP("tab", "doss"), utils.QPInt("idDossier", idDossier))
+	body, err := mails.NotifieComptable(ct.asso, dossier.Responsable().NOMPrenom(), camp.Label(), url)
+	if err != nil {
+		return err
+	}
+	return mails.NewMailer(ct.smtp, ct.asso.MailsSettings).SendMail(ct.asso.MailsSettings.NotificationFromDirecteur, "Dossier à examiner", body, nil, nil)
 }
 
 type CreateMessageIn struct {

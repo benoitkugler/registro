@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"mime/multipart"
 	"net/url"
 	"slices"
 	"strconv"
@@ -72,14 +73,28 @@ func QueryParamBool(c echo.Context, name string) bool {
 	return value != ""
 }
 
+// FormValueInt calls c.FormValue(name) and parse it as int
+func FormValueInt[T interface{ ~int64 | int }](c echo.Context, name string) (T, error) {
+	return ParseInt[T](c.FormValue(name))
+}
+
 // FormValueJSON calls c.FormValue(name) and parse its JSON
 func FormValueJSON(c echo.Context, name string, out any) error {
 	content := c.FormValue(name)
 	return json.Unmarshal([]byte(content), out)
 }
 
+// FormFiles returns the files at [name]. It is detected by gomacro.
+func FormFiles(form *multipart.Form, name string) []*multipart.FileHeader {
+	return form.File[name]
+}
+
 // SQLError wraps [*pq.Error] errors only
 func SQLError(err error) error {
+	if err == sql.ErrNoRows {
+		//lint:ignore ST1005 Erreur utilisateur
+		return fmt.Errorf("La requête SQL a échoué : %s", err)
+	}
 	if errPq, ok := err.(*pq.Error); ok {
 		//lint:ignore ST1005 Erreur utilisateur
 		return fmt.Errorf("La requête SQL (table %s) a échoué : %s", errPq.Table, errPq)

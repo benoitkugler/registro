@@ -6,7 +6,7 @@ CREATE TABLE demandes (
     Categorie smallint CHECK (Categorie IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)) NOT NULL,
     Description text NOT NULL,
     MaxDocs integer NOT NULL,
-    JoursValide integer NOT NULL
+    Nationnalite smallint CHECK (Nationnalite IN (0, 1, 2)) NOT NULL
 );
 
 CREATE TABLE demande_camps (
@@ -24,7 +24,8 @@ CREATE TABLE files (
     Id serial PRIMARY KEY,
     Taille integer NOT NULL,
     NomClient text NOT NULL,
-    Uploaded timestamp(0) with time zone NOT NULL
+    Uploaded timestamp(0) with time zone NOT NULL,
+    ReviewStatus smallint CHECK (ReviewStatus IN (0, 1, 2)) NOT NULL
 );
 
 CREATE TABLE file_aides (

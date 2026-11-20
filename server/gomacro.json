@@ -97,6 +97,20 @@
             "Output": "sql/events/gen_randdata_test.go"
         }
     ],
+    "sql/compta/models.go": [
+        {
+            "Mode": "go/sqlcrud",
+            "Output": "sql/compta/gen_scans.go"
+        },
+        {
+            "Mode": "sql",
+            "Output": "sql/compta/gen_create.sql"
+        },
+        {
+            "Mode": "go/randdata",
+            "Output": "sql/compta/gen_randdata_test.go"
+        }
+    ],
     "logic/events_src.go": [
         {
             "Mode": "go/unions",
@@ -107,6 +121,12 @@
         {
             "Mode": "typescript/api",
             "Output": "../registro-web/src/clients/backoffice/logic/api.ts"
+        }
+    ],
+    "routes_compta.go": [
+        {
+            "Mode": "typescript/api",
+            "Output": "../registro-web/src/clients/compta/logic/api.ts"
         }
     ],
     "routes_dons.go": [

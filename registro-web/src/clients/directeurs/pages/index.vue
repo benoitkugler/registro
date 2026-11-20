@@ -9,6 +9,13 @@
     <v-card title="Connection" class="mx-auto" width="400px">
       <v-card-text>
         <form>
+          <input
+            type="text"
+            name="username"
+            autocomplete="username"
+            value="directeur"
+            hidden
+          />
           <SelectCamp
             label="Camp"
             v-model="selected"

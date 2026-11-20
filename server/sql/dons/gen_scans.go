@@ -106,7 +106,16 @@ func (item Don) Insert(tx DB) (out Don, err error) {
 		) VALUES (
 		$1, $2, $3, $4, $5, $6, $7, $8
 		) RETURNING id, idpersonne, idorganisme, montant, modepaiement, date, affectation, details, remercie;
-		`, item.IdPersonne, item.IdOrganisme, item.Montant, item.ModePaiement, item.Date, item.Affectation, item.Details, item.Remercie)
+		`,
+		item.IdPersonne,
+		item.IdOrganisme,
+		item.Montant,
+		item.ModePaiement,
+		item.Date,
+		item.Affectation,
+		item.Details,
+		item.Remercie,
+	)
 	return ScanDon(row)
 }
 
@@ -117,7 +126,17 @@ func (item Don) Update(tx DB) (out Don, err error) {
 		) = (
 		$1, $2, $3, $4, $5, $6, $7, $8
 		) WHERE id = $9 RETURNING id, idpersonne, idorganisme, montant, modepaiement, date, affectation, details, remercie;
-		`, item.IdPersonne, item.IdOrganisme, item.Montant, item.ModePaiement, item.Date, item.Affectation, item.Details, item.Remercie, item.Id)
+		`,
+		item.IdPersonne,
+		item.IdOrganisme,
+		item.Montant,
+		item.ModePaiement,
+		item.Date,
+		item.Affectation,
+		item.Details,
+		item.Remercie,
+		item.Id,
+	)
 	return ScanDon(row)
 }
 
@@ -276,7 +295,14 @@ func (item Organisme) Insert(tx DB) (out Organisme, err error) {
 		) VALUES (
 		$1, $2, $3, $4, $5, $6
 		) RETURNING id, nom, mail, adresse, codepostal, ville, pays;
-		`, item.Nom, item.Mail, item.Adresse, item.CodePostal, item.Ville, item.Pays)
+		`,
+		item.Nom,
+		item.Mail,
+		item.Adresse,
+		item.CodePostal,
+		item.Ville,
+		item.Pays,
+	)
 	return ScanOrganisme(row)
 }
 
@@ -287,7 +313,15 @@ func (item Organisme) Update(tx DB) (out Organisme, err error) {
 		) = (
 		$1, $2, $3, $4, $5, $6
 		) WHERE id = $7 RETURNING id, nom, mail, adresse, codepostal, ville, pays;
-		`, item.Nom, item.Mail, item.Adresse, item.CodePostal, item.Ville, item.Pays, item.Id)
+		`,
+		item.Nom,
+		item.Mail,
+		item.Adresse,
+		item.CodePostal,
+		item.Ville,
+		item.Pays,
+		item.Id,
+	)
 	return ScanOrganisme(row)
 }
 

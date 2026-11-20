@@ -14,7 +14,7 @@ SELECT
             FROM tauxs));
 
 -- Builtin Demandes
-INSERT INTO demandes (Categorie, Description, MaxDocs, JoursValide)
+INSERT INTO demandes (Categorie, Description, MaxDocs, Nationnalite)
     VALUES
         --
         (1, '', 2, 0),
@@ -44,4 +44,17 @@ SELECT
             SELECT
                 max(id)
             FROM demandes));
+
+-- default compta config
+
+INSERT INTO compta_configs (Year, -- integer
+    MealsCost, -- integer[]
+    SmallMealThreshold, -- integer
+    SmallMealMajoration, -- integer
+    AssoCars, -- integer[]
+    ChauffageMDR, -- integer
+    EntretienMDR, -- integer
+    MaterielMDR -- integer
+ )
+    VALUES (2020, '{50, 200, 50, 200, 70}', 25, 10, '{150, 80, 50}', 15000, 20, 100);
 

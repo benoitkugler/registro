@@ -10,6 +10,8 @@ type IdPersonne int64
 //
 // required by Fichesanitaire and Ficheequipier
 // gomacro:SQL ADD UNIQUE(Id, IsTemp)
+//
+// gomacro:SQL _SELECT KEY(Mail)
 type Personne struct {
 	Id IdPersonne
 
@@ -24,6 +26,10 @@ type Personne struct {
 	// IsTemp is `true` for non verified profils,
 	// which may require to be merged to an existant one
 	IsTemp bool
+
+	// SecuriteSociale is the french "numéro de sécurité sociale",
+	// or the "numéro AVS" for the Repere configuration.
+	SecuriteSociale string
 }
 
 // RemoveTemp delete from [m] the temporary profiles
@@ -33,15 +39,6 @@ func (m Personnes) RemoveTemp() {
 			delete(m, k)
 		}
 	}
-}
-
-// SelectByMail returns the profiles with the given [mail].
-func SelectByMail(db DB, mail string) (Personnes, error) {
-	rows, err := db.Query("SELECT * FROM personnes WHERE Mail = $1", mail)
-	if err != nil {
-		return nil, err
-	}
-	return ScanPersonnes(rows)
 }
 
 // Fichesanitaire stores information as declared on the personnal space.
@@ -60,7 +57,6 @@ type Fichesanitaire struct {
 	AllergiesAlimentaires string
 	TraitementMedical     string
 
-	Medecin      NomTel
 	AutreContact NomTel // added to the responsable
 
 	// TODO: maybe add assurances
@@ -69,6 +65,8 @@ type Fichesanitaire struct {
 	Owners   Mails // used for security
 
 	guard bool `gomacro-sql-guard:"false"`
+
+	ReviewStatus FileReviewStatus
 }
 
 // Ficheequipier is an extension table loaded
@@ -80,8 +78,6 @@ type Fichesanitaire struct {
 // gomacro:SQL ADD FOREIGN KEY (IdPersonne, guard) REFERENCES Personne(Id,IsTemp) ON DELETE CASCADE
 type Ficheequipier struct {
 	IdPersonne IdPersonne `gomacro-sql-on-delete:"CASCADE"`
-
-	SecuriteSociale string // ou numéro AVS pour la configuration Repere
 
 	Diplome   Diplome
 	Formation string // permet de préciser si besoin

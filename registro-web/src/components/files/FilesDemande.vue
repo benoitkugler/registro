@@ -18,15 +18,6 @@
         <v-chip label :color="props.optionnelle ? undefined : 'pink'">
           {{ props.optionnelle ? "Optionnel" : "Requis" }}
         </v-chip>
-        <v-tooltip v-if="props.demande.JoursValide > 0">
-          <template #activator="{ props: tooltipProps }">
-            <v-icon v-bind="tooltipProps" class="mx-2"
-              >mdi-clock-outline</v-icon
-            >
-          </template>
-          Ce document sera supprimé automatiquement
-          <b>{{ props.demande.JoursValide }} jours</b> après son ajout.
-        </v-tooltip>
       </div>
       <template v-else>
         <slot name="prepend"></slot>

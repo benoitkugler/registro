@@ -60,6 +60,13 @@ type Identite struct {
 	Pays       Pays
 }
 
+// PersonneBase is the editable subset of [Personne] exposed
+// to the equipier client.
+type PersonneBase struct {
+	Identite
+	SecuriteSociale string
+}
+
 func (p *Identite) FPrenom() string { return formatPrenom(p.Prenom) }
 
 func (p *Identite) FNom() string { return strings.ToUpper(p.Nom) }
@@ -75,7 +82,7 @@ func (p Identite) PrenomNOM() string {
 }
 
 // PrenomN returns Prenom N.
-func (p *Identite) PrenomN() string {
+func (p Identite) PrenomN() string {
 	var initiale string
 	if nom := p.FNom(); nom != "" {
 		r, _ := utf8.DecodeRuneInString(nom)
@@ -241,3 +248,11 @@ type NomTel struct {
 	Nom string
 	Tel Tel
 }
+
+type FileReviewStatus uint8
+
+const (
+	FileReviewPending   FileReviewStatus = iota // En attente
+	FileReviewValidated                         // Validé
+	FileReviewRejected                          // Refusé
+)

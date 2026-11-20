@@ -66,8 +66,7 @@
       Avis
     </v-list-item>
     <v-divider></v-divider>
-    <!-- This is not ready just yet -->
-    <!-- <v-list-item
+    <v-list-item
       prepend-icon="mdi-credit-card-outline"
       append-icon="mdi-open-in-new"
       link
@@ -76,18 +75,19 @@
       color="primary"
     >
       Comptabilité
-    </v-list-item> -->
-
-    <v-divider></v-divider>
-    <v-list-item
-      prepend-icon="mdi-logout"
-      link
-      :to="{ path: '/' }"
-      color="primary"
-      @click="CachedTokens.clear()"
-    >
-      Se déconnecter
     </v-list-item>
+
+    <template #append>
+      <v-list-item
+        prepend-icon="mdi-logout"
+        link
+        :to="{ path: '/' }"
+        color="primary"
+        @click="CachedTokens.clear()"
+      >
+        Se déconnecter
+      </v-list-item>
+    </template>
   </v-navigation-drawer>
 
   <v-app-bar rounded elevation="4" color="primary">
@@ -111,7 +111,7 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import { CachedTokens } from "../logic/logic";
+import { CachedTokens, controller } from "../logic/logic";
 import { useDisplay } from "vuetify";
 
 const props = defineProps<{

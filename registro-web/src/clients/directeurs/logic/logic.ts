@@ -21,9 +21,9 @@ class Controller extends AbstractAPI {
     public showMessage: (
       message: string,
       color?: string,
-      action?: Action
+      action?: Action,
     ) => void,
-    baseURL: string
+    baseURL: string,
   ) {
     super(baseURL, "");
   }
@@ -52,7 +52,7 @@ const isDev = import.meta.env.DEV;
 export const controller = new Controller(
   (_, __) => {},
   (_, __) => {},
-  baseURL()
+  baseURL(),
 );
 
 // if (isDev) controller.setCamp(devCamp as CampItem, "test.fr", devToken);
@@ -78,19 +78,20 @@ export function isMessageNew(message: EventExt_MessageEvt) {
 
 export namespace CachedTokens {
   export function get() {
-    const cachedIdCamp = window.localStorage.getItem("cachedIdCamp") || "";
+    const cachedIdCamp =
+      window.localStorage.getItem("cachedIdCampDirecteurs") || "";
     const cachedToken =
       window.localStorage.getItem("cachedTokenDirecteurs") || "";
     return { idCamp: Number(cachedIdCamp) as IdCamp, token: cachedToken };
   }
 
   export function set(idCamp: IdCamp, token: string) {
-    window.localStorage.setItem("cachedIdCamp", String(idCamp));
+    window.localStorage.setItem("cachedIdCampDirecteurs", String(idCamp));
     window.localStorage.setItem("cachedTokenDirecteurs", token);
   }
 
   export function clear() {
-    window.localStorage.removeItem("cachedIdCamp");
+    window.localStorage.removeItem("cachedIdCampDirecteurs");
     window.localStorage.removeItem("cachedTokenDirecteurs");
   }
 }

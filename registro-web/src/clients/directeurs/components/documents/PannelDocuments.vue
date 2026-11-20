@@ -22,7 +22,15 @@
     <v-card-text v-else>
       <v-alert type="info" closable>
         La <b>fiche sanitaire</b> et les <b>vaccins</b> sont automatiquement
-        demandés pour les participants mineurs.
+        demandés
+        <span v-if="data.AskedDocs.FicheSanitaireMajeurs">
+          pour tous les participants, quel que soit leur âge.
+        </span>
+        <span v-else>pour les participants mineurs.</span>
+        <div v-if="data.AskedDocs.CarteId" class="mt-2">
+          Une <b>pièce d'identité</b> est également demandée automatiquement
+          pour tous les inscrits.
+        </div>
       </v-alert>
       <v-list>
         <!-- generated documents -->

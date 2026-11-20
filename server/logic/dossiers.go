@@ -253,7 +253,7 @@ func (bp BilanParticipant) publish(taux ds.Taux) BilanParticipantPub {
 	out := BilanParticipantPub{BilanParticipant: bp}
 
 	out.AvecAides = taux.Convertible(bp.prixSansRemises(taux)).String()
-	out.Net = taux.Convertible(bp.net(taux)).String()
+	out.Net = taux.Convertible(bp.Net(taux)).String()
 	return out
 }
 
@@ -287,8 +287,8 @@ type BilanFinancesPub struct {
 func (d DossierFinance) Publish(key crypto.Encrypter) DossierExt {
 	taux := d.Taux
 	b := d.Bilan()
-	inscrits := make(map[cps.IdParticipant]BilanParticipantPub, len(b.inscrits))
-	for k, v := range b.inscrits {
+	inscrits := make(map[cps.IdParticipant]BilanParticipantPub, len(b.Inscrits))
+	for k, v := range b.Inscrits {
 		inscrits[k] = v.publish(taux)
 	}
 
@@ -342,7 +342,7 @@ func LoadByMail(db ds.DB, mail string) (Dossiers, pr.Personnes, error) {
 	if len(mail) == 0 { // return early to avoid matching against empty profiles
 		return Dossiers{}, nil, nil
 	}
-	responsables, err := pr.SelectByMail(db, mail)
+	responsables, err := pr.SelectPersonnesByMail(db, mail)
 	if err != nil {
 		return Dossiers{}, nil, utils.SQLError(err)
 	}

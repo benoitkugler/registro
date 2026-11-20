@@ -7,10 +7,12 @@ import (
 	"strings"
 	"time"
 
+	filesAPI "registro/controllers/files"
 	"registro/controllers/services"
 	"registro/crypto"
 	"registro/logic"
 	"registro/mails"
+	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
 	pr "registro/sql/personnes"
 	"registro/utils"
@@ -20,26 +22,22 @@ import (
 
 // fiches sanitaires
 
-// only asks for fiche sanitaires and vaccins for majeur
-func asksFichesanitaire(dossier logic.Dossier, personne pr.Personne) bool {
-	camp, ok := dossier.FirstCampFor(personne.Id)
-	if !ok {
-		return false
-	}
-	return camp.AgeDebutCamp(personne.DateNaissance) < 18
-}
-
 type FichesanitaireExt struct {
-	Personne       string
-	IsLocked       bool
-	State          pr.FichesanitaireState
-	Fichesanitaire pr.Fichesanitaire
+	Personne     string
+	Nationnalite pr.Nationnalite
+
+	IsLocked         bool
+	IsOwnResponsable bool
+	State            pr.FichesanitaireState
+
+	Fichesanitaire  pr.Fichesanitaire
+	SecuriteSociale string
 
 	ResponsableNom  string
 	ResponsableTels pr.Tels
 }
 
-func loadFichesanitaires(db ds.DB, dossier logic.Dossier) (out []FichesanitaireExt, _ error) {
+func loadFichesanitaires(db ds.DB, dossier logic.Dossier, loader filesAPI.DemandesLoader) (out []FichesanitaireExt, _ error) {
 	responsable := dossier.Responsable()
 	idPersonnes := dossier.Participants.IdPersonnes()
 
@@ -48,24 +46,35 @@ func loadFichesanitaires(db ds.DB, dossier logic.Dossier) (out []FichesanitaireE
 		return out, utils.SQLError(err)
 	}
 	fichesByPersonne := fiches.ByIdPersonne()
-	// make sure the struct is initialized for every [Personne], restricting to < 18 years old
+	// make sure the struct is initialized for every [Personne], restricting to minors
+	// unless the association asks for fiche sanitaires for majors.
 	for _, pers := range dossier.Personnes()[1:] {
-		if pers.IsTemp { // wait for the validation
+		ageCamp, hasCamp := dossier.FirstCampFor(pers.Id)
+		if !hasCamp {
 			continue
 		}
-		if !asksFichesanitaire(dossier, pers) {
+		required := loader.ForParticipant(filesAPI.ParticipantDemandesArgs{
+			IdCamp:   ageCamp.Id,
+			AgeCamp:  ageCamp,
+			Personne: pers,
+			Statut:   cps.Inscrit,
+		}).FicheSanitaire
+		if !required {
 			continue
 		}
 
 		fiche := fichesByPersonne[pers.Id]
 		fiche.IdPersonne = pers.Id // init ID for empty fiche
 		fsExt := FichesanitaireExt{
-			pers.PrenomN(),
-			isFichesanitaireLocked(responsable.Mail, fiche.Owners),
-			fiche.State(dossier.Dossier.MomentInscription),
-			fiche,
-			responsable.PrenomNOM(),
-			responsable.Tels,
+			Personne:         pers.PrenomN(),
+			Nationnalite:     pers.Nationnalite,
+			IsLocked:         isFichesanitaireLocked(responsable.Mail, fiche.Owners),
+			IsOwnResponsable: pers.Id == dossier.Dossier.IdResponsable,
+			State:            fiche.State(dossier.Dossier.MomentInscription),
+			Fichesanitaire:   fiche,
+			SecuriteSociale:  pers.SecuriteSociale,
+			ResponsableNom:   responsable.PrenomNOM(),
+			ResponsableTels:  responsable.Tels,
 		}
 		if fsExt.IsLocked { // hide sensitive information
 			fsExt.Fichesanitaire = pr.Fichesanitaire{
@@ -80,8 +89,9 @@ func loadFichesanitaires(db ds.DB, dossier logic.Dossier) (out []FichesanitaireE
 }
 
 type UpdateFichesanitaireIn struct {
-	Token          string
-	Fichesanitaire pr.Fichesanitaire
+	Token           string
+	Fichesanitaire  pr.Fichesanitaire
+	SecuriteSociale string
 }
 
 func (ct *Controller) UpdateFichesanitaire(c echo.Context) error {
@@ -123,6 +133,11 @@ func (ct *Controller) updateFichesanitaire(args UpdateFichesanitaireIn) error {
 	if !slices.Contains(dossier.Participants.IdPersonnes(), idPersonne) {
 		return errors.New("access forbidden")
 	}
+	personne, err := pr.SelectPersonne(ct.db, idPersonne)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
 	// for security concern, load the existing fs
 	fs, _, err := pr.SelectFichesanitaireByIdPersonne(ct.db, idPersonne)
 	if err != nil {
@@ -139,8 +154,13 @@ func (ct *Controller) updateFichesanitaire(args UpdateFichesanitaireIn) error {
 	}
 	args.Fichesanitaire.Owners = fs.Owners
 	args.Fichesanitaire.Modified = time.Now()
-
+	args.Fichesanitaire.ReviewStatus = pr.FileReviewPending // reset the validation status
 	return utils.InTx(ct.db, func(tx *sql.Tx) error {
+		personne.SecuriteSociale = args.SecuriteSociale
+		_, err = personne.Update(tx)
+		if err != nil {
+			return err
+		}
 		_, err = pr.DeleteFichesanitairesByIdPersonnes(tx, idPersonne)
 		if err != nil {
 			return err

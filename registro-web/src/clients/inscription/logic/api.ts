@@ -21,6 +21,7 @@ export interface ConfigInscription {
   ShowInscriptionRapide: boolean;
   ShowAutorisationVehicules: boolean;
   ShowAnnulationConditions: boolean;
+  RequireResponsabiliteCivile: boolean;
 }
 // registro/config.RemisesHints
 export interface RemisesHints {
@@ -41,6 +42,8 @@ export interface CampExt {
   Places: Int;
   AgeMin: Int;
   AgeMax: Int;
+  HoraireDebut: Horaire;
+  HoraireFin: Horaire;
   Meta: Meta;
   Prix: string;
   OptionPrix: OptionPrixExt;
@@ -95,6 +98,12 @@ export interface StatutParticipantOut {
   Jeune: boolean;
   Age: Int;
   EcartInDays: Int;
+}
+// registro/sql/camps.Horaire
+export interface Horaire {
+  Valid: boolean;
+  Heure: Int;
+  Minute: Int;
 }
 export type IdCamp = Int & { __opaque_int__: "IdCamp" };
 // registro/sql/camps.Meta

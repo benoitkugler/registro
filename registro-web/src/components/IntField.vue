@@ -6,7 +6,11 @@
     type="number"
     :min="props.min === undefined ? 1 : props.min"
     :max="props.max"
-    v-model.number="model"
+    :model-value="model"
+    @update:model-value="
+      (s: string) =>
+        props.debounce ? throughDebounce(s) : (model = Number(s) as Int)
+    "
     :hide-details="!hint"
     :hint="props.hint"
     :persistent-hint="props.persistentHint"
@@ -25,7 +29,22 @@ const props = defineProps<{
   disabled?: boolean;
   suffix?: string;
   persistentHint?: boolean;
+  debounce?: boolean;
 }>();
 
 const model = defineModel<Int>({ required: true });
+
+// debounce feature
+let timerId: ReturnType<typeof setTimeout>;
+function throughDebounce(s: string) {
+  const debounceDelay = 500;
+
+  // cancel pending call
+  clearTimeout(timerId);
+
+  const v = Math.round(Number(s)) as Int;
+
+  // delay new call 500ms
+  timerId = setTimeout(() => (model.value = v), debounceDelay);
+}
 </script>

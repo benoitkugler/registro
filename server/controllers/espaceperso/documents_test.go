@@ -21,7 +21,7 @@ func TestDocuments(t *testing.T) {
 		"../../migrations/init.sql")
 	defer db.Remove()
 
-	pe1, err := pr.Personne{Identite: pr.Identite{DateNaissance: shared.NewDateFrom(tu.DateFor(13))}}.Insert(db)
+	pe1, err := pr.Personne{Identite: pr.Identite{DateNaissance: shared.NewDateFrom(tu.DateFor(25))}}.Insert(db)
 	tu.AssertNoErr(t, err)
 	pe2, err := pr.Personne{Identite: pr.Identite{DateNaissance: shared.NewDateFrom(tu.DateFor(8))}}.Insert(db)
 	tu.AssertNoErr(t, err)
@@ -40,10 +40,10 @@ func TestDocuments(t *testing.T) {
 	}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	d1, err := fs.Demande{MaxDocs: 1}.Insert(db)
+	customD, err := fs.Demande{MaxDocs: 1}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	err = fs.DemandeCamp{IdDemande: d1.Id, IdCamp: camp.Id}.Insert(db)
+	err = fs.DemandeCamp{IdDemande: customD.Id, IdCamp: camp.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	form, err := cps.Form{IdCamp: camp.Id}.Insert(db)
@@ -59,7 +59,7 @@ func TestDocuments(t *testing.T) {
 	err = cps.ParticipantForm{IdForm: form.Id, IdCamp: camp.Id, IdParticipant: p1.Id, Reponses: cps.FormReponses{cps.ChampReponseTexte("")}}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	ct := NewController(db.DB, crypto.Encrypter{}, config.SMTP{}, config.Asso{}, fs.NewFileSystem(os.TempDir()), config.Immich{})
+	ct := NewController(db.DB, crypto.Encrypter{}, config.SMTP{}, config.Asso{AskedDocs: config.AskedDocs{CarteId: true}}, fs.NewFileSystem(os.TempDir()), config.Immich{})
 
 	docs, err := ct.markAndloadDocuments(dossier.Id)
 	tu.AssertNoErr(t, err)
@@ -68,14 +68,36 @@ func TestDocuments(t *testing.T) {
 	tu.Assert(t, len(docs.FilesToUpload) == 2)
 	tu.Assert(t, len(docs.FilesToUpload[0].Demandes[0].Uploaded) == 0)
 	tu.Assert(t, len(docs.Chartes) == 1)
-	tu.Assert(t, len(docs.Fiches) == 2)
+	tu.Assert(t, len(docs.Fiches) == 1)
 	tu.Assert(t, len(docs.Forms) == 2)
-	tu.Assert(t, docs.NewCount == 0+4+2+1+1)
+	tu.Assert(t, docs.NewCount == 0+5+1+1+1)
 
-	_, err = ct.uploadDocument(dossier.Id, d1.Id, pe4.Id, tu.PngData, "test.png")
+	for _, personne := range docs.FilesToUpload {
+		hasCarteId, hasVaccins := false, false
+		for _, demande := range personne.Demandes {
+			hasCarteId = hasCarteId || demande.Demande.Categorie == fs.CarteId
+			hasVaccins = hasVaccins || demande.Demande.Categorie == fs.Vaccins
+		}
+		tu.Assert(t, hasCarteId)
+		if personne.IdPersonne == pe1.Id {
+			tu.Assert(t, !hasVaccins)
+		}
+	}
+
+	ct.asso.AskedDocs.CarteId = false
+	docsWithoutCarteId, err := ct.markAndloadDocuments(dossier.Id)
+	tu.AssertNoErr(t, err)
+	for _, personne := range docsWithoutCarteId.FilesToUpload {
+		for _, demande := range personne.Demandes {
+			tu.Assert(t, demande.Demande.Categorie != fs.CarteId)
+		}
+	}
+	ct.asso.AskedDocs.CarteId = true
+
+	_, err = ct.uploadDocument(dossier.Id, customD.Id, pe4.Id, tu.PngData, "test.png")
 	tu.AssertErr(t, err)
 
-	_, err = ct.uploadDocument(dossier.Id, d1.Id, pe1.Id, tu.PngData, "test.png")
+	_, err = ct.uploadDocument(dossier.Id, customD.Id, pe1.Id, tu.PngData, "test.png")
 	tu.AssertNoErr(t, err)
 
 	err = ct.accepteCharte(dossier.Id, pe1.Id)
@@ -83,7 +105,8 @@ func TestDocuments(t *testing.T) {
 
 	docs, err = ct.markAndloadDocuments(dossier.Id)
 	tu.AssertNoErr(t, err)
-	tu.Assert(t, len(docs.FilesToUpload[0].Demandes[0].Uploaded) == 1)
+	tu.Assert(t, len(docs.FilesToUpload[0].Demandes) == 2)
+	tu.Assert(t, len(docs.FilesToUpload[0].Demandes[1].Uploaded) == 1)
 	tu.Assert(t, docs.NewCount == 3+1+1+1)
 
 	err = cps.ParticipantForm{IdForm: form.Id, IdCamp: camp.Id, IdParticipant: p2.Id, Reponses: cps.FormReponses{cps.ChampReponseTexte("")}}.Insert(db)

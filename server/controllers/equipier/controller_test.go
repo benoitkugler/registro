@@ -23,8 +23,14 @@ func TestUpdate(t *testing.T) {
 
 	ct := Controller{db: db.DB}
 
-	err = ct.update(eq.Id, UpdateIn{PersonneDetails: pr.Ficheequipier{EtatCivil: pr.Marie, Recommandation: pr.Recommandation{Tel: "0256"}}})
+	err = ct.update(eq.Id, UpdateIn{
+		PersonneBase:    pr.PersonneBase{SecuriteSociale: "194057855126891"},
+		PersonneDetails: pr.Ficheequipier{EtatCivil: pr.Marie, Recommandation: pr.Recommandation{Tel: "0256"}},
+	})
 	tu.AssertNoErr(t, err)
+	pers, err := pr.SelectPersonne(db, personne.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, pers.SecuriteSociale == "194057855126891")
 	err = ct.update(eq.Id, UpdateIn{Presence: cps.PresenceOffsets{Debut: 4, Fin: -5}})
 	tu.AssertNoErr(t, err)
 	err = ct.update(eq.Id, UpdateIn{Presence: cps.PresenceOffsets{Debut: 5, Fin: -5}})

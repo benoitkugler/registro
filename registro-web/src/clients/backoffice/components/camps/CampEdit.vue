@@ -58,6 +58,21 @@
               ></DateField>
             </v-col>
           </v-row>
+
+          <v-row>
+            <v-col>
+              <HoraireField
+                v-model="inner.HoraireDebut"
+                label="Horaire du début du camp"
+              ></HoraireField>
+            </v-col>
+            <v-col>
+              <HoraireField
+                v-model="inner.HoraireFin"
+                label="Horaire de fin du camp"
+              ></HoraireField>
+            </v-col>
+          </v-row>
         </v-card-text>
       </v-card>
 

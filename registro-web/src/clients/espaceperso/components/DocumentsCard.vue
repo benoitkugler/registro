@@ -82,15 +82,30 @@
           :subtitle="fiche.Personne"
         >
           <template #append>
-            <v-chip
-              v-if="fiche.State == FichesanitaireState.UpToDate"
-              @click="ficheToEdit = fiche"
-              color="green"
-              append-icon="mdi-check"
-              elevation="1"
-            >
-              Remplie
-            </v-chip>
+            <template v-if="fiche.State == FichesanitaireState.UpToDate">
+              <v-chip
+                :color="
+                  Formatters.reviewStatus(fiche.Fichesanitaire.ReviewStatus)
+                    .color
+                "
+                :prepend-icon="
+                  Formatters.reviewStatus(fiche.Fichesanitaire.ReviewStatus)
+                    .icon
+                "
+                class="mr-2"
+              >
+                Vérification :
+                {{ FileReviewStatusLabels[fiche.Fichesanitaire.ReviewStatus] }}
+              </v-chip>
+              <v-btn
+                @click="ficheToEdit = fiche"
+                size="small"
+                prepend-icon="mdi-eye"
+              >
+                Consulter
+              </v-btn>
+            </template>
+
             <v-btn
               size="small"
               @click="ficheToEdit = fiche"
@@ -231,6 +246,7 @@ import { onMounted, ref } from "vue";
 import {
   Categorie,
   FichesanitaireState,
+  FileReviewStatusLabels,
   type Documents,
   type Fichesanitaire,
   type FichesanitaireExt,
@@ -242,7 +258,7 @@ import {
 } from "../logic/api";
 import { controller } from "../logic/logic";
 import type { Int } from "@/urls";
-import { endpoints } from "@/utils";
+import { endpoints, Formatters } from "@/utils";
 import FichesanitaireForm from "./FichesanitaireForm.vue";
 import CharteCard from "./CharteCard.vue";
 import { useDisplay } from "vuetify";
@@ -291,11 +307,15 @@ async function deleteDocument(file: PublicFile) {
 
 const ficheToEdit = ref<FichesanitaireExt | null>(null);
 
-async function saveFichesanitaire(fiche: Fichesanitaire) {
+async function saveFichesanitaire(
+  fiche: Fichesanitaire,
+  securiteSociale: string,
+) {
   ficheToEdit.value = null;
   const res = await controller.UpdateFichesanitaire({
     Token: props.token,
     Fichesanitaire: fiche,
+    SecuriteSociale: securiteSociale,
   });
   if (res === undefined) return;
   controller.showMessage("La fiche sanitaire a bien été enregistrée. Merci !");

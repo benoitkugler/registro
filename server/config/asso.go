@@ -23,6 +23,10 @@ type Asso struct {
 	// Also used in "Lettre aux parents" if UseCoordCentre is true, and as contact in espaceperso
 	ContactNom, ContactTel, ContactMail string
 
+	// Dénomination du contact notifié depuis l'espace directeur,
+	// utilisée pour le libellé du bouton (ex: "le comptable", "le centre").
+	ComptaContactLabel string
+
 	MailsSettings MailsSettings
 
 	BankAccounts   []BankAccount  // displayed in espace perso
@@ -30,7 +34,18 @@ type Asso struct {
 
 	RemisesHints RemisesHints
 
+	AskedDocs AskedDocs
+
 	ConfigInscription
+}
+
+type AskedDocs struct {
+	// FicheSanitaireMajeurs requests a fiche sanitaire (and vaccins)
+	// for every participant, regardless of age.
+	FicheSanitaireMajeurs bool
+
+	// CarteId requests a Carte d'identité/Passeport for enrolled participants.
+	CarteId bool
 }
 
 type BankAccount struct {
@@ -38,16 +53,17 @@ type BankAccount struct {
 }
 
 type ConfigInscription struct {
-	SupportBonsCAF            bool // if true, displayed in inscription form and activates Aides on espaceperso
-	SupportANCV               bool // if true, displayed in inscription form
-	SupportPaiementEnLigne    bool // if true, displayed in inscription and activated on espaceperso
-	EmailRetraitMedia         string
-	ShowFondSoutien           bool // if true, displayed in inscription form
-	ShowCharteConduite        bool // if true, displayed in inscription form
-	AskNationnalite           bool // if true, displayed for participants in inscription form
-	ShowInscriptionRapide     bool // if true, displays a bar in inscription form
-	ShowAutorisationVehicules bool // if true, displays an autorisation checkbox in inscription form
-	ShowAnnulationConditions  bool // if true, displays a warning in inscription form (step 3)
+	SupportBonsCAF              bool // if true, displayed in inscription form and activates Aides on espaceperso
+	SupportANCV                 bool // if true, displayed in inscription form
+	SupportPaiementEnLigne      bool // if true, displayed in inscription and activated on espaceperso
+	EmailRetraitMedia           string
+	ShowFondSoutien             bool // if true, displayed in inscription form
+	ShowCharteConduite          bool // if true, displayed in inscription form
+	AskNationnalite             bool // if true, displayed for participants in inscription form
+	ShowInscriptionRapide       bool // if true, displays a bar in inscription form
+	ShowAutorisationVehicules   bool // if true, displays an autorisation checkbox in inscription form
+	ShowAnnulationConditions    bool // if true, displays a warning in inscription form (step 3)
+	RequireResponsabiliteCivile bool // if true, a checkbox must be checked
 }
 
 var acve = Asso{
@@ -59,6 +75,8 @@ var acve = Asso{
 	ContactNom:  "ACVE - Centre d'inscriptions",
 	ContactTel:  "04 75 22 03 95",
 	ContactMail: "inscriptions@acve.asso.fr",
+
+	ComptaContactLabel: "le centre",
 
 	Icon:            "logo_acve.png",
 	BackgroundColor: "#b8dbf1", // rgb(184, 219, 241)
@@ -85,16 +103,22 @@ var acve = Asso{
 		AutresInscrits: 15,
 	},
 
+	AskedDocs: AskedDocs{
+		FicheSanitaireMajeurs: false,
+		CarteId:               false,
+	},
+
 	ConfigInscription: ConfigInscription{
 		SupportBonsCAF: true, SupportANCV: true,
-		SupportPaiementEnLigne:    true,
-		EmailRetraitMedia:         "contact@acve.asso.fr",
-		ShowFondSoutien:           false,
-		ShowCharteConduite:        false,
-		AskNationnalite:           false,
-		ShowInscriptionRapide:     true,
-		ShowAutorisationVehicules: true,
-		ShowAnnulationConditions:  false,
+		SupportPaiementEnLigne:      true,
+		EmailRetraitMedia:           "contact@acve.asso.fr",
+		ShowFondSoutien:             false,
+		ShowCharteConduite:          false,
+		AskNationnalite:             false,
+		ShowInscriptionRapide:       true,
+		ShowAutorisationVehicules:   true,
+		ShowAnnulationConditions:    false,
+		RequireResponsabiliteCivile: false,
 	},
 }
 
@@ -107,6 +131,8 @@ var repere = Asso{
 	ContactNom:  "Repère - Centre d'inscriptions",
 	ContactTel:  "+41 79 334 15 04",
 	ContactMail: "webmaster@lerepere.ch",
+
+	ComptaContactLabel: "le comptable",
 
 	Icon: "logo_repere.png",
 	// couleurs extraites de https://asso-repere.ch
@@ -130,16 +156,22 @@ var repere = Asso{
 		AutresInscrits: 10,
 	},
 
+	AskedDocs: AskedDocs{
+		FicheSanitaireMajeurs: true,
+		CarteId:               true,
+	},
+
 	ConfigInscription: ConfigInscription{
 		SupportBonsCAF: false, SupportANCV: false,
-		SupportPaiementEnLigne:    false,
-		EmailRetraitMedia:         "webmaster@lerepere.ch",
-		ShowFondSoutien:           true,
-		ShowCharteConduite:        true,
-		AskNationnalite:           true,
-		ShowInscriptionRapide:     true, // false pour la première année, actif maintenant
-		ShowAutorisationVehicules: false,
-		ShowAnnulationConditions:  true,
+		SupportPaiementEnLigne:      false,
+		EmailRetraitMedia:           "webmaster@lerepere.ch",
+		ShowFondSoutien:             true,
+		ShowCharteConduite:          true,
+		AskNationnalite:             true,
+		ShowInscriptionRapide:       true, // false pour la première année, actif maintenant
+		ShowAutorisationVehicules:   false,
+		ShowAnnulationConditions:    true,
+		RequireResponsabiliteCivile: true,
 	},
 }
 
@@ -165,6 +197,9 @@ type MailsSettings struct {
 
 	// notification adress; should be specified by env. var ASSO_MAIL_FONDS_SOUTIEN
 	FondsSoutien string
+
+	// notification adress; should be specified by env. var ASSO_MAIL_NOTIFICATION_FROM_DIRECTEUR
+	NotificationFromDirecteur string
 }
 
 // NewAsso read the ASSO env variable and returns the associated configuration.
@@ -172,7 +207,8 @@ type MailsSettings struct {
 //   - acve
 //   - repere
 //
-// The ASSO_BANK_IBAN and ASSO_MAIL_SAUVEGARDE envs are also read
+// The ASSO_BANK_IBAN, ASSO_MAIL_SAUVEGARDE, ASSO_MAIL_FONDS_SOUTIEN
+// and ASSO_MAIL_NOTIFICATION_FROM_DIRECTEUR envs are also read
 func NewAsso() (Asso, error) {
 	var out Asso
 
@@ -207,6 +243,11 @@ func NewAsso() (Asso, error) {
 	out.MailsSettings.FondsSoutien = os.Getenv("ASSO_MAIL_FONDS_SOUTIEN")
 	if out.MailsSettings.FondsSoutien == "" {
 		return Asso{}, errors.New("missing ASSO_MAIL_FONDS_SOUTIEN env. variable")
+	}
+
+	out.MailsSettings.NotificationFromDirecteur = os.Getenv("ASSO_MAIL_NOTIFICATION_FROM_DIRECTEUR")
+	if out.MailsSettings.NotificationFromDirecteur == "" {
+		return Asso{}, errors.New("missing ASSO_MAIL_NOTIFICATION_FROM_DIRECTEUR env. variable")
 	}
 
 	return out, nil

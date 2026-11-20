@@ -25,7 +25,6 @@ CREATE TYPE Qualifications AS (
 
 CREATE TABLE ficheequipiers (
     IdPersonne integer NOT NULL,
-    SecuriteSociale text NOT NULL,
     Diplome smallint CHECK (Diplome IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24)) NOT NULL,
     Formation text NOT NULL,
     Fonctionnaire boolean NOT NULL,
@@ -50,11 +49,11 @@ CREATE TABLE fichesanitaires (
     DifficultesSante text NOT NULL,
     AllergiesAlimentaires text NOT NULL,
     TraitementMedical text NOT NULL,
-    Medecin jsonb NOT NULL,
     AutreContact jsonb NOT NULL,
     Modified timestamp(0) with time zone NOT NULL,
     Owners text[],
-    guard boolean NOT NULL
+    guard boolean NOT NULL,
+    ReviewStatus smallint CHECK (ReviewStatus IN (0, 1, 2)) NOT NULL
 );
 
 CREATE TABLE personnes (
@@ -72,7 +71,8 @@ CREATE TABLE personnes (
     Pays text NOT NULL,
     Publicite Publicite NOT NULL,
     CharteAccepted timestamp(0) with time zone NOT NULL,
-    IsTemp boolean NOT NULL
+    IsTemp boolean NOT NULL,
+    SecuriteSociale text NOT NULL
 );
 
 -- constraints
@@ -172,9 +172,6 @@ IMMUTABLE;
 
 ALTER TABLE fichesanitaires
     ADD CONSTRAINT AutreContact_gomacro CHECK (gomacro_validate_json_pers_NomTel (AutreContact));
-
-ALTER TABLE fichesanitaires
-    ADD CONSTRAINT Medecin_gomacro CHECK (gomacro_validate_json_pers_NomTel (Medecin));
 
 ALTER TABLE ficheequipiers
     ADD CONSTRAINT Recommandation_gomacro CHECK (gomacro_validate_json_pers_Recommandation (Recommandation));
