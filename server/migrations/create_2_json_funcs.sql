@@ -107,6 +107,29 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION gomacro_validate_json_array_camp_TrancheQuotient (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) = 'null' THEN
+        RETURN TRUE;
+    END IF;
+    IF jsonb_typeof(data) != 'array' THEN
+        RETURN FALSE;
+    END IF;
+    IF jsonb_array_length(data) = 0 THEN
+        RETURN TRUE;
+    END IF;
+    RETURN (
+        SELECT
+            bool_and(gomacro_validate_json_camp_TrancheQuotient (value))
+        FROM
+            jsonb_array_elements(data));
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
 CREATE OR REPLACE FUNCTION gomacro_validate_json_array_camp_Vetement (data jsonb)
     RETURNS boolean
     AS $$
@@ -438,6 +461,28 @@ BEGIN
         AND gomacro_validate_json_number (data -> 'Equipiers')
         AND gomacro_validate_json_number (data -> 'Famille')
         AND gomacro_validate_json_doss_Montant (data -> 'Speciale');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_camp_TrancheQuotient (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(KEY IN ('QuotientMin', 'Pourcentage'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_number (data -> 'QuotientMin')
+        AND gomacro_validate_json_number (data -> 'Pourcentage');
     RETURN is_valid;
 END;
 $$

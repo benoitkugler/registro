@@ -24,14 +24,6 @@ func randAide() Aide {
 	return s
 }
 
-func randAr4_int32() [4]int32 {
-	var out [4]int32
-	for i := range out {
-		out[i] = randint32()
-	}
-	return out
-}
-
 func randCamp() Camp {
 	var s Camp
 	s.Id = randIdCamp()
@@ -348,7 +340,18 @@ func randPresenceOffsets() PresenceOffsets {
 }
 
 func randPrixQuotientFamilial() PrixQuotientFamilial {
-	return PrixQuotientFamilial(randAr4_int32())
+	l := 1 + rand.Intn(5)
+	out := make(PrixQuotientFamilial, l)
+	minimum := -1
+	for i := range out {
+		minimum += 1 + rand.Intn(100)
+		out[i] = TrancheQuotient{
+			QuotientMin: minimum,
+			Pourcentage: rand.Intn(101),
+		}
+	}
+	out[l-1].Pourcentage = 100
+	return out
 }
 
 func randProjetSpi() ProjetSpi {

@@ -4,7 +4,6 @@ import type { AxiosResponse } from "axios";
 import Axios from "axios";
 
 export type Ar2_string = [string, string];
-export type Ar4_Int = [Int, Int, Int, Int];
 
 // AAAA-MM-YY date format
 export type Date_ = string & { __opaque__: "Date" };
@@ -434,7 +433,7 @@ export interface Participant {
   OptionPrix: OptionPrixParticipant;
 }
 // registro/sql/camps.PrixQuotientFamilial
-export type PrixQuotientFamilial = Ar4_Int;
+export type PrixQuotientFamilial = TrancheQuotient[];
 // registro/sql/camps.Remises
 export interface Remises {
   Equipiers: Int;
@@ -521,6 +520,11 @@ export interface Structureaide {
 }
 // registro/sql/camps.Structureaides
 export type Structureaides = Record<IdStructureaide, Structureaide> | null;
+// registro/sql/camps.TrancheQuotient
+export interface TrancheQuotient {
+  QuotientMin: Int;
+  Pourcentage: Int;
+}
 // registro/sql/dossiers.Currency
 export const Currency = {
   Euros: 0,

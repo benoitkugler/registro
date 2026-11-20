@@ -167,7 +167,7 @@ CREATE TABLE camps (
     Statut smallint CHECK (Statut IN (0, 1, 2)) NOT NULL,
     Prix Montant NOT NULL,
     OptionPrix jsonb NOT NULL,
-    OptionQuotientFamilial integer[] CHECK (array_length(OptionQuotientFamilial, 1) = 4) NOT NULL,
+    OptionQuotientFamilial jsonb NOT NULL,
     Password text NOT NULL,
     DocumentsReady boolean NOT NULL,
     DocumentsToShow DocumentsToShow NOT NULL,
@@ -635,6 +635,29 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION gomacro_validate_json_array_camp_TrancheQuotient (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) = 'null' THEN
+        RETURN TRUE;
+    END IF;
+    IF jsonb_typeof(data) != 'array' THEN
+        RETURN FALSE;
+    END IF;
+    IF jsonb_array_length(data) = 0 THEN
+        RETURN TRUE;
+    END IF;
+    RETURN (
+        SELECT
+            bool_and(gomacro_validate_json_camp_TrancheQuotient (value))
+        FROM
+            jsonb_array_elements(data));
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
 CREATE OR REPLACE FUNCTION gomacro_validate_json_array_camp_Vetement (data jsonb)
     RETURNS boolean
     AS $$
@@ -966,6 +989,28 @@ BEGIN
         AND gomacro_validate_json_number (data -> 'Equipiers')
         AND gomacro_validate_json_number (data -> 'Famille')
         AND gomacro_validate_json_doss_Montant (data -> 'Speciale');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_camp_TrancheQuotient (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(KEY IN ('QuotientMin', 'Pourcentage'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_number (data -> 'QuotientMin')
+        AND gomacro_validate_json_number (data -> 'Pourcentage');
     RETURN is_valid;
 END;
 $$
@@ -1671,6 +1716,9 @@ ALTER TABLE camps
 ALTER TABLE camps
     ADD CONSTRAINT OptionPrix_gomacro CHECK (gomacro_validate_json_camp_OptionPrixCamp (OptionPrix));
 
+ALTER TABLE camps
+    ADD CONSTRAINT OptionQuotientFamilial_gomacro CHECK (gomacro_validate_json_array_camp_TrancheQuotient (OptionQuotientFamilial));
+
 ALTER TABLE participants
     ADD CONSTRAINT OptionPrix_gomacro CHECK (gomacro_validate_json_camp_OptionPrixParticipant (OptionPrix));
 
@@ -2069,30 +2117,30 @@ SELECT
             FROM tauxs));
 
 -- Builtin Demandes
-INSERT INTO demandes (Categorie, Description, MaxDocs)
+INSERT INTO demandes (Categorie, Description, MaxDocs, Nationnalite)
     VALUES
         --
-        (1, '', 2),
+        (1, '', 2, 0),
         --
-        (2, '', 2),
+        (2, '', 2, 0),
         --
-        (3, '', 1),
+        (3, '', 1, 0),
         --
-        (4, '', 1),
+        (4, '', 1, 0),
         --
-        (5, '', 1),
+        (5, '', 1, 0),
         --
-        (6, '', 1),
+        (6, '', 1, 0),
         --
-        (7, '', 2),
+        (7, '', 2, 0),
         --
-        (8, 'Vaccins', 5),
+        (8, 'Vaccins', 5, 0),
         --
-        (9, '', 1),
+        (9, '', 1, 0),
         --
-        (10, '', 1),
+        (10, '', 1, 0),
         --
-        (11, '', 1);
+        (11, '', 1, 0);
 
 SELECT
     setval('demandes_id_seq', (

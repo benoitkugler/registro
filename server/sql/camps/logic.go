@@ -404,10 +404,8 @@ func (c *Camp) Check() error {
 	if c.Prix.Cent < 0 {
 		return errors.New("invalid Prix")
 	}
-	for _, perc := range c.OptionQuotientFamilial {
-		if !(0 <= perc && perc <= 100) {
-			return errors.New("invalid OptionQuotientFamilial percentage")
-		}
+	if err := c.OptionQuotientFamilial.Check(); err != nil {
+		return err
 	}
 	if c.OptionPrix.Active == PrixJour {
 		if c.OptionPrix.PrixParJour == 0 {

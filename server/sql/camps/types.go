@@ -205,34 +205,71 @@ func (op OptionPrixParticipant) IsEmpty(kind OptionPrixKind) bool {
 	}
 }
 
-// grilleQF définit une grille fixe de prix au quotient familial
-// Index 0 : de 1 à 359
-// Index 1 : de 360 à 564
-// Index 2 : de 565 à 714
-// Index 3 : plus de 715
-var grilleQF = [...]int{0, 359, 564, 714}
+// TrancheQuotient définit le pourcentage appliqué aux quotients familiaux
+// supérieurs ou égaux à QuotientMin, et inférieurs à la tranche suivante.
+type TrancheQuotient struct {
+	QuotientMin int
+	Pourcentage int
+}
 
 // PrixQuotientFamilial applique un pourcentage sur le prix de base (exprimé en %),
-// pour les categories définie par `QuotientFamilial`
+// pour les tranches définies par [TrancheQuotient].
 //
-// Par cohérence avec le prix de base, la dernière valeur vaut toujours 100
-// (sauf pour la valeur zero).
-type PrixQuotientFamilial [len(grilleQF)]int32
+// Une grille vide est la valeur par défaut : aucune option prix au quotient
+// familial n'est proposée sur le séjour. Une grille non vide doit avoir des
+// QuotientMin strictement croissants et une dernière tranche à 100%, par
+// cohérence avec le prix de base.
+type PrixQuotientFamilial []TrancheQuotient
+
+// DefaultPrixQuotientFamilial renvoie la grille historique, utilisée comme
+// valeur initiale lors de l'activation de l'option dans le backoffice.
+func DefaultPrixQuotientFamilial() PrixQuotientFamilial {
+	return PrixQuotientFamilial{
+		{QuotientMin: 1, Pourcentage: 20},
+		{QuotientMin: 360, Pourcentage: 40},
+		{QuotientMin: 565, Pourcentage: 60},
+		{QuotientMin: 715, Pourcentage: 100},
+	}
+}
 
 // IsActive renvoie 'true' si la réduction est active
-func (oq PrixQuotientFamilial) IsActive() bool { return oq[3] == 100 }
+func (q PrixQuotientFamilial) IsActive() bool { return len(q) > 0 }
+
+// Check vérifie la cohérence d'une grille non vide.
+func (q PrixQuotientFamilial) Check() error {
+	if len(q) == 0 {
+		return nil
+	}
+	prevMin := -1
+	for i, tranche := range q {
+		if tranche.QuotientMin <= prevMin {
+			return fmt.Errorf("invalid OptionQuotientFamilial QuotientMin at index %d", i)
+		}
+		if tranche.Pourcentage < 0 || tranche.Pourcentage > 100 {
+			return fmt.Errorf("invalid OptionQuotientFamilial percentage at index %d", i)
+		}
+		prevMin = tranche.QuotientMin
+	}
+	if last := len(q) - 1; q[last].Pourcentage != 100 {
+		return errors.New("last OptionQuotientFamilial percentage must be 100")
+	}
+	return nil
+}
 
 // Percentage renvoie le pourcentage appliqué au prix de base pour le quotient
 // familial donné.
 func (q PrixQuotientFamilial) Percentage(quotientFamilial int) int {
-	N := len(grilleQF)
-	for i := 0; i < N-1; i++ {
-		q1, q2 := grilleQF[i], grilleQF[i+1]
-		if q1 < quotientFamilial && quotientFamilial <= q2 {
-			return int(q[i])
-		}
+	if !q.IsActive() || quotientFamilial <= 0 {
+		return 100
 	}
-	return 100
+	pourcentage := q[0].Pourcentage
+	for _, tranche := range q {
+		if quotientFamilial < tranche.QuotientMin {
+			break
+		}
+		pourcentage = tranche.Pourcentage
+	}
+	return pourcentage
 }
 
 type OptionNavette struct {

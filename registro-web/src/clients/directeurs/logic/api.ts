@@ -5,7 +5,6 @@ import Axios from "axios";
 
 import type { JSONStreamResponse } from "@/utils";
 export type Ar2_string = [string, string];
-export type Ar4_Int = [Int, Int, Int, Int];
 
 // AAAA-MM-YY date format
 export type Date_ = string & { __opaque__: "Date" };
@@ -590,7 +589,7 @@ export interface PresenceOffsets {
   Fin: Int;
 }
 // registro/sql/camps.PrixQuotientFamilial
-export type PrixQuotientFamilial = Ar4_Int;
+export type PrixQuotientFamilial = TrancheQuotient[];
 // registro/sql/camps.ProjetSpi
 export interface ProjetSpi {
   IdCamp: IdCamp;
@@ -739,6 +738,11 @@ export const StatutParticipantLabels: Record<StatutParticipant, string> = {
   [StatutParticipant.Inscrit]: "Inscrit",
 };
 
+// registro/sql/camps.TrancheQuotient
+export interface TrancheQuotient {
+  QuotientMin: Int;
+  Pourcentage: Int;
+}
 // registro/sql/camps.Vetement
 export interface Vetement {
   Quantite: Int;

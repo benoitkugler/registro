@@ -6,65 +6,70 @@
   >
     <v-card-text>
       <!-- Quotient familial -->
-      <v-row>
-        <v-col align-self="center">
+      <v-row align="center">
+        <v-col align-self="center" cols="auto">
           <v-checkbox
             :model-value="isQFActive"
-            @update:model-value="(b) => (innerQF[3] = (b ? 100 : 0) as Int)"
+            @update:model-value="onQFActiveChange"
             hide-details
             label="Prix au quotient familial"
           ></v-checkbox>
         </v-col>
-        <v-col align-self="center"
-          ><IntField
-            suffix="%"
-            :min="0 as Int"
-            :max="100 as Int"
-            :disabled="!isQFActive"
-            hide-details
-            readonly-currency
-            label="entre 1 et 359"
-            v-model="innerQF[0]"
-          ></IntField
-        ></v-col>
-
-        <v-col align-self="center"
-          ><IntField
-            suffix="%"
-            :min="0 as Int"
-            :max="100 as Int"
-            :disabled="!isQFActive"
-            hide-details
-            readonly-currency
-            label="entre 360 et 564"
-            v-model="innerQF[1]"
-          ></IntField
-        ></v-col>
-        <v-col align-self="center"
-          ><IntField
-            suffix="%"
-            :min="0 as Int"
-            :max="100 as Int"
-            :disabled="!isQFActive"
-            hide-details
-            readonly-currency
-            label="entre 565 et 714"
-            v-model="innerQF[2]"
-          ></IntField
-        ></v-col>
-        <v-col align-self="center"
-          ><IntField
-            suffix="%"
-            :min="0 as Int"
-            :max="100 as Int"
-            :disabled="true"
-            hide-details
-            readonly-currency
-            label="plus de 715"
-            v-model="innerQF[3]"
-          ></IntField
-        ></v-col>
+        <v-col v-if="isQFActive" class="text-caption">
+          La dernière tranche est fixée à 100 % du prix de base.
+        </v-col>
       </v-row>
+
+      <template v-if="isQFActive">
+        <v-row
+          v-for="(tranche, index) in innerQF"
+          :key="index"
+          align="center"
+          class="my-1"
+        >
+          <v-col cols="auto">
+            <v-btn
+              icon="mdi-delete-outline"
+              variant="text"
+              size="small"
+              density="comfortable"
+              :disabled="innerQF.length <= 1"
+              aria-label="Supprimer la tranche"
+              @click="removeTranche(index)"
+            ></v-btn>
+          </v-col>
+          <v-col>
+            <IntField
+              :label="trancheLabel(index)"
+              :min="minQuotient(index)"
+              v-model="tranche.QuotientMin"
+            ></IntField>
+          </v-col>
+          <v-col>
+            <IntField
+              label="Pourcentage"
+              suffix="%"
+              :min="0 as Int"
+              :max="100 as Int"
+              :disabled="index === innerQF.length - 1"
+              hide-details
+              v-model="tranche.Pourcentage"
+            ></IntField>
+          </v-col>
+        </v-row>
+
+        <v-row class="mt-1">
+          <v-col cols="auto">
+            <v-btn
+              prepend-icon="mdi-plus"
+              variant="tonal"
+              size="small"
+              @click="addTranche"
+              >Ajouter une tranche</v-btn
+            >
+          </v-col>
+        </v-row>
+      </template>
 
       <v-divider thickness="1" class="my-2"></v-divider>
 
@@ -129,11 +134,55 @@ const innerQF = defineModel<PrixQuotientFamilial>("optionQf", {
   required: true,
 });
 
+if (innerQF.value == null) innerQF.value = [];
+
 const isQFActive = computed(() =>
   Camps.isQuotientFamilialActive(innerQF.value),
 );
 
 const kindItems = selectItems(OptionPrixKindLabels);
+
+function onQFActiveChange(active: boolean | null) {
+  innerQF.value = active ? Camps.defaultQuotientFamilial() : [];
+}
+
+function minQuotient(index: number): Int {
+  if (index === 0) return 0 as Int;
+  return (innerQF.value[index - 1].QuotientMin + 1) as Int;
+}
+
+function trancheLabel(index: number): string {
+  const min = innerQF.value[index].QuotientMin;
+  if (index === innerQF.value.length - 1) return `Plus de ${min}`;
+  return `De ${min} à ${innerQF.value[index + 1].QuotientMin - 1}`;
+}
+
+function addTranche() {
+  const grid = innerQF.value;
+  const lastIndex = grid.length - 1;
+  const last = grid[lastIndex];
+  const previousMin = lastIndex > 0 ? grid[lastIndex - 1].QuotientMin : -1;
+  const minBeforeLast = last.QuotientMin - 100;
+  if (minBeforeLast > previousMin) {
+    grid.splice(lastIndex, 0, {
+      QuotientMin: minBeforeLast as Int,
+      Pourcentage: 50 as Int,
+    });
+    return;
+  }
+  // Pas de place avant la dernière tranche : on étend la grille vers le haut.
+  last.Pourcentage = 50 as Int;
+  grid.push({
+    QuotientMin: (last.QuotientMin + 100) as Int,
+    Pourcentage: 100 as Int,
+  });
+}
+
+function removeTranche(index: number) {
+  if (innerQF.value.length <= 1) return;
+  innerQF.value.splice(index, 1);
+  innerQF.value[innerQF.value.length - 1].Pourcentage = 100 as Int;
+}
 
 // used to set better default values
 function onKindChange(newKind: OptionPrixKind) {

@@ -264,8 +264,17 @@ export namespace Camps {
     return str.includes(normalizedPattern);
   }
 
-  export function isQuotientFamilialActive(opt: PrixQuotientFamilial) {
-    return opt[3] != 0;
+  export function isQuotientFamilialActive(opt: PrixQuotientFamilial | null) {
+    return opt != null && opt.length > 0;
+  }
+
+  export function defaultQuotientFamilial(): PrixQuotientFamilial {
+    return [
+      { QuotientMin: 1 as Int, Pourcentage: 20 as Int },
+      { QuotientMin: 360 as Int, Pourcentage: 40 as Int },
+      { QuotientMin: 565 as Int, Pourcentage: 60 as Int },
+      { QuotientMin: 715 as Int, Pourcentage: 100 as Int },
+    ];
   }
 
   export function toItem(c: CampExt): CampItem {

@@ -316,11 +316,16 @@ func Test_pc_prixBase(t *testing.T) {
 		{fields{prix: eur(100)}, eur(100), ""},
 		// QF
 		{fields{prix: eur(100), qf: 100}, eur(100), ""},
-		{fields{prix: eur(100), optQF: cps.PrixQuotientFamilial{20, 40, 60, 100}}, eur(100), ""},
-		{fields{prix: eur(100), optQF: cps.PrixQuotientFamilial{20, 40, 60, 100}, qf: 100}, eur(20), "QF 100"},
-		{fields{prix: eur(100), optQF: cps.PrixQuotientFamilial{20, 40, 60, 100}, qf: 400}, eur(40), "QF 400"},
-		{fields{prix: eur(100), optQF: cps.PrixQuotientFamilial{20, 40, 60, 100}, qf: 600}, eur(60), "QF 600"},
-		{fields{prix: eur(100), optQF: cps.PrixQuotientFamilial{20, 40, 60, 100}, qf: 1000}, eur(100), "QF 1000"},
+		{fields{prix: eur(100), optQF: cps.DefaultPrixQuotientFamilial()}, eur(100), ""},
+		{fields{prix: eur(100), optQF: cps.DefaultPrixQuotientFamilial(), qf: 100}, eur(20), "QF 100"},
+		{fields{prix: eur(100), optQF: cps.DefaultPrixQuotientFamilial(), qf: 400}, eur(40), "QF 400"},
+		{fields{prix: eur(100), optQF: cps.DefaultPrixQuotientFamilial(), qf: 600}, eur(60), "QF 600"},
+		{fields{prix: eur(100), optQF: cps.DefaultPrixQuotientFamilial(), qf: 1000}, eur(100), "QF 1000"},
+		// QF avec une grille personnalisée
+		{fields{prix: eur(100), optQF: cps.PrixQuotientFamilial{{QuotientMin: 0, Pourcentage: 50}, {QuotientMin: 500, Pourcentage: 100}}, qf: 100}, eur(50), "QF 100"},
+		{fields{prix: eur(100), optQF: cps.PrixQuotientFamilial{{QuotientMin: 0, Pourcentage: 50}, {QuotientMin: 500, Pourcentage: 100}}, qf: 600}, eur(100), "QF 600"},
+		// QF désactivé (grille vide)
+		{fields{prix: eur(100), optQF: cps.PrixQuotientFamilial{}, qf: 100}, eur(100), ""},
 		// Option rapide
 		{fields{prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixInscriptionRapide, InscriptionRapide: cps.InscriptionRapide{Prix: 8000, Limite: sh.Date(inscription.Add(-5 * 24 * time.Hour))}}}, eur(100), ""},
 		{fields{prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixInscriptionRapide, InscriptionRapide: cps.InscriptionRapide{Prix: 8000, Limite: sh.Date(inscription)}}}, eur(80), "Inscription rapide"},
@@ -335,7 +340,7 @@ func Test_pc_prixBase(t *testing.T) {
 			fields{
 				prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixJour, PrixParJour: 2000},
 				optPart: cps.OptionPrixParticipant{Jour: cps.JoursPresence{0, 2}},
-				optQF:   cps.PrixQuotientFamilial{20, 40, 60, 100}, qf: 100,
+				optQF:   cps.DefaultPrixQuotientFamilial(), qf: 100,
 			}, eur(8), "2 jours - QF 100",
 		}, // 40 * 20%
 	}

@@ -167,7 +167,7 @@ CREATE TABLE camps (
     Statut smallint CHECK (Statut IN (0, 1, 2)) NOT NULL,
     Prix Montant NOT NULL,
     OptionPrix jsonb NOT NULL,
-    OptionQuotientFamilial integer[] CHECK (array_length(OptionQuotientFamilial, 1) = 4) NOT NULL,
+    OptionQuotientFamilial jsonb NOT NULL,
     Password text NOT NULL,
     DocumentsReady boolean NOT NULL,
     DocumentsToShow DocumentsToShow NOT NULL,

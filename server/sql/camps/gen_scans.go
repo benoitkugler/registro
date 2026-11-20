@@ -2704,21 +2704,12 @@ func dumpJSON(s any) (driver.Value, error) {
 	return driver.Value(string(b)), nil
 }
 
-func (s *PrixQuotientFamilial) Scan(src any) error {
-	var tmp pq.Int32Array
-	err := tmp.Scan(src)
-	if err != nil {
-		return err
-	}
-	if len(tmp) != 4 {
-		return fmt.Errorf("unexpected length %d", len(tmp))
-	}
-	copy(s[:], tmp)
-	return nil
-
-}
+func (s *PrixQuotientFamilial) Scan(src any) error { return loadJSON(s, src) }
 func (s PrixQuotientFamilial) Value() (driver.Value, error) {
-	return pq.Int32Array(s[:]).Value()
+	if s == nil {
+		s = PrixQuotientFamilial{}
+	}
+	return dumpJSON(s)
 }
 
 func (s *Roles) Scan(src any) error {
