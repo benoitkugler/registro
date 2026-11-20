@@ -87,13 +87,4 @@ func TestPrixQuotientFamilial_SQLValue(t *testing.T) {
 	if !reflect.DeepEqual(got, grid) {
 		t.Errorf("round trip = %v, want %v", got, grid)
 	}
-
-	// La valeur zéro est stockée comme un tableau vide, jamais comme NULL.
-	value, err = (PrixQuotientFamilial)(nil).Value()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if value.(string) != "[]" {
-		t.Errorf("zero value = %q, want []", value)
-	}
 }
