@@ -30,6 +30,7 @@ func init() {
 	os.Setenv("ASSO_BANK_IBAN", "iban1,iban2")
 	os.Setenv("ASSO_MAIL_SAUVEGARDE", "test@free.fr")
 	os.Setenv("ASSO_MAIL_FONDS_SOUTIEN", "test@free.fr")
+	os.Setenv("ASSO_MAIL_NOTIFICATION_FROM_DIRECTEUR", "test@free.fr")
 	asso, err = config.NewAsso()
 	if err != nil {
 		panic(err)

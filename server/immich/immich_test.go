@@ -55,6 +55,7 @@ func TestAPI(t *testing.T) {
 }
 
 func TestThumbnail(t *testing.T) {
+	t.Skip("require manual inspection and album deletion")
 	api := NewApi(devCreds(t))
 
 	album, err := api.CreateAlbum("Test Thumbnail 2")
@@ -62,6 +63,4 @@ func TestThumbnail(t *testing.T) {
 
 	err = api.SetAlbumThumbnail(album.Id, tu.ImageURL)
 	tu.AssertNoErr(t, err)
-
-	// require manual inspection and deletion
 }
