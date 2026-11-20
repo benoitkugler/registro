@@ -589,7 +589,7 @@ export interface PresenceOffsets {
   Fin: Int;
 }
 // registro/sql/camps.PrixQuotientFamilial
-export type PrixQuotientFamilial = TrancheQuotient[];
+export type PrixQuotientFamilial = TrancheQuotient[] | null;
 // registro/sql/camps.ProjetSpi
 export interface ProjetSpi {
   IdCamp: IdCamp;

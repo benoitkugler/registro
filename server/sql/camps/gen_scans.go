@@ -2704,14 +2704,6 @@ func dumpJSON(s any) (driver.Value, error) {
 	return driver.Value(string(b)), nil
 }
 
-func (s *PrixQuotientFamilial) Scan(src any) error { return loadJSON(s, src) }
-func (s PrixQuotientFamilial) Value() (driver.Value, error) {
-	if s == nil {
-		s = PrixQuotientFamilial{}
-	}
-	return dumpJSON(s)
-}
-
 func (s *Roles) Scan(src any) error {
 	var tmp pq.Int32Array
 	err := tmp.Scan(src)
@@ -3080,6 +3072,9 @@ func (s OptionPrixCamp) Value() (driver.Value, error) { return dumpJSON(s) }
 
 func (s *OptionPrixParticipant) Scan(src any) error          { return loadJSON(s, src) }
 func (s OptionPrixParticipant) Value() (driver.Value, error) { return dumpJSON(s) }
+
+func (s *PrixQuotientFamilial) Scan(src any) error          { return loadJSON(s, src) }
+func (s PrixQuotientFamilial) Value() (driver.Value, error) { return dumpJSON(s) }
 
 func (s *Remises) Scan(src any) error          { return loadJSON(s, src) }
 func (s Remises) Value() (driver.Value, error) { return dumpJSON(s) }

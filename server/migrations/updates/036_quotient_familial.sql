@@ -66,4 +66,4 @@ ALTER TABLE camps
 ALTER TABLE camps
     ADD CONSTRAINT OptionQuotientFamilial_gomacro CHECK (gomacro_validate_json_array_camp_TrancheQuotient (OptionQuotientFamilial));
 
-ROLLBACK;
+COMMIT;

@@ -1708,6 +1708,9 @@ ALTER TABLE forms
     ADD CONSTRAINT Champs_gomacro CHECK (gomacro_validate_json_array_camp_Champ (Champs));
 
 ALTER TABLE camps
+    ADD CONSTRAINT OptionQuotientFamilial_gomacro CHECK (gomacro_validate_json_array_camp_TrancheQuotient (OptionQuotientFamilial));
+
+ALTER TABLE camps
     ADD CONSTRAINT Vetements_gomacro CHECK (gomacro_validate_json_camp_ListeVetements (Vetements));
 
 ALTER TABLE camps
@@ -1715,9 +1718,6 @@ ALTER TABLE camps
 
 ALTER TABLE camps
     ADD CONSTRAINT OptionPrix_gomacro CHECK (gomacro_validate_json_camp_OptionPrixCamp (OptionPrix));
-
-ALTER TABLE camps
-    ADD CONSTRAINT OptionQuotientFamilial_gomacro CHECK (gomacro_validate_json_array_camp_TrancheQuotient (OptionQuotientFamilial));
 
 ALTER TABLE participants
     ADD CONSTRAINT OptionPrix_gomacro CHECK (gomacro_validate_json_camp_OptionPrixParticipant (OptionPrix));

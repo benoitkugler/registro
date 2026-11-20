@@ -433,7 +433,7 @@ export interface Participant {
   OptionPrix: OptionPrixParticipant;
 }
 // registro/sql/camps.PrixQuotientFamilial
-export type PrixQuotientFamilial = TrancheQuotient[];
+export type PrixQuotientFamilial = TrancheQuotient[] | null;
 // registro/sql/camps.Remises
 export interface Remises {
   Equipiers: Int;

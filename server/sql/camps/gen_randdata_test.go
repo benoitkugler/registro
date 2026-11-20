@@ -340,18 +340,7 @@ func randPresenceOffsets() PresenceOffsets {
 }
 
 func randPrixQuotientFamilial() PrixQuotientFamilial {
-	l := 1 + rand.Intn(5)
-	out := make(PrixQuotientFamilial, l)
-	minimum := -1
-	for i := range out {
-		minimum += 1 + rand.Intn(100)
-		out[i] = TrancheQuotient{
-			QuotientMin: minimum,
-			Pourcentage: rand.Intn(101),
-		}
-	}
-	out[l-1].Pourcentage = 100
-	return out
+	return PrixQuotientFamilial(randSliceTrancheQuotient())
 }
 
 func randProjetSpi() ProjetSpi {
@@ -420,6 +409,15 @@ func randSliceRole() []Role {
 	out := make([]Role, l)
 	for i := range out {
 		out[i] = randRole()
+	}
+	return out
+}
+
+func randSliceTrancheQuotient() []TrancheQuotient {
+	l := 3 + rand.Intn(5)
+	out := make([]TrancheQuotient, l)
+	for i := range out {
+		out[i] = randTrancheQuotient()
 	}
 	return out
 }
@@ -508,6 +506,14 @@ func randStructureaide() Structureaide {
 	s.Nom = randstring()
 	s.Immatriculation = randstring()
 	s.Info = randstring()
+
+	return s
+}
+
+func randTrancheQuotient() TrancheQuotient {
+	var s TrancheQuotient
+	s.QuotientMin = randint()
+	s.Pourcentage = randint()
 
 	return s
 }
