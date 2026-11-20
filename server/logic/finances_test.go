@@ -299,13 +299,16 @@ func TestDossierFinance_DispatchPaiements(t *testing.T) {
 
 func Test_pc_prixBase(t *testing.T) {
 	inscription := time.Now()
+	debut := sh.NewDate(2026, time.July, 1)
+	gridAge := cps.PrixParAge{{AgeMax: 10, Prix: 5000}, {AgeMax: 18, Prix: 8000}}
 	type fields struct {
-		optPart cps.OptionPrixParticipant
-		optCamp cps.OptionPrixCamp
-		optQF   cps.PrixQuotientFamilial
-		prix    cps.Montant
-		duree   int
-		qf      int
+		optPart       cps.OptionPrixParticipant
+		optCamp       cps.OptionPrixCamp
+		optQF         cps.PrixQuotientFamilial
+		prix          cps.Montant
+		duree         int
+		qf            int
+		dateNaissance sh.Date
 	}
 	tests := []struct {
 		fields fields
@@ -330,6 +333,11 @@ func Test_pc_prixBase(t *testing.T) {
 		{fields{prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixJour, PrixParJour: 2000}, optPart: cps.OptionPrixParticipant{Jour: cps.JoursPresence{}}}, eur(100), ""},
 		{fields{prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixJour, PrixParJour: 2000}, optPart: cps.OptionPrixParticipant{Jour: cps.JoursPresence{0, 1, 2, 3}}}, eur(80), "4 jours"},
 		{fields{prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixJour, PrixParJour: 2000}, optPart: cps.OptionPrixParticipant{Jour: cps.JoursPresence{0, 2}}}, eur(40), "2 jours"},
+		// Option prix par âge
+		{fields{prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixAge, PrixParAge: gridAge}, dateNaissance: sh.NewDate(2020, time.July, 1)}, eur(50), "Âge 6 ans"},
+		{fields{prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixAge, PrixParAge: gridAge}, dateNaissance: sh.NewDate(2021, time.July, 1)}, eur(50), "Âge 5 ans"},
+		{fields{prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixAge, PrixParAge: gridAge}, dateNaissance: sh.NewDate(2016, time.July, 1)}, eur(80), "Âge 10 ans"},
+		{fields{prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixAge, PrixParAge: gridAge}, dateNaissance: sh.NewDate(2000, time.July, 1)}, eur(100), ""},
 		// Mélange
 		{
 			fields{
@@ -338,6 +346,13 @@ func Test_pc_prixBase(t *testing.T) {
 				optQF:   cps.PrixQuotientFamilial{20, 40, 60, 100}, qf: 100,
 			}, eur(8), "2 jours - QF 100",
 		}, // 40 * 20%
+		{
+			fields{
+				prix: eur(100), optCamp: cps.OptionPrixCamp{Active: cps.PrixAge, PrixParAge: gridAge},
+				optQF: cps.PrixQuotientFamilial{20, 40, 60, 100}, qf: 100,
+				dateNaissance: sh.NewDate(2020, time.July, 1),
+			}, eur(10), "Âge 6 ans - QF 100",
+		}, // 50 * 20%
 	}
 	for _, tt := range tests {
 		p := partExt{
@@ -346,8 +361,10 @@ func Test_pc_prixBase(t *testing.T) {
 				OptionPrix:             tt.fields.optCamp,
 				OptionQuotientFamilial: tt.fields.optQF,
 				Prix:                   tt.fields.prix, Duree: tt.fields.duree,
+				DateDebut: debut,
 			},
-			inscription: inscription,
+			dateNaissance: tt.fields.dateNaissance,
+			inscription:   inscription,
 		}
 		got, got1 := p.prixBase()
 		tu.Assert(t, got == tt.want)

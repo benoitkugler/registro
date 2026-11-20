@@ -166,6 +166,7 @@ const (
 	NoOption              OptionPrixKind = iota // Aucune
 	PrixInscriptionRapide                       // Remise pour inscription rapide
 	PrixJour                                    // Prix à la journée
+	PrixAge                                     // Prix selon l'âge du participant, voir [PrixParAge]
 )
 
 // OptionPrixCamp stocke une option sur le prix d'un camp. Une seule est effective,
@@ -180,11 +181,61 @@ type OptionPrixCamp struct {
 	// Le champ [Prix] du séjour peut être inférieur à la somme
 	// pour une remise.
 	PrixParJour int
+
+	// PrixParAge définit les tranches de prix selon l'âge du participant.
+	// L'option n'est effective que si Active vaut [PrixAge].
+	PrixParAge PrixParAge
 }
 
 type InscriptionRapide struct {
 	Limite sh.Date // date limite d'inscripion, incluse
 	Prix   int     // prix préférentiel, en centimes (le montant est celui du prix original)
+}
+
+type PrixAgeTranche struct {
+	AgeMax int // exclus
+	Prix   int // cents, in camp currency
+}
+
+// PrixParAge définit le prix en fonction de l'âge des participants.
+// La liste est classée par AgeMax croissant.
+// Par exemple: [(10, 50), (18, 80)] définit 3 tranches :
+//   - < 10 ans : 50
+//   - 10 <= age < 18 : 80
+//   - >= 18 : prix de base
+type PrixParAge []PrixAgeTranche
+
+// IsActive renvoie 'true' si une grille est définie.
+func (pa PrixParAge) IsActive() bool { return len(pa) > 0 }
+
+// Check vérifie la cohérence de la grille.
+func (pa PrixParAge) Check() error {
+	if len(pa) == 0 {
+		return errors.New("empty PrixParAge")
+	}
+	prevAge := 0
+	for i, tranche := range pa {
+		if tranche.AgeMax <= prevAge {
+			return fmt.Errorf("invalid PrixParAge AgeMax at index %d", i)
+		}
+		if tranche.Prix < 0 {
+			return fmt.Errorf("invalid PrixParAge Prix at index %d", i)
+		}
+		prevAge = tranche.AgeMax
+	}
+	return nil
+}
+
+// Prix renvoie le prix correspondant à [age], ou false si aucune tranche
+// ne s'applique (l'âge est supérieur ou égal au dernier AgeMax : dans ce cas,
+// le prix de base du séjour est conservé).
+func (pa PrixParAge) Prix(age int) (int, bool) {
+	for _, tranche := range pa {
+		if age < tranche.AgeMax {
+			return tranche.Prix, true
+		}
+	}
+	return 0, false
 }
 
 // OptionPrixParticipant répond à OptionPrixCamp. L'option est active si :

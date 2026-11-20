@@ -297,14 +297,26 @@ func randOptionPrixCamp() OptionPrixCamp {
 	s.Active = randOptionPrixKind()
 	s.InscriptionRapide = randInscriptionRapide()
 	s.PrixParJour = randint()
+	s.PrixParAge = randPrixParAge()
 
 	return s
 }
 
 func randOptionPrixKind() OptionPrixKind {
-	choix := [...]OptionPrixKind{NoOption, PrixInscriptionRapide, PrixJour}
+	choix := [...]OptionPrixKind{NoOption, PrixInscriptionRapide, PrixJour, PrixAge}
 	i := rand.Intn(len(choix))
 	return choix[i]
+}
+
+func randPrixParAge() PrixParAge {
+	l := 1 + rand.Intn(4)
+	out := make(PrixParAge, l)
+	age := 0
+	for i := range out {
+		age += 1 + rand.Intn(10)
+		out[i] = PrixAgeTranche{AgeMax: age, Prix: randint()}
+	}
+	return out
 }
 
 func randOptionPrixParticipant() OptionPrixParticipant {

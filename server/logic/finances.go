@@ -9,6 +9,7 @@ import (
 	ds "registro/sql/dossiers"
 	fs "registro/sql/files"
 	pr "registro/sql/personnes"
+	sh "registro/sql/shared"
 	"registro/utils"
 )
 
@@ -150,7 +151,14 @@ func (df DossierFinance) Bilan() BilanFinances {
 			demandeEnAttente.Add(camp.Prix)
 			continue
 		}
-		data := partExt{participant, camp, df.Dossier.Dossier.MomentInscription, df.aides[participant.Id], df.structures}
+		data := partExt{
+			Participant:   participant,
+			Camp:          camp,
+			dateNaissance: df.PersonneFor(participant).DateNaissance,
+			inscription:   df.Dossier.Dossier.MomentInscription,
+			aides:         df.aides[participant.Id],
+			structures:    df.structures,
+		}
 		bilan := data.bilan()
 		inscrits[participant.Id] = bilan
 		demande.Add(bilan.Net(df.Taux))
@@ -270,7 +278,8 @@ type partExt struct {
 	cps.Participant
 	cps.Camp
 
-	inscription time.Time
+	dateNaissance sh.Date
+	inscription   time.Time
 
 	aides      cps.Aides
 	structures cps.Structureaides // enough for [aides]
@@ -404,6 +413,12 @@ func (p partExt) prixBase() (cps.Montant, string) {
 				plural = "s"
 			}
 			descOption = fmt.Sprintf("%d jour%s", nbJours, plural)
+		}
+	case cps.PrixAge:
+		age := p.Camp.AgeDebutCamp(p.dateNaissance)
+		if prixAge, ok := optCamp.PrixParAge.Prix(age); ok {
+			prix.Cent = prixAge
+			descOption = fmt.Sprintf("Âge %d ans", age)
 		}
 	}
 
