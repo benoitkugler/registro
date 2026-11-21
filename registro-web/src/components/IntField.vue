@@ -8,8 +8,10 @@
     :max="props.max"
     :model-value="model"
     @update:model-value="
-      (s: string) =>
-        props.debounce ? throughDebounce(s) : (model = Number(s) as Int)
+      (s: string) => {
+        if (!isValid(s)) return;
+        props.debounce ? throughDebounce(s) : (model = Number(s) as Int);
+      }
     "
     :hide-details="!hint"
     :hint="props.hint"
@@ -21,6 +23,7 @@
 
 <script setup lang="ts">
 import type { Int } from "@/clients/backoffice/logic/api";
+import { round } from "@/utils";
 const props = defineProps<{
   label: string;
   hint?: string;
@@ -42,9 +45,20 @@ function throughDebounce(s: string) {
   // cancel pending call
   clearTimeout(timerId);
 
-  const v = Math.round(Number(s)) as Int;
+  const v = round(Number(s));
 
   // delay new call 500ms
   timerId = setTimeout(() => (model.value = v), debounceDelay);
+}
+
+function isValid(s: string) {
+  const val = round(Number(s));
+  if (props.min !== undefined) {
+    if (val < props.min) return false;
+  }
+  if (props.max !== undefined) {
+    if (val > props.max) return false;
+  }
+  return true;
 }
 </script>

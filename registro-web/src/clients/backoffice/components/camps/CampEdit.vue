@@ -1,5 +1,13 @@
 <template>
   <v-card title="Paramètres du séjour" :subtitle="Camps.label(props.camp)">
+    <v-dialog v-model="showPrixOption">
+      <CampOptionsPrix
+        :camp="inner"
+        v-model:option-prix="inner.OptionPrix"
+        v-model:option-qf="inner.OptionQuotientFamilial"
+      ></CampOptionsPrix>
+    </v-dialog>
+
     <v-card-text>
       <v-card class="my-2" subtitle="Général">
         <v-card-text>
@@ -87,26 +95,16 @@
               ></MontantField>
             </v-col>
             <v-col align-self="center" cols="6" class="text-center">
-              <v-menu :close-on-content-click="false">
-                <template #activator="{ props: menuProps }">
-                  <v-text-field
-                    v-bind="menuProps"
-                    readonly
-                    label="Option sur le prix"
-                    variant="outlined"
-                    density="compact"
-                    hide-details
-                    :model-value="formatOption(inner)"
-                  >
-                  </v-text-field>
-                </template>
-
-                <CampOptionsPrix
-                  :camp="inner"
-                  v-model:option-prix="inner.OptionPrix"
-                  v-model:option-qf="inner.OptionQuotientFamilial"
-                ></CampOptionsPrix>
-              </v-menu>
+              <v-text-field
+                readonly
+                label="Option sur le prix"
+                variant="outlined"
+                density="compact"
+                hide-details
+                :model-value="formatOption(inner)"
+                @click="showPrixOption = true"
+              >
+              </v-text-field>
             </v-col>
           </v-row>
         </v-card-text>
@@ -357,6 +355,8 @@ function formatOption(inner: Camp) {
   }
   return chunks.join(", ");
 }
+
+const showPrixOption = ref(false);
 
 async function copyPreselectionURL() {
   await copyToClipboard(props.preselectionUrl);

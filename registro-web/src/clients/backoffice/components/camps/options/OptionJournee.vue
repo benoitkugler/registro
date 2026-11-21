@@ -1,10 +1,13 @@
 <template>
-  <v-card
-    subtitle="Le prix est variable en fonction des jours de participation au camp."
-  >
+  <v-card>
     <v-card-text>
       <v-row>
-        <v-col cols="3">
+        <v-col>
+          Le prix est variable en fonction des jours de participation au camp.
+        </v-col>
+      </v-row>
+      <v-row>
+        <v-col>
           <MontantField
             label="Prix d'une journée"
             :model-value="{
