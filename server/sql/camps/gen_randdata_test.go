@@ -289,12 +289,13 @@ func randOptionPrixCamp() OptionPrixCamp {
 	s.Active = randOptionPrixKind()
 	s.InscriptionRapide = randInscriptionRapide()
 	s.PrixParJour = randint()
+	s.PrixParAge = randPrixParAge()
 
 	return s
 }
 
 func randOptionPrixKind() OptionPrixKind {
-	choix := [...]OptionPrixKind{NoOption, PrixInscriptionRapide, PrixJour}
+	choix := [...]OptionPrixKind{NoOption, PrixInscriptionRapide, PrixJour, PrixAge}
 	i := rand.Intn(len(choix))
 	return choix[i]
 }
@@ -337,6 +338,18 @@ func randPresenceOffsets() PresenceOffsets {
 	s.Fin = randint()
 
 	return s
+}
+
+func randPrixAgeTranche() PrixAgeTranche {
+	var s PrixAgeTranche
+	s.AgeMax = randint()
+	s.Prix = randint()
+
+	return s
+}
+
+func randPrixParAge() PrixParAge {
+	return PrixParAge(randSlicePrixAgeTranche())
 }
 
 func randPrixQuotientFamilial() PrixQuotientFamilial {
@@ -400,6 +413,15 @@ func randSliceChampReponse() []ChampReponse {
 	out := make([]ChampReponse, l)
 	for i := range out {
 		out[i] = randChampReponse()
+	}
+	return out
+}
+
+func randSlicePrixAgeTranche() []PrixAgeTranche {
+	l := 3 + rand.Intn(5)
+	out := make([]PrixAgeTranche, l)
+	for i := range out {
+		out[i] = randPrixAgeTranche()
 	}
 	return out
 }

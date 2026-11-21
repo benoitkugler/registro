@@ -77,6 +77,7 @@ export interface InscriptionRapideExt {
 export interface OptionPrixExt {
   Active: OptionPrixKind;
   InscriptionRapide: InscriptionRapideExt;
+  PrixParAge: PrixAgeTrancheExt[] | null;
 }
 // registro/controllers/inscriptions.Participant
 export interface Participant {
@@ -87,6 +88,11 @@ export interface Participant {
   Sexe: Sexe;
   Nationnalite: Nationnalite;
   Mail: string;
+}
+// registro/controllers/inscriptions.PrixAgeTrancheExt
+export interface PrixAgeTrancheExt {
+  AgeMax: Int;
+  Prix: string;
 }
 // registro/controllers/inscriptions.SearchHistoryOut
 export interface SearchHistoryOut {
@@ -118,6 +124,7 @@ export const OptionPrixKind = {
   NoOption: 0,
   PrixInscriptionRapide: 1,
   PrixJour: 2,
+  PrixAge: 3,
 } as const;
 export type OptionPrixKind =
   (typeof OptionPrixKind)[keyof typeof OptionPrixKind];
@@ -126,6 +133,7 @@ export const OptionPrixKindLabels: Record<OptionPrixKind, string> = {
   [OptionPrixKind.NoOption]: "Aucune",
   [OptionPrixKind.PrixInscriptionRapide]: "Remise pour inscription rapide",
   [OptionPrixKind.PrixJour]: "Prix à la journée",
+  [OptionPrixKind.PrixAge]: "Prix selon l'âge du participant",
 };
 
 // registro/sql/inscriptions.ResponsableLegal

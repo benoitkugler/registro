@@ -290,6 +290,7 @@ import {
   StatutCampLabels,
   type Camp,
   type Int,
+  type PrixParAge,
   type PrixQuotientFamilial,
 } from "@/clients/backoffice/logic/api";
 import { Camps, copy, copyToClipboard, selectItems } from "@/utils";
@@ -322,6 +323,16 @@ function isQFGridValid(grid: PrixQuotientFamilial | null) {
   });
 }
 
+function isPrixAgeGridValid(grid: PrixParAge) {
+  if (!grid || grid.length === 0) return false;
+  let previousAge = 0 as Int;
+  return grid.every((tranche) => {
+    const valid = tranche.AgeMax > previousAge && tranche.Prix >= 0;
+    previousAge = tranche.AgeMax;
+    return valid;
+  });
+}
+
 const areFieldsValid = computed(
   () =>
     new Date(inner.value.DateDebut).getFullYear() >= 2020 &&
@@ -334,6 +345,10 @@ const areFieldsValid = computed(
     !(
       inner.value.OptionPrix.Active == OptionPrixKind.PrixJour &&
       inner.value.OptionPrix.PrixParJour == 0
+    ) &&
+    !(
+      inner.value.OptionPrix.Active == OptionPrixKind.PrixAge &&
+      !isPrixAgeGridValid(inner.value.OptionPrix.PrixParAge)
     ),
 );
 

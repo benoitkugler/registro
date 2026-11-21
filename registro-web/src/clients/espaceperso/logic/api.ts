@@ -400,12 +400,14 @@ export interface OptionPrixCamp {
   Active: OptionPrixKind;
   InscriptionRapide: InscriptionRapide;
   PrixParJour: Int;
+  PrixParAge: PrixParAge;
 }
 // registro/sql/camps.OptionPrixKind
 export const OptionPrixKind = {
   NoOption: 0,
   PrixInscriptionRapide: 1,
   PrixJour: 2,
+  PrixAge: 3,
 } as const;
 export type OptionPrixKind =
   (typeof OptionPrixKind)[keyof typeof OptionPrixKind];
@@ -414,6 +416,7 @@ export const OptionPrixKindLabels: Record<OptionPrixKind, string> = {
   [OptionPrixKind.NoOption]: "Aucune",
   [OptionPrixKind.PrixInscriptionRapide]: "Remise pour inscription rapide",
   [OptionPrixKind.PrixJour]: "Prix à la journée",
+  [OptionPrixKind.PrixAge]: "Prix selon l'âge du participant",
 };
 
 // registro/sql/camps.OptionPrixParticipant
@@ -432,6 +435,13 @@ export interface Participant {
   QuotientFamilial: Int;
   OptionPrix: OptionPrixParticipant;
 }
+// registro/sql/camps.PrixAgeTranche
+export interface PrixAgeTranche {
+  AgeMax: Int;
+  Prix: Int;
+}
+// registro/sql/camps.PrixParAge
+export type PrixParAge = PrixAgeTranche[] | null;
 // registro/sql/camps.PrixQuotientFamilial
 export type PrixQuotientFamilial = TrancheQuotient[] | null;
 // registro/sql/camps.Remises

@@ -67,11 +67,40 @@
           </v-alert>
         </v-col>
       </v-row>
+      <v-row
+        v-if="
+          props.camp.OptionPrix.Active == OptionPrixKind.PrixAge &&
+          ageTranches.length
+        "
+      >
+        <v-col>
+          <v-alert color="info" icon="mdi-currency-eur">
+            Le prix dépend de l'âge au premier jour du séjour :
+            <v-row
+              v-for="(tranche, index) in ageTranches"
+              :key="index"
+              no-gutters
+            >
+              <v-col>{{ ageTrancheLabel(index) }} :</v-col>
+              <v-col>
+                <b>{{ tranche.Prix }}</b></v-col
+              >
+            </v-row>
+            <v-row no-gutters>
+              <v-col> {{ ageTrancheLabel(ageTranches.length) }} :</v-col>
+              <v-col>
+                <b>{{ props.camp.Prix }}</b></v-col
+              >
+            </v-row>
+          </v-alert>
+        </v-col>
+      </v-row>
     </v-card-text>
   </v-card>
 </template>
 
 <script lang="ts" setup>
+import { computed } from "vue";
 import { useDisplay } from "vuetify";
 import { OptionPrixKind, type CampExt } from "../logic/api";
 import { Camps, Formatters } from "@/utils";
@@ -81,4 +110,10 @@ const props = defineProps<{
 }>();
 
 const { xs } = useDisplay();
+
+const ageTranches = computed(() => props.camp.OptionPrix.PrixParAge ?? []);
+
+function ageTrancheLabel(index: number): string {
+  return Formatters.ageTranche(ageTranches.value, index);
+}
 </script>

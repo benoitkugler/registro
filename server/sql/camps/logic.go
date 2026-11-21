@@ -407,9 +407,14 @@ func (c *Camp) Check() error {
 	if err := c.OptionQuotientFamilial.Check(); err != nil {
 		return err
 	}
-	if c.OptionPrix.Active == PrixJour {
+	switch c.OptionPrix.Active {
+	case PrixJour:
 		if c.OptionPrix.PrixParJour == 0 {
 			return errors.New("invalid OptionPrix.PrixParJour")
+		}
+	case PrixAge:
+		if err := c.OptionPrix.PrixParAge.Check(); err != nil {
+			return err
 		}
 	}
 	if c.PlacesReservees < 0 || c.PlacesReservees > c.Places {

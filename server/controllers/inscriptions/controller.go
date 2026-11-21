@@ -80,12 +80,18 @@ type OptionPrixExt struct {
 	Active cps.OptionPrixKind
 
 	InscriptionRapide InscriptionRapideExt
+	PrixParAge        []PrixAgeTrancheExt
 }
 
 type InscriptionRapideExt struct {
 	Limite    sh.Date
 	Prix      string // Formatted, possibly including several currencies
 	Effective bool   // [true] si now <= Limite
+}
+
+type PrixAgeTrancheExt struct {
+	AgeMax int    // âge maximum de la tranche, exclus
+	Prix   string // Formatted, possibly including several currencies
 }
 
 func newOptionPrixExt(opt camps.OptionPrixCamp, prix ds.Montant, taux ds.Taux) OptionPrixExt {
@@ -98,6 +104,18 @@ func newOptionPrixExt(opt camps.OptionPrixCamp, prix ds.Montant, taux ds.Taux) O
 				Prix:      taux.Convertible(ds.Montant{Currency: prix.Currency, Cent: opt.InscriptionRapide.Prix}).String(),
 				Effective: opt.InscriptionRapide.Limite.AfterOrEqual(time.Now()),
 			},
+		}
+	case camps.PrixAge:
+		tranches := make([]PrixAgeTrancheExt, len(opt.PrixParAge))
+		for i, tranche := range opt.PrixParAge {
+			tranches[i] = PrixAgeTrancheExt{
+				AgeMax: tranche.AgeMax,
+				Prix:   taux.Convertible(ds.Montant{Currency: prix.Currency, Cent: tranche.Prix}).String(),
+			}
+		}
+		return OptionPrixExt{
+			Active:     opt.Active,
+			PrixParAge: tranches,
 		}
 	default:
 		return OptionPrixExt{}

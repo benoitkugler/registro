@@ -26,6 +26,9 @@
             :option="props.optionCamp"
             v-model="inner.options.Jour"
           ></OptionJournee>
+          <div v-else-if="props.optionCamp.Active == OptionPrixKind.PrixAge">
+            Le prix est calculé selon l'âge du participant au début du séjour.
+          </div>
           <div v-else>Le camp ne propose pas d'option sur le prix.</div>
         </v-col>
       </v-row>

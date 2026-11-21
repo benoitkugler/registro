@@ -13,6 +13,7 @@ import {
   type EventMessage,
   type ParticipantCamp,
   type ParticipantExt,
+  type PrixParAge,
   type StatutExt,
   type Tels,
 } from "./clients/backoffice/logic/api";
@@ -268,7 +269,7 @@ export namespace Camps {
     return opt != null && opt.length > 0;
   }
 
-  export function defaultQuotientFamilial(): PrixQuotientFamilial {
+  export function defaultQuotientFamilial(): NonNullable<PrixQuotientFamilial> {
     return [
       { QuotientMin: 1 as Int, Pourcentage: 20 as Int },
       { QuotientMin: 360 as Int, Pourcentage: 40 as Int },
@@ -486,6 +487,13 @@ export namespace Formatters {
     return demande.Categorie == Categorie.NoBuiltin
       ? demande.Description
       : CategorieLabels[demande.Categorie];
+  }
+
+  export function ageTranche(tranches: { AgeMax: Int }[], index: number) {
+    if (index == tranches.length)
+      return `${tranches[tranches.length - 1].AgeMax} ans et plus`;
+    if (index === 0) return `Moins de ${tranches[0].AgeMax} ans`;
+    return `De ${tranches[index - 1].AgeMax} à ${tranches[index].AgeMax - 1} ans`;
   }
 }
 
