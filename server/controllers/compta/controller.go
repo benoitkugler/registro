@@ -34,9 +34,12 @@ type Controller struct {
 func NewController(db *sql.DB, key crypto.Encrypter, compta config.Compta, smtp config.SMTP, asso config.Asso) (*Controller, error) {
 	files := filesAPI{googleDriveAPI{compta.GoogleDriveKeyFile, compta.GoogleDriveFolderId}, fileSystemAPI{compta.FilesDir}}
 
-	err := files.googleDrive.check()
-	if err != nil {
-		return nil, err
+	// we accept empty drive settings (see main.go)
+	if compta.GoogleDriveKeyFile != "" {
+		err := files.googleDrive.check()
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &Controller{db, key, compta.AdminPassword, compta.AdminMail, files, smtp, asso}, nil

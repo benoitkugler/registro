@@ -33,10 +33,11 @@ import (
 
 func main() {
 	devPtr := flag.Bool("dev", false, "utilise un mode de développement (mail, localhost)")
+	acceptNoComptaDrivePtr := flag.Bool("noComptaDrive", false, "accept empty Google Drive compta settings")
 	flag.Parse()
-	isDev := *devPtr
+	isDev, acceptNoComptaDrive := *devPtr, *acceptNoComptaDrivePtr
 
-	asso, keys, dbCreds, smtp, directories, immich, comptaCfg := loadEnvs(isDev)
+	asso, keys, dbCreds, smtp, directories, immich, comptaCfg := loadEnvs(isDev, acceptNoComptaDrive)
 
 	fmt.Println("Loading env. -> OK.")
 	fmt.Println("\tASSO:", asso.ID)
@@ -91,7 +92,11 @@ func main() {
 
 	comptaCt, err := compta.NewController(db, encrypter, comptaCfg, smtp, asso)
 	check(err)
-	fmt.Printf("Google Drive acces for compta: OK.\n\tkey file: %s\n\troot folder: %s\n", comptaCfg.GoogleDriveKeyFile, comptaCfg.GoogleDriveFolderId)
+	if comptaCfg.GoogleDriveKeyFile != "" {
+		fmt.Printf("Google Drive acces for compta: OK.\n\tkey file: %s\n\troot folder: %s\n", comptaCfg.GoogleDriveKeyFile, comptaCfg.GoogleDriveFolderId)
+	} else {
+		fmt.Println("Google Drive acces for compta: missing.")
+	}
 
 	servicesCt := services.NewController(db, encrypter, smtp, asso)
 
@@ -143,7 +148,7 @@ func main() {
 	e.Logger.Fatal(e.Start(adress))
 }
 
-func loadEnvs(devMode bool) (config.Asso, config.Keys, config.DB, config.SMTP, config.Directories, config.Immich, config.Compta) {
+func loadEnvs(devMode, acceptNoComptaDrive bool) (config.Asso, config.Keys, config.DB, config.SMTP, config.Directories, config.Immich, config.Compta) {
 	asso, err := config.NewAsso()
 	check(err)
 
@@ -162,7 +167,7 @@ func loadEnvs(devMode bool) (config.Asso, config.Keys, config.DB, config.SMTP, c
 	immich, err := config.NewImmich()
 	check(err)
 
-	compta, err := config.NewCompta()
+	compta, err := config.NewCompta(acceptNoComptaDrive)
 	check(err)
 
 	return asso, keys, db, smtp, dirs, immich, compta
