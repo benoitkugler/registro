@@ -38,7 +38,6 @@ const (
 // many inscrits without dossier
 var blackListCamps = map[int64]bool{
 	245: true, 263: true, 265: true, 283: true, 312: true, 315: true,
-	318: true, // TODO: remove this camp one the Calista special case has been handled
 }
 
 func check(err error) {
