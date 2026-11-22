@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"registro/generators/sheets"
@@ -29,11 +30,11 @@ func Init(templatePath string) error {
 	if err != nil {
 		return fmt.Errorf("loading PDF template: %s", err)
 	}
-	if L := len(doc.Catalog.AcroForm.Flatten()); L != 65 {
+	if L := len(doc.Catalog.AcroForm.Flatten()); L != 36 {
 		return fmt.Errorf("loading PDF template: corrupted model (unexpected number of form fields)")
 	}
-	field := doc.Catalog.AcroForm.Flatten()["z1"].Field // pointer
-	field.FT = model.FormFieldText{}                    // remove max length limitation
+	field := doc.Catalog.AcroForm.Flatten()["numeroRecu"].Field // pointer
+	field.FT = model.FormFieldText{}                            // remove max length limitation
 
 	recuTemplate = &doc
 	return nil
@@ -155,39 +156,48 @@ func Generate(db dons.DB, year int) ([]byte, error) {
 }
 
 // indique l'identifiant des champs présents dans le modèle.
-// A synchroniser avec ModeleRecuFiscalEditable.pdf
+// A synchroniser avec modele_2026_form.pdf
 type champPdf struct {
 	id     string
 	valeur formfill.FDFValue
 }
 
-var champsACVE = []champPdf{
-	// ACVE
-	{id: "z2" /* nom */, valeur: formfill.FDFText("ACVE")},
-	{id: "z4" /* adresse */, valeur: formfill.FDFText("La Maison du Rocher")},
-	{id: "z5" /* codePostal */, valeur: formfill.FDFText("26160")},
-	{id: "z5b" /* ville */, valeur: formfill.FDFText("CHAMALOC")},
-	{id: "z6" /* objectifL1 */, valeur: formfill.FDFText("Créer et gérer des séjours pour enfants, adolescents et adultes.")},
-	{id: "z7" /* objectifL2 */, valeur: formfill.FDFText("Faire connaître, à travers des animations adaptées à l’âge des participants, les valeurs chrétiennes.")},
+func champsAsso(asso association) []champPdf {
+	categorie := formfill.FDFName("Off")
+	if asso.ReconnueUtilitePublique {
+		categorie = formfill.FDFName("Oui")
+	}
 
-	// CATEGORIE ASSO
-	{id: "z9", valeur: formfill.FDFName("Oui")},
+	return []champPdf{
+		{id: "nomOrganisme", valeur: formfill.FDFText(asso.Nom)},
+		{id: "numeroSIREN", valeur: formfill.FDFText(asso.NumeroSIREN)},
+		{id: "adresseOrganisme", valeur: formfill.FDFText(asso.Adresse)},
+		{id: "codePostalOrganisme", valeur: formfill.FDFText(asso.CodePostal)},
+		{id: "villeOrganisme", valeur: formfill.FDFText(asso.Ville)},
+		{id: "paysOrganisme", valeur: formfill.FDFText(asso.Pays)},
+		{id: "objectifLigne1", valeur: formfill.FDFText(asso.ObjectifLigne1)},
+		{id: "objectifLigne2", valeur: formfill.FDFText(asso.ObjectifLigne2)},
 
-	{id: "d3" /* anneeDecret */, valeur: formfill.FDFText("1957")},
-	{id: "d3b" /* anneeJournal */, valeur: formfill.FDFText("1957")},
-	{id: "d1" /* jourDecret */, valeur: formfill.FDFText("5")},
-	{id: "d1b" /* jourJournal */, valeur: formfill.FDFText("29")},
-	{id: "d2" /* moisDecret */, valeur: formfill.FDFText("1")},
-	{id: "d2b" /* moisJournal */, valeur: formfill.FDFText("1")},
+		// Catégorie de l'association
+		{id: "associationReconnueUtilitePublique", valeur: categorie},
+
+		{id: "jourDecret", valeur: formfill.FDFText(asso.Decret.Jour)},
+		{id: "moisDecret", valeur: formfill.FDFText(asso.Decret.Mois)},
+		{id: "anneeDecret", valeur: formfill.FDFText(asso.Decret.Annee)},
+		{id: "jourJournalOfficiel", valeur: formfill.FDFText(asso.JournalOfficiel.Jour)},
+		{id: "moisJournalOfficiel", valeur: formfill.FDFText(asso.JournalOfficiel.Mois)},
+		{id: "anneeJournalOfficiel", valeur: formfill.FDFText(asso.JournalOfficiel.Annee)},
+	}
 }
 
 func champsDonateur(donateur pr.Personne) []champPdf {
 	return []champPdf{
-		{id: "z29" /* nom */, valeur: formfill.FDFText(donateur.Nom)},
-		{id: "z30" /* prenom */, valeur: formfill.FDFText(donateur.Prenom)},
-		{id: "z31" /* adresse */, valeur: formfill.FDFText(donateur.Adresse)},
-		{id: "z32" /* codePostal */, valeur: formfill.FDFText(donateur.CodePostal)},
-		{id: "z33" /* ville */, valeur: formfill.FDFText(donateur.Ville)},
+		{id: "nomDonateur", valeur: formfill.FDFText(donateur.FNom())},
+		{id: "prenomDonateur", valeur: formfill.FDFText(donateur.FPrenom())},
+		{id: "adresseDonateur", valeur: formfill.FDFText(donateur.Adresse)},
+		{id: "codePostalDonateur", valeur: formfill.FDFText(donateur.CodePostal)},
+		{id: "villeDonateur", valeur: formfill.FDFText(strings.ToUpper(donateur.Ville))},
+		{id: "paysDonateur", valeur: formfill.FDFText(string(donateur.Pays))},
 	}
 }
 
@@ -197,35 +207,35 @@ func champsDon(don recuFiscal) []champPdf {
 	euros := don.Montant.Convert(ds.Euros)
 	montantLettre := num2words.EurosToWords(euros.Cent)
 	modeDon := map[ds.ModePaiement]string{
-		ds.Especes:   "z49",
-		ds.Cheque:    "z50",
-		ds.Virement:  "z51",
-		ds.Helloasso: "z51",
-		ds.EnLigne:   "z51",
-		ds.Ancv:      "z50",
+		ds.Especes:   "modeVersementEspeces",
+		ds.Cheque:    "modeVersementCheque",
+		ds.Virement:  "modeVersementVirement",
+		ds.Helloasso: "modeVersementVirement",
+		ds.EnLigne:   "modeVersementVirement",
+		ds.Ancv:      "modeVersementCheque",
 	}
 	return []champPdf{
-		{id: "z34" /* montantChiffre */, valeur: formfill.FDFText(euros.String())},
-		{id: "z35" /* montantLettre */, valeur: formfill.FDFText(montantLettre)},
-		{id: "z36" /* jourVersement */, valeur: formfill.FDFText(strconv.Itoa(date.Day()))},
-		{id: "z37" /* moisVersement */, valeur: formfill.FDFText(strconv.Itoa(int(date.Month())))},
-		{id: "z38" /* anneeVersement */, valeur: formfill.FDFText(strconv.Itoa(date.Year()))},
+		{id: "montantChiffres", valeur: formfill.FDFText(euros.String())},
+		{id: "montantLettres", valeur: formfill.FDFText(montantLettre)},
+		{id: "jourVersement", valeur: formfill.FDFText(strconv.Itoa(date.Day()))},
+		{id: "moisVersement", valeur: formfill.FDFText(strconv.Itoa(int(date.Month())))},
+		{id: "anneeVersement", valeur: formfill.FDFText(strconv.Itoa(date.Year()))},
 		{id: modeDon[don.Mode], valeur: formfill.FDFName("Oui")},
 	}
 }
 
 var champsTypeDon = []champPdf{
-	{id: "z39" /* articleLoi[200] */, valeur: formfill.FDFName("Oui")},
-	{id: "z46" /* natureDon[manuel] */, valeur: formfill.FDFName("Oui")},
-	{id: "z44" /* formeDon[numeraire] */, valeur: formfill.FDFName("Oui")},
+	{id: "article200CGI", valeur: formfill.FDFName("Oui")},
+	{id: "natureDonNumeraire", valeur: formfill.FDFName("Oui")},
+	{id: "formeDonManuel", valeur: formfill.FDFName("Oui")},
 }
 
 func champsDateEdition() []champPdf {
 	today := time.Now()
 	return []champPdf{
-		{id: "z52" /* jour */, valeur: formfill.FDFText(strconv.Itoa(today.Day()))},
-		{id: "z53" /* mois */, valeur: formfill.FDFText(strconv.Itoa(int(today.Month())))},
-		{id: "z54" /* annee */, valeur: formfill.FDFText(strconv.Itoa(today.Year()))},
+		{id: "jourEdition", valeur: formfill.FDFText(strconv.Itoa(today.Day()))},
+		{id: "moisEdition", valeur: formfill.FDFText(strconv.Itoa(int(today.Month())))},
+		{id: "anneeEdition", valeur: formfill.FDFText(strconv.Itoa(today.Year()))},
 	}
 }
 
@@ -239,9 +249,9 @@ func numero(idPersonne pr.IdPersonne) string {
 // returns the PDF bytes.
 func fillPdf(recu recuFiscal, donateur pr.Personne) ([]byte, error) {
 	fields := []champPdf{
-		{id: "z1" /* numero */, valeur: formfill.FDFText(numero(donateur.Id))},
+		{id: "numeroRecu", valeur: formfill.FDFText(numero(donateur.Id))},
 	}
-	fields = append(fields, champsACVE...)
+	fields = append(fields, champsAsso(assoACVE)...)
 	fields = append(fields, champsDonateur(donateur)...)
 	fields = append(fields, champsDon(recu)...)
 	fields = append(fields, champsTypeDon...)

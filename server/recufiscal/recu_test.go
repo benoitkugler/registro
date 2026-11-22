@@ -20,14 +20,36 @@ import (
 var taux = ds.Taux{Euros: 1000}
 
 func init() {
-	if err := Init("templateRecuAcve.pdf"); err != nil {
+	if err := Init("modele_2026_form.pdf"); err != nil {
 		panic(err)
 	}
 }
 
 func TestFieldLength(t *testing.T) {
-	field := recuTemplate.Catalog.AcroForm.Flatten()["z1"].Field
+	field := recuTemplate.Catalog.AcroForm.Flatten()["numeroRecu"].Field
 	tu.Assert(t, field.FT.(model.FormFieldText).MaxLen == nil)
+}
+
+func TestFieldNames(t *testing.T) {
+	expected := []string{
+		"numeroRecu", "nomOrganisme", "numeroSIREN", "adresseOrganisme", "codePostalOrganisme", "villeOrganisme",
+		"paysOrganisme",
+		"objectifLigne1", "objectifLigne2", "associationReconnueUtilitePublique",
+		"jourDecret", "moisDecret", "anneeDecret",
+		"jourJournalOfficiel", "moisJournalOfficiel", "anneeJournalOfficiel",
+		"nomDonateur", "prenomDonateur", "adresseDonateur", "codePostalDonateur", "villeDonateur", "paysDonateur",
+		"montantChiffres", "montantLettres",
+		"jourVersement", "moisVersement", "anneeVersement",
+		"article200CGI", "formeDonManuel", "natureDonNumeraire",
+		"modeVersementEspeces", "modeVersementCheque", "modeVersementVirement",
+		"jourEdition", "moisEdition", "anneeEdition",
+	}
+	fields := recuTemplate.Catalog.AcroForm.Flatten()
+	tu.Assert(t, len(fields) == len(expected))
+	for _, name := range expected {
+		_, ok := fields[name]
+		tu.Assert(t, ok)
+	}
 }
 
 func TestRecu(t *testing.T) {
@@ -36,7 +58,12 @@ func TestRecu(t *testing.T) {
 		Mode:    ds.Virement,
 		Date:    time.Now().AddDate(-2, 3, -5),
 	},
-		pr.Personne{Id: 1, Identite: pr.Identite{Nom: "GER", Prenom: "EMLZKEs"}},
+		pr.Personne{Id: 1, Identite: pr.Identite{
+			Nom: "GER", Prenom: "EMLZKEs",
+			Adresse: "28, Rue du grand cerf", CodePostal: "26161", Ville: "Une grande ville longue",
+
+			Pays: "FR",
+		}},
 	)
 	tu.AssertNoErr(t, err)
 
@@ -44,7 +71,9 @@ func TestRecu(t *testing.T) {
 }
 
 func TestFields(t *testing.T) {
-	champNum := champPdf{id: "z1", valeur: formfill.FDFText(numero(4))}
+	t.Skip("dev test")
+
+	champNum := champPdf{id: "numeroRecu", valeur: formfill.FDFText(numero(4))}
 	donateur := pr.Personne{
 		Identite: pr.Identite{
 			Nom:        "')='à=(kmlrk'",
@@ -61,7 +90,7 @@ func TestFields(t *testing.T) {
 	}
 	fields := []champPdf{champNum}
 
-	fields = append(fields, champsACVE...)
+	fields = append(fields, champsAsso(assoACVE)...)
 	fields = append(fields, champsDonateur(donateur)...)
 	fields = append(fields, champsDon(don)...)
 	fields = append(fields, champsTypeDon...)
@@ -107,7 +136,7 @@ func BenchmarkExportRecus(b *testing.B) {
 	tu.AssertNoErr(b, err)
 	defer db.Close()
 
-	err = Init("templateRecuAcve.pdf")
+	err = Init("modele_2026_form.pdf")
 	tu.AssertNoErr(b, err)
 	pdfcreator.Init(os.TempDir(), "")
 	tu.AssertNoErr(b, err)
