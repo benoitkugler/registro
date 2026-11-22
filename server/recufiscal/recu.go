@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"errors"
 	"fmt"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -30,7 +31,7 @@ func Init(templatePath string) error {
 	if err != nil {
 		return fmt.Errorf("loading PDF template: %s", err)
 	}
-	if L := len(doc.Catalog.AcroForm.Flatten()); L != 36 {
+	if L := len(doc.Catalog.AcroForm.Flatten()); L != 37 {
 		return fmt.Errorf("loading PDF template: corrupted model (unexpected number of form fields)")
 	}
 	field := doc.Catalog.AcroForm.Flatten()["numeroRecu"].Field // pointer
@@ -190,11 +191,35 @@ func champsAsso(asso association) []champPdf {
 	}
 }
 
+// regexNumeroRue reconnaît un numéro de rue en début d'adresse,
+// avec un éventuel suffixe (« 12bis ») ou une virgule (« 12, »).
+var regexNumeroRue = regexp.MustCompile(`^\d+[A-Za-z]*,?$`)
+
+// extraitNumeroRue sépare le numéro de rue du reste de l'adresse.
+// Si aucun numéro n'est trouvé, le numéro est vide et l'adresse
+// est renvoyée telle quelle.
+func extraitNumeroRue(adresse string) (numero, rue string) {
+	premiereLigne, suite, found := strings.Cut(adresse, "\n")
+	mots := strings.Fields(premiereLigne)
+	if len(mots) < 2 || !regexNumeroRue.MatchString(mots[0]) {
+		return "", adresse
+	}
+
+	numero = strings.TrimSuffix(mots[0], ",")
+	rue = strings.Join(mots[1:], " ")
+	if found {
+		rue += "\n" + suite
+	}
+	return numero, rue
+}
+
 func champsDonateur(donateur pr.Personne) []champPdf {
+	numeroRue, rue := extraitNumeroRue(donateur.Adresse)
 	return []champPdf{
 		{id: "nomDonateur", valeur: formfill.FDFText(donateur.FNom())},
 		{id: "prenomDonateur", valeur: formfill.FDFText(donateur.FPrenom())},
-		{id: "adresseDonateur", valeur: formfill.FDFText(donateur.Adresse)},
+		{id: "numeroRueDonateur", valeur: formfill.FDFText(numeroRue)},
+		{id: "adresseDonateur", valeur: formfill.FDFText(rue)},
 		{id: "codePostalDonateur", valeur: formfill.FDFText(donateur.CodePostal)},
 		{id: "villeDonateur", valeur: formfill.FDFText(strings.ToUpper(donateur.Ville))},
 		{id: "paysDonateur", valeur: formfill.FDFText(string(donateur.Pays))},

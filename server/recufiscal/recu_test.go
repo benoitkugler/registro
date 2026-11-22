@@ -37,7 +37,7 @@ func TestFieldNames(t *testing.T) {
 		"objectifLigne1", "objectifLigne2", "associationReconnueUtilitePublique",
 		"jourDecret", "moisDecret", "anneeDecret",
 		"jourJournalOfficiel", "moisJournalOfficiel", "anneeJournalOfficiel",
-		"nomDonateur", "prenomDonateur", "adresseDonateur", "codePostalDonateur", "villeDonateur", "paysDonateur",
+		"nomDonateur", "prenomDonateur", "numeroRueDonateur", "adresseDonateur", "codePostalDonateur", "villeDonateur", "paysDonateur",
 		"montantChiffres", "montantLettres",
 		"jourVersement", "moisVersement", "anneeVersement",
 		"article200CGI", "formeDonManuel", "natureDonNumeraire",
@@ -49,6 +49,25 @@ func TestFieldNames(t *testing.T) {
 	for _, name := range expected {
 		_, ok := fields[name]
 		tu.Assert(t, ok)
+	}
+}
+
+func TestExtraitNumeroRue(t *testing.T) {
+	cases := []struct {
+		adresse, numero, rue string
+	}{
+		{"12 rue des Fleurs", "12", "rue des Fleurs"},
+		{"12bis, rue de la Paix", "12bis", "rue de la Paix"},
+		{"3bis allée des Tilleuls\ncomplément", "3bis", "allée des Tilleuls\ncomplément"},
+		{" 28, Rue du grand cerf ", "28", "Rue du grand cerf"},
+		{"La Maison du Rocher", "", "La Maison du Rocher"},
+		{"lmemzkd\ndlss\nzlkdsmkmdkmsdk", "", "lmemzkd\ndlss\nzlkdsmkmdkmsdk"},
+		{"12", "", "12"},
+		{"", "", ""},
+	}
+	for _, c := range cases {
+		numero, rue := extraitNumeroRue(c.adresse)
+		tu.Assert(t, numero == c.numero && rue == c.rue)
 	}
 }
 
