@@ -47,8 +47,9 @@ ALTER TABLE tauxs
 ALTER TABLE dossiers
     ADD UNIQUE (Id, IdTaux);
 
-ALTER TABLE dossiers
-    ADD UNIQUE (KeyV1);
+CREATE UNIQUE INDEX ON dossiers (KeyV1)
+WHERE
+    length(KeyV1) > 0;
 
 ALTER TABLE dossiers
     ADD FOREIGN KEY (IdTaux) REFERENCES tauxs;

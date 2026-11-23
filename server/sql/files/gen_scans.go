@@ -605,6 +605,16 @@ func DeleteDemandesByIdDirecteurs(tx DB, idDirecteurs_ ...personnes.IdPersonne) 
 	return ScanDemandes(rows)
 }
 
+// SelectDemandeByCategorie return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectDemandeByCategorie(tx DB, categorie Categorie) (item Demande, found bool, err error) {
+	row := tx.QueryRow("SELECT id, idfile, iddirecteur, categorie, description, maxdocs, nationnalite FROM demandes WHERE Categorie = $1", categorie)
+	item, err = ScanDemande(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
+}
+
 func scanOneFile(row scanner) (File, error) {
 	var item File
 	err := row.Scan(
@@ -1112,6 +1122,16 @@ func DeleteFileCampsByIdCamps(tx DB, idCamps_ ...camps.IdCamp) (FileCamps, error
 		return nil, err
 	}
 	return ScanFileCamps(rows)
+}
+
+// SelectFileCampByIdCamp return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectFileCampByIdCamp(tx DB, idCamp camps.IdCamp) (item FileCamp, found bool, err error) {
+	row := tx.QueryRow("SELECT idfile, idcamp, islettre FROM file_camps WHERE IdCamp = $1", idCamp)
+	item, err = ScanFileCamp(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
 }
 
 func scanOneFilePersonne(row scanner) (FilePersonne, error) {

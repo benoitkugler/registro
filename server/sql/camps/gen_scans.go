@@ -701,6 +701,16 @@ func SelectEquipierByIdCampAndIdPersonne(tx DB, idCamp IdCamp, idPersonne person
 	return item, true, err
 }
 
+// SelectEquipierByIdCamp return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectEquipierByIdCamp(tx DB, idCamp IdCamp) (item Equipier, found bool, err error) {
+	row := tx.QueryRow("SELECT id, idcamp, idpersonne, roles, presence, formstatus, acceptecharte FROM equipiers WHERE IdCamp = $1", idCamp)
+	item, err = ScanEquipier(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
+}
+
 func scanOneForm(row scanner) (Form, error) {
 	var item Form
 	err := row.Scan(
