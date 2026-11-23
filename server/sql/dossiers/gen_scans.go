@@ -253,6 +253,16 @@ func SelectDossierByIdAndIdTaux(tx DB, id IdDossier, idTaux IdTaux) (item Dossie
 	return item, true, err
 }
 
+// SelectDossierByKeyV1 return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectDossierByKeyV1(tx DB, keyV1 string) (item Dossier, found bool, err error) {
+	row := tx.QueryRow("SELECT id, idtaux, idresponsable, copiesmails, partageadressesok, demandefondsoutien, momentinscription, lastloaddocuments, keyv1 FROM dossiers WHERE KeyV1 = $1", keyV1)
+	item, err = ScanDossier(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
+}
+
 func scanOnePaiement(row scanner) (Paiement, error) {
 	var item Paiement
 	err := row.Scan(

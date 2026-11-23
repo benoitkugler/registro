@@ -49,6 +49,9 @@ ALTER TABLE dossiers
     ADD UNIQUE (Id, IdTaux);
 
 ALTER TABLE dossiers
+    ADD UNIQUE (KeyV1);
+
+ALTER TABLE dossiers
     ADD FOREIGN KEY (IdTaux) REFERENCES tauxs;
 
 ALTER TABLE dossiers

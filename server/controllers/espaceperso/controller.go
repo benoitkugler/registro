@@ -604,6 +604,19 @@ func (ct *Controller) acceptePlaceLiberee(idDossier ds.IdDossier, idEvent evs.Id
 		return utils.SQLError(err)
 	}
 
+	equipiers, err := cps.SelectEquipiersByIdCamps(ct.db, participant.IdCamp)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	var directeur pr.Personne
+	dirEq, hasDirecteur := equipiers.Directeur()
+	if hasDirecteur {
+		directeur, err = pr.SelectPersonne(ct.db, dirEq.IdPersonne)
+		if err != nil {
+			return utils.SQLError(err)
+		}
+	}
+
 	return utils.InTx(ct.db, func(tx *sql.Tx) error {
 		// update the participant
 		participant.Statut = cps.Inscrit
@@ -620,7 +633,9 @@ func (ct *Controller) acceptePlaceLiberee(idDossier ds.IdDossier, idEvent evs.Id
 		if err != nil {
 			return err
 		}
-		// notify backoffice
+
+		// notify backoffice and directeur
+
 		html := fmt.Sprintf(`Bonjour, <br /><br />
 	La place libre sur le séjour %s a été acceptée par %s. <br /><br />
 	Le statut du participant a automatiquement été mis à jour. <br /><br />
@@ -630,6 +645,13 @@ func (ct *Controller) acceptePlaceLiberee(idDossier ds.IdDossier, idEvent evs.Id
 		err = mails.NewMailer(ct.smtp, ct.asso.MailsSettings).SendMail(ct.asso.ContactMail, "Place acceptée", html, nil, nil)
 		if err != nil {
 			return err
+		}
+
+		if hasDirecteur {
+			err = mails.NewMailer(ct.smtp, ct.asso.MailsSettings).SendMail(directeur.Mail, "Place acceptée", html, nil, nil)
+			if err != nil {
+				return err
+			}
 		}
 
 		return nil
