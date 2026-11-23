@@ -28,8 +28,8 @@ func TestTrimParticipants(t *testing.T) {
 	}
 
 	gotParticipants, gotFactures := trimParticipants(participants, factures, baseV1{camps: rd.Camps{10: {Id: 10}}})
-	if len(gotParticipants) != 2 || gotParticipants[1].Id != 1 || gotParticipants[3].Id != 3 {
-		t.Fatalf("trimmed participants = %+v, want participants 1 and 3", gotParticipants)
+	if len(gotParticipants) != 1 || gotParticipants[1].Id != 1 {
+		t.Fatalf("trimmed participants = %+v, want participant 1 only", gotParticipants)
 	}
 	if len(gotFactures) != 1 || gotFactures[100].Id != 100 {
 		t.Fatalf("trimmed factures = %+v, want facture 100 only", gotFactures)
@@ -55,10 +55,12 @@ func TestTrimPersonnesKeepsRegistrationPeople(t *testing.T) {
 
 func TestDossierFromV1(t *testing.T) {
 	moment := time.Date(2025, time.June, 1, 12, 0, 0, 0, time.UTC)
+	lastConnection := time.Date(2025, time.June, 2, 8, 30, 0, 0, time.UTC)
 	got := dossierFromV1(rd.Facture{
 		Key:               "legacy-key",
 		CopiesMails:       pq.StringArray{"copy@example.org"},
 		PartageAdressesOK: true,
+		LastConnection:    lastConnection,
 	}, 1, 42, moment)
 
 	want := ds.Dossier{
@@ -67,6 +69,7 @@ func TestDossierFromV1(t *testing.T) {
 		CopiesMails:       pr.Mails{"copy@example.org"},
 		PartageAdressesOK: true,
 		MomentInscription: moment,
+		LastLoadDocuments: lastConnection,
 		KeyV1:             "legacy-key",
 	}
 	if !reflect.DeepEqual(got, want) {
