@@ -12,8 +12,8 @@ La configuration pour une association se fait par 3 moyens :
   | `ASSO_MAIL_NOTIFICATION_FROM_DIRECTEUR` | adresse de notification pour les messages automatiques envoyés quand un directeur demande l'attention sur un dossier                    | v0.13.0             |
   | `COMPTA_ADMIN_PASSWORD`                 | mot de passe administrateur de l'espace compta : il donne accès au suivi de tous les séjours                                            | v0.13.0             |
   | `COMPTA_ADMIN_MAIL`                     | adresse mail de l'administrateur de l'espace compta, sur lequel est envoyé une notification quand le directeur a terminé sa déclaration | v0.13.0             |
-  | `COMPTA_GOOGLE_DRIVE_FOLDER_ID`         | identifiant du dossier Google Drive partagé avec le compte de service (optionnel avec le flag -noComptaDrive)                           | v0.13.0             |
-  | `COMPTA_GOOGLE_DRIVE_KEY_FILE`          | chemin vers le fichier de clé JSON du compte de service Google Drive (optionnel avec le flag -noComptaDrive)                            | v0.13.0             |
+  | `COMPTA_GOOGLE_DRIVE_FOLDER_ID`         | identifiant du dossier Google Drive partagé avec le compte de service (optionnel par défaut, requis avec le flag -checkComptaDrive)                           | v0.13.0             |
+  | `COMPTA_GOOGLE_DRIVE_KEY_FILE`          | chemin vers le fichier de clé JSON du compte de service Google Drive (optionnel par défaut, requis avec le flag -checkComptaDrive)                            | v0.13.0             |
   | `COMPTA_FILES_DIR`                      | répertoire local des fichiers des justificatifs déposés sur l'espace comptabilité des séjours                                           | v0.13.0             |
   | `HELLOASSO_HORIZON_KEY`                 | clé d'authentification des requêtes Horizon entrantes                                                                                   | v0.12.3             |
   | `HELLOASSO_RELAIS_KEY`                  | clé d'authentification des réponses envoyées à Horizon                                                                                  | v0.12.3             |

@@ -33,11 +33,11 @@ import (
 
 func main() {
 	devPtr := flag.Bool("dev", false, "utilise un mode de développement (mail, localhost)")
-	acceptNoComptaDrivePtr := flag.Bool("noComptaDrive", false, "accept empty Google Drive compta settings")
+	checkComptaDrivePtr := flag.Bool("checkComptaDrive", false, "error on empty Google Drive compta settings")
 	flag.Parse()
-	isDev, acceptNoComptaDrive := *devPtr, *acceptNoComptaDrivePtr
+	isDev, checkComptaDrive := *devPtr, *checkComptaDrivePtr
 
-	asso, keys, dbCreds, smtp, directories, immich, comptaCfg := loadEnvs(isDev, acceptNoComptaDrive)
+	asso, keys, dbCreds, smtp, directories, immich, comptaCfg := loadEnvs(isDev, checkComptaDrive)
 
 	fmt.Println("Loading env. -> OK.")
 	fmt.Println("\tASSO:", asso.ID)
@@ -148,7 +148,7 @@ func main() {
 	e.Logger.Fatal(e.Start(adress))
 }
 
-func loadEnvs(devMode, acceptNoComptaDrive bool) (config.Asso, config.Keys, config.DB, config.SMTP, config.Directories, config.Immich, config.Compta) {
+func loadEnvs(devMode, checkComptaDrive bool) (config.Asso, config.Keys, config.DB, config.SMTP, config.Directories, config.Immich, config.Compta) {
 	asso, err := config.NewAsso()
 	check(err)
 
@@ -167,7 +167,7 @@ func loadEnvs(devMode, acceptNoComptaDrive bool) (config.Asso, config.Keys, conf
 	immich, err := config.NewImmich()
 	check(err)
 
-	compta, err := config.NewCompta(acceptNoComptaDrive)
+	compta, err := config.NewCompta(checkComptaDrive)
 	check(err)
 
 	return asso, keys, db, smtp, dirs, immich, compta

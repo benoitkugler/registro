@@ -27,7 +27,7 @@ func TestAPIConstructors(t *testing.T) {
 		{name: "NewStripe", call: func() error { _, err := NewStripe(); return err }},
 		{name: "NewHelloasso", call: func() error { _, err := NewHelloasso(); return err }},
 		{name: "NewHorizon", call: func() error { _, err := NewHorizon(); return err }},
-		{name: "NewCompta", call: func() error { _, err := NewCompta(false); return err }},
+		{name: "NewCompta", call: func() error { _, err := NewCompta(true); return err }},
 	}
 
 	for _, test := range tests {

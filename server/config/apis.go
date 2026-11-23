@@ -132,14 +132,14 @@ type Compta struct {
 // NewCompta uses env variables to build Compta configuration:
 // COMPTA_FILES_DIR, COMPTA_ADMIN_PASSWORD, COMPTA_ADMIN_MAIL
 // Google Drive settings uses the optionnal COMPTA_GOOGLE_DRIVE_KEY_FILE, COMPTA_GOOGLE_DRIVE_FOLDER_ID
-func NewCompta(acceptNoGoogleDrive bool) (Compta, error) {
+func NewCompta(checkComptaDrive bool) (Compta, error) {
 	keyFile := os.Getenv("COMPTA_GOOGLE_DRIVE_KEY_FILE")
-	if keyFile == "" && !acceptNoGoogleDrive {
+	if keyFile == "" && checkComptaDrive {
 		return Compta{}, errors.New("missing env COMPTA_GOOGLE_DRIVE_KEY_FILE")
 	}
 
 	folderID := os.Getenv("COMPTA_GOOGLE_DRIVE_FOLDER_ID")
-	if folderID == "" && !acceptNoGoogleDrive {
+	if folderID == "" && checkComptaDrive {
 		return Compta{}, errors.New("missing env COMPTA_GOOGLE_DRIVE_FOLDER_ID")
 	}
 

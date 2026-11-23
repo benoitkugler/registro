@@ -42,7 +42,7 @@ func main() {
 		check(fmt.Errorf("connexion à la base: %w", err))
 	}
 
-	comptaCfg, err := config.NewCompta(false)
+	comptaCfg, err := config.NewCompta(true)
 	check(err)
 
 	opts := ct.MigrationOptions{

@@ -12,7 +12,7 @@ import (
 
 func devEnv(t *testing.T) (googleDriveAPI, fileSystemAPI, config.SMTP) {
 	tu.LoadEnv(t, "../../env.sh")
-	st, err := config.NewCompta(false)
+	st, err := config.NewCompta(true)
 	tu.AssertNoErr(t, err)
 	smtp, err := config.NewSMTP(false)
 	tu.AssertNoErr(t, err)

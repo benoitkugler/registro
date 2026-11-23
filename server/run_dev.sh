@@ -1,2 +1,2 @@
 source env.sh &&
-go run *.go -dev
+go run *.go -dev -checkComptaDrive
