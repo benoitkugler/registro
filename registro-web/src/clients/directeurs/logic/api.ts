@@ -395,6 +395,7 @@ export interface Camp {
   InscriptionExterne: boolean;
   Statut: StatutCamp;
   Prix: Montant;
+  DemandeAcompte: boolean;
   OptionPrix: OptionPrixCamp;
   OptionQuotientFamilial: PrixQuotientFamilial;
   Password: string;

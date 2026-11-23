@@ -125,6 +125,11 @@ export interface FilesCamp {
   ToRead: PublicFile[] | null;
   ToUploadModeles: PublicFile[] | null;
 }
+// registro/controllers/backoffice.GetCampsOut
+export interface GetCampsOut {
+  Camps: CampHeader[] | null;
+  AcomptePercent: Int;
+}
 // registro/controllers/backoffice.InscriptionIdentifieIn
 export interface InscriptionIdentifieIn {
   IdDossier: IdDossier;
@@ -333,6 +338,8 @@ export interface BilanFinancesPub {
   Recu: string;
   Restant: string;
   Statut: StatutPaiement;
+  AcompteDu: string;
+  AcompteRestant: string;
   DemandeEnAttenteValidation: string;
 }
 // registro/logic.BilanParticipantPub
@@ -602,6 +609,7 @@ export interface Camp {
   PlacesReservees: Int;
   HoraireDebut: Horaire;
   HoraireFin: Horaire;
+  DemandeAcompte: boolean;
 }
 // registro/sql/camps.CampExt
 export interface CampExt {
@@ -1257,7 +1265,7 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseURL + "/api/v1/backoffice/camps";
     this.startRequest();
     try {
-      const rep: AxiosResponse<CampHeader[] | null> = await Axios.get(fullUrl, {
+      const rep: AxiosResponse<GetCampsOut> = await Axios.get(fullUrl, {
         headers: this.getHeaders(),
       });
       return rep.data;

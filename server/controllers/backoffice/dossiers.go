@@ -311,7 +311,7 @@ func (ct *Controller) loadDossier(host string, id ds.IdDossier) (DossierDetails,
 	url := logic.EspacePersoURL(ct.key, host, id)
 	virement := OffuscateurVirements.Mask(id)
 	accounts := ct.asso.BankAccounts
-	return DossierDetails{dossier.Publish(ct.key), url, virement, accounts}, nil
+	return DossierDetails{dossier.Publish(ct.key, ct.asso.AcomptePercent), url, virement, accounts}, nil
 }
 
 func (ct *Controller) DossiersCreate(c echo.Context) error {
@@ -891,7 +891,7 @@ func (ct *Controller) previewRelancePaiement(idCamp cps.IdCamp) ([]PreviewRelanc
 		out[i] = PreviewRelance{
 			dossier.Dossier.Dossier.Id,
 			dossier.Responsable().NOMPrenom(),
-			dossier.Publish(ct.key).Bilan,
+			dossier.Publish(ct.key, ct.asso.AcomptePercent).Bilan,
 			dossier.Events.LastBy(evs.Facture).Created,
 		}
 	}

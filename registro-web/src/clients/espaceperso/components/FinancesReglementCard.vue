@@ -1,11 +1,15 @@
 <template>
   <v-card title="Régler le séjour" class="mt-2">
     <v-card-text>
-      Le montant à régler est de
-      <b> {{ props.dossier.Bilan.Restant }} </b>.
+      Le montant à régler est de <b> {{ amountToPay }} </b>.
+      <template v-if="props.state == RequiredPaiementState.PaiementAcompte">
+        <br />
+        Il s'agit de l'acompte demandé pour votre inscription. Le solde sera
+        demandé ultérieurement.
+      </template>
       <v-row class="mt-4">
         <v-col align-self="start" cols="12" md="4">
-          <v-list class="py-0" selectable v-model:selected="mode">
+          <v-list class="py-0" selectable v-model:selected="selectedMode">
             <v-list-item
               rounded
               class="my-2"
@@ -48,11 +52,11 @@
           </v-list>
         </v-col>
         <v-col align-self="start" cols="12" md="8">
-          <v-card :title="ModePaiementLabels[mode]">
-            <v-card-text v-if="mode == ModePaiement.EnLigne">
+          <v-card :title="ModePaiementLabels[selectedMode]">
+            <v-card-text v-if="selectedMode == ModePaiement.EnLigne">
               TODO: see https://github.com/benoitkugler/registro/issues/76
             </v-card-text>
-            <v-card-text v-else-if="mode == ModePaiement.Virement">
+            <v-card-text v-else-if="selectedMode == ModePaiement.Virement">
               Vous pouvez effectuer votre virement vers
               {{
                 props.settings.BankAccounts?.length || 0 > 1
@@ -102,7 +106,7 @@
                 </v-row>
               </v-alert>
             </v-card-text>
-            <v-card-text v-else-if="mode == ModePaiement.Cheque">
+            <v-card-text v-else-if="selectedMode == ModePaiement.Cheque">
               Merci d'envoyer votre chèque à l'ordre
               <b>{{ props.settings.Cheques.Ordre }}</b> à l'adresse suivante :
               <v-row justify="center">
@@ -127,10 +131,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import {
   ModePaiement,
   ModePaiementLabels,
+  RequiredPaiementState,
   type DossierExt,
   type PaiementSettings,
 } from "../logic/api";
@@ -140,14 +145,21 @@ const props = defineProps<{
   token: string;
   dossier: DossierExt;
   settings: PaiementSettings;
+  state: RequiredPaiementState;
 }>();
 
 const emit = defineEmits<{}>();
 
-const mode = ref<ModePaiement>(
+const amountToPay = computed(() =>
+  props.state === RequiredPaiementState.PaiementAcompte
+    ? props.dossier.Bilan.AcompteRestant
+    : props.dossier.Bilan.Restant,
+);
+
+const selectedMode = ref<ModePaiement>(
   props.settings.SupportPaiementEnLigne
     ? ModePaiement.EnLigne
-    : ModePaiement.Virement
+    : ModePaiement.Virement,
 );
 
 async function copyIBAN(iban: string) {

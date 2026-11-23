@@ -280,7 +280,14 @@ type InscriptionsValideIn struct {
 // ValideInscription met à jour le statut des participants et
 // envoie un mail d'accusé de réception.
 //
-// Le dossier est considéré comme validé si aucun participant n'est encore [AStatuer]
+// Le dossier est considéré comme validé si aucun participant n'est encore [AStatuer].
+//
+// Lorsqu'un participant est nouvellement inscrit dans un camp qui demande un
+// acompte (Camp.DemandeAcompte), le mail demande au responsable de le régler.
+// L'acompte vaut [config.Asso.AcomptePercent] % du prix de base du séjour,
+// calculé par [acompteParticipant]. Les montants sont additionnés dans un
+// [ds.MontantTaux] utilisant le taux du dossier, afin de gérer les dossiers
+// comportant des séjours en devises différentes.
 func ValideInscription(db *sql.DB, key crypto.Encrypter, smtp config.SMTP, asso config.Asso,
 	host string, args InscriptionsValideIn, bypass StatutBypassRights, acteur cps.OptIdCamp,
 ) error {
@@ -289,6 +296,10 @@ func ValideInscription(db *sql.DB, key crypto.Encrypter, smtp config.SMTP, asso 
 		return err
 	}
 	dossier := loader.Dossier
+	taux, err := ds.SelectTaux(db, dossier.IdTaux)
+	if err != nil {
+		return utils.SQLError(err)
+	}
 
 	// on calcule le statut des participants (requiert les participants et personnes déjà inscrites)
 	camps, err := cps.LoadCamps(db, loader.Camps().IDs())
@@ -309,8 +320,13 @@ func ValideInscription(db *sql.DB, key crypto.Encrypter, smtp config.SMTP, asso 
 		now := time.Now()
 		var (
 			inscrits, attente, refuses, astatuer []mails.Participant
+			acomptes                             []mails.AcompteParticipant
+			acompteTotal                         ds.MontantTaux
+			hasAcompte                           bool
 			statuationEv                         evs.Event // register the last Statuation event for the notification link
 		)
+		// [MontantTaux] gère l'addition de montants en devises différentes.
+		acompteTotal = taux.Zero()
 		for _, pExt := range loader.ParticipantsExt() {
 			participant := pExt.Participant
 			mailPart := mails.Participant{Personne: pExt.Personne.PrenomNOM(), Camp: pExt.Camp.Label()}
@@ -357,6 +373,18 @@ func ValideInscription(db *sql.DB, key crypto.Encrypter, smtp config.SMTP, asso 
 
 			if newStatut == cps.Inscrit {
 				inscrits = append(inscrits, mailPart)
+				// Seuls les participants validés à cette occasion sont comptés :
+				// les validations précédentes ont déjà donné lieu à leur message.
+				if camp := camps.Camps[participant.IdCamp]; asso.AcomptePercent > 0 && camp.DemandeAcompte {
+					acompte := camp.Acompte(asso.AcomptePercent)
+					acomptes = append(acomptes, mails.AcompteParticipant{
+						Personne: mailPart.Personne,
+						Camp:     mailPart.Camp,
+						Acompte:  acompte.String(),
+					})
+					acompteTotal.Add(acompte)
+					hasAcompte = true
+				}
 			} else if newStatut == cps.Refuse {
 				refuses = append(refuses, mailPart)
 			} else {
@@ -368,7 +396,12 @@ func ValideInscription(db *sql.DB, key crypto.Encrypter, smtp config.SMTP, asso 
 		if args.SendMail {
 			resp := loader.Responsable()
 			url := EspacePersoURL(key, host, dossier.Id, utils.QPInt("idEvent", statuationEv.Id))
-			html, err := mails.ConfirmationInscription(asso, mails.NewContact(&resp), url, inscrits, attente, refuses, astatuer)
+			acompte := mails.AcompteInfo{Percent: asso.AcomptePercent}
+			if hasAcompte {
+				acompte.Participants = acomptes
+				acompte.Total = taux.Convertible(acompteTotal.Montant).String()
+			}
+			html, err := mails.ConfirmationInscription(asso, mails.NewContact(&resp), url, inscrits, attente, refuses, astatuer, acompte)
 			if err != nil {
 				return err
 			}

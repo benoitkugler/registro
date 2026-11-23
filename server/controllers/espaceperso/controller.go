@@ -69,7 +69,9 @@ type Data struct {
 	PaiementSettings           PaiementSettings
 	SupportsAidesExt           bool
 
-	IsPaiementOpen bool
+	// RequiredPaiementState décrit ce qui est demandé à la famille :
+	// aucun paiement, acompte seul, ou paiement total.
+	RequiredPaiementState logic.RequiredPaiementState
 	// EnableJustificatifs is true when all the camps have started (or ended)
 	EnableJustificatifs bool
 }
@@ -95,7 +97,7 @@ func (ct *Controller) load(id ds.IdDossier) (Data, error) {
 	}
 	_, campInscritsStarted := dossier.ParticipantsExtReal()
 	return Data{
-		dossier.Publish(ct.key),
+		dossier.Publish(ct.key, ct.asso.AcomptePercent),
 		documents.NewCount,
 		ct.asso.Title,
 		ct.asso.ContactMail,
@@ -106,7 +108,7 @@ func (ct *Controller) load(id ds.IdDossier) (Data, error) {
 			ct.asso.ChequeSettings,
 		},
 		ct.asso.SupportBonsCAF,
-		dossier.IsPaiementOpen(),
+		dossier.PaiementMode(ct.asso.AcomptePercent),
 		campInscritsStarted,
 	}, nil
 }
@@ -545,7 +547,7 @@ func (ct *Controller) renderFacture(id ds.IdDossier) ([]byte, error) {
 	}
 
 	// sort by time
-	finances := dossier.Publish(ct.key)
+	finances := dossier.Publish(ct.key, ct.asso.AcomptePercent)
 	var paiements []ds.Paiement
 	for _, p := range finances.Paiements {
 		paiements = append(paiements, p)

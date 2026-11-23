@@ -58,11 +58,20 @@ type CampHeader struct {
 }
 
 func (ct *Controller) CampsGet(c echo.Context) error {
-	out, err := ct.getCamps(c.Request().Host)
+	l, err := ct.getCamps(c.Request().Host)
 	if err != nil {
 		return err
 	}
+	out := GetCampsOut{l, ct.asso.AcomptePercent}
 	return c.JSON(200, out)
+}
+
+type GetCampsOut struct {
+	Camps []CampHeader
+
+	// AcomptePercent is the association-level setting used to compute
+	// the deposit asked for camps with Camp.DemandeAcompte.
+	AcomptePercent int
 }
 
 func (ct *Controller) getCamps(host string) ([]CampHeader, error) {
@@ -98,7 +107,15 @@ func (ct *Controller) getCamps(host string) ([]CampHeader, error) {
 		camp := loader.Camp.Ext()
 		preselectionURL := utils.BuildUrl(host, inscriptions.EndpointInscription, utils.QP(inscriptions.PreselectionQueryParam, camp.Slug))
 		directeurURL := directeurURL(ct.key, host, id)
-		out[i] = CampHeader{camp, taux[loader.Camp.IdTaux], loader.Stats(), files.Stats(), hasDirecteur, preselectionURL, directeurURL}
+		out[i] = CampHeader{
+			camp,
+			taux[loader.Camp.IdTaux],
+			loader.Stats(),
+			files.Stats(),
+			hasDirecteur,
+			preselectionURL,
+			directeurURL,
+		}
 	}
 	return out, nil
 }
@@ -257,6 +274,7 @@ func (ct *Controller) updateCamp(args cps.Camp) (cps.CampExt, error) {
 	camp.PlacesReservees = args.PlacesReservees
 	camp.HoraireDebut = args.HoraireDebut
 	camp.HoraireFin = args.HoraireFin
+	camp.DemandeAcompte = args.DemandeAcompte
 	camp, err = camp.Update(ct.db)
 	if err != nil {
 		return cps.CampExt{}, utils.SQLError(err)

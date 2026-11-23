@@ -32,6 +32,10 @@ type Asso struct {
 	BankAccounts   []BankAccount  // displayed in espace perso
 	ChequeSettings ChequeSettings // nil for disabled
 
+	// AcomptePercent is the percentage of the camp price
+	// asked as a deposit for camps with Camp.DemandeAcompte.
+	AcomptePercent int
+
 	RemisesHints RemisesHints
 
 	AskedDocs AskedDocs
@@ -98,6 +102,8 @@ var acve = Asso{
 		Adresse: [2]string{"Centre d'inscriptions - Marie-Pierre Buffet", "27, impasse Vignon - 26150 Chamaloc"},
 	},
 
+	AcomptePercent: 10,
+
 	RemisesHints: RemisesHints{
 		ParentEquipier: 30,
 		AutresInscrits: 15,
@@ -150,6 +156,8 @@ var repere = Asso{
 	BankAccounts: []BankAccount{{Owner: "ASSOCIATION REPERE", Name: "Compte en euros (EUR)"}, {Owner: "ASSOCIATION REPERE", Name: "Compte en francs suisses (CHF)"}},
 
 	ChequeSettings: ChequeSettings{}, // disabled
+
+	AcomptePercent: 10,
 
 	RemisesHints: RemisesHints{
 		ParentEquipier: 50,
