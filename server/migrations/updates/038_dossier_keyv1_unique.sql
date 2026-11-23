@@ -1,4 +1,4 @@
--- v0.13.1
+-- v0.13.2
 -- La clé V1 est facultative : plusieurs dossiers peuvent avoir une clé vide.
 -- L'unicité ne s'applique qu'aux clés non vides.
 
