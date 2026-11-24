@@ -36,6 +36,7 @@ interface ImportMetaEnv {
   readonly VITE_ASSO: "acve" | "repere";
   readonly VITE_ASSO_TITLE: string;
   readonly VITE_ASSO_URL: string;
+  readonly VITE_SUPPORTED_CURRENCIES: string;
 }
 
 // https://vitejs.dev/config/

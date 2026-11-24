@@ -1,6 +1,6 @@
 <template>
   <v-row no-gutters>
-    <v-col :cols="props.readonlyCurrency ? 12 : 7">
+    <v-col :cols="hideCurrencySelect ? 12 : 7">
       <v-text-field
         :autofocus="props.autofocus"
         class="mr-1"
@@ -22,14 +22,12 @@
                 })
         "
         :suffix="
-          props.readonlyCurrency
-            ? CurrencyLabels[modelValue.Currency]
-            : undefined
+          hideCurrencySelect ? CurrencyLabels[modelValue.Currency] : undefined
         "
       >
       </v-text-field>
     </v-col>
-    <v-col cols="5" v-if="!props.readonlyCurrency">
+    <v-col cols="5" v-if="!hideCurrencySelect">
       <v-select
         label="Monnaie"
         variant="outlined"
@@ -47,8 +45,10 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue";
 import { CurrencyLabels, type Montant } from "@/clients/backoffice/logic/api";
-import { round, selectItems } from "@/utils";
+import { singleCurrency, currencyItems } from "@/settings";
+import { round } from "@/utils";
 const props = defineProps<{
   label: string;
   hideDetails?: boolean;
@@ -61,7 +61,10 @@ const props = defineProps<{
 
 const modelValue = defineModel<Montant>({ required: true });
 
-const currencyItems = selectItems(CurrencyLabels);
+// A single supported currency (ACVE has only EUR) doesn't need a selector.
+const hideCurrencySelect = computed(
+  () => props.readonlyCurrency === true || singleCurrency,
+);
 
 // debounce feature
 let timerId: ReturnType<typeof setTimeout>;
