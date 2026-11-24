@@ -5,7 +5,7 @@ go 1.26.5
 require (
 	github.com/benoitkugler/go-weasyprint v0.0.16
 	github.com/benoitkugler/num2words v1.0.1
-	github.com/benoitkugler/pdf v0.0.16
+	github.com/benoitkugler/pdf v0.0.17
 	github.com/benoitkugler/textprocessing v0.0.6
 	github.com/benoitkugler/webrender v0.0.15
 	github.com/disintegration/imaging v1.6.2
