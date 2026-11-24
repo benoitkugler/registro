@@ -35,16 +35,16 @@ func TestNotifieMessage(t *testing.T) {
 	tu.Write(t, "NotifieMessage.html", []byte(html))
 }
 
-func TestNotifieFacture(t *testing.T) {
+func TestNotifieDemandeReglement(t *testing.T) {
 	asso, _ := loadEnv(t)
 
-	html, err := NotifieFacture(asso,
+	html, err := NotifieDemandeReglement(asso,
 		Contact{Prenom: "Claudy", Sexe: pr.Woman},
 		"https://acve.fr/inscription/valide?data:cryp4tedinscriptin",
 	)
 	tu.AssertNoErr(t, err)
 
-	tu.Write(t, "NotifieFacture.html", []byte(html))
+	tu.Write(t, "NotifieDemandeReglement.html", []byte(html))
 }
 
 func TestNotifieDocumentsCamp(t *testing.T) {

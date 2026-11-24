@@ -76,6 +76,10 @@ export interface CreateEquipierIn {
   IdCamp: IdCamp;
   Roles: Roles;
 }
+// registro/controllers/backoffice.DemandePaiementIn
+export interface DemandePaiementIn {
+  IdDossiers: IdDossier[] | null;
+}
 // registro/controllers/backoffice.DossierDetails
 export interface DossierDetails {
   Dossier: DossierExt;
@@ -218,10 +222,6 @@ export const QueryReglementLabels: Record<QueryReglement, string> = {
   [QueryReglement.Zero]: "Non commencé",
 };
 
-// registro/controllers/backoffice.RelancePaiementIn
-export interface RelancePaiementIn {
-  IdDossiers: IdDossier[] | null;
-}
 // registro/controllers/backoffice.RelancePendingInscriptionsIn
 export interface RelancePendingInscriptionsIn {
   Ids: IdInscription[] | null;
@@ -2187,8 +2187,8 @@ export abstract class AbstractAPI {
     }
   }
 
-  /** EventsSendRelancePaiement return a streaming Response (JSON line format) */
-  async EventsSendRelancePaiement(params: RelancePaiementIn) {
+  /** EventsSendDemandePaiement return a streaming Response (JSON line format) */
+  async EventsSendDemandePaiement(params: DemandePaiementIn) {
     const fullUrl = this.baseURL + "/api/v1/backoffice/events/relance-paiement";
     this.startRequest();
     try {

@@ -23,7 +23,7 @@ var (
 	preinscriptionT             *template.Template
 	notifieFusionDossierT       *template.Template
 	notifieMessageT             *template.Template
-	notifieFactureT             *template.Template
+	notifieDemandeReglementT    *template.Template
 	notifieDocumentsCampT       *template.Template
 	notifieDocumentsValidesT    *template.Template
 	notifieDocumentRefuseT      *template.Template
@@ -48,7 +48,7 @@ func init() {
 	preinscriptionT = parseTemplate("templates/preinscription.html")
 	notifieFusionDossierT = parseTemplate("templates/notifieFusionDossier.html")
 	notifieMessageT = parseTemplate("templates/notifieMessage.html")
-	notifieFactureT = parseTemplate("templates/notifieFacture.html")
+	notifieDemandeReglementT = parseTemplate("templates/notifieDemandeReglement.html")
 	notifieDocumentsCampT = parseTemplate("templates/notifieDocumentsCamp.html")
 	notifieDocumentsValidesT = parseTemplate("templates/notifieDocumentsValides.html")
 	notifieDocumentRefuseT = parseTemplate("templates/notifieDocumentRefuse.html")
@@ -146,7 +146,7 @@ func NotifieMessage(asso config.Asso, contact Contact, contenu, lienEspacePerso 
 	return render(notifieMessageT, args)
 }
 
-func NotifieFacture(asso config.Asso, contact Contact, lienEspacePerso string) (string, error) {
+func NotifieDemandeReglement(asso config.Asso, contact Contact, lienEspacePerso string) (string, error) {
 	args := struct {
 		champsCommuns
 		EspacePersoURL         string
@@ -161,7 +161,7 @@ func NotifieFacture(asso config.Asso, contact Contact, lienEspacePerso string) (
 		EspacePersoURL:         lienEspacePerso,
 		EspacePersoButtonLabel: "MON ESPACE",
 	}
-	return render(notifieFactureT, args)
+	return render(notifieDemandeReglementT, args)
 }
 
 func NotifieDocumentsCamp(asso config.Asso, contact Contact, campLabel string, espacePersoURL string) (string, error) {

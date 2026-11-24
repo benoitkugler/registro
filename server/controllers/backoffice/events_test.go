@@ -131,7 +131,7 @@ func Test_events(t *testing.T) {
 		tu.Assert(t, len(preview) == 0)
 
 		out := httptest.NewRecorder()
-		it, err := ct.sendRelancePaiement("", RelancePaiementIn{ids})
+		it, err := ct.sendDemandePaiement("", DemandePaiementIn{ids})
 		tu.AssertNoErr(t, err)
 		err = utils.StreamJSON(out, it)
 		tu.AssertNoErr(t, err)

@@ -181,7 +181,7 @@ func (ct *Controller) sendFacture(host string, id ds.IdDossier) error {
 		}
 		url := logic.EspacePersoURL(ct.key, host, id, utils.QPInt("idEvent", event.Id))
 		// notifie le responsable
-		body, err := mails.NotifieFacture(ct.asso, mails.NewContact(&responsable), url)
+		body, err := mails.NotifieDemandeReglement(ct.asso, mails.NewContact(&responsable), url)
 		if err != nil {
 			return err
 		}
@@ -371,16 +371,16 @@ func (ct *Controller) sendSondages(host string, idCamp cps.IdCamp) (iter.Seq2[Se
 	}, nil
 }
 
-type RelancePaiementIn struct {
+type DemandePaiementIn struct {
 	IdDossiers []ds.IdDossier
 }
 
-func (ct *Controller) EventsSendRelancePaiement(c echo.Context) error {
-	var args RelancePaiementIn
+func (ct *Controller) EventsSendDemandePaiement(c echo.Context) error {
+	var args DemandePaiementIn
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
-	it, err := ct.sendRelancePaiement(c.Request().Host, args)
+	it, err := ct.sendDemandePaiement(c.Request().Host, args)
 	if err != nil {
 		return err
 	}
@@ -392,7 +392,7 @@ type SendProgress struct {
 	Total   int
 }
 
-func (ct *Controller) sendRelancePaiement(host string, args RelancePaiementIn) (iter.Seq2[SendProgress, error], error) {
+func (ct *Controller) sendDemandePaiement(host string, args DemandePaiementIn) (iter.Seq2[SendProgress, error], error) {
 	dossiers, err := logic.LoadDossiers(ct.db, args.IdDossiers)
 	if err != nil {
 		return nil, err
@@ -417,7 +417,7 @@ func (ct *Controller) sendRelancePaiement(host string, args RelancePaiementIn) (
 				}
 				url := logic.EspacePersoURL(ct.key, host, idDossier, utils.QPInt("idEvent", event.Id))
 				// notifie le responsable
-				body, err := mails.NotifieFacture(ct.asso, mails.NewContact(&responsable), url)
+				body, err := mails.NotifieDemandeReglement(ct.asso, mails.NewContact(&responsable), url)
 				if err != nil {
 					return err
 				}
