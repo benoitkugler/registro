@@ -217,7 +217,7 @@
   </v-dialog>
 
   <!-- validation d'une inscription -->
-  <v-dialog v-model="showValidation" max-width="800px">
+  <v-dialog v-model="showValidation" max-width="1000px">
     <ValidationInscriptionCard
       v-if="data"
       :dossier="data.Dossier"
