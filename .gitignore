@@ -8,3 +8,5 @@ server/migrations/fromACVEv1/env.sh
 server/google-drive-dev.json
 server/caf/test/attestation_paiement.pdf
 server/caf/test/attestation_quotient.pdf
+server/caf/test/Aide preview CNAF.pdf
+server/caf/test/Aide MSA.pdf
