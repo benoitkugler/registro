@@ -15,23 +15,11 @@
         prepend-icon="mdi-lock-open"
         :disabled="!allDocumentsToShow.length"
       >
-        Envoyer</v-btn
+        Envoyer...</v-btn
       >
     </template>
     <v-skeleton-loader v-if="data == null"></v-skeleton-loader>
     <v-card-text v-else>
-      <v-alert type="info" closable>
-        La <b>fiche sanitaire</b> et les <b>vaccins</b> sont automatiquement
-        demandés
-        <span v-if="data.AskedDocs.FicheSanitaireMajeurs">
-          pour tous les participants, quel que soit leur âge.
-        </span>
-        <span v-else>pour les participants mineurs.</span>
-        <div v-if="data.AskedDocs.CarteId" class="mt-2">
-          Une <b>pièce d'identité</b> est également demandée automatiquement
-          pour tous les inscrits.
-        </div>
-      </v-alert>
       <v-list>
         <!-- generated documents -->
         <v-list-subheader>Documents générés</v-list-subheader>
@@ -141,8 +129,45 @@
             </v-btn>
           </v-col>
         </v-row>
+        <!-- hard-coded asso wide documents -->
+        <v-list-item title="Fiche sanitaire">
+          <template #append>
+            <v-btn
+              icon
+              size="x-small"
+              variant="text"
+              @click="showDocsHelpDialog = true"
+            >
+              <v-icon>mdi-information-outline</v-icon>
+            </v-btn>
+          </template>
+        </v-list-item>
+        <v-list-item title="Vaccins">
+          <template #append>
+            <v-btn
+              icon
+              size="x-small"
+              variant="text"
+              @click="showDocsHelpDialog = true"
+            >
+              <v-icon>mdi-information-outline</v-icon>
+            </v-btn>
+          </template>
+        </v-list-item>
+        <v-list-item title="Pièce d'identité" v-if="data.AskedDocs.CarteId">
+          <template #append>
+            <v-btn
+              icon
+              size="x-small"
+              variant="text"
+              @click="showDocsHelpDialog = true"
+            >
+              <v-icon>mdi-information-outline</v-icon>
+            </v-btn>
+          </template>
+        </v-list-item>
         <v-list-item v-if="!data.CampDemandes?.length">
-          <i>Il n'y a encore aucun document à remplir pour ce séjour.</i>
+          <i>Aucun document complémentaire demandé pour ce séjour.</i>
         </v-list-item>
         <v-list-item
           v-for="demande in data.CampDemandes"
@@ -223,11 +248,19 @@
     <v-card title="Confirmer l'envoi des documents">
       <v-card-text>
         Les documents suivants seront disponibles sur l'espace de suivi, et un
-        mail de notification sera envoyé.
+        mail de notification sera envoyé aux familles.
 
         <div class="mt-2 text-center">
-          <v-chip v-for="doc in allDocumentsToShow" class="mx-1">
-            {{ doc }}</v-chip
+          <v-chip
+            v-for="doc in allDocumentsToShow"
+            class="ma-1"
+            :prepend-icon="
+              doc.kind == 'upload'
+                ? 'mdi-file-upload-outline'
+                : 'mdi-file-eye-outline'
+            "
+          >
+            {{ doc.title }}</v-chip
           >
         </div>
       </v-card-text>
@@ -242,6 +275,30 @@
         >
           Débloquer et notifier</v-btn
         >
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
+  <!-- help docs asso-wide -->
+  <v-dialog v-model="showDocsHelpDialog" max-width="600px">
+    <v-card title="Documents automatiquement demandés">
+      <v-card-text>
+        <p>
+          La <b>fiche sanitaire</b> et les <b>vaccins</b> sont automatiquement
+          demandés
+          <span v-if="data?.AskedDocs.FicheSanitaireMajeurs">
+            pour tous les inscrits, quel que soit leur âge.
+          </span>
+          <span v-else>pour les inscrits mineurs.</span>
+        </p>
+        <p v-if="data?.AskedDocs.CarteId" class="mt-2">
+          Une <b>pièce d'identité</b> est également demandée automatiquement
+          pour tous les inscrits.
+        </p>
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn @click="showDocsHelpDialog = false">Fermer</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -328,6 +385,7 @@ async function deleteFile() {
 }
 
 const showAddDemandeDialog = ref(false);
+const showDocsHelpDialog = ref(false);
 
 async function onCreateDemande(d: DemandeDirecteur) {
   if (!data.value) return;
@@ -389,15 +447,29 @@ const allDocumentsToShow = computed(() => {
   const d = data.value;
   if (!d) return [];
 
-  const out: string[] = [];
-  if (d.ToShow.LettreDirecteur) out.push("Lettre aux familles");
-  if (d.ToShow.ListeVetements) out.push("Liste de vêtements");
-  if (d.ToShow.CharteParticipant) out.push("Charte");
-  if (d.ToShow.ListeParticipants) out.push("Liste des participants");
-  d.FilesToDownload?.forEach((doc) => out.push(doc.NomClient));
-  d.CampDemandes?.forEach((doc) => out.push(Formatters.demande(doc.Demande)));
+  const out: { title: string; kind: "download" | "upload" }[] = [];
+  if (d.ToShow.LettreDirecteur)
+    out.push({ title: "Lettre aux familles", kind: "download" });
+  if (d.ToShow.ListeVetements)
+    out.push({ title: "Liste de vêtements", kind: "download" });
+  if (d.ToShow.CharteParticipant)
+    out.push({ title: "Charte", kind: "download" });
+  if (d.ToShow.ListeParticipants)
+    out.push({ title: "Liste des participants", kind: "download" });
+  d.FilesToDownload?.forEach((doc) =>
+    out.push({ title: doc.NomClient, kind: "download" }),
+  );
+  // hard-coded asso wide docs
+  out.push({ title: "Fiche sanitaire", kind: "upload" });
+  out.push({ title: "Vaccins", kind: "upload" });
+  if (d.AskedDocs.CarteId)
+    out.push({ title: "Pièce d'identité", kind: "upload" });
+  d.CampDemandes?.forEach((doc) =>
+    out.push({ title: Formatters.demande(doc.Demande), kind: "upload" }),
+  );
 
-  if (formsCount.value) out.push(`Formulaire(s) : ${formsCount.value}`);
+  if (formsCount.value)
+    out.push({ title: `Formulaire(s) : ${formsCount.value}`, kind: "upload" });
 
   return out;
 });
