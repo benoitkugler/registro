@@ -332,7 +332,7 @@ func (df DossierFinance) PaiementMode(percent int, requireDemandePaiement bool) 
 	if ac := df.acompte(bilan, percent); ac.Requis && ac.Restant.Cent > 0 {
 		return PaiementAcompte
 	}
-	if requireDemandePaiement && !df.Events.HasDemandePaiement() {
+	if _, has := df.Events.HasDemandePaiement(); requireDemandePaiement && !has {
 		return PaiementDesactive
 	}
 	return PaiementTotal

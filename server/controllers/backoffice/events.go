@@ -162,18 +162,23 @@ func (ct *Controller) EventsSendFacture(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	err = ct.sendFacture(c.Request().Host, id)
+	err = ct.sendDemandePaiement(c.Request().Host, id)
 	if err != nil {
 		return err
 	}
 	return c.NoContent(200)
 }
 
-func (ct *Controller) sendFacture(host string, id ds.IdDossier) error {
+func (ct *Controller) sendDemandePaiement(host string, id ds.IdDossier) error {
 	dossier, responsable, err := dossierAndResp(ct.db, id)
 	if err != nil {
 		return err
 	}
+	events, err := logic.LoadEventsByDossier(ct.db, id)
+	if err != nil {
+		return err
+	}
+	lastDemande, isRappel := events.HasDemandePaiement()
 	return utils.InTx(ct.db, func(tx *sql.Tx) error {
 		event, err := evs.Event{IdDossier: id, Kind: evs.DemandePaiement, Created: time.Now()}.Insert(tx)
 		if err != nil {
@@ -181,7 +186,7 @@ func (ct *Controller) sendFacture(host string, id ds.IdDossier) error {
 		}
 		url := logic.EspacePersoURL(ct.key, host, id, utils.QPInt("idEvent", event.Id))
 		// notifie le responsable
-		body, err := mails.NotifieDemandeReglement(ct.asso, mails.NewContact(&responsable), url)
+		body, err := mails.NotifieDemandeReglement(ct.asso, mails.NewContact(&responsable), url, isRappel, lastDemande)
 		if err != nil {
 			return err
 		}
@@ -371,6 +376,46 @@ func (ct *Controller) sendSondages(host string, idCamp cps.IdCamp) (iter.Seq2[Se
 	}, nil
 }
 
+type PreviewRelance struct {
+	Id               ds.IdDossier
+	Responsable      string
+	Bilan            logic.BilanFinancesPub
+	LastEventFacture time.Time // maybe empty
+}
+
+func (ct *Controller) EventsSendRelancePaiementPreview(c echo.Context) error {
+	idCamp, err := utils.QueryParamInt[cps.IdCamp](c, "idCamp")
+	if err != nil {
+		return err
+	}
+	out, err := ct.previewRelancePaiement(idCamp)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) previewRelancePaiement(idCamp cps.IdCamp) ([]PreviewRelance, error) {
+	filtered, _, err := loadAndFilter(ct.db, SearchDossierIn{
+		IdCamp:    idCamp.Opt(),
+		Reglement: Partiel | Zero,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	out := make([]PreviewRelance, len(filtered))
+	for i, dossier := range filtered {
+		out[i] = PreviewRelance{
+			dossier.Dossier.Dossier.Id,
+			dossier.Responsable().NOMPrenom(),
+			dossier.Publish(ct.key, ct.asso.AcomptePercent).Bilan,
+			dossier.Events.LastBy(evs.DemandePaiement).Created,
+		}
+	}
+	return out, nil
+}
+
 type DemandePaiementIn struct {
 	IdDossiers []ds.IdDossier
 }
@@ -380,7 +425,7 @@ func (ct *Controller) EventsSendDemandePaiement(c echo.Context) error {
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
-	it, err := ct.sendDemandePaiement(c.Request().Host, args)
+	it, err := ct.sendDemandesPaiement(c.Request().Host, args)
 	if err != nil {
 		return err
 	}
@@ -392,7 +437,7 @@ type SendProgress struct {
 	Total   int
 }
 
-func (ct *Controller) sendDemandePaiement(host string, args DemandePaiementIn) (iter.Seq2[SendProgress, error], error) {
+func (ct *Controller) sendDemandesPaiement(host string, args DemandePaiementIn) (iter.Seq2[SendProgress, error], error) {
 	dossiers, err := logic.LoadDossiers(ct.db, args.IdDossiers)
 	if err != nil {
 		return nil, err
@@ -409,6 +454,7 @@ func (ct *Controller) sendDemandePaiement(host string, args DemandePaiementIn) (
 		for index, idDossier := range ids {
 			dossier := dossiers.For(idDossier)
 			responsable := dossier.Responsable()
+			lastDemande, isRappel := dossier.Events.HasDemandePaiement()
 
 			err = utils.InTx(ct.db, func(tx *sql.Tx) error {
 				event, err := evs.Event{IdDossier: idDossier, Kind: evs.DemandePaiement, Created: time.Now()}.Insert(tx)
@@ -417,7 +463,7 @@ func (ct *Controller) sendDemandePaiement(host string, args DemandePaiementIn) (
 				}
 				url := logic.EspacePersoURL(ct.key, host, idDossier, utils.QPInt("idEvent", event.Id))
 				// notifie le responsable
-				body, err := mails.NotifieDemandeReglement(ct.asso, mails.NewContact(&responsable), url)
+				body, err := mails.NotifieDemandeReglement(ct.asso, mails.NewContact(&responsable), url, isRappel, lastDemande)
 				if err != nil {
 					return err
 				}

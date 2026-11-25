@@ -11,6 +11,7 @@ import (
 	"registro/sql/camps"
 	"registro/sql/dossiers"
 	pr "registro/sql/personnes"
+	sh "registro/sql/shared"
 )
 
 //go:embed templates/*
@@ -160,11 +161,13 @@ func NotifieMessage(asso config.Asso, contact Contact, contenu, lienEspacePerso 
 	return render(notifieMessageT, args)
 }
 
-func NotifieDemandeReglement(asso config.Asso, contact Contact, lienEspacePerso string) (string, error) {
+func NotifieDemandeReglement(asso config.Asso, contact Contact, lienEspacePerso string, isRappel bool, lastDemande sh.Date) (string, error) {
 	args := struct {
 		champsCommuns
 		EspacePersoURL         string
 		EspacePersoButtonLabel string
+		IsRappel               bool
+		LastDemandePaiement    sh.Date
 	}{
 		champsCommuns: champsCommuns{
 			Title:       "Demande de règlement",
@@ -174,6 +177,8 @@ func NotifieDemandeReglement(asso config.Asso, contact Contact, lienEspacePerso 
 		},
 		EspacePersoURL:         lienEspacePerso,
 		EspacePersoButtonLabel: "MON ESPACE",
+		IsRappel:               isRappel,
+		LastDemandePaiement:    lastDemande,
 	}
 	return render(notifieDemandeReglementT, args)
 }

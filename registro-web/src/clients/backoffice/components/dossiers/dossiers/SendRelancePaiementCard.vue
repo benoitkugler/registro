@@ -1,5 +1,5 @@
 <template>
-  <v-card title="Envoyer une relance de paiement">
+  <v-card title="Envoyer une demande de paiement" subtitle="ou une relance">
     <v-card-text>
       <v-row>
         <v-col align-self="center" cols="5">
@@ -11,7 +11,7 @@
           ></SelectCamp>
         </v-col>
         <v-col align-self="center">
-          <v-card v-if="preview" subtitle="Dossiers à relancer">
+          <v-card v-if="preview" subtitle="Dossiers à contacter">
             <template #append v-if="preview.length">
               <v-checkbox
                 label="Tout sélectionner"
@@ -41,7 +41,7 @@
                     isDateZero(dossier.LastEventFacture)
                       ? ''
                       : `Dernière demande : ${Formatters.time(
-                          dossier.LastEventFacture
+                          dossier.LastEventFacture,
                         )}`
                   "
                   :value="dossier.Id"
@@ -125,6 +125,6 @@ async function fetchPreview() {
 
 const selected = ref<IdDossier[]>([]);
 const allSelected = computed(
-  () => selected.value.length == preview.value.length
+  () => selected.value.length == preview.value.length,
 );
 </script>

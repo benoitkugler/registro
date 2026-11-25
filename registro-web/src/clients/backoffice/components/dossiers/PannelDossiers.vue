@@ -26,18 +26,18 @@
                 ></v-list-item>
                 <v-divider></v-divider>
                 <v-list-item
-                  title="Documents..."
-                  subtitle="Paramétrer et envoyer les documents d'un séjour"
-                  prepend-icon="mdi-mail"
-                  @click="showSendDocuments = true"
+                  title="Demande de paiement..."
+                  subtitle="Paramétrer et envoyer une demande/relance, pour un séjour"
+                  prepend-icon="mdi-invoice-send"
+                  @click="showDemandesPaiement = true"
                 >
                 </v-list-item>
                 <v-divider></v-divider>
                 <v-list-item
-                  title="Relance de paiement..."
-                  subtitle="Paramétrer et envoyer une relance, pour un séjour"
-                  prepend-icon="mdi-invoice-send"
-                  @click="showDemandesPaiement = true"
+                  title="Documents..."
+                  subtitle="Paramétrer et envoyer les documents d'un séjour"
+                  prepend-icon="mdi-mail"
+                  @click="showSendDocuments = true"
                 >
                 </v-list-item>
               </v-list>

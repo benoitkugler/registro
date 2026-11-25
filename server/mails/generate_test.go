@@ -38,14 +38,18 @@ func TestNotifieMessage(t *testing.T) {
 
 func TestNotifieDemandeReglement(t *testing.T) {
 	asso, _ := loadEnv(t)
+	contact := Contact{Prenom: "Claudy", Sexe: pr.Woman}
+	url := "https://acve.fr/inscription/valide?data:cryp4tedinscriptin"
 
-	html, err := NotifieDemandeReglement(asso,
-		Contact{Prenom: "Claudy", Sexe: pr.Woman},
-		"https://acve.fr/inscription/valide?data:cryp4tedinscriptin",
-	)
+	html, err := NotifieDemandeReglement(asso, contact, url, false, shared.Date{})
 	tu.AssertNoErr(t, err)
-
+	tu.Assert(t, !strings.Contains(html, "déjà été adressée"))
 	tu.Write(t, "NotifieDemandeReglement.html", []byte(html))
+
+	html, err = NotifieDemandeReglement(asso, contact, url, true, shared.NewDate(2026, time.November, 23))
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, strings.Contains(html, "adressée le 23/11/2026"))
+	tu.Write(t, "NotifieDemandeReglement_Rappel.html", []byte(html))
 }
 
 func TestNotifieDocumentsCamp(t *testing.T) {

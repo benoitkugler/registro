@@ -7,6 +7,7 @@ import (
 	ds "registro/sql/dossiers"
 	evs "registro/sql/events"
 	pr "registro/sql/personnes"
+	sh "registro/sql/shared"
 	"registro/utils"
 )
 
@@ -55,9 +56,14 @@ func (events Events) HasSendCampDocuments(idCamp cps.IdCamp) bool {
 	return false
 }
 
-// HasDemandePaiement returns [true] if a DemandePaiement event has been sent.
-func (events Events) HasDemandePaiement() bool {
-	return len(EventsBy[DemandePaiementEvt](events)) > 0
+// HasDemandePaiement returns the date of the last DemandePaiement event
+// and [true] if such an event has been sent.
+func (events Events) HasDemandePaiement() (sh.Date, bool) {
+	demandes := EventsBy[DemandePaiementEvt](events)
+	if len(demandes) == 0 {
+		return sh.Date{}, false
+	}
+	return sh.NewDateFrom(demandes[len(demandes)-1].Event.Created), true
 }
 
 // LastBy may return a zero value

@@ -856,48 +856,6 @@ func (ct *Controller) mergeDossier(host string, args DossiersMergeIn) error {
 	})
 }
 
-type PreviewRelance struct {
-	Id               ds.IdDossier
-	Responsable      string
-	Bilan            logic.BilanFinancesPub
-	LastEventFacture time.Time // maybe empty
-}
-
-func (ct *Controller) EventsSendRelancePaiementPreview(c echo.Context) error {
-	idCamp, err := utils.QueryParamInt[cps.IdCamp](c, "idCamp")
-	if err != nil {
-		return err
-	}
-	out, err := ct.previewRelancePaiement(idCamp)
-	if err != nil {
-		return err
-	}
-	return c.JSON(200, out)
-}
-
-func (ct *Controller) previewRelancePaiement(idCamp cps.IdCamp) ([]PreviewRelance, error) {
-	filtered, _, err := loadAndFilter(ct.db, SearchDossierIn{
-		IdCamp:    idCamp.Opt(),
-		Reglement: Partiel | Zero,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	out := make([]PreviewRelance, len(filtered))
-	for i, dossier := range filtered {
-
-		dossier.LastEventTime()
-		out[i] = PreviewRelance{
-			dossier.Dossier.Dossier.Id,
-			dossier.Responsable().NOMPrenom(),
-			dossier.Publish(ct.key, ct.asso.AcomptePercent).Bilan,
-			dossier.Events.LastBy(evs.DemandePaiement).Created,
-		}
-	}
-	return out, nil
-}
-
 func (ct *Controller) DossierSolde(c echo.Context) error {
 	id, err := utils.QueryParamInt[ds.IdDossier](c, "id")
 	if err != nil {

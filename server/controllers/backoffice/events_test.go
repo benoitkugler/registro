@@ -73,7 +73,7 @@ func Test_events(t *testing.T) {
 	})
 
 	t.Run("facture", func(t *testing.T) {
-		err = ct.sendFacture("", d1.Id)
+		err = ct.sendDemandePaiement("", d1.Id)
 		tu.AssertNoErr(t, err)
 	})
 
@@ -131,7 +131,7 @@ func Test_events(t *testing.T) {
 		tu.Assert(t, len(preview) == 0)
 
 		out := httptest.NewRecorder()
-		it, err := ct.sendDemandePaiement("", DemandePaiementIn{ids})
+		it, err := ct.sendDemandesPaiement("", DemandePaiementIn{ids})
 		tu.AssertNoErr(t, err)
 		err = utils.StreamJSON(out, it)
 		tu.AssertNoErr(t, err)

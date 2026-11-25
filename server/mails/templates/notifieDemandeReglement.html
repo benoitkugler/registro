@@ -1,5 +1,17 @@
 {{ define "content" }}
 <table cellpadding="0">
+  {{ if .IsRappel }}
+  <tr>
+    <td>
+      Nous revenons vers vous car le règlement de votre séjour n'est toujours
+      pas enregistré. Une première demande de règlement vous a déjà été
+      adressée le {{ .LastDemandePaiement }} : si vous avez déjà payé, merci
+      d'ignorer ce message. Sinon, vous pouvez procéder au
+      <b>règlement du séjour</b> en choisissant un des moyens de paiement
+      décrits sur votre espace personnel (bouton ci-dessous).
+    </td>
+  </tr>
+  {{ else }}
   <tr>
     <td>
       Nous vous remercions pour votre inscription. Vous pouvez maintenant
@@ -8,6 +20,7 @@
       (bouton ci-dessous).
     </td>
   </tr>
+  {{ end }}
   <tr>
     <td>{{ template "espacePersoButton" . }}</td>
   </tr>
