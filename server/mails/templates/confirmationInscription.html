@@ -89,8 +89,9 @@
     <td>
       <br />
       Vous pouvez retrouver ces informations, nous contacter {{ if
-      .Acompte.Total }}et procéder au règlement de l'acompte{{ else }}ou
-      procéder au règlement{{ end }} en cliquant sur le bouton ci-dessous.
+      .Acompte.Total }}et procéder au règlement de l'acompte{{ else if not
+      .Asso.RequireDemandePaiement }}ou procéder au règlement{{ end }} en
+      cliquant sur le bouton ci-dessous.
     </td>
   </tr>
   <tr>

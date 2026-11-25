@@ -169,22 +169,59 @@ func TestDossierFinance_Acompte(t *testing.T) {
 	tu.Assert(t, ac.Requis)
 	tu.Assert(t, ac.Du == taux.Convertible(eur(20)).Convert(df.Bilan().currency))
 	tu.Assert(t, ac.Restant == ac.Du)
-	tu.Assert(t, df.PaiementMode(10) == PaiementAcompte)
+	tu.Assert(t, df.PaiementMode(10, false) == PaiementAcompte)
 
 	// une fois l'acompte réglé, le solde complet est demandé
 	df.paiements = ds.Paiements{1: {Montant: ac.Du}}
 	tu.Assert(t, df.acompte(df.Bilan(), 10).Restant == ds.Montant{Currency: ac.Du.Currency})
-	tu.Assert(t, df.PaiementMode(10) == PaiementTotal)
+	tu.Assert(t, df.PaiementMode(10, false) == PaiementTotal)
 
 	// tant qu'une participation est à statuer, aucun paiement
 	df.Participants[2] = cps.Participant{Id: 2, IdCamp: 2, Statut: cps.AStatuer}
-	tu.Assert(t, df.PaiementMode(10) == PaiementDesactive)
+	tu.Assert(t, df.PaiementMode(10, false) == PaiementDesactive)
 
 	// sans camp demandant un acompte, le paiement total est requis
 	df.Participants[2] = cps.Participant{Id: 2, IdCamp: 2, Statut: cps.Inscrit}
 	camps[1] = cps.Camp{Prix: eur(200), Duree: 10}
 	tu.Assert(t, !df.acompte(df.Bilan(), 10).Requis)
-	tu.Assert(t, df.PaiementMode(10) == PaiementTotal)
+	tu.Assert(t, df.PaiementMode(10, false) == PaiementTotal)
+}
+
+func TestDossierFinance_RequireDemandePaiement(t *testing.T) {
+	taux := ds.Taux{Euros: 1000, FrancsSuisse: 2000}
+	camps := cps.Camps{
+		1: cps.Camp{Prix: eur(200), Duree: 10, DemandeAcompte: true},
+		2: cps.Camp{Prix: chf(150)},
+	}
+	df := DossierFinance{
+		Dossier: Dossier{
+			camps: camps,
+			Participants: cps.Participants{
+				1: {Id: 1, IdCamp: 1, Statut: cps.Inscrit},
+				2: {Id: 2, IdCamp: 2, Statut: cps.Inscrit},
+			},
+		},
+		Taux: taux,
+	}
+
+	// sans demande de paiement, seul l'acompte est demandé
+	tu.Assert(t, df.PaiementMode(10, true) == PaiementAcompte)
+
+	// une fois l'acompte réglé, le solde reste bloqué
+	ac := df.acompte(df.Bilan(), 10)
+	df.paiements = ds.Paiements{1: {Montant: ac.Du}}
+	tu.Assert(t, df.PaiementMode(10, true) == PaiementDesactive)
+
+	// sans acompte à régler, aucun paiement n'est affiché
+	delete(camps, 1)
+	delete(df.Participants, 1)
+	df.paiements = nil
+	tu.Assert(t, df.PaiementMode(10, true) == PaiementDesactive)
+	tu.Assert(t, df.PaiementMode(10, false) == PaiementTotal)
+
+	// l'envoi de la demande de paiement débloque le solde
+	df.Events = Events{{Id: 1, Content: DemandePaiementEvt{}}}
+	tu.Assert(t, df.PaiementMode(10, true) == PaiementTotal)
 }
 
 func TestDossierFinance_MontantsPayesParDevise(t *testing.T) {

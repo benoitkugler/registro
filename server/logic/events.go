@@ -55,6 +55,11 @@ func (events Events) HasSendCampDocuments(idCamp cps.IdCamp) bool {
 	return false
 }
 
+// HasDemandePaiement returns [true] if a DemandePaiement event has been sent.
+func (events Events) HasDemandePaiement() bool {
+	return len(EventsBy[DemandePaiementEvt](events)) > 0
+}
+
 // LastBy may return a zero value
 func (events Events) LastBy(kind evs.EventKind) Event {
 	var last Event

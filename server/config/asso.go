@@ -36,6 +36,11 @@ type Asso struct {
 	// asked as a deposit for camps with Camp.DemandeAcompte.
 	AcomptePercent int
 
+	// RequireDemandePaiement blocks the total paiement in espaceperso
+	// until a DemandePaiement event has been sent for the dossier.
+	// The acompte is always permitted.
+	RequireDemandePaiement bool
+
 	RemisesHints RemisesHints
 
 	AskedDocs AskedDocs
@@ -102,7 +107,8 @@ var acve = Asso{
 		Adresse: [2]string{"Centre d'inscriptions - Marie-Pierre Buffet", "27, impasse Vignon - 26150 Chamaloc"},
 	},
 
-	AcomptePercent: 10,
+	AcomptePercent:         10,
+	RequireDemandePaiement: true,
 
 	RemisesHints: RemisesHints{
 		ParentEquipier: 30,
@@ -157,7 +163,8 @@ var repere = Asso{
 
 	ChequeSettings: ChequeSettings{}, // disabled
 
-	AcomptePercent: 10,
+	AcomptePercent:         10,
+	RequireDemandePaiement: false,
 
 	RemisesHints: RemisesHints{
 		ParentEquipier: 50,

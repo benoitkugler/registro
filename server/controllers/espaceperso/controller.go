@@ -108,7 +108,7 @@ func (ct *Controller) load(id ds.IdDossier) (Data, error) {
 			ct.asso.ChequeSettings,
 		},
 		ct.asso.SupportBonsCAF,
-		dossier.PaiementMode(ct.asso.AcomptePercent),
+		dossier.PaiementMode(ct.asso.AcomptePercent, ct.asso.RequireDemandePaiement),
 		campInscritsStarted,
 	}, nil
 }

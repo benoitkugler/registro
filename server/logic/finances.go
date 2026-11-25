@@ -112,26 +112,6 @@ func (de DossierFinance) MontantsPayesParDevise() ds.MultiCurrencies {
 	return out
 }
 
-// IsPaiementOpen returns [true] if the Espace perso
-// should allow paiements
-func (de *DossierFinance) IsPaiementOpen() bool {
-	// every participant must have been validated
-	for _, part := range de.Participants {
-		if part.Statut == cps.AStatuer {
-			return false
-		}
-	}
-	// aide en attente de validation
-	for _, aides := range de.aides {
-		for _, aide := range aides {
-			if !aide.Valide {
-				return false
-			}
-		}
-	}
-	return true
-}
-
 // Bilan additionne le prix pour chaque participant et
 // décompte les paiements effectués.
 //
@@ -315,11 +295,34 @@ func (df DossierFinance) acompte(bilan BilanFinances, percent int) AcompteInfo {
 	return out
 }
 
+// isPaiementOpen returns [true] if the Espace perso
+// should allow paiements
+func (de *DossierFinance) isPaiementOpen() bool {
+	// every participant must have been validated
+	for _, part := range de.Participants {
+		if part.Statut == cps.AStatuer {
+			return false
+		}
+	}
+	// aide en attente de validation
+	for _, aides := range de.aides {
+		for _, aide := range aides {
+			if !aide.Valide {
+				return false
+			}
+		}
+	}
+	return true
+}
+
 // PaiementMode détermine l'état des paiements dans l'espace personnel :
 // aucun paiement tant que le dossier n'est pas validé, acompte seul
 // tant qu'il n'est pas réglé, puis paiement du solde.
-func (df DossierFinance) PaiementMode(percent int) RequiredPaiementState {
-	if !df.IsPaiementOpen() {
+//
+// Lorsque requireDemandePaiement est vrai, le paiement du solde attend
+// l'envoi d'un évènement DemandePaiement. L'acompte reste toujours permis.
+func (df DossierFinance) PaiementMode(percent int, requireDemandePaiement bool) RequiredPaiementState {
+	if !df.isPaiementOpen() {
 		return PaiementDesactive
 	}
 	bilan := df.Bilan()
@@ -328,6 +331,9 @@ func (df DossierFinance) PaiementMode(percent int) RequiredPaiementState {
 	}
 	if ac := df.acompte(bilan, percent); ac.Requis && ac.Restant.Cent > 0 {
 		return PaiementAcompte
+	}
+	if requireDemandePaiement && !df.Events.HasDemandePaiement() {
+		return PaiementDesactive
 	}
 	return PaiementTotal
 }

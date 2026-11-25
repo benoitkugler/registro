@@ -2,6 +2,7 @@ package mails
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -211,6 +212,34 @@ func TestConfirmationInscription(t *testing.T) {
 	)
 	tu.AssertNoErr(t, err)
 	tu.Write(t, "ConfirmationInscription_6.html", []byte(html))
+}
+
+func TestConfirmationInscription_PaiementStatement(t *testing.T) {
+	cfg, _ := loadEnv(t)
+	contact, url := Contact{Prenom: "Benoit", Sexe: pr.Woman}, "https://acve.fr/confirme"
+	inscrits := []Participant{{"Benoit Kugler", "C2 2025"}}
+
+	for _, tc := range []struct {
+		requireDemandePaiement bool
+		acompte                AcompteInfo
+		want, notWant          string
+	}{
+		{true, AcompteInfo{}, "", "procéder au règlement"},
+		{false, AcompteInfo{}, "ou procéder au règlement", ""},
+		{true, AcompteInfo{Total: "20 €", Percent: 10}, "règlement de l'acompte", ""},
+		{false, AcompteInfo{Total: "20 €", Percent: 10}, "règlement de l'acompte", ""},
+	} {
+		asso := cfg
+		asso.RequireDemandePaiement = tc.requireDemandePaiement
+		html, err := ConfirmationInscription(asso, contact, url, inscrits, nil, nil, nil, tc.acompte)
+		tu.AssertNoErr(t, err)
+		if tc.want != "" {
+			tu.Assert(t, strings.Contains(html, tc.want))
+		}
+		if tc.notWant != "" {
+			tu.Assert(t, !strings.Contains(html, tc.notWant))
+		}
+	}
 }
 
 func TestNotifieFusionDossier(t *testing.T) {
