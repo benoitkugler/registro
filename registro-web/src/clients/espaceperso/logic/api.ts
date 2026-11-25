@@ -39,7 +39,7 @@ export interface Data {
   MailCentre: string;
   PaiementSettings: PaiementSettings;
   SupportsAidesExt: boolean;
-  IsPaiementOpen: boolean;
+  RequiredPaiementState: RequiredPaiementState;
   EnableJustificatifs: boolean;
 }
 // registro/controllers/espaceperso.DemandePersonne
@@ -158,6 +158,8 @@ export interface BilanFinancesPub {
   Recu: string;
   Restant: string;
   Statut: StatutPaiement;
+  AcompteDu: string;
+  AcompteRestant: string;
   DemandeEnAttenteValidation: string;
 }
 // registro/logic.BilanParticipantPub
@@ -276,6 +278,24 @@ export interface PublicParticipantCamp {
   CampQuotientFamilial: PrixQuotientFamilial;
   Personne: PersonneHeader;
 }
+// registro/logic.RequiredPaiementState
+export const RequiredPaiementState = {
+  PaiementDesactive: 0,
+  PaiementAcompte: 1,
+  PaiementTotal: 2,
+} as const;
+export type RequiredPaiementState =
+  (typeof RequiredPaiementState)[keyof typeof RequiredPaiementState];
+
+export const RequiredPaiementStateLabels: Record<
+  RequiredPaiementState,
+  string
+> = {
+  [RequiredPaiementState.PaiementDesactive]: "Paiement désactivé",
+  [RequiredPaiementState.PaiementAcompte]: "Acompte",
+  [RequiredPaiementState.PaiementTotal]: "Paiement total",
+};
+
 // registro/logic.SondageEvt
 export interface SondageEvt {
   IdCamp: IdCamp;

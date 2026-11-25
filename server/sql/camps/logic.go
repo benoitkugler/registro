@@ -308,6 +308,10 @@ func (c Camp) Label() string {
 	return fmt.Sprintf("%s %d", c.Nom, c.DateDebut.Time().Year())
 }
 
+// Acompte renvoie l'acompte demandé pour un participant
+// inscrit dans ce camp
+func (cp *Camp) Acompte(percent int) ds.Montant { return cp.Prix.Mult(percent).Div(100) }
+
 func (cp *Camp) Plage() sh.Plage { return sh.Plage{From: cp.DateDebut, Duree: cp.Duree} }
 
 // DateFin renvoie la date du dernier jour du camp

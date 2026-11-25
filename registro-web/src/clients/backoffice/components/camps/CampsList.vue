@@ -144,6 +144,7 @@
       :camp="toEdit.Camp.Camp"
       :preselection-url="toEdit.URLPreselection"
       :meta-entries-hints="metaEntriesHints"
+      :acompte-percent="acomptePercent"
       @save="updateCamp"
     ></CampEdit>
   </v-dialog>
@@ -290,6 +291,7 @@ const emit = defineEmits<{
 onMounted(fetchCamps);
 
 const campsData = reactive(new Map<IdCamp, CampHeader>());
+const acomptePercent = ref(0 as Int);
 const isLoading = ref(false);
 
 const filter = reactive({ pattern: "", openOnly: false });
@@ -343,8 +345,9 @@ async function fetchCamps() {
   const res = await controller.CampsGet();
   isLoading.value = false;
   if (res === undefined) return;
+  acomptePercent.value = res.AcomptePercent;
   campsData.clear();
-  res?.forEach((v) => campsData.set(v.Camp.Camp.Id, v));
+  res.Camps?.forEach((v) => campsData.set(v.Camp.Camp.Id, v));
 }
 
 async function create() {

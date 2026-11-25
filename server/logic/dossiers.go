@@ -278,15 +278,26 @@ type BilanFinancesPub struct {
 	Restant string // Demande - Recu
 	Statut  StatutPaiement
 
+	// Acompte requis pour les séjours qui le demandent, ou vide.
+	// AcompteRestant vaut 0 une fois l'acompte réglé.
+	AcompteDu      string
+	AcompteRestant string
+
 	// Prix indicatif (sans remises ni aides) des prix
 	// des séjours des participants non inscrits,
 	// ou vide.
 	DemandeEnAttenteValidation string
 }
 
-func (d DossierFinance) Publish(key crypto.Encrypter) DossierExt {
+func (d DossierFinance) Publish(key crypto.Encrypter, acomptePercent int) DossierExt {
 	taux := d.Taux
 	b := d.Bilan()
+	acompte := d.acompte(b, acomptePercent)
+	acompteDu, acompteRestant := "", ""
+	if acompte.Requis {
+		acompteDu = taux.Convertible(acompte.Du).String()
+		acompteRestant = taux.Convertible(acompte.Restant).String()
+	}
 	inscrits := make(map[cps.IdParticipant]BilanParticipantPub, len(b.Inscrits))
 	for k, v := range b.Inscrits {
 		inscrits[k] = v.publish(taux)
@@ -308,6 +319,8 @@ func (d DossierFinance) Publish(key crypto.Encrypter) DossierExt {
 		taux.Convertible(b.Recu()).String(),
 		taux.Convertible(b.ApresPaiement()).String(),
 		b.StatutPaiement(),
+		acompteDu,
+		acompteRestant,
 		enAttente,
 	}
 

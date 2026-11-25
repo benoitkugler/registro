@@ -147,6 +147,46 @@ func TestDossierFinance_Bilan(t *testing.T) {
 	}))
 }
 
+func TestDossierFinance_Acompte(t *testing.T) {
+	taux := ds.Taux{Euros: 1000, FrancsSuisse: 2000}
+	camps := cps.Camps{
+		1: cps.Camp{Prix: eur(200), Duree: 10, DemandeAcompte: true},
+		2: cps.Camp{Prix: chf(150)},
+	}
+	df := DossierFinance{
+		Dossier: Dossier{
+			camps: camps,
+			Participants: cps.Participants{
+				1: {Id: 1, IdCamp: 1, Statut: cps.Inscrit},
+				2: {Id: 2, IdCamp: 2, Statut: cps.Inscrit},
+			},
+		},
+		Taux: taux,
+	}
+
+	// 10 % du prix du séjour avec acompte, converti dans la devise du bilan
+	ac := df.acompte(df.Bilan(), 10)
+	tu.Assert(t, ac.Requis)
+	tu.Assert(t, ac.Du == taux.Convertible(eur(20)).Convert(df.Bilan().currency))
+	tu.Assert(t, ac.Restant == ac.Du)
+	tu.Assert(t, df.PaiementMode(10) == PaiementAcompte)
+
+	// une fois l'acompte réglé, le solde complet est demandé
+	df.paiements = ds.Paiements{1: {Montant: ac.Du}}
+	tu.Assert(t, df.acompte(df.Bilan(), 10).Restant == ds.Montant{Currency: ac.Du.Currency})
+	tu.Assert(t, df.PaiementMode(10) == PaiementTotal)
+
+	// tant qu'une participation est à statuer, aucun paiement
+	df.Participants[2] = cps.Participant{Id: 2, IdCamp: 2, Statut: cps.AStatuer}
+	tu.Assert(t, df.PaiementMode(10) == PaiementDesactive)
+
+	// sans camp demandant un acompte, le paiement total est requis
+	df.Participants[2] = cps.Participant{Id: 2, IdCamp: 2, Statut: cps.Inscrit}
+	camps[1] = cps.Camp{Prix: eur(200), Duree: 10}
+	tu.Assert(t, !df.acompte(df.Bilan(), 10).Requis)
+	tu.Assert(t, df.PaiementMode(10) == PaiementTotal)
+}
+
 func TestDossierFinance_MontantsPayesParDevise(t *testing.T) {
 	df := DossierFinance{paiements: ds.Paiements{
 		1: {Montant: eur(100)},

@@ -177,7 +177,8 @@ CREATE TABLE camps (
     IsAlbumVisible boolean NOT NULL,
     PlacesReservees integer NOT NULL,
     HoraireDebut Horaire NOT NULL,
-    HoraireFin Horaire NOT NULL
+    HoraireFin Horaire NOT NULL,
+    DemandeAcompte boolean NOT NULL
 );
 
 CREATE TABLE equipiers (

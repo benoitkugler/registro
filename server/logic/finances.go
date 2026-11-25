@@ -247,6 +247,91 @@ func (b BilanFinances) StatutPaiement() StatutPaiement {
 	}
 }
 
+// RequiredPaiementState décrit ce qui est demandé à la famille
+// dans l'espace personnel.
+type RequiredPaiementState uint8
+
+const (
+	// aucune information de paiement n'est affichée
+	PaiementDesactive RequiredPaiementState = iota // Paiement désactivé
+	// seul l'acompte est à régler
+	PaiementAcompte // Acompte
+	// le solde complet est à régler
+	PaiementTotal // Paiement total
+)
+
+func (pm RequiredPaiementState) String() string {
+	switch pm {
+	case PaiementDesactive:
+		return "Paiement désactivé"
+	case PaiementAcompte:
+		return "Acompte"
+	case PaiementTotal:
+		return "Paiement total"
+	default:
+		return "<invalid mode>"
+	}
+}
+
+// AcompteInfo résume l'acompte à régler pour un dossier.
+type AcompteInfo struct {
+	Requis bool // au moins un inscrit est concerné
+
+	Du      ds.Montant // montant total de l'acompte, plafonné au montant total dû
+	Restant ds.Montant // montant de l'acompte non encore réglé
+}
+
+// acompte calcule l'acompte dû par le dossier. Il est calculé sur le
+// prix de base des séjours demandant un acompte, et plafonné au montant
+// total dû (après aides et remises).
+func (df DossierFinance) acompte(bilan BilanFinances, percent int) AcompteInfo {
+	var out AcompteInfo
+	if percent <= 0 {
+		return out
+	}
+	total := df.Taux.Zero()
+	for _, part := range df.Participants {
+		if part.Statut != cps.Inscrit {
+			continue
+		}
+		camp := df.camps[part.IdCamp]
+		if !camp.DemandeAcompte {
+			continue
+		}
+		total.Add(camp.Acompte(percent))
+		out.Requis = true
+	}
+	if !out.Requis {
+		return out
+	}
+	out.Du = total.Convert(bilan.currency)
+	if out.Du.Cent > bilan.demande {
+		out.Du.Cent = bilan.demande
+	}
+	if out.Du.Cent <= 0 { // nothing to ask for
+		return AcompteInfo{}
+	}
+	out.Restant = ds.Montant{Cent: max(0, out.Du.Cent-bilan.recu), Currency: out.Du.Currency}
+	return out
+}
+
+// PaiementMode détermine l'état des paiements dans l'espace personnel :
+// aucun paiement tant que le dossier n'est pas validé, acompte seul
+// tant qu'il n'est pas réglé, puis paiement du solde.
+func (df DossierFinance) PaiementMode(percent int) RequiredPaiementState {
+	if !df.IsPaiementOpen() {
+		return PaiementDesactive
+	}
+	bilan := df.Bilan()
+	if bilan.IsAcquitte() {
+		return PaiementDesactive
+	}
+	if ac := df.acompte(bilan, percent); ac.Requis && ac.Restant.Cent > 0 {
+		return PaiementAcompte
+	}
+	return PaiementTotal
+}
+
 // DispatchPaiements split the received amount between all inscrits,
 // proportionnal to the sejour price.
 func (b BilanFinances) DispatchPaiements(taux ds.Taux) map[cps.IdParticipant]ds.Montant {

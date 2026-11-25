@@ -148,7 +148,7 @@
           :token="token"
           :dossier="data.Dossier"
           :supports-aides-ext="data.SupportsAidesExt"
-          :is-paiement-open="data.IsPaiementOpen"
+          :mode="data.RequiredPaiementState"
           :settings="data.PaiementSettings"
           @refresh="fetchData"
           @show-reglement="showReglement = true"
@@ -202,6 +202,7 @@
       :token="token"
       :dossier="data.Dossier"
       :settings="data.PaiementSettings"
+      :state="data.RequiredPaiementState"
     ></FinancesReglementCard>
   </v-dialog>
 
@@ -216,7 +217,7 @@
   </v-dialog>
 
   <!-- validation d'une inscription -->
-  <v-dialog v-model="showValidation" max-width="800px">
+  <v-dialog v-model="showValidation" max-width="1000px">
     <ValidationInscriptionCard
       v-if="data"
       :dossier="data.Dossier"

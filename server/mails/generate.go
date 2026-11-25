@@ -115,6 +115,20 @@ type Participant struct {
 	Camp     string
 }
 
+// AcompteParticipant is one participant concerned by a deposit.
+type AcompteParticipant struct {
+	Personne string
+	Camp     string
+	Acompte  string
+}
+
+// AcompteInfo describes the deposit asked for in a confirmation mail.
+type AcompteInfo struct {
+	Participants []AcompteParticipant
+	Total        string
+	Percent      int
+}
+
 type champsCommuns struct {
 	Title       string
 	Salutations string
@@ -327,13 +341,14 @@ func ValidationMailInscription(asso config.Asso, contact Contact, urlConfirmeIns
 	return render(validationMailInscriptionT, args)
 }
 
-func ConfirmationInscription(asso config.Asso, contact Contact, lienEspacePerso string, inscrits, attente, refuses, astatuer []Participant) (string, error) {
+func ConfirmationInscription(asso config.Asso, contact Contact, lienEspacePerso string, inscrits, attente, refuses, astatuer []Participant, acompte AcompteInfo) (string, error) {
 	args := struct {
 		champsCommuns
 		Inscrits               []Participant
 		Attente                []Participant
 		Refuses                []Participant
 		AStatuer               []Participant
+		Acompte                AcompteInfo
 		EspacePersoURL         string
 		EspacePersoButtonLabel string
 	}{
@@ -347,6 +362,7 @@ func ConfirmationInscription(asso config.Asso, contact Contact, lienEspacePerso 
 		Attente:                attente,
 		Refuses:                refuses,
 		AStatuer:               astatuer,
+		Acompte:                acompte,
 		EspacePersoURL:         lienEspacePerso,
 		EspacePersoButtonLabel: "Mon espace",
 	}

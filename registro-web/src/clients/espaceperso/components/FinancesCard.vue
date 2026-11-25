@@ -4,13 +4,14 @@
       <v-btn
         class="mr-1"
         @click.stop="emit('showReglement')"
-        :disabled="
-          !props.isPaiementOpen ||
-          props.dossier.Bilan.Statut == StatutPaiement.Complet
-        "
+        :disabled="props.mode == RequiredPaiementState.PaiementDesactive"
         prepend-icon="mdi-cash-plus"
       >
-        Payer
+        {{
+          props.mode == RequiredPaiementState.PaiementAcompte
+            ? "Payer l'acompte"
+            : "Payer"
+        }}
       </v-btn>
       <v-btn
         size="small"
@@ -49,6 +50,18 @@
           </template>
         </v-list-item>
 
+        <template v-if="props.mode == RequiredPaiementState.PaiementAcompte">
+          <v-divider thickness="1"></v-divider>
+
+          <v-list-item title="Acompte à régler" density="compact">
+            <template #append>
+              <span class="font-weight-bold text-orange">
+                {{ dossier.Bilan.AcompteRestant }}
+              </span>
+            </template>
+          </v-list-item>
+        </template>
+
         <v-divider thickness="1"></v-divider>
 
         <v-list-item title="Montant restant à régler" density="compact">
@@ -83,20 +96,20 @@
 
 <script setup lang="ts">
 import {
+  RequiredPaiementState,
   StatutPaiement,
   type Aide,
   type DossierExt,
   type Structureaides,
 } from "../logic/api";
-import { computed, onMounted, ref } from "vue";
+import { onMounted, ref } from "vue";
 import AideCard from "./AideCard.vue";
 import { controller } from "../logic/logic";
-import { Formatters } from "@/utils";
 const props = defineProps<{
   token: string;
   dossier: DossierExt;
   supportsAidesExt: boolean;
-  isPaiementOpen: boolean;
+  mode: RequiredPaiementState;
 }>();
 
 const emit = defineEmits<{

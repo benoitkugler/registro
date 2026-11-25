@@ -151,6 +151,7 @@ func TestConfirmationInscription(t *testing.T) {
 		[]Participant{},
 		[]Participant{},
 		[]Participant{},
+		AcompteInfo{},
 	)
 	tu.AssertNoErr(t, err)
 	tu.Write(t, "ConfirmationInscription_1.html", []byte(html))
@@ -160,6 +161,7 @@ func TestConfirmationInscription(t *testing.T) {
 		[]Participant{},
 		[]Participant{{"Benoit Kugler", "C2 2025"}},
 		[]Participant{},
+		AcompteInfo{},
 	)
 	tu.AssertNoErr(t, err)
 	tu.Write(t, "ConfirmationInscription_2.html", []byte(html))
@@ -169,6 +171,7 @@ func TestConfirmationInscription(t *testing.T) {
 		[]Participant{{"Benoit Kugler", "C2 2025"}},
 		[]Participant{},
 		[]Participant{},
+		AcompteInfo{},
 	)
 	tu.AssertNoErr(t, err)
 	tu.Write(t, "ConfirmationInscription_3.html", []byte(html))
@@ -178,6 +181,7 @@ func TestConfirmationInscription(t *testing.T) {
 		[]Participant{},
 		[]Participant{{"Benoit Kugler", "C2 2025"}},
 		[]Participant{},
+		AcompteInfo{},
 	)
 	tu.AssertNoErr(t, err)
 	tu.Write(t, "ConfirmationInscription_4.html", []byte(html))
@@ -187,6 +191,7 @@ func TestConfirmationInscription(t *testing.T) {
 		[]Participant{{"Benoit Kugler", "C2 2025"}, {"Benoit Kugler", "C3 2025"}},
 		[]Participant{},
 		[]Participant{},
+		AcompteInfo{},
 	)
 	tu.AssertNoErr(t, err)
 	tu.Write(t, "ConfirmationInscription_5.html", []byte(html))
@@ -196,6 +201,13 @@ func TestConfirmationInscription(t *testing.T) {
 		[]Participant{{"Benoit Attente", "C2 2025"}, {"Benoit Attente", "C3 2025"}},
 		[]Participant{{"Benoit Refusé", "C2 2025"}},
 		[]Participant{{"Benoit A statuer", "C2 2025"}, {"Benoit A statuer", "C3 2025"}},
+		AcompteInfo{
+			Total:   "20 €",
+			Percent: 10,
+			Participants: []AcompteParticipant{
+				{Personne: "Benoit Inscrit", Camp: "C2 2025", Acompte: "20 €"},
+			},
+		},
 	)
 	tu.AssertNoErr(t, err)
 	tu.Write(t, "ConfirmationInscription_6.html", []byte(html))

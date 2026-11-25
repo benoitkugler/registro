@@ -107,6 +107,17 @@
               </v-text-field>
             </v-col>
           </v-row>
+          <v-row>
+            <v-col>
+              <BoolField
+                v-model="inner.DemandeAcompte"
+                label="Demander un acompte"
+                density="compact"
+                persistent-hint
+                :hint="`Un acompte de ${props.acomptePercent}% est demandé à la validation de l'inscription.`"
+              ></BoolField>
+            </v-col>
+          </v-row>
         </v-card-text>
       </v-card>
 
@@ -301,6 +312,7 @@ const props = defineProps<{
   camp: Camp;
   preselectionUrl: string;
   metaEntriesHints: { keys: string[]; values: string[] };
+  acomptePercent: Int;
 }>();
 const emit = defineEmits<{
   (e: "save", camp: Camp): void;

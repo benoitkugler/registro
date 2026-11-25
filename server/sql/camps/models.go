@@ -84,6 +84,10 @@ type Camp struct {
 	PlacesReservees int
 
 	HoraireDebut, HoraireFin Horaire
+
+	// DemandeAcompte indique qu'un acompte est demandé
+	// pour ce séjour (voir config.Asso.AcomptePercent).
+	DemandeAcompte bool
 }
 
 // ProjetSpi est une extension de la table [Camp],

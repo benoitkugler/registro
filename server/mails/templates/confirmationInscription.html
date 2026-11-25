@@ -67,11 +67,30 @@
   </tr>
   {{ end }}
 
+  <!-- acompte -->
+  {{ if .Acompte.Total }}
   <tr>
     <td>
       <br />
-      Vous pouvez retrouver ces informations, nous contacter ou procéder au
-      règlement en cliquant sur le bouton ci-dessous.
+      Pour les séjours suivants, un acompte de
+      <b>{{ .Acompte.Total }}</b> ({{ .Acompte.Percent }} % du prix du séjour)
+      est à régler au plus vite :
+      <ul>
+        {{ range .Acompte.Participants }}
+        <li>{{ .Personne }} sur le séjour {{ .Camp }} : {{ .Acompte }}</li>
+        {{ end }}
+      </ul>
+      Le solde total sera demandé ultérieurement.
+    </td>
+  </tr>
+  {{ end }}
+
+  <tr>
+    <td>
+      <br />
+      Vous pouvez retrouver ces informations, nous contacter {{ if
+      .Acompte.Total }}et procéder au règlement de l'acompte{{ else }}ou
+      procéder au règlement{{ end }} en cliquant sur le bouton ci-dessous.
     </td>
   </tr>
   <tr>

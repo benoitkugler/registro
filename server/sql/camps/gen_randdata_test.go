@@ -55,6 +55,7 @@ func randCamp() Camp {
 	s.PlacesReservees = randint()
 	s.HoraireDebut = randHoraire()
 	s.HoraireFin = randHoraire()
+	s.DemandeAcompte = randbool()
 
 	return s
 }
