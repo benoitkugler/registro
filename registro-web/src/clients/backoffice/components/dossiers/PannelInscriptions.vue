@@ -120,7 +120,7 @@ import {
   type InscriptionExt,
 } from "../../logic/api";
 import InscriptionRow from "../../../../components/inscriptions/InscriptionRow.vue";
-import { normalize, Personnes, Camps, Participants } from "@/utils";
+import { normalize, Personnes, Camps, Participants, round } from "@/utils";
 import MergeCard from "./MergeCard.vue";
 import DoublonsParticipantsCard from "./DoublonsParticipantsCard.vue";
 
@@ -146,7 +146,7 @@ onMounted(async () => {
       (d) => d.Dossier.Id == props.initialDossier,
     );
     if (dossier === undefined) return;
-    search.value = Personnes.NOMPrenom(dossier.Responsable);
+    search.value = idSearch(props.initialDossier);
   }
 });
 
@@ -160,11 +160,27 @@ async function fetchInscriptions() {
   data.value = res || [];
 }
 
+function idSearch(id: IdDossier) {
+  return `id:${id}`;
+}
+function isIDSearch(s: string) {
+  if (s.startsWith("id:")) {
+    const n = Number(s.substring(3));
+    if (Number.isInteger(n)) return n as IdDossier;
+  }
+  return null;
+}
+
 const search = ref("");
 // n'affiche que les dossiers contenant au moins un participant
 // à statuer, avec un profil limite (as hint)
 const restrictToAStatuerAndInvalid = ref(false);
 const displayed = computed(() => {
+  const idToShow = isIDSearch(search.value);
+  if (idToShow !== null) {
+    return data.value.filter((insc) => insc.Dossier.Id == idToShow);
+  }
+
   const pattern = normalize(search.value);
   return data.value.filter((insc) => {
     return (
