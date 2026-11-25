@@ -37,7 +37,7 @@
                   title="Relance de paiement..."
                   subtitle="Paramétrer et envoyer une relance, pour un séjour"
                   prepend-icon="mdi-invoice-send"
-                  @click="showRelancePaiement = true"
+                  @click="showDemandesPaiement = true"
                 >
                 </v-list-item>
               </v-list>
@@ -104,10 +104,10 @@
     </v-dialog>
 
     <!-- preview relance paiements -->
-    <v-dialog v-model="showRelancePaiement" max-width="1000px">
+    <v-dialog v-model="showDemandesPaiement" max-width="1000px">
       <SendRelancePaiementCard
         :camps="allCamps"
-        @send="sendRelancePaiement"
+        @send="sendDemandesPaiement"
       ></SendRelancePaiementCard>
     </v-dialog>
 
@@ -126,14 +126,14 @@
 
     <!-- monitor relances -->
     <v-dialog
-      :model-value="relancePaiementProgress != null"
+      :model-value="demandesPaiementProgress != null"
       max-width="400px"
       persistent
     >
       <RequestProgressCard
-        v-if="relancePaiementProgress"
+        v-if="demandesPaiementProgress"
         title="Envoi des relances en cours"
-        :progress="relancePaiementProgress"
+        :progress="demandesPaiementProgress"
       ></RequestProgressCard>
     </v-dialog>
 
@@ -493,29 +493,31 @@ async function sendDocumentsCamp(idCamp: IdCamp, idDossiers: IdDossier[]) {
   controller.showMessage("Documents du séjour envoyés avec succès.");
 }
 
-const showRelancePaiement = ref(false);
-const relancePaiementProgress = ref<SendProgress | null>(null);
-async function sendRelancePaiement(idCamp: IdCamp, idDossiers: IdDossier[]) {
+const showDemandesPaiement = ref(false);
+const demandesPaiementProgress = ref<SendProgress | null>(null);
+async function sendDemandesPaiement(idCamp: IdCamp, idDossiers: IdDossier[]) {
   // start with initial 0 progress
-  relancePaiementProgress.value = {
+  demandesPaiementProgress.value = {
     Current: 0 as Int,
     Total: idDossiers.length as Int,
   };
-  const res = await controller.EventsSendRelancePaiement({
+  const res = await controller.EventsSendDemandePaiement({
     IdDossiers: idDossiers,
   });
   if (res === undefined) {
-    relancePaiementProgress.value = null;
+    demandesPaiementProgress.value = null;
     return;
   }
   await readJSONStream(
     res,
-    (v) => (relancePaiementProgress.value = v),
-    (err) => controller.onError("Envoi de la relance", err),
+    (v) => (demandesPaiementProgress.value = v),
+    (err) => controller.onError("Envoi de la demande de paiement", err),
   );
-  relancePaiementProgress.value = null;
+  demandesPaiementProgress.value = null;
   ensureDossier();
-  controller.showMessage("Toutes les relances ont été envoyées avec succès.");
+  controller.showMessage(
+    "Toutes les demandes de paiement ont été envoyées avec succès.",
+  );
 }
 
 const showRemisesHints = ref(false);
