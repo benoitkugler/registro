@@ -437,7 +437,7 @@ func TestEventKindFromV1(t *testing.T) {
 		rd.MResponsable:         ev.Message,
 		rd.MCentre:              ev.Message,
 		rd.MAccuseReception:     ev.Statuation,
-		rd.MFacture:             ev.Facture,
+		rd.MFacture:             ev.DemandePaiement,
 		rd.MDocuments:           ev.CampDocs,
 		rd.MFactureAcquittee:    ev.Attestation,
 		rd.MAttestationPresence: ev.Attestation,

@@ -335,7 +335,7 @@ function handleFromEvent(fromIdEvent: IdEvent) {
     case EventContentKind.StatuationEvt:
       showValidation.value = true;
       return;
-    case EventContentKind.FactureEvt:
+    case EventContentKind.DemandePaiementEvt:
       showReglement.value = true;
       return;
     case EventContentKind.PlaceLibereeEvt:

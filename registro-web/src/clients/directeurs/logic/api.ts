@@ -395,7 +395,6 @@ export interface Camp {
   InscriptionExterne: boolean;
   Statut: StatutCamp;
   Prix: Montant;
-  DemandeAcompte: boolean;
   OptionPrix: OptionPrixCamp;
   OptionQuotientFamilial: PrixQuotientFamilial;
   Password: string;
@@ -408,6 +407,7 @@ export interface Camp {
   PlacesReservees: Int;
   HoraireDebut: Horaire;
   HoraireFin: Horaire;
+  DemandeAcompte: boolean;
 }
 // registro/sql/camps.CauseAge
 export interface CauseAge {
@@ -835,7 +835,7 @@ export const EventKind = {
   Statuation: 1,
   Message: 2,
   PlaceLiberee: 3,
-  Facture: 4,
+  DemandePaiement: 4,
   CampDocs: 5,
   Attestation: 6,
   Sondage: 7,
@@ -848,7 +848,7 @@ export const EventKindLabels: Record<EventKind, string> = {
   [EventKind.Statuation]: "Inscription validée",
   [EventKind.Message]: "Message",
   [EventKind.PlaceLiberee]: "Place libérée",
-  [EventKind.Facture]: "Facture",
+  [EventKind.DemandePaiement]: "Demande de paiement",
   [EventKind.CampDocs]: "Document des camps",
   [EventKind.Attestation]: "Facture acquittée ou attestation de présence",
   [EventKind.Sondage]: "Avis sur le séjour",

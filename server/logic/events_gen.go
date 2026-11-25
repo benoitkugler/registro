@@ -37,8 +37,8 @@ func (out *EventContentWrapper) UnmarshalJSON(src []byte) error {
 		var data ChangementCampEvt
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
-	case "FactureEvt":
-		var data FactureEvt
+	case "DemandePaiementEvt":
+		var data DemandePaiementEvt
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case "MessageEvt":
@@ -81,8 +81,8 @@ func (item EventContentWrapper) MarshalJSON() ([]byte, error) {
 		wr = wrapper{Kind: "CampDocsEvt", Data: data}
 	case ChangementCampEvt:
 		wr = wrapper{Kind: "ChangementCampEvt", Data: data}
-	case FactureEvt:
-		wr = wrapper{Kind: "FactureEvt", Data: data}
+	case DemandePaiementEvt:
+		wr = wrapper{Kind: "DemandePaiementEvt", Data: data}
 	case MessageEvt:
 		wr = wrapper{Kind: "MessageEvt", Data: data}
 	case PlaceLibereeEvt:
@@ -101,15 +101,15 @@ func (item EventContentWrapper) MarshalJSON() ([]byte, error) {
 }
 
 const (
-	AttestationEvtEvKind    = "AttestationEvt"
-	CampDocsEvtEvKind       = "CampDocsEvt"
-	ChangementCampEvtEvKind = "ChangementCampEvt"
-	FactureEvtEvKind        = "FactureEvt"
-	MessageEvtEvKind        = "MessageEvt"
-	PlaceLibereeEvtEvKind   = "PlaceLibereeEvt"
-	SondageEvtEvKind        = "SondageEvt"
-	StatuationEvtEvKind     = "StatuationEvt"
-	SupprimeEvtEvKind       = "SupprimeEvt"
+	AttestationEvtEvKind     = "AttestationEvt"
+	CampDocsEvtEvKind        = "CampDocsEvt"
+	ChangementCampEvtEvKind  = "ChangementCampEvt"
+	DemandePaiementEvtEvKind = "DemandePaiementEvt"
+	MessageEvtEvKind         = "MessageEvt"
+	PlaceLibereeEvtEvKind    = "PlaceLibereeEvt"
+	SondageEvtEvKind         = "SondageEvt"
+	StatuationEvtEvKind      = "StatuationEvt"
+	SupprimeEvtEvKind        = "SupprimeEvt"
 )
 
 func (item Event) MarshalJSON() ([]byte, error) {

@@ -28,7 +28,7 @@ declare module 'vue' {
     EventAttestationV: typeof import('./src/components/events/EventAttestationV.vue')['default']
     EventCampDocsV: typeof import('./src/components/events/EventCampDocsV.vue')['default']
     EventChangementCampV: typeof import('./src/components/events/EventChangementCampV.vue')['default']
-    EventFactureV: typeof import('./src/components/events/EventFactureV.vue')['default']
+    EventFactureV: typeof import('./src/components/events/EventDemandePaiementV.vue/index.js')['default']
     EventInscriptionTimeV: typeof import('./src/components/events/EventInscriptionTimeV.vue')['default']
     EventItem: typeof import('./src/components/events/EventItem.vue')['default']
     EventMessageV: typeof import('./src/components/events/EventMessageV.vue')['default']

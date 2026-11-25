@@ -892,7 +892,7 @@ func (ct *Controller) previewRelancePaiement(idCamp cps.IdCamp) ([]PreviewRelanc
 			dossier.Dossier.Dossier.Id,
 			dossier.Responsable().NOMPrenom(),
 			dossier.Publish(ct.key, ct.asso.AcomptePercent).Bilan,
-			dossier.Events.LastBy(evs.Facture).Created,
+			dossier.Events.LastBy(evs.DemandePaiement).Created,
 		}
 	}
 	return out, nil

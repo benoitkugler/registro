@@ -379,6 +379,10 @@ export interface ChangementCampEvt {
   OldCampLabel: string;
   NewCampLabel: string;
 }
+// registro/logic.DemandePaiementEvt
+export interface DemandePaiementEvt {
+  IsRappel: boolean;
+}
 // registro/logic.DossierExt
 export interface DossierExt {
   Dossier: Dossier;
@@ -408,7 +412,7 @@ export const EventContentKind = {
   AttestationEvt: "AttestationEvt",
   CampDocsEvt: "CampDocsEvt",
   ChangementCampEvt: "ChangementCampEvt",
-  FactureEvt: "FactureEvt",
+  DemandePaiementEvt: "DemandePaiementEvt",
   MessageEvt: "MessageEvt",
   PlaceLibereeEvt: "PlaceLibereeEvt",
   SondageEvt: "SondageEvt",
@@ -423,7 +427,7 @@ export type EventContent =
   | { Kind: "AttestationEvt"; Data: AttestationEvt }
   | { Kind: "CampDocsEvt"; Data: CampDocsEvt }
   | { Kind: "ChangementCampEvt"; Data: ChangementCampEvt }
-  | { Kind: "FactureEvt"; Data: FactureEvt }
+  | { Kind: "DemandePaiementEvt"; Data: DemandePaiementEvt }
   | { Kind: "MessageEvt"; Data: MessageEvt }
   | { Kind: "PlaceLibereeEvt"; Data: PlaceLibereeEvt }
   | { Kind: "SondageEvt"; Data: SondageEvt }
@@ -432,10 +436,6 @@ export type EventContent =
 
 // registro/logic.Events
 export type Events = Event[] | null;
-// registro/logic.FactureEvt
-export interface FactureEvt {
-  IsRappel: boolean;
-}
 // registro/logic.IdentTarget
 export interface IdentTarget {
   IdTemporaire: IdPersonne;

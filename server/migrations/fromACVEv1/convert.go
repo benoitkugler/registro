@@ -408,7 +408,7 @@ func eventKindFromV1(v1 rd.MessageKind) (ev.EventKind, bool) {
 	case rd.MAccuseReception:
 		return ev.Statuation, true
 	case rd.MFacture:
-		return ev.Facture, true
+		return ev.DemandePaiement, true
 	case rd.MDocuments:
 		return ev.CampDocs, true
 	case rd.MFactureAcquittee, rd.MAttestationPresence:

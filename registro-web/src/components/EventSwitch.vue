@@ -49,14 +49,14 @@
     :user="props.event.User"
     @accept-place-liberee="emit('acceptPlaceLiberee', props.event.Event.Id)"
   ></EventPlaceLibereeV>
-  <EventFactureV
+  <EventDemandePaiementV
     v-else-if="
       props.event.Kind == 'event' &&
-      props.event.Event.Content.Kind == EventContentKind.FactureEvt
+      props.event.Event.Content.Kind == EventContentKind.DemandePaiementEvt
     "
     :event="props.event.Event"
     :content="props.event.Event.Content.Data"
-  ></EventFactureV>
+  ></EventDemandePaiementV>
   <EventCampDocsV
     v-else-if="
       props.event.Kind == 'event' &&
@@ -107,7 +107,7 @@ import {
 import EventMessageV from "./events/EventMessageV.vue";
 import EventPlaceLibereeV from "./events/EventPlaceLibereeV.vue";
 import EventSupprimeV from "./events/EventSupprimeV.vue";
-import EventFactureV from "./events/EventFactureV.vue";
+import EventDemandePaiementV from "./events/EventDemandePaiementV.vue";
 import EventCampDocsV from "./events/EventCampDocsV.vue";
 import EventAttestationV from "./events/EventAttestationV.vue";
 import EventSondageV from "./events/EventSondageV.vue";

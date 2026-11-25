@@ -175,7 +175,7 @@ func (ct *Controller) sendFacture(host string, id ds.IdDossier) error {
 		return err
 	}
 	return utils.InTx(ct.db, func(tx *sql.Tx) error {
-		event, err := evs.Event{IdDossier: id, Kind: evs.Facture, Created: time.Now()}.Insert(tx)
+		event, err := evs.Event{IdDossier: id, Kind: evs.DemandePaiement, Created: time.Now()}.Insert(tx)
 		if err != nil {
 			return err
 		}
@@ -411,7 +411,7 @@ func (ct *Controller) sendDemandePaiement(host string, args DemandePaiementIn) (
 			responsable := dossier.Responsable()
 
 			err = utils.InTx(ct.db, func(tx *sql.Tx) error {
-				event, err := evs.Event{IdDossier: idDossier, Kind: evs.Facture, Created: time.Now()}.Insert(tx)
+				event, err := evs.Event{IdDossier: idDossier, Kind: evs.DemandePaiement, Created: time.Now()}.Insert(tx)
 				if err != nil {
 					return err
 				}

@@ -71,15 +71,15 @@ type EventContent interface {
 	kind() evs.EventKind
 }
 
-func (SupprimeEvt) kind() evs.EventKind       { return evs.Supprime }
-func (StatuationEvt) kind() evs.EventKind     { return evs.Statuation }
-func (MessageEvt) kind() evs.EventKind        { return evs.Message }
-func (FactureEvt) kind() evs.EventKind        { return evs.Facture }
-func (CampDocsEvt) kind() evs.EventKind       { return evs.CampDocs }
-func (PlaceLibereeEvt) kind() evs.EventKind   { return evs.PlaceLiberee }
-func (AttestationEvt) kind() evs.EventKind    { return evs.Attestation }
-func (SondageEvt) kind() evs.EventKind        { return evs.Sondage }
-func (ChangementCampEvt) kind() evs.EventKind { return evs.ChangementCamp }
+func (SupprimeEvt) kind() evs.EventKind        { return evs.Supprime }
+func (StatuationEvt) kind() evs.EventKind      { return evs.Statuation }
+func (MessageEvt) kind() evs.EventKind         { return evs.Message }
+func (DemandePaiementEvt) kind() evs.EventKind { return evs.DemandePaiement }
+func (CampDocsEvt) kind() evs.EventKind        { return evs.CampDocs }
+func (PlaceLibereeEvt) kind() evs.EventKind    { return evs.PlaceLiberee }
+func (AttestationEvt) kind() evs.EventKind     { return evs.Attestation }
+func (SondageEvt) kind() evs.EventKind         { return evs.Sondage }
+func (ChangementCampEvt) kind() evs.EventKind  { return evs.ChangementCamp }
 
 type SupprimeEvt struct{}
 
@@ -125,18 +125,18 @@ func (ld *eventsContent) newMessage(ev evs.Event) MessageEvt {
 	return out
 }
 
-type FactureEvt struct {
+type DemandePaiementEvt struct {
 	IsRappel bool
 }
 
 // check is their is a previous facture sent
-func (ld *eventsContent) newFacture(ev evs.Event, all evs.Events) FactureEvt {
+func (ld *eventsContent) newDemandePaiement(ev evs.Event, all evs.Events) DemandePaiementEvt {
 	for _, other := range all {
-		if other.Id != ev.Id && other.Kind == evs.Facture && other.Created.Before(ev.Created) {
-			return FactureEvt{true}
+		if other.Id != ev.Id && other.Kind == evs.DemandePaiement && other.Created.Before(ev.Created) {
+			return DemandePaiementEvt{true}
 		}
 	}
-	return FactureEvt{false}
+	return DemandePaiementEvt{false}
 }
 
 type CampDocsEvt struct {
@@ -309,8 +309,8 @@ func (ec *eventsContent) build(event evs.Event, dossierEvents evs.Events) Event 
 		out.Content = ec.newMessage(event)
 	case evs.PlaceLiberee:
 		out.Content = ec.newPlaceLiberee(event)
-	case evs.Facture:
-		out.Content = ec.newFacture(event, dossierEvents)
+	case evs.DemandePaiement:
+		out.Content = ec.newDemandePaiement(event, dossierEvents)
 	case evs.CampDocs:
 		out.Content = ec.newCampDocs(event)
 	case evs.Attestation:

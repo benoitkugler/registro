@@ -26,6 +26,18 @@ export abstract class AbstractAPI {
     return { Authorization: "Bearer " + this.authToken };
   }
 
+  /** RedirectLegacyEspacePerso performs the request and handles the error */
+  async RedirectLegacyEspacePerso() {
+    const fullUrl = this.baseURL + "/espace_perso/:key";
+    this.startRequest();
+    try {
+      await Axios.get(fullUrl, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
   /** ValideTransfertFicheSanitaire performs the request and handles the error */
   async ValideTransfertFicheSanitaire(params: { token: string }) {
     const fullUrl =

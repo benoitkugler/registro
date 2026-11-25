@@ -15,12 +15,12 @@ const (
 
 	// peut provenir du backoffice, du portail directeurs
 	// ou de l'espace perso
-	Message      // Message
-	PlaceLiberee // Place libérée
-	Facture      // Facture
-	CampDocs     // Document des camps
-	Attestation  // Facture acquittée ou attestation de présence
-	Sondage      // Avis sur le séjour
+	Message         // Message
+	PlaceLiberee    // Place libérée
+	DemandePaiement // Demande de paiement
+	CampDocs        // Document des camps
+	Attestation     // Facture acquittée ou attestation de présence
+	Sondage         // Avis sur le séjour
 
 	ChangementCamp // Changement de séjour
 
