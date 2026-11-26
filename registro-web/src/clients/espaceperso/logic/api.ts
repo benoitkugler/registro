@@ -40,6 +40,7 @@ export interface Data {
   PaiementSettings: PaiementSettings;
   SupportsAidesExt: boolean;
   RequiredPaiementState: RequiredPaiementState;
+  PaiementOptions: Record<Currency, PaiementOption> | null;
   EnableJustificatifs: boolean;
 }
 // registro/controllers/espaceperso.DemandePersonne
@@ -89,6 +90,12 @@ export interface FormParticipant {
   Form: Form;
   Reponses: FormReponses;
 }
+// registro/controllers/espaceperso.PaiementOption
+export interface PaiementOption {
+  Currency: Currency;
+  Min: Int;
+  Max: Int;
+}
 // registro/controllers/espaceperso.PaiementSettings
 export interface PaiementSettings {
   VirementCode: string;
@@ -114,6 +121,15 @@ export interface SendMessageIn {
 export interface SondageExt {
   Camp: string;
   Sondage: Sondage;
+}
+// registro/controllers/espaceperso.StartOnlinePaymentIn
+export interface StartOnlinePaymentIn {
+  Token: string;
+  Montant: Montant;
+}
+// registro/controllers/espaceperso.StartOnlinePaymentOut
+export interface StartOnlinePaymentOut {
+  URL: string;
 }
 // registro/controllers/espaceperso.UpdateFichesanitaireIn
 export interface UpdateFichesanitaireIn {
@@ -868,6 +884,22 @@ export abstract class AbstractAPI {
       const rep: AxiosResponse<Event> = await Axios.post(fullUrl, params, {
         headers: this.getHeaders(),
       });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** StartOnlinePayment performs the request and handles the error */
+  async StartOnlinePayment(params: StartOnlinePaymentIn) {
+    const fullUrl = this.baseURL + "/api/v1/espaceperso/paiement/online";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<StartOnlinePaymentOut> = await Axios.post(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
       return rep.data;
     } catch (error) {
       this.handleError(error);

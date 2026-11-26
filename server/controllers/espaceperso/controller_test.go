@@ -41,7 +41,7 @@ func Test_createAide(t *testing.T) {
 	st, err := cps.Structureaide{}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	ct := NewController(db.DB, crypto.Encrypter{}, config.SMTP{}, config.Asso{}, fs.NewFileSystem(os.TempDir()), config.Immich{})
+	ct := NewController(db.DB, crypto.Encrypter{}, config.SMTP{}, config.Asso{}, fs.NewFileSystem(os.TempDir()), config.Immich{}, nil)
 
 	err = ct.createAide(dossier.Id, cps.Aide{IdStructureaide: st.Id, IdParticipant: pa.Id, Valeur: ds.NewEuros(456.4)}, tu.PngData, "test.png")
 	tu.AssertNoErr(t, err)
@@ -77,7 +77,7 @@ func TestPhotos(t *testing.T) {
 	tu.LoadEnv(t, "../../env.sh")
 	photos, err := config.NewImmich()
 	tu.AssertNoErr(t, err)
-	ct := NewController(db.DB, crypto.Encrypter{}, config.SMTP{}, config.Asso{}, fs.NewFileSystem(os.TempDir()), photos)
+	ct := NewController(db.DB, crypto.Encrypter{}, config.SMTP{}, config.Asso{}, fs.NewFileSystem(os.TempDir()), photos, nil)
 
 	api := immich.NewApi(ct.immich)
 	album, err := api.CreateAlbum("__TEST")

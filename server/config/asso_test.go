@@ -12,4 +12,10 @@ func TestAsso(t *testing.T) {
 	if acve.ComptaContactLabel != "le centre" || repere.ComptaContactLabel != "le comptable" {
 		t.Fatal("unexpected ComptaContactLabel")
 	}
+	if acve.OnlinePayProvider != OnlinePayStripe || repere.OnlinePayProvider != OnlinePayPayrexx {
+		t.Fatal("unexpected online payment provider")
+	}
+	if !acve.SupportOnlinePay || repere.SupportOnlinePay {
+		t.Fatal("online payment should be enabled only for ACVE")
+	}
 }

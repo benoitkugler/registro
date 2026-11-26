@@ -338,6 +338,21 @@ func (df DossierFinance) PaiementMode(percent int, requireDemandePaiement bool) 
 	return PaiementTotal
 }
 
+// MontantARegler returns the amount currently asked to the family,
+// according to [PaiementMode]. I returns false when no
+// paiement is currently required.
+func (df DossierFinance) MontantARegler(percent int, requireDemandePaiement bool) (ds.Montant, bool) {
+	switch df.PaiementMode(percent, requireDemandePaiement) {
+	case PaiementAcompte:
+		bilan := df.Bilan()
+		return df.acompte(bilan, percent).Restant, true
+	case PaiementTotal:
+		return df.Bilan().ApresPaiement(), true
+	default:
+		return ds.Montant{}, false
+	}
+}
+
 // DispatchPaiements split the received amount between all inscrits,
 // proportionnal to the sejour price.
 func (b BilanFinances) DispatchPaiements(taux ds.Taux) map[cps.IdParticipant]ds.Montant {

@@ -53,9 +53,12 @@
         </v-col>
         <v-col align-self="start" cols="12" md="8">
           <v-card :title="ModePaiementLabels[selectedMode]">
-            <v-card-text v-if="selectedMode == ModePaiement.EnLigne">
-              TODO: see https://github.com/benoitkugler/registro/issues/76
-            </v-card-text>
+            <OnlinePaySettings
+              v-if="selectedMode == ModePaiement.EnLigne"
+              :payment-options="props.paymentOptions"
+              :pending="onlinePayPending"
+              @start="startPayment"
+            ></OnlinePaySettings>
             <v-card-text v-else-if="selectedMode == ModePaiement.Virement">
               Vous pouvez effectuer votre virement vers
               {{
@@ -131,21 +134,29 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import {
+  Currency,
+  CurrencyLabels,
   ModePaiement,
   ModePaiementLabels,
   RequiredPaiementState,
+  type Data,
   type DossierExt,
+  type Int,
+  type Montant,
+  type PaiementOption,
   type PaiementSettings,
 } from "../logic/api";
 import { copyToClipboard, Formatters } from "@/utils";
 import { controller } from "../logic/logic";
+import OnlinePaySettings from "./OnlinePaySettings.vue";
 const props = defineProps<{
   token: string;
   dossier: DossierExt;
   settings: PaiementSettings;
   state: RequiredPaiementState;
+  paymentOptions: Data["PaiementOptions"];
 }>();
 
 const emit = defineEmits<{}>();
@@ -161,6 +172,20 @@ const selectedMode = ref<ModePaiement>(
     ? ModePaiement.EnLigne
     : ModePaiement.Virement,
 );
+
+const onlinePayPending = ref(false);
+async function startPayment(montant: Montant) {
+  onlinePayPending.value = true;
+  const out = await controller.StartOnlinePayment({
+    Token: props.token,
+    Montant: montant,
+  });
+  onlinePayPending.value = false;
+  if (out === undefined) return;
+
+  // redirect to checkout
+  window.location.assign(out.URL);
+}
 
 async function copyIBAN(iban: string) {
   await copyToClipboard(iban);

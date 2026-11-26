@@ -203,6 +203,7 @@
       :dossier="data.Dossier"
       :settings="data.PaiementSettings"
       :state="data.RequiredPaiementState"
+      :payment-options="data.PaiementOptions"
     ></FinancesReglementCard>
   </v-dialog>
 
@@ -291,6 +292,16 @@ onMounted(async () => {
   token.value = tokenS;
   await fetchData();
   if (!data.value) return;
+
+  // payment providers redirect here with a status query parameter
+  const paiement = query.get("paiement");
+  if (paiement === "success") {
+    controller.showMessage(
+      "Votre paiement est en cours de traitement. Le dossier sera mis à jour après confirmation de la banque.",
+    );
+  } else if (paiement === "cancel") {
+    controller.showMessage("Le paiement en ligne a été annulé.");
+  }
 
   // then, handle from inscription
   if (fromInscription) {

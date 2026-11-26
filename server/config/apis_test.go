@@ -7,6 +7,8 @@ func TestAPIConstructors(t *testing.T) {
 	t.Setenv("IMMICH_API_KEY", "test-key")
 	t.Setenv("STRIPE_KEY", "test-key")
 	t.Setenv("STRIPE_WEBHOOK", "test-webhook")
+	t.Setenv("PAYREXX_INSTANCE", "test-instance")
+	t.Setenv("PAYREXX_API_KEY", "test-key")
 	t.Setenv("HELLOASSO_SLUG", "test-slug")
 	t.Setenv("HELLOASSO_ID", "test-id")
 	t.Setenv("HELLOASSO_SECRET", "test-secret")
@@ -25,6 +27,7 @@ func TestAPIConstructors(t *testing.T) {
 	}{
 		{name: "NewImmich", call: func() error { _, err := NewImmich(); return err }},
 		{name: "NewStripe", call: func() error { _, err := NewStripe(); return err }},
+		{name: "NewPayrexx", call: func() error { _, err := NewPayrexx(); return err }},
 		{name: "NewHelloasso", call: func() error { _, err := NewHelloasso(); return err }},
 		{name: "NewHorizon", call: func() error { _, err := NewHorizon(); return err }},
 		{name: "NewCompta", call: func() error { _, err := NewCompta(true); return err }},

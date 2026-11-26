@@ -23,6 +23,7 @@ import (
 	"registro/crypto"
 	"registro/generators/pdfcreator"
 	"registro/logic"
+	"registro/onlinepay"
 	"registro/recufiscal"
 	cp "registro/sql/camps"
 	"registro/sql/files"
@@ -56,8 +57,18 @@ func main() {
 		fmt.Println("Using model for recu fiscal:", path)
 	}
 
-	// TODO: setup Helloasso, OnlinePaiement APIS
+	// TODO: setup Helloasso API
 	helloasso := config.Helloasso{}
+
+	var onlinePayProvider onlinepay.Provider
+	if asso.SupportOnlinePay {
+		provider, err := onlinepay.NewProvider(asso.OnlinePayProvider)
+		check(err)
+		onlinePayProvider = provider
+		fmt.Println("\tOnlinePaiement provider:", asso.OnlinePayProvider)
+	} else {
+		fmt.Println("\tOnlinePaiement disabled")
+	}
 
 	fmt.Printf("Connecting to DB <%s> at <%s>...\n", dbCreds.Name, dbCreds.Host)
 	db, err := dbCreds.ConnectPostgres()
@@ -86,7 +97,7 @@ func main() {
 
 	equipiersCt := equipiers.NewController(db, asso.ID, encrypter, fs, immich)
 
-	espacepersoCt := espaceperso.NewController(db, encrypter, smtp, asso, fs, immich)
+	espacepersoCt := espaceperso.NewController(db, encrypter, smtp, asso, fs, immich, onlinePayProvider)
 
 	inscriptionsCt := inscriptions.NewController(db, encrypter, smtp, asso)
 
@@ -132,6 +143,7 @@ func main() {
 	setupRoutesDons(e, donsCt)
 	setupRoutesEquipier(e, equipiersCt)
 	setupRoutesEspaceperso(e, espacepersoCt)
+	setupRoutesOnlinePay(e, espacepersoCt)
 	setupRoutesInscription(e, inscriptionsCt)
 	setupRoutesCompta(e, comptaCt)
 	setupRoutesMisc(e, filesCt)

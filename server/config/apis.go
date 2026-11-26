@@ -117,6 +117,21 @@ type Payrexx struct {
 	ApiKey   string
 }
 
+// NewPayrexx loads PAYREXX_INSTANCE and PAYREXX_API_KEY env. variables
+func NewPayrexx() (Payrexx, error) {
+	instance := os.Getenv("PAYREXX_INSTANCE")
+	if instance == "" {
+		return Payrexx{}, errors.New("missing env PAYREXX_INSTANCE")
+	}
+
+	apiKey := os.Getenv("PAYREXX_API_KEY")
+	if apiKey == "" {
+		return Payrexx{}, errors.New("missing env PAYREXX_API_KEY")
+	}
+
+	return Payrexx{instance, apiKey}, nil
+}
+
 type Compta struct {
 	// Service account json file
 	GoogleDriveKeyFile string

@@ -9,11 +9,15 @@ La configuration pour une association se fait par 3 moyens :
 
   | Variable                                | Description                                                                                                                             | Version             |
   | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+  | `PAYREXX_INSTANCE`                      | instance Payrexx, sans `https://` (quand le fournisseur `payrexx` est sélectionné)                                                      | v0.14.0             |
+  | `PAYREXX_API_KEY`                       | clé API Payrexx (quand le fournisseur `payrexx` est sélectionné)                                                                        | v0.14.0             |
+  | `STRIPE_KEY`                            | clé API Stripe (quand le fournisseur `stripe` est sélectionné)                                                                          | v0.1.1 ou antérieur |
+  | `STRIPE_WEBHOOK`                        | clé secrète de vérification des notifications Stripe (quand le fournisseur `stripe` est sélectionné)                                    | v0.1.1 ou antérieur |
   | `ASSO_MAIL_NOTIFICATION_FROM_DIRECTEUR` | adresse de notification pour les messages automatiques envoyés quand un directeur demande l'attention sur un dossier                    | v0.13.0             |
   | `COMPTA_ADMIN_PASSWORD`                 | mot de passe administrateur de l'espace compta : il donne accès au suivi de tous les séjours                                            | v0.13.0             |
   | `COMPTA_ADMIN_MAIL`                     | adresse mail de l'administrateur de l'espace compta, sur lequel est envoyé une notification quand le directeur a terminé sa déclaration | v0.13.0             |
-  | `COMPTA_GOOGLE_DRIVE_FOLDER_ID`         | identifiant du dossier Google Drive partagé avec le compte de service (optionnel par défaut, requis avec le flag -checkComptaDrive)                           | v0.13.0             |
-  | `COMPTA_GOOGLE_DRIVE_KEY_FILE`          | chemin vers le fichier de clé JSON du compte de service Google Drive (optionnel par défaut, requis avec le flag -checkComptaDrive)                            | v0.13.0             |
+  | `COMPTA_GOOGLE_DRIVE_FOLDER_ID`         | identifiant du dossier Google Drive partagé avec le compte de service (optionnel par défaut, requis avec le flag -checkComptaDrive)     | v0.13.0             |
+  | `COMPTA_GOOGLE_DRIVE_KEY_FILE`          | chemin vers le fichier de clé JSON du compte de service Google Drive (optionnel par défaut, requis avec le flag -checkComptaDrive)      | v0.13.0             |
   | `COMPTA_FILES_DIR`                      | répertoire local des fichiers des justificatifs déposés sur l'espace comptabilité des séjours                                           | v0.13.0             |
   | `HELLOASSO_HORIZON_KEY`                 | clé d'authentification des requêtes Horizon entrantes                                                                                   | v0.12.3             |
   | `HELLOASSO_RELAIS_KEY`                  | clé d'authentification des réponses envoyées à Horizon                                                                                  | v0.12.3             |
@@ -44,8 +48,6 @@ La configuration pour une association se fait par 3 moyens :
   | `DB_PASSWORD`                           | mot de passe PostgreSQL                                                                                                                 | v0.1.1 ou antérieur |
   | `DB_NAME`                               | nom de la base de données                                                                                                               | v0.1.1 ou antérieur |
   | `DB_PORT`                               | port PostgreSQL (facultatif, 5432 par défaut)                                                                                           | v0.1.1 ou antérieur |
-  | `STRIPE_KEY`                            | clé API Stripe                                                                                                                          | v0.1.1 ou antérieur |
-  | `STRIPE_WEBHOOK`                        | clé secrète de vérification des notifications Stripe                                                                                    | v0.1.1 ou antérieur |
   | `HELLOASSO_ID`                          | identifiant de l'API HelloAsso                                                                                                          | v0.1.1 ou antérieur |
   | `HELLOASSO_SECRET`                      | secret de l'API HelloAsso                                                                                                               | v0.1.1 ou antérieur |
   | `IP`                                    | adresse IP d'écoute du serveur, en production                                                                                           | v0.1.1 ou antérieur |

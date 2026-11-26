@@ -16,6 +16,7 @@ import (
 	"registro/immich"
 	"registro/logic"
 	"registro/mails"
+	"registro/onlinepay"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
 	evs "registro/sql/events"
@@ -34,17 +35,18 @@ const updateLimitation = 7 * 24 * time.Hour
 type Controller struct {
 	db *sql.DB
 
-	key    crypto.Encrypter
-	smtp   config.SMTP
-	asso   config.Asso
-	files  fs.FileSystem
-	immich config.Immich
+	key      crypto.Encrypter
+	smtp     config.SMTP
+	asso     config.Asso
+	files    fs.FileSystem
+	immich   config.Immich
+	provider onlinepay.Provider // optional, set when online payment is enabled
 }
 
 func NewController(db *sql.DB, key crypto.Encrypter, smtp config.SMTP, asso config.Asso, fs fs.FileSystem,
-	immich config.Immich,
+	immich config.Immich, provider onlinepay.Provider,
 ) *Controller {
-	return &Controller{db, key, smtp, asso, fs, immich}
+	return &Controller{db, key, smtp, asso, fs, immich, provider}
 }
 
 func (ct *Controller) Load(c echo.Context) error {
@@ -72,6 +74,12 @@ type Data struct {
 	// RequiredPaiementState décrit ce qui est demandé à la famille :
 	// aucun paiement, acompte seul, ou paiement total.
 	RequiredPaiementState logic.RequiredPaiementState
+
+	// PaiementOptions lists the amount still to pay in each currency
+	// supported by the dossier. Online payments may be split, so each
+	// option also gives the minimum accepted amount.
+	PaiementOptions map[ds.Currency]PaiementOption
+
 	// EnableJustificatifs is true when all the camps have started (or ended)
 	EnableJustificatifs bool
 }
@@ -96,20 +104,27 @@ func (ct *Controller) load(id ds.IdDossier) (Data, error) {
 		return Data{}, err
 	}
 	_, campInscritsStarted := dossier.ParticipantsExtReal()
+
+	var options map[ds.Currency]PaiementOption
+	if montant, ok := dossier.MontantARegler(ct.asso.AcomptePercent, ct.asso.RequireDemandePaiement); ok {
+		options = paiementOptions(dossier.Taux, montant)
+	}
+
 	return Data{
-		dossier.Publish(ct.key, ct.asso.AcomptePercent),
-		documents.NewCount,
-		ct.asso.Title,
-		ct.asso.ContactMail,
-		PaiementSettings{
-			backoffice.OffuscateurVirements.Mask(id),
-			ct.asso.BankAccounts,
-			ct.asso.SupportPaiementEnLigne,
-			ct.asso.ChequeSettings,
+		Dossier:                    dossier.Publish(ct.key, ct.asso.AcomptePercent),
+		DocumentsToReadOrFillCount: documents.NewCount,
+		AssoTitle:                  ct.asso.Title,
+		MailCentre:                 ct.asso.ContactMail,
+		PaiementSettings: PaiementSettings{
+			VirementCode:           backoffice.OffuscateurVirements.Mask(id),
+			BankAccounts:           ct.asso.BankAccounts,
+			SupportPaiementEnLigne: ct.asso.SupportOnlinePay,
+			Cheques:                ct.asso.ChequeSettings,
 		},
-		ct.asso.SupportBonsCAF,
-		dossier.PaiementMode(ct.asso.AcomptePercent, ct.asso.RequireDemandePaiement),
-		campInscritsStarted,
+		SupportsAidesExt:      ct.asso.SupportBonsCAF,
+		RequiredPaiementState: dossier.PaiementMode(ct.asso.AcomptePercent, ct.asso.RequireDemandePaiement),
+		PaiementOptions:       options,
+		EnableJustificatifs:   campInscritsStarted,
 	}, nil
 }
 

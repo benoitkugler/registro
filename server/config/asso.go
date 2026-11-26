@@ -41,12 +41,25 @@ type Asso struct {
 	// The acompte is always permitted.
 	RequireDemandePaiement bool
 
+	// OnlinePayProvider selects the online payment gateway.
+	// It determines which credentials are loaded at startup when
+	// SupportPaiementEnLigne is true.
+	OnlinePayProvider OnlinePayProvider
+
 	RemisesHints RemisesHints
 
 	AskedDocs AskedDocs
 
 	ConfigInscription
 }
+
+// OnlinePayProvider is the name of an online payment provider.
+type OnlinePayProvider string
+
+const (
+	OnlinePayStripe  OnlinePayProvider = "stripe"
+	OnlinePayPayrexx OnlinePayProvider = "payrexx"
+)
 
 type AskedDocs struct {
 	// FicheSanitaireMajeurs requests a fiche sanitaire (and vaccins)
@@ -64,7 +77,7 @@ type BankAccount struct {
 type ConfigInscription struct {
 	SupportBonsCAF              bool // if true, displayed in inscription form and activates Aides on espaceperso
 	SupportANCV                 bool // if true, displayed in inscription form
-	SupportPaiementEnLigne      bool // if true, displayed in inscription and activated on espaceperso
+	SupportOnlinePay            bool // if true, displayed in inscription and activated on espaceperso
 	EmailRetraitMedia           string
 	ShowFondSoutien             bool // if true, displayed in inscription form
 	ShowCharteConduite          bool // if true, displayed in inscription form
@@ -109,6 +122,7 @@ var acve = Asso{
 
 	AcomptePercent:         10,
 	RequireDemandePaiement: true,
+	OnlinePayProvider:      OnlinePayStripe,
 
 	RemisesHints: RemisesHints{
 		ParentEquipier: 30,
@@ -122,7 +136,7 @@ var acve = Asso{
 
 	ConfigInscription: ConfigInscription{
 		SupportBonsCAF: true, SupportANCV: true,
-		SupportPaiementEnLigne:      true,
+		SupportOnlinePay:            true,
 		EmailRetraitMedia:           "contact@acve.asso.fr",
 		ShowFondSoutien:             false,
 		ShowCharteConduite:          false,
@@ -165,6 +179,7 @@ var repere = Asso{
 
 	AcomptePercent:         10,
 	RequireDemandePaiement: false,
+	OnlinePayProvider:      OnlinePayPayrexx,
 
 	RemisesHints: RemisesHints{
 		ParentEquipier: 50,
@@ -178,7 +193,7 @@ var repere = Asso{
 
 	ConfigInscription: ConfigInscription{
 		SupportBonsCAF: false, SupportANCV: false,
-		SupportPaiementEnLigne:      false,
+		SupportOnlinePay:            false,
 		EmailRetraitMedia:           "webmaster@lerepere.ch",
 		ShowFondSoutien:             true,
 		ShowCharteConduite:          true,

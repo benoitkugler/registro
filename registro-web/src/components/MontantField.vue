@@ -10,6 +10,8 @@
         :hint="props.hint"
         :label="props.label"
         type="number"
+        :min="props.min === undefined ? undefined : props.min / 100"
+        :max="props.max === undefined ? undefined : props.max / 100"
         :disabled="props.disabled"
         :model-value="modelValue.Cent / 100"
         @update:model-value="
@@ -46,7 +48,11 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { CurrencyLabels, type Montant } from "@/clients/backoffice/logic/api";
+import {
+  CurrencyLabels,
+  type Int,
+  type Montant,
+} from "@/clients/backoffice/logic/api";
 import { singleCurrency, currencyItems } from "@/settings";
 import { round } from "@/utils";
 const props = defineProps<{
@@ -57,6 +63,8 @@ const props = defineProps<{
   autofocus?: boolean;
   hint?: string;
   debounce?: boolean;
+  min?: Int;
+  max?: Int;
 }>();
 
 const modelValue = defineModel<Montant>({ required: true });

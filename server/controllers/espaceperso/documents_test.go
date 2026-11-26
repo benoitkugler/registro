@@ -59,7 +59,7 @@ func TestDocuments(t *testing.T) {
 	err = cps.ParticipantForm{IdForm: form.Id, IdCamp: camp.Id, IdParticipant: p1.Id, Reponses: cps.FormReponses{cps.ChampReponseTexte("")}}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	ct := NewController(db.DB, crypto.Encrypter{}, config.SMTP{}, config.Asso{AskedDocs: config.AskedDocs{CarteId: true}}, fs.NewFileSystem(os.TempDir()), config.Immich{})
+	ct := NewController(db.DB, crypto.Encrypter{}, config.SMTP{}, config.Asso{AskedDocs: config.AskedDocs{CarteId: true}}, fs.NewFileSystem(os.TempDir()), config.Immich{}, nil)
 
 	docs, err := ct.markAndloadDocuments(dossier.Id)
 	tu.AssertNoErr(t, err)
