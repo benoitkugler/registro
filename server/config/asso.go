@@ -104,7 +104,7 @@ var acve = Asso{
 	ChequeSettings: ChequeSettings{
 		IsValid: true,
 		Ordre:   "ACVE",
-		Adresse: [2]string{"Centre d'inscriptions - Marie-Pierre Buffet", "27, impasse Vignon - 26150 Chamaloc"},
+		Adresse: [2]string{"Centre d'inscriptions - Natacha GROSDIDIER", "40 Rue du pin de Barjac - 07440 ALBOUSSIERE"},
 	},
 
 	AcomptePercent:         10,
