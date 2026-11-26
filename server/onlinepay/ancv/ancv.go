@@ -103,10 +103,19 @@ func formatAmount(cent int) string { return strconv.Itoa(cent) }
 // PaymentResult is the outcome of initializing a transaction and paying it.
 type PaymentResult struct {
 	TransactionID string
-	State         string
+
+	// State is the state reported by POST /payment-transactions/{id}/payer.
+	// It is often PROCESSING: a successful call does not mean the beneficiary
+	// has validated the payment.
+	State string
 }
 
 // CreateAndPay initializes a transaction and submits it to the beneficiary.
+// It returns as soon as POST /payment-transactions/{id}/payer succeeds: it does
+// NOT wait for the beneficiary to validate the payment in the ANCV app. The
+// payment is recorded later, when ANCV calls the notification webhook
+// (HandleANCVPaymentNotification in the espaceperso controller).
+//
 // Kit §4.5.1 (p. 17) : « La première étape du paiement [...] est
 // l'initialisation d'une transaction de paiement ». Kit §4.5.2 (p. 20) : « La
 // mise en paiement consiste à soumettre une transaction [...] pour acquisition
