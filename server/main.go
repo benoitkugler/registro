@@ -24,6 +24,7 @@ import (
 	"registro/generators/pdfcreator"
 	"registro/logic"
 	"registro/onlinepay"
+	"registro/onlinepay/ancv"
 	"registro/recufiscal"
 	cp "registro/sql/camps"
 	"registro/sql/files"
@@ -97,7 +98,15 @@ func main() {
 
 	equipiersCt := equipiers.NewController(db, asso.ID, encrypter, fs, immich)
 
-	espacepersoCt := espaceperso.NewController(db, encrypter, smtp, asso, fs, immich, onlinePayProvider)
+	var ancvApi *ancv.Api
+	if asso.SupportANCV {
+		cfg, err := config.NewANCV()
+		check(err)
+		ancvApi, err = ancv.NewApi(cfg)
+		check(err)
+		fmt.Printf("\tANCV payment enabled (prod: %t)\n", cfg.Prod)
+	}
+	espacepersoCt := espaceperso.NewController(db, encrypter, smtp, asso, fs, immich, onlinePayProvider, ancvApi)
 
 	inscriptionsCt := inscriptions.NewController(db, encrypter, smtp, asso)
 

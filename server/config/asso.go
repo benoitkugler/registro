@@ -43,8 +43,12 @@ type Asso struct {
 
 	// OnlinePayProvider selects the online payment gateway.
 	// It determines which credentials are loaded at startup when
-	// SupportPaiementEnLigne is true.
+	// SupportOnlinePay is true.
 	OnlinePayProvider OnlinePayProvider
+
+	// SupportANCV enables payment through ANCV (Chèque-Vacances Connect),
+	// integrated directly and independently of [SupportOnlinePay].
+	SupportANCV bool
 
 	RemisesHints RemisesHints
 
@@ -123,6 +127,7 @@ var acve = Asso{
 	AcomptePercent:         10,
 	RequireDemandePaiement: true,
 	OnlinePayProvider:      OnlinePayStripe,
+	SupportANCV:            true,
 
 	RemisesHints: RemisesHints{
 		ParentEquipier: 30,
@@ -180,6 +185,7 @@ var repere = Asso{
 	AcomptePercent:         10,
 	RequireDemandePaiement: false,
 	OnlinePayProvider:      OnlinePayPayrexx,
+	SupportANCV:            false,
 
 	RemisesHints: RemisesHints{
 		ParentEquipier: 50,

@@ -18,4 +18,7 @@ func TestAsso(t *testing.T) {
 	if !acve.SupportOnlinePay || repere.SupportOnlinePay {
 		t.Fatal("online payment should be enabled only for ACVE")
 	}
+	if !acve.SupportANCV || repere.SupportANCV {
+		t.Fatal("ANCV payment should be enabled only for ACVE")
+	}
 }

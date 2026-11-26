@@ -16,7 +16,7 @@
               title="Payer en ligne"
               subtitle="par carte bancaire"
               :value="ModePaiement.EnLigne"
-              v-if="props.settings.SupportPaiementEnLigne"
+              v-if="props.settings.SupportOnlinePay"
             >
               <template #append>
                 <v-icon
@@ -168,7 +168,7 @@ const amountToPay = computed(() =>
 );
 
 const selectedMode = ref<ModePaiement>(
-  props.settings.SupportPaiementEnLigne
+  props.settings.SupportOnlinePay
     ? ModePaiement.EnLigne
     : ModePaiement.Virement,
 );

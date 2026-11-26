@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"strconv"
 )
 
 // See https://api.immich.app
@@ -55,6 +56,54 @@ func NewStripe() (Stripe, error) {
 	}
 
 	return Stripe{key, webhook}, nil
+}
+
+// ANCV holds the credentials used to call the ANCV Chèque-Vacances Connect
+// API. The association is connected directly, without an intermediary, so the
+// merchant (PTL) sealing key is used.
+//
+// Kit d'intégration ANCV v1.08, §5.3.2.2 (p. 52) : « Si le paramètre
+// Merchant → serviceProviderId est renseigné [...] la clé de signature à
+// utiliser est celle de l'Intermédiaire de Service (IS). Dans le cas contraire,
+// la clé de signature à utiliser est celle du commerçant (PTL). »
+// §4.2 (p. 13) describes the two base URLs selected by [ANCV.Prod].
+type ANCV struct {
+	ShopID      int64  // merchant.shopId
+	SealKey     string // merchant sealing key (PTL)
+	SealVersion string // versionKey in the ANCV-Security header
+	Prod        bool   // true => production, false => recette (safe zero value)
+}
+
+// NewANCV uses env variables to build ANCV credentials :
+// ANCV_SHOP_ID, ANCV_SEAL_KEY, ANCV_SEAL_VERSION, ANCV_PROD (optional).
+//
+// Kit d'intégration ANCV v1.08, §4.3.1 (p. 13) : « L'en-tête doit
+// contenir à minima les entrées suivantes : Content-Type : application/json,
+// Ancv-Security : {algo.version.seal} ».
+func NewANCV() (out ANCV, err error) {
+	shopID := os.Getenv("ANCV_SHOP_ID")
+	if shopID == "" {
+		return ANCV{}, errors.New("missing env ANCV_SHOP_ID")
+	}
+	out.ShopID, err = strconv.ParseInt(shopID, 10, 64)
+	if err != nil {
+		return ANCV{}, fmt.Errorf("invalid env ANCV_SHOP_ID: %s", shopID)
+	}
+
+	out.SealKey = os.Getenv("ANCV_SEAL_KEY")
+	if out.SealKey == "" {
+		return ANCV{}, errors.New("missing env ANCV_SEAL_KEY")
+	}
+
+	out.SealVersion = os.Getenv("ANCV_SEAL_VERSION")
+	if out.SealVersion == "" {
+		return ANCV{}, errors.New("missing env ANCV_SEAL_VERSION")
+	}
+
+	// Prod is opt-in: an unset or unexpected value selects the recette API.
+	out.Prod = os.Getenv("ANCV_PROD") == "TRUE"
+
+	return out, nil
 }
 
 type Helloasso struct {

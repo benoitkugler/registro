@@ -100,7 +100,7 @@ export interface PaiementOption {
 export interface PaiementSettings {
   VirementCode: string;
   BankAccounts: BankAccount[] | null;
-  SupportPaiementEnLigne: boolean;
+  SupportOnlinePay: boolean;
   Cheques: ChequeSettings;
 }
 // registro/controllers/espaceperso.PhotoAlbum
@@ -121,6 +121,17 @@ export interface SendMessageIn {
 export interface SondageExt {
   Camp: string;
   Sondage: Sondage;
+}
+// registro/controllers/espaceperso.StartANCVPaymentIn
+export interface StartANCVPaymentIn {
+  Token: string;
+  BeneficiaryID: string;
+  MontantAsCent: Int;
+}
+// registro/controllers/espaceperso.StartANCVPaymentOut
+export interface StartANCVPaymentOut {
+  TransactionID: string;
+  State: string;
 }
 // registro/controllers/espaceperso.StartOnlinePaymentIn
 export interface StartOnlinePaymentIn {
@@ -896,6 +907,22 @@ export abstract class AbstractAPI {
     this.startRequest();
     try {
       const rep: AxiosResponse<StartOnlinePaymentOut> = await Axios.post(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** StartANCVPayment performs the request and handles the error */
+  async StartANCVPayment(params: StartANCVPaymentIn) {
+    const fullUrl = this.baseURL + "/api/v1/espaceperso/paiement/ancv";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<StartANCVPaymentOut> = await Axios.post(
         fullUrl,
         params,
         { headers: this.getHeaders() },

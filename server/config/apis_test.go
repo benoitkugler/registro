@@ -9,6 +9,10 @@ func TestAPIConstructors(t *testing.T) {
 	t.Setenv("STRIPE_WEBHOOK", "test-webhook")
 	t.Setenv("PAYREXX_INSTANCE", "test-instance")
 	t.Setenv("PAYREXX_API_KEY", "test-key")
+	t.Setenv("ANCV_SHOP_ID", "10000065")
+	t.Setenv("ANCV_SEAL_KEY", "test-seal-key")
+	t.Setenv("ANCV_SEAL_VERSION", "version-test")
+	t.Setenv("ANCV_PROD", "TRUE")
 	t.Setenv("HELLOASSO_SLUG", "test-slug")
 	t.Setenv("HELLOASSO_ID", "test-id")
 	t.Setenv("HELLOASSO_SECRET", "test-secret")
@@ -28,6 +32,7 @@ func TestAPIConstructors(t *testing.T) {
 		{name: "NewImmich", call: func() error { _, err := NewImmich(); return err }},
 		{name: "NewStripe", call: func() error { _, err := NewStripe(); return err }},
 		{name: "NewPayrexx", call: func() error { _, err := NewPayrexx(); return err }},
+		{name: "NewANCV", call: func() error { _, err := NewANCV(); return err }},
 		{name: "NewHelloasso", call: func() error { _, err := NewHelloasso(); return err }},
 		{name: "NewHorizon", call: func() error { _, err := NewHorizon(); return err }},
 		{name: "NewCompta", call: func() error { _, err := NewCompta(true); return err }},
@@ -39,5 +44,37 @@ func TestAPIConstructors(t *testing.T) {
 				t.Fatalf("constructor returned an error: %v", err)
 			}
 		})
+	}
+}
+
+func TestNewANCV(t *testing.T) {
+	t.Setenv("ANCV_SHOP_ID", "10000065")
+	t.Setenv("ANCV_SEAL_KEY", "663768ff68ad8ea6768bbf65163e9b0a")
+	t.Setenv("ANCV_SEAL_VERSION", "version-3620")
+	t.Setenv("ANCV_PROD", "TRUE")
+
+	cfg, err := NewANCV()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.ShopID != 10000065 || cfg.SealKey == "" || cfg.SealVersion != "version-3620" || !cfg.Prod {
+		t.Fatalf("unexpected config: %+v", cfg)
+	}
+
+	t.Setenv("ANCV_PROD", "FALSE")
+	cfg, err = NewANCV()
+	if err != nil || cfg.Prod {
+		t.Fatalf("recette should be selected: %+v, %v", cfg, err)
+	}
+
+	t.Setenv("ANCV_PROD", "")
+	cfg, err = NewANCV()
+	if err != nil || cfg.Prod {
+		t.Fatalf("unset ANCV_PROD should select recette: %+v, %v", cfg, err)
+	}
+
+	t.Setenv("ANCV_SHOP_ID", "invalid")
+	if _, err := NewANCV(); err == nil {
+		t.Fatal("an invalid shop id should be rejected")
 	}
 }

@@ -13,6 +13,10 @@ La configuration pour une association se fait par 3 moyens :
   | `PAYREXX_API_KEY`                       | clé API Payrexx (quand le fournisseur `payrexx` est sélectionné)                                                                        | v0.14.0             |
   | `STRIPE_KEY`                            | clé API Stripe (quand le fournisseur `stripe` est sélectionné)                                                                          | v0.1.1 ou antérieur |
   | `STRIPE_WEBHOOK`                        | clé secrète de vérification des notifications Stripe (quand le fournisseur `stripe` est sélectionné)                                    | v0.1.1 ou antérieur |
+  | `ANCV_SHOP_ID`                          | identifiant technique de la boutique ANCV (`merchant.shopId`) ; intégration directe, sans `serviceProviderId`                            | v0.15.0             |
+  | `ANCV_SEAL_KEY`                         | clé de scellement HMAC-SHA256 du commerçant (PTL)                                                                                         | v0.15.0             |
+  | `ANCV_SEAL_VERSION`                     | version de la clé de scellement, placée dans l'en-tête `ANCV-Security`                                                                   | v0.15.0             |
+  | `ANCV_PROD`                             | `TRUE` pour utiliser la production ANCV, sinon (ou si absent) l'environnement de recette                                                 | v0.15.0             |
   | `ASSO_MAIL_NOTIFICATION_FROM_DIRECTEUR` | adresse de notification pour les messages automatiques envoyés quand un directeur demande l'attention sur un dossier                    | v0.13.0             |
   | `COMPTA_ADMIN_PASSWORD`                 | mot de passe administrateur de l'espace compta : il donne accès au suivi de tous les séjours                                            | v0.13.0             |
   | `COMPTA_ADMIN_MAIL`                     | adresse mail de l'administrateur de l'espace compta, sur lequel est envoyé une notification quand le directeur a terminé sa déclaration | v0.13.0             |
@@ -54,3 +58,40 @@ La configuration pour une association se fait par 3 moyens :
   | `PORT`                                  | port d'écoute du serveur, en production                                                                                                 | v0.1.1 ou antérieur |
 
 - l'object `colorScheme` du fichier registro-web/src/vuetify.ts
+
+## Paiement par Chèque-Vacances Connect (ANCV)
+
+L'intégration est directe (commerçant/PTL, sans intermédiaire de service).
+Les variables `ANCV_*` ne sont lues que lorsque l'association active
+`SupportCVCo` (actuellement ACVE). Le montant est exprimé en centimes d'euros,
+seule devise acceptée par l'ANCV.
+
+Points d'entrée :
+
+- `POST /api/v1/espaceperso/paiement/ancv` : initialise la transaction et
+  soumet le paiement au bénéficiaire ;
+- `POST /api/v1/ancv/notification` : webhook public (sans JWT ni filtrage d'IP).
+  Son état est revérifié auprès de l'ANCV avant tout enregistrement.
+  L'URL est construite depuis l'hôte de la requête, comme pour Stripe.
+
+### Références ANCV
+
+Les commentaires de `server/onlinepay/ancv/` et de
+`server/controllers/espaceperso/ancv.go` citent le document
+`Kit_Integration_par_API_du_CVCo.pdf` (v1.08, © Worldline) par section et page.
+Les sections utilisées sont principalement :
+
+| Section | Pages | Sujet |
+| ------- | ----- | ----- |
+| §4.2 | 13 | environnements de recette et de production |
+| §4.3.1, §5.3.2 | 13, 52-53 | en-têtes et calcul du sceau HMAC-SHA256 |
+| §4.5.1, §4.5.2, §4.5.3 | 17-25 | initialisation, mise en paiement, demande d'état |
+| §5.1 | 45-46 | webhooks, rejeux et contraintes de sécurité |
+| §6.2.2 à §6.2.5 | 56-69 | dictionnaire des données échangées |
+| §6.3 | 69-70 | correspondance des codes d'erreur |
+| §6.7 | 81 | vecteur de test du calcul de sceau |
+
+Le kit ne fournit pas d'API pour simuler des notifications (`§6.9 Cahier de
+recette - A venir`). En recette, les notifications sont générées par de vraies
+transactions validées depuis l'application bénéficiaire (§6.10, document DR3).
+

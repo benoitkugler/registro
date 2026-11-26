@@ -17,6 +17,7 @@ import (
 	"registro/logic"
 	"registro/mails"
 	"registro/onlinepay"
+	"registro/onlinepay/ancv"
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
 	evs "registro/sql/events"
@@ -35,18 +36,33 @@ const updateLimitation = 7 * 24 * time.Hour
 type Controller struct {
 	db *sql.DB
 
-	key      crypto.Encrypter
-	smtp     config.SMTP
-	asso     config.Asso
-	files    fs.FileSystem
-	immich   config.Immich
+	key    crypto.Encrypter
+	smtp   config.SMTP
+	asso   config.Asso
+	files  fs.FileSystem
+	immich config.Immich
+
 	provider onlinepay.Provider // optional, set when online payment is enabled
+
+	// ANCV is integrated directly, independently of the online payment
+	// provider. It is optional and enabled by [config.Asso.SupportANCV].
+	ancvClient ancvClient
 }
 
+// [ancv] is optional
 func NewController(db *sql.DB, key crypto.Encrypter, smtp config.SMTP, asso config.Asso, fs fs.FileSystem,
-	immich config.Immich, provider onlinepay.Provider,
+	immich config.Immich, provider onlinepay.Provider, ancv *ancv.Api,
 ) *Controller {
-	return &Controller{db, key, smtp, asso, fs, immich, provider}
+	return &Controller{
+		db:         db,
+		key:        key,
+		smtp:       smtp,
+		asso:       asso,
+		files:      fs,
+		immich:     immich,
+		provider:   provider,
+		ancvClient: ancv,
+	}
 }
 
 func (ct *Controller) Load(c echo.Context) error {
@@ -90,8 +106,8 @@ type PaiementSettings struct {
 	VirementCode string
 	BankAccounts []config.BankAccount
 	// true if an external service to pay by CB is available
-	SupportPaiementEnLigne bool
-	Cheques                config.ChequeSettings
+	SupportOnlinePay bool
+	Cheques          config.ChequeSettings
 }
 
 func (ct *Controller) load(id ds.IdDossier) (Data, error) {
@@ -116,10 +132,10 @@ func (ct *Controller) load(id ds.IdDossier) (Data, error) {
 		AssoTitle:                  ct.asso.Title,
 		MailCentre:                 ct.asso.ContactMail,
 		PaiementSettings: PaiementSettings{
-			VirementCode:           backoffice.OffuscateurVirements.Mask(id),
-			BankAccounts:           ct.asso.BankAccounts,
-			SupportPaiementEnLigne: ct.asso.SupportOnlinePay,
-			Cheques:                ct.asso.ChequeSettings,
+			VirementCode:     backoffice.OffuscateurVirements.Mask(id),
+			BankAccounts:     ct.asso.BankAccounts,
+			SupportOnlinePay: ct.asso.SupportOnlinePay,
+			Cheques:          ct.asso.ChequeSettings,
 		},
 		SupportsAidesExt:      ct.asso.SupportBonsCAF,
 		RequiredPaiementState: dossier.PaiementMode(ct.asso.AcomptePercent, ct.asso.RequireDemandePaiement),

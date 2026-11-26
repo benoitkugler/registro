@@ -13,7 +13,7 @@ export type Int = number & { __opaque__: "Int" };
 export interface ConfigInscription {
   SupportBonsCAF: boolean;
   SupportANCV: boolean;
-  SupportPaiementEnLigne: boolean;
+  SupportOnlinePay: boolean;
   EmailRetraitMedia: string;
   ShowFondSoutien: boolean;
   ShowCharteConduite: boolean;
