@@ -101,6 +101,42 @@ func (ct *Controller) StartANCVPayment(c echo.Context) error {
 	return c.JSON(http.StatusOK, out)
 }
 
+// ANCVPaymentStatusOut reports whether an ANCV payment has been recorded for
+// the dossier. It deliberately says nothing about the ANCV transaction state:
+// only the webhook inserts the payment, so Recorded is the authoritative flag
+// for the family's UI.
+type ANCVPaymentStatusOut struct {
+	Recorded bool
+}
+
+// GetANCVPaymentStatus answers the family's UI while it waits for the ANCV
+// notification. Kit §5.1.2.1 (p. 45) : ANCV may retry the webhook, so the UI
+// polls this lightweight endpoint instead of assuming success from the
+// PROCESSING state returned by StartANCVPayment.
+func (ct *Controller) GetANCVPaymentStatus(c echo.Context) error {
+	if !ct.asso.SupportANCV || ct.ancvClient == nil {
+		return errors.New("Le paiement par Chèque-Vacances Connect n'est pas disponible.")
+	}
+	idDossier, err := crypto.DecryptID[ds.IdDossier](ct.key, c.QueryParam("token"))
+	if err != nil {
+		return errors.New("Lien invalide.")
+	}
+	transactionID := c.QueryParam("transactionId")
+	if transactionID == "" {
+		return errors.New("Identifiant de transaction ANCV manquant.")
+	}
+	paiements, err := ds.SelectPaiementsByIdDossiers(ct.db, idDossier)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	for _, paiement := range paiements {
+		if paiement.Mode == ds.Ancv && !paiement.IsRemboursement && paiement.Label == transactionID {
+			return c.JSON(http.StatusOK, ANCVPaymentStatusOut{Recorded: true})
+		}
+	}
+	return c.JSON(http.StatusOK, ANCVPaymentStatusOut{})
+}
+
 // HandleANCVPaymentNotification is the public webhook called by ANCV.
 //
 // Kit §5.1.1 (p. 45) : « Ces services doivent être en capacité de traiter une

@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"registro/config"
 	"registro/crypto"
@@ -238,5 +239,58 @@ func TestHandleANCVPaymentNotificationIgnoredStates(t *testing.T) {
 	tu.AssertNoErr(t, ct.HandleANCVPaymentNotification(c))
 	if rec.Code != http.StatusNoContent {
 		t.Fatalf("pre-transaction should be ignored, got %d", rec.Code)
+	}
+}
+
+func ancvStatusContext(token, transactionID string) (echo.Context, *httptest.ResponseRecorder) {
+	e := echo.New()
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/espaceperso/paiement/ancv/status", nil)
+	query := req.URL.Query()
+	query.Set("token", token)
+	query.Set("transactionId", transactionID)
+	req.URL.RawQuery = query.Encode()
+	rec := httptest.NewRecorder()
+	return e.NewContext(req, rec), rec
+}
+
+func TestGetANCVPaymentStatus(t *testing.T) {
+	db, ct, token, idDossier := setupANCVDossier(t)
+	ct.ancvClient = &stubANCVClient{}
+
+	status := func(token, transactionID string) ANCVPaymentStatusOut {
+		t.Helper()
+		c, rec := ancvStatusContext(token, transactionID)
+		tu.AssertNoErr(t, ct.GetANCVPaymentStatus(c))
+		if rec.Code != http.StatusOK {
+			t.Fatalf("unexpected status: %d (%s)", rec.Code, rec.Body.String())
+		}
+		var out ANCVPaymentStatusOut
+		tu.AssertNoErr(t, json.Unmarshal(rec.Body.Bytes(), &out))
+		return out
+	}
+
+	if status(token, "trx123").Recorded {
+		t.Fatal("payment should not be recorded before the notification")
+	}
+
+	_, err := ds.Paiement{
+		IdDossier: idDossier,
+		Payeur:    "Jean DUPONT",
+		Mode:      ds.Ancv,
+		Montant:   ds.Montant{Cent: 3500, Currency: ds.Euros},
+		Time:      time.Now().Truncate(time.Second),
+		Label:     "trx123",
+		Details:   "payment-123",
+	}.Insert(db.DB)
+	tu.AssertNoErr(t, err)
+
+	if !status(token, "trx123").Recorded {
+		t.Fatal("recorded payment should be detected")
+	}
+	if status(token, "other").Recorded {
+		t.Fatal("another transaction should not be reported as recorded")
+	}
+	if status(crypto.EncryptID(ct.key, idDossier+1), "trx123").Recorded {
+		t.Fatal("payment from another dossier should not be reported")
 	}
 }
