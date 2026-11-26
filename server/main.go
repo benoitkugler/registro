@@ -66,9 +66,9 @@ func main() {
 		provider, err := onlinepay.NewProvider(asso.OnlinePayProvider)
 		check(err)
 		onlinePayProvider = provider
-		fmt.Println("\tOnlinePaiement provider:", asso.OnlinePayProvider)
+		fmt.Println("OnlinePaiement provider:", asso.OnlinePayProvider)
 	} else {
-		fmt.Println("\tOnlinePaiement disabled")
+		fmt.Println("OnlinePaiement disabled")
 	}
 
 	fmt.Printf("Connecting to DB <%s> at <%s>...\n", dbCreds.Name, dbCreds.Host)
@@ -104,7 +104,7 @@ func main() {
 		check(err)
 		ancvApi, err = ancv.NewApi(cfg)
 		check(err)
-		fmt.Printf("\tANCV payment enabled (prod: %t)\n", cfg.Prod)
+		fmt.Printf("ANCV payment enabled (prod: %t)\n", cfg.Prod)
 	}
 	espacepersoCt := espaceperso.NewController(db, encrypter, smtp, asso, fs, immich, onlinePayProvider, ancvApi)
 
