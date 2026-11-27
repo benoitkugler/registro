@@ -22,13 +22,6 @@
             v-model="inner.IdStructureaide"
           ></v-select>
         </v-col>
-        <v-col>
-          <BoolField
-            v-model="inner.Valide"
-            label="Aide validée"
-            hide-details
-          ></BoolField>
-        </v-col>
       </v-row>
       <v-row>
         <v-col align-self="center">
@@ -75,7 +68,6 @@
 import {
   type Aide,
   type Int,
-  type ParticipantCamp,
   type PublicFile,
   type PublicParticipantCamp,
   type Structureaides,

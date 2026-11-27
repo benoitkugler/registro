@@ -142,7 +142,6 @@ CREATE TABLE aides (
     Id serial PRIMARY KEY,
     IdStructureaide integer NOT NULL,
     IdParticipant integer NOT NULL,
-    Valide boolean NOT NULL,
     Valeur Montant NOT NULL,
     ParJour boolean NOT NULL,
     NbJoursMax integer NOT NULL
@@ -318,7 +317,8 @@ CREATE TABLE files (
 
 CREATE TABLE file_aides (
     IdFile integer NOT NULL,
-    IdAide integer NOT NULL
+    IdParticipant integer NOT NULL,
+    IdAide integer
 );
 
 CREATE TABLE file_camps (
@@ -1723,6 +1723,12 @@ ALTER TABLE sondages
     ADD FOREIGN KEY (IdDossier) REFERENCES dossiers ON DELETE CASCADE;
 
 ALTER TABLE aides
+    ADD UNIQUE (Id, IdParticipant);
+
+ALTER TABLE aides
+    ADD UNIQUE (IdParticipant);
+
+ALTER TABLE aides
     ADD FOREIGN KEY (IdStructureaide) REFERENCES structureaides;
 
 ALTER TABLE aides
@@ -1857,10 +1863,19 @@ ALTER TABLE file_aides
     ADD UNIQUE (IdAide);
 
 ALTER TABLE file_aides
+    ADD UNIQUE (IdParticipant);
+
+ALTER TABLE file_aides
+    ADD FOREIGN KEY (IdAide, IdParticipant) REFERENCES aides (Id, IdParticipant);
+
+ALTER TABLE file_aides
     ADD FOREIGN KEY (IdFile) REFERENCES files ON DELETE CASCADE;
 
 ALTER TABLE file_aides
-    ADD FOREIGN KEY (IdAide) REFERENCES aides;
+    ADD FOREIGN KEY (IdParticipant) REFERENCES participants;
+
+ALTER TABLE file_aides
+    ADD FOREIGN KEY (IdAide) REFERENCES aides ON DELETE RESTRICT;
 
 ALTER TABLE inscriptions
     ADD UNIQUE (Id, IdTaux);

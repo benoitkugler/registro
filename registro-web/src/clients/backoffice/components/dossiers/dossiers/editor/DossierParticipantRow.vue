@@ -62,19 +62,34 @@
     </v-col>
     <!-- aides -->
     <v-col align-self="center" class="text-center">
-      <v-chip v-if="!sortedAides.length" label>Aucune aide</v-chip>
       <v-chip
-        v-for="aide in sortedAides"
+        v-if="justificatifAttente"
+        class="my-1"
+        label
+        color="orange"
+        prepend-icon="mdi-file-document"
+        :href="endpoints.LoadDocument(justificatifAttente.Key)"
+        target="_blank"
+      >
+        Justificatif en attente
+      </v-chip>
+      <v-chip v-else-if="!props.aide" label>Aucune aide</v-chip>
+      <v-chip
+        v-else
+        label
         class="my-1"
         prepend-icon="mdi-cash-plus"
-        :color="aide.Valide ? 'green' : 'orange'"
-        @click="aideToUpdate = aide"
+        color="green"
+        @click="aideToUpdate = props.aide"
       >
         <template #close>
-          <v-icon icon="mdi-close-circle" @click.stop="aideToRemove = aide" />
+          <v-icon
+            icon="mdi-close-circle"
+            @click.stop="aideToRemove = props.aide"
+          />
         </template>
-        {{ structures[aide.IdStructureaide].Nom }} :
-        {{ Formatters.montant(aide.Valeur) }}
+        {{ structures[props.aide.IdStructureaide].Nom }} :
+        {{ Formatters.montant(props.aide.Valeur) }}
       </v-chip>
     </v-col>
     <!-- remises -->
@@ -101,6 +116,7 @@
         </template>
         <v-list density="comfortable">
           <v-list-item
+            :disabled="!!props.aide"
             title="Ajouter une aide"
             prepend-icon="mdi-cash-plus"
             @click="
@@ -255,9 +271,9 @@
 import {
   OptionPrixKind,
   type Aide,
-  type Aides,
   type AidesCreateIn,
   type IdAide,
+  type IdParticipant,
   type IdStructureaide,
   type OptionPrixParticipant,
   type Participant,
@@ -265,7 +281,7 @@ import {
   type PublicParticipantCamp,
   type Structureaides,
 } from "@/clients/backoffice/logic/api";
-import { Camps, Formatters, Personnes } from "@/utils";
+import { Camps, endpoints, Formatters, Personnes } from "@/utils";
 import { computed, ref } from "vue";
 import ParticipantOptionPrix from "./ParticipantOptionPrix.vue";
 import RemisesChip from "./RemisesChip.vue";
@@ -275,8 +291,9 @@ import StructuresPannel from "../StructuresPannel.vue";
 
 const props = defineProps<{
   participant: PublicParticipantCamp;
-  aides: Aides;
+  aide: Aide | null | undefined;
   aidesFiles: Record<IdAide, PublicFile>;
+  aidesFilesAttente: Record<IdParticipant, PublicFile>;
   hasManyParticipants: boolean;
 }>();
 
@@ -295,11 +312,9 @@ const emit = defineEmits<{
   (e: "expand"): void;
 }>();
 
-const sortedAides = computed(() => {
-  const out = Object.values(props.aides || {});
-  out.sort((a, b) => a.Id - b.Id);
-  return out;
-});
+const justificatifAttente = computed<PublicFile | undefined>(
+  () => props.aidesFilesAttente[props.participant.Participant.Id],
+);
 
 const campNoOption = computed(
   () =>

@@ -237,12 +237,15 @@ type Structureaide struct {
 	Info            string
 }
 
+// Nécessaire pour la clé étrangère composite de FileAide.
+// gomacro:SQL ADD UNIQUE(Id, IdParticipant)
+//
+// Au plus une aide par participant.
+// gomacro:SQL ADD UNIQUE(IdParticipant)
 type Aide struct {
 	Id              IdAide
 	IdStructureaide IdStructureaide
 	IdParticipant   IdParticipant `gomacro-sql-on-delete:"CASCADE"`
-
-	Valide bool
 
 	Valeur     Montant
 	ParJour    bool

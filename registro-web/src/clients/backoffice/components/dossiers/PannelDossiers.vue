@@ -357,14 +357,9 @@ async function createAide(params: AidesCreateIn) {
   if (res === undefined) return;
   controller.showMessage("Aide ajoutée avec succès.");
 
-  // la nouvelle aide ne modifie pas le statut du dossier :
-  // pas de besoin de [loadDossier]
-  if (dossierDetails.value == null) return;
-  const allAides = dossierDetails.value.Dossier.Aides || {};
-  const thisPart = allAides[params.IdParticipant] || {};
-  thisPart[res.Id] = res;
-  allAides[params.IdParticipant] = thisPart;
-  dossierDetails.value.Dossier.Aides = allAides;
+  // la création de l'aide rattache le justificatif en attente :
+  // les fichiers du dossier doivent donc être rechargés
+  ensureDossier();
 }
 
 async function updateAide(aide: Aide) {

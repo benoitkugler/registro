@@ -740,6 +740,7 @@ func scanOneFileAide(row scanner) (FileAide, error) {
 	var item FileAide
 	err := row.Scan(
 		&item.IdFile,
+		&item.IdParticipant,
 		&item.IdAide,
 	)
 	return item, err
@@ -749,7 +750,7 @@ func ScanFileAide(row *sql.Row) (FileAide, error) { return scanOneFileAide(row) 
 
 // SelectAll returns all the items in the file_aides table.
 func SelectAllFileAides(db DB) (FileAides, error) {
-	rows, err := db.Query("SELECT idfile, idaide FROM file_aides")
+	rows, err := db.Query("SELECT idfile, idparticipant, idaide FROM file_aides")
 	if err != nil {
 		return nil, err
 	}
@@ -785,12 +786,13 @@ func ScanFileAides(rs *sql.Rows) (FileAides, error) {
 
 func (item FileAide) Insert(db DB) error {
 	_, err := db.Exec(`INSERT INTO file_aides (
-			idfile, idaide
+			idfile, idparticipant, idaide
 			) VALUES (
-			$1, $2
+			$1, $2, $3
 			);
 			`,
 		item.IdFile,
+		item.IdParticipant,
 		item.IdAide,
 	)
 	if err != nil {
@@ -808,6 +810,7 @@ func InsertManyFileAides(tx *sql.Tx, items ...FileAide) error {
 
 	stmt, err := tx.Prepare(pq.CopyIn("file_aides",
 		"idfile",
+		"idparticipant",
 		"idaide",
 	))
 	if err != nil {
@@ -817,6 +820,7 @@ func InsertManyFileAides(tx *sql.Tx, items ...FileAide) error {
 	for _, item := range items {
 		_, err = stmt.Exec(
 			item.IdFile,
+			item.IdParticipant,
 			item.IdAide,
 		)
 		if err != nil {
@@ -835,9 +839,9 @@ func InsertManyFileAides(tx *sql.Tx, items ...FileAide) error {
 }
 
 // Delete the link FileAide from the database.
-// Only the foreign keys IdFile, IdAide fields are used in 'item'.
+// Only the foreign keys IdFile, IdParticipant, IdAide fields are used in 'item'.
 func (item FileAide) Delete(tx DB) error {
-	_, err := tx.Exec(`DELETE FROM file_aides WHERE IdFile = $1 AND IdAide = $2;`, item.IdFile, item.IdAide)
+	_, err := tx.Exec(`DELETE FROM file_aides WHERE IdFile = $1 AND IdParticipant = $2 AND ((IdAide IS NULL AND $3 IS NULL) OR IdAide = $3);`, item.IdFile, item.IdParticipant, item.IdAide)
 	return err
 }
 
@@ -863,7 +867,7 @@ func (items FileAides) IdFiles() []IdFile {
 
 // SelectFileAideByIdFile return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectFileAideByIdFile(tx DB, idFile IdFile) (item FileAide, found bool, err error) {
-	row := tx.QueryRow("SELECT idfile, idaide FROM file_aides WHERE idfile = $1", idFile)
+	row := tx.QueryRow("SELECT idfile, idparticipant, idaide FROM file_aides WHERE idfile = $1", idFile)
 	item, err = ScanFileAide(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
@@ -872,7 +876,7 @@ func SelectFileAideByIdFile(tx DB, idFile IdFile) (item FileAide, found bool, er
 }
 
 func SelectFileAidesByIdFiles(tx DB, idFiles_ ...IdFile) (FileAides, error) {
-	rows, err := tx.Query("SELECT idfile, idaide FROM file_aides WHERE idfile = ANY($1)", IdFileArrayToPQ(idFiles_))
+	rows, err := tx.Query("SELECT idfile, idparticipant, idaide FROM file_aides WHERE idfile = ANY($1)", IdFileArrayToPQ(idFiles_))
 	if err != nil {
 		return nil, err
 	}
@@ -880,36 +884,75 @@ func SelectFileAidesByIdFiles(tx DB, idFiles_ ...IdFile) (FileAides, error) {
 }
 
 func DeleteFileAidesByIdFiles(tx DB, idFiles_ ...IdFile) (FileAides, error) {
-	rows, err := tx.Query("DELETE FROM file_aides WHERE idfile = ANY($1) RETURNING idfile, idaide", IdFileArrayToPQ(idFiles_))
+	rows, err := tx.Query("DELETE FROM file_aides WHERE idfile = ANY($1) RETURNING idfile, idparticipant, idaide", IdFileArrayToPQ(idFiles_))
 	if err != nil {
 		return nil, err
 	}
 	return ScanFileAides(rows)
 }
 
-// ByIdAide returns a map with 'IdAide' as keys.
-func (items FileAides) ByIdAide() map[camps.IdAide]FileAide {
-	out := make(map[camps.IdAide]FileAide, len(items))
+// ByIdParticipant returns a map with 'IdParticipant' as keys.
+func (items FileAides) ByIdParticipant() map[camps.IdParticipant]FileAide {
+	out := make(map[camps.IdParticipant]FileAide, len(items))
 	for _, target := range items {
-		out[target.IdAide] = target
+		out[target.IdParticipant] = target
 	}
 	return out
 }
 
-// IdAides returns the list of ids of IdAide
+// IdParticipants returns the list of ids of IdParticipant
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items FileAides) IdParticipants() []camps.IdParticipant {
+	out := make([]camps.IdParticipant, len(items))
+	for index, target := range items {
+		out[index] = target.IdParticipant
+	}
+	return out
+}
+
+// SelectFileAideByIdParticipant return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectFileAideByIdParticipant(tx DB, idParticipant camps.IdParticipant) (item FileAide, found bool, err error) {
+	row := tx.QueryRow("SELECT idfile, idparticipant, idaide FROM file_aides WHERE idparticipant = $1", idParticipant)
+	item, err = ScanFileAide(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
+}
+
+func SelectFileAidesByIdParticipants(tx DB, idParticipants_ ...camps.IdParticipant) (FileAides, error) {
+	rows, err := tx.Query("SELECT idfile, idparticipant, idaide FROM file_aides WHERE idparticipant = ANY($1)", camps.IdParticipantArrayToPQ(idParticipants_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanFileAides(rows)
+}
+
+func DeleteFileAidesByIdParticipants(tx DB, idParticipants_ ...camps.IdParticipant) (FileAides, error) {
+	rows, err := tx.Query("DELETE FROM file_aides WHERE idparticipant = ANY($1) RETURNING idfile, idparticipant, idaide", camps.IdParticipantArrayToPQ(idParticipants_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanFileAides(rows)
+}
+
+// IdAides returns the list of non null IdAide
 // contained in this table.
 // They are not garanteed to be distinct.
 func (items FileAides) IdAides() []camps.IdAide {
-	out := make([]camps.IdAide, len(items))
-	for index, target := range items {
-		out[index] = target.IdAide
+	var out []camps.IdAide
+	for _, target := range items {
+		if id := target.IdAide; id.Valid {
+			out = append(out, id.Id)
+		}
 	}
 	return out
 }
 
 // SelectFileAideByIdAide return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectFileAideByIdAide(tx DB, idAide camps.IdAide) (item FileAide, found bool, err error) {
-	row := tx.QueryRow("SELECT idfile, idaide FROM file_aides WHERE idaide = $1", idAide)
+	row := tx.QueryRow("SELECT idfile, idparticipant, idaide FROM file_aides WHERE idaide = $1", idAide)
 	item, err = ScanFileAide(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
@@ -918,7 +961,7 @@ func SelectFileAideByIdAide(tx DB, idAide camps.IdAide) (item FileAide, found bo
 }
 
 func SelectFileAidesByIdAides(tx DB, idAides_ ...camps.IdAide) (FileAides, error) {
-	rows, err := tx.Query("SELECT idfile, idaide FROM file_aides WHERE idaide = ANY($1)", camps.IdAideArrayToPQ(idAides_))
+	rows, err := tx.Query("SELECT idfile, idparticipant, idaide FROM file_aides WHERE idaide = ANY($1)", camps.IdAideArrayToPQ(idAides_))
 	if err != nil {
 		return nil, err
 	}
@@ -926,7 +969,7 @@ func SelectFileAidesByIdAides(tx DB, idAides_ ...camps.IdAide) (FileAides, error
 }
 
 func DeleteFileAidesByIdAides(tx DB, idAides_ ...camps.IdAide) (FileAides, error) {
-	rows, err := tx.Query("DELETE FROM file_aides WHERE idaide = ANY($1) RETURNING idfile, idaide", camps.IdAideArrayToPQ(idAides_))
+	rows, err := tx.Query("DELETE FROM file_aides WHERE idaide = ANY($1) RETURNING idfile, idparticipant, idaide", camps.IdAideArrayToPQ(idAides_))
 	if err != nil {
 		return nil, err
 	}

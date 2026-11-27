@@ -142,7 +142,6 @@ CREATE TABLE aides (
     Id serial PRIMARY KEY,
     IdStructureaide integer NOT NULL,
     IdParticipant integer NOT NULL,
-    Valide boolean NOT NULL,
     Valeur Montant NOT NULL,
     ParJour boolean NOT NULL,
     NbJoursMax integer NOT NULL
@@ -318,7 +317,8 @@ CREATE TABLE files (
 
 CREATE TABLE file_aides (
     IdFile integer NOT NULL,
-    IdAide integer NOT NULL
+    IdParticipant integer NOT NULL,
+    IdAide integer
 );
 
 CREATE TABLE file_camps (

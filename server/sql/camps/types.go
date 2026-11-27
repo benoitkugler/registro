@@ -18,11 +18,13 @@ type Montant = dossiers.Montant
 
 type OptIdCamp = sh.OptID[IdCamp]
 
+type OptIdAide = sh.OptID[IdAide]
+
 func (id IdCamp) Opt() OptIdCamp { return OptIdCamp{Id: id, Valid: true} }
 
-func (id IdEquipier) Opt() sh.OptID[IdEquipier] {
-	return sh.OptID[IdEquipier]{Id: id, Valid: true}
-}
+func (id IdEquipier) Opt() sh.OptID[IdEquipier] { return sh.OptID[IdEquipier]{Id: id, Valid: true} }
+
+func (id IdAide) Opt() OptIdAide { return OptIdAide{Id: id, Valid: true} }
 
 type StatutCamp uint8
 

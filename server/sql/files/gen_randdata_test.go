@@ -60,7 +60,8 @@ func randFile() File {
 func randFileAide() FileAide {
 	var s FileAide
 	s.IdFile = randIdFile()
-	s.IdAide = randcam_IdAide()
+	s.IdParticipant = randcam_IdParticipant()
+	s.IdAide = randsha_OptID_cam_IdAide()
 
 	return s
 }
@@ -114,6 +115,10 @@ func randcam_IdEquipier() camps.IdEquipier {
 	return camps.IdEquipier(randint64())
 }
 
+func randcam_IdParticipant() camps.IdParticipant {
+	return camps.IdParticipant(randint64())
+}
+
 func randint() int {
 	return int(rand.Intn(1000000))
 }
@@ -135,6 +140,14 @@ func randper_IdPersonne() personnes.IdPersonne {
 func randsha_OptID_IdFile() shared.OptID[IdFile] {
 	var s shared.OptID[IdFile]
 	s.Id = randIdFile()
+	s.Valid = randbool()
+
+	return s
+}
+
+func randsha_OptID_cam_IdAide() shared.OptID[camps.IdAide] {
+	var s shared.OptID[camps.IdAide]
+	s.Id = randcam_IdAide()
 	s.Valid = randbool()
 
 	return s

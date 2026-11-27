@@ -403,12 +403,9 @@ func (ct *Controller) deleteDossier(id ds.IdDossier) error {
 			toDelete.Add(pers.Id)
 		}
 	}
-	// also cleanup aides files; the other items will cascade
-	aides, err := cps.SelectAidesByIdParticipants(ct.db, data.Participants.IDs()...)
-	if err != nil {
-		return utils.SQLError(err)
-	}
-	links, err := files.SelectFileAidesByIdAides(ct.db, aides.IDs()...)
+	// also cleanup aides files, including those still waiting for an aide;
+	// the other items will cascade
+	links, err := files.SelectFileAidesByIdParticipants(ct.db, data.Participants.IDs()...)
 	if err != nil {
 		return utils.SQLError(err)
 	}
@@ -513,12 +510,60 @@ func (ct *Controller) AidesCreate(c echo.Context) error {
 }
 
 func (ct *Controller) createAide(args AidesCreateIn) (cps.Aide, error) {
-	// Considère l'aide valide car venant du backoffice
-	out, err := cps.Aide{IdParticipant: args.IdParticipant, IdStructureaide: args.IdStructure, Valide: true}.Insert(ct.db)
+	var out cps.Aide
+	err := utils.InTx(ct.db, func(tx *sql.Tx) error {
+		if _, found, err := cps.SelectAideByIdParticipant(tx, args.IdParticipant); err != nil {
+			return err
+		} else if found {
+			return errors.New("Ce participant a déjà une aide.")
+		}
+		aide, err := cps.Aide{IdParticipant: args.IdParticipant, IdStructureaide: args.IdStructure}.Insert(tx)
+		if err != nil {
+			return err
+		}
+		out = aide
+
+		// le justificatif téléversé par les parents est rattaché à l'aide
+		return attachAideJustificatif(tx, aide.Id, args.IdParticipant)
+	})
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
 	return out, nil
+}
+
+// attachAideJustificatif rattache le justificatif en attente d'un participant
+// à l'aide venant d'être créée. Le lien existant est supprimé puis réinserré
+// avec l'IdAide, en deux étapes dans la même transaction.
+// Le fichier associé est aussi validé : on considère qu'on ne peut pas
+// créer une aide sans avoir validé la pièce justificative
+func attachAideJustificatif(tx *sql.Tx, idAide cps.IdAide, idParticipant cps.IdParticipant) error {
+	link, found, err := files.SelectFileAideByIdParticipant(tx, idParticipant)
+	if err != nil {
+		return err
+	}
+	if !found {
+		return nil
+	}
+
+	file, err := files.SelectFile(tx, link.IdFile)
+	if err != nil {
+		return err
+	}
+	file.ReviewStatus = pr.FileReviewValidated
+	_, err = file.Update(tx)
+	if err != nil {
+		return err
+	}
+
+	if _, err := files.DeleteFileAidesByIdFiles(tx, link.IdFile); err != nil {
+		return err
+	}
+	return files.FileAide{
+		IdFile:        link.IdFile,
+		IdParticipant: link.IdParticipant,
+		IdAide:        idAide.Opt(),
+	}.Insert(tx)
 }
 
 func (ct *Controller) AidesUpdate(c echo.Context) error {
@@ -548,7 +593,6 @@ func (ct *Controller) updateAide(args cps.Aide) error {
 	}
 
 	current.IdStructureaide = args.IdStructureaide
-	current.Valide = args.Valide
 	current.Valeur = args.Valeur
 	current.ParJour = args.ParJour
 	current.NbJoursMax = args.NbJoursMax
@@ -581,6 +625,10 @@ func (ct *Controller) AidesJustificatifUpload(c echo.Context) error {
 
 // uploadJustificatif create or update the link table
 func (ct *Controller) uploadAideJustificatif(idAide cps.IdAide, content []byte, filename string) (logic.PublicFile, error) {
+	aide, err := cps.SelectAide(ct.db, idAide)
+	if err != nil {
+		return logic.PublicFile{}, utils.SQLError(err)
+	}
 	item, found, err := files.SelectFileAideByIdAide(ct.db, idAide)
 	if err != nil {
 		return logic.PublicFile{}, utils.SQLError(err)
@@ -594,7 +642,7 @@ func (ct *Controller) uploadAideJustificatif(idAide cps.IdAide, content []byte, 
 			if err != nil {
 				return err
 			}
-			err = files.FileAide{IdFile: file.Id, IdAide: idAide}.Insert(tx)
+			err = files.FileAide{IdFile: file.Id, IdParticipant: aide.IdParticipant, IdAide: idAide.Opt()}.Insert(tx)
 			if err != nil {
 				return err
 			}

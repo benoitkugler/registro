@@ -1,7 +1,7 @@
 <template>
   <v-card
-    title="Ajouter une aide extérieure"
-    subtitle="Cette aide sera vérifiée par le centre."
+    title="Envoyer un justificatif d'aide"
+    subtitle="Ce justificatif sera vérifié par le centre."
   >
     <v-card-text>
       <v-row>
@@ -10,7 +10,10 @@
             variant="outlined"
             density="comfortable"
             label="Participant concerné"
-            v-model="aide.IdParticipant"
+            :model-value="zeroableToNullable(idParticipant)"
+            @update:model-value="
+              (id) => (idParticipant = nullableToZeroable(id))
+            "
             :items="participantsItems"
           >
             <template #item="{ item, props: itemProps }">
@@ -18,52 +21,10 @@
                 v-bind="itemProps"
                 :title="item.raw.title"
                 :subtitle="item.raw.subtitle"
+                :disabled="!item.raw.enabled"
               ></v-list-item>
             </template>
           </v-select>
-        </v-col>
-      </v-row>
-      <v-row>
-        <v-col>
-          <v-select
-            variant="outlined"
-            density="comfortable"
-            label="Structure"
-            :model-value="zeroableToNullable(aide.IdStructureaide)"
-            @update:model-value="
-              (v) => (aide.IdStructureaide = nullableToZeroable(v))
-            "
-            :items="structures"
-            no-data-text="Aucune structure n'est disponible."
-          ></v-select>
-        </v-col>
-      </v-row>
-      <v-row>
-        <v-col align-self="center">
-          <MontantField
-            label="Valeur"
-            v-model="aide.Valeur"
-            hide-details
-          ></MontantField>
-        </v-col>
-      </v-row>
-      <v-row>
-        <v-col align-self="center">
-          <v-checkbox
-            v-model="aide.ParJour"
-            label="Montant par jour"
-            hide-details
-          ></v-checkbox>
-        </v-col>
-        <v-col align-self="center">
-          <IntField
-            v-if="aide.ParJour"
-            label="Limite sur le nombre de jours"
-            v-model="aide.NbJoursMax"
-            :min="0 as Int"
-            hint="0 pour ne pas limiter"
-            persistent-hint
-          ></IntField>
         </v-col>
       </v-row>
       <v-row>
@@ -79,10 +40,10 @@
       <v-spacer></v-spacer>
       <v-btn
         color="green"
-        :disabled="!isAideValide"
-        @click="emit('save', aide, file!)"
+        :disabled="!isValid"
+        @click="emit('save', idParticipant, file!)"
       >
-        Ajouter pour vérification
+        Envoyer pour vérification
       </v-btn>
     </v-card-actions>
   </v-card>
@@ -90,63 +51,39 @@
 
 <script setup lang="ts">
 import {
-  Currency,
-  type Aide,
+  StatutParticipant,
   type DossierExt,
-  type IdAide,
-  type IdStructureaide,
-  type Int,
-  type Structureaides,
+  type IdParticipant,
 } from "../logic/api";
 import { computed, ref } from "vue";
-import { controller } from "../logic/logic";
 import {
   Camps,
   nullableToZeroable,
   Personnes,
   zeroableToNullable,
 } from "@/utils";
+
 const props = defineProps<{
   dossier: DossierExt;
-  structureaides: Structureaides;
 }>();
 
 const emit = defineEmits<{
-  (e: "save", aide: Aide, file: File): void;
+  (e: "save", idParticipant: IdParticipant, file: File): void;
 }>();
 
-const aide = ref<Aide>({
-  Id: 0 as IdAide,
-  IdStructureaide: 0 as IdStructureaide,
-  IdParticipant: (props.dossier.Participants || [])[0].Participant.Id,
-  Valide: false,
-  Valeur: { Currency: Currency.Euros, Cent: 0 as Int },
-  ParJour: false,
-  NbJoursMax: 0 as Int,
-});
+const idParticipant = ref<IdParticipant>(0 as IdParticipant);
 const file = ref<File | null>(null);
-const isAideValide = computed(() => {
-  if (!aide.value) return false;
-  return (
-    file.value != null &&
-    aide.value.IdParticipant != 0 &&
-    aide.value.IdStructureaide != 0 &&
-    aide.value.Valeur.Cent != 0
-  );
-});
+
+const isValid = computed(() => file.value != null && idParticipant.value != 0);
 
 const participantsItems = computed(() =>
   (props.dossier.Participants || []).map((p) => ({
     title: Personnes.label(p.Personne),
     subtitle: Camps.label(p.Camp),
     value: p.Participant.Id,
-  }))
-);
-
-const structures = computed(() =>
-  Object.values(props.structureaides || {}).map((s) => ({
-    value: s.Id,
-    title: s.Nom,
-  }))
+    enabled:
+      p.Participant.Statut == StatutParticipant.Inscrit &&
+      !(props.dossier.Aides || {})[p.Participant.Id],
+  })),
 );
 </script>

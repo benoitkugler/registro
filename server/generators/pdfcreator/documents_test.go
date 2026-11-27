@@ -221,9 +221,9 @@ func TestFacture(t *testing.T) {
 		{Camp: camp, ParticipantPersonne: camps.ParticipantPersonne{Participant: camps.Participant{Id: 4}, Personne: pr.Personne{Identite: personne}}},
 	}, logic.BilanFinancesPub{
 		Inscrits: map[camps.IdParticipant]logic.BilanParticipantPub{
-			1: {BilanParticipant: logic.BilanParticipant{Aides: []logic.AideResolved{
-				{Structure: "CAF Drme", Montant: ds.NewEuros(456.4)},
-			}}},
+			1: {BilanParticipant: logic.BilanParticipant{
+				Aide: logic.AideResolved{Valid: true, Structure: "CAF Drme", Montant: ds.NewEuros(456.4)},
+			}},
 			2: {
 				BilanParticipant: logic.BilanParticipant{
 					Remises: camps.Remises{Equipiers: 45, Speciale: ds.NewFrancsuisses(20)},

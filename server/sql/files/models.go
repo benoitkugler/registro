@@ -124,11 +124,17 @@ type FilePersonne struct {
 	guard bool `gomacro-sql-guard:"false"`
 }
 
-// FileAide est une table de lien pour les justificatifs des aides
+// FileAide est une table de lien pour les justificatifs des aides.
+// Dans le cas d'un upload des parents, le fichier est rattaché au participant,
+// sans aide. Une fois le justificatif validé et l'aide créée, le fichier y est rattaché.
 //
 // gomacro:SQL ADD UNIQUE(IdFile)
 // gomacro:SQL ADD UNIQUE(IdAide)
+// gomacro:SQL ADD UNIQUE(IdParticipant)
+// gomacro:SQL ADD FOREIGN KEY (IdAide, IdParticipant) REFERENCES Aide(Id,IdParticipant)
 type FileAide struct {
-	IdFile IdFile `gomacro-sql-on-delete:"CASCADE"`
-	IdAide cps.IdAide
+	IdFile        IdFile `gomacro-sql-on-delete:"CASCADE"`
+	IdParticipant cps.IdParticipant
+
+	IdAide cps.OptIdAide `gomacro-sql-on-delete:"RESTRICT" gomacro-sql-foreign:"Aide"`
 }

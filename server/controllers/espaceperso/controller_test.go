@@ -20,7 +20,7 @@ import (
 	tu "registro/utils/testutils"
 )
 
-func Test_createAide(t *testing.T) {
+func Test_uploadAideJustificatif(t *testing.T) {
 	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
 		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",
 		"../../migrations/init.sql")
@@ -38,13 +38,30 @@ func Test_createAide(t *testing.T) {
 	pa, err := cps.Participant{IdTaux: 1, IdCamp: camp.Id, IdPersonne: pe.Id, IdDossier: dossier.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	st, err := cps.Structureaide{}.Insert(db)
-	tu.AssertNoErr(t, err)
-
 	ct := NewController(db.DB, crypto.Encrypter{}, config.SMTP{}, config.Asso{}, fs.NewFileSystem(os.TempDir()), config.Immich{}, nil, nil)
 
-	err = ct.createAide(dossier.Id, cps.Aide{IdStructureaide: st.Id, IdParticipant: pa.Id, Valeur: ds.NewEuros(456.4)}, tu.PngData, "test.png")
+	file, err := ct.uploadAideJustificatif(dossier.Id, pa.Id, tu.PngData, "test.png")
 	tu.AssertNoErr(t, err)
+	tu.Assert(t, file.Key != "")
+
+	links, err := fs.SelectFileAidesByIdParticipants(db, pa.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(links) == 1)
+	tu.Assert(t, links[0].IdParticipant == pa.Id)
+	tu.Assert(t, !links[0].IdAide.Valid) // pas encore d'aide
+
+	// un nouvel envoi remplace le justificatif en attente
+	_, err = ct.uploadAideJustificatif(dossier.Id, pa.Id, tu.PngData, "test2.png")
+	tu.AssertNoErr(t, err)
+	links, err = fs.SelectFileAidesByIdParticipants(db, pa.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(links) == 1)
+
+	err = ct.deleteAideJustificatif(dossier.Id, pa.Id)
+	tu.AssertNoErr(t, err)
+	links, err = fs.SelectFileAidesByIdParticipants(db, pa.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(links) == 0)
 }
 
 func TestPhotos(t *testing.T) {

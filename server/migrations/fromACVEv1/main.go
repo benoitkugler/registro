@@ -100,6 +100,8 @@ func main() {
 		skipDocumentContents: *skipDocumentContents,
 	}
 
+	check(checkAidesUnicity(trimmedV1))
+
 	for _, warning := range warningsFromV1(trimmedV1, opts) {
 		warningf("%s", warning)
 	}

@@ -127,11 +127,14 @@ func TestController_aides(t *testing.T) {
 	aide, err := ct.createAide(AidesCreateIn{IdParticipant: part.Id, IdStructure: structure.Id})
 	tu.AssertNoErr(t, err)
 
+	// au plus une aide par participant
+	_, err = ct.createAide(AidesCreateIn{IdParticipant: part.Id, IdStructure: structure.Id})
+	tu.AssertErr(t, err)
+
 	// check structure is not removable now
 	err = ct.deleteStructureaide(structure.Id)
 	tu.AssertErr(t, err)
 
-	aide.Valide = true
 	aide.Valeur = ds.NewEuros(26)
 	aide.ParJour = true
 	err = ct.updateAide(aide)
@@ -165,6 +168,64 @@ func TestController_aides(t *testing.T) {
 	// check structure is removable now
 	err = ct.deleteStructureaide(structure.Id)
 	tu.AssertNoErr(t, err)
+}
+
+func TestController_aideJustificatifAttente(t *testing.T) {
+	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
+		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",
+		"../../migrations/init.sql")
+	defer db.Remove()
+
+	pe, err := pr.Personne{Identite: pr.Identite{DateNaissance: shared.Date(time.Now())}}.Insert(db)
+	tu.AssertNoErr(t, err)
+	camp, err := cps.Camp{IdTaux: 1}.Insert(db)
+	tu.AssertNoErr(t, err)
+	dossier, err := ds.Dossier{IdResponsable: pe.Id, IdTaux: 1, MomentInscription: time.Now()}.Insert(db)
+	tu.AssertNoErr(t, err)
+	part, err := cps.Participant{IdCamp: camp.Id, IdPersonne: pe.Id, IdDossier: dossier.Id, IdTaux: 1}.Insert(db)
+	tu.AssertNoErr(t, err)
+	structure, err := cps.Structureaide{}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	ct := Controller{db: db.DB, files: fs.NewFileSystem(t.TempDir())}
+
+	// justificatif téléversé par les parents : rattaché au participant, sans aide
+	file, err := fs.File{}.Insert(db)
+	tu.AssertNoErr(t, err)
+	err = (fs.FileAide{IdFile: file.Id, IdParticipant: part.Id}).Insert(db)
+	tu.AssertNoErr(t, err)
+	_, err = fs.UploadFile(ct.files, db, file.Id, tu.PngData, "attente.png")
+	tu.AssertNoErr(t, err)
+
+	aide, err := ct.createAide(AidesCreateIn{IdParticipant: part.Id, IdStructure: structure.Id})
+	tu.AssertNoErr(t, err)
+
+	link, found, err := fs.SelectFileAideByIdFile(db, file.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, found)
+	tu.Assert(t, link.IdParticipant == part.Id)
+	tu.Assert(t, link.IdAide.Is(aide.Id))
+	file, err = fs.SelectFile(db, file.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, file.ReviewStatus == pr.FileReviewValidated)
+
+	// un justificatif en attente est supprimé avec le participant
+	pe2, err := pr.Personne{Identite: pr.Identite{DateNaissance: shared.Date(time.Now())}}.Insert(db)
+	tu.AssertNoErr(t, err)
+	part2, err := cps.Participant{IdCamp: camp.Id, IdPersonne: pe2.Id, IdDossier: dossier.Id, IdTaux: 1}.Insert(db)
+	tu.AssertNoErr(t, err)
+	file2, err := fs.File{}.Insert(db)
+	tu.AssertNoErr(t, err)
+	err = (fs.FileAide{IdFile: file2.Id, IdParticipant: part2.Id}).Insert(db)
+	tu.AssertNoErr(t, err)
+	_, err = fs.UploadFile(ct.files, db, file2.Id, tu.PngData, "attente2.png")
+	tu.AssertNoErr(t, err)
+
+	err = ct.deleteParticipant(part2.Id)
+	tu.AssertNoErr(t, err)
+	links, err := fs.SelectFileAidesByIdParticipants(db, part2.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(links) == 0)
 }
 
 func TestController_paiements(t *testing.T) {

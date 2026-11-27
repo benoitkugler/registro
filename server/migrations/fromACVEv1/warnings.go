@@ -82,3 +82,31 @@ func warningsFromV1(trimmed baseV1, opts migrationOptions) []string {
 
 	return out
 }
+
+// checkAidesUnicity refuses les données v1 où plusieurs aides concernent le
+// même participant : la v2 n'autorise qu'une aide par participant.
+// Un avertissement explicite est affiché pour chaque participant concerné.
+func checkAidesUnicity(trimmed baseV1) error {
+	byParticipant := make(map[int64][]int64)
+	for id, aide := range trimmed.aides {
+		byParticipant[aide.IdParticipant] = append(byParticipant[aide.IdParticipant], id)
+	}
+
+	duplicates := make([]int64, 0)
+	for idParticipant, ids := range byParticipant {
+		if len(ids) > 1 {
+			duplicates = append(duplicates, idParticipant)
+		}
+	}
+	if len(duplicates) == 0 {
+		return nil
+	}
+
+	sort.Slice(duplicates, func(i, j int) bool { return duplicates[i] < duplicates[j] })
+	for _, idParticipant := range duplicates {
+		ids := byParticipant[idParticipant]
+		sort.Slice(ids, func(i, j int) bool { return ids[i] < ids[j] })
+		warningf("participant %d : %d aides v1 (ids %v) alors qu'une seule aide v2 est autorisée", idParticipant, len(ids), ids)
+	}
+	return fmt.Errorf("migration interrompue : plusieurs aides v1 pour un même participant")
+}

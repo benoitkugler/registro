@@ -7,6 +7,8 @@ import (
 
 	cps "registro/sql/camps"
 	ds "registro/sql/dossiers"
+	fs "registro/sql/files"
+	pr "registro/sql/personnes"
 	sh "registro/sql/shared"
 	tu "registro/utils/testutils"
 )
@@ -15,6 +17,43 @@ var (
 	eur = ds.NewEuros
 	chf = ds.NewFrancsuisses
 )
+
+func TestLoadDossiersFinancesAidesFiles(t *testing.T) {
+	db := tu.NewTestDB(t, "../migrations/create_1_tables.sql",
+		"../migrations/create_2_json_funcs.sql", "../migrations/create_3_constraints.sql",
+		"../migrations/init.sql")
+	defer db.Remove()
+
+	pe, err := pr.Personne{}.Insert(db)
+	tu.AssertNoErr(t, err)
+	taux, err := ds.Taux{Euros: 1000}.Insert(db)
+	tu.AssertNoErr(t, err)
+	dossier, err := ds.Dossier{IdResponsable: pe.Id, IdTaux: taux.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+	camp, err := cps.Camp{IdTaux: taux.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+	part, err := cps.Participant{IdCamp: camp.Id, IdPersonne: pe.Id, IdDossier: dossier.Id, IdTaux: taux.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+	structure, err := cps.Structureaide{}.Insert(db)
+	tu.AssertNoErr(t, err)
+	aide, err := cps.Aide{IdParticipant: part.Id, IdStructureaide: structure.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	pending, err := fs.File{}.Insert(db)
+	tu.AssertNoErr(t, err)
+	err = (fs.FileAide{IdFile: pending.Id, IdParticipant: part.Id}).Insert(db)
+	tu.AssertNoErr(t, err)
+	attached, err := fs.File{}.Insert(db)
+	tu.AssertNoErr(t, err)
+	err = (fs.FileAide{IdFile: attached.Id, IdParticipant: part.Id, IdAide: aide.Id.Opt()}).Insert(db)
+	tu.AssertNoErr(t, err)
+
+	ld, err := LoadDossiersFinances(db, dossier.Id)
+	tu.AssertNoErr(t, err)
+	df := ld.For(dossier.Id)
+	tu.Assert(t, df.aidesFiles[aide.Id].Id == attached.Id)
+	tu.Assert(t, df.aidesFilesAttente[part.Id].Id == pending.Id)
+}
 
 func TestDossierFinance_Bilan(t *testing.T) {
 	taux := ds.Taux{Euros: 1000, FrancsSuisse: 2000}
@@ -41,9 +80,9 @@ func TestDossierFinance_Bilan(t *testing.T) {
 	bilan := df.Bilan()
 	tu.Assert(t, reflect.DeepEqual(bilan, BilanFinances{
 		map[cps.IdParticipant]BilanParticipant{
-			1: {eur(200), eur(200), "", cps.Remises{}, nil},
-			2: {chf(150), chf(150), "", cps.Remises{}, nil},
-			3: {chf(150), chf(150), "", cps.Remises{}, nil},
+			1: {eur(200), eur(200), "", cps.Remises{}, AideResolved{}},
+			2: {chf(150), chf(150), "", cps.Remises{}, AideResolved{}},
+			3: {chf(150), chf(150), "", cps.Remises{}, AideResolved{}},
 		},
 		40000, 15000, 35000, 0, 0, ds.FrancsSuisse,
 	}))
@@ -56,21 +95,17 @@ func TestDossierFinance_Bilan(t *testing.T) {
 		3: cps.Participant{Id: 3, IdCamp: 2, Statut: cps.Inscrit},
 		4: cps.Participant{Id: 4, IdCamp: 2, Statut: cps.AStatuer},
 	}
-	df.aides = map[cps.IdParticipant]cps.Aides{
-		1: {
-			1: cps.Aide{Valide: true, Valeur: eur(20)},
-			2: cps.Aide{Valide: true, Valeur: chf(2), ParJour: true},
-			3: cps.Aide{Valide: false, Valeur: chf(5)},
-		},
+	df.aides = map[cps.IdParticipant]cps.Aide{
+		1: {Valeur: eur(20)},
 	}
 	bilan = df.Bilan()
 	tu.Assert(t, reflect.DeepEqual(bilan, BilanFinances{
 		map[cps.IdParticipant]BilanParticipant{
-			1: {eur(200), eur(200), "", cps.Remises{}, []AideResolved{{"", eur(20)}, {"", chf(20)}}},
-			2: {chf(150), chf(150), "", cps.Remises{}, nil},
-			3: {chf(150), chf(150), "", cps.Remises{}, nil},
+			1: {eur(200), eur(200), "", cps.Remises{}, AideResolved{Valid: true, Montant: eur(20)}},
+			2: {chf(150), chf(150), "", cps.Remises{}, AideResolved{}},
+			3: {chf(150), chf(150), "", cps.Remises{}, AideResolved{}},
 		},
-		40000 - 1000 - 200*10, 15000, 35000, 0, 1000 + 200*10, ds.FrancsSuisse,
+		40000 - 1000, 15000, 35000, 0, 1000, ds.FrancsSuisse,
 	}))
 	tu.Assert(t, bilan.Inscrits[1].ResolvedRemises(taux) == chf(0))
 
@@ -93,9 +128,9 @@ func TestDossierFinance_Bilan(t *testing.T) {
 				Speciale:  eur(10),
 				Equipiers: 10,
 				Famille:   5,
-			}, nil},
-			2: {chf(150), chf(150), "", cps.Remises{}, nil},
-			3: {chf(150), chf(150), "", cps.Remises{}, nil},
+			}, AideResolved{}},
+			2: {chf(150), chf(150), "", cps.Remises{}, AideResolved{}},
+			3: {chf(150), chf(150), "", cps.Remises{}, AideResolved{}},
 		},
 		40000 - 500 - 1500, 15000, 35000, 0, 0, ds.FrancsSuisse,
 	}))
@@ -109,10 +144,8 @@ func TestDossierFinance_Bilan(t *testing.T) {
 			Famille:   5,
 		}},
 	}
-	df.aides = map[cps.IdParticipant]cps.Aides{
-		1: {
-			1: cps.Aide{Valide: true, Valeur: eur(20)},
-		},
+	df.aides = map[cps.IdParticipant]cps.Aide{
+		1: {Valeur: eur(20)},
 	}
 	bilan = df.Bilan()
 	tu.Assert(t, reflect.DeepEqual(df.Bilan(), BilanFinances{
@@ -121,7 +154,7 @@ func TestDossierFinance_Bilan(t *testing.T) {
 				Speciale:  eur(10),
 				Equipiers: 5,
 				Famille:   5,
-			}, []AideResolved{{"", eur(20)}}},
+			}, AideResolved{Valid: true, Montant: eur(20)}},
 		},
 		10000 - 1000 - 500 - 900, 0, 35000, 0, 1000, ds.FrancsSuisse,
 	}))
@@ -141,7 +174,7 @@ func TestDossierFinance_Bilan(t *testing.T) {
 	}
 	tu.Assert(t, reflect.DeepEqual(df.Bilan(), BilanFinances{
 		map[cps.IdParticipant]BilanParticipant{
-			1: {eur(200), eur(200), "", cps.Remises{}, nil},
+			1: {eur(200), eur(200), "", cps.Remises{}, AideResolved{}},
 		},
 		10000, 0, 35000, 5000, 0, ds.FrancsSuisse,
 	}))
@@ -185,6 +218,26 @@ func TestDossierFinance_Acompte(t *testing.T) {
 	camps[1] = cps.Camp{Prix: eur(200), Duree: 10}
 	tu.Assert(t, !df.acompte(df.Bilan(), 10).Requis)
 	tu.Assert(t, df.PaiementMode(10, false) == PaiementTotal)
+}
+
+func TestDossierFinance_PaiementAttenteJustificatif(t *testing.T) {
+	df := DossierFinance{
+		Dossier: Dossier{
+			camps: cps.Camps{
+				1: cps.Camp{Prix: eur(200), Duree: 10, DemandeAcompte: true},
+			},
+			Participants: cps.Participants{
+				1: cps.Participant{Id: 1, IdCamp: 1, Statut: cps.Inscrit},
+			},
+		},
+		Taux:              ds.Taux{Euros: 1000},
+		aidesFilesAttente: map[cps.IdParticipant]fs.File{1: {Id: 42}},
+	}
+
+	tu.Assert(t, df.PaiementMode(10, false) == PaiementDesactive)
+
+	df.aidesFilesAttente = nil
+	tu.Assert(t, df.PaiementMode(10, false) == PaiementAcompte)
 }
 
 func TestDossierFinance_RequireDemandePaiement(t *testing.T) {

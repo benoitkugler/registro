@@ -17,11 +17,12 @@ import (
 type DossiersFinances struct {
 	Dossiers
 
-	taux       ds.Tauxs
-	aides      map[cps.IdParticipant]cps.Aides
-	aidesFiles map[cps.IdAide]fs.File // enough for [aides]
-	structures cps.Structureaides
-	paiements  map[ds.IdDossier]ds.Paiements
+	taux              ds.Tauxs
+	aides             map[cps.IdParticipant]cps.Aide
+	aidesFiles        map[cps.IdAide]fs.File        // enough for [aides]
+	aidesFilesAttente map[cps.IdParticipant]fs.File // justificatifs en attente d'une aide
+	structures        cps.Structureaides
+	paiements         map[ds.IdDossier]ds.Paiements
 }
 
 // LoadDossiersFinance is a convenient wrapper around [LoadDossiersFinances]
@@ -52,8 +53,8 @@ func LoadDossiersFinances(db ds.DB, ids ...ds.IdDossier) (DossiersFinances, erro
 	if err != nil {
 		return DossiersFinances{}, utils.SQLError(err)
 	}
-	// justificatifs
-	links, err := fs.SelectFileAidesByIdAides(db, aides.IDs()...)
+	// justificatifs, y compris ceux en attente d'une aide
+	links, err := fs.SelectFileAidesByIdParticipants(db, dossiers.participantsIDs...)
 	if err != nil {
 		return DossiersFinances{}, utils.SQLError(err)
 	}
@@ -62,9 +63,17 @@ func LoadDossiersFinances(db ds.DB, ids ...ds.IdDossier) (DossiersFinances, erro
 		return DossiersFinances{}, utils.SQLError(err)
 	}
 	aidesFiles := make(map[cps.IdAide]fs.File)
+	aidesFilesAttente := make(map[cps.IdParticipant]fs.File)
 	for _, link := range links {
-		aidesFiles[link.IdAide] = files[link.IdFile]
+		file := files[link.IdFile]
+		if link.IdAide.Valid {
+			aidesFiles[link.IdAide.Id] = file
+		} else {
+			aidesFilesAttente[link.IdParticipant] = file
+		}
 	}
+
+	aidesByParticipant := aides.ByIdParticipant()
 
 	structures, err := cps.SelectStructureaides(db, aides.IdStructureaides()...)
 	if err != nil {
@@ -75,16 +84,22 @@ func LoadDossiersFinances(db ds.DB, ids ...ds.IdDossier) (DossiersFinances, erro
 		return DossiersFinances{}, utils.SQLError(err)
 	}
 
-	return DossiersFinances{dossiers, tauxs, aides.ByIdParticipant(), aidesFiles, structures, paiements.ByIdDossier()}, nil
+	return DossiersFinances{dossiers, tauxs, aidesByParticipant, aidesFiles, aidesFilesAttente, structures, paiements.ByIdDossier()}, nil
 }
 
 func (df DossiersFinances) For(id ds.IdDossier) DossierFinance {
 	out := df.Dossiers.For(id)
-	aides := make(map[cps.IdParticipant]cps.Aides)
+	aides := make(map[cps.IdParticipant]cps.Aide)
+	aidesFilesAttente := make(map[cps.IdParticipant]fs.File)
 	for _, part := range out.Participants {
-		aides[part.Id] = df.aides[part.Id]
+		if aide, ok := df.aides[part.Id]; ok {
+			aides[part.Id] = aide
+		}
+		if file, ok := df.aidesFilesAttente[part.Id]; ok {
+			aidesFilesAttente[part.Id] = file
+		}
 	}
-	return DossierFinance{out, df.taux[out.Dossier.IdTaux], aides, df.aidesFiles, df.structures, df.paiements[id]}
+	return DossierFinance{out, df.taux[out.Dossier.IdTaux], aides, df.aidesFiles, aidesFilesAttente, df.structures, df.paiements[id]}
 }
 
 type DossierFinance struct {
@@ -92,9 +107,10 @@ type DossierFinance struct {
 
 	Taux ds.Taux
 
-	aides      map[cps.IdParticipant]cps.Aides // exact list, including not validated
-	aidesFiles map[cps.IdAide]fs.File          // enough for [aides]
-	structures cps.Structureaides              // enough for [aides]
+	aides             map[cps.IdParticipant]cps.Aide // at most one per participant
+	aidesFiles        map[cps.IdAide]fs.File         // enough for [aides]
+	aidesFilesAttente map[cps.IdParticipant]fs.File  // justificatifs en attente d'une aide
+	structures        cps.Structureaides             // enough for [aides]
 
 	paiements ds.Paiements // liste exacte
 }
@@ -118,7 +134,7 @@ func (de DossierFinance) MontantsPayesParDevise() ds.MultiCurrencies {
 // Seuls les participants inscrits (en liste principale) sont pris en compte,
 // les participants en liste d'attente étant ignorés.
 //
-// Les aides en cours de validation sont ignorées.
+// Les justificatifs en attente n'influencent pas le bilan : l'aide n'existe pas encore.
 func (df DossierFinance) Bilan() BilanFinances {
 	inscrits := map[cps.IdParticipant]BilanParticipant{}
 	demande, aides, demandeEnAttente := df.Taux.Zero(), df.Taux.Zero(), df.Taux.Zero()
@@ -136,13 +152,13 @@ func (df DossierFinance) Bilan() BilanFinances {
 			Camp:          camp,
 			dateNaissance: df.PersonneFor(participant).DateNaissance,
 			inscription:   df.Dossier.Dossier.MomentInscription,
-			aides:         df.aides[participant.Id],
+			aide:          df.aides[participant.Id], // valeur zéro si pas d'aide
 			structures:    df.structures,
 		}
 		bilan := data.bilan()
 		inscrits[participant.Id] = bilan
 		demande.Add(bilan.Net(df.Taux))
-		aides.Add(bilan.totalAides(df.Taux))
+		aides.Add(bilan.Aide.Montant)
 	}
 
 	for _, paiement := range df.paiements {
@@ -298,18 +314,14 @@ func (df DossierFinance) acompte(bilan BilanFinances, percent int) AcompteInfo {
 // isPaiementOpen returns [true] if the Espace perso
 // should allow paiements
 func (de *DossierFinance) isPaiementOpen() bool {
-	// every participant must have been validated
 	for _, part := range de.Participants {
+		// every participant must have been validated
 		if part.Statut == cps.AStatuer {
 			return false
 		}
-	}
-	// aide en attente de validation
-	for _, aides := range de.aides {
-		for _, aide := range aides {
-			if !aide.Valide {
-				return false
-			}
+		// justificatif en attente de création de l'aide
+		if _, ok := de.aidesFilesAttente[part.Id]; ok {
+			return false
 		}
 	}
 	return true
@@ -387,8 +399,8 @@ type partExt struct {
 	dateNaissance sh.Date
 	inscription   time.Time
 
-	aides      cps.Aides
-	structures cps.Structureaides // enough for [aides]
+	aide       cps.Aide           // valeur zéro si pas d'aide
+	structures cps.Structureaides // enough for [aide]
 }
 
 // BilanParticipant exposes the finances for one [Participant]
@@ -406,27 +418,16 @@ type BilanParticipant struct {
 
 	Remises cps.Remises
 
-	// Aides validées seulement
-	Aides []AideResolved
-}
-
-func (bp BilanParticipant) totalAides(taux ds.Taux) cps.Montant {
-	totalAide := taux.Zero()
-	for _, aide := range bp.Aides {
-		totalAide.Add(aide.Montant)
-	}
-	return totalAide.Montant
+	// Aide extérieure éventuelle (Aide.Valid indique si elle existe)
+	Aide AideResolved
 }
 
 // prixSansRemises renvoie le prix du séjour si on applique les aides (extérieures)
 // mais pas les remises.
 func (bp BilanParticipant) prixSansRemises(taux ds.Taux) cps.Montant {
 	out := taux.Convertible(bp.AvecOption)
-
-	// totalAides ignore les aides non validées
-	totalAide := bp.totalAides(taux)
-
-	out.Sub(totalAide)
+	// le montant d'une aide absente est nul
+	out.Sub(bp.Aide.Montant)
 
 	p := out.Montant
 	if p.Cent < 0 {
@@ -453,13 +454,19 @@ func (bp BilanParticipant) ResolvedRemises(taux ds.Taux) cps.Montant {
 	return before
 }
 
-// AideResolved shows resolved [AideResolved]
+// AideResolved est l'aide éventuelle d'un participant, avec son montant résolu.
 type AideResolved struct {
+	Valid     bool // faux si le participant n'a pas d'aide
 	Structure string
 	Montant   cps.Montant
 }
 
-func (ar AideResolved) String() string { return fmt.Sprintf("%s : %s", ar.Structure, ar.Montant) }
+func (ar AideResolved) String() string {
+	if !ar.Valid {
+		return ""
+	}
+	return fmt.Sprintf("%s : %s", ar.Structure, ar.Montant)
+}
 
 func (p partExt) bilan() (out BilanParticipant) {
 	out.PrixCamp = p.Camp.Prix
@@ -467,14 +474,10 @@ func (p partExt) bilan() (out BilanParticipant) {
 	out.AvecOption, out.AvecOptionDescription = p.prixBase()
 	out.Remises = p.Participant.Remises
 
-	duree := p.duree()
-
-	for _, id := range utils.MapKeysSorted(p.aides) {
-		aide := p.aides[id]
-		if !aide.Valide {
-			continue
-		}
-		out.Aides = append(out.Aides, AideResolved{p.structures[aide.IdStructureaide].Nom, aide.Resolve(duree)})
+	out.Aide = AideResolved{
+		Valid:     p.aide != (cps.Aide{}),
+		Structure: p.structures[p.aide.IdStructureaide].Nom,
+		Montant:   p.aide.Resolve(p.duree()),
 	}
 	return out
 }

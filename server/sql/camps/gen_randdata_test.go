@@ -16,7 +16,6 @@ func randAide() Aide {
 	s.Id = randIdAide()
 	s.IdStructureaide = randIdStructureaide()
 	s.IdParticipant = randIdParticipant()
-	s.Valide = randbool()
 	s.Valeur = randdos_Montant()
 	s.ParJour = randbool()
 	s.NbJoursMax = randint()

@@ -28,11 +28,6 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// Une modification après J-7 (début du séjour)
-// entraine une notification par email
-// TODO: check that
-const updateLimitation = 7 * 24 * time.Hour
-
 type Controller struct {
 	db *sql.DB
 
@@ -261,74 +256,136 @@ func (ct *Controller) GetStructureaides(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-// CreateAide déclare une aide (non validée).
-func (ct *Controller) CreateAide(c echo.Context) error {
+// UploadAideJustificatif téléverse un justificatif d'aide pour un participant.
+// Le fichier est rattaché au participant, sans aide : celle-ci sera créée
+// par le backoffice lors de la validation du justificatif.
+func (ct *Controller) UploadAideJustificatif(c echo.Context) error {
 	token := c.QueryParam("token")
 	id, err := crypto.DecryptID[ds.IdDossier](ct.key, token)
 	if err != nil {
 		return err
 	}
-
-	var args cps.Aide
-	err = utils.FormValueJSON(c, "aide", &args)
+	idParticipant, err := utils.QueryParamInt[cps.IdParticipant](c, "idParticipant")
 	if err != nil {
 		return err
 	}
 
-	header, err := c.FormFile("document")
+	header, err := c.FormFile("file")
 	if err != nil {
 		return err
 	}
-
 	content, name, err := fsAPI.ReadUpload(header)
 	if err != nil {
 		return err
 	}
 
-	err = ct.createAide(id, args, content, name)
+	out, err := ct.uploadAideJustificatif(id, idParticipant, content, name)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) DeleteAideJustificatif(c echo.Context) error {
+	token := c.QueryParam("token")
+	id, err := crypto.DecryptID[ds.IdDossier](ct.key, token)
+	if err != nil {
+		return err
+	}
+	idParticipant, err := utils.QueryParamInt[cps.IdParticipant](c, "idParticipant")
 	if err != nil {
 		return err
 	}
 
+	if err := ct.deleteAideJustificatif(id, idParticipant); err != nil {
+		return err
+	}
 	return c.NoContent(200)
 }
 
-func (ct *Controller) createAide(id ds.IdDossier, args cps.Aide, fileContent []byte, fileName string) error {
-	participant, err := cps.SelectParticipant(ct.db, args.IdParticipant)
+func (ct *Controller) checkParticipantAide(id ds.IdDossier, idParticipant cps.IdParticipant) error {
+	participant, err := cps.SelectParticipant(ct.db, idParticipant)
 	if err != nil {
 		return utils.SQLError(err)
 	}
 	if participant.IdDossier != id {
 		return errors.New("access forbidden")
 	}
+	return nil
+}
 
-	return utils.InTx(ct.db, func(tx *sql.Tx) error {
-		aide, err := cps.Aide{
-			IdStructureaide: args.IdStructureaide,
-			IdParticipant:   args.IdParticipant,
-			Valide:          false,
-			Valeur:          args.Valeur,
-			ParJour:         args.ParJour,
-			NbJoursMax:      args.NbJoursMax,
-		}.Insert(tx)
-		if err != nil {
-			return err
+func (ct *Controller) uploadAideJustificatif(id ds.IdDossier, idParticipant cps.IdParticipant, fileContent []byte, fileName string) (logic.PublicFile, error) {
+	var out logic.PublicFile
+	if err := ct.checkParticipantAide(id, idParticipant); err != nil {
+		return out, err
+	}
+
+	link, hasAide, err := fs.SelectFileAideByIdParticipant(ct.db, idParticipant)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+
+	// un éventuel justificatif déjà en attente et NON validé est remplacé,
+	// mais une aide déjà validée donne une erreur
+	if hasAide && link.IdAide.Valid {
+		return out, errors.New("aide déjà validée")
+	}
+
+	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
+		if hasAide && !link.IdAide.Valid {
+			if _, err := fs.DeleteFileAidesByIdFiles(tx, link.IdFile); err != nil {
+				return err
+			}
+			deleted, err := fs.DeleteFilesByIDs(tx, link.IdFile)
+			if err != nil {
+				return err
+			}
+			if err := ct.files.Delete(deleted...); err != nil {
+				return err
+			}
 		}
 
 		file, err := fs.File{}.Insert(tx)
 		if err != nil {
 			return err
 		}
-		err = fs.FileAide{IdFile: file.Id, IdAide: aide.Id}.Insert(tx)
+		// IdAide reste vide : l'aide n'existe pas encore.
+		if err := (fs.FileAide{IdFile: file.Id, IdParticipant: idParticipant}).Insert(tx); err != nil {
+			return err
+		}
+		uploaded, err := fs.UploadFile(ct.files, tx, file.Id, fileContent, fileName)
 		if err != nil {
 			return err
 		}
+		out = logic.NewPublicFile(ct.key, uploaded)
+		return nil
+	})
+	return out, err
+}
 
-		_, err = fs.UploadFile(ct.files, tx, file.Id, fileContent, fileName)
+func (ct *Controller) deleteAideJustificatif(id ds.IdDossier, idParticipant cps.IdParticipant) error {
+	if err := ct.checkParticipantAide(id, idParticipant); err != nil {
+		return err
+	}
+	return utils.InTx(ct.db, func(tx *sql.Tx) error {
+		link, has, err := fs.SelectFileAideByIdParticipant(tx, idParticipant)
 		if err != nil {
 			return err
 		}
+		if !has || link.IdAide.Valid {
+			return nil
+		}
 
+		if _, err := fs.DeleteFileAidesByIdFiles(tx, link.IdFile); err != nil {
+			return err
+		}
+		deleted, err := fs.DeleteFilesByIDs(tx, link.IdFile)
+		if err != nil {
+			return err
+		}
+		if err := ct.files.Delete(deleted...); err != nil {
+			return err
+		}
 		return nil
 	})
 }

@@ -46,7 +46,7 @@
     <th style="padding: 2px">Camp</th>
     <th style="padding: 2px">Dates</th>
     <th style="padding: 2px">Prix</th>
-    <th style="padding: 2px">Aides extérieures</th>
+    <th style="padding: 2px">Aide extérieure</th>
     <th style="padding: 2px">Sous-total</th>
   </tr>
   {{ range .Participants }}
@@ -55,17 +55,15 @@
     <td>{{ .Camp.Label }}</td>
     <td>du {{ .Camp.DateDebut.String }}<br />au {{ .Camp.DateFin.String }}</td>
     <td>{{ .Finances.AvecOption}} {{ .Finances.AvecOptionDescription }}</td>
-    <td style="font-size: 10pt">
-      {{ range .Finances.Aides }}
-      <div>{{ .String }}</div>
-      {{ end }}
+    <td style="font-size: 9pt">
+      {{ if .Finances.Aide.Valid }} {{ .Finances.Aide.String }} {{ end }}
     </td>
     <td style="text-align: right">{{ .Finances.AvecAides }}</td>
   </tr>
   {{ if ne .Finances.RemisesHTML "" }}
   <!-- Total remises -->
   <tr>
-    <td colspan="5" style="font-size: 10pt">{{ .Finances.RemisesHTML }}</td>
+    <td colspan="5" style="font-size: 9pt">{{ .Finances.RemisesHTML }}</td>
     <td style="text-align: right">{{ .Finances.Net }}</td>
   </tr>
   {{ end }} {{ end }}

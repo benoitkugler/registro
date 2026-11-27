@@ -229,12 +229,13 @@ type PublicParticipantCamp struct {
 // DossierExt is the public version of a [Dossier],
 // with all information resolved.
 type DossierExt struct {
-	Dossier       ds.Dossier
-	IdResponsable pr.IdPersonne
-	Responsable   string
-	Participants  []PublicParticipantCamp
-	Aides         map[cps.IdParticipant]cps.Aides
-	AidesFiles    map[cps.IdAide]PublicFile // optionnel
+	Dossier           ds.Dossier
+	IdResponsable     pr.IdPersonne
+	Responsable       string
+	Participants      []PublicParticipantCamp
+	Aides             map[cps.IdParticipant]cps.Aide
+	AidesFiles        map[cps.IdAide]PublicFile        // optionnel
+	AidesFilesAttente map[cps.IdParticipant]PublicFile // justificatifs en attente d'une aide, optionnel
 
 	Events    Events
 	Paiements ds.Paiements
@@ -325,12 +326,14 @@ func (d DossierFinance) Publish(key crypto.Encrypter, acomptePercent int) Dossie
 	}
 
 	aideFiles := make(map[cps.IdAide]PublicFile)
-	for _, l := range d.aides {
-		for _, aide := range l {
-			if file, ok := d.aidesFiles[aide.Id]; ok {
-				aideFiles[aide.Id] = NewPublicFile(key, file)
-			}
+	for _, aide := range d.aides {
+		if file, ok := d.aidesFiles[aide.Id]; ok {
+			aideFiles[aide.Id] = NewPublicFile(key, file)
 		}
+	}
+	aideFilesAttente := make(map[cps.IdParticipant]PublicFile)
+	for idParticipant, file := range d.aidesFilesAttente {
+		aideFilesAttente[idParticipant] = NewPublicFile(key, file)
 	}
 
 	parts := d.ParticipantsExt()
@@ -345,7 +348,7 @@ func (d DossierFinance) Publish(key crypto.Encrypter, acomptePercent int) Dossie
 		}
 	}
 
-	return DossierExt{d.Dossier.Dossier, d.Responsable().Id, d.Responsable().PrenomNOM(), publicParticipants, d.aides, aideFiles, d.Events, d.paiements, bilan}
+	return DossierExt{d.Dossier.Dossier, d.Responsable().Id, d.Responsable().PrenomNOM(), publicParticipants, d.aides, aideFiles, aideFilesAttente, d.Events, d.paiements, bilan}
 }
 
 // LoadByMail renvoie les dossiers dont le responsable a le mail fourni. Ignore les responsables temporaires.

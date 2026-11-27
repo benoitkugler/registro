@@ -322,6 +322,7 @@ export interface AlbumAndLinks {
 export type AlbumID = string;
 // registro/logic.AideResolved
 export interface AideResolved {
+  Valid: boolean;
   Structure: string;
   Montant: Montant;
 }
@@ -348,7 +349,7 @@ export interface BilanParticipantPub {
   AvecOption: Montant;
   AvecOptionDescription: string;
   Remises: Remises;
-  Aides: AideResolved[] | null;
+  Aide: AideResolved;
   AvecAides: string;
   Net: string;
 }
@@ -389,8 +390,9 @@ export interface DossierExt {
   IdResponsable: IdPersonne;
   Responsable: string;
   Participants: PublicParticipantCamp[] | null;
-  Aides: Record<IdParticipant, Aides> | null;
+  Aides: Record<IdParticipant, Aide> | null;
   AidesFiles: Record<IdAide, PublicFile> | null;
+  AidesFilesAttente: Record<IdParticipant, PublicFile> | null;
   Events: Events;
   Paiements: Paiements;
   Bilan: BilanFinancesPub;
@@ -571,13 +573,10 @@ export interface Aide {
   Id: IdAide;
   IdStructureaide: IdStructureaide;
   IdParticipant: IdParticipant;
-  Valide: boolean;
   Valeur: Montant;
   ParJour: boolean;
   NbJoursMax: Int;
 }
-// registro/sql/camps.Aides
-export type Aides = Record<IdAide, Aide> | null;
 // registro/sql/camps.Camp
 export interface Camp {
   Id: IdCamp;

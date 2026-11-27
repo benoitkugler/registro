@@ -35,10 +35,11 @@
           <DossierParticipantRow
             v-for="participant in props.dossier.Dossier.Participants"
             :participant="participant"
-            :aides="
+            :aide="
               (props.dossier.Dossier.Aides || {})[participant.Participant.Id]
             "
             :aides-files="props.dossier.Dossier.AidesFiles || {}"
+            :aides-files-attente="props.dossier.Dossier.AidesFilesAttente || {}"
             :has-many-participants="
               (props.dossier.Dossier.Participants?.length || 0) > 1
             "

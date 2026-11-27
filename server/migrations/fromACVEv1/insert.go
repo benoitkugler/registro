@@ -48,11 +48,13 @@ type idMaps struct {
 	participants  map[int64]cps.IdParticipant
 	structures    map[int64]cps.IdStructureaide
 	aides         map[int64]cps.IdAide
-	groupes       map[int64]cps.IdGroupe
-	sondages      map[int64]cps.IdSondage
-	files         map[int64]fs.File
-	demandes      map[int64]fs.IdDemande
-	events        map[int64]ev.IdEvent
+	// IdAide migré -> IdParticipant migré, utile pour les justificatifs
+	aideParticipants map[cps.IdAide]cps.IdParticipant
+	groupes          map[int64]cps.IdGroupe
+	sondages         map[int64]cps.IdSondage
+	files            map[int64]fs.File
+	demandes         map[int64]fs.IdDemande
+	events           map[int64]ev.IdEvent
 
 	comptas     map[comptaV1.IdCompta]compta.IdComptaCamp
 	records     map[comptaV1.IdRecord]compta.IdComptaRecord
@@ -62,24 +64,25 @@ type idMaps struct {
 
 func newIDMaps() idMaps {
 	return idMaps{
-		organismes:    make(map[int64]dons.IdOrganisme),
-		personnes:     make(map[int64]pr.IdPersonne),
-		tempPersonnes: make(map[int64]bool),
-		camps:         make(map[int64]cps.Camp),
-		equipiers:     make(map[int64]cps.IdEquipier),
-		dossiers:      make(map[int64]ds.IdDossier),
-		participants:  make(map[int64]cps.IdParticipant),
-		structures:    make(map[int64]cps.IdStructureaide),
-		aides:         make(map[int64]cps.IdAide),
-		groupes:       make(map[int64]cps.IdGroupe),
-		sondages:      make(map[int64]cps.IdSondage),
-		files:         make(map[int64]fs.File),
-		demandes:      make(map[int64]fs.IdDemande),
-		events:        make(map[int64]ev.IdEvent),
-		comptas:       make(map[comptaV1.IdCompta]compta.IdComptaCamp),
-		records:       make(map[comptaV1.IdRecord]compta.IdComptaRecord),
-		subrecords:    make(map[comptaV1.IdSubrecord]compta.IdComptaSubrecord),
-		comptafiles:   make(map[comptaV1.IdFilecompta]compta.IdComptaFile),
+		organismes:       make(map[int64]dons.IdOrganisme),
+		personnes:        make(map[int64]pr.IdPersonne),
+		tempPersonnes:    make(map[int64]bool),
+		camps:            make(map[int64]cps.Camp),
+		equipiers:        make(map[int64]cps.IdEquipier),
+		dossiers:         make(map[int64]ds.IdDossier),
+		participants:     make(map[int64]cps.IdParticipant),
+		structures:       make(map[int64]cps.IdStructureaide),
+		aides:            make(map[int64]cps.IdAide),
+		aideParticipants: make(map[cps.IdAide]cps.IdParticipant),
+		groupes:          make(map[int64]cps.IdGroupe),
+		sondages:         make(map[int64]cps.IdSondage),
+		files:            make(map[int64]fs.File),
+		demandes:         make(map[int64]fs.IdDemande),
+		events:           make(map[int64]ev.IdEvent),
+		comptas:          make(map[comptaV1.IdCompta]compta.IdComptaCamp),
+		records:          make(map[comptaV1.IdRecord]compta.IdComptaRecord),
+		subrecords:       make(map[comptaV1.IdSubrecord]compta.IdComptaSubrecord),
+		comptafiles:      make(map[comptaV1.IdFilecompta]compta.IdComptaFile),
 	}
 }
 
@@ -398,6 +401,7 @@ func migrateStructuresAndAides(tx *sql.Tx, trimmed baseV1, m idMaps) error {
 		m.structures[id] = v2.Id
 	}
 
+	// checkAidesUnicity garantit au plus une aide par participant (v2 UNIQUE).
 	fmt.Println("\taides...")
 	for id, v1 := range trimmed.aides {
 		idStructure, ok := m.structures[v1.IdStructureaide]
@@ -416,6 +420,7 @@ func migrateStructuresAndAides(tx *sql.Tx, trimmed baseV1, m idMaps) error {
 			return err
 		}
 		m.aides[id] = inserted.Id
+		m.aideParticipants[inserted.Id] = idParticipant
 	}
 	return nil
 }
@@ -711,7 +716,11 @@ func fileAidesFromV1(links rd.DocumentAides, m idMaps) []fs.FileAide {
 		if !ok || seenAides[idAide] {
 			continue
 		}
-		out = append(out, fs.FileAide{IdFile: file.Id, IdAide: idAide})
+		idParticipant, ok := m.aideParticipants[idAide]
+		if !ok {
+			continue
+		}
+		out = append(out, fs.FileAide{IdFile: file.Id, IdParticipant: idParticipant, IdAide: idAide.Opt()})
 		seenFiles[file.Id] = true
 		seenAides[idAide] = true
 	}

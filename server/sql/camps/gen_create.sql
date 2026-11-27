@@ -27,7 +27,6 @@ CREATE TABLE aides (
     Id serial PRIMARY KEY,
     IdStructureaide integer NOT NULL,
     IdParticipant integer NOT NULL,
-    Valide boolean NOT NULL,
     Valeur Montant NOT NULL,
     ParJour boolean NOT NULL,
     NbJoursMax integer NOT NULL
@@ -259,6 +258,12 @@ ALTER TABLE sondages
 
 ALTER TABLE sondages
     ADD FOREIGN KEY (IdDossier) REFERENCES dossiers ON DELETE CASCADE;
+
+ALTER TABLE aides
+    ADD UNIQUE (Id, IdParticipant);
+
+ALTER TABLE aides
+    ADD UNIQUE (IdParticipant);
 
 ALTER TABLE aides
     ADD FOREIGN KEY (IdStructureaide) REFERENCES structureaides;

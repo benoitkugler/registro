@@ -260,7 +260,6 @@ func aideFromV1(v1 rd.Aide) cps.Aide {
 	return cps.Aide{
 		IdStructureaide: 0, // filled by the caller
 		IdParticipant:   0, // filled by the caller
-		Valide:          bool(v1.Valide),
 		Valeur:          euros(v1.Valeur),
 		ParJour:         bool(v1.ParJour),
 		NbJoursMax:      int(v1.NbJoursMax),

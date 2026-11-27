@@ -207,12 +207,9 @@ func (ct *Controller) ParticipantsDelete(c echo.Context) error {
 }
 
 func (ct *Controller) deleteParticipant(id cps.IdParticipant) error {
-	// cleanup aides files and temp personne; the other items will cascade
-	aides, err := cps.SelectAidesByIdParticipants(ct.db, id)
-	if err != nil {
-		return utils.SQLError(err)
-	}
-	links, err := files.SelectFileAidesByIdAides(ct.db, aides.IDs()...)
+	// cleanup aides files, including those still waiting for an aide,
+	// and temp personne; the other items will cascade
+	links, err := files.SelectFileAidesByIdParticipants(ct.db, id)
 	if err != nil {
 		return utils.SQLError(err)
 	}

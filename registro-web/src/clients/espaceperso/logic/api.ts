@@ -25,6 +25,10 @@ export interface ChequeSettings {
   Ordre: string;
   Adresse: Ar2_string;
 }
+// registro/controllers/espaceperso.ANCVPaymentStatusOut
+export interface ANCVPaymentStatusOut {
+  Recorded: boolean;
+}
 // registro/controllers/espaceperso.Charte
 export interface Charte {
   Id: IdPersonne;
@@ -169,6 +173,7 @@ export interface GeneratedFile {
 }
 // registro/logic.AideResolved
 export interface AideResolved {
+  Valid: boolean;
   Structure: string;
   Montant: Montant;
 }
@@ -195,7 +200,7 @@ export interface BilanParticipantPub {
   AvecOption: Montant;
   AvecOptionDescription: string;
   Remises: Remises;
-  Aides: AideResolved[] | null;
+  Aide: AideResolved;
   AvecAides: string;
   Net: string;
 }
@@ -231,8 +236,9 @@ export interface DossierExt {
   IdResponsable: IdPersonne;
   Responsable: string;
   Participants: PublicParticipantCamp[] | null;
-  Aides: Record<IdParticipant, Aides> | null;
+  Aides: Record<IdParticipant, Aide> | null;
   AidesFiles: Record<IdAide, PublicFile> | null;
+  AidesFilesAttente: Record<IdParticipant, PublicFile> | null;
   Events: Events;
   Paiements: Paiements;
   Bilan: BilanFinancesPub;
@@ -366,13 +372,10 @@ export interface Aide {
   Id: IdAide;
   IdStructureaide: IdStructureaide;
   IdParticipant: IdParticipant;
-  Valide: boolean;
   Valeur: Montant;
   ParJour: boolean;
   NbJoursMax: Int;
 }
-// registro/sql/camps.Aides
-export type Aides = Record<IdAide, Aide> | null;
 // registro/sql/camps.Champ
 export interface Champ {
   Titre: string;
@@ -933,17 +936,65 @@ export abstract class AbstractAPI {
     }
   }
 
-  /** CreateAide performs the request and handles the error */
-  async CreateAide(file: File, formValue: Aide, params: { token: string }) {
-    const fullUrl = this.baseURL + "/api/v1/espaceperso/aide";
+  /** GetANCVPaymentStatus performs the request and handles the error */
+  async GetANCVPaymentStatus(params: { transactionId: string }) {
+    const fullUrl = this.baseURL + "/api/v1/espaceperso/paiement/ancv/status";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<ANCVPaymentStatusOut> = await Axios.get(
+        fullUrl,
+        {
+          headers: this.getHeaders(),
+          params: { transactionId: params["transactionId"] },
+        },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** UploadAideJustificatif performs the request and handles the error */
+  async UploadAideJustificatif(
+    file: File,
+    params: { token: string; idParticipant: IdParticipant },
+  ) {
+    const fullUrl = this.baseURL + "/api/v1/espaceperso/aide/justificatif";
     this.startRequest();
     try {
       const formData = new FormData();
-      formData.append("document", file, file.name);
-      formData.append("aide", JSON.stringify(formValue));
-      await Axios.post(fullUrl, formData, {
+      formData.append("file", file, file.name);
+      const rep: AxiosResponse<PublicFile> = await Axios.post(
+        fullUrl,
+        formData,
+        {
+          headers: this.getHeaders(),
+          params: {
+            token: params["token"],
+            idParticipant: String(params["idParticipant"]),
+          },
+        },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** DeleteAideJustificatif performs the request and handles the error */
+  async DeleteAideJustificatif(params: {
+    token: string;
+    idParticipant: IdParticipant;
+  }) {
+    const fullUrl = this.baseURL + "/api/v1/espaceperso/aide/justificatif";
+    this.startRequest();
+    try {
+      await Axios.delete(fullUrl, {
         headers: this.getHeaders(),
-        params: { token: params["token"] },
+        params: {
+          token: params["token"],
+          idParticipant: String(params["idParticipant"]),
+        },
       });
       return true;
     } catch (error) {

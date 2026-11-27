@@ -17,6 +17,25 @@ import (
 	pr "registro/sql/personnes"
 )
 
+func TestCheckAidesUnicity(t *testing.T) {
+	unique := baseV1{aides: rd.Aides{
+		1: {Id: 1, IdParticipant: 10},
+		2: {Id: 2, IdParticipant: 20},
+	}}
+	if err := checkAidesUnicity(unique); err != nil {
+		t.Fatalf("checkAidesUnicity() = %v, want nil", err)
+	}
+
+	duplicated := baseV1{aides: rd.Aides{
+		1: {Id: 1, IdParticipant: 10},
+		2: {Id: 2, IdParticipant: 10},
+		3: {Id: 3, IdParticipant: 20},
+	}}
+	if err := checkAidesUnicity(duplicated); err == nil {
+		t.Fatal("checkAidesUnicity() accepted two aides for one participant")
+	}
+}
+
 func TestValidateMigration(t *testing.T) {
 	opts := migrationOptions{v1FilesDir: "/tmp/v1"}
 	if err := validateMigration(baseV1{}, opts); err == nil {
@@ -349,13 +368,14 @@ func TestFileAidesFromV1Dedup(t *testing.T) {
 	m.files[10] = fs.File{Id: 100}
 	m.files[11] = fs.File{Id: 101}
 	m.aides[7] = cps.IdAide(70)
+	m.aideParticipants[70] = cps.IdParticipant(700)
 
 	links := rd.DocumentAides{
 		{IdDocument: 10, IdAide: 7},
 		{IdDocument: 11, IdAide: 7},
 	}
 	got := fileAidesFromV1(links, m)
-	want := []fs.FileAide{{IdFile: 100, IdAide: 70}}
+	want := []fs.FileAide{{IdFile: 100, IdParticipant: 700, IdAide: cps.IdAide(70).Opt()}}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("fileAidesFromV1() = %+v, want %+v", got, want)
 	}

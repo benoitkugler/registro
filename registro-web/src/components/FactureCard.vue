@@ -20,7 +20,7 @@
           >Prix avec option</v-col
         >
         <v-col cols="3" class="text-center" v-if="!hideOptionsAndAides"
-          >Aides extérieures</v-col
+          >Aide extérieure</v-col
         >
         <v-col :cols="hideOptionsAndAides ? 4 : 2" class="text-right"
           >Sous-total</v-col
@@ -58,9 +58,10 @@
             class="text-center"
             v-if="!hideOptionsAndAides"
           >
-            <span v-if="!part.Bilan.Aides?.length">-</span>
-            <v-chip v-for="aide in part.Bilan.Aides" label size="small">
-              {{ aide.Structure }} : {{ Formatters.montant(aide.Montant) }}
+            <span v-if="!part.Bilan.Aide.Valid">-</span>
+            <v-chip v-else label size="small">
+              {{ part.Bilan.Aide.Structure }} :
+              {{ Formatters.montant(part.Bilan.Aide.Montant) }}
             </v-chip>
           </v-col>
           <v-col
@@ -202,7 +203,7 @@ const hideOptionsAndAides = computed(() =>
   participants.value.every(
     (part) =>
       Participants.montantEquals(part.Bilan.PrixCamp, part.Bilan.AvecOption) &&
-      !part.Bilan.Aides?.length,
+      !part.Bilan.Aide.Valid,
   ),
 );
 </script>
