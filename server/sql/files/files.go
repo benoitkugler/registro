@@ -66,28 +66,29 @@ func (fs FileSystem) Save(doc IdFile, fileContent []byte, miniature bool) error 
 
 // UploadFile computes the miniature, stores the content on the file system
 // and updates the metadata.
+// The whole [File] is passed so that fields not handled here (notably
+// ReviewStatus) are preserved by the update.
 // The file size is not checked.
-func UploadFile(fs FileSystem, db DB, id IdFile, fileContent []byte, filename string) (File, error) {
+func UploadFile(fs FileSystem, db DB, file File, fileContent []byte, filename string) (File, error) {
 	ext := filepath.Ext(filename)
 	minContent, err := ComputeMiniature(ext, bytes.NewReader(fileContent))
 	if err != nil {
 		return File{}, err
 	}
-	meta := File{
-		Id:     id,
-		Taille: len(fileContent), NomClient: filename, Uploaded: time.Now().Truncate(time.Second),
-	}
-	meta, err = meta.Update(db)
+	file.Taille = len(fileContent)
+	file.NomClient = filename
+	file.Uploaded = time.Now().Truncate(time.Second)
+	file, err = file.Update(db)
 	if err != nil {
 		return File{}, utils.SQLError(err)
 	}
-	err = fs.Save(id, fileContent, false)
+	err = fs.Save(file.Id, fileContent, false)
 	if err != nil {
 		return File{}, err
 	}
-	err = fs.Save(id, minContent, true)
+	err = fs.Save(file.Id, minContent, true)
 	if err != nil {
 		return File{}, err
 	}
-	return meta, nil
+	return file, nil
 }

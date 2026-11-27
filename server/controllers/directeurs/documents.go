@@ -187,7 +187,7 @@ func (ct *Controller) uploadToDownload(idCamp cps.IdCamp, content []byte, filena
 		if err != nil {
 			return err
 		}
-		file, err = fs.UploadFile(ct.files, tx, file.Id, content, filename)
+		file, err = fs.UploadFile(ct.files, tx, file, content, filename)
 		if err != nil {
 			return err
 		}
@@ -426,7 +426,7 @@ func (ct *Controller) uploadDemandeFile(user cps.IdCamp, idDemande fs.IdDemande,
 		if err != nil {
 			return err
 		}
-		file, err = fs.UploadFile(ct.files, tx, file.Id, content, filename)
+		file, err = fs.UploadFile(ct.files, tx, file, content, filename)
 		if err != nil {
 			return err
 		}

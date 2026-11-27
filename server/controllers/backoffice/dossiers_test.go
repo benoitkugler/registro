@@ -194,7 +194,7 @@ func TestController_aideJustificatifAttente(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	err = (fs.FileAide{IdFile: file.Id, IdParticipant: part.Id}).Insert(db)
 	tu.AssertNoErr(t, err)
-	_, err = fs.UploadFile(ct.files, db, file.Id, tu.PngData, "attente.png")
+	_, err = fs.UploadFile(ct.files, db, file, tu.PngData, "attente.png")
 	tu.AssertNoErr(t, err)
 
 	aide, err := ct.createAide(AidesCreateIn{IdParticipant: part.Id, IdStructure: structure.Id})
@@ -209,6 +209,13 @@ func TestController_aideJustificatifAttente(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, file.ReviewStatus == pr.FileReviewValidated)
 
+	// remplacer le justificatif ne réinitialise pas la validation
+	_, err = ct.uploadAideJustificatif(aide.Id, tu.PngData, "remplace.png")
+	tu.AssertNoErr(t, err)
+	file, err = fs.SelectFile(db, file.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, file.ReviewStatus == pr.FileReviewValidated)
+
 	// un justificatif en attente est supprimé avec le participant
 	pe2, err := pr.Personne{Identite: pr.Identite{DateNaissance: shared.Date(time.Now())}}.Insert(db)
 	tu.AssertNoErr(t, err)
@@ -218,7 +225,7 @@ func TestController_aideJustificatifAttente(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	err = (fs.FileAide{IdFile: file2.Id, IdParticipant: part2.Id}).Insert(db)
 	tu.AssertNoErr(t, err)
-	_, err = fs.UploadFile(ct.files, db, file2.Id, tu.PngData, "attente2.png")
+	_, err = fs.UploadFile(ct.files, db, file2, tu.PngData, "attente2.png")
 	tu.AssertNoErr(t, err)
 
 	err = ct.deleteParticipant(part2.Id)

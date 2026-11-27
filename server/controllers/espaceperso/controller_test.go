@@ -141,7 +141,7 @@ func Test_loadFichesanitaires(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	err = fs.FilePersonne{IdFile: file1.Id, IdPersonne: mineur.Id, IdDemande: fs.IdDemande(fs.Vaccins)}.Insert(db)
 	tu.AssertNoErr(t, err)
-	_, err = fs.UploadFile(fsys, db, file1.Id, tu.PngData, "test.png")
+	_, err = fs.UploadFile(fsys, db, file1, tu.PngData, "test.png")
 	tu.AssertNoErr(t, err)
 
 	dossier, err := ds.Dossier{IdTaux: 1, IdResponsable: mineur.Id}.Insert(db)

@@ -244,7 +244,7 @@ func (ct *Controller) updateLettreDirecteur(idCamp cps.IdCamp, lettre cps.Lettre
 
 		// Etape 3.b
 		pdfName := fmt.Sprintf("Lettre du directeur %s.pdf", camp.Label())
-		fileLettre, err = fs.UploadFile(ct.files, tx, fileLettre.Id, pdfContent, pdfName)
+		fileLettre, err = fs.UploadFile(ct.files, tx, fileLettre, pdfContent, pdfName)
 		if err != nil {
 			return err
 		}

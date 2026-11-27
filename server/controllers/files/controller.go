@@ -229,7 +229,7 @@ func SaveFileFor(files fs.FileSystem, db *sql.DB, idPersonne pr.IdPersonne, idDe
 		if err != nil {
 			return err
 		}
-		file, err = fs.UploadFile(files, tx, file.Id, content, filename)
+		file, err = fs.UploadFile(files, tx, file, content, filename)
 		if err != nil {
 			return err
 		}

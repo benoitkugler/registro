@@ -353,7 +353,7 @@ func (ct *Controller) uploadAideJustificatif(id ds.IdDossier, idParticipant cps.
 		if err := (fs.FileAide{IdFile: file.Id, IdParticipant: idParticipant}).Insert(tx); err != nil {
 			return err
 		}
-		uploaded, err := fs.UploadFile(ct.files, tx, file.Id, fileContent, fileName)
+		uploaded, err := fs.UploadFile(ct.files, tx, file, fileContent, fileName)
 		if err != nil {
 			return err
 		}

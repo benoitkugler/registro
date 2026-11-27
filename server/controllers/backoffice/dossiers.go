@@ -633,12 +633,13 @@ func (ct *Controller) uploadAideJustificatif(idAide cps.IdAide, content []byte, 
 	if err != nil {
 		return logic.PublicFile{}, utils.SQLError(err)
 	}
-	idFile := item.IdFile
-
-	var out logic.PublicFile
+	var (
+		out  logic.PublicFile
+		file files.File
+	)
 	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
 		if !found { // create one file and a link
-			file, err := files.File{}.Insert(tx)
+			file, err = files.File{}.Insert(tx)
 			if err != nil {
 				return err
 			}
@@ -646,9 +647,13 @@ func (ct *Controller) uploadAideJustificatif(idAide cps.IdAide, content []byte, 
 			if err != nil {
 				return err
 			}
-			idFile = file.Id
+		} else { // reload the metadata, in particular the review status
+			file, err = files.SelectFile(tx, item.IdFile)
+			if err != nil {
+				return err
+			}
 		}
-		file, err := files.UploadFile(ct.files, tx, idFile, content, filename)
+		file, err = files.UploadFile(ct.files, tx, file, content, filename)
 		if err != nil {
 			return err
 		}
