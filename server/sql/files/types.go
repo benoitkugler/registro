@@ -3,7 +3,7 @@ package files
 import (
 	"fmt"
 
-	cp "registro/sql/camps"
+	cps "registro/sql/camps"
 	pr "registro/sql/personnes"
 	"registro/sql/shared"
 	"registro/utils"
@@ -99,7 +99,7 @@ func (ds Demandes) builtins() (out [nbBuiltins]Demande, err error) {
 }
 
 // Defaut renvoie les demandes par défaut pour l'équipier donné.
-func (builtinDemandes Builtins) Defaut(id cp.IdEquipier, roles cp.Roles, asso string) DemandeEquipiers {
+func (builtinDemandes Builtins) Defaut(id cps.IdEquipier, roles cps.Roles, asso string) DemandeEquipiers {
 	var demandes []optionalCategorie
 	switch asso {
 	case "acve":
@@ -125,23 +125,23 @@ type optionalCategorie struct {
 	Optionnelle bool
 }
 
-var defaultDemandesACVE = [cp.RolesCount][]Categorie{
-	cp.Direction:     {CarteId, Permis, SB, Bafa, Bafd, CarteVitale, Vaccins},
-	cp.Adjoint:       {CarteId, Permis, SB, CarteVitale, Vaccins},
-	cp.Animation:     {CarteId, Permis, SB, Bafa, CarteVitale, Vaccins},
-	cp.Menage:        {CarteId, CarteVitale, Vaccins},
-	cp.Cuisine:       {CarteId, CarteVitale, Vaccins},
-	cp.Intendance:    {CarteId, CarteVitale, Vaccins},
-	cp.Infirmerie:    {CarteId, Secourisme, CarteVitale, Vaccins},
-	cp.AideAnimation: {CarteId, CarteVitale, Vaccins},
-	cp.Lingerie:      {CarteId, CarteVitale, Vaccins},
-	cp.Chauffeur:     {CarteId, CarteVitale, Vaccins},
-	cp.Factotum:      {CarteId, CarteVitale, Vaccins},
-	cp.Babysiter:     {CarteId, CarteVitale, Vaccins},
-	cp.AutreRole:     {}, // rien
+var defaultDemandesACVE = [cps.RolesCount][]Categorie{
+	cps.Direction:     {CarteId, Permis, SB, Bafa, Bafd, CarteVitale, Vaccins},
+	cps.Adjoint:       {CarteId, Permis, SB, CarteVitale, Vaccins},
+	cps.Animation:     {CarteId, Permis, SB, Bafa, CarteVitale, Vaccins},
+	cps.Menage:        {CarteId, CarteVitale, Vaccins},
+	cps.Cuisine:       {CarteId, CarteVitale, Vaccins},
+	cps.Intendance:    {CarteId, CarteVitale, Vaccins},
+	cps.Infirmerie:    {CarteId, Secourisme, CarteVitale, Vaccins},
+	cps.AideAnimation: {CarteId, CarteVitale, Vaccins},
+	cps.Lingerie:      {CarteId, CarteVitale, Vaccins},
+	cps.Chauffeur:     {CarteId, CarteVitale, Vaccins},
+	cps.Factotum:      {CarteId, CarteVitale, Vaccins},
+	cps.Babysiter:     {CarteId, CarteVitale, Vaccins},
+	cps.AutreRole:     {}, // rien
 }
 
-func defaultACVE(roles cp.Roles) []optionalCategorie {
+func defaultACVE(roles cps.Roles) []optionalCategorie {
 	// on aggrège les demandes de chaque rôle
 	var categories [nbBuiltins]bool
 	for _, role := range roles {
@@ -163,15 +163,15 @@ func defaultACVE(roles cp.Roles) []optionalCategorie {
 	return demandes
 }
 
-func isDemandeOptACVE(cat Categorie, roles cp.Roles) bool {
+func isDemandeOptACVE(cat Categorie, roles cps.Roles) bool {
 	// un certificat de secourisme est obligatoire pour l'infirmerie
-	if roles.Is(cp.Infirmerie) && cat == Secourisme {
+	if roles.Is(cps.Infirmerie) && cat == Secourisme {
 		return false
 	}
 	return true
 }
 
-func defaultRepere(_ cp.Roles) []optionalCategorie {
+func defaultRepere(_ cps.Roles) []optionalCategorie {
 	return []optionalCategorie{
 		{SB, true},
 		{Secourisme, true},
