@@ -63,6 +63,16 @@ func newRecordExt(record ca.ComptaRecord, subrecords []ca.ComptaSubrecord) Recor
 	return RecordExt{record, subrecords, recordStatus(record, subrecords), recordTotal(subrecords).String()}
 }
 
+// getRecordExt reloads the subrecords and recomputes the derived fields
+// (status, total) of a record after a mutation.
+func (ct *Controller) getRecordExt(record ca.ComptaRecord) (RecordExt, error) {
+	subs, err := ca.SelectComptaSubrecordsByIdRecords(ct.db, record.Id)
+	if err != nil {
+		return RecordExt{}, utils.SQLError(err)
+	}
+	return newRecordExt(record, subs.Sorted()), nil
+}
+
 type RecordStatus uint8
 
 const (
@@ -220,29 +230,25 @@ func (ct *Controller) AddSubrecord(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) addSubrecord(record ca.IdComptaRecord, user ca.IdComptaCamp) (ca.ComptaSubrecord, error) {
+func (ct *Controller) addSubrecord(record ca.IdComptaRecord, user ca.IdComptaCamp) (RecordExt, error) {
 	group, err := ca.SelectComptaRecord(ct.db, record)
 	if err != nil {
-		return ca.ComptaSubrecord{}, utils.SQLError(err)
+		return RecordExt{}, utils.SQLError(err)
 	}
 
 	if user != userAdmin && user != group.IdCamp {
-		return ca.ComptaSubrecord{}, errAccess
+		return RecordExt{}, errAccess
 	}
 
-	out, err := ca.ComptaSubrecord{
+	_, err = ca.ComptaSubrecord{
 		IdRecord: record,
 		Currency: ds.Euros,
 	}.Insert(ct.db)
 	if err != nil {
-		return ca.ComptaSubrecord{}, utils.SQLError(err)
+		return RecordExt{}, utils.SQLError(err)
 	}
-	return out, nil
-}
 
-type RecordAndSub struct {
-	Record    ca.ComptaRecord
-	Subrecord ca.ComptaSubrecord
+	return ct.getRecordExt(group)
 }
 
 func (ct *Controller) UpdateRecord(c echo.Context) error {
@@ -519,42 +525,42 @@ func (ct *Controller) DeleteSubrecord(c echo.Context) error {
 		return err
 	}
 
-	err = ct.deleteSubrecord(idR, user)
+	out, err := ct.deleteSubrecord(idR, user)
 	if err != nil {
 		return err
 	}
 
-	return c.NoContent(200)
+	return c.JSON(200, out)
 }
 
-func (ct *Controller) deleteSubrecord(id ca.IdComptaSubrecord, user ca.IdComptaCamp) error {
+func (ct *Controller) deleteSubrecord(id ca.IdComptaSubrecord, user ca.IdComptaCamp) (RecordExt, error) {
 	rec, subrecord, err := getRecord(ct.db, id)
 	if err != nil {
-		return utils.SQLError(err)
+		return RecordExt{}, utils.SQLError(err)
 	}
 	compta, err := ca.SelectComptaCamp(ct.db, rec.IdCamp)
 	if err != nil {
-		return utils.SQLError(err)
+		return RecordExt{}, utils.SQLError(err)
 	}
 
 	if user != userAdmin && user != rec.IdCamp {
-		return errAccess
+		return RecordExt{}, errAccess
 	}
 
 	_, err = ca.DeleteComptaSubrecordById(ct.db, id)
 	if err != nil {
-		return utils.SQLError(err)
+		return RecordExt{}, utils.SQLError(err)
 	}
 
 	// remove empty groups
 	others, err := ca.SelectComptaSubrecordsByIdRecords(ct.db, rec.Id)
 	if err != nil {
-		return utils.SQLError(err)
+		return RecordExt{}, utils.SQLError(err)
 	}
 	if len(others) == 0 {
 		_, err = ca.DeleteComptaRecordById(ct.db, rec.Id)
 		if err != nil {
-			return utils.SQLError(err)
+			return RecordExt{}, utils.SQLError(err)
 		}
 	}
 
@@ -568,7 +574,7 @@ func (ct *Controller) deleteSubrecord(id ca.IdComptaSubrecord, user ca.IdComptaC
 		}()
 	}
 
-	return nil
+	return newRecordExt(rec, others.Sorted()), nil
 }
 
 // UploadAndCreate creates a new Record with the given file.
@@ -770,23 +776,23 @@ func handleJustificatifsUploads(uploads []justificatifUpload) (string, []byte, e
 	return "justificatifs.pdf", content, nil
 }
 
-func (ct *Controller) uploadJustificatif(id ca.IdComptaSubrecord, uploads []justificatifUpload, user ca.IdComptaCamp) (RecordAndSub, error) {
+func (ct *Controller) uploadJustificatif(id ca.IdComptaSubrecord, uploads []justificatifUpload, user ca.IdComptaCamp) (RecordExt, error) {
 	group, rec, err := getRecord(ct.db, id)
 	if err != nil {
-		return RecordAndSub{}, fmt.Errorf("Erreur interne: %w", err)
+		return RecordExt{}, fmt.Errorf("Erreur interne: %w", err)
 	}
 	compta, err := ca.SelectComptaCamp(ct.db, group.IdCamp)
 	if err != nil {
-		return RecordAndSub{}, utils.SQLError(err)
+		return RecordExt{}, utils.SQLError(err)
 	}
 
 	if user != userAdmin && user != group.IdCamp {
-		return RecordAndSub{}, errAccess
+		return RecordExt{}, errAccess
 	}
 
 	filename, content, err := handleJustificatifsUploads(uploads)
 	if err != nil {
-		return RecordAndSub{}, err
+		return RecordExt{}, err
 	}
 
 	if rec.IdFile.Valid {
@@ -796,24 +802,23 @@ func (ct *Controller) uploadJustificatif(id ca.IdComptaSubrecord, uploads []just
 
 	meta, err := ct.files.createFile(ct.db, compta.FileStatus, filename, content)
 	if err != nil {
-		return RecordAndSub{}, err
+		return RecordExt{}, err
 	}
 
 	if user != userAdmin {
 		group.IsValidated = false // remove the validation since the justificatif has changed
 		group, err = group.Update(ct.db)
 		if err != nil {
-			return RecordAndSub{}, utils.SQLError(err)
+			return RecordExt{}, utils.SQLError(err)
 		}
 	}
 
 	rec.IdFile = ca.NewOptIdComptaFile(meta.Id)
-	rec, err = rec.Update(ct.db)
-	if err != nil {
-		return RecordAndSub{}, utils.SQLError(err)
+	if _, err = rec.Update(ct.db); err != nil {
+		return RecordExt{}, utils.SQLError(err)
 	}
 
-	return RecordAndSub{group, rec}, nil
+	return ct.getRecordExt(group)
 }
 
 func (ct *Controller) RemoveJustificatif(c echo.Context) error {
@@ -832,40 +837,39 @@ func (ct *Controller) RemoveJustificatif(c echo.Context) error {
 	return c.JSON(200, rec)
 }
 
-func (ct *Controller) removeJustificatif(id ca.IdComptaSubrecord, user ca.IdComptaCamp) (RecordAndSub, error) {
+func (ct *Controller) removeJustificatif(id ca.IdComptaSubrecord, user ca.IdComptaCamp) (RecordExt, error) {
 	group, rec, err := getRecord(ct.db, id)
 	if err != nil {
-		return RecordAndSub{}, fmt.Errorf("Erreur interne: %w", err)
+		return RecordExt{}, fmt.Errorf("Erreur interne: %w", err)
 	}
 	compta, err := ca.SelectComptaCamp(ct.db, group.IdCamp)
 	if err != nil {
-		return RecordAndSub{}, utils.SQLError(err)
+		return RecordExt{}, utils.SQLError(err)
 	}
 
 	if user != userAdmin && user != group.IdCamp {
-		return RecordAndSub{}, errAccess
+		return RecordExt{}, errAccess
 	}
 
 	err = ct.files.remove(ct.db, compta.FileStatus, rec.IdFile.Id)
 	if err != nil {
-		return RecordAndSub{}, fmt.Errorf("Erreur interne: %w", err)
+		return RecordExt{}, fmt.Errorf("Erreur interne: %w", err)
 	}
 
 	if user != userAdmin {
 		group.IsValidated = false // remove the validation since the justificatif is no more
 		group, err = group.Update(ct.db)
 		if err != nil {
-			return RecordAndSub{}, utils.SQLError(err)
+			return RecordExt{}, utils.SQLError(err)
 		}
 	}
 
 	rec.IdFile = ca.OptIdComptaFile{}
-	rec, err = rec.Update(ct.db)
-	if err != nil {
-		return RecordAndSub{}, fmt.Errorf("Erreur interne: %w", err)
+	if _, err = rec.Update(ct.db); err != nil {
+		return RecordExt{}, fmt.Errorf("Erreur interne: %w", err)
 	}
 
-	return RecordAndSub{group, rec}, nil
+	return ct.getRecordExt(group)
 }
 
 func (ct *Controller) DownloadJustificatif(c echo.Context) error {

@@ -80,12 +80,57 @@ func TestRecords(t *testing.T) {
 	_, err = ct.removeJustificatif(rec1.Subrecords[0].Id, userAdmin)
 	tu.AssertNoErr(t, err)
 
-	err = ct.deleteSubrecord(rec1.Subrecords[0].Id, userAdmin)
+	_, err = ct.deleteSubrecord(rec1.Subrecords[0].Id, userAdmin)
 	tu.AssertNoErr(t, err)
-	err = ct.deleteSubrecord(rec2.Subrecords[0].Id, userAdmin)
+	_, err = ct.deleteSubrecord(rec2.Subrecords[0].Id, userAdmin)
 	tu.AssertNoErr(t, err)
 
 	time.Sleep(100 * time.Millisecond) // make sure the delete calls are done
+}
+
+func TestRecordStatusAfterMutations(t *testing.T) {
+	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
+		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",
+		"../../migrations/init.sql")
+	defer db.Remove()
+
+	c1, _ := createCamps(t, db)
+
+	ct := Controller{
+		db:    db.DB,
+		files: filesAPI{fileSystem: fileSystemAPI{Folder: t.TempDir()}},
+	}
+	co, err := ct.loadOrCreateCompta(c1.Id)
+	tu.AssertNoErr(t, err)
+
+	rec, err := ct.createRecord(CreateRecordIn{co.Id, ca.AccountCamp})
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, rec.Status == Incomplete)
+
+	// adding a justificatif to a camp account completes the record
+	uploaded, err := ct.uploadJustificatif(rec.Subrecords[0].Id, []justificatifUpload{
+		{filename: "test.png", content: tu.PngData},
+	}, userAdmin)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, uploaded.Status == Complete)
+	tu.Assert(t, uploaded.Subrecords[0].IdFile.Valid)
+
+	// removing it makes the record incomplete again
+	removed, err := ct.removeJustificatif(rec.Subrecords[0].Id, userAdmin)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, removed.Status == Incomplete)
+	tu.Assert(t, !removed.Subrecords[0].IdFile.Valid)
+
+	// adding then deleting a subrecord keeps the recomputed status in sync
+	added, err := ct.addSubrecord(removed.Record.Id, userAdmin)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(added.Subrecords) == 2)
+	tu.Assert(t, added.Status == Incomplete)
+
+	deleted, err := ct.deleteSubrecord(added.Subrecords[1].Id, userAdmin)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(deleted.Subrecords) == 1)
+	tu.Assert(t, deleted.Status == Incomplete)
 }
 
 func TestMerge(t *testing.T) {

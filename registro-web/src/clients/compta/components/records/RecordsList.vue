@@ -359,7 +359,6 @@ import {
   type GetRecordsOut,
   type IdComptaRecord,
   type IdComptaSubrecord,
-  type RecordAndSub,
   type RecordExt,
 } from "../../logic/api.ts";
 import { controller, type RecordExtModeOpt } from "../../logic/logic.ts";
@@ -384,6 +383,13 @@ const emit = defineEmits<{
 const { mobile } = useDisplay();
 
 const records = ref(copy(props.records.Records || []));
+
+// mutations return the whole RecordExt, with the status recomputed by the server
+function replaceRecord(rec: RecordExt) {
+  const index = records.value.findIndex((r) => r.Record.Id == rec.Record.Id);
+  if (index != -1) records.value[index] = rec;
+}
+
 const toDelete = ref<{ hasMany: boolean; Subrecord: ComptaSubrecord } | null>(
   null,
 );
@@ -541,8 +547,7 @@ async function updateRecord(rec: RecordExt) {
   if (res === undefined) return;
 
   controller.showMessage("Enregistrement modifié avec succès.");
-  const index = records.value.findIndex((r) => r.Record.Id == res.Record.Id);
-  records.value[index] = res;
+  replaceRecord(res);
   toEdit.value = null;
 }
 
@@ -555,16 +560,16 @@ async function deleteSubrecord() {
   controller.showMessage("Enregistrement supprimé avec succès.");
   const record = records.value.find((r) =>
     r.Subrecords?.map((s) => s.Id).includes(idToDelete),
-  )!;
-
-  record.Subrecords = (record.Subrecords || []).filter(
-    (sub) => sub.Id != idToDelete,
   );
-  // do not show empty groups
-  if (!record.Subrecords.length) {
-    records.value = records.value.filter(
-      (r) => r.Record.Id != record.Record.Id,
-    );
+  if (record) {
+    if (res.Subrecords?.length) {
+      replaceRecord(res);
+    } else {
+      // do not show empty groups
+      records.value = records.value.filter(
+        (r) => r.Record.Id != record.Record.Id,
+      );
+    }
   }
   toDelete.value = null;
 }
@@ -580,28 +585,16 @@ async function uploadJustificatif(rec: ComptaSubrecord, files: File[]) {
   inUpload.value.delete(rec.Id);
   if (res === undefined) return;
   controller.showMessage("Justificatif téléversé avec succès.");
-  applyRecordAndSub(res);
-}
-
-function applyRecordAndSub(v: RecordAndSub) {
-  const index = records.value.findIndex((r) => r.Record.Id == v.Record.Id);
-  if (index != -1) {
-    records.value[index].Record = v.Record;
-    const l = records.value[index].Subrecords || [];
-    const subindex = l.findIndex((r) => r.Id == v.Subrecord.Id);
-    l[subindex] = v.Subrecord;
-  }
+  replaceRecord(res);
 }
 
 async function addSubrecord(record: ComptaRecord) {
   const res = await controller.AddSubrecord({ "id-record": record.Id });
   if (res === undefined) return;
 
-  const index = records.value.findIndex((r) => r.Record.Id == record.Id);
-  if (index != -1) {
-    records.value[index].Subrecords!.push(res);
-
-    toEdit.value = copy(records.value[index]);
+  replaceRecord(res);
+  if (records.value.some((r) => r.Record.Id == res.Record.Id)) {
+    toEdit.value = copy(res);
   }
 }
 
@@ -609,7 +602,7 @@ async function deleteJustificatif(rec: ComptaSubrecord) {
   const res = await controller.RemoveJustificatif({ "id-subrecord": rec.Id });
   if (res === undefined) return;
   controller.showMessage("Justificatif supprimé avec succès.");
-  applyRecordAndSub(res);
+  replaceRecord(res);
 }
 
 async function addReview(rec: ComptaRecord, text: string) {

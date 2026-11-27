@@ -153,11 +153,6 @@ export interface MergeRecordToIn {
   Source: IdComptaRecord;
   Target: IdComptaRecord;
 }
-// registro/controllers/compta.RecordAndSub
-export interface RecordAndSub {
-  Record: ComptaRecord;
-  Subrecord: ComptaSubrecord;
-}
 // registro/controllers/compta.RecordBusHeader
 export interface RecordBusHeader {
   IdSubrecord: IdComptaSubrecord;
@@ -951,7 +946,7 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseURL + "/api/v1/compta/records/subrecord";
     this.startRequest();
     try {
-      const rep: AxiosResponse<ComptaSubrecord> = await Axios.put(
+      const rep: AxiosResponse<RecordExt> = await Axios.put(
         fullUrl,
         null,
         {
@@ -970,11 +965,11 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseURL + "/api/v1/compta/records/subrecord";
     this.startRequest();
     try {
-      await Axios.delete(fullUrl, {
+      const rep: AxiosResponse<RecordExt> = await Axios.delete(fullUrl, {
         headers: this.getHeaders(),
         params: { id: String(params["id"]) },
       });
-      return true;
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
@@ -1069,7 +1064,7 @@ export abstract class AbstractAPI {
         formData.append("justificatifs", file, file.name);
       }
       formData.append("idSubrecord", String(formParams["idSubrecord"]));
-      const rep: AxiosResponse<RecordAndSub> = await Axios.post(
+      const rep: AxiosResponse<RecordExt> = await Axios.post(
         fullUrl,
         formData,
         { headers: this.getHeaders() },
@@ -1085,7 +1080,7 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseURL + "/api/v1/compta/records/justificatif";
     this.startRequest();
     try {
-      const rep: AxiosResponse<RecordAndSub> = await Axios.delete(fullUrl, {
+      const rep: AxiosResponse<RecordExt> = await Axios.delete(fullUrl, {
         headers: this.getHeaders(),
         params: { "id-subrecord": String(params["id-subrecord"]) },
       });
