@@ -23,7 +23,7 @@
         accepté.
       </v-alert>
       <v-row>
-        <v-col cols="4">
+        <v-col cols="4" v-if="currencyItems.length > 1">
           <v-select
             v-model="amount.Currency"
             :items="currencyItems"
