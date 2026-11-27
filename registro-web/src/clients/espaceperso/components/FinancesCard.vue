@@ -17,7 +17,7 @@
               <template #prepend>
                 <v-icon color="green">mdi-plus</v-icon>
               </template>
-              Attestation QF
+              Quotient familial
             </v-btn>
           </span>
         </template>
@@ -91,101 +91,25 @@
               </template>
             </v-list-item>
 
-            <template v-if="props.supportsAidesExt && pendingFiles.length">
-              <v-divider thickness="1"></v-divider>
-              <v-list-subheader>
-                Justificatifs en attente de validation
-              </v-list-subheader>
-              <v-list-item
-                v-for="pending in pendingFiles"
-                :key="pending.file.Key"
-                density="compact"
-                :title="participantLabel(pending.id)"
-                :subtitle="pending.file.NomClient"
+            <v-row v-if="hasPendingFiles" no-gutters class="px-4 pt-2 pb-1">
+              <v-chip
+                v-if="pendingQuotientFamilial"
+                class="mr-2"
+                size="small"
+                color="orange"
+                prepend-icon="mdi-clock-outline"
               >
-                <template #append>
-                  <v-btn
-                    icon="mdi-download"
-                    size="small"
-                    variant="text"
-                    :href="endpoints.LoadDocument(pending.file.Key)"
-                    @click.stop=""
-                    target="_blank"
-                  ></v-btn>
-                  <v-btn
-                    icon="mdi-delete"
-                    size="small"
-                    variant="text"
-                    color="red"
-                    @click.stop="deleteAideJustificatif(pending.id)"
-                  ></v-btn>
-                </template>
-              </v-list-item>
-            </template>
-
-            <template v-if="props.dossier.HasQuotientFamilialFile">
-              <v-divider thickness="1"></v-divider>
-              <v-list-subheader
-                >Attestation de quotient familial</v-list-subheader
+                Quotient familial à valider
+              </v-chip>
+              <v-chip
+                v-if="pendingAideJustificatifs"
+                size="small"
+                color="orange"
+                prepend-icon="mdi-file-document-outline"
               >
-              <v-list-item
-                density="compact"
-                :title="props.dossier.QuotientFamilialFile.NomClient"
-                :subtitle="`${Formatters.size(props.dossier.QuotientFamilialFile.Taille)} - Ajouté ${Formatters.date(props.dossier.QuotientFamilialFile.Uploaded)}`"
-              >
-                <template #append>
-                  <v-chip
-                    class="mr-2"
-                    size="small"
-                    :color="
-                      Formatters.reviewStatus(
-                        props.dossier.QuotientFamilialFile.ReviewStatus,
-                      ).color
-                    "
-                    :prepend-icon="
-                      Formatters.reviewStatus(
-                        props.dossier.QuotientFamilialFile.ReviewStatus,
-                      ).icon
-                    "
-                  >
-                    {{
-                      FileReviewStatusLabels[
-                        props.dossier.QuotientFamilialFile.ReviewStatus
-                      ]
-                    }}
-                  </v-chip>
-                  <v-btn
-                    icon="mdi-download"
-                    size="small"
-                    variant="text"
-                    :href="
-                      endpoints.LoadDocument(
-                        props.dossier.QuotientFamilialFile.Key,
-                      )
-                    "
-                    @click.stop=""
-                    target="_blank"
-                  ></v-btn>
-                  <v-tooltip
-                    :disabled="!qfValidated"
-                    :text="qfValidatedMessage"
-                  >
-                    <template #activator="{ props: tooltipProps }">
-                      <span v-bind="tooltipProps">
-                        <v-btn
-                          icon="mdi-delete"
-                          size="small"
-                          variant="text"
-                          color="red"
-                          :disabled="qfValidated"
-                          @click.stop="deleteQuotientFamilial"
-                        ></v-btn>
-                      </span>
-                    </template>
-                  </v-tooltip>
-                </template>
-              </v-list-item>
-            </template>
+                Aides à valider : {{ pendingAideJustificatifs }}
+              </v-chip>
+            </v-row>
           </v-list>
         </v-card-text>
       </v-card>
@@ -221,7 +145,14 @@
     </v-dialog>
 
     <v-dialog v-model="showDetails">
-      <FactureCard :dossier="dossier"></FactureCard>
+      <FactureCard
+        :dossier="dossier"
+        :show-justificatifs-attente="props.supportsAidesExt"
+        :can-delete-justificatifs-attente="props.supportsAidesExt"
+        :can-delete-quotient-familial="true"
+        @delete-justificatif="deleteAideJustificatif"
+        @delete-quotient-familial="deleteQuotientFamilial"
+      ></FactureCard>
     </v-dialog>
 
     <v-card-actions>
@@ -246,18 +177,16 @@
 <script setup lang="ts">
 import {
   FileReviewStatus,
-  FileReviewStatusLabels,
   RequiredPaiementState,
   StatutPaiement,
   type DossierExt,
   type IdParticipant,
-  type PublicFile,
 } from "../logic/api";
 import { computed, ref } from "vue";
 import AideCard from "./AideCard.vue";
 import FileInput from "@/components/files/FileInput.vue";
 import { controller } from "../logic/logic";
-import { Camps, endpoints, Formatters, Personnes } from "@/utils";
+import { Camps } from "@/utils";
 const props = defineProps<{
   token: string;
   dossier: DossierExt;
@@ -290,21 +219,22 @@ const qfValidated = computed(
       FileReviewStatus.FileReviewValidated,
 );
 
-const pendingFiles = computed(() => {
-  const out: { id: IdParticipant; file: PublicFile }[] = [];
-  for (const [id, file] of Object.entries(
-    props.dossier.AidesFilesAttente || {},
-  )) {
-    out.push({ id: Number(id) as unknown as IdParticipant, file });
-  }
-  return out;
-});
-
-function participantLabel(id: IdParticipant): string {
-  const p = props.dossier.Participants?.find((p) => p.Participant.Id === id);
-  if (!p) return "";
-  return `${Personnes.label(p.Personne)} - ${Camps.label(p.Camp)}`;
-}
+const pendingAideJustificatifs = computed(() =>
+  props.supportsAidesExt
+    ? Object.values(props.dossier.AidesFilesAttente || {}).filter(
+        (file) => file.ReviewStatus === FileReviewStatus.FileReviewPending,
+      ).length
+    : 0,
+);
+const pendingQuotientFamilial = computed(
+  () =>
+    props.dossier.HasQuotientFamilialFile &&
+    props.dossier.QuotientFamilialFile.ReviewStatus ===
+      FileReviewStatus.FileReviewPending,
+);
+const hasPendingFiles = computed(
+  () => pendingAideJustificatifs.value > 0 || pendingQuotientFamilial.value,
+);
 
 async function createAide(idParticipant: IdParticipant, file: File) {
   showCreateAide.value = false;

@@ -139,7 +139,10 @@
                 </v-col>
               </v-row>
             </template>
-            <FactureCard :dossier="props.dossier.Dossier"></FactureCard>
+            <FactureCard
+              :dossier="props.dossier.Dossier"
+              :show-justificatifs-attente="true"
+            ></FactureCard>
           </v-menu>
         </v-col>
       </v-row>

@@ -63,6 +63,7 @@ declare module 'vue' {
     RatingField: typeof import('./src/components/sondages/RatingField.vue')['default']
     ReglementsCard: typeof import('./src/components/inscriptions/ReglementsCard.vue')['default']
     RequestProgressCard: typeof import('./src/components/RequestProgressCard.vue')['default']
+    ReviewStatusChip: typeof import('./src/components/ReviewStatusChip.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SelectCamp: typeof import('./src/components/SelectCamp.vue')['default']

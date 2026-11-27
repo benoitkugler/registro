@@ -1,13 +1,6 @@
 <template>
   <v-col align-self="center" cols="2" class="text-center">
-    <v-chip
-      class="mr-2"
-      size="small"
-      :color="Formatters.reviewStatus(props.status).color"
-      :prepend-icon="Formatters.reviewStatus(props.status).icon"
-    >
-      {{ FileReviewStatusLabels[props.status] }}
-    </v-chip>
+    <ReviewStatusChip :status="props.status"></ReviewStatusChip>
   </v-col>
   <v-col cols="auto" align-self="center">
     <v-btn

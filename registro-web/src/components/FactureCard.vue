@@ -111,6 +111,93 @@
       </v-row>
 
       <v-divider thickness="1" class="my-2"></v-divider>
+      <!-- Justificatifs en attente de validation -->
+      <template v-if="showJustificatifsAttente && pendingJustificatifs.length">
+        <v-list-subheader>
+          Justificatifs en attente de validation
+        </v-list-subheader>
+        <v-list density="compact">
+          <v-list-item
+            v-for="pending in pendingJustificatifs"
+            :key="pending.file.Key"
+            density="compact"
+            :title="justificatifLabel(pending.id)"
+            :subtitle="pending.file.NomClient"
+          >
+            <template #append>
+              <ReviewStatusChip
+                :status="pending.file.ReviewStatus"
+              ></ReviewStatusChip>
+              <v-btn
+                icon="mdi-download"
+                size="small"
+                variant="text"
+                :href="endpoints.LoadDocument(pending.file.Key)"
+                @click.stop=""
+                target="_blank"
+              ></v-btn>
+              <v-btn
+                v-if="canDeleteJustificatifsAttente"
+                icon="mdi-delete"
+                size="small"
+                variant="text"
+                color="red"
+                @click.stop="emit('deleteJustificatif', pending.id)"
+              ></v-btn>
+            </template>
+          </v-list-item>
+        </v-list>
+      </template>
+
+      <!-- Attestation de quotient familial -->
+      <template v-if="props.dossier.HasQuotientFamilialFile">
+        <v-divider thickness="1" class="my-2"></v-divider>
+        <v-list-subheader>Attestation de quotient familial</v-list-subheader>
+        <v-list density="compact">
+          <v-list-item
+            density="compact"
+            :title="props.dossier.QuotientFamilialFile.NomClient"
+            :subtitle="`${Formatters.size(props.dossier.QuotientFamilialFile.Taille)} - Ajouté ${Formatters.date(props.dossier.QuotientFamilialFile.Uploaded)}`"
+          >
+            <template #append>
+              <ReviewStatusChip
+                :status="props.dossier.QuotientFamilialFile.ReviewStatus"
+              ></ReviewStatusChip>
+
+              <v-btn
+                icon="mdi-download"
+                size="small"
+                variant="text"
+                :href="
+                  endpoints.LoadDocument(props.dossier.QuotientFamilialFile.Key)
+                "
+                @click.stop=""
+                target="_blank"
+              ></v-btn>
+              <v-tooltip
+                v-if="canDeleteQuotientFamilial"
+                :disabled="!quotientFamilialValidated"
+                :text="quotientFamilialValidatedMessage"
+              >
+                <template #activator="{ props: tooltipProps }">
+                  <span v-bind="tooltipProps">
+                    <v-btn
+                      icon="mdi-delete"
+                      size="small"
+                      variant="text"
+                      color="red"
+                      :disabled="quotientFamilialValidated"
+                      @click.stop="emit('deleteQuotientFamilial')"
+                    ></v-btn>
+                  </span>
+                </template>
+              </v-tooltip>
+            </template>
+          </v-list-item>
+        </v-list>
+      </template>
+
+      <v-divider thickness="1" class="my-2"></v-divider>
 
       <!-- Paiements -->
       <v-row v-if="!paiements.length">
@@ -146,22 +233,43 @@
 
 <script setup lang="ts">
 import {
+  FileReviewStatus,
+  FileReviewStatusLabels,
   StatutParticipant,
   type BilanParticipantPub,
   type DossierExt,
+  type IdParticipant,
+  type PublicFile,
   type Remises,
 } from "@/clients/backoffice/logic/api";
-import { Camps, Formatters, Participants, Personnes } from "@/utils";
+import { Camps, endpoints, Formatters, Participants, Personnes } from "@/utils";
 import { computed } from "vue";
 
 const props = defineProps<{
   dossier: DossierExt;
+  showJustificatifsAttente: boolean;
+  canDeleteJustificatifsAttente?: boolean;
+  canDeleteQuotientFamilial?: boolean;
+}>();
+
+const emit = defineEmits<{
+  (e: "deleteJustificatif", id: IdParticipant): void;
+  (e: "deleteQuotientFamilial"): void;
 }>();
 
 const listeAttente = computed(() =>
   (props.dossier.Participants || [])
     .filter((p) => p.Participant.Statut != StatutParticipant.Inscrit)
     .map((p) => Personnes.label(p.Personne)),
+);
+
+const quotientFamilialValidatedMessage =
+  "Attestation validée : demandez au backoffice de la refuser avant d'en envoyer une nouvelle.";
+const quotientFamilialValidated = computed(
+  () =>
+    props.dossier.HasQuotientFamilialFile &&
+    props.dossier.QuotientFamilialFile.ReviewStatus ===
+      FileReviewStatus.FileReviewValidated,
 );
 
 const participants = computed(() =>
@@ -190,6 +298,26 @@ function formatRemises(remises: Remises) {
   if (remises.Speciale.Cent)
     chunks.push(`Remise : ${Formatters.montant(remises.Speciale)}`);
   return chunks.join("  ;  ");
+}
+
+const pendingJustificatifs = computed<
+  { id: IdParticipant; file: PublicFile }[]
+>(() => {
+  const out: { id: IdParticipant; file: PublicFile }[] = [];
+  for (const [id, file] of Object.entries(
+    props.dossier.AidesFilesAttente || {},
+  )) {
+    out.push({ id: Number(id) as unknown as IdParticipant, file });
+  }
+  return out;
+});
+
+function justificatifLabel(id: IdParticipant): string {
+  const p = (props.dossier.Participants || []).find(
+    (p) => p.Participant.Id === id,
+  );
+  if (!p) return "";
+  return `${Personnes.label(p.Personne)} - ${Camps.label(p.Camp)}`;
 }
 
 const paiements = computed(() => {

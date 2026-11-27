@@ -24,13 +24,10 @@
           )} - Ajouté ${Formatters.date(props.file.Uploaded)}`"
         >
           <template #append>
-            <v-chip
+            <ReviewStatusChip
               class="ml-2"
-              :color="Formatters.reviewStatus(file.ReviewStatus).color"
-              :prepend-icon="Formatters.reviewStatus(file.ReviewStatus).icon"
-            >
-              {{ FileReviewStatusLabels[file.ReviewStatus] }}
-            </v-chip>
+              :status="file.ReviewStatus"
+            ></ReviewStatusChip>
           </template>
         </v-list-item>
       </v-card-text>
