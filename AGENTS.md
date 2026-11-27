@@ -12,4 +12,5 @@
   must list the exact targeted commands (e.g. `go test ./caf -run TestName`) to
   run after implementation, and ask the user before broadening the scope.
 - Running the client/web tests (`bun test`, `npm test`, or `vitest run` in
-  `registro-web/`) is fine — no restriction there.
+  `registro-web/`) is fine — no restriction there. Always run frontend tests
+  with the environment variable `DEV=true` (e.g. `DEV=true bun test`).
