@@ -5,6 +5,7 @@ package files
 import (
 	"database/sql"
 	"registro/sql/camps"
+	"registro/sql/dossiers"
 	"registro/sql/personnes"
 
 	"github.com/lib/pq"
@@ -1402,6 +1403,205 @@ func DeleteFilePersonnesByIdDemandes(tx DB, idDemandes_ ...IdDemande) (FilePerso
 		return nil, err
 	}
 	return ScanFilePersonnes(rows)
+}
+
+func scanOneFileQuotientFamilial(row scanner) (FileQuotientFamilial, error) {
+	var item FileQuotientFamilial
+	err := row.Scan(
+		&item.IdFile,
+		&item.IdDossier,
+	)
+	return item, err
+}
+
+func ScanFileQuotientFamilial(row *sql.Row) (FileQuotientFamilial, error) {
+	return scanOneFileQuotientFamilial(row)
+}
+
+// SelectAll returns all the items in the file_quotient_familials table.
+func SelectAllFileQuotientFamilials(db DB) (FileQuotientFamilials, error) {
+	rows, err := db.Query("SELECT idfile, iddossier FROM file_quotient_familials")
+	if err != nil {
+		return nil, err
+	}
+	return ScanFileQuotientFamilials(rows)
+}
+
+type FileQuotientFamilials []FileQuotientFamilial
+
+func ScanFileQuotientFamilials(rs *sql.Rows) (FileQuotientFamilials, error) {
+	var (
+		item FileQuotientFamilial
+		err  error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(FileQuotientFamilials, 0, 16)
+	for rs.Next() {
+		item, err = scanOneFileQuotientFamilial(rs)
+		if err != nil {
+			return nil, err
+		}
+		structs = append(structs, item)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+func (item FileQuotientFamilial) Insert(db DB) error {
+	_, err := db.Exec(`INSERT INTO file_quotient_familials (
+			idfile, iddossier
+			) VALUES (
+			$1, $2
+			);
+			`,
+		item.IdFile,
+		item.IdDossier,
+	)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Insert the links FileQuotientFamilial in the database.
+// It is a no-op if 'items' is empty.
+func InsertManyFileQuotientFamilials(tx *sql.Tx, items ...FileQuotientFamilial) error {
+	if len(items) == 0 {
+		return nil
+	}
+
+	stmt, err := tx.Prepare(pq.CopyIn("file_quotient_familials",
+		"idfile",
+		"iddossier",
+	))
+	if err != nil {
+		return err
+	}
+
+	for _, item := range items {
+		_, err = stmt.Exec(
+			item.IdFile,
+			item.IdDossier,
+		)
+		if err != nil {
+			return err
+		}
+	}
+
+	if _, err = stmt.Exec(); err != nil {
+		return err
+	}
+
+	if err = stmt.Close(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Delete the link FileQuotientFamilial from the database.
+// Only the foreign keys IdFile, IdDossier fields are used in 'item'.
+func (item FileQuotientFamilial) Delete(tx DB) error {
+	_, err := tx.Exec(`DELETE FROM file_quotient_familials WHERE IdFile = $1 AND IdDossier = $2;`, item.IdFile, item.IdDossier)
+	return err
+}
+
+// ByIdFile returns a map with 'IdFile' as keys.
+func (items FileQuotientFamilials) ByIdFile() map[IdFile]FileQuotientFamilial {
+	out := make(map[IdFile]FileQuotientFamilial, len(items))
+	for _, target := range items {
+		out[target.IdFile] = target
+	}
+	return out
+}
+
+// IdFiles returns the list of ids of IdFile
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items FileQuotientFamilials) IdFiles() []IdFile {
+	out := make([]IdFile, len(items))
+	for index, target := range items {
+		out[index] = target.IdFile
+	}
+	return out
+}
+
+// SelectFileQuotientFamilialByIdFile return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectFileQuotientFamilialByIdFile(tx DB, idFile IdFile) (item FileQuotientFamilial, found bool, err error) {
+	row := tx.QueryRow("SELECT idfile, iddossier FROM file_quotient_familials WHERE idfile = $1", idFile)
+	item, err = ScanFileQuotientFamilial(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
+}
+
+func SelectFileQuotientFamilialsByIdFiles(tx DB, idFiles_ ...IdFile) (FileQuotientFamilials, error) {
+	rows, err := tx.Query("SELECT idfile, iddossier FROM file_quotient_familials WHERE idfile = ANY($1)", IdFileArrayToPQ(idFiles_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanFileQuotientFamilials(rows)
+}
+
+func DeleteFileQuotientFamilialsByIdFiles(tx DB, idFiles_ ...IdFile) (FileQuotientFamilials, error) {
+	rows, err := tx.Query("DELETE FROM file_quotient_familials WHERE idfile = ANY($1) RETURNING idfile, iddossier", IdFileArrayToPQ(idFiles_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanFileQuotientFamilials(rows)
+}
+
+// ByIdDossier returns a map with 'IdDossier' as keys.
+func (items FileQuotientFamilials) ByIdDossier() map[dossiers.IdDossier]FileQuotientFamilial {
+	out := make(map[dossiers.IdDossier]FileQuotientFamilial, len(items))
+	for _, target := range items {
+		out[target.IdDossier] = target
+	}
+	return out
+}
+
+// IdDossiers returns the list of ids of IdDossier
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items FileQuotientFamilials) IdDossiers() []dossiers.IdDossier {
+	out := make([]dossiers.IdDossier, len(items))
+	for index, target := range items {
+		out[index] = target.IdDossier
+	}
+	return out
+}
+
+// SelectFileQuotientFamilialByIdDossier return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectFileQuotientFamilialByIdDossier(tx DB, idDossier dossiers.IdDossier) (item FileQuotientFamilial, found bool, err error) {
+	row := tx.QueryRow("SELECT idfile, iddossier FROM file_quotient_familials WHERE iddossier = $1", idDossier)
+	item, err = ScanFileQuotientFamilial(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
+}
+
+func SelectFileQuotientFamilialsByIdDossiers(tx DB, idDossiers_ ...dossiers.IdDossier) (FileQuotientFamilials, error) {
+	rows, err := tx.Query("SELECT idfile, iddossier FROM file_quotient_familials WHERE iddossier = ANY($1)", dossiers.IdDossierArrayToPQ(idDossiers_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanFileQuotientFamilials(rows)
+}
+
+func DeleteFileQuotientFamilialsByIdDossiers(tx DB, idDossiers_ ...dossiers.IdDossier) (FileQuotientFamilials, error) {
+	rows, err := tx.Query("DELETE FROM file_quotient_familials WHERE iddossier = ANY($1) RETURNING idfile, iddossier", dossiers.IdDossierArrayToPQ(idDossiers_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanFileQuotientFamilials(rows)
 }
 
 func IdDemandeArrayToPQ(ids []IdDemande) pq.Int64Array {

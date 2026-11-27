@@ -4,6 +4,7 @@ import {
   EventContentKind,
   FileReviewStatus,
   ModePaiement,
+  QuotientFamilialDetectionStatus,
   Sexe,
   StatutPaiement,
   StatutParticipant,
@@ -463,6 +464,20 @@ export namespace Formatters {
         return { color: "red", icon: "mdi-close-circle" };
       default:
         return { color: "orange", icon: "mdi-clock-outline" };
+    }
+  }
+
+  export function quotientFamilialDetection(status: QuotientFamilialDetectionStatus) {
+    switch (status) {
+      case QuotientFamilialDetectionStatus.QFDetectionSuccess:
+        return { color: "green", icon: "mdi-check" };
+      case QuotientFamilialDetectionStatus.QFDetectionNoFile:
+        return { color: "grey", icon: "mdi-file-outline" };
+      case QuotientFamilialDetectionStatus.QFDetectionAmbiguous:
+      case QuotientFamilialDetectionStatus.QFDetectionUnsupported:
+        return { color: "orange", icon: "mdi-alert-outline" };
+      default:
+        return { color: "red", icon: "mdi-close-circle" };
     }
   }
 

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	cps "registro/sql/camps"
+	"registro/sql/dossiers"
 	pr "registro/sql/personnes"
 )
 
@@ -137,4 +138,11 @@ type FileAide struct {
 	IdParticipant cps.IdParticipant
 
 	IdAide cps.OptIdAide `gomacro-sql-on-delete:"RESTRICT" gomacro-sql-foreign:"Aide"`
+}
+
+// gomacro:SQL ADD UNIQUE(IdFile)
+// gomacro:SQL ADD UNIQUE(IdDossier)
+type FileQuotientFamilial struct {
+	IdFile    IdFile             `gomacro-sql-on-delete:"CASCADE"`
+	IdDossier dossiers.IdDossier `gomacro-sql-on-delete:"RESTRICT"`
 }

@@ -134,7 +134,7 @@ func (d fontDecoder) charCodesToCIDs(codes []byte) []model.CID {
 func extractText(pdf []byte) (string, error) {
 	doc, _, err := reader.ParsePDFReader(bytes.NewReader(pdf), reader.Options{})
 	if err != nil {
-		return "", fmt.Errorf("%w: %s", ErrInvalidPDF, err)
+		return "", fmt.Errorf("%w : le fichier n'est pas un PDF lisible", ErrInvalidPDF)
 	}
 
 	decoders := make(map[*model.FontDict]fontDecoder)
@@ -142,7 +142,7 @@ func extractText(pdf []byte) (string, error) {
 	for _, page := range doc.Catalog.Pages.Flatten() {
 		content, err := streams.DecodePageContents(page)
 		if err != nil {
-			return "", fmt.Errorf("%w: decoding page content: %s", ErrInvalidPDF, err)
+			return "", fmt.Errorf("%w : impossible de décoder le contenu de la page", ErrInvalidPDF)
 		}
 		var colorSpaces model.ResourcesColorSpace
 		if page.Resources != nil {
@@ -150,7 +150,7 @@ func extractText(pdf []byte) (string, error) {
 		}
 		ops, err := parser.ParseContent(content, colorSpaces)
 		if err != nil {
-			return "", fmt.Errorf("%w: parsing page content: %s", ErrInvalidPDF, err)
+			return "", fmt.Errorf("%w : impossible d'analyser le contenu de la page", ErrInvalidPDF)
 		}
 
 		pageText, err := extractPageText(ops, page, decoders)
@@ -165,7 +165,7 @@ func extractText(pdf []byte) (string, error) {
 
 	text := normalizeText(all.String())
 	if text == "" {
-		return "", fmt.Errorf("%w: PDF contains no text layer (scanned document?)", ErrNoExtractableText)
+		return "", fmt.Errorf("%w : le PDF ne contient pas de texte (document scanné ?)", ErrNoExtractableText)
 	}
 	return text, nil
 }

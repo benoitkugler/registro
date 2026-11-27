@@ -21,6 +21,7 @@ type DossiersFinances struct {
 	aides             map[cps.IdParticipant]cps.Aide
 	aidesFiles        map[cps.IdAide]fs.File        // enough for [aides]
 	aidesFilesAttente map[cps.IdParticipant]fs.File // justificatifs en attente d'une aide
+	qfFiles           map[ds.IdDossier]fs.File      // attestation de quotient familial, au plus une par dossier
 	structures        cps.Structureaides
 	paiements         map[ds.IdDossier]ds.Paiements
 }
@@ -73,6 +74,20 @@ func LoadDossiersFinances(db ds.DB, ids ...ds.IdDossier) (DossiersFinances, erro
 		}
 	}
 
+	// attestation de quotient familial : au plus un fichier par dossier
+	qfLinks, err := fs.SelectFileQuotientFamilialsByIdDossiers(db, ids...)
+	if err != nil {
+		return DossiersFinances{}, utils.SQLError(err)
+	}
+	qfFilesByID, err := fs.SelectFiles(db, qfLinks.IdFiles()...)
+	if err != nil {
+		return DossiersFinances{}, utils.SQLError(err)
+	}
+	qfFiles := make(map[ds.IdDossier]fs.File, len(qfLinks))
+	for _, link := range qfLinks {
+		qfFiles[link.IdDossier] = qfFilesByID[link.IdFile]
+	}
+
 	aidesByParticipant := aides.ByIdParticipant()
 
 	structures, err := cps.SelectStructureaides(db, aides.IdStructureaides()...)
@@ -84,7 +99,7 @@ func LoadDossiersFinances(db ds.DB, ids ...ds.IdDossier) (DossiersFinances, erro
 		return DossiersFinances{}, utils.SQLError(err)
 	}
 
-	return DossiersFinances{dossiers, tauxs, aidesByParticipant, aidesFiles, aidesFilesAttente, structures, paiements.ByIdDossier()}, nil
+	return DossiersFinances{dossiers, tauxs, aidesByParticipant, aidesFiles, aidesFilesAttente, qfFiles, structures, paiements.ByIdDossier()}, nil
 }
 
 func (df DossiersFinances) For(id ds.IdDossier) DossierFinance {
@@ -99,7 +114,7 @@ func (df DossiersFinances) For(id ds.IdDossier) DossierFinance {
 			aidesFilesAttente[part.Id] = file
 		}
 	}
-	return DossierFinance{out, df.taux[out.Dossier.IdTaux], aides, df.aidesFiles, aidesFilesAttente, df.structures, df.paiements[id]}
+	return DossierFinance{out, df.taux[out.Dossier.IdTaux], aides, df.aidesFiles, aidesFilesAttente, df.qfFiles[id], df.structures, df.paiements[id]}
 }
 
 type DossierFinance struct {
@@ -110,6 +125,7 @@ type DossierFinance struct {
 	aides             map[cps.IdParticipant]cps.Aide // at most one per participant
 	aidesFiles        map[cps.IdAide]fs.File         // enough for [aides]
 	aidesFilesAttente map[cps.IdParticipant]fs.File  // justificatifs en attente d'une aide
+	qfFile            fs.File                        // attestation de quotient familial, zéro si absente
 	structures        cps.Structureaides             // enough for [aides]
 
 	paiements ds.Paiements // liste exacte

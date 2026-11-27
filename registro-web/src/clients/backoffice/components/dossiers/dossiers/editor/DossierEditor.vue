@@ -5,6 +5,23 @@
   >
     <template v-slot:append>
       <v-btn
+        v-if="props.dossier.Dossier.HasQuotientFamilialFile"
+        :prepend-icon="
+          Formatters.reviewStatus(
+            props.dossier.Dossier.QuotientFamilialFile.ReviewStatus,
+          ).icon
+        "
+        :color="
+          Formatters.reviewStatus(
+            props.dossier.Dossier.QuotientFamilialFile.ReviewStatus,
+          ).color
+        "
+        variant="outlined"
+        @click="showQuotientFamilialFile = true"
+        >Attestation de quotient familial</v-btn
+      >
+      <v-divider thickness="1" vertical class="mx-2"></v-divider>
+      <v-btn
         @click="
           participantToCreate = {
             IdCamp: 0 as IdCamp,
@@ -103,6 +120,19 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- validation du fichier QF -->
+    <v-dialog v-model="showQuotientFamilialFile" max-width="800px">
+      <QuotientFamilialCard
+        :dossier="props.dossier"
+        @validate="
+          (v) => {
+            emit('validateQuotientFamilial', v);
+            showQuotientFamilialFile = false;
+          }
+        "
+      ></QuotientFamilialCard>
+    </v-dialog>
   </v-card>
 </template>
 
@@ -120,9 +150,11 @@ import {
   type IdPersonne,
   type Participant,
   type ParticipantsCreateIn,
+  type QuotientFamilialValidateIn,
   type Structureaides,
 } from "../../../../logic/api";
 import DossierEditCard from "./DossierEditCard.vue";
+import QuotientFamilialCard from "./QuotientFamilialCard.vue";
 import DossierParticipantRow from "./DossierParticipantRow.vue";
 import { controller } from "@/clients/backoffice/logic/logic";
 import { Formatters } from "@/utils.ts";
@@ -145,6 +177,8 @@ const emit = defineEmits<{
   (e: "deleteAide", id: IdAide): void;
   (e: "deleteFileAide", id: IdAide): void;
   (e: "uploadFileAide", f: File, id: IdAide): void;
+  // attestation de quotient familial
+  (e: "validateQuotientFamilial", args: QuotientFamilialValidateIn): void;
 }>();
 
 const participantToCreate = ref<ParticipantsCreateIn | null>(null);
@@ -160,4 +194,6 @@ async function loadStructureaides() {
   isLoading.value = false;
   structures.value = res || {};
 }
+
+const showQuotientFamilialFile = ref(false);
 </script>

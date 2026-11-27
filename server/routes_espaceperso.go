@@ -21,6 +21,8 @@ func setupRoutesEspaceperso(e *echo.Echo, ct *espaceperso.Controller) {
 	e.GET("/api/v1/espaceperso/paiement/ancv/status", ct.GetANCVPaymentStatus)
 	e.POST("/api/v1/espaceperso/aide/justificatif", ct.UploadAideJustificatif)
 	e.DELETE("/api/v1/espaceperso/aide/justificatif", ct.DeleteAideJustificatif)
+	e.POST("/api/v1/espaceperso/quotient-familial", ct.UploadQuotientFamilial)
+	e.DELETE("/api/v1/espaceperso/quotient-familial", ct.DeleteQuotientFamilial)
 	e.GET("/api/v1/espaceperso/structureaides", ct.GetStructureaides)
 
 	e.GET("/api/v1/espaceperso/photos", ct.LoadPhotos)

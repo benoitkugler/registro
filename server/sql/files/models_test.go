@@ -50,6 +50,48 @@ func TestSQL(t *testing.T) {
 	tu.AssertNoErr(t, err)
 }
 
+func TestFileQuotientFamilial(t *testing.T) {
+	db := tu.NewTestDB(t, "../personnes/gen_create.sql", "../dossiers/gen_create.sql", "../camps/gen_create.sql", "gen_create.sql")
+	defer db.Remove()
+
+	pers, err := personnes.Personne{}.Insert(db)
+	tu.AssertNoErr(t, err)
+	taux, err := dossiers.Taux{Euros: 1000}.Insert(db)
+	tu.AssertNoErr(t, err)
+	dossier1, err := dossiers.Dossier{IdResponsable: pers.Id, IdTaux: taux.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+	dossier2, err := dossiers.Dossier{IdResponsable: pers.Id, IdTaux: taux.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	file1, err := File{}.Insert(db)
+	tu.AssertNoErr(t, err)
+	err = FileQuotientFamilial{IdFile: file1.Id, IdDossier: dossier1.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	link, found, err := SelectFileQuotientFamilialByIdDossier(db, dossier1.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, found && link.IdFile == file1.Id)
+
+	// au plus une attestation par dossier, et un fichier ne sert qu'à un dossier
+	file2, err := File{}.Insert(db)
+	tu.AssertNoErr(t, err)
+	err = FileQuotientFamilial{IdFile: file2.Id, IdDossier: dossier1.Id}.Insert(db)
+	tu.AssertErr(t, err)
+	err = FileQuotientFamilial{IdFile: file1.Id, IdDossier: dossier2.Id}.Insert(db)
+	tu.AssertErr(t, err)
+
+	links, err := SelectFileQuotientFamilialsByIdDossiers(db, dossier1.Id, dossier2.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(links) == 1)
+
+	deleted, err := DeleteFileQuotientFamilialsByIdDossiers(db, dossier1.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(deleted) == 1)
+	_, found, err = SelectFileQuotientFamilialByIdDossier(db, dossier1.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, !found)
+}
+
 func TestFileAide(t *testing.T) {
 	db := tu.NewTestDB(t, "../personnes/gen_create.sql", "../dossiers/gen_create.sql", "../camps/gen_create.sql", "gen_create.sql")
 	defer db.Remove()
@@ -98,16 +140,10 @@ func TestFileAide(t *testing.T) {
 	// une seule pièce peut être rattachée à une aide donnée
 	file2, err := File{}.Insert(db)
 	tu.AssertNoErr(t, err)
-	err = FileAide{IdFile: file2.Id, IdParticipant: part.Id}.Insert(db)
-	tu.AssertNoErr(t, err)
-	link2, found, err := SelectFileAideByIdFile(db, file2.Id)
-	tu.AssertNoErr(t, err)
-	tu.Assert(t, found && !link2.IdAide.Valid)
-	_, err = DeleteFileAidesByIdFiles(db, link2.IdFile)
 	tu.AssertNoErr(t, err)
 	err = FileAide{
-		IdFile:        link2.IdFile,
-		IdParticipant: link2.IdParticipant,
+		IdFile:        file2.Id,
+		IdParticipant: link.IdParticipant,
 		IdAide:        aide.Id.Opt(),
 	}.Insert(db)
 	tu.AssertErr(t, err)

@@ -47,6 +47,11 @@ CREATE TABLE file_personnes (
     guard boolean NOT NULL
 );
 
+CREATE TABLE file_quotient_familials (
+    IdFile integer NOT NULL,
+    IdDossier integer NOT NULL
+);
+
 -- constraints
 ALTER TABLE demandes
     ADD CONSTRAINT constraint_categorie CHECK (Categorie = 0 OR IdDirecteur IS NULL);
@@ -139,4 +144,16 @@ ALTER TABLE file_aides
 
 ALTER TABLE file_aides
     ADD FOREIGN KEY (IdAide) REFERENCES aides ON DELETE RESTRICT;
+
+ALTER TABLE file_quotient_familials
+    ADD UNIQUE (IdFile);
+
+ALTER TABLE file_quotient_familials
+    ADD UNIQUE (IdDossier);
+
+ALTER TABLE file_quotient_familials
+    ADD FOREIGN KEY (IdFile) REFERENCES files ON DELETE CASCADE;
+
+ALTER TABLE file_quotient_familials
+    ADD FOREIGN KEY (IdDossier) REFERENCES dossiers ON DELETE RESTRICT;
 

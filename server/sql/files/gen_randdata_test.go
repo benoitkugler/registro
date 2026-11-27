@@ -3,6 +3,7 @@ package files
 import (
 	"math/rand"
 	"registro/sql/camps"
+	"registro/sql/dossiers"
 	"registro/sql/personnes"
 	"registro/sql/shared"
 	"time"
@@ -84,6 +85,14 @@ func randFilePersonne() FilePersonne {
 	return s
 }
 
+func randFileQuotientFamilial() FileQuotientFamilial {
+	var s FileQuotientFamilial
+	s.IdFile = randIdFile()
+	s.IdDossier = randdos_IdDossier()
+
+	return s
+}
+
 func randIdDemande() IdDemande {
 	return IdDemande(randint64())
 }
@@ -117,6 +126,10 @@ func randcam_IdEquipier() camps.IdEquipier {
 
 func randcam_IdParticipant() camps.IdParticipant {
 	return camps.IdParticipant(randint64())
+}
+
+func randdos_IdDossier() dossiers.IdDossier {
+	return dossiers.IdDossier(randint64())
 }
 
 func randint() int {

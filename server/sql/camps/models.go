@@ -174,9 +174,12 @@ type Participant struct {
 	// so that a [Dossier] has only one taux
 	IdTaux dossiers.IdTaux
 
-	Statut           StatutParticipant
-	Remises          Remises
-	QuotientFamilial int // optional, 0 for inactive
+	Statut  StatutParticipant
+	Remises Remises
+	// QuotientFamilial of the participant, optional, 0 for inactive
+	// This is often the one of the [Dossier.Responsable], it is
+	// distinct to support edge cases.
+	QuotientFamilial int
 
 	OptionPrix OptionPrixParticipant
 }

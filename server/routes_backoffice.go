@@ -79,6 +79,7 @@ func setupRoutesBackoffice(e *echo.Echo, ct *backoffice.Controller) {
 	gr.POST("/api/v1/backoffice/dossiers/solde", ct.DossierSolde)
 
 	gr.POST("/api/v1/backoffice/dossiers/merge", ct.DossiersMerge)
+	gr.POST("/api/v1/backoffice/dossiers/quotient-familial", ct.DossiersValidateQuotientFamilial)
 
 	gr.GET("/api/v1/backoffice/structureaides", ct.StructureaidesGet)
 	gr.PUT("/api/v1/backoffice/structureaides", ct.StructureaideCreate)

@@ -303,6 +303,18 @@ ALTER TABLE file_aides
 ALTER TABLE file_aides
     ADD FOREIGN KEY (IdAide) REFERENCES aides ON DELETE RESTRICT;
 
+ALTER TABLE file_quotient_familials
+    ADD UNIQUE (IdFile);
+
+ALTER TABLE file_quotient_familials
+    ADD UNIQUE (IdDossier);
+
+ALTER TABLE file_quotient_familials
+    ADD FOREIGN KEY (IdFile) REFERENCES files ON DELETE CASCADE;
+
+ALTER TABLE file_quotient_familials
+    ADD FOREIGN KEY (IdDossier) REFERENCES dossiers ON DELETE RESTRICT;
+
 ALTER TABLE inscriptions
     ADD UNIQUE (Id, IdTaux);
 

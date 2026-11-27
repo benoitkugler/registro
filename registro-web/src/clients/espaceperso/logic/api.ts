@@ -239,6 +239,8 @@ export interface DossierExt {
   Aides: Record<IdParticipant, Aide> | null;
   AidesFiles: Record<IdAide, PublicFile> | null;
   AidesFilesAttente: Record<IdParticipant, PublicFile> | null;
+  HasQuotientFamilialFile: boolean;
+  QuotientFamilialFile: PublicFile;
   Events: Events;
   Paiements: Paiements;
   Bilan: BilanFinancesPub;
@@ -995,6 +997,39 @@ export abstract class AbstractAPI {
           token: params["token"],
           idParticipant: String(params["idParticipant"]),
         },
+      });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** UploadQuotientFamilial performs the request and handles the error */
+  async UploadQuotientFamilial(file: File, params: { token: string }) {
+    const fullUrl = this.baseURL + "/api/v1/espaceperso/quotient-familial";
+    this.startRequest();
+    try {
+      const formData = new FormData();
+      formData.append("file", file, file.name);
+      const rep: AxiosResponse<PublicFile> = await Axios.post(
+        fullUrl,
+        formData,
+        { headers: this.getHeaders(), params: { token: params["token"] } },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** DeleteQuotientFamilial performs the request and handles the error */
+  async DeleteQuotientFamilial(params: { token: string }) {
+    const fullUrl = this.baseURL + "/api/v1/espaceperso/quotient-familial";
+    this.startRequest();
+    try {
+      await Axios.delete(fullUrl, {
+        headers: this.getHeaders(),
+        params: { token: params["token"] },
       });
       return true;
     } catch (error) {

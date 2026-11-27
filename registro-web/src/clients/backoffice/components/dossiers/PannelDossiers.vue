@@ -76,6 +76,7 @@
         @update-aide="updateAide"
         @delete-file-aide="deleteFileAide"
         @upload-file-aide="uploadFileAide"
+        @validate-quotient-familial="validateQuotientFamilial"
         @create-paiement="createPaiement"
         @update-paiement="updatePaiement"
         @delete-paiement="deletePaiement"
@@ -161,6 +162,7 @@ import {
   type IdPersonne,
   type SearchDossierOut,
   type DossiersMergeIn,
+  type QuotientFamilialValidateIn,
   type Event,
   type DossierHeader,
   type IdAide,
@@ -387,6 +389,17 @@ async function uploadFileAide(f: File, id: IdAide) {
     m[id] = res;
     dossierDetails.value.Dossier.AidesFiles = m;
   }
+}
+
+async function validateQuotientFamilial(args: QuotientFamilialValidateIn) {
+  const res = await controller.DossiersValidateQuotientFamilial(args);
+  if (res === undefined) return;
+  controller.showMessage(
+    args.Accepted
+      ? "Attestation validée et quotient familial appliqué."
+      : "Attestation refusée.",
+  );
+  ensureDossier();
 }
 
 async function deleteAide(id: IdAide) {

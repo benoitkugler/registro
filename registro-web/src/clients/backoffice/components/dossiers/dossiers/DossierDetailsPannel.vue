@@ -196,6 +196,7 @@
         @deleteAide="(v) => emit('deleteAide', v)"
         @deleteFileAide="(v) => emit('deleteFileAide', v)"
         @uploadFileAide="(f, v) => emit('uploadFileAide', f, v)"
+        @validateQuotientFamilial="(v) => emit('validateQuotientFamilial', v)"
       >
       </DossierEditor>
     </v-dialog>
@@ -332,6 +333,7 @@ import {
   type Paiement,
   type Participant,
   type ParticipantsCreateIn,
+  type QuotientFamilialValidateIn,
 } from "../../../logic/api";
 import {
   buildPseudoEvents,
@@ -369,6 +371,8 @@ const emit = defineEmits<{
   (e: "deleteAide", id: IdAide): void;
   (e: "deleteFileAide", id: IdAide): void;
   (e: "uploadFileAide", f: File, id: IdAide): void;
+  // attestation de quotient familial
+  (e: "validateQuotientFamilial", args: QuotientFamilialValidateIn): void;
   // paiements
   (e: "createPaiement"): void;
   (e: "updatePaiement", paiement: Paiement): void;

@@ -29,6 +29,7 @@
         <v-col>
           <BoolField
             hide-details
+            density="compact"
             v-model="innerDossier.PartageAdressesOK"
             label="Partage des coordonnées"
           >
@@ -39,6 +40,7 @@
         <v-col>
           <BoolField
             hide-details
+            density="compact"
             v-model="innerDossier.DemandeFondSoutien"
             label="Demande le fonds de soutien"
           >

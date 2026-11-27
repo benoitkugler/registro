@@ -237,6 +237,11 @@ type DossierExt struct {
 	AidesFiles        map[cps.IdAide]PublicFile        // optionnel
 	AidesFilesAttente map[cps.IdParticipant]PublicFile // justificatifs en attente d'une aide, optionnel
 
+	// Attestation de quotient familial, au plus une par dossier.
+	// QuotientFamilialFile n'est renseigné que si HasQuotientFamilialFile est vrai.
+	HasQuotientFamilialFile bool
+	QuotientFamilialFile    PublicFile
+
 	Events    Events
 	Paiements ds.Paiements
 
@@ -348,7 +353,23 @@ func (d DossierFinance) Publish(key crypto.Encrypter, acomptePercent int) Dossie
 		}
 	}
 
-	return DossierExt{d.Dossier.Dossier, d.Responsable().Id, d.Responsable().PrenomNOM(), publicParticipants, d.aides, aideFiles, aideFilesAttente, d.Events, d.paiements, bilan}
+	out := DossierExt{
+		Dossier:           d.Dossier.Dossier,
+		IdResponsable:     d.Responsable().Id,
+		Responsable:       d.Responsable().PrenomNOM(),
+		Participants:      publicParticipants,
+		Aides:             d.aides,
+		AidesFiles:        aideFiles,
+		AidesFilesAttente: aideFilesAttente,
+		Events:            d.Events,
+		Paiements:         d.paiements,
+		Bilan:             bilan,
+	}
+	if d.qfFile.Id != 0 {
+		out.HasQuotientFamilialFile = true
+		out.QuotientFamilialFile = NewPublicFile(key, d.qfFile)
+	}
+	return out
 }
 
 // LoadByMail renvoie les dossiers dont le responsable a le mail fourni. Ignore les responsables temporaires.

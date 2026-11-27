@@ -86,6 +86,7 @@ export interface DossierDetails {
   EspacepersoURL: string;
   VirementCode: string;
   BankAccounts: BankAccount[] | null;
+  QuotientFamilialDetection: QuotientFamilialDetection;
 }
 // registro/controllers/backoffice.DossierDocumentsState
 export interface DossierDocumentsState {
@@ -227,6 +228,47 @@ export const QueryReglementLabels: Record<QueryReglement, string> = {
   [QueryReglement.Zero]: "Non commencé",
 };
 
+// registro/controllers/backoffice.QuotientFamilialDetection
+export interface QuotientFamilialDetection {
+  Status: QuotientFamilialDetectionStatus;
+  Message: string;
+  QuotientFamilial: Int;
+  Mois: Month;
+  Annee: Int;
+}
+// registro/controllers/backoffice.QuotientFamilialDetectionStatus
+export const QuotientFamilialDetectionStatus = {
+  QFDetectionNoFile: 0,
+  QFDetectionSuccess: 1,
+  QFDetectionUnreadable: 2,
+  QFDetectionInvalidPDF: 3,
+  QFDetectionNoText: 4,
+  QFDetectionUnsupported: 5,
+  QFDetectionAmbiguous: 6,
+} as const;
+export type QuotientFamilialDetectionStatus =
+  (typeof QuotientFamilialDetectionStatus)[keyof typeof QuotientFamilialDetectionStatus];
+
+export const QuotientFamilialDetectionStatusLabels: Record<
+  QuotientFamilialDetectionStatus,
+  string
+> = {
+  [QuotientFamilialDetectionStatus.QFDetectionNoFile]: "Aucune attestation",
+  [QuotientFamilialDetectionStatus.QFDetectionSuccess]: "QF détecté",
+  [QuotientFamilialDetectionStatus.QFDetectionUnreadable]: "Fichier illisible",
+  [QuotientFamilialDetectionStatus.QFDetectionInvalidPDF]: "PDF invalide",
+  [QuotientFamilialDetectionStatus.QFDetectionNoText]: "PDF sans texte",
+  [QuotientFamilialDetectionStatus.QFDetectionUnsupported]:
+    "Attestation non reconnue",
+  [QuotientFamilialDetectionStatus.QFDetectionAmbiguous]: "Résultat ambigu",
+};
+
+// registro/controllers/backoffice.QuotientFamilialValidateIn
+export interface QuotientFamilialValidateIn {
+  IdDossier: IdDossier;
+  QuotientFamilial: Int;
+  Accepted: boolean;
+}
 // registro/controllers/backoffice.RelancePendingInscriptionsIn
 export interface RelancePendingInscriptionsIn {
   Ids: IdInscription[] | null;
@@ -393,6 +435,8 @@ export interface DossierExt {
   Aides: Record<IdParticipant, Aide> | null;
   AidesFiles: Record<IdAide, PublicFile> | null;
   AidesFilesAttente: Record<IdParticipant, PublicFile> | null;
+  HasQuotientFamilialFile: boolean;
+  QuotientFamilialFile: PublicFile;
   Events: Events;
   Paiements: Paiements;
   Bilan: BilanFinancesPub;
@@ -1195,6 +1239,7 @@ export interface OptID_IdDossier {
   Id: IdDossier;
   Valid: boolean;
 }
+export type Month = Int & { __opaque_int__: "Month" };
 
 /** AbstractAPI provides auto-generated API calls and should be used 
 		as base class for an app controller.
@@ -1875,6 +1920,19 @@ export abstract class AbstractAPI {
   /** DossiersMerge performs the request and handles the error */
   async DossiersMerge(params: DossiersMergeIn) {
     const fullUrl = this.baseURL + "/api/v1/backoffice/dossiers/merge";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** DossiersValidateQuotientFamilial performs the request and handles the error */
+  async DossiersValidateQuotientFamilial(params: QuotientFamilialValidateIn) {
+    const fullUrl =
+      this.baseURL + "/api/v1/backoffice/dossiers/quotient-familial";
     this.startRequest();
     try {
       await Axios.post(fullUrl, params, { headers: this.getHeaders() });

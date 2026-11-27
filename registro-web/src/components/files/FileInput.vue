@@ -2,7 +2,7 @@
   <v-file-input
     :label="props.label"
     density="comfortable"
-    accept=".jpg,.jpeg,.png,.pdf"
+    :accept="props.accept || '.jpg,.jpeg,.png,.pdf'"
     :multiple="false"
     v-model="inner"
     @update:model-value="onUpdate"
@@ -18,6 +18,7 @@ import { ref, useTemplateRef } from "vue";
 
 const props = defineProps<{
   label?: string;
+  accept?: string;
 }>();
 
 const emit = defineEmits<{

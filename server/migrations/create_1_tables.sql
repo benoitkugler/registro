@@ -334,6 +334,11 @@ CREATE TABLE file_personnes (
     guard boolean NOT NULL
 );
 
+CREATE TABLE file_quotient_familials (
+    IdFile integer NOT NULL,
+    IdDossier integer NOT NULL
+);
+
 CREATE TABLE inscriptions (
     Id serial PRIMARY KEY,
     IdTaux integer NOT NULL,

@@ -301,6 +301,9 @@ type DossierDetails struct {
 	// also displayed in espace perso
 	// name, IBAN
 	BankAccounts []config.BankAccount
+
+	// Résultat de la détection automatique de l'attestation de quotient familial.
+	QuotientFamilialDetection QuotientFamilialDetection
 }
 
 func (ct *Controller) loadDossier(host string, id ds.IdDossier) (DossierDetails, error) {
@@ -311,7 +314,14 @@ func (ct *Controller) loadDossier(host string, id ds.IdDossier) (DossierDetails,
 	url := logic.EspacePersoURL(ct.key, host, id)
 	virement := OffuscateurVirements.Mask(id)
 	accounts := ct.asso.BankAccounts
-	return DossierDetails{dossier.Publish(ct.key, ct.asso.AcomptePercent), url, virement, accounts}, nil
+	published := dossier.Publish(ct.key, ct.asso.AcomptePercent)
+	return DossierDetails{
+		Dossier:                   published,
+		EspacepersoURL:            url,
+		VirementCode:              virement,
+		BankAccounts:              accounts,
+		QuotientFamilialDetection: detectQuotientFamilial(published, ct.files),
+	}, nil
 }
 
 func (ct *Controller) DossiersCreate(c echo.Context) error {

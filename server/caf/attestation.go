@@ -17,13 +17,13 @@ import (
 
 var (
 	// ErrInvalidPDF indicates that the input could not be read as a PDF.
-	ErrInvalidPDF = errors.New("invalid PDF")
+	ErrInvalidPDF = errors.New("PDF invalide")
 	// ErrNoExtractableText indicates a scanned or image-only PDF.
-	ErrNoExtractableText = errors.New("no extractable text")
+	ErrNoExtractableText = errors.New("aucun texte extraiyable")
 	// ErrUnsupportedDocument indicates a PDF that is not a native CAF attestation.
-	ErrUnsupportedDocument = errors.New("unsupported document")
+	ErrUnsupportedDocument = errors.New("document non pris en charge")
 	// ErrAmbiguous indicates conflicting values in the document.
-	ErrAmbiguous = errors.New("ambiguous attestation")
+	ErrAmbiguous = errors.New("attestation ambiguë")
 )
 
 // Attestation holds the values extracted from the attestation.
@@ -67,23 +67,23 @@ type period struct {
 func parseAttestationText(text string) (Attestation, error) {
 	text = normalizeText(text)
 	if otherRE.MatchString(text) {
-		return Attestation{}, fmt.Errorf("%w: MSA or Service-Public attestation", ErrUnsupportedDocument)
+		return Attestation{}, fmt.Errorf("%w : attestation MSA ou Service-Public", ErrUnsupportedDocument)
 	}
 
 	amounts := findAmounts(text)
 	if len(amounts) == 0 {
-		return Attestation{}, fmt.Errorf("%w: no quotient familial amount", ErrUnsupportedDocument)
+		return Attestation{}, fmt.Errorf("%w : aucun montant de quotient familial", ErrUnsupportedDocument)
 	}
 	if len(amounts) > 1 {
-		return Attestation{}, fmt.Errorf("%w: several quotient familial amounts (%s)", ErrAmbiguous, strings.Join(amounts, ", "))
+		return Attestation{}, fmt.Errorf("%w : plusieurs montants de quotient familial (%s)", ErrAmbiguous, strings.Join(amounts, ", "))
 	}
 
 	periods := findPeriods(text)
 	if len(periods) == 0 {
-		return Attestation{}, fmt.Errorf("%w: no month of validity", ErrUnsupportedDocument)
+		return Attestation{}, fmt.Errorf("%w : aucun mois de validité", ErrUnsupportedDocument)
 	}
 	if len(periods) > 1 {
-		return Attestation{}, fmt.Errorf("%w: several validity periods", ErrAmbiguous)
+		return Attestation{}, fmt.Errorf("%w : plusieurs périodes de validité", ErrAmbiguous)
 	}
 
 	qf, err := parseMontant(amounts[0])
@@ -93,10 +93,10 @@ func parseAttestationText(text string) (Attestation, error) {
 	p := periods[0]
 	mois, ok := moisFR[p.mois]
 	if !ok {
-		return Attestation{}, fmt.Errorf("%w: unknown month %q", ErrUnsupportedDocument, p.mois)
+		return Attestation{}, fmt.Errorf("%w : mois inconnu %q", ErrUnsupportedDocument, p.mois)
 	}
 	if p.annee < 2000 || p.annee > 2100 {
-		return Attestation{}, fmt.Errorf("%w: invalid year %d", ErrUnsupportedDocument, p.annee)
+		return Attestation{}, fmt.Errorf("%w : année invalide %d", ErrUnsupportedDocument, p.annee)
 	}
 
 	return Attestation{QuotientFamilial: qf, Mois: mois, Annee: p.annee}, nil
@@ -200,14 +200,14 @@ func parseMontant(raw string) (int, error) {
 
 	if before, after, ok := strings.Cut(s, "."); ok {
 		if strings.Trim(after, "0") != "" {
-			return 0, fmt.Errorf("%w: non-integer quotient familial %q", ErrUnsupportedDocument, raw)
+			return 0, fmt.Errorf("%w : quotient familial non entier %q", ErrUnsupportedDocument, raw)
 		}
 		s = before
 	}
 
 	n, err := strconv.Atoi(s)
 	if err != nil || n < 0 {
-		return 0, fmt.Errorf("%w: invalid quotient familial %q", ErrUnsupportedDocument, raw)
+		return 0, fmt.Errorf("%w : quotient familial invalide %q", ErrUnsupportedDocument, raw)
 	}
 	return n, nil
 }
