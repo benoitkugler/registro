@@ -60,6 +60,7 @@ export function emptyQuery(): SearchDossierIn {
     Reglement: QueryReglement.EmptyQR,
     SortByNewMessages: false,
     OnlyFondSoutien: false,
+    OnlyNotifications: false,
   };
 }
 

@@ -42,6 +42,14 @@
             <v-chip class="ml-1" size="small" v-if="query.OnlyFondSoutien">
               Fonds de soutien
             </v-chip>
+            <v-chip
+              class="ml-1"
+              size="small"
+              v-if="query.OnlyNotifications"
+              prepend-icon="mdi-bell"
+            >
+              Fichiers à valider
+            </v-chip>
           </template>
 
           <template #append>
@@ -113,6 +121,22 @@
                         color="light-blue-darken-3"
                         v-model="query.SortByNewMessages"
                         @update:model-value="searchDossiers"
+                        append-icon="mdi-message"
+                      >
+                      </v-switch>
+                    </v-col>
+                  </v-row>
+                  <v-row>
+                    <v-col>
+                      <v-switch
+                        label="Fichiers à valider"
+                        hint="N'affiche que les dossiers avec des fichiers à valider."
+                        persistent-hint
+                        density="compact"
+                        color="orange"
+                        v-model="query.OnlyNotifications"
+                        @update:model-value="searchDossiers"
+                        append-icon="mdi-file-outline"
                       >
                       </v-switch>
                     </v-col>
@@ -157,11 +181,27 @@
         @click="emit('click', dossier)"
         class="my-1"
       >
-        <template #append v-if="dossier.NewMessages">
-          <v-badge
-            color="light-blue-darken-3"
-            :content="dossier.NewMessages"
-          ></v-badge>
+        <template #append v-if="dossier.NewMessages || dossier.Notifications">
+          <div class="d-flex align-center">
+            <v-badge
+              v-if="dossier.NewMessages"
+              class="mr-2"
+              color="light-blue-darken-3"
+              :content="dossier.NewMessages"
+            >
+              <v-icon icon="mdi-message" title="Messages non lus"></v-icon>
+            </v-badge>
+            <v-badge
+              v-if="dossier.Notifications"
+              color="orange"
+              :content="dossier.Notifications"
+            >
+              <v-icon
+                icon="mdi-file-outline"
+                title="Fichiers à valider"
+              ></v-icon>
+            </v-badge>
+          </div>
         </template>
       </v-list-item>
     </v-list>

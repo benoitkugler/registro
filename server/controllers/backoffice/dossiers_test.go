@@ -103,6 +103,73 @@ func TestController_searchDossiers(t *testing.T) {
 	tu.Assert(t, len(out.Dossiers) == 0)
 }
 
+func TestController_searchDossiersNotifications(t *testing.T) {
+	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
+		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",
+		"../../migrations/init.sql")
+	defer db.Remove()
+
+	pe1, err := pr.Personne{Identite: pr.Identite{DateNaissance: shared.Date(time.Now())}}.Insert(db)
+	tu.AssertNoErr(t, err)
+	pe2, err := pr.Personne{Identite: pr.Identite{DateNaissance: shared.Date(time.Now())}}.Insert(db)
+	tu.AssertNoErr(t, err)
+	pe3, err := pr.Personne{Identite: pr.Identite{DateNaissance: shared.Date(time.Now())}}.Insert(db)
+	tu.AssertNoErr(t, err)
+	camp, err := cps.Camp{IdTaux: 1}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	dossier1, err := ds.Dossier{IdResponsable: pe1.Id, IdTaux: 1, MomentInscription: time.Now()}.Insert(db)
+	tu.AssertNoErr(t, err)
+	dossier2, err := ds.Dossier{IdResponsable: pe2.Id, IdTaux: 1, MomentInscription: time.Now()}.Insert(db)
+	tu.AssertNoErr(t, err)
+	dossier3, err := ds.Dossier{IdResponsable: pe3.Id, IdTaux: 1, MomentInscription: time.Now()}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	part1, err := cps.Participant{IdCamp: camp.Id, IdDossier: dossier1.Id, IdTaux: 1, IdPersonne: pe1.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+	_, err = cps.Participant{IdCamp: camp.Id, IdDossier: dossier2.Id, IdTaux: 1, IdPersonne: pe2.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+	_, err = cps.Participant{IdCamp: camp.Id, IdDossier: dossier3.Id, IdTaux: 1, IdPersonne: pe3.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	// justificatif d'aide en attente
+	file1, err := fs.File{}.Insert(db)
+	tu.AssertNoErr(t, err)
+	err = (fs.FileAide{IdFile: file1.Id, IdParticipant: part1.Id}).Insert(db)
+	tu.AssertNoErr(t, err)
+
+	// attestation QF en attente
+	file2, err := fs.File{}.Insert(db)
+	tu.AssertNoErr(t, err)
+	err = (fs.FileQuotientFamilial{IdFile: file2.Id, IdDossier: dossier2.Id}).Insert(db)
+	tu.AssertNoErr(t, err)
+
+	// attestation QF déjà validée : ce n'est plus une notification
+	file3, err := fs.File{ReviewStatus: pr.FileReviewValidated}.Insert(db)
+	tu.AssertNoErr(t, err)
+	err = (fs.FileQuotientFamilial{IdFile: file3.Id, IdDossier: dossier3.Id}).Insert(db)
+	tu.AssertNoErr(t, err)
+
+	ct := Controller{db: db.DB}
+
+	out, err := ct.searchDossiers(SearchDossierIn{}, false)
+	tu.AssertNoErr(t, err)
+	notifications := make(map[ds.IdDossier]int, len(out.Dossiers))
+	for _, header := range out.Dossiers {
+		notifications[header.Id] = header.Notifications
+	}
+	tu.Assert(t, notifications[dossier1.Id] == 1)
+	tu.Assert(t, notifications[dossier2.Id] == 1)
+	tu.Assert(t, notifications[dossier3.Id] == 0)
+
+	out, err = ct.searchDossiers(SearchDossierIn{OnlyNotifications: true}, false)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(out.Dossiers) == 2)
+	for _, header := range out.Dossiers {
+		tu.Assert(t, header.Id != dossier3.Id)
+	}
+}
+
 func TestController_aides(t *testing.T) {
 	db := tu.NewTestDB(t, "../../migrations/create_1_tables.sql",
 		"../../migrations/create_2_json_funcs.sql", "../../migrations/create_3_constraints.sql",

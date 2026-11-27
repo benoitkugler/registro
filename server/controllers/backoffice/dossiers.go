@@ -94,6 +94,7 @@ type SearchDossierIn struct {
 	Reglement         QueryReglement
 	SortByNewMessages bool
 	OnlyFondSoutien   bool
+	OnlyNotifications bool
 }
 
 type SearchDossierOut struct {
@@ -117,18 +118,20 @@ func (ct *Controller) DossiersSearch(c echo.Context) error {
 }
 
 type DossierHeader struct {
-	Id           ds.IdDossier
-	Responsable  string
-	Participants string
-	NewMessages  int
+	Id            ds.IdDossier
+	Responsable   string
+	Participants  string
+	NewMessages   int
+	Notifications int // fichiers à valider (justificatifs et attestation QF)
 }
 
-func newDossierHeader(dossier logic.Dossier, isFondSoutien bool) DossierHeader {
+func newDossierHeader(dossier logic.Dossier, isFondSoutien bool, notifications int) DossierHeader {
 	return DossierHeader{
-		Id:           dossier.Dossier.Id,
-		Responsable:  dossier.Responsable().PrenomNOM(),
-		Participants: dossier.ParticipantsLabels(),
-		NewMessages:  len(dossier.Events.UnreadMessagesFor(isFondSoutien)),
+		Id:            dossier.Dossier.Id,
+		Responsable:   dossier.Responsable().PrenomNOM(),
+		Participants:  dossier.ParticipantsLabels(),
+		NewMessages:   len(dossier.Events.UnreadMessagesFor(isFondSoutien)),
+		Notifications: notifications,
 	}
 }
 
@@ -176,7 +179,7 @@ func loadAndFilter(db ds.DB, query SearchDossierIn) ([]logic.DossierFinance, int
 	var filtered []logic.DossierFinance
 	for _, id := range ids {
 		dossier := data.For(id)
-		if match(dossier, queryText, query.IdCamp, query.Attente, query.Reglement, query.OnlyFondSoutien) {
+		if match(dossier, queryText, query.IdCamp, query.Attente, query.Reglement, query.OnlyFondSoutien, query.OnlyNotifications) {
 			filtered = append(filtered, dossier)
 		}
 	}
@@ -206,20 +209,25 @@ func (ct *Controller) searchDossiers(query SearchDossierIn, isFondSoutien bool) 
 	}
 	out := make([]DossierHeader, len(filtered))
 	for i, v := range filtered {
-		out[i] = newDossierHeader(v.Dossier, isFondSoutien)
+		out[i] = newDossierHeader(v.Dossier, isFondSoutien, v.FilesToValidate())
 	}
 	return SearchDossierOut{out, totalCount}, nil
 }
 
 func match(dossier logic.DossierFinance,
 	text search.Query, idCamp evs.OptIdCamp, attente QueryAttente, reglement QueryReglement,
-	onlyFondSoutien bool,
+	onlyFondSoutien bool, onlyNotifications bool,
 ) bool {
 	// critère fonds de soutien
 	if onlyFondSoutien {
 		if !dossier.Dossier.Dossier.DemandeFondSoutien {
 			return false
 		}
+	}
+
+	// critère notifications
+	if onlyNotifications && dossier.FilesToValidate() == 0 {
+		return false
 	}
 
 	// critère camp

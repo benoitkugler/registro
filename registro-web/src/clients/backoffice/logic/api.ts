@@ -101,6 +101,7 @@ export interface DossierHeader {
   Responsable: string;
   Participants: string;
   NewMessages: Int;
+  Notifications: Int;
 }
 // registro/controllers/backoffice.DossiersMergeIn
 export interface DossiersMergeIn {
@@ -295,6 +296,7 @@ export interface SearchDossierIn {
   Reglement: QueryReglement;
   SortByNewMessages: boolean;
   OnlyFondSoutien: boolean;
+  OnlyNotifications: boolean;
 }
 // registro/controllers/backoffice.SearchDossierOut
 export interface SearchDossierOut {

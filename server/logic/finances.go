@@ -131,6 +131,22 @@ type DossierFinance struct {
 	paiements ds.Paiements // liste exacte
 }
 
+// FilesToValidate returns the number of files awaiting backoffice validation:
+// justificatifs without an aide, and the quotient familial attestation when
+// it is still pending.
+func (df DossierFinance) FilesToValidate() int {
+	count := 0
+	for _, file := range df.aidesFilesAttente {
+		if file.ReviewStatus == pr.FileReviewPending {
+			count++
+		}
+	}
+	if df.qfFile.Id != 0 && df.qfFile.ReviewStatus == pr.FileReviewPending {
+		count++
+	}
+	return count
+}
+
 // MontantsPayesParDevise returns the net payments in their original currencies.
 func (de DossierFinance) MontantsPayesParDevise() ds.MultiCurrencies {
 	var out ds.MultiCurrencies
