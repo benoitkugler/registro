@@ -65,8 +65,8 @@ func newRecordExt(record ca.ComptaRecord, subrecords []ca.ComptaSubrecord) Recor
 
 // getRecordExt reloads the subrecords and recomputes the derived fields
 // (status, total) of a record after a mutation.
-func (ct *Controller) getRecordExt(record ca.ComptaRecord) (RecordExt, error) {
-	subs, err := ca.SelectComptaSubrecordsByIdRecords(ct.db, record.Id)
+func getRecordExt(db ca.DB, record ca.ComptaRecord) (RecordExt, error) {
+	subs, err := ca.SelectComptaSubrecordsByIdRecords(db, record.Id)
 	if err != nil {
 		return RecordExt{}, utils.SQLError(err)
 	}
@@ -248,7 +248,7 @@ func (ct *Controller) addSubrecord(record ca.IdComptaRecord, user ca.IdComptaCam
 		return RecordExt{}, utils.SQLError(err)
 	}
 
-	return ct.getRecordExt(group)
+	return getRecordExt(ct.db, group)
 }
 
 func (ct *Controller) UpdateRecord(c echo.Context) error {
@@ -818,7 +818,7 @@ func (ct *Controller) uploadJustificatif(id ca.IdComptaSubrecord, uploads []just
 		return RecordExt{}, utils.SQLError(err)
 	}
 
-	return ct.getRecordExt(group)
+	return getRecordExt(ct.db, group)
 }
 
 func (ct *Controller) RemoveJustificatif(c echo.Context) error {
@@ -869,7 +869,7 @@ func (ct *Controller) removeJustificatif(id ca.IdComptaSubrecord, user ca.IdComp
 		return RecordExt{}, fmt.Errorf("Erreur interne: %w", err)
 	}
 
-	return ct.getRecordExt(group)
+	return getRecordExt(ct.db, group)
 }
 
 func (ct *Controller) DownloadJustificatif(c echo.Context) error {
